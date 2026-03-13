@@ -1,9 +1,9 @@
 #pragma once
 
-#include "support.hpp"
-#include "_IQNtables.hpp"
+#include "port.hpp"
+#include "constants.hpp"
 
-#include "_IQNdiv.hpp"
+#include "div.hpp"
 
 #ifndef M_PI
 #define M_PI (3.1415926536)
@@ -65,7 +65,8 @@ struct [[nodiscard]] Atan2Intermediate{
     __attribute__((always_inline,  optimize( "-Ofast" )))
     [[nodiscard]] static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // return 0;
-        const int32_t * piq32Coeffs = &ymd::fxmath::details::IQ32ATAN_COEFFS[(uq32_input >> 25) & 0x00fc];
+        const auto & piq32_coeffs = fxmath::details::IQ32ATAN_COEFFS[(uq32_input >> 27)];
+        // __builtin_prefetch(&piq32_coeffs[0], );
         /*
         * Calculate atan(x) using the following Taylor series:
         *
@@ -73,54 +74,53 @@ struct [[nodiscard]] Atan2Intermediate{
         */
 
         /* c3*x */
-        uint32_t uq32_result_pu = mul32hsu(piq32Coeffs[0], uq32_input);
+        uint32_t uq32_result_pu = mul32hsu(piq32_coeffs[0], uq32_input);
 
         /* c3*x + c2 */
-        uq32_result_pu = uq32_result_pu + piq32Coeffs[1];
+        uq32_result_pu = uq32_result_pu + piq32_coeffs[1];
 
         /* (c3*x + c2)*x */
         uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
 
         /* (c3*x + c2)*x + c1 */
-        uq32_result_pu = uq32_result_pu + piq32Coeffs[2];
+        uq32_result_pu = uq32_result_pu + piq32_coeffs[2];
 
         /* ((c3*x + c2)*x + c1)*x */
         uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
-        uq32_result_pu = uq32_result_pu + piq32Coeffs[3];
+        uq32_result_pu = uq32_result_pu + piq32_coeffs[3];
         return uq32_result_pu;
     }
 };
 
 
 
-template<size_t Q>
 __attribute__((always_inline,  optimize( "-Ofast" )))
-constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
-    uint32_t uqn_y,
-    uint32_t uqn_x
+constexpr ymd::math::fixed<32, uint32_t> atan2pu32(
+    uint32_t uiqn_y,
+    uint32_t uiqn_x
 ){
     Atan2Flag flag = Atan2Flag::zero();
     uint32_t uq32_input;
 
-    if (uqn_y & (1U << 31)) {
+    if (uiqn_y & (1U << 31)) {
         flag.y_is_neg = 1;
-        uqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_y));
+        uiqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uiqn_y));
     }
 
-    if (uqn_x & (1U << 31)) {
+    if (uiqn_x & (1U << 31)) {
         flag.x_is_neg = 1;
-        uqn_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_x));
+        uiqn_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uiqn_x));
     }
 
-    if (uqn_x < uqn_y) {
+    if (uiqn_x < uiqn_y) {
         flag.swapped = 1;
-        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
-            uqn_x, uqn_y)) << (1);
-    } else if((uqn_x > uqn_y)) {
-        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
-            uqn_y, uqn_x)) << (1);
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::div32u<31>(
+            uiqn_x, uiqn_y)) << (1);
+    } else if((uiqn_x > uiqn_y)) {
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::div32u<31>(
+            uiqn_y, uiqn_x)) << (1);
     } else{
         // 1/8 lap
         // 1/8 * 2^32
@@ -132,29 +132,29 @@ constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
 
 template<size_t Q>
 __attribute__((always_inline,  optimize( "-Ofast" )))
-constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
-    uint32_t uqn_y
+constexpr ymd::math::fixed<32, uint32_t> atanpu32(
+    uint32_t uiqn_y
 ){
     Atan2Flag flag = Atan2Flag::zero();
     uint32_t uq32_input;
 
-    if (uqn_y & (1U << 31)) {
+    if (uiqn_y & (1U << 31)) {
         flag.y_is_neg = 1;
-        uqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_y));
+        uiqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uiqn_y));
     }
 
     constexpr uint32_t ONE_BITS = (1u << Q);
 
-    if (uqn_y > ONE_BITS) {
+    if (uiqn_y > ONE_BITS) {
         flag.swapped = 1;
         //TODO 替换为更轻量的求倒数算法
-        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
-            (1u << Q), uqn_y
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::div32u<31>(
+            (1u << Q), uiqn_y
         )) << 1;
-    } else if(uqn_y < ONE_BITS) {
-        uq32_input = uqn_y << (32 - Q);
+    } else if(uiqn_y < ONE_BITS) {
+        uq32_input = uiqn_y << (32 - Q);
         // uq32_input = (1u << (30));
-    } else{// uqn_y == ONE_BITS
+    } else{// uiqn_y == ONE_BITS
         return flag.apply_to_uq32(((1u << (29))));
     }
 
@@ -173,7 +173,7 @@ constexpr ymd::math::fixed<32, uint32_t> atan2pu(
     ymd::math::fixed<Q, int32_t> iqn_input_y, 
     ymd::math::fixed<Q, int32_t> iqn_input_x
 ){
-    return fxmath::details::_atan2pu_impl<Q>(iqn_input_y.to_bits(), iqn_input_x.to_bits());
+    return fxmath::details::atan2pu32(iqn_input_y.to_bits(), iqn_input_x.to_bits());
 }
 
 
@@ -190,7 +190,7 @@ template<size_t Q>
 constexpr ymd::math::fixed<32, uint32_t> atanpu(
     ymd::math::fixed<Q, int32_t> iqn_input_y
 ){
-    return fxmath::details::_atanpu_impl<Q>(iqn_input_y.to_bits());
+    return fxmath::details::atanpu32<Q>(iqn_input_y.to_bits());
 }
 
 

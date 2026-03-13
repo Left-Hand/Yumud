@@ -1,7 +1,7 @@
 #pragma once
 
-#include "support.hpp"
-#include "_IQNtables.hpp"
+#include "port.hpp"
+#include "constants.hpp"
 #include <tuple>
 
 
@@ -11,7 +11,6 @@
 
 
 namespace ymd::fxmath::details{
-
 /*
  * Perform the calculation where the input is only in the first quadrant
  * using one of the following two functions.
@@ -44,8 +43,8 @@ namespace ymd::fxmath::details{
  * Using a lookup table with a 64 bit index (52 indexes since the input range is
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
-struct alignas(16) [[nodiscard]] SincosIntermediate{
-    using Self = SincosIntermediate;
+struct alignas(16) [[nodiscard]] IqSincosIntermediate{
+    using Self = IqSincosIntermediate;
 
     struct SinCosResult{
         math::fixed<31, int32_t> sin;
@@ -240,7 +239,7 @@ namespace sincos_exact_laws{
 };
 
 __attribute__((always_inline,  optimize( "-Ofast" )))
-constexpr SincosIntermediate CosSinPU(uint32_t uq32_x_pu_bits){
+constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bits){
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
     //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
@@ -263,10 +262,12 @@ constexpr SincosIntermediate CosSinPU(uint32_t uq32_x_pu_bits){
     const uint32_t lut_index = uint32_t(uq32_eeq_x >> 26);
     //计算查找表索引
 
-    const int32_t iq31_sin_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][0];
-    const int32_t iq31_cos_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][1];
+    // __builtin_prefetch(&fxmath::details::IQ31_SINCOS_TABLE[lut_index], 0, 3);
+    const auto & pair = fxmath::details::IQ31_SINCOS_TABLE[lut_index];
+    const int32_t iq31_sin_coeff = pair[0];
+    const int32_t iq31_cos_coeff = pair[1];
 
-    return fxmath::details::SincosIntermediate{
+    return fxmath::details::IqSincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,
@@ -282,7 +283,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> sin(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
@@ -290,7 +291,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> cos(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
@@ -298,7 +299,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> sin_approx(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
@@ -306,7 +307,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> cos_approx(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
@@ -315,7 +316,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> sinpu(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
@@ -323,7 +324,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> cospu(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
@@ -331,7 +332,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> sinpu_approx(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
@@ -339,7 +340,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 math::fixed<31, int32_t> cospu_approx(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
@@ -348,7 +349,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincos(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    const auto res = fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
@@ -357,7 +358,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincospu(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    const auto res = fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
@@ -366,7 +367,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincospu_approx(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+    const auto res = fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }
@@ -375,7 +376,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincos_approx(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    const auto res = fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }

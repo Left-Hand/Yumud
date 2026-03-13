@@ -53,6 +53,141 @@ __attribute__((always_inline))
 static_assert(div_10000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 10000);
 
 
+template<int8_t Q, bool IS_SIGNED>
+constexpr int32_t m__IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
+{
+    using namespace iqmath::details;
+    bool is_neg = 0;
+    uint32_t uiqNResult;
+
+    if constexpr(IS_SIGNED == true) {
+        /* save sign of denominator */
+        if (iqNInput2 == 0) [[unlikely]]{
+            return INT32_MAX;
+        }else if(iqNInput2 < 0){
+            if(iqNInput2 == INT32_MIN) [[unlikely]] {
+                iqNInput2 = INT32_MAX;
+                is_neg = 1;
+            }else{
+                iqNInput2 = -iqNInput2;
+                is_neg = 1;
+            }
+        }
+
+        /* save sign of numerator */
+        if (iqNInput1 < 0) {
+            is_neg = !is_neg;
+
+            if(iqNInput1 == INT32_MIN) [[unlikely]] {
+                iqNInput1 = INT32_MAX;
+            }else{
+                iqNInput1 = -iqNInput1;
+            }
+        }
+
+    } else {
+        /* Check for divide by zero */
+        if (iqNInput2 == 0) [[unlikely]] {
+            return INT32_MAX;
+        }
+    }
+
+
+    /* Scale inputs so that 0.5 <= uiq32Input2 < 1.0. */
+    // Handle zero case to avoid undefined behavior in __builtin_clz
+    // Find the number of leading zeros to determine the shift amount
+    #if 0
+    //1.046us per call @ch32v303 144mhz(fpu present)
+    #if 0
+    const size_t shift_amount = [&] -> size_t __no_inline{
+        return size_t(CLZ(iqNInput2));
+    }();
+    #else
+    const size_t shift_amount = size_t(CLZ(iqNInput2));
+    #endif
+    #else
+    //0.79us per call @ch32v303 144mhz(fpu present)
+    const size_t shift_amount = __builtin_clz(iqNInput2);
+    #endif
+
+    if(shift_amount >= 32) __builtin_unreachable();
+    
+    uint32_t uiq32Input2 = iqNInput2 << shift_amount;
+    uint64_t uiiqNInput1 = uint64_t(iqNInput1);
+    if constexpr(Q < 31) {
+        const int32_t shifts = (31 - Q - 1 - shift_amount);
+        if(shifts >= 0) {
+            uiiqNInput1 >>= shifts;
+        } else {
+            uiiqNInput1 <<= -shifts;
+        }
+    } else {
+        uiiqNInput1 <<= 1 + shift_amount;
+    }
+
+    /*
+     * Shift input1 back from iq31 to iqN but scale by 2 since we multiply
+     * by result in iq30 format.
+     */
+
+
+    /* Check for saturation. */
+    if (uint32_t(uiiqNInput1 >> 32)) {
+        if (is_neg) {
+            return INT32_MIN;
+        } else {
+            return INT32_MAX;
+        }
+    }
+
+    /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
+    const size_t ui8Index = size_t((uiq32Input2 >> 25) - 64);
+    uint32_t uiq30Guess = uint32_t(_IQ6div_lookup[ui8Index]) << 24;
+
+    
+
+    uint32_t ui30Temp;
+
+    /* 牛顿迭代 lambda - 无分支 */
+    auto newton_iter = [&]() __attribute__((always_inline)){
+        ui30Temp = static_cast<uint32_t>(
+            static_cast<uint64_t>(uiq30Guess) * 
+            static_cast<uint64_t>(uiq32Input2) >> 32
+        );
+        ui30Temp = 0x80000000 - ui30Temp;  /* - (temp - 0x80000000) */
+        uiq30Guess = static_cast<uint64_t>(uiq30Guess) * 
+                    static_cast<uint64_t>(ui30Temp) >> 32;
+        uiq30Guess <<= 2;
+    };
+
+    newton_iter();
+    newton_iter();
+    
+    if constexpr (Q >= 24) {
+        newton_iter();
+    }
+
+    /* Multiply 1/uiq32Input2 and uiqNInput1. */
+    uiqNResult = (static_cast<uint64_t>(uiq30Guess) * static_cast<uint64_t>(uint32_t(uiiqNInput1))) >> 32;
+
+
+    /* Saturate, add the sign and return. */
+    if constexpr(IS_SIGNED == true) {
+        if(is_neg){
+            if(uiqNResult > uint32_t(INT32_MIN)) [[unlikely]] {
+                return INT32_MIN;
+            }
+            return -(int32_t)uiqNResult;
+        }else{
+            if(uiqNResult > uint32_t(INT32_MAX)) [[unlikely]] {
+                return INT32_MAX;
+            }
+            return (int32_t)uiqNResult;
+        }
+    } else {
+        return uiqNResult;
+    }
+}
 
 void test_div_10000(){
     static constexpr size_t NUM_BLOCKS = 256;

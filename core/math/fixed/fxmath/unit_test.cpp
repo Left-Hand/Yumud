@@ -1,13 +1,11 @@
-#include "_IQNconv.hpp"
+#include "fconv.hpp"
+#include "div.hpp"
 #include <cmath>
 
 using namespace ymd;
 using namespace ymd::fxmath::details;
 
-
-
 namespace {
-
 #if 0
 [[nodiscard]] static constexpr float _IQNtoF2(const int32_t iqNInput, size_t Q){
     //这段代码只有一处使用了Q, 不需要使用模板
@@ -91,6 +89,12 @@ namespace {
 }
 
 #endif
+
+}
+
+
+namespace test_fconv{
+
 
 [[maybe_unused]] void test_n_to_f(){ 
 
@@ -385,6 +389,41 @@ namespace {
     // 负零在IEEE754中符号位为1，但值是0
     // 代码中is_negative=true，但最后会取负，得到-0，但转换为int32_t应该是0
     static_assert(_IQFtoN(0.0f, 8) == _IQFtoN(-0.0f, 8), "正负零应得到相同结果");
+}
+
+}
+
+namespace test_div{
+using namespace fxmath::details;
+
+
+void test_div32u(){
+    static_assert(div32u<1>(65536 << 1, 1 << 1) == 65536 << 1);
+    static_assert(div32u<10>(65536 << 10, 1 << 10) == 65536 << 10);
+    static_assert(div32u<10>(32768 << 10, 1 << 10) == 32768 << 10);
+    static_assert(div32u<16>(32768 << 16, 1 << 16) == 32768u << 16);
+    static_assert(div32u<16>(20000u << 16, 1u << 16) == 20000u << 16);
+    static_assert(div32u<5>(32768 << 5, 1 << 5) == 32768 << 5);
+
+    static_assert(div32u<0>(32768 << 0, 1 << 0) == 32768 << 0);
+    // static_assert(div32u<32>(
+    //     std::numeric_limits<uint32_t>::max(), 
+    //     std::numeric_limits<uint32_t>::max()) 
+    //     == std::numeric_limits<uint32_t>::max());
+}
+
+void test_div32i(){
+    static_assert(div32i<1>(65536 << 1, -1 << 1) == -65536 << 1);
+    static_assert(div32i<10>(65536 << 10, -1 << 10) == -65536 << 10);
+    static_assert(div32i<10>(32768 << 10, -1 << 10) == -32768 << 10);
+    static_assert(div32i<16>(20000 << 16, -1 << 16) == -20000 << 16);
+    static_assert(div32i<5>(32768 << 5, -1 << 5) == -32768 << 5);
+
+    static_assert(div32i<0>(32768 << 0, -1 << 0) == -32768 << 0);
+    static_assert(div32i<31>(
+        std::numeric_limits<int32_t>::max(), 
+        std::numeric_limits<int32_t>::min()) 
+        == std::numeric_limits<int32_t>::min());
 }
 
 }

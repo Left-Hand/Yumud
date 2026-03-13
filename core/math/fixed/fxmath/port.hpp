@@ -5,7 +5,7 @@
 
 namespace ymd::fxmath::details{
 
-#if 1
+#if 0
 [[nodiscard]] __attribute__((__always_inline__)) constexpr 
 int16_t __mpy_w(int16_t arg1, int16_t arg2){
     return (arg1 * arg2);
@@ -91,20 +91,6 @@ int32_t __mpyf_l_reuse_arg1(int32_t arg1, int32_t arg2){
     return int32_t((int64_t(arg1) * int64_t(arg2)) >> 31);
 }
 
-[[nodiscard]] __attribute__((__always_inline__)) constexpr 
-uint32_t __mpyf_ul(uint32_t arg1, uint32_t arg2){
-    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
-}
-
-[[nodiscard]] __attribute__((__always_inline__)) constexpr 
-uint32_t __mpyf_ul32(uint32_t arg1, uint32_t arg2){
-    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
-}
-
-[[nodiscard]] __attribute__((__always_inline__)) constexpr 
-int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){
-    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
-}
 
 [[nodiscard]] __attribute__((__always_inline__)) constexpr 
 int64_t __mpyfx(int32_t arg1, int32_t arg2){
@@ -114,6 +100,11 @@ int64_t __mpyfx(int32_t arg1, int32_t arg2){
 [[nodiscard]] __attribute__((__always_inline__)) constexpr 
 uint64_t __mpyfx_u(uint32_t arg1, uint32_t arg2){
     return ((uint64_t(arg1) * uint64_t(arg2)) << 1);
+}
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+uint32_t __mpyf_ul32(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
 }
 #endif
 
@@ -192,4 +183,18 @@ static constexpr int32_t mul32hus(uint32_t a, int32_t b) {
         return result;
     }
 }
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+uint32_t __mpyf_ul(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
+
+
+
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
+
 }

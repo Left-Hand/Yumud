@@ -1,26 +1,17 @@
 #pragma once
 
-#include "_IQNtables.hpp"
-#include "rts_support.hpp"
+#include "constants.hpp"
+#include "port.hpp"
 
 namespace ymd::fxmath::details{
 
-/* div */
-static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
-    0x7F, 0x7D, 0x7B, 0x79, 0x78, 0x76, 0x74, 0x73,
-    0x71, 0x6F, 0x6E, 0x6D, 0x6B, 0x6A, 0x68, 0x67,
-    0x66, 0x65, 0x63, 0x62, 0x61, 0x60, 0x5F, 0x5E,
-    0x5D, 0x5C, 0x5B, 0x5A, 0x59, 0x58, 0x57, 0x56,
-    0x55, 0x54, 0x53, 0x52, 0x52, 0x51, 0x50, 0x4F,
-    0x4E, 0x4E, 0x4D, 0x4C, 0x4C, 0x4B, 0x4A, 0x49,
-    0x49, 0x48, 0x48, 0x47, 0x46, 0x46, 0x45, 0x45,
-    0x44, 0x43, 0x43, 0x42, 0x42, 0x41, 0x41, 0x40, 0x40
-};
 
-template<int8_t Q, bool IS_SIGNED>
+
+template<size_t Q, bool IS_SIGNED>
 __attribute__((optimize( "-Ofast" )))
-constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
+constexpr int32_t iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
+    #if 0
     size_t ui8Index = 0;
     bool is_neg = 0;
     uint32_t uiq30Guess;
@@ -84,6 +75,83 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
         uiqNInput1 = (uint32_t)uiiqNInput1;
     }
 
+    #else
+    bool is_neg = 0;
+    uint32_t uiqNResult;
+
+    if constexpr(IS_SIGNED == true) {
+        /* save sign of denominator */
+        if (iqNInput2 == 0) [[unlikely]]{
+            return INT32_MAX;
+        }else if(iqNInput2 < 0){
+            if(iqNInput2 == INT32_MIN) [[unlikely]] {
+                iqNInput2 = INT32_MAX;
+                is_neg = 1;
+            }else{
+                iqNInput2 = -iqNInput2;
+                is_neg = 1;
+            }
+        }
+
+        /* save sign of numerator */
+        if (iqNInput1 < 0) {
+            is_neg = !is_neg;
+
+            if(iqNInput1 == INT32_MIN) [[unlikely]] {
+                iqNInput1 = INT32_MAX;
+            }else{
+                iqNInput1 = -iqNInput1;
+            }
+        }
+
+    } else {
+        /* Check for divide by zero */
+        if (iqNInput2 == 0) [[unlikely]] {
+            return INT32_MAX;
+        }
+    }
+
+
+    /* Scale inputs so that 0.5 <= uiq32Input2 < 1.0. */
+    // Handle zero case to avoid undefined behavior in __builtin_clz
+    // Find the number of leading zeros to determine the shift amount
+    #if 0
+    //1.046us per call @ch32v303 144mhz(fpu present)
+    #if 0
+    const size_t shift_amount = [&] -> size_t __no_inline{
+        return size_t(CLZ(iqNInput2));
+    }();
+    #else
+    const size_t shift_amount = size_t(CLZ(iqNInput2));
+    #endif
+    #else
+    //0.79us per call @ch32v303 144mhz(fpu present)
+    const size_t shift_amount = __builtin_clz(iqNInput2);
+    #endif
+
+    if(shift_amount >= 32) __builtin_unreachable();
+    
+    uint32_t uiq32Input2 = iqNInput2 << shift_amount;
+    uint64_t uiiqNInput1 = uint64_t(iqNInput1);
+    if constexpr(Q < 31) {
+        const int32_t shifts = (31 - Q - shift_amount);
+        if(shifts >= 0) {
+            uiiqNInput1 >>= shifts;
+        } else {
+            uiiqNInput1 <<= -shifts;
+        }
+    } else {
+        uiiqNInput1 <<= (Q - 31) + shift_amount;
+    }
+
+    size_t ui8Index = 0;
+    uint32_t uiq30Guess;
+    uint32_t uiqNInput1 = (uint32_t)uiiqNInput1;
+    uint32_t uiq31Input2 = uiq32Input2 >> 1;
+    // uint32_t uiqNResult;
+    // uint64_t uiiqNInput1;
+    #endif
+
     /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
     ui8Index = uiq31Input2 >> 24;
     ui8Index -= 64;
@@ -120,14 +188,29 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
             }
         } else {
             if (is_neg) {
-                return -(int32_t)uiqNResult;
+                return -(int32_t)uiqNResult - 1;
             } else {
-                return (int32_t)uiqNResult;
+                return (int32_t)uiqNResult + 1;
             }
         }
     } else {
-        return uiqNResult;
+        return uiqNResult + 1;
     }
+}
+
+template<size_t Q>
+__attribute__((optimize( "-Ofast" )))
+constexpr int32_t div32i(int32_t iqNInput1, int32_t iqNInput2){
+    return iqn_div_impl<Q, true>(iqNInput1, iqNInput2);
+}
+
+template<size_t Q>
+__attribute__((optimize( "-Ofast" )))
+constexpr uint32_t div32u(uint32_t iqNInput1, uint32_t iqNInput2){
+    return std::bit_cast<uint32_t>(iqn_div_impl<Q, false>(
+        std::bit_cast<int32_t>(iqNInput1), 
+        std::bit_cast<int32_t>(iqNInput2)
+    ));
 }
 
 }

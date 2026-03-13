@@ -1,9 +1,9 @@
 #pragma once
 
-#include "support.hpp"
-#include "_IQNtables.hpp"
+#include "port.hpp"
+#include "constants.hpp"
 
-#include "_IQNsqrt.hpp"
+#include "sqrt.hpp"
 
 namespace ymd::fxmath::details{
 
@@ -39,35 +39,35 @@ namespace ymd::fxmath::details{
  */
 
 __attribute__((always_inline,  optimize( "-Ofast" )))
-constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
+constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
     bool is_acos = false;
 
     /*
      * Apply the transformation from asin to acos if input is greater than 0.5.
      * The first step is to calculate the following:
      *
-     *     (sqrt((1 - uiq31Input)/2))
+     *     (sqrt((1 - uiq31_input)/2))
      */
 
     #if 0
-    uint32_t uiq32Input;
+    uint32_t uiq32_input;
     {
-        const uint32_t Temp = 0x80000000u - uiq31Input;
+        const uint32_t Temp = 0x80000000u - uiq31_input;
         if (Temp < 0x40000000u) {
-            /* Calculate sqrt((1 - uiq31Input)/2) */
+            /* Calculate sqrt((1 - uiq31_input)/2) */
             #if 0
-            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32_input = fxmath::details::sqrt32u<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
             #else
-            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
-            // uiq32Input = _IQNsqrt32<31>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits();
-            uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp << 1)).to_bits();
-            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32_input = fxmath::details::sqrt32u<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32_input = fxmath::details::sqrt32u<31>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits();
+            uiq32_input = fxmath::details::sqrt32u<32>(math::fixed<32, uint32_t>::from_bits(Temp << 1)).to_bits();
+            // uiq32_input = fxmath::details::sqrt32u<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
             #endif
 
             /* Flag that the transformation was used. */
             is_acos = true;
         }else{
-            uiq32Input = uiq31Input << 1;
+            uiq32_input = uiq31_input << 1;
             is_acos = false;
         }
     }
@@ -76,16 +76,16 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
      * Apply the transformation from asin to acos if input is greater than 0.5.
      * The first step is to calculate the following:
      *
-     *     (sqrt((1 - uiq31Input)/2))
+     *     (sqrt((1 - uiq31_input)/2))
      */
     {
-        const uint32_t uiq31InputTemp = 0x80000000u - uiq31Input;
-        if (uiq31InputTemp < 0x40000000u) {
+        const uint32_t uiq31_input_temp = 0x80000000u - uiq31_input;
+        if (uiq31_input_temp < 0x40000000u) {
             /* Halve the result. */
-            uiq31Input = uiq31InputTemp >> 1;
+            uiq31_input = uiq31_input_temp >> 1;
 
-            /* Calculate sqrt((1 - uiq31Input)/2) */
-            uiq31Input = _IQNsqrt32<31>(math::fixed<31, int32_t>::from_bits(uiq31Input)).to_bits();
+            /* Calculate sqrt((1 - uiq31_input)/2) */
+            uiq31_input = fxmath::details::sqrt32u<31>(math::fixed<31, int32_t>::from_bits(uiq31_input)).to_bits();
 
             /* Flag that the transformation was used. */
             is_acos = true;
@@ -94,13 +94,13 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
         }
     }
 
-    if(uiq31Input & 0x80000000) __builtin_unreachable();
-    const uint32_t uiq32Input = (uiq31Input << 1); 
+    if(uiq31_input & 0x80000000) __builtin_unreachable();
+    const uint32_t uiq32_input = (uiq31_input << 1); 
     #endif
     
     /* Calculate the index using the left 6 most bits of the input. */
     /* Set the coefficient pointer. */
-    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t(uiq32Input >> 27)];
+    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t(uiq32_input >> 27)];
     int32_t iq29Result;
 
     /*
@@ -110,25 +110,25 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
      */
 
     /* c4*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * (piq29Coeffs[0])) >> 32));
+    iq29Result = int32_t(((int64_t(uiq32_input) * (piq29Coeffs[0])) >> 32));
 
     /* c4*x + c3 */
     iq29Result += piq29Coeffs[1];
 
     /* (c4*x + c3)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
+    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
 
     /* (c4*x + c3)*x + c2 */
     iq29Result += piq29Coeffs[2];
 
     /* ((c4*x + c3)*x + c2)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
+    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
 
     /* ((c4*x + c3)*x + c2)*x + c1 */
     iq29Result += piq29Coeffs[3];
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
+    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x + c0 */
     iq29Result += piq29Coeffs[4];
@@ -139,6 +139,8 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
 
         // acos(x) = -(2 * asin(sqrt(1-x)/2)-pi/2)
         // 2\arcsin\left(\sqrt{\frac{\left(1-x\right)}{2}}\right)-\frac{\pi}{2}
+
+        constexpr int32_t _iq29_halfPi = 0x3243f6a8;
         iq29Result = iq29Result << 1;
         iq29Result -= _iq29_halfPi;      // this is equivalent to the above
         iq29Result = -iq29Result;       // but avoids using temporary registers
@@ -148,11 +150,11 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
 
 }
 
-
-template<const size_t Q>
-constexpr math::fixed<29, int32_t> _IQNasin(math::fixed<Q, int32_t> iqNInput){
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     static_assert(Q <= 32);
-    uint32_t input_bits = std::bit_cast<uint32_t>(iqNInput.to_bits());
+    uint32_t input_bits = std::bit_cast<uint32_t>(x.to_bits());
     const bool is_neg  = input_bits & (1u << 31);
     if(is_neg) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
 
@@ -162,28 +164,25 @@ constexpr math::fixed<29, int32_t> _IQNasin(math::fixed<Q, int32_t> iqNInput){
         }
 
     #if 1
-    const uint32_t uiq31Input = [&] -> uint32_t{
+    const uint32_t uiq31_input = [&] -> uint32_t{
         if constexpr(Q < 32) return uint32_t(input_bits << (31 - Q));
         else return uint32_t(input_bits >> 1);
     }();
 
-    auto iq29_result = __IQNasin31(uiq31Input);
+    auto iq29_result = fxmath::details::asin31(uiq31_input);
     #else
     
-    const uint32_t uiq32Input = [&] -> uint32_t{
+    const uint32_t uiq32_input = [&] -> uint32_t{
         return uint32_t(input_bits << (32 - Q));
     }();
 
-    auto iq29_result = __IQNasin32(uiq32Input);
+    auto iq29_result = __IQNasin32(uiq32_input);
     #endif
 
     if(is_neg) iq29_result = -iq29_result;
 
     return iq29_result;
 }
-
-
-
 }
 
 namespace ymd::math{
@@ -191,13 +190,13 @@ namespace ymd::math{
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed<29, int32_t> asin(const fixed<Q, int32_t> x){
-    return fixed<29, int32_t>(fxmath::details::_IQNasin(x));
+    return fxmath::details::asin32i(x);
 }
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed<29, int32_t> acos(const fixed<Q, int32_t> x){
-    return fixed<29, int32_t>(M_PI/2) - asin(x);
+    return fixed<29, int32_t>(M_PI/2) - asin32i(x);
 }
 
 template<size_t Q>

@@ -3,13 +3,12 @@
 #include <array>
 #include "fixed.hpp"
 
-#include "details/_IQNdiv.hpp"
-#include "details/_IQNatan2.hpp"
-#include "details/_IQNsqrt.hpp"
-#include "details/_IQNexp.hpp"
-#include "details/_IQNasin_acos.hpp"
-#include "details/_IQNsin_cos.hpp"
-#include "details/_IQNlog.hpp"
+#include "fxmath/atan2.hpp"
+#include "fxmath/sqrt.hpp"
+#include "fxmath/exp.hpp"
+#include "fxmath/asin_acos.hpp"
+#include "fxmath/sin_cos.hpp"
+#include "fxmath/log.hpp"
 
 
 namespace ymd::math{
@@ -19,6 +18,21 @@ template<size_t Q>
 static constexpr fixed<Q, int32_t> tpzpu(const fixed<Q, int32_t> x){
     return abs(4 * frac(x - fixed<Q, int32_t>(0.25)) - 2) - 1;
 }
+
+
+template<size_t Q>
+constexpr 
+fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const fixed<Q, int32_t> exponent) {
+    return exp(exponent * ln(base));
+}
+
+template<size_t Q>
+constexpr 
+fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const int32_t times) {
+    //TODO 判断使用循环还是pow运算 选取最优时间
+    return exp(times * ln(base));
+}
+
 }
 
 
