@@ -11,9 +11,9 @@
 #include "core/utils/zero.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "drivers/CommonIO/Key/Key.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"

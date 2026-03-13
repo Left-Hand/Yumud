@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "drivers/Encoder/encoder.hpp"
 #include "core/io/regs.hpp"

@@ -3,11 +3,11 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"

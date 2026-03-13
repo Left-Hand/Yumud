@@ -3,8 +3,8 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/spi/hw_singleton.hpp"
-#include "hal/bus/spi/soft/soft_spi.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
+#include "hal/conn/spi/soft/soft_spi.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"

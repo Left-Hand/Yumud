@@ -10,9 +10,9 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 
 
 

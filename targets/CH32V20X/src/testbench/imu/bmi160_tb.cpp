@@ -5,9 +5,9 @@
 #include "core/utils/default.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 #include "algebra/vectors/quat.hpp"
 

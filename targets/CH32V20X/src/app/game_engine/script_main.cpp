@@ -16,9 +16,9 @@
 #include "algebra/vectors/quat.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"

@@ -7,7 +7,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/hw_singleton.hpp"
@@ -21,8 +21,8 @@
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "digipw/spll/spll_1ph_sogi_iq.hpp"
 
 

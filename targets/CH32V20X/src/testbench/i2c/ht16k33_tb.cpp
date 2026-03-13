@@ -8,8 +8,8 @@
 #include "core/sync/barrier.hpp"
 #include "core/string/owned/heapless_string.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 

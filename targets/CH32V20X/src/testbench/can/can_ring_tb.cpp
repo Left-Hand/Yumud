@@ -2,11 +2,11 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 
 using namespace ymd;

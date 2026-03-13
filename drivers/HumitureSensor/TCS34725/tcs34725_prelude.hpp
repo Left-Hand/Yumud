@@ -8,7 +8,7 @@
 
 #include "core/math/real.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 

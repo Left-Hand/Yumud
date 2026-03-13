@@ -4,8 +4,8 @@
 #include "core/utils/Option.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/bus_base.hpp"
-#include "hal/bus/bus_enums.hpp"
+#include "hal/conn/bus_base.hpp"
+#include "hal/conn/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
 #include "spi_primitive.hpp"
 

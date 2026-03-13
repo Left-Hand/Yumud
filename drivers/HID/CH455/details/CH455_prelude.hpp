@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio.hpp"
 
 

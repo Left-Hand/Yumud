@@ -6,4 +6,4 @@
 #include "core/utils/PerUnit.hpp"
 
 #include "core/math/real.hpp"
-#include "hal/bus/can/candrv.hpp"
+#include "hal/conn/can/candrv.hpp"

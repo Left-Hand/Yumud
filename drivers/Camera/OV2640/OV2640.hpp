@@ -5,7 +5,7 @@
 #include "hal/media/dvp/dvp.hpp"
 #include "primitive/image/image.hpp"
 #include "core/utils/Errno.hpp"
-#include "hal/bus/sccb/sccb_drv.hpp"
+#include "hal/conn/sccb/sccb_drv.hpp"
 
 namespace ymd::drivers{
 

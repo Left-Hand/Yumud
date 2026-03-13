@@ -4,7 +4,7 @@
 
 #include "core/container/ringbuf.hpp"
 
-#include "hal/bus/bus_enums.hpp"
+#include "hal/conn/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
 
 #include "uart_primitive.hpp"

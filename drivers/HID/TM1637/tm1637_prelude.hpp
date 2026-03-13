@@ -13,7 +13,7 @@
 #include "core/string/view/string_view.hpp"
 #include "core/stream/ostream.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "primitive/hid_input/keyevent.hpp"
 
 #include "core/tmp/reflect/enum.hpp"

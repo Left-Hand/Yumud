@@ -3,7 +3,7 @@
 #include <optional>
 #include <array>
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "core/utils/Result.hpp"

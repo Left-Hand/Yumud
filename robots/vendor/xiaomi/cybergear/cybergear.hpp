@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
+#include "hal/conn/can/can.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/PerUnit.hpp"

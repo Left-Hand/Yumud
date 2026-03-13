@@ -13,8 +13,8 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef *)>(x))
-#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+// #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::Tim)>(x))
 
 
 
@@ -85,6 +85,47 @@ std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
     }else{
         __builtin_trap();
     }
+}
+
+volatile uint16_t & timer_channel_find_cvr(
+    void * p_inst, 
+    const hal::TimerChannelSelection sel
+){ 
+    switch(sel.kind()){
+        default: __builtin_trap();
+        case hal::TimerChannelSelection::CH1:
+        case hal::TimerChannelSelection::CH1N:
+            return (SPL_INST(p_inst)->CH1CVR);
+        case hal::TimerChannelSelection::CH2:
+        case hal::TimerChannelSelection::CH2N:
+            return (SPL_INST(p_inst)->CH2CVR);
+        case hal::TimerChannelSelection::CH3:
+        case hal::TimerChannelSelection::CH3N:
+            return (SPL_INST(p_inst)->CH3CVR);
+        case hal::TimerChannelSelection::CH4:
+            return (SPL_INST(p_inst)->CH4CVR);
+    }
+}
+
+
+
+void timer_channel_enable_dma(void * p_inst, const hal::TimerChannelSelection sel, const Enable en){
+    const uint16_t source = [&] -> uint16_t{
+        switch(sel.kind()){
+        case hal::TimerChannelSelection::CH1:
+            return TIM_DMA_CC1;
+        case hal::TimerChannelSelection::CH2:
+            return TIM_DMA_CC2;
+        case hal::TimerChannelSelection::CH3:
+            return TIM_DMA_CC3;
+        case hal::TimerChannelSelection::CH4:
+            return TIM_DMA_CC4;
+        default:
+            __builtin_trap();
+        }
+    }();
+
+    TIM_DMACmd(SPL_INST(p_inst), source, (en == EN));
 }
 
 void timer_set_remap(const Nth nth, const TimerRemap rm){

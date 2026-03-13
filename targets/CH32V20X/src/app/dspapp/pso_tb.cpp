@@ -11,7 +11,7 @@
 #include "ParticleSwarmOptimization.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;
 

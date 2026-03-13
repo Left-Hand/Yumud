@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hal/bus/spi/spi.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spi.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "primitive/image/image.hpp"
 

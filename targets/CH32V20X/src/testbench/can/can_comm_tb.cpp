@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/math/real.hpp"
 
-#include "hal/bus/can/can.hpp"
+#include "hal/conn/can/can.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;

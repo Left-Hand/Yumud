@@ -2,8 +2,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"

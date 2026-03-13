@@ -7,7 +7,7 @@
 
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/ads1118-16-bit-adc-module.html
 

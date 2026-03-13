@@ -4,15 +4,15 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/default.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 
 #include "robots/gesture/mahony.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;

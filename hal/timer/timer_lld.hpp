@@ -19,6 +19,13 @@ std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
 void timer_set_remap(const Nth nth, const hal::TimerRemap rm);
 void timer_enable_rcc(const Nth nth, const Enable en);
 
+void timer_channel_enable_dma(void * p_inst,     const hal::TimerChannelSelection sel, const Enable en);
+
+
+volatile uint16_t & timer_channel_find_cvr(
+    void * p_inst, 
+    const hal::TimerChannelSelection sel
+);
 
 Nth timer_to_nth(const uintptr_t inst_base);
 

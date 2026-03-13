@@ -658,7 +658,7 @@ void AdvancedTimer::on_cc_interrupt(){
     TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
 }
 
-void BasicTimer::on_common_interrupt(){
+void BasicTimer::isr_common(){
     const uint16_t itstatus = SPL_INST(inst_)->INTFR;
 
     TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Update);

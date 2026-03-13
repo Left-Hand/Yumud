@@ -11,7 +11,7 @@
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "drivers/Encoder/encoder.hpp"
 

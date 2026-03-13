@@ -5,22 +5,25 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+
 #define DEBUG_DATA0_ADDRESS  ((volatile uint32_t*)0xE0000380)
 #define DEBUG_DATA1_ADDRESS  ((volatile uint32_t*)0xE0000384)
 
-void Sdi::write(const char data){
+namespace ymd::lld{
+void sdi_blocking_write_byte(const uint8_t byte){
     while( (*(DEBUG_DATA0_ADDRESS) != 0u));
     *(DEBUG_DATA1_ADDRESS) = 0;
-    *(DEBUG_DATA0_ADDRESS) = (0x01 << 24)| (data << 16);
+    *(DEBUG_DATA0_ADDRESS) = (0x01 << 24)| (byte << 16);
     while(*(DEBUG_DATA0_ADDRESS));
 }
 
-void Sdi::write(const char * pbuf, const size_t len){
+void sdi_blocking_write_bytes(std::span<const uint8_t> bytes){
     int i = 0;
 
+    size_t len = bytes.size();
     int writeSize = len;
 
-    #define GET_DATA(n) ((size_t(i + n) < len) ? (*(pbuf+i)) : 0)
+    #define GET_DATA(n) ((size_t(i + n) < len) ? (bytes[i]) : 0)
 
     #define WRITE(size) \
     *(DEBUG_DATA1_ADDRESS) = GET_DATA(3) | (GET_DATA(4)<<8) | (GET_DATA(5)<<16) | (GET_DATA(6)<<24);\
@@ -45,16 +48,12 @@ void Sdi::write(const char * pbuf, const size_t len){
     while(*(DEBUG_DATA0_ADDRESS));
 }
 
-size_t Sdi::pending() const{
-    return (*(DEBUG_DATA0_ADDRESS) == 0u) ? 1 : 0;
+size_t sdi_free_capacity(){
+    return (*(DEBUG_DATA0_ADDRESS) == 0u) ? 0 : 1;
 }
 
-void Sdi::init(){
+void sdi_init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }
 
-namespace ymd::hal{
-#ifdef ENABLE_SDI
-Sdi sdi;
-#endif
 }

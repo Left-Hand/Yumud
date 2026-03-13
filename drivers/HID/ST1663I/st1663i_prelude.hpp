@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "algebra/vectors/vec2.hpp"
 #include <span>

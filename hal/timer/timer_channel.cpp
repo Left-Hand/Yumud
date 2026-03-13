@@ -16,45 +16,17 @@ using namespace ymd::hal;
 
 
 volatile uint16_t & TimerChannel::from_channel_to_cvr(
-    void * inst, 
-    const ChannelSelection sel
+    void * p_inst, 
+    const hal::TimerChannelSelection sel
 ){
-
-    switch(sel.kind()){
-        default: __builtin_trap();
-        case ChannelSelection::CH1:
-        case ChannelSelection::CH1N:
-            return (SPL_INST(inst)->CH1CVR);
-        case ChannelSelection::CH2:
-        case ChannelSelection::CH2N:
-            return (SPL_INST(inst)->CH2CVR);
-        case ChannelSelection::CH3:
-        case ChannelSelection::CH3N:
-            return (SPL_INST(inst)->CH3CVR);
-        case ChannelSelection::CH4:
-            return (SPL_INST(inst)->CH4CVR);
-    }
+    return lld::timer_channel_find_cvr(p_inst, sel);
 }
 
 
+
+
 void TimerChannel::enable_dma(const Enable en){
-
-    const uint16_t source = [&] -> uint16_t{
-        switch(sel_.kind()){
-        case ChannelSelection::CH1:
-            return TIM_DMA_CC1;
-        case ChannelSelection::CH2:
-            return TIM_DMA_CC2;
-        case ChannelSelection::CH3:
-            return TIM_DMA_CC3;
-        case ChannelSelection::CH4:
-            return TIM_DMA_CC4;
-        default:
-            __builtin_trap();
-        }
-    }();
-
-    TIM_DMACmd(SPL_INST(inst_), source, (en == EN));
+    lld::timer_channel_enable_dma(p_inst_, sel_, en);
 }
 
 
@@ -136,7 +108,7 @@ static Option<DmaChannel &> timch_to_dma(const Nth nth, timer::ChannelSelection:
 
 
 Option<DmaChannel &> TimerChannel::dma() const {
-    return timch_to_dma(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)), sel_.kind());
+    return timch_to_dma(lld::timer_to_nth(reinterpret_cast<uintptr_t>(p_inst_)), sel_.kind());
 }
 
 

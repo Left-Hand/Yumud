@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 //参考资料：
 // https://github.com/tstellanova/hmc5983/blob/master/src/lib.rs

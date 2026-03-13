@@ -7,7 +7,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gpio_intf.hpp"
-#include "gpio_tag.hpp"
+#include "gpio_primitive.hpp"
 
 
 namespace ymd::hal{

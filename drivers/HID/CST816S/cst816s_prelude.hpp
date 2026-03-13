@@ -8,7 +8,7 @@
 
 #include "algebra/vectors/vec2.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 //参考资料:
 // BSD 3-Clause License

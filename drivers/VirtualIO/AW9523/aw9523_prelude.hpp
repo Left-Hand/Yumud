@@ -8,7 +8,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "primitive/pwm_channel.hpp"
 

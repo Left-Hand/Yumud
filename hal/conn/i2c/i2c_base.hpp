@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/bus_base.hpp"
+#include "hal/conn/bus_base.hpp"
 #include "core/utils/Option.hpp"
 
 #include "primitive/i2c/i2c_addr.hpp"

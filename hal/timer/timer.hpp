@@ -224,7 +224,7 @@ protected:
     [[nodiscard]] uint32_t get_periph_clk_freq();
     void enable_rcc(const Enable en);
 
-    void on_common_interrupt();
+    void isr_common();
 
     void dyn_enable_interrupt(IT I,Enable en);
 
@@ -265,7 +265,7 @@ public:
     }
 
     //处理中断响应
-    void on_specified_interrupt(const IT I){
+    void isr_specified(const IT I){
         if(event_callback_ == nullptr) [[unlikely]]
             return;
         event_callback_(I);

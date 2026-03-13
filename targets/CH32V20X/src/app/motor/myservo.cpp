@@ -4,9 +4,9 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/can/can.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 
 #include "src/testbench/tb.h"

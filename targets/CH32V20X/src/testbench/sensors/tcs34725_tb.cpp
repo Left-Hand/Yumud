@@ -3,12 +3,12 @@
 #include "core/debug/debug.hpp"
 #include "core/utils/default.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HumitureSensor/TCS34725/tcs34725.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;
 

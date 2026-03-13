@@ -5,7 +5,7 @@
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "tcan1145_prelude.hpp"
 
 namespace ymd::drivers{

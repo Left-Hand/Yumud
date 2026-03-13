@@ -5,7 +5,7 @@
 #include "core/io/regs.hpp"
 #include "drivers/Encoder/encoder.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers::kth7823{
 

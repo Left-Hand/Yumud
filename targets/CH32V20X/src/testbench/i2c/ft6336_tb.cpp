@@ -12,8 +12,8 @@
 #include "primitive/hid_input/segcode.hpp"
 #include "primitive/hid_input/button_input.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HID/ft6336u/ft6336u.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/gpio/gpio_utils.hpp"
+#include "hal/gpio/gpio_primitive.hpp"
 
 #include "hal/sysmisc/nvic/nvic.hpp"
 

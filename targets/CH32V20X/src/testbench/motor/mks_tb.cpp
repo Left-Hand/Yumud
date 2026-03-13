@@ -8,8 +8,8 @@
 #include "primitive/colors/color/color.hpp"
 
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "robots/vendor/mks/mks_frame_factory.hpp"
 

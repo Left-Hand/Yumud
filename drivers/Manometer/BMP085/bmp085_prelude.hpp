@@ -6,7 +6,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 // 参考来源

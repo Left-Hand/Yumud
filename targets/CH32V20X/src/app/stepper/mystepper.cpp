@@ -17,9 +17,9 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"

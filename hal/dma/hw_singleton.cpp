@@ -20,7 +20,7 @@ DmaChannel dma1_ch6{DMA1_Channel6};
 DmaChannel dma1_ch7{DMA1_Channel7};
 
 //DMA1CH8只有部分芯片有
-#if defined(DMA1_Channel8)
+#if defined (CH32V20x_D6) && defined(DMA1_Channel8)
 DmaChannel dma1_ch8{DMA1_Channel8};
 #endif
 #endif

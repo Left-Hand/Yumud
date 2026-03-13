@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 //http://www.baiheee.com/Documents/091203/091203224635.htm
 

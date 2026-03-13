@@ -2,7 +2,7 @@
 
 
 #include "core/io/regs.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 #include "core/utils/result.hpp"

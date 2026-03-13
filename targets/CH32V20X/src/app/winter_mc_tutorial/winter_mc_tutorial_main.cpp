@@ -13,8 +13,8 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "algebra/vectors/quat.hpp"

@@ -17,8 +17,8 @@
 #include "drivers/IMU/IMU.hpp"
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 // The MMC5983MA is an AEC-Q100 qualified complete 3-axis magnetic sensor with on-chip 
 // signal processing and integrated I2C/SPI bus suitable for use in automotive applications.

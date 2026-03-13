@@ -5,7 +5,7 @@
 #include "core/utils/sumtype.hpp"
 #include "core/utils/Match.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 
 using namespace ymd;    

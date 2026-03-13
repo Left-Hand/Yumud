@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 #include "drivers/Encoder/encoder.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 //参考文档：https://www.cnblogs.com/c17VV-blogs/p/18864288
 

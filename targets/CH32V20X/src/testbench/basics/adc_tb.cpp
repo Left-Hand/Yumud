@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "core/stream/ostream.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/dma/dma.hpp"
 #include "core/sdk.hpp"
 

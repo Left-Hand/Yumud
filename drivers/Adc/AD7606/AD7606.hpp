@@ -5,7 +5,7 @@
 
 
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{

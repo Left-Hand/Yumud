@@ -2,7 +2,7 @@
 #include "dsp/controller/l1/l1_adaptive.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "core/clock/time.hpp"

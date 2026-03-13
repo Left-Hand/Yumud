@@ -1,6 +1,6 @@
 // #include "core/debug/debug.hpp"
 
-// #include "hal/bus/can/can.hpp"
+// #include "hal/conn/can/can.hpp"
 // #include "hal/timer/hw_singleton.hpp"
 
 // #include "coroutine"
