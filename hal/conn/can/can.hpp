@@ -74,6 +74,9 @@ public:
     // 是否正在睡眠
     [[nodiscard]] bool is_sleeping();
 
+    // 是否正在初始化
+    [[nodiscard]] bool is_initializing();
+
     // 是否正在进行接收
     [[nodiscard]] bool is_receiving();
 

@@ -5,6 +5,8 @@
 #include "primitive/can/can_event.hpp"
 #include "primitive/can/can_filter_config.hpp"
 
+// can寄存器位与状态机参考资料
+// https://jishuzhan.net/article/1950332304592777217
 
 
 namespace ymd::lld{
@@ -77,7 +79,7 @@ uint32_t can_statr_rqcp_mask(const hal::CanMailboxIndex mbox_idx){
 }
 
 [[nodiscard]] static constexpr 
-uint32_t can_statr_tkok_mask(const hal::CanMailboxIndex mbox_idx){ 
+uint32_t can_statr_txok_mask(const hal::CanMailboxIndex mbox_idx){ 
     return 1u << (can_statr_mask_shift(mbox_idx) + 1);
 }
 

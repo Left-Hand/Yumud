@@ -438,24 +438,30 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
     // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
 
-    //查找空闲的邮箱
-    const auto may_idle_mbox_idx = can_get_idle_mailbox_index(p_inst_);
+    const uint32_t temp_tstar = SPL_INST(p_inst_)->TSTATR;
+
+    static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = 
+        (lld::can_tstatr_tme_mask(CanMailboxIndex::_0) 
+        | lld::can_tstatr_tme_mask(CanMailboxIndex::_1) 
+        | lld::can_tstatr_tme_mask(CanMailboxIndex::_2));
 
 
-    //如果有空闲邮箱，直接发送
-    if(may_idle_mbox_idx.is_some()){
-        const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
+    const bool is_any_mailbox_idle = (temp_tstar & ANY_MAILBOX_IDLE_BITMASK) != 0;
+
+    if(is_any_mailbox_idle){
+        const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
+        const auto idle_mbox_idx = std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits);
         transmit(idle_mbox_idx, frame);
         return Ok();
+    }else{
+        //没有空闲邮箱，存入队列
+        if(const auto write_quantity = tx_queue_.try_push(frame);
+            write_quantity == 0){
+            // 队列已满
+            return Err(CanLibError::SoftQueueFull);
+        }
+        return Ok();
     }
-    
-    //没有空闲邮箱，存入队列
-    if(const auto write_len = tx_queue_.try_push(frame);
-        write_len == 0){
-        // 队列已满
-        return Err(CanLibError::SoftQueueFull);
-    }
-    return Ok();
 }
 
 Option<BxCanFrame> Can::try_read(){
@@ -532,6 +538,10 @@ bool Can::is_sleeping(){
     return bool(RAL_INST(p_inst_)->STATR.SLAK);
 }
 
+bool Can::is_initializing(){
+    return bool(RAL_INST(p_inst_)->STATR.INAK);
+}
+
 bool Can::is_busoff(){
     return bool(RAL_INST(p_inst_)->ERRSR.BOFF);
 }
@@ -564,21 +574,21 @@ void Can::enable_debug_freeze(const Enable en){
 }
 
 
+#if 1
 void CanIrqHandler::isr_tx(Can & self){
     volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
     const uint32_t temp_tstatr = tstatr_reg;
     //遍历每个邮箱
 
-    // const uint32_t ANY_READY_MASK = lld::can_statr_rqcp_mask(CanMailboxIndex::_0) | lld::can_statr_tkok_mask(CanMailboxIndex::_0) |
-    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_1) | lld::can_statr_tkok_mask(CanMailboxIndex::_1) |
-    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_2) | lld::can_statr_tkok_mask(CanMailboxIndex::_2)
+    // const uint32_t ANY_READY_MASK = lld::can_statr_rqcp_mask(CanMailboxIndex::_0) | lld::can_statr_txok_mask(CanMailboxIndex::_0) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_1) | lld::can_statr_txok_mask(CanMailboxIndex::_1) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_2) | lld::can_statr_txok_mask(CanMailboxIndex::_2)
     auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>() {
         static constexpr uint32_t TSTATR_TME_MASK = lld::can_tstatr_tme_mask(mbox_idx);
         static constexpr uint32_t TSTATR_RQCP_MASK = lld::can_statr_rqcp_mask(mbox_idx);
-        static constexpr uint32_t TSTATR_TXOK_MASK = lld::can_statr_tkok_mask(mbox_idx);
-        static constexpr uint32_t READY_MASK = TSTATR_TME_MASK | TSTATR_RQCP_MASK;
+        static constexpr uint32_t TSTATR_TXOK_MASK = lld::can_statr_txok_mask(mbox_idx);
 
-        if((temp_tstatr & READY_MASK) != READY_MASK){
+        if((temp_tstatr & TSTATR_TME_MASK) != TSTATR_TME_MASK){
             //not ready
             return;
         }
@@ -616,6 +626,23 @@ void CanIrqHandler::isr_tx(Can & self){
     }
     return;
 }
+#else
+void CanIrqHandler::isr_tx(Can & self){
+    volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
+    const uint32_t temp_tstatr = tstatr_reg;
+    //遍历每个邮箱
+
+    // const uint32_t ANY_READY_MASK = lld::can_statr_rqcp_mask(CanMailboxIndex::_0) | lld::can_statr_txok_mask(CanMailboxIndex::_0) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_1) | lld::can_statr_txok_mask(CanMailboxIndex::_1) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_2) | lld::can_statr_txok_mask(CanMailboxIndex::_2)
+
+    static constexpr uint32_t TSTATR_TME0_MASK = lld::can_tstatr_tme_mask(CanMailboxIndex::_0);
+    static constexpr uint32_t TSTATR_RQCP0_MASK = lld::can_statr_rqcp_mask(CanMailboxIndex::_0);
+    static constexpr uint32_t TSTATR_TXOK0_MASK = lld::can_statr_txok_mask(CanMailboxIndex::_0);
+
+}
+
+#endif
 
 
 void CanIrqHandler::isr_rx(
