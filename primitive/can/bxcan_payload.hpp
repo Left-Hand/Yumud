@@ -235,7 +235,7 @@ public:
     uint8_t & get() {return get_element<I>(*this);}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const std::array<uint32_t, 2> to_u32x2() const {
+    std::array<uint32_t, 2> to_u32x2() const {
         // return u8x8;
         if(std::is_constant_evaluated()){
             return std::bit_cast<std::array<uint32_t, 2>>(u8x8);
@@ -248,7 +248,7 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const uint64_t to_u64() const {
+    uint64_t to_u64() const {
         const auto [low32, high32] = to_u32x2();
         return static_cast<uint64_t>(low32) | (static_cast<uint64_t>(high32) << 32);
     }

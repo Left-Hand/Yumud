@@ -367,6 +367,91 @@ void Can::init(const Config & cfg){
 
 }
 
+void Can::deinit(){
+    enable_rcc(DISEN);
+};
+
+void Can::init_interrupts(){
+    can_setup_interrupts(p_inst_);
+}
+
+void Can::alter_to_pins(const CanRemap remap){
+    can_to_tx_pin(inst_nth_, remap).afpp();
+    can_to_rx_pin(inst_nth_, remap).afpp();
+}
+
+void Can::enable_rcc(const Enable en){
+    lld::can_enable_rcc(inst_nth_, en);
+}
+
+void Can::set_remap(const CanRemap remap){
+    lld::can_set_remap(inst_nth_, remap);
+}
+
+
+void Can::enable_hw_retransmit(const Enable en){
+    RAL_INST(p_inst_)->CTLR.NART = (en == EN);
+}
+
+bool Can::is_tranmitting(){
+    return bool(RAL_INST(p_inst_)->STATR.TXM);
+}
+
+bool Can::is_receiving(){
+    return bool(RAL_INST(p_inst_)->STATR.RXM);
+}
+
+bool Can::is_sleeping(){
+    return bool(RAL_INST(p_inst_)->STATR.SLAK);
+}
+
+bool Can::is_initializing(){
+    return bool(RAL_INST(p_inst_)->STATR.INAK);
+}
+
+bool Can::is_busoff(){
+    return bool(RAL_INST(p_inst_)->ERRSR.BOFF);
+}
+
+void Can::enable_rxfifo_lock(const Enable en){
+    RAL_INST(p_inst_)->CTLR.RFLM = (en == EN);
+}
+
+void Can::enable_index_priority(const Enable en){
+    RAL_INST(p_inst_)->CTLR.TXFP = (en == EN);
+}
+
+void Can::enable_debug_freeze(const Enable en){
+    RAL_INST(p_inst_)->CTLR.DBF = (en == EN);
+}
+
+void Can::abort_transmit(const CanMailboxIndex mbox_idx){
+    SPL_INST(p_inst_)->TSTATR = lld::can_statr_rqcp_mask(mbox_idx);
+}
+
+uint8_t Can::get_rx_errcnt(){
+    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 24);
+}
+
+uint8_t Can::get_tx_errcnt(){
+    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 16);
+}
+
+Option<Can::Error> Can::last_error(){
+    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.LEC & 0xff);
+    if(bits == 0) return None;
+    return Some(std::bit_cast<Can::Error>(bits));
+}
+
+
+void Can::abort_all_transmits(){
+    static constexpr uint32_t MASK = 
+        lld::can_statr_rqcp_mask(CanMailboxIndex::_0)  
+        | lld::can_statr_rqcp_mask(CanMailboxIndex::_1)  
+        | lld::can_statr_rqcp_mask(CanMailboxIndex::_2)
+    ;
+    SPL_INST(p_inst_)->TSTATR = MASK;
+}
 
 Result<void, Infallible> Can::configure_filter(
     const Nth filter_nth, 
@@ -393,17 +478,23 @@ Result<void, Infallible> Can::set_filter_origin(
     return Ok();
 }
 
-void Can::deinit(){
-    enable_rcc(DISEN);
-};
-
-void Can::init_interrupts(){
-    can_setup_interrupts(p_inst_);
+uint32_t Can::get_aligned_bus_clk_freq(){
+    #if defined(CH32V203) || defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
+    //所有的CAN外设都使用APB1时钟
+    return sys::clock::get_apb1_clk_freq();
+    #elif defined(CH32H417)
+    return sys::clock::get_ahb_clk_freq();
+    #endif
 }
 
-void Can::transmit(CanMailboxIndex mbox_idx, const BxCanFrame & frame){
-    lld::can_transmit_nott(p_inst_, mbox_idx, frame);
+size_t Can::free_capacity(){
+    return tx_queue_.free_capacity();
 }
+
+size_t Can::available(){
+    return rx_queue_.length();
+}
+
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
@@ -422,7 +513,7 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     if(is_any_mailbox_idle){
         const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
         const auto idle_mbox_idx = std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits);
-        transmit(idle_mbox_idx, frame);
+        lld::can_transmit_nott(p_inst_, idle_mbox_idx, frame);
         return Ok();
     }else{
         //没有空闲邮箱，存入队列
@@ -442,106 +533,6 @@ Option<BxCanFrame> Can::try_read(){
         ret = Some(frame);
     }); quantity == 0) return None;
     return ret;
-}
-
-
-BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
-    return lld::can_receive(p_inst_, fifo_idx);
-}
-
-
-size_t Can::free_capacity(){
-    return tx_queue_.free_capacity();
-}
-
-size_t Can::available(){
-    return rx_queue_.length();
-}
-
-void Can::alter_to_pins(const CanRemap remap){
-    can_to_tx_pin(inst_nth_, remap).afpp();
-    can_to_rx_pin(inst_nth_, remap).afpp();
-}
-
-
-
-void Can::enable_rcc(const Enable en){
-    lld::can_enable_rcc(inst_nth_, en);
-}
-
-void Can::set_remap(const CanRemap remap){
-    lld::can_set_remap(inst_nth_, remap);
-}
-
-
-void Can::enable_hw_retransmit(const Enable en){
-    RAL_INST(p_inst_)->CTLR.NART = (en == EN);
-}
-
-uint32_t Can::get_aligned_bus_clk_freq(){
-    //所有的CAN外设都使用APB1时钟
-    return sys::clock::get_apb1_clk_freq();
-}
-
-uint8_t Can::get_rx_errcnt(){
-    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 24);
-}
-
-uint8_t Can::get_tx_errcnt(){
-    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 16);
-}
-
-Option<Can::Error> Can::last_error(){
-    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.LEC & 0xff);
-    if(bits == 0) return None;
-    return Some(std::bit_cast<Can::Error>(bits));
-}
-
-bool Can::is_tranmitting(){
-    return bool(RAL_INST(p_inst_)->STATR.TXM);
-}
-
-bool Can::is_receiving(){
-    return bool(RAL_INST(p_inst_)->STATR.RXM);
-}
-
-bool Can::is_sleeping(){
-    return bool(RAL_INST(p_inst_)->STATR.SLAK);
-}
-
-bool Can::is_initializing(){
-    return bool(RAL_INST(p_inst_)->STATR.INAK);
-}
-
-bool Can::is_busoff(){
-    return bool(RAL_INST(p_inst_)->ERRSR.BOFF);
-}
-
-
-
-void Can::abort_transmit(const CanMailboxIndex mbox_idx){
-    SPL_INST(p_inst_)->TSTATR = lld::can_statr_rqcp_mask(mbox_idx);
-}
-
-void Can::abort_all_transmits(){
-    static constexpr uint32_t MASK = 
-        lld::can_statr_rqcp_mask(CanMailboxIndex::_0)  
-        | lld::can_statr_rqcp_mask(CanMailboxIndex::_1)  
-        | lld::can_statr_rqcp_mask(CanMailboxIndex::_2)
-    ;
-    SPL_INST(p_inst_)->TSTATR = MASK;
-}
-
-void Can::enable_rxfifo_lock(const Enable en){
-    RAL_INST(p_inst_)->CTLR.RFLM = (en == EN);
-}
-
-void Can::enable_index_priority(const Enable en){
-    RAL_INST(p_inst_)->CTLR.TXFP = (en == EN);
-}
-
-void Can::enable_debug_freeze(const Enable en){
-    RAL_INST(p_inst_)->CTLR.DBF = (en == EN);
 }
 
 
@@ -620,7 +611,7 @@ void CanIrqHandler::isr_tx(Can & self){
         if(desired_dequeue_quantity > 0){
             auto mbox_idx = std::bit_cast<hal::CanMailboxIndex>(uint8_t(i));
             auto quantity = self.tx_queue_.consume_one([&](const hal::BxCanFrame & frame){
-                self.transmit(mbox_idx, frame);
+                lld::can_transmit_nott(self.p_inst_, mbox_idx, frame);
             });
             desired_dequeue_quantity -= quantity;
         }else{
@@ -696,7 +687,7 @@ void CanIrqHandler::isr_rx(
             //入队的报文数量
             const size_t enqueued_quantity = self.rx_queue_.try_push(
                 //取走一个报文
-                self.receive(fifo_idx)
+                lld::can_receive(self.p_inst_, fifo_idx)
             );
 
             //总是清除中断标志 不管接收到的消息是否能够入队

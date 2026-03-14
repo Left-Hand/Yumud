@@ -91,7 +91,11 @@ struct RecvTransportParser final{
         callback_(request);
     }
 
-    void on_crc_failed(const uint8_t calc, const uint8_t given){
+    void on_crc_failed(
+        [[maybe_unused]] const uint8_t calc, 
+        [[maybe_unused]] const uint8_t given
+    ){
+        
         //do nothing
     }
 private:

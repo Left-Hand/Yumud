@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/conn/can/can.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/PerUnit.hpp"
@@ -83,6 +83,8 @@ struct [[nodiscard]] Feedback final{
 };
 }
 
+
+#if 0
 class CyberGear{
 public:
 
@@ -153,4 +155,5 @@ private:
     IResult<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
 };
 
+#endif
 }

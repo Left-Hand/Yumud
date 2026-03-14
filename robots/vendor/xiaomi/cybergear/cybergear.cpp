@@ -26,6 +26,8 @@ using TorqueCode = cybergear::details::TorqueCode;
 using KpCode = cybergear::details::KpCode;
 using KdCode = cybergear::details::KdCode;
 
+
+#if 0
 using Self = cybergear::CyberGear;
 
 using Error = cybergear::Error;
@@ -112,6 +114,7 @@ static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
 }
 
 }
+
 
 namespace ymd::robots::cybergear{
 
@@ -275,3 +278,5 @@ IResult<> Self::on_ctrl2_feed_back(
 }
 
 }
+
+#endif

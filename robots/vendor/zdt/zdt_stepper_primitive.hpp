@@ -259,6 +259,7 @@ struct [[nodiscard]] AcclerationLevel final{
     using Self = AcclerationLevel;
     static constexpr Self from_tpss(const iq16 acc_per_second){
         // TODO
+        (void)acc_per_second;
         return Self{10};
     }
 

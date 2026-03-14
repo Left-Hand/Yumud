@@ -148,6 +148,7 @@ struct [[nodiscard]] SetLoopMode final{
     static constexpr RespCommand COMMAND = RespCommand::SetLoopMode;
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> bytes){
+        (void)bytes; //unused
         return Ok(Self{});
     }
 };

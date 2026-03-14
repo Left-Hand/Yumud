@@ -59,7 +59,7 @@ void can_configure_filter(
     const uint32_t bitmask = 1u << filter_nth;
     auto guard = FinitGuard();
 
-    set_or_reset_reg_bits(false, p_inst->FWR.bits, bitmask);
+    set_or_reset_reg_bits(false, p_inst->FWR.BITS, bitmask);
 
     uint32_t FR1;
     uint32_t FR2;
@@ -78,12 +78,12 @@ void can_configure_filter(
             static_cast<uint32_t>(filter_cfg.id16[1]);
     }
 
-    p_inst->FILTER_PAIR[filter_nth].FR1.bits = FR1;
-    p_inst->FILTER_PAIR[filter_nth].FR2.bits = FR2;
+    p_inst->FILTER_PAIR[filter_nth].FR1.BITS = FR1;
+    p_inst->FILTER_PAIR[filter_nth].FR2.BITS = FR2;
 
     set_or_reset_reg_bits(
         filter_cfg.is_32bit(),
-        p_inst->FSCFGR.bits,
+        p_inst->FSCFGR.BITS,
         bitmask
     );
 
@@ -94,20 +94,20 @@ void can_configure_filter(
     
     set_or_reset_reg_bits(
         filter_cfg.is_list_mode(),
-        p_inst->FMCFGR.bits,
+        p_inst->FMCFGR.BITS,
         bitmask
     );
 
     set_or_reset_reg_bits(
         fifo_idx == hal::CanFifoIndex::_1,
-        p_inst->FAFIFOR.bits,
+        p_inst->FAFIFOR.BITS,
         bitmask
     );
 
     set_or_reset_reg_bits(
         // filter_en == EN,
         true,
-        p_inst->FWR.bits,
+        p_inst->FWR.BITS,
         bitmask
     );
 }

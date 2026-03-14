@@ -149,12 +149,6 @@ private:
 
     void init_interrupts();
 
-    //在指定的邮箱填写报文
-    void transmit(const CanMailboxIndex mbox_idx, const BxCanFrame & frame);
-
-    //在指定的fifo读取报文
-    [[nodiscard]] BxCanFrame receive(const CanFifoIndex fifo_idx);
-
     // void poll_tx_queue();
     
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();

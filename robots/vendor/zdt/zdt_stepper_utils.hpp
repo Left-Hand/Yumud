@@ -121,6 +121,9 @@ private:
         const FuncCode func_code,
         const std::span<const uint8_t> bytes
     ){
+        // TODO
+        //examine with func code;
+        (void) func_code;
         uint16_t crc = 0xffff;
         for(size_t i = 0; i < bytes.size(); i++){
             crc ^= uint16_t(bytes[i]) << 8;
