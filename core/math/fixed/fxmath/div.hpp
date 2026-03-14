@@ -160,22 +160,22 @@ constexpr int32_t iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 
 
     /* 1st iteration */
-    uint32_t ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
+    uint32_t ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 2nd iteration */
-    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 3rd iteration */
-    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* Multiply 1/uiq31Input2 and uiqNInput1. */
-    uiqNResult = __mpyf_ul(uiq30Guess, uiqNInput1);
+    uiqNResult = intrinsics::__mpyf_ul(uiq30Guess, uiqNInput1);
 
 
     /* Saturate, add the sign and return. */

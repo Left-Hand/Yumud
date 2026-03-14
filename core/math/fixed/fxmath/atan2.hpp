@@ -74,19 +74,19 @@ struct [[nodiscard]] Atan2Intermediate{
         */
 
         /* c3*x */
-        uint32_t uq32_result_pu = mul32hsu(piq32_coeffs[0], uq32_input);
+        uint32_t uq32_result_pu = intrinsics::mul32hsu(piq32_coeffs[0], uq32_input);
 
         /* c3*x + c2 */
         uq32_result_pu = uq32_result_pu + piq32_coeffs[1];
 
         /* (c3*x + c2)*x */
-        uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
+        uq32_result_pu = intrinsics::mul32hsu(uq32_result_pu, uq32_input);
 
         /* (c3*x + c2)*x + c1 */
         uq32_result_pu = uq32_result_pu + piq32_coeffs[2];
 
         /* ((c3*x + c2)*x + c1)*x */
-        uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
+        uq32_result_pu = intrinsics::mul32hsu(uq32_result_pu, uq32_input);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
         uq32_result_pu = uq32_result_pu + piq32_coeffs[3];

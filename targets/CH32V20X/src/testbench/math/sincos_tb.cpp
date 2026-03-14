@@ -6,6 +6,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "core/stream/BufStream.hpp"
 #include "core/utils/Result.hpp"
+#include "core/intrinsics/reverse.hpp"
 #include <cmath>
 
 using namespace ymd;
@@ -317,19 +318,19 @@ static int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
 __attribute__((always_inline))
 static constexpr int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
     // 计算 C*t
-    int32_t tC = fxmath::details::mul32hsu(C, t);
+    int32_t tC = intrinsics::mul32hsu(C, t);
     
     // 计算 t/2
     uint32_t th = t >> 1;
     
     // 计算 S*(t/2)
-    int32_t tSh = fxmath::details::mul32hsu(S, th);
+    int32_t tSh = intrinsics::mul32hsu(S, th);
     
     // S = S + C*t
     S = S + tC;
     
     // 计算 S*t²/2 = [S*(t/2)] * t
-    int32_t t2S = fxmath::details::mul32hsu(tSh, t);
+    int32_t t2S = intrinsics::mul32hsu(tSh, t);
     
     // 最终结果: S + C*t - S*t²/2
     int32_t res = S - t2S;
@@ -346,24 +347,24 @@ static constexpr uint32_t ONE_SIXTH_Q31 = 0x0AAAAAAB;  // (1/6) 的Q31近似
 __attribute__((always_inline))
 static constexpr int32_t taylor_3o_optimized(uint32_t t, int32_t S, int32_t C) {
     // 并行计算独立项
-    int32_t tC = fxmath::details::mul32hsu(C, t);           // C*t
+    int32_t tC = intrinsics::mul32hsu(C, t);           // C*t
     uint32_t t_half = t >> 1;               // t/2
     
     // 计算 S*t/2 和 S*t²/6 可以并行
-    int32_t S_t_half = fxmath::details::mul32hsu(S, t_half); // S*t/2
-    int32_t C_t_half = fxmath::details::mul32hsu(C, t_half); // C*t/2 (用于t³项)
+    int32_t S_t_half = intrinsics::mul32hsu(S, t_half); // S*t/2
+    int32_t C_t_half = intrinsics::mul32hsu(C, t_half); // C*t/2 (用于t³项)
     
     // S + C*t
     int32_t S_plus_tC = S + tC;
     
     // 计算 t²项: -S*t²/2
-    int32_t t2_term = fxmath::details::mul32hsu(S_t_half, t);  // S*t²/2
+    int32_t t2_term = intrinsics::mul32hsu(S_t_half, t);  // S*t²/2
     
     // 计算 t³项: -C*t³/6
     // C*t/2 * t = C*t²/2
-    int32_t C_t2_half = fxmath::details::mul32hsu(C_t_half, t);  // C*t²/2
+    int32_t C_t2_half = intrinsics::mul32hsu(C_t_half, t);  // C*t²/2
     // 再乘 t/3 得到 C*t³/6
-    int32_t t3_term = fxmath::details::mul32hsu(C_t2_half, fxmath::details::mul32hu(t, ONE_THIRD_Q31));  // C*t³/6
+    int32_t t3_term = intrinsics::mul32hsu(C_t2_half, intrinsics::mul32hu(t, ONE_THIRD_Q31));  // C*t³/6
     
     // 最终结果: S + C*t - S*t²/2 - C*t³/6
     int32_t result = S_plus_tC - t2_term - t3_term;
@@ -442,8 +443,8 @@ __attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr std::tuple<uint32_t, uint32_t> left_shift_two_part(const uint32_t x, const size_t shift){
     #if 0
     const uint32_t rhs = 1u << shift;
-    const uint32_t low = fxmath::details::mul32(x, rhs);
-    const uint32_t high = fxmath::details::mul32hu(x, rhs);
+    const uint32_t low = intrinsics::mul32(x, rhs);
+    const uint32_t high = intrinsics::mul32hu(x, rhs);
     #else
     const uint32_t high= x >> (32 - shift);
     const uint32_t low = x << shift;
@@ -473,7 +474,7 @@ constexpr fxmath::details::IqSincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bi
 
     #if 1
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-    const uint32_t uq32_eeq_x = fxmath::details::mul32hu(uq32_x_pu_bits ^ inverse_mask, uq32_quatpi_bits);
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits ^ inverse_mask, uq32_quatpi_bits);
     #endif
 
     #else
@@ -491,7 +492,7 @@ constexpr fxmath::details::IqSincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bi
     #endif
 
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-    const uint32_t uq32_eeq_x = fxmath::details::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
 
     #endif
 
@@ -506,7 +507,7 @@ constexpr fxmath::details::IqSincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bi
     #else
 
     // 优化后：一次计算，两次使用
-    uint32_t idx_offset = fxmath::details::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+    uint32_t idx_offset = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
     uint32_t lut_index = idx_offset >> 26;        // 高6位
     uint32_t uq32_x_offset = static_cast<uint32_t>(idx_offset << 6) >> 6; // 低26位
     #endif
@@ -586,15 +587,19 @@ void sincos_main(){
         .remap = hal::USART2_REMAP_PA2_PA3,
         .baudrate = hal::NearestFreq(576_KHz), 
         // .baudrate = hal::NearestFreq(6000000), 
-        .tx_strategy = CommStrategy::Blocking,
+        .tx_strategy = CommStrategy::Dma,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
+    // DEBUGGER.force_sync(EN);
     // DEBUGGER.set_eps(4);
     DEBUGGER.set_eps(6);
 
-
-    clock::delay(200ms);
+    while(true){
+        clock::delay(1ms);
+        // DEBUGGER.println(clock::seconds());
+        // DEBUGGER.println(std::hex, intrinsics::reverse_u8x4(0x12345678));
+    }
 
     // const auto dur = eval_func(func);
     // PANIC{riscv_has_native_hard_f32};

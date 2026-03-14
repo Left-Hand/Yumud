@@ -388,6 +388,7 @@ size_t Uart::try_write_bytes(const std::span<const uint8_t> bytes){
         }
         case CommStrategy::Dma:{
             const auto written_quantity = tx_queue_.try_push(bytes);
+            poll_tx_dma();
             return written_quantity;
         }
         case CommStrategy::Disabled:
@@ -455,64 +456,92 @@ void Uart::set_tx_strategy(const CommStrategy tx_strategy){
 
 }
 
+void Uart::poll_tx_dma(){
+    auto & self = *this;
+    if(tx_dma_.pending_count() == 0){
+        const size_t req_dequeue_quantity = tx_queue_.length();
+        if(req_dequeue_quantity){
+            const size_t act_dequeue_quantity = tx_queue_.try_pop(
+                std::span(tx_dma_buf_.begin(), req_dequeue_quantity)
+            );
+            tx_dma_.start_transfer_mem2pph<uint8_t>(
+                (&SPL_INST(self.p_inst_)->DATAR), 
+                tx_dma_buf_.begin(), 
+                act_dequeue_quantity
+            );
+        }else{
+            {
+                const auto uev = Event::TxIdle;
+                TRY_EMIT_EVENT(self, uev);
+            }
+        }
+    }
+
+    #if 0
+    [this](const DmaEvent ev){
+        auto & self = *this;
+        switch(ev){
+        case DmaEvent::TransferComplete:{
+            //将数据从当前索引填充至末尾
+            const size_t quantity = self.tx_queue_.try_pop(std::span(
+                &tx_dma_buf_[tx_dma_buf_index_],
+                UART_TX_DMA_BUF_SIZE - tx_dma_buf_index_
+            ));
+
+            (void)quantity;
+            tx_dma_buf_index_ = 0;
+            break;
+        }
+        case DmaEvent::TransferOnhalf:{
+            //将数据从当前索引填充至半满
+            const size_t quantity = self.tx_queue_.try_pop(std::span(
+                &tx_dma_buf_[tx_dma_buf_index_],
+                (UART_TX_DMA_BUF_SIZE / 2) - tx_dma_buf_index_
+            ));
+
+            (void)quantity;
+            tx_dma_buf_index_ = UART_TX_DMA_BUF_SIZE / 2;
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+    #endif
+}
+
 void Uart::setup_tx_dma(const DmaPriority priority){
+    // TODO 优化调度为环形模式
+
+    // 这是一个简单的txdma调度 但是至少不会丢包粘包 
+    // 每次在缓冲区起始存入数据 然后触发dma开始搬运
+    
     tx_dma_.init({
-        .mode = DmaMode::BurstMemoryToPeriphCircular,
+        .mode = DmaMode::BurstMemoryToPeriph,
         .priority = priority
     });
 
 
-    tx_dma_.set_event_callback(
-        [this](const DmaEvent ev){
-            auto & self = *this;
-            switch(ev){
-            case DmaEvent::TransferComplete:{
-                //将数据从当前索引填充至末尾
-                const size_t quantity = self.tx_queue_.try_pop(std::span(
-                    &tx_dma_buf_[tx_dma_buf_index_],
-                    UART_TX_DMA_BUF_SIZE - tx_dma_buf_index_
-                ));
+    tx_dma_.set_event_callback([this](const DmaEvent ev){
+        (void)ev;
+        poll_tx_dma();
+    });
 
-                (void)quantity;
-                tx_dma_buf_index_ = 0;
-                break;
-            }
-            case DmaEvent::TransferOnhalf:{
-                //将数据从当前索引填充至半满
-                const size_t quantity = self.tx_queue_.try_pop(std::span(
-                    &tx_dma_buf_[tx_dma_buf_index_],
-                    (UART_TX_DMA_BUF_SIZE / 2) - tx_dma_buf_index_
-                ));
-
-                (void)quantity;
-                tx_dma_buf_index_ = UART_TX_DMA_BUF_SIZE / 2;
-                break;
-            }
-
-            default:
-                break;
-            }
-        }
-    );
     tx_dma_.register_nvic(UART_TX_DMA_INTERRUPT_NVIC_PRIORITY, EN);
-    tx_dma_.enable_interrupt<DmaIT::Done>(EN);
-    tx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
-    tx_dma_.start_transfer_mem2pph<uint8_t>(
-        (&SPL_INST(p_inst_)->DATAR),
-        tx_dma_buf_.data(),
-        UART_TX_DMA_BUF_SIZE
-    );
+    tx_dma_.enable_interrupt<DmaIT::Done>(EN);
+    // tx_dma_.enable_interrupt<DmaIT::Half>(EN);
 }
 
 
 
 void Uart::enable_tx_dma(const Enable en){
-    USART_DMACmd(SPL_INST(p_inst_), USART_DMAReq_Tx, (en == EN));
+    RAL_INST(p_inst_)->CTLR3.DMAT = (en == EN);
 }
 
 void Uart::enable_rx_dma(const Enable en){
-    USART_DMACmd(SPL_INST(p_inst_), USART_DMAReq_Rx, (en == EN));
+    RAL_INST(p_inst_)->CTLR3.DMAR = (en == EN);
 }
 
 
@@ -521,7 +550,8 @@ void Uart::set_rx_strategy(const CommStrategy rx_strategy){
 
     switch(rx_strategy){
         case CommStrategy::Disabled:
-            [[fallthrough]];
+            //should unreachable
+            break;
         case CommStrategy::Blocking:
             break;
         case CommStrategy::Interrupt:

@@ -55,6 +55,8 @@ private:
     void setup_rx_dma(const DmaPriority priority);
     void setup_tx_dma(const DmaPriority priority);
 
+    void poll_tx_dma();
+
 
 
     std::array<uint8_t, UART_TX_DMA_BUF_SIZE> tx_dma_buf_;

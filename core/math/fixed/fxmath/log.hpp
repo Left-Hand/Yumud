@@ -68,7 +68,7 @@ static constexpr Self from(uint32_t uiqn_input){
 
     #pragma GCC unroll 8
     for (size_t i = 1; i < LOG_COEFFS_TABLE_SIZE; i++) {
-        iq30_result = mul32hss(iq32_input, iq30_result);
+        iq30_result = intrinsics::mul32hss(iq32_input, iq30_result);
 
         // __builtin_prefetch(IQ30LOG_COEFFS + i, 0, 1);
         iq30_result += IQ30LOG_COEFFS[i];
@@ -137,7 +137,7 @@ fixed<Q, int32_t> lg(const fixed<Q, uint32_t> x) {
     constexpr double LN10 = 2.30258509299;
     constexpr auto INV_LN10 = fixed<32, uint32_t>(1.0 / LN10);
     return fixed<Q, int32_t>::from_bits(
-        fxmath::details::mul32hsu(fxmath::details::ln32u<Q>(x).to_bits(), INV_LN10.to_bits()));
+        intrinsics::mul32hsu(fxmath::details::ln32u<Q>(x).to_bits(), INV_LN10.to_bits()));
 }
 
 

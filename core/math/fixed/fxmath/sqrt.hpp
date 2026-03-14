@@ -235,9 +235,9 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
             auto newton_iter = [&]() __attribute__((always_inline,  optimize( "-Ofast" ))){
                 if(uiq30_guess & 0x80000000) __builtin_unreachable();
                 const uint32_t uiq31_guess = uiq30_guess << 1;
-                uint32_t uiq32_temp = mul32hu(uiq32_input, uiq31_guess);
-                uint32_t uiq31_temp = (0xC0000000 - mul32hu(uiq32_temp, uiq31_guess));
-                uiq30_guess = mul32hu(uiq31_guess, uiq31_temp);
+                uint32_t uiq32_temp = intrinsics::mul32hu(uiq32_input, uiq31_guess);
+                uint32_t uiq31_temp = (0xC0000000 - intrinsics::mul32hu(uiq32_temp, uiq31_guess));
+                uiq30_guess = intrinsics::mul32hu(uiq31_guess, uiq31_temp);
             };
 
             /* Iterate through Newton-Raphson algorithm. */

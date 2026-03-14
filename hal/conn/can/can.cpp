@@ -727,40 +727,10 @@ void CanIrqHandler::isr_rx(
     }
 }
 
-
-template<uint32_t IT>
-static void can_clear_it_pending_bit(void * p_inst)
-{
-    if constexpr(IT == CAN_IT_TME){
-        SPL_INST(p_inst)->TSTATR = CAN_TSTATR_RQCP0 | CAN_TSTATR_RQCP1 | CAN_TSTATR_RQCP2;  
-    }else if constexpr(IT == CAN_IT_FF0){
-        SPL_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FULL0;
-    }else if constexpr(IT == CAN_IT_FOV0){
-        SPL_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FOVR0;
-    }else if constexpr(IT == CAN_IT_FF1){
-        SPL_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FULL1;
-    }else if constexpr(IT == CAN_IT_FOV1){
-        SPL_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FOVR1;
-    }else if constexpr(IT == CAN_IT_WKU){
-        SPL_INST(p_inst)->STATR = CAN_STATR_WKUI;
-    }else if constexpr(IT == CAN_IT_SLK){
-        SPL_INST(p_inst)->STATR = CAN_STATR_SLAKI;
-    }else if constexpr(IT == CAN_IT_EWG){
-        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;
-    }else if constexpr(IT == CAN_IT_EPV){
-        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
-    }else if constexpr (IT == CAN_IT_BOF){
-        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
-    }else if constexpr (IT == CAN_IT_LEC){
-        SPL_INST(p_inst)->ERRSR = RESET; 
-        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
-    }else if constexpr (IT == CAN_IT_ERR){
-        SPL_INST(p_inst)->ERRSR = RESET; 
-        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
-	}
-}
-
+__attribute__((hot, flatten))
 void CanIrqHandler::isr_sce(Can & self) {
+    //TODO 不再逐位判断 而是将连续的位一起打包
+
     void* p_inst = self.p_inst_;
 
     const uint32_t temp_inten = SPL_INST(p_inst)->INTENR;

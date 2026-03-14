@@ -67,7 +67,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
         uint32_t uiq31_fractional_result = (*piq31_coeffs++);
         /* Compute exp^(uiq31Fractional). */
         for (size_t i = 0; i < EXP_COEFFS_TABLE_SIZE; i++) {
-            uiq31_fractional_result = mul32hu(uiq32_fractional, uiq31_fractional_result);
+            uiq31_fractional_result = intrinsics::mul32hu(uiq32_fractional, uiq31_fractional_result);
             uiq31_fractional_result += (piq31_coeffs[i]);
         }
 
@@ -75,7 +75,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
         * Multiply the integer result in iqN format and the fractional result in
         * iq31 format to obtain the result in iqN format.
         */
-        return mul32hu(uiqn_integer_result, uiq31_fractional_result);
+        return intrinsics::mul32hu(uiqn_integer_result, uiq31_fractional_result);
     }
 };
 

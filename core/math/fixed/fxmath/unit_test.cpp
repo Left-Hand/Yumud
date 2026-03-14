@@ -1,5 +1,11 @@
 #include "fconv.hpp"
 #include "div.hpp"
+
+
+#include "../fixed.hpp"
+
+
+#include "sqrt.hpp"
 #include <cmath>
 
 using namespace ymd;
@@ -454,5 +460,26 @@ void test_fit_table(){
 }
 #endif
 
+void test_sqrt(){
 
+    {
+
+        // static constexpr uint32_t b1 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-2))) .to_bits();
+        // static constexpr uint32_t b2 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-4))) .to_bits();
+        // static_assert(b1
+        //     == uq32::from_bits(1u << (32-1)).to_bits());
+        // static_assert(b2
+        //     == uq32::from_bits(1u << (32-2)).to_bits());
+    }
+
+    {
+
+        static constexpr uint32_t b1 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-16))) .to_bits();
+        static constexpr uint32_t b2 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-18))) .to_bits();
+        static_assert(b1
+            == uq32::from_bits(1u << (32-8)).to_bits());
+        static_assert(b2
+            == uq32::from_bits(1u << (32-9)).to_bits());
+    }
+}
 }

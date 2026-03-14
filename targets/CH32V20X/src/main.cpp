@@ -7,8 +7,8 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    myesc_main();
-    // sincos_main();
+    // myesc_main();
+    sincos_main();
     // sincospll_main();
     // pwm_main();
     // cap_main();

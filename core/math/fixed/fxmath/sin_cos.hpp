@@ -189,13 +189,13 @@ namespace sincos_exact_laws{
 
         /* 0.5*x*(-S(k)) */
         res_iq31_bits = res_iq31_bits >> 1;
-        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
 
         /* C(k) + 0.5*x*(-S(k)) */
         res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
 
         /* x*(C(k) + 0.5*x*(-S(k))) */
-        res_iq31_bits = mul32hsu(res_iq31_bits,  uq32_x_offset);
+        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits,  uq32_x_offset);
 
         /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
         res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
@@ -214,21 +214,21 @@ namespace sincos_exact_laws{
     taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
         int32_t res_iq31_bits;
 
-        res_iq31_bits = static_cast<int32_t>(mul32hu(TWO_BY_3_UQ31, uq32_x_offset));
-        res_iq31_bits = mul32hss(res_iq31_bits, iq31_cos_coeff);
+        res_iq31_bits = static_cast<int32_t>(intrinsics::mul32hu(TWO_BY_3_UQ31, uq32_x_offset));
+        res_iq31_bits = intrinsics::mul32hss(res_iq31_bits, iq31_cos_coeff);
 
         /* -S(k) - 0.333*x*C(k) */
         res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
         /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
         res_iq31_bits = res_iq31_bits >> 1;
-        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
 
         /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
         res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
 
         /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
 
         /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
         res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
@@ -254,7 +254,7 @@ constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bit
     #endif
 
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-    const uint32_t uq32_eeq_x = mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
 
     //获取每个扇区的偏移值
     const uint32_t uq32_x_offset = (uq32_eeq_x)& 0x03ffffff;

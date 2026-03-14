@@ -4,6 +4,19 @@
 
 namespace ymd::intrinsics{
 
+
+static constexpr uint32_t reverse_u8x4(uint32_t x){
+    constexpr uint32_t MAGIC1 = 0xf0f0f0f0;
+    constexpr uint32_t MAGIC2 = 0xcccccccc;
+    constexpr uint32_t MAGIC3 = 0xaaaaaaaa;
+
+    x = ((x & MAGIC1) >> 4) | ((x & (~MAGIC1)) << 4);
+    x = ((x & MAGIC2) >> 2) | ((x & (~MAGIC2)) << 2);
+    x = ((x & MAGIC3) >> 1) | ((x & (~MAGIC3)) << 1);
+
+    return x;
+}
+
 // 如果没有__builtin_bitreverse32，可以手动实现位反转
 static constexpr uint32_t bitreverse32(uint32_t x) {
     #if 0
