@@ -100,7 +100,7 @@ void s21c_main(){
     // Microseconds exe_us = 0us;
     static uint32_t ticks_cnt_ = 0;
 
-    timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(), EN);
 
     auto s21c_tx_pin_ = hal::PC<2>();
     auto s21c_tx_pin2_ = hal::PC<3>();

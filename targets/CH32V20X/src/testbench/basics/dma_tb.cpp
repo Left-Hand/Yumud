@@ -51,7 +51,7 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     logger.println("DMA it bind done");
     channel.enable_interrupt<hal::DmaIT::Done>(EN);
     channel.enable_interrupt<hal::DmaIT::Half>(EN);
-    channel.register_nvic({0,0}, EN);
+    channel.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     logger.println("DMA begin");
     channel.start_transfer_mem2mem<char>(dst, src, sizeof(src));
     while(channel.pending_count()){

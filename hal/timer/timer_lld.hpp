@@ -86,7 +86,7 @@ Nth timer_to_nth(const uintptr_t inst_base);
     return false;
 }
 
-[[nodiscard]] static constexpr IRQn it_to_irq(const Nth nth, const hal::TimerIT it){
+[[nodiscard]] static constexpr IRQn timer_it_to_irq(const Nth nth, const hal::TimerIT it){
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
     case x:\

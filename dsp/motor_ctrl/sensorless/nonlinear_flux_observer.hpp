@@ -107,7 +107,7 @@ public:
     //     return math::fixed<Q0, int32_t>::from_bits(bits);
     // }
 
-    constexpr void update(auto alphabeta_volt, auto alphabeta_curr){
+    constexpr void update(auto && alphabeta_volt, auto && alphabeta_curr){
         // Algorithm based on paper: Sensorless Control of Surface-Mount Permanent-Magnet Synchronous Motors Based on a Nonlinear Observer
         // http://cas.ensmp.fr/~praly/Telechargement/Journaux/2010-IEEE_TPEL-Lee-Hong-Nam-Ortega-Praly-Astolfi.pdf
         // In particular, equation 8 (and by extension eqn 4 and 6).
@@ -115,9 +115,11 @@ public:
         // The V_alphabeta applied immedietly prior to the current measurement associated with this cycle
         // is the one computed two cycles ago. To get the correct measurement, it was stored twice:
         // once by final_v_alpha/final_v_beta in the current control reporting, and once by V_alphabeta_memory.
-        const auto [Valpha, Vbeta] = alphabeta_volt;
-        const auto [Ialpha, Ibeta] = alphabeta_curr;
-        const iq16 I_alphabeta[2] = {Ialpha, Ibeta};
+
+        const iq16 I_alphabeta[2] = {
+            static_cast<iq16>((alphabeta_curr)[0]), 
+            static_cast<iq16>((alphabeta_curr)[1]), 
+        };
         // alpha-beta vector operations
         iq16 eta_mf[2];
 
@@ -151,8 +153,8 @@ public:
         }
 
         // Flux state estimation done, store V_alphabeta for next timestep
-        state_.v_alphabeta_last[0] = Valpha;
-        state_.v_alphabeta_last[1] = Vbeta;
+        state_.v_alphabeta_last[0] = static_cast<iq16>((alphabeta_volt)[0]);
+        state_.v_alphabeta_last[1] = static_cast<iq16>((alphabeta_volt)[1]);
 
         // phase_ = atan2(eta_mf[1], eta_mf[0]);
         state_.turns = math::atan2pu(eta_mf[1], eta_mf[0]);

@@ -39,10 +39,10 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
     });
 
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
 
-    timer.register_nvic<hal::TimerIT::CC4>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::CC4>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::CC4>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){

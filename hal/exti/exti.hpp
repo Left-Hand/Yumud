@@ -66,7 +66,7 @@ private:
 
     Gpio * const p_pin_;
     const GpioMode gpio_mode_;
-    const NvicPriority priority_;
+    const NvicPriorityCode priority_;
     const TrigEdge edge_;
     const TrigMode mode_;
 
@@ -74,13 +74,13 @@ private:
 public:
     explicit ExtiChannel(
         const TrigSource line, 
-        const NvicPriority priority,
+        const NvicPriorityCode priority,
         const TrigEdge edge = TrigEdge::Rising, 
         const TrigMode _mode = TrigMode::Interrupt);
 
     explicit ExtiChannel(
         Gpio & gpio, 
-        const NvicPriority priority,
+        const NvicPriorityCode priority,
         const TrigEdge edge = TrigEdge::Rising, 
         const TrigMode _mode = TrigMode::Interrupt);
 
@@ -92,9 +92,12 @@ public:
 
 
     void enable_it(const Enable en){
-        priority_
-            .with_irqn(map_source_to_irqn(source_))
-            .enable(en);
+        // priority_
+        //     .with_irqn(map_source_to_irqn(source_))
+        //     .enable(en);
+        const auto irqn = map_source_to_irqn(source_);
+        lld::nvic_set_irqn_priority(irqn, priority_);
+        lld::nvic_enable_irqn(irqn, en == EN);
     }
 
     static constexpr GpioMode map_edge_to_gpiomode(const TrigEdge edge){

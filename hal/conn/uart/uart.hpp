@@ -17,7 +17,7 @@ struct UartIrqHandler{
     static void isr_tc(Uart & self);
 
     static void isr_rxne(Uart & self);
-    static void isr_rxidle(Uart & self);
+    static void isr_idle(Uart & self);
 };
 
 class Uart final:public UartBase{
@@ -43,11 +43,11 @@ private:
     Nth inst_nth_;
 
     void enable_rcc(const Enable en);
-    void register_nvic(const Enable en);
+    void register_nvic(hal::NvicPriorityCode priority, const Enable en);
     void set_remap(const UartRemap remap);
 
     void enable_rxne_interrupt(const Enable en);
-    void enable_rxidle_interrupt(const Enable en);
+    void enable_idle_interrupt(const Enable en);
     void enable_tx_interrupt(const Enable en);
 
     void enable_tx_dma(const Enable en);

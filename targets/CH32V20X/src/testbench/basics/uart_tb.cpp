@@ -27,11 +27,11 @@ using namespace ymd;
                 clock::delay(1ms);
                 rx_led.set_low();
                 break;
-            case hal::UartEvent::TxIdle:
-                tx_led.set_high();
-                clock::delay(1ms);
-                tx_led.set_low();
-                break;
+            // case hal::UartEvent::TxIdle:
+            //     tx_led.set_high();
+            //     clock::delay(1ms);
+            //     tx_led.set_low();
+            //     break;
             default:
                 PANIC{"Unexpected event", ev};
                 break;

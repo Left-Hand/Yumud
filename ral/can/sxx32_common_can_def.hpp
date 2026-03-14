@@ -3,7 +3,8 @@
 #include "core/constants/enums.hpp"
 #include "core/io/regs.hpp"
 
-namespace ymd::ral::ch32::common_can{
+namespace ymd::ral::sxx32::common_can{
+
 struct [[nodiscard]] R32_CAN_CTLR{
     uint32_t INRQ:1;
     uint32_t SLEEP:1;
@@ -84,6 +85,8 @@ struct [[nodiscard]] R32_CAN_RFIFO{
     uint32_t FULL:1;
 
     uint32_t FOVR:1;
+    uint32_t RFOM:1;
+
     uint32_t :26;
 };
 
@@ -330,12 +333,12 @@ struct [[nodiscard]] CAN_Def{
 };
 
 
-static_assert(sizeof(R32_CAN_CTLR) == 4);
-static_assert(sizeof(R32_CAN_STATR) == 4);
-static_assert(sizeof(R32_CAN_TSTATR) == 4);
-static_assert(sizeof(R32_CAN_INTEN) == 4);
-static_assert(sizeof(R32_CAN_ERRSR) == 4);
-static_assert(sizeof(R32_CAN_BTIMR) == 4);
+VALIDATE_R32(R32_CAN_CTLR);
+VALIDATE_R32(R32_CAN_STATR);
+VALIDATE_R32(R32_CAN_TSTATR);
+VALIDATE_R32(R32_CAN_INTEN);
+VALIDATE_R32(R32_CAN_ERRSR);
+VALIDATE_R32(R32_CAN_BTIMR);
 
 
 static_assert(__builtin_offsetof(CAN_Def, CAN_Def::CTLR) == 0);

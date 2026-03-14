@@ -115,7 +115,7 @@ void winter_mc_tutorial_main(){
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().dont_alter_to_pins();
 
-    isr_timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    isr_timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(), EN);
     isr_timer.enable_interrupt<hal::TimerIT::Update>(EN);
 
 

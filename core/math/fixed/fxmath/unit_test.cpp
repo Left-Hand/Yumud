@@ -426,4 +426,33 @@ void test_div32i(){
         == std::numeric_limits<int32_t>::min());
 }
 
+#if 0
+// static constexpr uint32_t fit_table(uint32_t x){
+//     return 2u * 64u * 64u * 127u / (63u * (2u * x) + 2u * 64u * 64u);
+// }
+
+static constexpr uint32_t fit_table(uint32_t x){
+    return 4u * 64u * 64u * 127u / (63u * (4u * x - 1) + 4u * 64u * 64u);
+}
+
+void test_fit_table(){
+
+    static_assert(fit_table(0) == IQ6DIV_LOOPUP[0]);
+    static_assert(fit_table(1) == IQ6DIV_LOOPUP[1]);
+    static_assert(fit_table(2) == IQ6DIV_LOOPUP[2]);
+    static_assert(fit_table(3) == IQ6DIV_LOOPUP[3]);
+    static_assert(fit_table(4) == IQ6DIV_LOOPUP[4]);
+
+    auto test_all = []() -> int32_t {
+        for(uint32_t i = 0; i < 64; i++){
+            if(fit_table(i) != IQ6DIV_LOOPUP[i]) return i;
+        }
+        return -1;
+    };
+
+    static_assert(test_all() == -1);
+}
+#endif
+
+
 }

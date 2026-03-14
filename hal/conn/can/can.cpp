@@ -16,19 +16,36 @@ using namespace ymd::hal;
 
 
 //CAN发送中断 NVIC优先级
-static constexpr NvicPriority CAN_TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
+static constexpr NvicPriorityCode CAN_TX_INTERRUPT_NVIC_PRIORITY = 
+    NvicPriorityCode::from_pre_sub_dn<2>(1, 3);
 
 //CAN接收中断0 NVIC优先级
-static constexpr NvicPriority CAN_RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
+static constexpr NvicPriorityCode CAN_RX0_INTERRUPT_NVIC_PRIORITY = 
+    NvicPriorityCode::from_pre_sub_dn<2>(1, 2);
 
 //CAN接收中断1 NVIC优先级
-static constexpr NvicPriority CAN_RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
+static constexpr NvicPriorityCode CAN_RX1_INTERRUPT_NVIC_PRIORITY = 
+    NvicPriorityCode::from_pre_sub_dn<2>(1, 0);
 
 //CAN状态改变中断 NVIC优先级
-static constexpr NvicPriority CAN_SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
+static constexpr NvicPriorityCode CAN_SCE_INTERRUPT_NVIC_PRIORITY = 
+    NvicPriorityCode::from_pre_sub_dn<2>(1, 1);
 
 
+static constexpr auto CAN1_TX_INTERRUPT_NVIC_PRIORITY = CAN_TX_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN1_RX0_INTERRUPT_NVIC_PRIORITY = CAN_RX0_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN1_RX1_INTERRUPT_NVIC_PRIORITY = CAN_RX1_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN1_SCE_INTERRUPT_NVIC_PRIORITY = CAN_SCE_INTERRUPT_NVIC_PRIORITY;
 
+static constexpr auto CAN2_TX_INTERRUPT_NVIC_PRIORITY = CAN_TX_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN2_RX0_INTERRUPT_NVIC_PRIORITY = CAN_RX0_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN2_RX1_INTERRUPT_NVIC_PRIORITY = CAN_RX1_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN2_SCE_INTERRUPT_NVIC_PRIORITY = CAN_SCE_INTERRUPT_NVIC_PRIORITY;
+
+static constexpr auto CAN3_TX_INTERRUPT_NVIC_PRIORITY = CAN_TX_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN3_RX0_INTERRUPT_NVIC_PRIORITY = CAN_RX0_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN3_RX1_INTERRUPT_NVIC_PRIORITY = CAN_RX1_INTERRUPT_NVIC_PRIORITY;
+static constexpr auto CAN3_SCE_INTERRUPT_NVIC_PRIORITY = CAN_SCE_INTERRUPT_NVIC_PRIORITY;
 
 
 
@@ -221,30 +238,40 @@ static void can_setup_interrupts(void * p_inst){
         #ifdef CAN1_PRESENT
         case 1:
             //tx interrupt
-            CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(USB_HP_CAN1_TX_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(USB_HP_CAN1_TX_IRQn, CAN1_TX_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(USB_HP_CAN1_TX_IRQn, true);
             //rx0 interrupt
-            CAN_RX0_INTERRUPT_NVIC_PRIORITY.with_irqn(USB_LP_CAN1_RX0_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(USB_LP_CAN1_RX0_IRQn, CAN1_RX0_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(USB_LP_CAN1_RX0_IRQn, true);
             //rx1 interrupt
-            CAN_RX1_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN1_RX1_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN1_RX1_IRQn, CAN1_RX1_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN1_RX1_IRQn, true);
             //sce interrupt
 
             #ifdef CAN_SCE_ENABLED
-            CAN_SCE_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN1_SCE_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN1_SCE_IRQn, CAN1_SCE_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN1_SCE_IRQn, true);
             #endif
             break;
         #endif
 
         #ifdef CAN2_PRESENT
         case 2:
+
             //tx interrupt
-            CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_TX_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN2_TX_IRQn, CAN2_TX_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN2_TX_IRQn, true);
             //rx0 interrupt
-            CAN_RX0_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_RX0_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN2_RX0_IRQn, CAN2_RX0_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN2_RX0_IRQn, true);
             //rx1 interrupt
-            CAN_RX1_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_RX1_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN2_RX1_IRQn, CAN2_RX1_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN2_RX1_IRQn, true);
             //sce interrupt
+
             #ifdef CAN_SCE_ENABLED
-            CAN_SCE_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_SCE_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN2_SCE_IRQn, CAN2_SCE_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN2_SCE_IRQn, true);
             #endif
             break;
         #endif
@@ -252,14 +279,19 @@ static void can_setup_interrupts(void * p_inst){
         #ifdef CAN3_PRESENT
         case 3:
             //tx interrupt
-            CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN3_TX_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN3_TX_IRQn, CAN3_TX_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN3_TX_IRQn, true);
             //rx0 interrupt
-            CAN_RX0_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN3_RX0_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN3_RX0_IRQn, CAN3_RX0_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN3_RX0_IRQn, true);
             //rx1 interrupt
-            CAN_RX1_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN3_RX1_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN3_RX1_IRQn, CAN3_RX1_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN3_RX1_IRQn, true);
             //sce interrupt
+
             #ifdef CAN_SCE_ENABLED
-            CAN_SCE_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN3_SCE_IRQn).enable(EN);
+            lld::nvic_set_irqn_priority(CAN3_SCE_IRQn, CAN3_SCE_INTERRUPT_NVIC_PRIORITY);
+            lld::nvic_enable_irqn(CAN3_SCE_IRQn, true);
             #endif
             break;
         #endif

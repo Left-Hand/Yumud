@@ -12,9 +12,14 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-static constexpr const NvicPriority UART_RX_DMA_INTERRUPT_NVIC_PRIORITY = {1,4};
-static constexpr const NvicPriority UART_TX_DMA_INTERRUPT_NVIC_PRIORITY = {1,5};
-static constexpr const NvicPriority UART_INTERRUPT_NVIC_PRIORITY = {1,3};
+static constexpr const NvicPriorityCode UART_RX_DMA_INTERRUPT_NVIC_PRIORITY 
+    = NvicPriorityCode::from_pre_sub_d2(1,0);
+
+static constexpr const NvicPriorityCode UART_TX_DMA_INTERRUPT_NVIC_PRIORITY 
+    = NvicPriorityCode::from_pre_sub_d2(1,2);
+
+static constexpr const NvicPriorityCode UART_INTERRUPT_NVIC_PRIORITY 
+    = NvicPriorityCode::from_pre_sub_d2(1,1);
 
 static constexpr const DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
 static constexpr const DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
@@ -72,7 +77,29 @@ sys::abort(AbortInfo::from_reason(str));\
 
 
 #endif
+
 namespace {
+
+#if 1
+template<typename T>
+static T clone_volatile(volatile T * p_reg){
+    return *const_cast<T *>(p_reg);
+}
+
+template<typename T>
+static void notify_volatile_readed(volatile T * p_reg){
+    const T dummy = *const_cast<T *>(p_reg);
+    (void)dummy;
+    return;
+}
+
+template<typename T>
+static void store_volatile(volatile T * p_reg, const auto x){
+    *const_cast<T *>(p_reg) = std::bit_cast<T>(x);
+}
+
+
+#endif
 
 
 template<UartRemap REMAP>
@@ -245,7 +272,7 @@ static DmaChannel & _uart_to_tx_dma(const Nth nth){
     UNREACHABLE();
 }
 
-
+static constexpr uint32_t STATR_CLEARABLE_MASK = (0b11'0110'0000);
 }
 
 
@@ -274,6 +301,8 @@ static constexpr uint32_t calc_buadrate_hz(hal::UartBaudrate baudrate){
 
 
 void Uart::init(const Config & cfg){
+    [[maybe_unused]] auto & self = *this;
+
     enable_rcc(EN);
 
     USART_Cmd(SPL_INST(p_inst_), DISABLE);
@@ -314,9 +343,22 @@ void Uart::init(const Config & cfg){
 
     USART_Init(SPL_INST(p_inst_), &USART_InitStructure);
 
-    lld::usart_enable_error_interrupt(p_inst_, EN);
 
-    register_nvic(EN);
+
+    #if 1
+    //清除中断标志位
+    if(1){
+        store_volatile(reinterpret_cast<volatile uint32_t*>(&SPL_INST(self.p_inst_)->STATR)
+            ,  ~STATR_CLEARABLE_MASK
+        );
+        RAL_INST((self).p_inst_)->STATR;
+        RAL_INST((self).p_inst_)->DATAR;
+    }
+    #endif
+
+
+    lld::usart_enable_error_interrupt(p_inst_, EN);
+    register_nvic(UART_INTERRUPT_NVIC_PRIORITY, EN);
 
     USART_Cmd(SPL_INST(p_inst_), ENABLE);
 
@@ -325,21 +367,20 @@ void Uart::init(const Config & cfg){
 
 }
 
-size_t Uart::try_write_bytes(std::span<const uint8_t> bytes){
+size_t Uart::try_write_bytes(const std::span<const uint8_t> bytes){
     switch(tx_strategy_){
         case CommStrategy::Blocking:{
-            RAL_INST(p_inst_)->DATAR.DR;
+            auto * p_byte = bytes.data();
+            auto * p_end = bytes.data() + bytes.size();
 
-            //阻塞地发送字符
-            for(size_t i = 0; i < bytes.size(); ++i){
-                RAL_INST(p_inst_)->DATAR.DR = bytes[i];
+            while(p_byte < p_end){
                 while((RAL_INST(p_inst_)->STATR.TXE) == RESET);
+                RAL_INST(p_inst_)->DATAR.DR = static_cast<uint32_t>(*p_byte);
+                p_byte ++;
             }
-            while((RAL_INST(p_inst_)->STATR.TC) == RESET);
 
             return bytes.size();
         }
-            break;
         case CommStrategy::Interrupt:{
             const auto written_quantity = tx_queue_.try_push(bytes);
             enable_tx_interrupt(EN);
@@ -380,10 +421,10 @@ void Uart::enable_single_line_mode(const Enable en){
 }
 
 
-void Uart::register_nvic(const Enable en){
-    UART_INTERRUPT_NVIC_PRIORITY.with_irqn(
-        lld::uart_calc_nvic_irqn(inst_nth_)
-    ).enable(en);
+void Uart::register_nvic(hal::NvicPriorityCode priority, const Enable en){
+    const auto irqn = lld::uart_calc_nvic_irqn(inst_nth_);
+    lld::nvic_set_irqn_priority(irqn, priority);
+    lld::nvic_enable_irqn(irqn, en == EN);
 }
 
 void Uart::set_tx_strategy(const CommStrategy tx_strategy){
@@ -485,12 +526,12 @@ void Uart::set_rx_strategy(const CommStrategy rx_strategy){
             break;
         case CommStrategy::Interrupt:
             enable_rx_dma(DISEN);
-            enable_rxidle_interrupt(DISEN);
+            enable_idle_interrupt(DISEN);
             enable_rxne_interrupt(EN);
             break;
         case CommStrategy::Dma:
             enable_rxne_interrupt(DISEN);
-            enable_rxidle_interrupt(EN);
+            enable_idle_interrupt(EN);
             enable_rx_dma(EN);
             setup_rx_dma(RX_DMA_DMA_PRIORITY);
             break;
@@ -634,9 +675,9 @@ void UartIrqHandler::isr_txe(Uart & self){
     }
 }
 
-void UartIrqHandler::isr_rxidle(Uart & self){
+void UartIrqHandler::isr_idle(Uart & self){
 
-    auto emit_rxidle_event = [&self](){
+    auto emit_idle_event = [&self](){
         const auto uev = Event::RxIdle;
         TRY_EMIT_EVENT(self, uev);
     };
@@ -667,16 +708,17 @@ void UartIrqHandler::isr_rxidle(Uart & self){
             }
 
             self.rx_dma_buf_index_ = supposed_dma_buf_index;
-            emit_rxidle_event();
+            emit_idle_event();
         };
             break;
 
         case CommStrategy::Interrupt:{
-            emit_rxidle_event();
+            emit_idle_event();
+            break;
         }
 
         case CommStrategy::Disabled:{
-            ABORT("uart rx disabled, but triggered rxidle")
+            ABORT("uart rx disabled, but triggered idle")
         }
 
         default:
@@ -694,7 +736,7 @@ void Uart::enable_tx_interrupt(const Enable en){
 }
 
 
-void Uart::enable_rxidle_interrupt(const Enable en){
+void Uart::enable_idle_interrupt(const Enable en){
     lld::uart_enable_idle_interrupt(p_inst_, en);
 }
 
@@ -725,66 +767,162 @@ struct alignas(4) [[nodiscard]] BareUartEvent final{
     uint32_t cts_state_change:1;
 };
 
+
 void UartIrqHandler::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.p_inst_);
-    const auto flags = ral_inst->get_flags();
-    if(flags.any_fault()){
-        if(flags.ORE){
-            // 过载错误标志
+    const auto temp_statr = clone_volatile(&ral_inst->STATR);
+    const auto temp_ctlr1 = clone_volatile(&ral_inst->CTLR1);
+
+    // statr
+    // |  3  |  2   |  1 |  0   |
+    // | ore |  ne  | fe |  pe  |
+
+    // ore:过载错误
+    // ne:噪声错误
+    // fe:帧错误
+    // pe:奇偶校验错误
+
+    if(std::bit_cast<uint32_t>(temp_statr) & 0x0f){
+        // 过载错误标志。当接收移位寄存器存在数据需
+        // 要转到数据寄存器时，但是数据寄存器的接收
+        // 域还有数据未读出时，此位将会被置位。如果
+        // RXNEIE 被置位了，还会产生对应中断
+        if(temp_statr.ORE){
             {
                 //TODO
             }
             //这个事件无法自然消退
         }
-        if(flags.FE){
+
+        // 帧错误标志。当检测到同步错误，过多的噪声
+        // 或者断开符，该位将会被硬件置位。读此位再
+        // 读数据寄存器的操作会复位此位。
+        if(temp_statr.FE){
             //帧错误
             {
                 //TODO
             }
-
-            ral_inst->STATR;
-            ral_inst->DATAR;
+            //这个事件无法自然消退
         }
-        if(flags.PE){
+
+        // 校验错误标志。在接收模式下，如果产生奇偶
+        // 检验错误，硬件置位此位。读此位再读数据寄
+        // 存器的操作会复位此位。在清除此位前，软件
+        // 必须等 RXNE 标志位被置位。如果 PEIE 之前已
+        // 经被置位，那么此位被置位会产生对应的中
+        // 断。
+        if(temp_statr.PE){
             //奇偶校验位错误
             {
                 //TODO
             }
 
-            ral_inst->STATR;
-            ral_inst->DATAR;
+            notify_volatile_readed(&ral_inst->DATAR);
         }
-        if(flags.NE){
+
+        // 噪声错误标志。当检测到噪声错误标志时，由
+        // 硬件置位。读状态寄存器后，再读数据寄存器
+        // 的操作会复位此位。
+        if(temp_statr.NE){
             // 噪声错误标志
             {
                 //TODO
             }
 
-            ral_inst->STATR;
+            notify_volatile_readed(&ral_inst->DATAR);
+        }
+    }
+
+
+    // ctlr1和statr在这部分共用相同字段
+    // |  7  |  6   |  5   |  4  |
+    // | txe |  tc  | rxne |  idle  |
+    const uint32_t transmission_flags_mask = 
+        std::bit_cast<uint32_t>(temp_ctlr1) & 
+        std::bit_cast<uint32_t>(temp_statr) & 0xf0;
+
+    if(transmission_flags_mask){
+        // rxne
+        // 读数据寄存器非空标志，当移位寄存器中的数
+        // 据被转移到数据寄存器中，该位会被硬件置
+        // 位。如果 RXNEIE 已经被置位，则还会产生对应
+        // 的中断。对数据寄存器的读操作可以将该位清
+        // 除。也可以直接写 0 来清除该位。
+        if(transmission_flags_mask & (1u << 5)){
+            UartIrqHandler::isr_rxne(self);
+
+            // 也可以直接写 0 来清除该位
+            // store_volatile(&ral_inst->STATR, (~(1u << 5)));
+        }
+
+        // txe
+        // 发送数据寄存器空标志。当 TDR 寄存器中的的
+        // 数据被硬件转移到移位寄存器的时候，该位被
+        // 硬件置位。如果 TXEIE 已经被置位时，就会产
+        // 生中断，对数据寄存器进行写操作，此位将会
+        // 被复位。
+        if(transmission_flags_mask & (1u << 7)){
+            UartIrqHandler::isr_txe(self);
+            // 对数据寄存器进行写操作，此位将会
+            // 被复位。
+        }
+
+        // tc
+        // 发送完成标志。当含有数据的一帧发送完成
+        // 后，并且 TXE 被置位，则硬件将会此位置位，
+        // 如果 TCIE 被置位，还会产生对应中断，软件读
+        // 了此位再写数据寄存器则会清除此位。也可以
+        // 直接写 0 来清除此位。
+        if(transmission_flags_mask & (1u << 6)){
+            UartIrqHandler::isr_tc(self);
+
+            // 也可以直接写 0 来清除此位
+            store_volatile(&ral_inst->STATR, (~(1u << 6)));
+            // USART_ClearITPendingBit(SPL_INST(self.p_inst_), USART_IT_TC);
+        }
+
+        // idle
+        // 总线空闲标志。当总线空闲时，该位将会被硬
+        // 件置位。如果 IDLEIE 已经被置位，则会产生对
+        // 应的中断。读状态寄存器再读数据寄存器的操
+        // 作会清除此位。
+        if(transmission_flags_mask & (1u << 4)){
+            UartIrqHandler::isr_idle(self);
+
+            //已经读了状态寄存器了，
+            // 现在再读数据寄存器
+            // notify_volatile_readed(&ral_inst->DATAR);
+            // ral_inst->STATR;
             ral_inst->DATAR;
         }
     }
 
-    if(flags.RXNE){
-        // 对数据寄存器的读操作可以将该位清零
-        UartIrqHandler::isr_rxne(self);
+
+    #if 0
+    if(temp_statr.LBD) [[unlikely]]{
+        const auto temp_ctlr2 = clone_volatile(&ral_inst->CTLR2);
+        // LIN Break 检测标志。当检测到 LIN Break 时，
+        // 该位被硬件置位。由软件清零。如果 LBDIE 已
+        // 经被置位，则将会产生中断。
+        if(temp_ctlr2.LBDIE){
+
+            //TODO
+        }
     }
 
-    if(flags.TXE){
-        // 对数据寄存器进行写操作，此位将会清零
-        UartIrqHandler::isr_txe(self);
-    }
+    if(temp_statr.CTS) [[unlikely]]{
+        const auto temp_ctlr3 = clone_volatile(&ral_inst->CTLR3);
+        
+        // CTS 状态改变标志。如果设置了 CTSE 位，当
+        // nCTS 输出状态改变时，该位将由硬件置高。由
+        // 软件清零。如果 CTSIE 位已经被置位，则会产
+        // 生中断。
+        if(temp_ctlr3.CTSIE){
 
-    if(flags.TC){
-        UartIrqHandler::isr_tc(self);
-        USART_ClearITPendingBit(SPL_INST(self.p_inst_), USART_IT_TC);
+            //TODO
+        }
     }
-
-    if(flags.IDLE){
-        UartIrqHandler::isr_rxidle(self);
-        ral_inst->STATR;
-        ral_inst->DATAR;
-    }
+    #endif
 
 };
 

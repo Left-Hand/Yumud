@@ -297,7 +297,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     auto & timer = hal::timer1;
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -476,7 +476,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto isr_trig_gpio = hal::PC<13>();
     isr_trig_gpio.outpp();
 
-    adc.register_nvic({0,0}, EN);
+    adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
     adc.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -491,7 +491,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     iq16 a_curr, b_curr;
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -585,7 +585,7 @@ void mystepper_main(){
 
     digipw::AlphaBetaCoord<iq16> alphabeta_curr = {0, 0};
 
-    adc.register_nvic({0,0}, EN);
+    adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
     adc.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -652,7 +652,7 @@ void mystepper_main(){
     // eeprom_tb();
 
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){

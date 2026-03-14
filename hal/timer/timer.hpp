@@ -196,8 +196,10 @@ public:
 
     //将中断优先级注册到NVIC
     template<IT I>
-    void register_nvic(const NvicPriority priority, const Enable en){
-        priority.with_irqn(lld::it_to_irq(tim_nth_, I)).enable(en);
+    void register_nvic(const NvicPriorityCode priority, const Enable en){
+        const auto irqn = lld::timer_it_to_irq(tim_nth_, I);
+        lld::nvic_set_irqn_priority(irqn, priority);
+        lld::nvic_enable_irqn(irqn, en == EN);
     }
 
     //使能ARR同步更新（shadow）

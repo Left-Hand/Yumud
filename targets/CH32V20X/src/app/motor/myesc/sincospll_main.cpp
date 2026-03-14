@@ -84,7 +84,7 @@ void sincospll_main(){
         .count_freq =  hal::NearestFreq(F_SAMPLE),
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().dont_alter_to_pins();
-    hal::timer2.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
 
     Angular<uq32> simulated_angle_ = Zero;

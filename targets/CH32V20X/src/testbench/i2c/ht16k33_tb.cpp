@@ -295,6 +295,7 @@ private:
                 cursor_ = cursor_
                     .shift(1, str_.length())
                     .unwrap_or(cursor_);
+                return;
 
             case KeyCode::ArrowUp:
             case KeyCode::ArrowDown:{

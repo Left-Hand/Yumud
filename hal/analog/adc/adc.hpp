@@ -139,8 +139,9 @@ public:
         event_callback_ = std::forward<Fn>(cb);
     }
 
-    void register_nvic(const NvicPriority priority, const Enable en){
-        priority.with_irqn(ADC_IRQn).enable(en);
+    void register_nvic(const NvicPriorityCode priority, const Enable en){
+        lld::nvic_set_irqn_priority(ADC_IRQn, priority);
+        lld::nvic_enable_irqn(ADC_IRQn, en == EN);
     }
 
     template<IT I>

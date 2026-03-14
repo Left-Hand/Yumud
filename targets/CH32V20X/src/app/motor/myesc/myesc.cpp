@@ -33,7 +33,6 @@
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/ctrl/pi_controller.hpp"
 
-
 #include "linear_regression.hpp"
 #include "motor_profiles.hpp"
 
@@ -228,7 +227,7 @@ void myesc_main(){
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
         // .baudrate = hal::NearestFreq(6000000),
         .baudrate = hal::NearestFreq(576000),
-        .rx_strategy = CommStrategy::Disabled,
+        .rx_strategy = CommStrategy::Dma,
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -670,6 +669,8 @@ void myesc_main(){
             return CLAMP2((kp * e1) + (kd * e2), 1);
         }();
     #endif
+
+    iq20 current_cmd_ = 0;
     [[maybe_unused]] auto ctrl_isr = [&]{
         const auto uvw_current_bits = get_uvw_current_bits();
         if(dc_cal_done_ == false) [[unlikely]]{
@@ -703,6 +704,7 @@ void myesc_main(){
 
 
         //#region 电流传感
+
 
         const auto uvw_curr = UvwCoord<iq20>{
             .u = static_cast<int32_t>(std::get<0>(uvw_current_bits) - static_cast<int32_t>(std::get<0>(uvw_current_bits_offset_)))
@@ -768,7 +770,7 @@ void myesc_main(){
                 hfi_elec_angle_ = hfi_elec_angle;
             }
         }else{
-            const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.70_iq16 * now_secs);
+            const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.10_iq16 * now_secs);
 
             const auto openloop_elec_angle = make_angular_from_turns(
                 uq32(frac(openloop_manchine_multilap_angle.to_turns()) * MotorProfile::POLE_PAIRS));
@@ -790,24 +792,23 @@ void myesc_main(){
         [[maybe_unused]] static constexpr iq20 TORQUE_2_current_RATIO = 1_iq20;
         [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 1.2_iq16;
 
-        // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
-        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd_ = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd_ = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
 
-        // const iq20 current_cmd = 0.24_iq20;
-        const iq20 current_cmd = 6.24_iq20;
-        // const iq20 current_cmd = 0.7_iq20;
-        // const iq20 current_cmd = 0;
-        // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));
-        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
-        // const iq20 current_cmd = 0.07_iq20 * iq16(sin(now_secs));
-        // const iq20 current_cmd = 0.07_iq20 * -1;
+        // const iq20 current_cmd_ = 0.24_iq20;
+        // const iq20 current_cmd_ = 0.7_iq20;
+        // const iq20 current_cmd_ = 0;
+        // const iq20 current_cmd_ = 0.1_iq20 * iq16(math::sin(now_secs));
+        // const iq20 current_cmd_ = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd_ = 0.07_iq20 * iq16(sin(now_secs));
+        // const iq20 current_cmd_ = 0.07_iq20 * -1;
         //#endregion
 
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
         [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
             const iq20 dest_d_curr = 0;
-            const iq20 dest_q_curr = current_cmd;
+            const iq20 dest_q_curr = current_cmd_;
             // return DqCoord<iq20>{
             //     .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
             //     .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
@@ -895,7 +896,7 @@ void myesc_main(){
         // const auto alphabeta_volt = AlphaBetaCoord<iq20>::ZERO;
         // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MODU_VOLT_LIMIT);
 
-        // flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
+        flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
         // smo_sensorless_ob.update({alphabeta_curr, alphabeta_volt});
         // lbg_sensorless_ob.update({alphabeta_curr, alphabeta_volt});
 
@@ -909,9 +910,9 @@ void myesc_main(){
 
         set_uvw_dutycycle(uvw_dutycycle);
 
-        // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x1, current_cmd);
-        // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x2, current_cmd);
-        // leso_state_var_ = leso.iterate(leso_state_var_, math::fixed_downcast<16>(rotor_rotation_state_var_.x1), current_cmd);
+        // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x1, current_cmd_);
+        // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x2, current_cmd_);
+        // leso_state_var_ = leso.iterate(leso_state_var_, math::fixed_downcast<16>(rotor_rotation_state_var_.x1), current_cmd_);
         busbar_current_unfilted_ = UvwCoord<iq20>(iq20(uvw_dutycycle.u), iq20(uvw_dutycycle.v), iq20(uvw_dutycycle.w)).dot(uvw_curr);
         // hfi_alphabeta_volt_ = hfi_alphabeta_volt;
         busbar_current_ = lpf_10hz(busbar_current_, busbar_current_unfilted_);
@@ -967,7 +968,7 @@ void myesc_main(){
         timming_watch_pin_.set_low();
     };
 
-    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -988,8 +989,26 @@ void myesc_main(){
 
     const auto temp_comp = hal::TemperatureCompensator::load();
     iq16 temperature_ = temp_comp.comp_u12(hal::adc1.inj<4>().read_u12());
+
+
+    [[maybe_unused]] auto poll_repl_activity = [&]{
+        [[maybe_unused]] static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
+        repl_server.enable_echo(DISEN);
+
+        [[maybe_unused]] static const auto list = script::make_list(
+            "root",
+            script::make_function(StringView("cm"), [&](iq20 current_cmd){
+                // handle_start_advanced_task();
+                if(math::abs(current_cmd) > 10) return;
+                current_cmd_ = current_cmd;
+            })
+        );
+
+        repl_server.invoke(list);
+    };
     
     while(true){
+        poll_repl_activity();
         [[maybe_unused]] const auto now_secs = clock::seconds();
         // [[maybe_unused]] const auto [s,c] = my_sincospu(now_secs);
         // repl_service_poller();
@@ -1021,24 +1040,28 @@ void myesc_main(){
             // uvw_current_.w,
             // alphabeta_volt_.alpha,
             // alphabeta_volt_.beta,
-            dq_volt_.d,
-            dq_volt_.q,
+            // dq_volt_.d,
+            // dq_volt_.q,
             // flux_sensorless_ob.angle().to_turns(),
             // flux_sensorless_ob.state().flux_state_mf[0],
             // flux_sensorless_ob.state().flux_state_mf[1],
             // flux_sensorless_ob.state().v_alphabeta_last[0],
             // flux_sensorless_ob.state().v_alphabeta_last[1],
-            dq_current_.d,
-            dq_current_.q,
-            busbar_current_,
+            // dq_current_.d,
+            // dq_current_.q,
+            alphabeta_current_[0],
+            alphabeta_current_[1],
+            // busbar_current_,
             // hfi_bin2_angle.to_turns()
             // hfi_response_imag_bin2_,
             // hfi_response_real_bin2_
             // full_arr,
             // exe_duration_.count(),
             
-            // my_TempSensor_Volt_To_Temper(temp_mv),
-            temperature_,
+            // temperature_,
+            // flux_sensorless_ob.angle().to_turns(),
+            // math::atan2pu(alphabeta_current_[0], alphabeta_current_[1]),
+            // alphabeta_current_[0] / alphabeta_current_[1],
             static_cast<uint32_t>(exe_elapsed_.count())
             // exe_duration_.count()
             // alphabeta_volt_,

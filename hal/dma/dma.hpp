@@ -89,7 +89,7 @@ public:
     //返回待传输的数目
     [[nodiscard]] size_t pending_count();
 
-    void register_nvic(const NvicPriority _priority, const Enable en);
+    void register_nvic(const NvicPriorityCode priority_code, const Enable en);
 
     template<DmaIT I>
     void enable_interrupt(const Enable en){

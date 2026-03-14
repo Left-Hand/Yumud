@@ -63,7 +63,7 @@ uint32_t SystemCoreClock         = HSI_VALUE;                    /* System Clock
 
 #endif
 
-__I uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+static const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 
 
 /* system_private_function_proto_types */

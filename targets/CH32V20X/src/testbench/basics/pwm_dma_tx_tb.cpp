@@ -94,7 +94,9 @@ void pwm_dma_tx_main(){
     // TIM_TimeBaseInitStructure.TIM_RepetitionCounter = 0;
     // TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStructure);
 
-    hal::NvicPriority{0, 1}.with_irqn(TIM3_IRQn).enable(EN);
+    static constexpr auto priority = hal::NvicPriorityCode::from_pre_sub_d2(0, 1);
+    lld::nvic_set_irqn_priority(TIM3_IRQn, priority);
+    lld::nvic_enable_irqn(TIM3_IRQn, true);
     
     TIM_ICInitStructure.TIM_Channel = TIM_Channel_3;
     TIM_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;

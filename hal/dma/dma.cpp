@@ -281,9 +281,10 @@ void DmaChannel::init(const Config & cfg){
     DMA_Init(SPL_INST(inst_), &DMA_InitStructure);
 }
 
-void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
+void DmaChannel::register_nvic(const NvicPriorityCode priority, const Enable en){
     const auto iqrn = dma_to_irqn(dma_nth_, ch_sel_nth_);
-    priority.with_irqn(iqrn).enable(en);
+    lld::nvic_set_irqn_priority(iqrn, priority);
+    lld::nvic_enable_irqn(iqrn, en == EN);
 }
 
 

@@ -304,7 +304,7 @@ void steadywin_main(){
     });
 
     //使能更新事件的中断
-    timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(), EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
 
     //启动定时器

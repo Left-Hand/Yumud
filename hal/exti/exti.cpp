@@ -10,7 +10,7 @@ using TrigSource = ExtiTrigSource;
 
 ExtiChannel::ExtiChannel(
     const TrigSource source, 
-    const NvicPriority priority,
+    const NvicPriorityCode priority,
     const TrigEdge edge, 
     const TrigMode mode
 ):
@@ -25,7 +25,7 @@ ExtiChannel::ExtiChannel(
 
 ExtiChannel::ExtiChannel(
     Gpio & gpio, 
-    const NvicPriority priority,
+    const NvicPriorityCode priority,
     const TrigEdge edge,
     const TrigMode mode
 ):

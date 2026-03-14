@@ -6,7 +6,7 @@
 
 namespace ymd::ral::ch32::common_uart{
 
-struct R32_STATR{
+struct [[nodiscard]] R32_STATR final{
     // 校验错误标志。在接收模式下，如果产生奇偶
     // 检验错误，硬件置位此位。读此位再读数据寄
     // 存器的操作会复位此位。在清除此位前，软件
@@ -56,16 +56,19 @@ struct R32_STATR{
 
 VALIDATE_R32(R32_STATR)
 
-struct R32_DATAR{
+struct [[nodiscard]] R32_DATAR final{
     uint32_t DR;
 };
 
-struct R32_BRR{
+struct [[nodiscard]] R32_BRR final{
     uint32_t FRAC:4;
     uint32_t MANT:28;
 };
 
-struct R32_CTLR1{
+VALIDATE_R32(R32_BRR)
+
+
+struct [[nodiscard]] R32_CTLR1 final{
     uint32_t SBK:1;
     uint32_t RWU:1;
     uint32_t RE:1;
@@ -86,7 +89,7 @@ struct R32_CTLR1{
     uint32_t :18;
 };
 
-struct R32_CTLR2{
+struct [[nodiscard]] R32_CTLR2 final{
     uint32_t ADD:4;
     uint32_t :1;
     uint32_t LBDL:1;
@@ -99,10 +102,11 @@ struct R32_CTLR2{
     uint32_t CLKEN:1;
     uint32_t STOP:2;
     uint32_t LINEN:1;
-    uint32_t :16;
+
+    uint32_t :17;
 };
 
-struct R32_CTLR3{
+struct [[nodiscard]] R32_CTLR3 final{
     uint32_t EIE:1;
     uint32_t IREN:1;
     uint32_t IRLP:1;
@@ -119,13 +123,18 @@ struct R32_CTLR3{
     uint32_t :21;
 };
 
-struct R32_GPR{
+struct [[nodiscard]] R32_GPR final{
     uint32_t PSC:8;
     uint32_t GT:8;
     uint32_t :16;
 };
 
-struct USART_Def{
+VALIDATE_R32(R32_CTLR1)
+VALIDATE_R32(R32_CTLR2)
+VALIDATE_R32(R32_CTLR3)
+VALIDATE_R32(R32_GPR)
+
+struct [[nodiscard]] USART_Def final{
     volatile R32_STATR STATR;
     volatile R32_DATAR DATAR;
     volatile R32_BRR BRR;
@@ -240,6 +249,15 @@ struct USART_Def{
     }
 
 };
+
+
+static_assert(__builtin_offsetof(USART_Def, USART_Def::STATR) == 0);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::DATAR) == 4);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::BRR) == 0x08);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::CTLR1) == 0x0c);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::CTLR2) == 0x10);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::CTLR3) == 0x14);
+static_assert(__builtin_offsetof(USART_Def, USART_Def::GPR) == 0x18);
 
 [[maybe_unused]] static inline USART_Def * USART1_Inst = (USART_Def *)(0x40013800);
 [[maybe_unused]] static inline USART_Def * USART2_Inst = (USART_Def *)(0x40004400);

@@ -323,7 +323,7 @@ void myservo_main(){
 
 
 
-    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){

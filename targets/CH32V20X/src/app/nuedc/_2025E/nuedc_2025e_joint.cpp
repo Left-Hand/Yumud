@@ -408,7 +408,7 @@ void nuedc_2025e_joint_main(){
         meas_elec_angle_ = meas_elec_angle;
     };
 
-    adc.register_nvic({0,0}, EN);
+    adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
     adc.set_event_callback(
         [&](const hal::AdcEvent ev){

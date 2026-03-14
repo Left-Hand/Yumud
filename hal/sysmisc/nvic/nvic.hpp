@@ -2,6 +2,8 @@
 
 #include "core/platform.hpp"
 #include "core/irqn.hpp"
+#include "nvic_primitive.hpp"
+#include "nvic_lld.hpp"
 
 #if defined(WCH) && defined(RISCV)
 #define SUPPORT_VTF
@@ -9,46 +11,28 @@
 
 namespace ymd::hal{
 
-namespace nvic_details{
-void enable_nvic(const uint8_t pre, const uint8_t sub, const IRQn _irq, const Enable en);
-}
 
-struct NvicPriority;
-struct NvicRequest;
+// struct NvicPriority;
+// struct NvicRequest;
 
-struct [[nodiscard]] NvicRequest{
-public:
-    constexpr NvicRequest(const uint8_t pre, const uint8_t sub, const IRQn irqn):
-            pre_(pre), sub_(sub), irqn_(irqn){;}
+// struct [[nodiscard]] NvicRequest{
+// public:
+//     hal::NvicPriorityCode priority_code;
+//     const IRQn irqn;
 
-    void enable(const Enable en) const{
-        nvic_details::enable_nvic(pre_, sub_, irqn_, en);
-    }
+// };
 
-private:    
-    const uint8_t pre_;
-    const uint8_t sub_;
-    const IRQn irqn_;
-};
+// struct [[nodiscard]] NvicPriority{
+// public:
 
-struct [[nodiscard]] NvicPriority{
-public:
-    constexpr NvicPriority(
-        const uint8_t pre, 
-        const uint8_t sub
-    ):
-        pre_(pre & 0b1), 
-        sub_(sub & 0b111){;}
+//     hal::NvicPriorityCode priority_code;
 
-    [[nodiscard]] constexpr NvicRequest with_irqn(const IRQn irqn) const {
-        return NvicRequest(pre_, sub_, irqn);
-    }
-private:
-    const uint8_t pre_;
-    const uint8_t sub_;
-
-    friend struct NvicRequest;
-};
+//     [[nodiscard]] constexpr NvicRequest with_irqn(const IRQn irqn) const {
+//         return NvicRequest(priority_code, irqn);
+//     }
+// private:
+//     friend struct NvicRequest;
+// };
 
 
 #ifdef SUPPORT_VTF
@@ -66,8 +50,8 @@ private:
     const uint8_t index;
     const uint32_t func_base;
 };
+using PficRequest = NvicRequest;
 #endif
 
-using PficRequest = NvicRequest;
 
 }

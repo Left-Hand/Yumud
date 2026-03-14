@@ -113,7 +113,7 @@ public:
     template<typename Fn>
     void register_servo_ctl_callback(Fn && fn){
         auto & timer = hal::timer1;
-        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback(std::forward<Fn>(fn));
     }

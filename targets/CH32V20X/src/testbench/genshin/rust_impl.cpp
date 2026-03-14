@@ -217,9 +217,9 @@ namespace{
     static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_iq16);
 
 
-    static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
-    static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
-    static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
+    [[maybe_unused]] static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
+    [[maybe_unused]] static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
+    [[maybe_unused]] static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
 
     static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::span(serialized4));
     static constexpr auto deserialized4f = std::get<0>(deserialized4);
@@ -230,8 +230,8 @@ namespace{
         hal::BxCanPayload::from_bytes(std::span(serialized2))
     );
     // static constexpr auto deserialized4m = deserialize<BxCanFrame, MyStruct>(frame);
-    static constexpr auto msg_size = frame.length();
-    static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
+    [[maybe_unused]] static constexpr auto msg_size = frame.length();
+    [[maybe_unused]] static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
 
     // static_assert(deserialized1 == 42, "deserialized1 != 42");
     static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
