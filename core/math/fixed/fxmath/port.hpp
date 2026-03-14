@@ -2,4 +2,10 @@
 
 #include "core/intrinsics/mul.hpp"
 
-#define FXMATH_ATTRIBUTE_HOT_TABLE __attribute__((section(".text"))) alignas(4)
+namespace ymd::fxmath{
+
+#define FXMATH_ATTRIBUTE_HOT_TABLE \
+    __attribute__((section(".rodata"))) \
+    alignas(4) 
+
+}

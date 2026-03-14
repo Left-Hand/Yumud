@@ -63,12 +63,13 @@ private:
     // data_t storage_;
 
     struct Empty {};
-    union {
-        Empty empty_;
-        T storage_;
-    };
 
     bool exists_;
+    union {
+        alignas(sizeof(size_t)) Empty empty_;
+        alignas(sizeof(size_t)) T storage_;
+    };
+
 
     constexpr T & get_inner(){return storage_;}
     constexpr const T & get_inner() const {return storage_;}

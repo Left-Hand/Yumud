@@ -114,9 +114,9 @@ namespace details{
         using ok_type = T;
         using err_type = T;
         __fast_inline constexpr ResultStorage_Same(const Ok<T> & val):
-            ok_val_(T(val)), is_ok_(true){;}    
+            is_ok_(true), ok_val_(T(val)){;}    
         __fast_inline constexpr ResultStorage_Same(const Err<T> & val):
-            err_val_(T(val)), is_ok_(false){;}
+            is_ok_(false), err_val_(T(val)){;}
     
         __fast_inline constexpr ResultStorage_Same(const ResultStorage_Same &) = default;
         __fast_inline constexpr ResultStorage_Same(ResultStorage_Same &&) = default;
@@ -127,12 +127,12 @@ namespace details{
         __fast_inline constexpr T get_ok() const{return ok_val_;}
         __fast_inline constexpr T get_err() const{return err_val_;}
     private:
+        bool is_ok_;
         union{
-            T ok_val_;
-            T err_val_;
+            alignas(sizeof(size_t)) T ok_val_;
+            alignas(sizeof(size_t)) T err_val_;
         };
 
-        bool is_ok_;
     };
     
     template<typename E>
