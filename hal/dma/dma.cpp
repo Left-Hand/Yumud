@@ -1,5 +1,5 @@
 #include "dma.hpp"
-#include "ral/ch32/ch32_common_dma_def.hpp"
+
 #include "core/utils/nth.hpp"
 #include "core/sdk.hpp"
 
@@ -182,20 +182,6 @@ static constexpr IRQn dma_to_irqn(const Nth dma_nth, const Nth ch_sel_nth){
     __builtin_trap();
 }
 
-template<typename T, typename Fn>
-static inline void modify_reg(volatile T* reg, Fn&& fn) {
-    static_assert(std::is_trivially_copyable_v<T>, 
-        "T must be trivially copyable for register operations");
-    
-    // 读取并转换
-    T temp = std::bit_cast<T>(*const_cast<const T*>(reg));
-    
-    // 应用修改
-    temp = fn(temp);
-    
-    // 写回
-    *const_cast<T*>(reg) = temp;
-}
 
 
 
@@ -292,17 +278,7 @@ void DmaChannel::register_nvic(const NvicPriorityCode priority, const Enable en)
     return DMA_GetFlagStatus(transfer_complete_mask_);
 }
 
-void DmaChannel::set_mem_and_periph_wordsize(
-    const WordSize mem_wordsize, 
-    const WordSize periph_wordsize
-){ 
-    auto * dma_ch = RAL_INST(inst_);
-    modify_reg(&dma_ch->CFGR, [&](auto reg){
-        reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
-        reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
-        return reg;
-    });
-}
+
 
 void DmaChannel::clear_pending_flag_and_restart(){
     DMA_ClearFlag(transfer_complete_mask_ | transfer_onhalf_mask_);

@@ -35,7 +35,9 @@ struct [[nodiscard]] UartEvent final{
         TxOverrun,
         RxIdle,
         RxOverrun,
-        RxFull,
+        RxQueueOverflow,
+        RxDmaHcOverflow,
+        RxDmaTcOverflow,
         RxBulk
     };
 

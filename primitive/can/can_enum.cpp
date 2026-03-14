@@ -28,8 +28,10 @@ OutputStream & operator<<(OutputStream & os, const LibError & error){
     switch(error){
         case LibError::NoMailboxAvailable: 
             return os << "NoMailboxAvailable";
-        case LibError::SoftQueueFull: 
-            return os << "SoftQueueFull";
+        case LibError::TxQueueFull: 
+            return os << "TxQueueFull";
+        case LibError::TxQueueOverflow: 
+            return os << "TxQueueOverflow";
     }
     __builtin_unreachable();
 }

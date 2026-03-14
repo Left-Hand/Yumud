@@ -29,7 +29,9 @@ void BurstDmaPwm::invoke(){
     
 
 
-    dma_channel_.start_transfer_mem2pph<uint16_t>(
+    dma_channel_.start_transfer_mem2pph<
+        DmaWordSize::TwoByte, DmaWordSize::TwoByte
+    >(
         &timer_oc_.cvr(), pbuf_.data(), pbuf_.size()
     );
 }

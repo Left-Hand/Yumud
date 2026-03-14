@@ -14,7 +14,7 @@ using namespace ymd;
 
 
 
-void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
+void dma_tb(OutputStream & logger, hal::DmaChannel & dma_channel){
 
     char src[] = 
     R"(The quick brown fox jumps over the lazy dog, 
@@ -30,17 +30,17 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     logger.println("dst:", dst);
     logger.println("======");
 
-    channel.init({hal::DmaMode::Synergy, hal::DmaPriority::High});
+    dma_channel.init({hal::DmaMode::Synergy, hal::DmaPriority::High});
     logger.println("DMA init done");
 
 
-    channel.set_event_callback([&](const hal::DmaEvent ev){
+    dma_channel.set_event_callback([&](const hal::DmaEvent ev){
         switch(ev){
             case hal::DmaEvent::TransferComplete:
-                logger.println("d", channel.pending_count());
+                logger.println("d", dma_channel.pending_count());
                 break;
             case hal::DmaEvent::TransferOnhalf:
-                logger.println("h", channel.pending_count());
+                logger.println("h", dma_channel.pending_count());
                 break;
             default:
                 break;
@@ -49,13 +49,13 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
 
 
     logger.println("DMA it bind done");
-    channel.enable_interrupt<hal::DmaIT::Done>(EN);
-    channel.enable_interrupt<hal::DmaIT::Half>(EN);
-    channel.register_nvic(hal::NvicPriorityCode::highest(),  EN);
+    dma_channel.enable_interrupt<hal::DmaIT::Done>(EN);
+    dma_channel.enable_interrupt<hal::DmaIT::Half>(EN);
+    dma_channel.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     logger.println("DMA begin");
-    channel.start_transfer_mem2mem<char>(dst, src, sizeof(src));
-    while(channel.pending_count()){
-        logger.println(channel.pending_count());
+    dma_channel.start_transfer_mem2mem<hal::DmaWordSize::OneByte, hal::DmaWordSize::OneByte>(dst, src, sizeof(src));
+    while(dma_channel.pending_count()){
+        logger.println(dma_channel.pending_count());
         clock::delay(200ms);
     }
 

@@ -6,13 +6,19 @@
 namespace ymd::hal{
 
 
+#if defined(CH583)
+#ifndef QINGKE_V4A
+#define QINGKE_V4A
+#endif
+#endif
+
 #if defined(CH32V203)
 #ifndef QINGKE_V4B
 #define QINGKE_V4B
 #endif
 #endif
 
-#if defined(CH32V307) || defined(CH32V317)
+#if defined(CH32V303) || defined(CH32V307) || defined(CH32V317)
 #ifndef QINGKE_V4F
 #define QINGKE_V4F
 #endif
@@ -126,7 +132,5 @@ struct [[nodiscard]] NvicPriorityCode final{
     }
 };
 
-
-}
-
 #endif
+}

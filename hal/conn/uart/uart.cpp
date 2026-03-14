@@ -6,7 +6,8 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "core/sdk.hpp"
-
+#include "core/intrinsics/volatile.hpp"
+#include "core/utils/scope_guard.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -47,6 +48,7 @@ if(self.event_callback_ != nullptr) {\
     self.event_callback_(x);\
 }\
 
+
 #ifdef RELEASE
 
 
@@ -80,6 +82,8 @@ sys::abort(AbortInfo::from_reason(str));\
 
 namespace {
 
+#define UNUSED(x) (void)(x) 
+
 #if 1
 template<typename T>
 static T clone_volatile(volatile T * p_reg){
@@ -89,7 +93,7 @@ static T clone_volatile(volatile T * p_reg){
 template<typename T>
 static void notify_volatile_readed(volatile T * p_reg){
     const T dummy = *const_cast<T *>(p_reg);
-    (void)dummy;
+    UNUSED(dummy);
     return;
 }
 
@@ -327,30 +331,36 @@ void Uart::init(const Config & cfg){
 
     const uint32_t baudrate_hz = calc_buadrate_hz(cfg.baudrate);
 
-    const USART_InitTypeDef USART_InitStructure{
-        .USART_BaudRate = baudrate_hz,
-        .USART_WordLength = USART_WordLength_8b,
-        .USART_StopBits = USART_StopBits_1,
-        .USART_Parity = USART_Parity_No,
-        .USART_Mode = ({
-            uint16_t mode_mask = 0;
-            if(cfg.tx_strategy != CommStrategy::Disabled) mode_mask |= USART_Mode_Tx;
-            if(cfg.rx_strategy != CommStrategy::Disabled) mode_mask |= USART_Mode_Rx;
-            mode_mask;
-        }),
-        .USART_HardwareFlowControl = USART_HardwareFlowControl_None
-    };
+    
+    {
+        const USART_InitTypeDef USART_InitStructure{
+            .USART_BaudRate = baudrate_hz,
+            .USART_WordLength = USART_WordLength_8b,
+            .USART_StopBits = USART_StopBits_1,
+            .USART_Parity = USART_Parity_No,
+            .USART_Mode = ({
+                uint16_t mode_mask = 0;
+                if(cfg.tx_strategy != CommStrategy::Disabled) mode_mask |= USART_Mode_Tx;
+                if(cfg.rx_strategy != CommStrategy::Disabled) mode_mask |= USART_Mode_Rx;
+                mode_mask;
+            }),
+            .USART_HardwareFlowControl = USART_HardwareFlowControl_None
+        };
 
-    USART_Init(SPL_INST(p_inst_), &USART_InitStructure);
+        USART_Init(SPL_INST(p_inst_), &USART_InitStructure);
+    }
 
 
 
     #if 1
     //清除中断标志位
     if(1){
+        //清除statr标志位
         store_volatile(reinterpret_cast<volatile uint32_t*>(&SPL_INST(self.p_inst_)->STATR)
             ,  ~STATR_CLEARABLE_MASK
         );
+
+        //清除部分要求先读statr再读datar可以清除的标志位
         RAL_INST((self).p_inst_)->STATR;
         RAL_INST((self).p_inst_)->DATAR;
     }
@@ -360,11 +370,19 @@ void Uart::init(const Config & cfg){
     lld::usart_enable_error_interrupt(p_inst_, EN);
     register_nvic(UART_INTERRUPT_NVIC_PRIORITY, EN);
 
-    USART_Cmd(SPL_INST(p_inst_), ENABLE);
-
     set_tx_strategy(cfg.tx_strategy);
     set_rx_strategy(cfg.rx_strategy);
 
+    USART_Cmd(SPL_INST(p_inst_), ENABLE);
+}
+
+void Uart::enable_tx(const Enable en){
+    RAL_INST(p_inst_)->CTLR1.TE = (en == EN);
+}
+
+
+void Uart::enable_rx(const Enable en){
+    RAL_INST(p_inst_)->CTLR1.RE = (en == EN);
 }
 
 size_t Uart::try_write_bytes(const std::span<const uint8_t> bytes){
@@ -430,10 +448,23 @@ void Uart::register_nvic(hal::NvicPriorityCode priority, const Enable en){
 
 void Uart::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ == tx_strategy) return;
+    auto guard = make_scope_guard([&]{
+        tx_strategy_ = tx_strategy;
+    });
+
+    if(tx_strategy == CommStrategy::Disabled){
+        enable_tx(DISEN);
+        enable_tx_dma(DISEN);
+        enable_tx_interrupt(DISEN);
+        return;
+    }
+
+    enable_tx(EN);
 
     switch(tx_strategy){
         case CommStrategy::Disabled:
-            [[fallthrough]];
+            __builtin_unreachable();
+            break;
         case CommStrategy::Blocking:
             enable_tx_dma(DISEN);
             enable_tx_interrupt(DISEN);
@@ -447,13 +478,7 @@ void Uart::set_tx_strategy(const CommStrategy tx_strategy){
             setup_tx_dma(TX_DMA_DMA_PRIORITY);
             enable_tx_interrupt(DISEN);
             break;
-        default:
-            UNREACHABLE();
-            break;
     }
-
-    tx_strategy_ = tx_strategy;
-
 }
 
 void Uart::poll_tx_dma(){
@@ -464,7 +489,7 @@ void Uart::poll_tx_dma(){
             const size_t act_dequeue_quantity = tx_queue_.try_pop(
                 std::span(tx_dma_buf_.begin(), req_dequeue_quantity)
             );
-            tx_dma_.start_transfer_mem2pph<uint8_t>(
+            tx_dma_.start_transfer_mem2pph<DmaWordSize::OneByte, DmaWordSize::OneByte>(
                 (&SPL_INST(self.p_inst_)->DATAR), 
                 tx_dma_buf_.begin(), 
                 act_dequeue_quantity
@@ -524,7 +549,7 @@ void Uart::setup_tx_dma(const DmaPriority priority){
 
 
     tx_dma_.set_event_callback([this](const DmaEvent ev){
-        (void)ev;
+        UNUSED(ev);
         poll_tx_dma();
     });
 
@@ -547,12 +572,28 @@ void Uart::enable_rx_dma(const Enable en){
 
 void Uart::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ == rx_strategy) return;
+    auto guard = make_scope_guard([&]{
+        rx_strategy_ = rx_strategy;
+    });
+
+    if(rx_strategy == CommStrategy::Disabled){
+        enable_rx(DISEN);
+        enable_rx_dma(DISEN);
+        enable_idle_interrupt(DISEN);
+        enable_rxne_interrupt(DISEN);
+        return;
+    }
+
+    enable_rx(EN);
 
     switch(rx_strategy){
         case CommStrategy::Disabled:
-            //should unreachable
+            //handled above
+            __builtin_unreachable();
             break;
         case CommStrategy::Blocking:
+            //blocking receive ? You idiot!!
+            ABORT("idiot");
             break;
         case CommStrategy::Interrupt:
             enable_rx_dma(DISEN);
@@ -609,7 +650,8 @@ void Uart::setup_rx_dma(const DmaPriority priority){
 
                 if(actual_quantity < required_quantity){
                     // 接收队列无法继续存全部数据 可能是接收的数据没有被及时读取导致的
-                    ABORT("uart rx(dma tc) queue full")
+                    const auto uev = Event::RxDmaTcOverflow;
+                    TRY_EMIT_EVENT_OR_ABORT(self, uev, "uart rx(dma tc) queue overflow");
                 }
 
                 self.rx_dma_buf_index_ = 0;
@@ -638,7 +680,8 @@ void Uart::setup_rx_dma(const DmaPriority priority){
 
                 if(actual_quantity < required_quantity){
                     // 接收队列无法继续存全部数据 可能是接收的数据没有被及时读取导致的
-                    ABORT("uart rx(dma hc) queue full")
+                    const auto uev = Event::RxDmaHcOverflow;
+                    TRY_EMIT_EVENT_OR_ABORT(self, uev, "uart rx(dma hc) queue overflow");
                 }
 
                 self.rx_dma_buf_index_ = HALF_UART_RX_DMA_BUF_SIZE;
@@ -654,7 +697,10 @@ void Uart::setup_rx_dma(const DmaPriority priority){
     rx_dma_.enable_interrupt<DmaIT::Done>(EN);
     rx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
-    rx_dma_.start_transfer_pph2mem<uint8_t>(
+    rx_dma_.start_transfer_pph2mem<
+        DmaWordSize::OneByte, 
+        DmaWordSize::OneByte
+    >(
         rx_dma_buf_.data(),
         &RAL_INST(p_inst_)->DATAR.DR,
         UART_RX_DMA_BUF_SIZE
@@ -672,8 +718,9 @@ void UartIrqHandler::isr_rxne(Uart & self){
             if(const auto quantity = self.rx_queue_.try_push(byte);
                 quantity == 0
             ){
+                const auto uev = Event::RxQueueOverflow;
+                TRY_EMIT_EVENT_OR_ABORT(self, uev, "uart rx(int) queue overflow");
                 // 接收的数据没有被及时读取 接收队列无法继续存数据
-                ABORT("uart rx(int) queue full")
             }
         }
             break;
@@ -685,7 +732,7 @@ void UartIrqHandler::isr_rxne(Uart & self){
 
 void UartIrqHandler::isr_tc(Uart & self){
     //TODO
-    (void)self;
+    UNUSED(self);
 }
 
 void UartIrqHandler::isr_txe(Uart & self){
@@ -710,6 +757,7 @@ void UartIrqHandler::isr_idle(Uart & self){
     auto emit_idle_event = [&self](){
         const auto uev = Event::RxIdle;
         TRY_EMIT_EVENT(self, uev);
+
     };
 
     switch(self.rx_strategy_){
@@ -719,12 +767,11 @@ void UartIrqHandler::isr_idle(Uart & self){
             if(supposed_dma_buf_index >= UART_RX_DMA_BUF_SIZE) [[unlikely]]
                 UNREACHABLE();
 
-            const uint32_t unaligned_mask = (HALF_UART_RX_DMA_BUF_SIZE - 1);
-            const bool is_dma_buf_index_unaligned = (supposed_dma_buf_index & unaligned_mask) != 0;
+            const uint32_t half_unaligned_mask = (HALF_UART_RX_DMA_BUF_SIZE - 1);
 
             // 如果这个索引已经被对齐到全部传输完成或者一半传输完成 
             // dma半满和全满中断将会接管缓冲填充操作 
-            if(is_dma_buf_index_unaligned) [[likely]] {
+            if(supposed_dma_buf_index & half_unaligned_mask) [[likely]] {
                 const auto rx_dma_buf_index = self.rx_dma_buf_index_;
                 const auto required_quantity = size_t(supposed_dma_buf_index - rx_dma_buf_index);
                 const auto actual_quantity = self.rx_queue_.try_push(std::span(
@@ -733,7 +780,8 @@ void UartIrqHandler::isr_idle(Uart & self){
 
                 if(actual_quantity != required_quantity){
                     // 接收的数据没有被及时读取 接收队列无法继续存数据
-                    ABORT("uart rx(dma) queue full")
+                    const auto uev = Event::RxDmaHcOverflow;
+                    TRY_EMIT_EVENT_OR_ABORT(self, uev, "uart rx(dma hc) queue overflow");
                 }
             }
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "dma_lld.hpp"
-
+#include "ral/ch32/ch32_common_dma_def.hpp"
+#include "core/intrinsics/volatile.hpp"
 
 namespace ymd::hal{
 
@@ -44,44 +45,44 @@ public:
 
     void clear_pending_flag_and_restart();
 
-    template <typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
 
-    template <typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_mem2pph(volatile void * dst, const void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
 
-    template<typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_mem2mem(void * dst, const void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
@@ -137,14 +138,23 @@ public:
         }
     }
 
+    __fast_inline
     void set_mem_and_periph_wordsize(
-        const WordSize src_wordsize, 
-        const WordSize dst_wordsize
-    );
+        const WordSize mem_wordsize, 
+        const WordSize periph_wordsize
+    ){ 
+        auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
+        intrinsics::modify_reg(&dma_ch->CFGR, [&](auto reg){
+            reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
+            reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
+            return reg;
+        });
+    }
 
     __fast_inline void on_interrupt(DmaEvent event){
         EXECUTE(event_callback_, event);
     }
+
     
     void start_transfer(const uintptr_t dst_addr, const uintptr_t src_addr, size_t size);
 

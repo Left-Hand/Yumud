@@ -16,7 +16,8 @@ namespace ymd::hal::can{
 
 enum struct [[nodiscard]] LibError:uint8_t{
     NoMailboxAvailable,
-    SoftQueueFull
+    TxQueueFull,
+    TxQueueOverflow,
 };
 
 

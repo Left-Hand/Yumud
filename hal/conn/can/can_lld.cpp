@@ -7,6 +7,7 @@
 
 #include "core/debug/debug.hpp"
 #include "core/utils/scope_guard.hpp"
+#include "core/intrinsics/volatile.hpp"
 #include "core/sdk.hpp"
 #include "ral/can.hpp"
 
@@ -20,24 +21,13 @@
 
 using namespace ymd;
 
-static void set_or_reset_bits(bool cond, volatile uint32_t & reg, uint32_t mask){
+static void set_or_reset_reg_bits(bool cond, volatile uint32_t & reg, uint32_t mask){
     if(cond){
         reg = reg | mask;
     }else{
         reg = reg & (~mask);
     }
 }
-
-template<typename T>
-static T clone_volatile(volatile T * p_reg){
-    return *const_cast<T *>(p_reg);
-}
-
-template<typename T>
-static void store_volatile(volatile T * p_reg, const T x){
-    *const_cast<T *>(p_reg) = x;
-}
-
 
 [[maybe_unused]] static void ch32v20xd6_can_bugfix();
 
@@ -69,7 +59,7 @@ void can_configure_filter(
     const uint32_t bitmask = 1u << filter_nth;
     auto guard = FinitGuard();
 
-    set_or_reset_bits(false, p_inst->FWR.bits, bitmask);
+    set_or_reset_reg_bits(false, p_inst->FWR.bits, bitmask);
 
     uint32_t FR1;
     uint32_t FR2;
@@ -91,7 +81,7 @@ void can_configure_filter(
     p_inst->FILTER_PAIR[filter_nth].FR1.bits = FR1;
     p_inst->FILTER_PAIR[filter_nth].FR2.bits = FR2;
 
-    set_or_reset_bits(
+    set_or_reset_reg_bits(
         filter_cfg.is_32bit(),
         p_inst->FSCFGR.bits,
         bitmask
@@ -102,19 +92,19 @@ void can_configure_filter(
     #endif
 
     
-    set_or_reset_bits(
+    set_or_reset_reg_bits(
         filter_cfg.is_list_mode(),
         p_inst->FMCFGR.bits,
         bitmask
     );
 
-    set_or_reset_bits(
+    set_or_reset_reg_bits(
         fifo_idx == hal::CanFifoIndex::_1,
         p_inst->FAFIFOR.bits,
         bitmask
     );
 
-    set_or_reset_bits(
+    set_or_reset_reg_bits(
         // filter_en == EN,
         true,
         p_inst->FWR.bits,
@@ -127,7 +117,7 @@ void can_set_filter_origin(
     [[maybe_unused]] const size_t origin
 ){
     auto guard = FinitGuard();
-    auto temp_reg = clone_volatile(&ral::CAN_Filt->FCTLR);
+    auto temp_reg = intrinsics::load_volatile(&ral::CAN_Filt->FCTLR);
     
     switch(inst_nth){
         #ifdef CAN1_PRESENT
@@ -146,7 +136,7 @@ void can_set_filter_origin(
         #endif
     }
 
-    store_volatile(&ral::CAN_Filt->FCTLR, temp_reg);
+    intrinsics::store_volatile(&ral::CAN_Filt->FCTLR, temp_reg);
     return;
 }
 

@@ -62,7 +62,8 @@ struct [[nodiscard]] R32_DATAR final{
 
 struct [[nodiscard]] R32_BRR final{
     uint32_t FRAC:4;
-    uint32_t MANT:28;
+    uint32_t MANT:12;
+    uint32_t :16;
 };
 
 VALIDATE_R32(R32_BRR)

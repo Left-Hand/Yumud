@@ -429,7 +429,7 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
         if(const auto write_quantity = tx_queue_.try_push(frame);
             write_quantity == 0){
             // 队列已满
-            return Err(CanLibError::SoftQueueFull);
+            return Err(CanLibError::TxQueueOverflow);
         }
         return Ok();
     }

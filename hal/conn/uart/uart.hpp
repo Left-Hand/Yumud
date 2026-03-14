@@ -46,6 +46,9 @@ private:
     void register_nvic(hal::NvicPriorityCode priority, const Enable en);
     void set_remap(const UartRemap remap);
 
+    void enable_tx(const Enable en);
+    void enable_rx(const Enable en);
+
     void enable_rxne_interrupt(const Enable en);
     void enable_idle_interrupt(const Enable en);
     void enable_tx_interrupt(const Enable en);

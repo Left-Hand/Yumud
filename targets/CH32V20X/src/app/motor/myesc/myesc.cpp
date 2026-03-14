@@ -330,12 +330,12 @@ void myesc_main(){
     auto & v_current_sense_ch_ = hal::adc1.inj<2>();
     auto & w_current_sense_ch_ = hal::adc1.inj<3>();
 
-    auto get_uvw_current_bits = [&] -> std::tuple<uint16_t, uint16_t, uint16_t>{
-        return std::make_tuple(
+    auto get_uvw_current_u12x3 = [&] -> std::array<uint32_t, 3>{
+        return {
             u_current_sense_ch_.read_u12(),
             v_current_sense_ch_.read_u12(),
             w_current_sense_ch_.read_u12()
-        );
+        };
     };
 
     stop_pwm();
@@ -672,12 +672,12 @@ void myesc_main(){
 
     iq20 current_cmd_ = 0;
     [[maybe_unused]] auto ctrl_isr = [&]{
-        const auto uvw_current_bits = get_uvw_current_bits();
+        const auto uvw_current_u12x3 = get_uvw_current_u12x3();
         if(dc_cal_done_ == false) [[unlikely]]{
             uvw_current_bits_offset_acc_ = std::make_tuple<uint32_t, uint32_t, uint32_t>(
-                std::get<0>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<0>(uvw_current_bits)),
-                std::get<1>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<1>(uvw_current_bits)),
-                std::get<2>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<2>(uvw_current_bits))
+                std::get<0>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<0>(uvw_current_u12x3)),
+                std::get<1>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<1>(uvw_current_u12x3)),
+                std::get<2>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<2>(uvw_current_u12x3))
             );
             dc_cal_cnt_++;
             if(dc_cal_cnt_ >= DC_CAL_TIMES){
@@ -707,11 +707,11 @@ void myesc_main(){
 
 
         const auto uvw_curr = UvwCoord<iq20>{
-            .u = static_cast<int32_t>(std::get<0>(uvw_current_bits) - static_cast<int32_t>(std::get<0>(uvw_current_bits_offset_)))
+            .u = static_cast<int32_t>(std::get<0>(uvw_current_u12x3) - static_cast<int32_t>(std::get<0>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
-            .v = static_cast<int32_t>(std::get<1>(uvw_current_bits) - static_cast<int32_t>(std::get<1>(uvw_current_bits_offset_)))
+            .v = static_cast<int32_t>(std::get<1>(uvw_current_u12x3) - static_cast<int32_t>(std::get<1>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
-            .w = static_cast<int32_t>(std::get<2>(uvw_current_bits) - static_cast<int32_t>(std::get<2>(uvw_current_bits_offset_)))
+            .w = static_cast<int32_t>(std::get<2>(uvw_current_u12x3) - static_cast<int32_t>(std::get<2>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
         };
 
@@ -896,7 +896,7 @@ void myesc_main(){
         // const auto alphabeta_volt = AlphaBetaCoord<iq20>::ZERO;
         // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MODU_VOLT_LIMIT);
 
-        flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
+        // flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
         // smo_sensorless_ob.update({alphabeta_curr, alphabeta_volt});
         // lbg_sensorless_ob.update({alphabeta_curr, alphabeta_volt});
 
