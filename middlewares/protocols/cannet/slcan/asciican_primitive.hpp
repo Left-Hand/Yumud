@@ -15,7 +15,7 @@ namespace ymd::asciican::primitive{
 
 namespace operations{
     struct [[nodiscard]] SendCanFrame{
-        hal::BxCanFrame frame;
+        hal::ClassicCanFrame frame;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanFrame & self){ 
             return os << os.field("frame")(self.frame);
@@ -93,7 +93,7 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 };
 
-using Frame = hal::BxCanFrame;
+using Frame = hal::ClassicCanFrame;
 
 enum class Error:uint8_t{
     NoInput,

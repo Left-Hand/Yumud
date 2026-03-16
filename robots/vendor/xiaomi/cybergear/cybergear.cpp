@@ -18,7 +18,7 @@ using namespace ymd;
 using namespace ymd::robots;
 using namespace ymd::robots::cybergear::details;
 
-using BxCanFrame = hal::BxCanFrame;
+using ClassicCanFrame = hal::ClassicCanFrame;
 using TemperatureCode = cybergear::details::TemperatureCode;
 using RadCode = cybergear::details::RadCode;
 using OmegaCode = cybergear::details::OmegaCode;
@@ -170,7 +170,7 @@ IResult<> Self::set_current_as_machine_home(){
         CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, host_id_, node_id_).to_bits(), 1, 0);
 }
 
-IResult<> Self::transmit(const BxCanFrame & frame){
+IResult<> Self::transmit(const ClassicCanFrame & frame){
     MOTOR_DEBUG("write_msg", frame);
     TODO();
     // can_drv_.transmit(frame);
@@ -203,14 +203,14 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t context, const uint
         return Err(Error::RET_DLC_LONGER);
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(context);
-    const auto frame = BxCanFrame::from_parts(
+    const auto frame = ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(bits), 
-        hal::BxCanPayload::from_bytes(std::span(buf.data(), dlc))
+        hal::ClassicCanPayload::from_bytes(std::span(buf.data(), dlc))
     );
     return this->transmit(frame);
 }
 
-IResult<> Self::on_receive(const BxCanFrame & frame){
+IResult<> Self::on_receive(const ClassicCanFrame & frame){
     if(!frame.is_extended())
         __builtin_trap();
     const auto id_u32 = frame.id_u32();

@@ -5,8 +5,8 @@
 
 namespace ymd::canopen::primitive{
 
-using CanFrame = hal::BxCanFrame;
-using CanPayload = hal::BxCanPayload;
+using CanFrame = hal::ClassicCanFrame;
+using CanPayload = hal::ClassicCanPayload;
 using hal::CanStdId;
 using namespace ymd::literals;
 

@@ -16,7 +16,7 @@ struct [[nodiscard]] FrameDeserializer{
 private:
 
 public:
-    static constexpr auto frame_to_event(const hal::BxCanFrame & frame) -> Result<Event, Error> {
+    static constexpr auto frame_to_event(const hal::ClassicCanFrame & frame) -> Result<Event, Error> {
         if(not frame.is_standard())
             return Err(Error::FrameIsNotStd);
 

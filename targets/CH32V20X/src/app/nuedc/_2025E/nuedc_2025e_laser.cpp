@@ -150,7 +150,7 @@ void nuedc_2025e_laser_main(){
     };
 
 
-    auto write_can_frame = [&](const hal::BxCanFrame & frame){
+    auto write_can_frame = [&](const hal::ClassicCanFrame & frame){
         if(frame.is_extended()) PANIC();
         can.try_write(frame).examine();
     };

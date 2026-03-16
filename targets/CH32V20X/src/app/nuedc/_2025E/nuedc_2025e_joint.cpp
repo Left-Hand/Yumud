@@ -260,7 +260,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::BxCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::ClassicCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -438,7 +438,7 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_frame = [&] -> Option<hal::BxCanFrame>{
+    auto read_can_frame = [&] -> Option<hal::ClassicCanFrame>{
 
         static constexpr size_t MAX_TIMES = 3u;
         const size_t iter_times = std::min(MAX_TIMES, can.available());
@@ -464,7 +464,7 @@ void nuedc_2025e_joint_main(){
         if(not msg_queue_.length())
             return None;
 
-        hal::BxCanFrame frame = hal::BxCanFrame::from_uninitialized();
+        hal::ClassicCanFrame frame = hal::ClassicCanFrame::from_uninitialized();
         if(msg_queue_.try_pop(frame) == 0)
             return None;
         return Some(frame);
@@ -564,7 +564,7 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::BxCanFrame & frame){
+        auto handle_msg = [&](const hal::ClassicCanFrame & frame){
             const auto stdid = frame.identifier().try_to_stdid().examine();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(stdid);
             if(msg_role != self_node_role_) return;

@@ -4,7 +4,7 @@
 
 namespace ymd{
 
-OutputStream & operator<<(OutputStream & os, const hal::BxCanFrame & frame){
+OutputStream & operator<<(OutputStream & os, const hal::ClassicCanFrame & frame){
     const auto guard = os.create_guard();
 
     os << '<'

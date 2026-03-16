@@ -45,7 +45,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     static constexpr auto times = count_iter(make_iter());
     static_assert(times == 2);
     {
-        static constexpr hal::BxCanFrame first_frame = get_nth_result(0, make_iter());
+        static constexpr hal::ClassicCanFrame first_frame = get_nth_result(0, make_iter());
         static_assert(first_frame.identifier().to_extid() == header.to_can_id());
         static_assert(first_frame.dlc().length() == 8);
         static_assert(first_frame.at(2) == 0x01);
@@ -63,7 +63,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     }
 
     {
-        static constexpr hal::BxCanFrame second_frame = get_nth_result(1, make_iter());
+        static constexpr hal::ClassicCanFrame second_frame = get_nth_result(1, make_iter());
         static_assert(second_frame.identifier().to_extid() == header.to_can_id());
         static_assert(second_frame.dlc().length() == 4);
         
@@ -97,7 +97,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     
     {
         // 单帧 - 数据(7) + 尾字节(1) = 8字节，不需要CRC因为刚好<=7字节数据
-        static constexpr hal::BxCanFrame single_frame = get_nth_result(0, make_iter());
+        static constexpr hal::ClassicCanFrame single_frame = get_nth_result(0, make_iter());
         static_assert(single_frame.identifier().to_extid() == header.to_can_id());
         static_assert(single_frame.dlc().length() == 8); // 7 bytes data + 1 byte tail
         
@@ -139,7 +139,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     
     {
         // 第一帧 - CRC(2) + 数据(5) + 尾字节(1) = 8字节
-        static constexpr hal::BxCanFrame first_frame = get_nth_result(0, make_iter());
+        static constexpr hal::ClassicCanFrame first_frame = get_nth_result(0, make_iter());
         static_assert(first_frame.identifier().to_extid() == header.to_can_id());
         static_assert(first_frame.dlc().length() == 8);
         
@@ -159,7 +159,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
 
     {
         // 第二帧 - 数据(6,7,8,9,10,11,12) + 尾字节(1) = 8字节
-        static constexpr hal::BxCanFrame second_frame = get_nth_result(1, make_iter());
+        static constexpr hal::ClassicCanFrame second_frame = get_nth_result(1, make_iter());
         static_assert(second_frame.identifier().to_extid() == header.to_can_id());
         static_assert(second_frame.dlc().length() == 8); 
         
@@ -180,7 +180,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
 
     {
         // 第三帧 - 数据(13,14,15,16,17,18) + 尾字节(1) = 7字节
-        static constexpr hal::BxCanFrame third_frame = get_nth_result(2, make_iter());
+        static constexpr hal::ClassicCanFrame third_frame = get_nth_result(2, make_iter());
         static_assert(third_frame.identifier().to_extid() == header.to_can_id());
         static_assert(third_frame.dlc().length() == 8); 
         
@@ -201,7 +201,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
 
     {
         // 第四帧 - 数据(20) + 尾字节(1) = 2字节
-        static constexpr hal::BxCanFrame fourth_frame = get_nth_result(3, make_iter());
+        static constexpr hal::ClassicCanFrame fourth_frame = get_nth_result(3, make_iter());
         static_assert(fourth_frame.identifier().to_extid() == header.to_can_id());
         static_assert(fourth_frame.dlc().length() == 2); 
         

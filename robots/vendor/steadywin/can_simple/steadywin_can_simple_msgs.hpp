@@ -136,8 +136,8 @@ struct [[nodiscard]] GetMotorCurrent final{
     int32_t multilap_angle;
     int32_t count_n_cpr;
 
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::ClassicCanPayload to_can_payload() const {
+        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 #endif
@@ -653,7 +653,7 @@ struct [[nodiscard]] GetPowers final{
 
 
 template<typename T>
-static constexpr hal::BxCanFrame serialize_msg_to_can_frame(
+static constexpr hal::ClassicCanFrame serialize_msg_to_can_frame(
     const primitive::AxisId & axis_id, 
     const T & msg
 ){
@@ -668,12 +668,12 @@ static constexpr hal::BxCanFrame serialize_msg_to_can_frame(
     }) {
         std::array<uint8_t, 8> bytes;
         msg.fill_bytes(bytes);
-        return hal::BxCanFrame::from_parts(
+        return hal::ClassicCanFrame::from_parts(
             frame_id.to_stdid(),
-            hal::BxCanPayload::from_u8x8(bytes)
+            hal::ClassicCanPayload::from_u8x8(bytes)
         );
     }else{
-        return hal::BxCanFrame::from_remote(
+        return hal::ClassicCanFrame::from_remote(
             frame_id.to_stdid()
         );
     }

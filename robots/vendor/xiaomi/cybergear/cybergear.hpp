@@ -92,7 +92,7 @@ public:
     // using Error = details::Error;
     // using IResult = details::IResult;
 
-    using CanFrame = hal::BxCanFrame; 
+    using CanFrame = hal::ClassicCanFrame; 
 
     using Feedback = details::Feedback;
     using TemperatureCode = details::TemperatureCode;

@@ -32,34 +32,34 @@ void can_ring_main(){
         .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
-    auto write_frame = [&](const hal::BxCanFrame & frame){
+    auto write_frame = [&](const hal::ClassicCanFrame & frame){
         DEBUG_PRINTLN("tx", frame);
         return can.try_write(frame);
     };
 
     static constexpr auto UNREACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x100), 
-            hal::BxCanPayload::from_list({0, 1, 3})
+            hal::ClassicCanPayload::from_list({0, 1, 3})
         ),
-        hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x300), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
-        hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame::from_parts(
             hal::CanExtId::from_bits(0x400), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         )
     });
 
     static constexpr auto REACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_list({0, 1, 2})
+            hal::ClassicCanPayload::from_list({0, 1, 2})
         ),
-        hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
     });
 

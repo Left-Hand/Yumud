@@ -608,7 +608,7 @@ struct [[nodiscard]] alignas(8) BmsTemps final{
     // std::array<Scaled<int16_t, 100> | Null, 3> temps;
 
     template<typename T>
-    constexpr hal::BxCanPayload to_payloads(
+    constexpr hal::ClassicCanPayload to_payloads(
         uint8_t temp_now,
         uint8_t temp_max,
         std::span<const T> temps
@@ -631,7 +631,7 @@ struct [[nodiscard]] alignas(8) BmsTemps final{
         try_push();
         try_push();
 
-        co_yield hal::BxCanPayload::from_bytes(std::span(buffer.data(), len));
+        co_yield hal::ClassicCanPayload::from_bytes(std::span(buffer.data(), len));
     }
     #endif
 };

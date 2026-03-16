@@ -208,11 +208,6 @@ template<CanFifoIndex fifo_idx>
 }
 
 
-
-
-
-
-
 static void can_setup_interrupts(void * p_inst){
     const uint32_t it_mask = 
         CAN_IT_TME      //tx done
@@ -367,8 +362,9 @@ void Can::init(const Config & cfg){
 
 }
 
+
 void Can::deinit(){
-    enable_rcc(DISEN);
+    lld::can_deinit(inst_nth_);
 };
 
 void Can::init_interrupts(){
@@ -496,7 +492,7 @@ size_t Can::available(){
 }
 
 
-Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
+Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
     // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
 
@@ -526,10 +522,10 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     }
 }
 
-Option<BxCanFrame> Can::try_read(){
-    Option<BxCanFrame> ret = None;
+Option<ClassicCanFrame> Can::try_read(){
+    Option<ClassicCanFrame> ret = None;
 
-    if(const auto quantity = rx_queue_.consume_one([&](const BxCanFrame & frame){
+    if(const auto quantity = rx_queue_.consume_one([&](const ClassicCanFrame & frame){
         ret = Some(frame);
     }); quantity == 0) return None;
     return ret;
@@ -610,7 +606,7 @@ void CanIrqHandler::isr_tx(Can & self){
         // 空闲邮箱，补包
         if(desired_dequeue_quantity > 0){
             auto mbox_idx = std::bit_cast<hal::CanMailboxIndex>(uint8_t(i));
-            auto quantity = self.tx_queue_.consume_one([&](const hal::BxCanFrame & frame){
+            auto quantity = self.tx_queue_.consume_one([&](const hal::ClassicCanFrame & frame){
                 lld::can_transmit_nott(self.p_inst_, mbox_idx, frame);
             });
             desired_dequeue_quantity -= quantity;

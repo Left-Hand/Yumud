@@ -19,7 +19,7 @@ static constexpr size_t NUM_CAN_FILTERS = 14 * 2;
 #endif
 
 
-
+void can_deinit(const Nth can_nth);
 Nth can_to_nth(const uintptr_t inst_base);
 void can_enable_rcc(const Nth can_nth, const Enable en);
 void can_set_remap(const Nth can_nth, const hal::CanRemap remap);
@@ -30,19 +30,19 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct);
 void can_transmit_nott(
     void * p_inst, 
     const hal::CanMailboxIndex mbox_idx, 
-    const hal::BxCanFrame & frame
+    const hal::ClassicCanFrame & frame
 );
 
 //can发送数据帧(ttcan)
 void can_transmit_ttcan(
     void * p_inst, 
     const hal::CanMailboxIndex mbox_idx, 
-    const hal::BxCanFrame & frame,
+    const hal::ClassicCanFrame & frame,
     const uint16_t tick
 );
 
 
-hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx);
+hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx);
 
 void can_configure_filter(
     const size_t filter_nth, 

@@ -56,13 +56,13 @@ public:
 
 
     // 尝试写入一个报文 如果没有可用的空间将返回错误
-    [[nodiscard]] Result<void, CanLibError> try_write(const BxCanFrame & frame);
+    [[nodiscard]] Result<void, CanLibError> try_write(const ClassicCanFrame & frame);
 
     // 尝试读取一个报文 如果没有可读的报文将返回空
-    [[nodiscard]] Option<BxCanFrame> try_read();
+    [[nodiscard]] Option<ClassicCanFrame> try_read();
 
     // 读取一个报文 如果没有可读的报文时立即终止程序
-    [[nodiscard]] BxCanFrame read();
+    [[nodiscard]] ClassicCanFrame read();
 
     // 可以继续写入的CAN报文数量
     [[nodiscard]] size_t free_capacity();
@@ -117,12 +117,12 @@ private:
     void init_interrupts();
 
     //在指定的邮箱填写报文
-    void transmit(const BxCanFrame & frame, const CanMailboxIndex mbox_idx);
+    void transmit(const ClassicCanFrame & frame, const CanMailboxIndex mbox_idx);
 
     void poll_backup_fifo();
 
     //在指定的fifo读取报文
-    [[nodiscard]] BxCanFrame receive(const CanFifoIndex fifo_idx);
+    [[nodiscard]] ClassicCanFrame receive(const CanFifoIndex fifo_idx);
 
     
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();

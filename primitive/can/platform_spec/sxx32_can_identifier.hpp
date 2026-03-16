@@ -28,6 +28,14 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         //是否为扩展帧
         uint32_t is_extended:1;
         uint32_t full_id:29;
+
+        [[nodiscard]] constexpr uint32_t extid() const {
+            return full_id;
+        }
+
+        [[nodiscard]] constexpr uint32_t stdid() const {
+            return full_id >> (29 - 11);
+        }
     };
 
     /// @brief  构造函数
@@ -86,9 +94,9 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr uint32_t id_u32() const {
         if(std::bit_cast<BitFields>(bits).is_extended)
-            return std::bit_cast<BitFields>(bits).full_id;
+            return std::bit_cast<BitFields>(bits).extid();
         else
-            return std::bit_cast<BitFields>(bits).full_id >> (29-11);
+            return std::bit_cast<BitFields>(bits).stdid();
     }
 
     /// @brief 尝试将帧ID转为标准帧ID
@@ -97,7 +105,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             return None;
-        return Some(CanStdId::from_bits(fields.full_id >> (29-11)));
+        return Some(CanStdId::from_bits(fields.stdid()));
     }
 
     /// @brief 尝试将帧ID转为 帧ID
@@ -106,7 +114,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             return None;
-        return Some(CanExtId::from_bits(fields.full_id));
+        return Some(CanExtId::from_bits(fields.extid()));
     }
 
     /// @brief 不顾帧格式，直接获取标准帧
@@ -115,7 +123,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             __builtin_trap();
-        return CanStdId::from_bits((fields.full_id >> (29-11)));
+        return CanStdId::from_bits((fields.stdid()));
     }
 
     /// @brief 不顾帧格式，直接获取拓展帧
@@ -124,7 +132,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             __builtin_trap();
-        return CanExtId::from_bits((fields.full_id ));
+        return CanExtId::from_bits((fields.extid()));
     }
 
 

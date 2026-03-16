@@ -5,7 +5,7 @@
 #include "core/utils/Option.hpp"
 
 
-//这个文件描述了BxCanDlc和FdCanBlc类 对于dlc的字段进行类型安全保障
+//这个文件描述了ClassicCanDlc和FdCanBlc类 对于dlc的字段进行类型安全保障
 
 namespace ymd{
 class OutputStream;
@@ -15,9 +15,9 @@ class OutputStream;
 namespace ymd::hal{
 
 //bxcan的dlc字段  至少需要四个比特才能表述
-struct [[nodiscard]] BxCanDlc final{
+struct [[nodiscard]] ClassicCanDlc final{
     static constexpr size_t NUM_BITS = 4;
-    using Self = BxCanDlc;
+    using Self = ClassicCanDlc;
 
     static constexpr Self from_uninitialized(){
         return Self();
@@ -65,10 +65,10 @@ struct [[nodiscard]] BxCanDlc final{
 private:
     uint8_t bits_;
 
-    constexpr explicit BxCanDlc(const uint8_t bits):
+    constexpr explicit ClassicCanDlc(const uint8_t bits):
         bits_(bits){;}
 
-    constexpr explicit BxCanDlc(){;}
+    constexpr explicit ClassicCanDlc(){;}
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
@@ -80,7 +80,7 @@ struct [[nodiscard]] FdCanDlc final{
     using Self = FdCanDlc;
 
     //canfd的dlc向下兼容传统can 不要求explicit
-    constexpr FdCanDlc(const BxCanDlc & classic_dlc):    
+    constexpr FdCanDlc(const ClassicCanDlc & classic_dlc):    
         bits_(classic_dlc.to_bits()){;}
 
     /// @brief 从比特位开始构造
@@ -184,5 +184,5 @@ private:
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
 
-static_assert(sizeof(BxCanDlc) == 1);
+static_assert(sizeof(ClassicCanDlc) == 1);
 }

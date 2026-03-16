@@ -36,7 +36,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
             __builtin_trap();
     }
 
-    [[nodiscard]] constexpr hal::BxCanFrame next() {
+    [[nodiscard]] constexpr hal::ClassicCanFrame next() {
         const auto bytes = paras_.bytes;
         const auto bytes_offset = state_.bytes_offset;
 
@@ -95,9 +95,9 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         payload[len] = tail_byte.to_bits();
         len += 1;
 
-        return hal::BxCanFrame::from_parts(
+        return hal::ClassicCanFrame::from_parts(
             paras_.header.to_can_id(),
-            hal::BxCanPayload::from_bytes(std::span(payload.data(), len))
+            hal::ClassicCanPayload::from_bytes(std::span(payload.data(), len))
         );
     }
 

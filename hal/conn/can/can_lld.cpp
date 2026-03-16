@@ -236,12 +236,47 @@ void can_set_remap(const Nth can_nth, const hal::CanRemap remap){
 }
 
 
+void can_deinit(const Nth can_nth){
+    switch(can_nth.count()){
+        #ifdef CAN1_PRESENT
+        case 1:{
+            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN1, ENABLE);
+            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN1, DISABLE);
+            break;
+        }
+        #endif
+
+        #ifdef CAN2_PRESENT
+        case 2:{
+            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN2, ENABLE);
+            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN2, DISABLE);
+            break;
+        }
+        #endif
+
+        #ifdef CAN3_PRESENT 
+        #error "can3 not supported yet"
+        #endif
+    }
+}
+
+
+#ifdef CANFD_PRESENT
+static void notify_thisis_bxnotfd(){
+	CANx->CANFD_CR &= ~(1);
+}
+#endif
+
 void can_transmit_nott(
     void * p_inst, 
     const hal::CanMailboxIndex mbox_idx, 
-    const hal::BxCanFrame & frame
+    const hal::ClassicCanFrame & frame
 ){
     if(size_t(mbox_idx) > 2) __builtin_unreachable();
+
+    #ifdef CANFD_PRESENT
+    notify_thisis_bxnotfd();
+    #endif
 
     auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
@@ -277,10 +312,14 @@ void can_transmit_nott(
 void can_transmit_ttcan(
     void * p_inst, 
     const hal::CanMailboxIndex mbox_idx, 
-    const hal::BxCanFrame & frame,
+    const hal::ClassicCanFrame & frame,
     uint16_t tick
 ){
     if(size_t(mbox_idx) > 2) __builtin_unreachable();
+
+    #ifdef CANFD_PRESENT
+    notify_thisis_bxnotfd();
+    #endif
 
     auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
@@ -314,7 +353,7 @@ void can_transmit_ttcan(
     mailbox_inst.TXMIR = tempmir;
 }
 
-hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
+hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
     const auto & mailbox = SPL_INST(p_inst)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
     const uint32_t rxmir = mailbox.RXMIR;
     const uint32_t rxmdtr = mailbox.RXMDTR;
@@ -327,7 +366,7 @@ hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
         static_cast<uint64_t>(static_cast<uint32_t>(mailbox.RXMDLR)) 
         | (static_cast<uint64_t>(static_cast<uint32_t>(mailbox.RXMDHR)) << 32);
 
-    return hal::BxCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
+    return hal::ClassicCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
 }
 
 
@@ -339,8 +378,14 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
     CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(_CANx);
     const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);
     static constexpr size_t INAK_TIMEOUT = 0x0000FFFF;
+
+
 	uint8_t InitStatus = CAN_InitStatus_Failed;
 	uint32_t wait_ack = 0x00000000;
+
+    #ifdef CANFD_PRESENT
+	notify_thisis_bxnotfd();
+    #endif
 
     #ifdef CH32H417
     ch32h417_can_bugfix();
@@ -456,6 +501,21 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
     }
 }
 
+
+
+
+/********************************** (C) COPYRIGHT  *******************************
+ * File Name          : ch32l103_can.c
+ * Author             : WCH
+ * Version            : V1.0.0
+ * Date               : 2023/07/08
+ * Description        : This file provides all the CAN firmware functions.
+ *********************************************************************************
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Attention: This software (modified or not) and binary are used for
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
+ *******************************************************************************/
+
 #ifdef CH32H417
 [[maybe_unused]] static void ch32h417_can_bugfix(){
 	uint32_t chip = DBGMCU_GetCHIPID();
@@ -556,3 +616,671 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 	}
 }
 #endif
+
+
+#ifdef FDCAN_PRESENT
+
+
+/* CAN_BS1_Mode */
+#define CAN_BS1_4bit                        ((uint32_t)0x00000000)
+#define CAN_BS1_6bit                        ((uint32_t)0x00000100)
+
+/* CANFD_data_length_code */
+#define CANFD_DLC_BYTES_0                   ((uint32_t)0x0000) /* 0 bytes data field  */
+#define CANFD_DLC_BYTES_1                   ((uint32_t)0x0001) /* 1 bytes data field  */
+#define CANFD_DLC_BYTES_2                   ((uint32_t)0x0002) /* 2 bytes data field  */
+#define CANFD_DLC_BYTES_3                   ((uint32_t)0x0003) /* 3 bytes data field  */
+#define CANFD_DLC_BYTES_4                   ((uint32_t)0x0004) /* 4 bytes data field  */
+#define CANFD_DLC_BYTES_5                   ((uint32_t)0x0005) /* 5 bytes data field  */
+#define CANFD_DLC_BYTES_6                   ((uint32_t)0x0006) /* 6 bytes data field  */
+#define CANFD_DLC_BYTES_7                   ((uint32_t)0x0007) /* 7 bytes data field  */
+#define CANFD_DLC_BYTES_8                   ((uint32_t)0x0008) /* 8 bytes data field  */
+#define CANFD_DLC_BYTES_12                  ((uint32_t)0x0009) /* 12 bytes data field */
+#define CANFD_DLC_BYTES_16                  ((uint32_t)0x000A) /* 16 bytes data field */
+#define CANFD_DLC_BYTES_20                  ((uint32_t)0x000B) /* 20 bytes data field */
+#define CANFD_DLC_BYTES_24                  ((uint32_t)0x000C) /* 24 bytes data field */
+#define CANFD_DLC_BYTES_32                  ((uint32_t)0x000D) /* 32 bytes data field */
+#define CANFD_DLC_BYTES_48                  ((uint32_t)0x000E) /* 48 bytes data field */
+#define CANFD_DLC_BYTES_64                  ((uint32_t)0x000F) /* 64 bytes data field */
+
+/* CANFD_synchronisation_jump_width */
+#define CANFD_SJW_1tq                          ((uint8_t)0x00) /* 1 time quantum */
+#define CANFD_SJW_2tq                          ((uint8_t)0x01) /* 2 time quantum */
+#define CANFD_SJW_3tq                          ((uint8_t)0x02) /* 3 time quantum */
+#define CANFD_SJW_4tq                          ((uint8_t)0x03) /* 4 time quantum */
+#define CANFD_SJW_5tq                          ((uint8_t)0x04) /* 5 time quantum */
+#define CANFD_SJW_6tq                          ((uint8_t)0x05) /* 6 time quantum */
+#define CANFD_SJW_7tq                          ((uint8_t)0x06) /* 7 time quantum */
+#define CANFD_SJW_8tq                          ((uint8_t)0x07) /* 8 time quantum */
+#define CANFD_SJW_9tq                          ((uint8_t)0x08) /* 9 time quantum */
+#define CANFD_SJW_10tq                         ((uint8_t)0x09) /* 10 time quantum */
+#define CANFD_SJW_11tq                         ((uint8_t)0x0A) /* 11 time quantum */
+#define CANFD_SJW_12tq                         ((uint8_t)0x0B) /* 12 time quantum */
+#define CANFD_SJW_13tq                         ((uint8_t)0x0C) /* 13 time quantum */
+#define CANFD_SJW_14tq                         ((uint8_t)0x0D) /* 14 time quantum */
+#define CANFD_SJW_15tq                         ((uint8_t)0x0E) /* 15 time quantum */
+#define CANFD_SJW_16tq                         ((uint8_t)0x0F) /* 16 time quantum */
+
+/* CANFD_time_quantum_in_bit_segment_1 */
+#define CANFD_BS1_1tq                         ((uint8_t)0x00) /* 1 time quantum */
+#define CANFD_BS1_2tq                         ((uint8_t)0x01) /* 2 time quantum */
+#define CANFD_BS1_3tq                         ((uint8_t)0x02) /* 3 time quantum */
+#define CANFD_BS1_4tq                         ((uint8_t)0x03) /* 4 time quantum */
+#define CANFD_BS1_5tq                         ((uint8_t)0x04) /* 5 time quantum */
+#define CANFD_BS1_6tq                         ((uint8_t)0x05) /* 6 time quantum */
+#define CANFD_BS1_7tq                         ((uint8_t)0x06) /* 7 time quantum */
+#define CANFD_BS1_8tq                         ((uint8_t)0x07) /* 8 time quantum */
+#define CANFD_BS1_9tq                         ((uint8_t)0x08) /* 9 time quantum */
+#define CANFD_BS1_10tq                        ((uint8_t)0x09) /* 10 time quantum */
+#define CANFD_BS1_11tq                        ((uint8_t)0x0A) /* 11 time quantum */
+#define CANFD_BS1_12tq                        ((uint8_t)0x0B) /* 12 time quantum */
+#define CANFD_BS1_13tq                        ((uint8_t)0x0C) /* 13 time quantum */
+#define CANFD_BS1_14tq                        ((uint8_t)0x0D) /* 14 time quantum */
+#define CANFD_BS1_15tq                        ((uint8_t)0x0E) /* 15 time quantum */
+#define CANFD_BS1_16tq                        ((uint8_t)0x0F) /* 16 time quantum */
+#define CANFD_BS1_17tq                         ((uint8_t)0x10) /* 17 time quantum */
+#define CANFD_BS1_18tq                         ((uint8_t)0x11) /* 18 time quantum */
+#define CANFD_BS1_19tq                         ((uint8_t)0x12) /* 19 time quantum */
+#define CANFD_BS1_20tq                         ((uint8_t)0x13) /* 20 time quantum */
+#define CANFD_BS1_21tq                         ((uint8_t)0x14) /* 21 time quantum */
+#define CANFD_BS1_22tq                         ((uint8_t)0x15) /* 22 time quantum */
+#define CANFD_BS1_23tq                         ((uint8_t)0x16) /* 23 time quantum */
+#define CANFD_BS1_24tq                         ((uint8_t)0x17) /* 24 time quantum */
+#define CANFD_BS1_25tq                         ((uint8_t)0x18) /* 25 time quantum */
+#define CANFD_BS1_26tq                         ((uint8_t)0x19) /* 26 time quantum */
+#define CANFD_BS1_27tq                         ((uint8_t)0x1A) /* 27 time quantum */
+#define CANFD_BS1_28tq                         ((uint8_t)0x1B) /* 28 time quantum */
+#define CANFD_BS1_29tq                         ((uint8_t)0x1C) /* 29 time quantum */
+#define CANFD_BS1_30tq                         ((uint8_t)0x1D) /* 30 time quantum */
+#define CANFD_BS1_31tq                         ((uint8_t)0x1E) /* 31 time quantum */
+#define CANFD_BS1_32tq                         ((uint8_t)0x1F) /* 32 time quantum */
+
+/* CANFD_time_quantum_in_bit_segment_2 */
+#define CANFD_BS2_1tq                          ((uint8_t)0x00) /* 1 time quantum */
+#define CANFD_BS2_2tq                          ((uint8_t)0x01) /* 2 time quantum */
+#define CANFD_BS2_3tq                          ((uint8_t)0x02) /* 3 time quantum */
+#define CANFD_BS2_4tq                          ((uint8_t)0x03) /* 4 time quantum */
+#define CANFD_BS2_5tq                          ((uint8_t)0x04) /* 5 time quantum */
+#define CANFD_BS2_6tq                          ((uint8_t)0x05) /* 6 time quantum */
+#define CANFD_BS2_7tq                          ((uint8_t)0x06) /* 7 time quantum */
+#define CANFD_BS2_8tq                          ((uint8_t)0x07) /* 8 time quantum */
+#define CANFD_BS2_9tq                          ((uint8_t)0x08) /* 9 time quantum */
+#define CANFD_BS2_10tq                         ((uint8_t)0x09) /* 10 time quantum */
+#define CANFD_BS2_11tq                         ((uint8_t)0x0A) /* 11 time quantum */
+#define CANFD_BS2_12tq                         ((uint8_t)0x0B) /* 12 time quantum */
+#define CANFD_BS2_13tq                         ((uint8_t)0x0C) /* 13 time quantum */
+#define CANFD_BS2_14tq                         ((uint8_t)0x0D) /* 14 time quantum */
+#define CANFD_BS2_15tq                         ((uint8_t)0x0E) /* 15 time quantum */
+#define CANFD_BS2_16tq                         ((uint8_t)0x0F) /* 16 time quantum */
+
+
+void        CAN_BS1_ModeConfig(CAN_TypeDef* CANx, uint32_t CAN_BS1_Mode, uint8_t CAN_BS1_tq);
+void        CAN_BusOff_ErrCntConfig(CAN_TypeDef *CANx, uint8_t BusOff_ErrCnt);
+void        CANFD_Restrict_ModeCmd(CAN_TypeDef *CANx, FunctionalState NewState);
+uint8_t     CANFD_Init(CAN_TypeDef *CANx, CANFD_InitTypeDef *CANFD_InitStruct);
+void        CANFD_StructInit(CANFD_InitTypeDef *CANFD_InitStruct);
+uint8_t     CANFD_Transmit(CAN_TypeDef *CANx, CanFDTxMsg *TxMessage);
+ErrorStatus CANFD_Receive(CAN_TypeDef *CANx, uint8_t FIFONumber, CanFDRxMsg *RxMessage);
+uint8_t     CANFD_GetTransmitDelayOffsetVal(CAN_TypeDef *CANx);
+void        CANFD_TransmitMailbox_DMAAdr(CAN_TypeDef *CANx, uint8_t MailboxNumber, uint32_t Address);
+void        CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Address);
+
+
+/*********************************************************************
+ * @fn      CAN_BS1_ModeConfig
+ *
+ * @brief   Configures the CAN the number of time quanta in Bit and mode.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          CAN_BS1_Mode - CAN BS1 Mode
+ *            CAN_BS1_4bit - 4bit mode
+ *              CAN_BS1_tq = TS1[3:0];(CANx->BTIMR)
+ *                This parameter must range from 0x00 to 0x0F.
+ *            CAN_BS1_6bit - 6bit mode
+ *              CAN_BS1_tq = (TS1[1:0] << 4) + BTR_TS1_T[3:0];(CANx->BTIMR)
+ *                This parameter must range from 0x00 to 0x3F.
+ *
+ * @return  none
+ */
+void CAN_BS1_ModeConfig(CAN_TypeDef* CANx, uint32_t CAN_BS1_Mode, uint8_t CAN_BS1_tq)
+{
+    CANx->CANFD_CR &= ~(CAN_BS1_6bit);
+    CANx->BTIMR &= ~(0x000FF000);
+
+    if(CAN_BS1_Mode == CAN_BS1_6bit)
+    {
+        CANx->CANFD_CR |= CAN_BS1_6bit;
+        CANx->BTIMR |= (CAN_BS1_tq << 16);
+    }
+    else if(CAN_BS1_Mode == CAN_BS1_4bit)
+    {
+        CANx->BTIMR |= (CAN_BS1_tq << 12);
+    }
+}
+
+/*********************************************************************
+ * @fn      CAN_BusOff_ErrCntConfig
+ *
+ * @brief   Configures the CAN the number of err count bus off.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          BusOff_ErrCnt - Err count bus off.
+ *            This parameter must range from 0x00 to 0xFF.
+ *
+ * @return  none
+ */
+void CAN_BusOff_ErrCntConfig(CAN_TypeDef *CANx, uint8_t BusOff_ErrCnt)
+{
+    CANx->TERR_CNT &= ~(0x000000FF);
+    CANx->TERR_CNT |= (uint32_t)BusOff_ErrCnt;
+}
+
+/*********************************************************************
+ * @fn      CANFD_Restrict_ModeCmd
+ *
+ * @brief   Enables or disables the CANFD restrict mode.
+ *
+ * @param   CANx - where x can be 1 to select the CANFD peripheral.
+ *          NewState - ENABLE or DISABLE.
+ *
+ * @return  none
+ */
+void CANFD_Restrict_ModeCmd(CAN_TypeDef *CANx, FunctionalState NewState)
+{
+
+    if(NewState)
+    {
+        CANx->CANFD_CR |= (1<<9);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<9);
+    }
+}
+
+/*********************************************************************
+ * @fn      CANFD_Init
+ *
+ * @brief   Initializes the CAN peripheral according to the specified
+ *        parameters in the CANFD_InitStruct.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          CANFD_InitStruct - pointer to a CANFD_InitTypeDef structure that
+ *        contains the configuration information for the CAN peripheral.
+ *
+ * @return  InitStatus - CAN InitStatus state.
+*             CAN_InitStatus_Failed.
+*             CAN_InitStatus_Success.
+ */
+uint8_t CANFD_Init(CAN_TypeDef* CANx, CANFD_InitTypeDef* CANFD_InitStruct)
+{
+    uint8_t InitStatus = CAN_InitStatus_Failed;
+    uint32_t wait_ack = 0x00000000;
+
+    CANx->CANFD_CR |= 1;
+
+    CANx->CTLR &= (~(uint32_t)CAN_CTLR_SLEEP);
+    CANx->CTLR |= CAN_CTLR_INRQ ;
+
+    while (((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
+    {
+        wait_ack++;
+    }
+
+    if ((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK)
+    {
+        InitStatus = CAN_InitStatus_Failed;
+    }
+    else
+    {
+        if (CANFD_InitStruct->CANFD_TTCM == ENABLE)
+        {
+            CANx->CTLR |= CAN_CTLR_TTCM;
+        }
+        else
+        {
+            CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
+        }
+
+        if (CANFD_InitStruct->CANFD_ABOM == ENABLE)
+        {
+            CANx->CTLR |= CAN_CTLR_ABOM;
+        }
+        else
+        {
+            CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
+        }
+
+        if (CANFD_InitStruct->CANFD_AWUM == ENABLE)
+        {
+            CANx->CTLR |= CAN_CTLR_AWUM;
+        }
+        else
+        {
+            CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
+        }
+
+        if (CANFD_InitStruct->CANFD_NART == ENABLE)
+        {
+            CANx->CTLR |= CAN_CTLR_NART;
+        }
+        else
+        {
+            CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
+        }
+
+        if (CANFD_InitStruct->CANFD_TXFP == ENABLE)
+        {
+            CANx->CTLR |= CAN_CTLR_TXFP;
+        }
+        else
+        {
+            CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
+        }
+
+        if (CANFD_InitStruct->CANFD_RES_Error == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<7);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<7);
+        }
+
+        if (CANFD_InitStruct->CANFD_BRS_TXM0 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<1);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<1);
+        }
+
+        if (CANFD_InitStruct->CANFD_BRS_TXM1 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<2);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<2);
+        }
+
+        if (CANFD_InitStruct->CANFD_BRS_TXM2 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<3);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<3);
+        }
+
+        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM0 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<4);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<4);
+        }
+
+        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM1 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<5);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<5);
+        }
+
+        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM2 == ENABLE)
+        {
+            CANx->CANFD_CR |= (1<<6);
+        }
+        else
+        {
+            CANx->CANFD_CR &= ~(1<<6);
+        }
+
+        CANx->CANFD_BTR &= ~(0x009F1FFF);
+        CANx->CANFD_TDCT &= ~(0x00003F3F);
+
+        CANx->CANFD_TDCT = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDC_FILTER << 8) | \
+                                     ((uint32_t)CANFD_InitStruct->CANFD_TDC0);
+
+        CANx->CANFD_BTR = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDCE << 23) | \
+                                    ((uint32_t)CANFD_InitStruct->CANFD_Prescaler-1 << 16) | \
+                                    ((uint32_t)CANFD_InitStruct->CANFD_BS1 << 8) | \
+                                    ((uint32_t)CANFD_InitStruct->CANFD_BS2 << 4) | \
+                                    ((uint32_t)CANFD_InitStruct->CANFD_SJW);
+
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
+        wait_ack = 0;
+
+        while (((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
+        {
+            wait_ack++;
+        }
+
+        if ((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK)
+        {
+            InitStatus = CAN_InitStatus_Failed;
+        }
+        else
+        {
+            InitStatus = CAN_InitStatus_Success ;
+        }
+    }
+
+    return InitStatus;
+}
+
+/*********************************************************************
+ * @fn      CANFD_StructInit
+ *
+ * @brief   Fills each CANFD_InitStruct member with its default value.
+ *
+ * @param   CANFD_InitStruct - pointer to a CANFD_InitTypeDef structure which
+ *        will be initialized.
+ *
+ * @return  none
+ */
+void CANFD_StructInit(CANFD_InitTypeDef* CANFD_InitStruct)
+{
+    CANFD_InitStruct->CANFD_TTCM = DISABLE;
+    CANFD_InitStruct->CANFD_ABOM = DISABLE;
+    CANFD_InitStruct->CANFD_AWUM = DISABLE;
+    CANFD_InitStruct->CANFD_NART = DISABLE;
+    CANFD_InitStruct->CANFD_TXFP = DISABLE;
+
+    CANFD_InitStruct->CANFD_RES_Error = DISABLE;
+    CANFD_InitStruct->CANFD_ESI_Auto_TXM0 = DISABLE;
+    CANFD_InitStruct->CANFD_ESI_Auto_TXM1 = DISABLE;
+    CANFD_InitStruct->CANFD_ESI_Auto_TXM2 = DISABLE;
+    CANFD_InitStruct->CANFD_BRS_TXM0 = DISABLE;
+    CANFD_InitStruct->CANFD_BRS_TXM1 = DISABLE;
+    CANFD_InitStruct->CANFD_BRS_TXM2 = DISABLE;
+
+    CANFD_InitStruct->CANFD_TDC_FILTER = 0;
+    CANFD_InitStruct->CANFD_TDC0 = 2;
+    CANFD_InitStruct->CANFD_TDCE = ENABLE;
+
+    CANFD_InitStruct->CANFD_Mode = CAN_Mode_Normal;
+    CANFD_InitStruct->CANFD_SJW = CANFD_SJW_8tq;
+    CANFD_InitStruct->CANFD_BS1 = CANFD_BS1_7tq;
+    CANFD_InitStruct->CANFD_BS2 = CANFD_BS2_4tq;
+    CANFD_InitStruct->CANFD_Prescaler = 1;
+}
+
+/*********************************************************************
+ * @fn      CANFD_Transmit
+ *
+ * @brief   Initiates the transmission of a message for CANFD.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          TxMessage - pointer to a structure which contains CAN Id, CAN
+ *        DLC and CAN data.
+ *
+ * @return  transmit_mailbox - The number of the mailbox that is used for
+ *        transmission or CAN_TxStatus_NoMailBox if there is no empty mailbox.
+ */
+uint8_t CANFD_Transmit(CAN_TypeDef* CANx, CanFDTxMsg* TxMessage)
+{
+    uint8_t transmit_mailbox = 0;
+
+    CANx->CANFD_CR |= (1);
+
+    if ((CANx->TSTATR&CAN_TSTATR_TME0) == CAN_TSTATR_TME0)
+    {
+        transmit_mailbox = 0;
+    }
+    else if ((CANx->TSTATR&CAN_TSTATR_TME1) == CAN_TSTATR_TME1)
+    {
+        transmit_mailbox = 1;
+    }
+    else if ((CANx->TSTATR&CAN_TSTATR_TME2) == CAN_TSTATR_TME2)
+    {
+        transmit_mailbox = 2;
+    }
+    else
+    {
+        transmit_mailbox = CAN_TxStatus_NoMailBox;
+    }
+
+    if (transmit_mailbox != CAN_TxStatus_NoMailBox)
+    {
+        CANx->sTxMailBox[transmit_mailbox].TXMIR &= TMIDxR_TXRQ;
+        if (TxMessage->IDE == CAN_Id_Standard)
+        {
+            CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->StdId << 21) | \
+                                                        TxMessage->RTR);
+        }
+        else
+        {
+            CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->ExtId << 3) | \
+                                                        TxMessage->IDE | \
+                                                        TxMessage->RTR);
+        }
+
+        TxMessage->DLC &= (uint8_t)0x0000000F;
+        CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
+        CANx->sTxMailBox[transmit_mailbox].TXMDTR |= TxMessage->DLC;
+        CANx->CANFD_DMA_T[transmit_mailbox] = (uint32_t)TxMessage->Data;
+        CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
+    }
+
+    return transmit_mailbox;
+}
+
+/*********************************************************************
+ * @fn      CANFD_Receive
+ *
+ * @brief   Receives a message.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          FIFONumber - Receive FIFO number.
+ *            CAN_FIFO0.
+ *            CAN_FIFO1.
+ *          RxMessage -  pointer to a structure receive message which contains
+ *        CAN Id, CAN DLC, CAN datas and FMI number.
+ *
+ * @return  ErrorStatus - NoREADY or READY.
+ */
+ErrorStatus CANFD_Receive(CAN_TypeDef* CANx, uint8_t FIFONumber, CanFDRxMsg* RxMessage)
+{
+    ErrorStatus sta = NoREADY;
+    uint8_t len, i;
+    uint32_t adr;
+
+    if((CANx->sFIFOMailBox[FIFONumber].RXMIR & 1) == 0) return sta;
+
+    RxMessage->IDE = (uint8_t)0x04 & CANx->sFIFOMailBox[FIFONumber].RXMIR;
+
+    if (RxMessage->IDE == CAN_Id_Standard)
+    {
+        RxMessage->StdId = (uint32_t)0x000007FF & (CANx->sFIFOMailBox[FIFONumber].RXMIR >> 21);
+    }
+    else
+    {
+        RxMessage->ExtId = (uint32_t)0x1FFFFFFF & (CANx->sFIFOMailBox[FIFONumber].RXMIR >> 3);
+    }
+
+    RxMessage->RTR = (uint8_t)0x02 & CANx->sFIFOMailBox[FIFONumber].RXMIR;
+
+    len = (uint8_t)0x0F & CANx->sFIFOMailBox[FIFONumber].RXMDTR;
+
+    if(len <= 8)
+    {
+        RxMessage->DLC = len;
+    }
+    else if(len <= 12)
+    {
+        RxMessage->DLC = (len - 6) * 4;
+    }
+    else if(len <= 15)
+    {
+        RxMessage->DLC = (len - 11) * 16;
+    }
+
+    RxMessage->FMI = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDTR >> 8);
+    RxMessage->BRS = (uint8_t)0x01 & (CANx->sFIFOMailBox[FIFONumber].RXMDTR >> 4);
+    RxMessage->ESI = (uint8_t)0x01 & (CANx->sFIFOMailBox[FIFONumber].RXMDTR >> 5);
+    RxMessage->RES = (uint8_t)0x01 & (CANx->sFIFOMailBox[FIFONumber].RXMDTR >> 6);
+
+    adr = CANx->CANFD_DMA_R[FIFONumber] + 0x20000000;
+
+    for(i=0; i<RxMessage->DLC; i++)
+    {
+        RxMessage->Data[i] = *((uint8_t*)adr++);
+    }
+
+    if (FIFONumber == CAN_FIFO0)
+    {
+        CANx->RFIFO0 |= CAN_RFIFO0_RFOM0;
+    }
+    else
+    {
+        CANx->RFIFO1 |= CAN_RFIFO1_RFOM1;
+    }
+
+    sta = READY;
+
+    return sta;
+}
+
+
+/*********************************************************************
+ * @fn      CANFD_GetTransmitDelayOffsetVal
+ *
+ * @brief   Returns the CANx Transmit Delay Offset Value.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *
+ * @return  val - CAN Transmit Delay Offset Value.
+ */
+uint8_t CANFD_GetTransmitDelayOffsetVal(CAN_TypeDef *CANx)
+{
+    uint8_t val=0;
+
+    val = (uint8_t)((CANx->CANFD_PSR & 0x00FF0000)>> 16);
+
+    return val;
+}
+
+/*********************************************************************
+ * @fn      CANFD_TransmitMailbox_DMAAdr
+ *
+ * @brief   Set Transmit Mailbox DMA address.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          MailboxNumber - Transmit Mailbox.
+ *            CAN_Transmit_Mailbox0.
+ *            CAN_Transmit_Mailbox1.
+ *            CAN_Transmit_Mailbox2.
+ *          address - DMA address.
+ *
+ * @return  none.
+ */
+void CANFD_TransmitMailbox_DMAAdr(CAN_TypeDef *CANx, uint8_t MailboxNumber, uint32_t Address)
+{
+    CANx->CANFD_DMA_T[MailboxNumber] = Address;
+}
+
+/*********************************************************************
+ * @fn      CANFD_ReceiveFIFO_DMAAdr
+ *
+ * @brief   Set receives FIFO DMA address.
+ *
+ * @param   CANx - where x can be 1 to select the CAN peripheral.
+ *          FIFONumber - Receive FIFO number.
+ *            CAN_FIFO0.
+ *            CAN_FIFO1.
+ *          address - DMA address.
+ *
+ * @return  none.
+ */
+void CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Address)
+{
+    CANx->CANFD_DMA_R[FIFONumber] = Address;
+}
+
+#endif
+
+[[maybe_unused]] static void fdcan_set_receive_addr(
+    void * p_inst, 
+    hal::CanFifoIndex fifo_idx,
+    uintptr_t addr
+){
+    if(addr & 0b11) __builtin_trap();
+    auto & reg_u32 = RAL_INST(p_inst)->CANFD_DMA_R[static_cast<uint8_t>(fifo_idx)];
+    reg_u32 = static_cast<uint32_t>(addr);
+}
+
+[[maybe_unused]] static void fdcan_set_transmit_addr(
+    void * p_inst, 
+    hal::CanMailboxIndex mbox_idx,
+    uintptr_t addr
+){
+    if(addr & 0b11) __builtin_trap();
+    auto & reg_u32 = RAL_INST(p_inst)->CANFD_DMA_T[static_cast<uint8_t>(mbox_idx)];
+    reg_u32 = static_cast<uint32_t>(addr);
+}
+
+static constexpr uint32_t FDCAN_DMA_BASE_ADDR = 0x2000'0000;
+[[maybe_unused]] static uintptr_t fdcan_get_receive_addr(
+    void * p_inst, 
+    hal::CanFifoIndex fifo_idx
+){
+    auto & reg_u32 = RAL_INST(p_inst)->CANFD_DMA_R[static_cast<uint8_t>(fifo_idx)];
+    return static_cast<uintptr_t>(reg_u32 + FDCAN_DMA_BASE_ADDR);
+}
+
+[[maybe_unused]] static uintptr_t fdcan_get_transmit_addr(
+    void * p_inst, 
+    hal::CanFifoIndex fifo_idx 
+){
+    auto & reg_u32 = RAL_INST(p_inst)->CANFD_DMA_T[static_cast<uint8_t>(fifo_idx)];
+    return static_cast<uintptr_t>(reg_u32 + FDCAN_DMA_BASE_ADDR);
+}
+
+[[maybe_unused]] static uint8_t fdcan_get_delay_offset(
+    void * p_inst
+){
+    return static_cast<uint8_t>(RAL_INST(p_inst)->CANFD_PSR.TDCV);
+}
+
+[[maybe_unused]] static void fdcan_enable_restrict_mode(
+    void * p_inst,
+    const Enable en
+){
+    RAL_INST(p_inst)->CANFD_CR.RESTRICT_MODE = (en == EN);
+
+}
+[[maybe_unused]] static void fdcan_set_buserr_cnt(
+    void * p_inst,
+    const uint8_t cnt
+){
+    RAL_INST(p_inst)->TERR_CNT.TX_ERR_CNT = cnt;
+}
+
+template<typename T>
+static void store_volatile_reg(volatile T * p_reg, const uint32_t x){
+    *reinterpret_cast<volatile uint32_t *>(p_reg) = x;
+}
+
+[[maybe_unused]] static void fdcan_set_bs1_tq(
+    void * p_inst,
+    const bool is_6bit,
+    const uint8_t bs1_bits
+){
+    // volatile uint32_t & reg = *reinterpret_cast<volatile uint32_t *>(&RAL_INST(p_inst)->BTIMR);
+    auto tempreg = intrinsics::load_volatile(&RAL_INST(p_inst)->BTIMR);
+    uint32_t tempreg_u32 = std::bit_cast<uint32_t>(tempreg) & (~0xff00);
+    if(is_6bit){
+        RAL_INST(p_inst)->CANFD_CR.CLAS_LONG_TS1 = 1;
+        tempreg_u32 |= static_cast<uint32_t>(bs1_bits << 16);
+    }else{
+        RAL_INST(p_inst)->CANFD_CR.CLAS_LONG_TS1 = 0;
+        tempreg_u32 |= static_cast<uint32_t>(bs1_bits << 16);
+    }
+    store_volatile_reg(&RAL_INST(p_inst)->BTIMR, tempreg_u32);
+}

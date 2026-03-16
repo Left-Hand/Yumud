@@ -13,9 +13,9 @@ namespace primitive{
 static constexpr hal::CanBaudrate DEFAULT_CAN_BAUD = hal::CanBaudrate::_500K;
 
 
-using CanFrame = hal::BxCanFrame;
+using CanFrame = hal::ClassicCanFrame;
 using CanId = hal::CanStdId;
-using CanPayload = hal::BxCanPayload;
+using CanPayload = hal::ClassicCanPayload;
 
 static constexpr size_t NUM_MAX_MOTORS = 8; 
 static constexpr uint16_t NUM_GENERIC_FEEDBACK_CANID_BASE = 0x96;

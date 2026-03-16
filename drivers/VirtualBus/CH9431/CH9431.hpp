@@ -14,8 +14,8 @@ namespace ymd::drivers{
 class CH9431 final:public CH9431_Prelude{
 public:
 
-    IResult<> write(const hal::BxCanFrame & frame);
-    IResult<hal::BxCanFrame> read();
+    IResult<> write(const hal::ClassicCanFrame & frame);
+    IResult<hal::ClassicCanFrame> read();
     IResult<> reset(){
         return transport_.reset_device();
     }

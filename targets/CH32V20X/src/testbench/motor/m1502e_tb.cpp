@@ -220,7 +220,7 @@ void m1502e_main(){
 
     static constexpr auto frame_factory = m1502e::FrameFactory{};
 
-    auto write_can_frame = [](const hal::BxCanFrame & frame){
+    auto write_can_frame = [](const hal::ClassicCanFrame & frame){
         can.try_write(frame).examine();
     };
 
@@ -291,7 +291,7 @@ void m1502e_main(){
         }
     };
 
-    auto handle_received_frame = [&](const hal::BxCanFrame & frame) -> void {
+    auto handle_received_frame = [&](const hal::ClassicCanFrame & frame) -> void {
         
         //  请求的CANID       响应的CANID
         //  0x32             0x96   +   MOTOR_ID           设置低四个电机的参数

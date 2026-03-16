@@ -5,188 +5,6 @@
 
 namespace ymd::ral::can::sxx32_common{
 
-#if 0
-struct [[nodiscard]] R32_CAN_CTLR{
-    uint32_t INRQ:1;
-    uint32_t SLEEP:1;
-    uint32_t TXFP:1;
-    uint32_t RFLM:1;
-
-    uint32_t NART:1;
-    uint32_t AWUM:1;
-    uint32_t ABOM:1;
-    uint32_t TTCM:1;
-
-    uint32_t :7;
-    uint32_t RST:1;
-
-    uint32_t DBF:1;
-    uint32_t :15;
-};
-
-struct [[nodiscard]] R32_CAN_STATR{
-    uint32_t INAK:1;
-    uint32_t SLAK:1;
-    uint32_t ERRI:1;
-    uint32_t WKUI:1;
-
-    uint32_t SLAKI:1;
-    uint32_t :3;
-
-    uint32_t TXM:1;
-    uint32_t RXM:1;
-    uint32_t SAMP:1;
-    uint32_t RX:1;
-
-    uint32_t :20;
-
-};
-
-struct [[nodiscard]] R32_CAN_TSTATR{
-    uint32_t RQCP0:1;
-    uint32_t TXOK0:1;
-    uint32_t ALST0:1;
-    uint32_t TERR0:1;
-
-    uint32_t :3;
-    uint32_t ABRQ0:1;
-
-
-    uint32_t RQCP1:1;
-    uint32_t TXOK1:1;
-    uint32_t ALST1:1;
-    uint32_t TERR1:1;
-
-    uint32_t :3;
-    uint32_t ABRQ1:1;
-
-
-    uint32_t RQCP2:1;
-    uint32_t TXOK2:1;
-    uint32_t ALST2:1;
-    uint32_t TERR2:1;
-
-    uint32_t :3;
-    uint32_t ABRQ2:1;
-
-
-    uint32_t CODE:2;
-    uint32_t TME0:1;
-    uint32_t TME1:1;
-
-    uint32_t TME2:1;
-    uint32_t LOW0:1;
-    uint32_t LOW1:1;
-    uint32_t LOW2:1;
-};
-
-struct [[nodiscard]] R32_CAN_RFIFO{
-    uint32_t FMP0:2;
-    uint32_t :1;
-    uint32_t FULL:1;
-
-    uint32_t FOVR:1;
-    uint32_t RFOM:1;
-
-    uint32_t :26;
-};
-
-struct [[nodiscard]] R32_CAN_INTEN{
-    uint32_t TMEIE:1;
-    uint32_t FMPIE0:1;
-    uint32_t FFIE0:1;
-    uint32_t FOVIE0:1;
-
-    uint32_t FMPIE1:1;
-    uint32_t FFIE1:1;
-    uint32_t FOVIE1:1;
-    uint32_t :1;
-
-    uint32_t EWGIE:1;
-    uint32_t EPVIE:1;
-    uint32_t BOFIE:1;
-    uint32_t LECIE:1;
-
-    uint32_t :3;
-    uint32_t ERRIE:1;
-
-    uint32_t WKUIE:1;
-    uint32_t SLKIE:1;
-
-    uint32_t :14;
-};
-
-struct [[nodiscard]] R32_CAN_ERRSR{
-    // 错误警告标志位。
-    // 当收发错误计数器达到警告阈值时，即大于
-    // 等于 96 时，硬件置 1。
-    uint32_t EWGF:1;
-
-    uint32_t EPVF:1;
-    uint32_t BOFF:1;
-    uint32_t :1;
-
-
-    // 上次错误代号。
-    // 检测到 CAN 总线上发送错误时，控制器根据
-    // 出错情况设置，当正确收发报文时，置 000b。
-    // 000：无错误；
-    // 001：位填充错误；
-    // 010：FORM 格式错误；
-    // 011：ACK 确认错误；
-    // 100：隐性位错误；
-    // 101：显性位错误；
-    // 110：CRC 错误；
-    // 111：软件设置。
-    // 通常应用软件读取到错误时，把代号设置为
-    // 111b，可以检测到代号更新。
-    uint32_t LEC:3;
-    uint32_t :9;
-
-    // 发送错误计数器。
-    // 当 CAN 发送出错时，根据出错条件，该计数
-    // 器加 1 或 8；发送成功后，该计数器减 1 或
-    // 设为 120(错误计数值大于 127)。计数器值超
-    // 过 127 时，CAN 进入错误被动状态。
-    uint32_t TEC:8;
-
-    // 接收错误计数器。
-    // 当 CAN 接收出错时，根据出错条件，该计数
-    // 器加 1 或 8；接收成功后，该计数器减 1 或
-    // 设为 120(错误计数值大于 127)。计数器值超
-    // 过 127 时，CAN 进入错误被动状态。
-    uint32_t REC:8;
-
-};
-
-struct [[nodiscard]] R32_CAN_BTIMR{
-    uint32_t BRP:10;
-    uint32_t :6;
-
-    uint32_t TS1:4;
-    uint32_t TS2:3;
-    uint32_t :1;
-
-    uint32_t SJW:2;
-    uint32_t :4;
-    uint32_t LBKM:1;
-    uint32_t SILM:1;
-};
-
-struct [[nodiscard]] R32_CAN_TTCTLR{
-    uint32_t TIMCMV:16;
-    uint32_t TIMRST:1;
-    uint32_t MODE:1;
-    uint32_t :14;
-};
-
-struct [[nodiscard]] R32_CAN_TTCNT{
-    uint32_t TIMCNT:16;
-    uint32_t :16;
-};
-
-#else
-
 struct [[nodiscard]] R32_CAN_CTLR{
     // 初始化模式请求位
     // 1：置 1 请求 CAN 控制器进入初始化模式，当
@@ -492,7 +310,6 @@ struct [[nodiscard]] R32_CAN_TTCNT{
     uint32_t :16;
 };
 
-#endif
 
 struct [[nodiscard]] R32_CAN_TXMIR{
     uint32_t TXRQ:1;
@@ -504,7 +321,10 @@ struct [[nodiscard]] R32_CAN_TXMIR{
 
 struct [[nodiscard]] R32_CAN_TXMDTR{
     uint32_t DLC:4;
-    uint32_t :4;
+    uint32_t FDCAN_BRS:1;
+    uint32_t FDCAN_ESI:1;
+    uint32_t FDCAN_RES:1;
+    uint32_t :1;
 
     uint32_t TGT:1;
     uint32_t :7;

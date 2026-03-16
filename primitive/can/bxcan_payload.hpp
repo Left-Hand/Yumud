@@ -7,9 +7,9 @@
 namespace ymd::hal{
 
 //描述了CAN2.0B(传统CAN)的数据载荷
-struct [[nodiscard]] BxCanPayload final{
+struct [[nodiscard]] ClassicCanPayload final{
 public:    
-    using Self = BxCanPayload;
+    using Self = ClassicCanPayload;
 
     using U8X8 = std::array<uint8_t, 8>;
 
@@ -39,7 +39,7 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Self(
             buf, 
-            BxCanDlc::from_bits(std::ranges::size(bytes))
+            ClassicCanDlc::from_bits(std::ranges::size(bytes))
         );
     }
 
@@ -65,7 +65,7 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(std::ranges::size(bytes))
+            ClassicCanDlc::from_bits(std::ranges::size(bytes))
         ));
     }
 
@@ -75,12 +75,12 @@ public:
 
     // __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
     //     Self self = Self();
-    //     self.dlc = BxCanDlc::from_length(len);
+    //     self.dlc = ClassicCanDlc::from_length(len);
     //     return self;
     // }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
-        return Self(std::move(array), BxCanDlc::full());
+        return Self(std::move(array), ClassicCanDlc::full());
     }
 
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
@@ -105,7 +105,7 @@ public:
 
         return Self(
             buf, 
-            BxCanDlc::from_bits(len)
+            ClassicCanDlc::from_bits(len)
         );
     }
 
@@ -129,7 +129,7 @@ public:
         // 使用数组视图构造CanFrame
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(len)
+            ClassicCanDlc::from_bits(len)
         ));
     }
 
@@ -144,7 +144,7 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Self(
             buf, 
-            BxCanDlc::from_bits(bytes.size())
+            ClassicCanDlc::from_bits(bytes.size())
         );
     }
 
@@ -158,14 +158,14 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(bytes.size())
+            ClassicCanDlc::from_bits(bytes.size())
         ));
     }
 
     /// \brief 从64位整数和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_u64_and_dlc(
         const uint64_t int_val,
-        const BxCanDlc dlc
+        const ClassicCanDlc dlc
     ){
         return Self(std::bit_cast<U8X8>(int_val),dlc);
     }
@@ -174,13 +174,13 @@ public:
     __attribute__((always_inline)) static constexpr Self from_u64(
         const uint64_t int_val
     ){
-        return Self(std::bit_cast<U8X8>(int_val), BxCanDlc::full());
+        return Self(std::bit_cast<U8X8>(int_val), ClassicCanDlc::full());
     }
 
     /// \brief 从数组和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(
         const U8X8 arr,
-        const BxCanDlc dlc
+        const ClassicCanDlc dlc
     ){
         return Self(arr,dlc);
     }
@@ -188,7 +188,7 @@ public:
     /// \brief 零
     __attribute__((always_inline)) static constexpr Self zero(
     ){
-        return Self(ZERO_U8X8, BxCanDlc::zero());
+        return Self(ZERO_U8X8, ClassicCanDlc::zero());
     }
 
 
@@ -255,16 +255,16 @@ public:
 
     #if 0
     alignas(4) U8X8 u8x8;
-    alignas(4) BxCanDlc dlc;
+    alignas(4) ClassicCanDlc dlc;
     #else
     #pragma pack(push, 1)
     U8X8 u8x8;
-    BxCanDlc dlc;
+    ClassicCanDlc dlc;
     #pragma pack(pop)
     #endif
 
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload(const BxCanPayload & other):dlc(other.dlc){
+    ClassicCanPayload(const ClassicCanPayload & other):dlc(other.dlc){
         if(std::is_constant_evaluated()){
             u8x8 = other.u8x8;
         }else{
@@ -277,7 +277,7 @@ public:
 
 private:
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload(const U8X8 _u8x8, const BxCanDlc _dlc):
+    ClassicCanPayload(const U8X8 _u8x8, const ClassicCanDlc _dlc):
         u8x8(_u8x8), dlc(_dlc){
             if(std::is_constant_evaluated()){
                 u8x8 = _u8x8;
@@ -290,9 +290,9 @@ private:
         }
 
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload():dlc(BxCanDlc::from_uninitialized()){;}
+    ClassicCanPayload():dlc(ClassicCanDlc::from_uninitialized()){;}
 
-    friend class BxCanFrame;
+    friend class ClassicCanFrame;
 
     template<size_t I>
     [[nodiscard]] static __attribute__((always_inline)) constexpr 
@@ -301,7 +301,7 @@ private:
     }
 };
 
-static_assert(sizeof(BxCanPayload) == 8 + 1);
+static_assert(sizeof(ClassicCanPayload) == 8 + 1);
 
 
 }

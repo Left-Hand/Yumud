@@ -380,7 +380,7 @@ void myservo_main(){
         // }
 
 
-        // constexpr auto msg = BxCanFrame::from_remote(CanStdId(0xff));
+        // constexpr auto msg = ClassicCanFrame::from_remote(CanStdId(0xff));
         // can.try_write(msg);
         const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(

@@ -10,27 +10,27 @@
 #include "core/utils/Result.hpp"
 
 
-//这个文件描述了BxCanFrame类 表示标准Can2.0(bxcan)的消息
+//这个文件描述了ClassicCanFrame类 表示标准Can2.0(bxcan)的消息
 
 namespace ymd::hal{
 
-struct [[nodiscard]] BxCanFrame final{
+struct [[nodiscard]] ClassicCanFrame final{
 public:
-    using Payload = BxCanPayload;
+    using Payload = ClassicCanPayload;
 
     using U8X8 = std::array<uint8_t, 8>;
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
-    using Self = BxCanFrame;
+    using Self = ClassicCanFrame;
 
 
-    constexpr BxCanFrame(const BxCanFrame & other):
+    constexpr ClassicCanFrame(const ClassicCanFrame & other):
         identifier_(other.identifier_), 
         payload_(other.payload_){}
 
 
-    constexpr BxCanFrame(BxCanFrame && other):
+    constexpr ClassicCanFrame(ClassicCanFrame && other):
         identifier_(other.identifier_), 
         payload_(other.payload_){}
 
@@ -75,7 +75,7 @@ public:
     ) noexcept{
         return Self(
             CanIdentifier::from_sxx32_reg_bits(id_bits), 
-            Payload::from_u64_and_dlc(payload_bits, BxCanDlc::from_bits(dlc_bits))
+            Payload::from_u64_and_dlc(payload_bits, ClassicCanDlc::from_bits(dlc_bits))
         );
     }
 
@@ -85,7 +85,7 @@ public:
     }
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __attribute__((always_inline)) constexpr BxCanDlc dlc() 
+    [[nodiscard]] __attribute__((always_inline)) constexpr  ClassicCanDlc dlc() 
     const noexcept{return payload_.dlc;}
 
     /// \brief 获取dlc标识符
@@ -238,25 +238,25 @@ private:
     Payload payload_;
 
 
-    __attribute__((always_inline)) constexpr BxCanFrame(
+    __attribute__((always_inline)) constexpr ClassicCanFrame(
         const CanIdentifier identifier,
         const Payload && payload
     ):
         identifier_(identifier),
         payload_(payload){}
 
-    __attribute__((always_inline)) constexpr BxCanFrame():
+    __attribute__((always_inline)) constexpr ClassicCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),
         payload_(Payload::from_uninitialized()){;}
 };
 
-// static_assert(sizeof(BxCanFrame) == 12 + 1);
-static_assert(sizeof(BxCanFrame) == 16);
+// static_assert(sizeof(ClassicCanFrame) == 12 + 1);
+static_assert(sizeof(ClassicCanFrame) == 16);
 
 
 }
 
 namespace ymd{
     class OutputStream;
-    OutputStream & operator<<(OutputStream & os, const hal::BxCanFrame & frame);
+    OutputStream & operator<<(OutputStream & os, const hal::ClassicCanFrame & frame);
 }

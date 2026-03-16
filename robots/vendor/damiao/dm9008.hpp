@@ -45,25 +45,25 @@ public:
     using NodeId = uint8_t;
 
     struct FrameFactory{
-        // static constexpr hal::BxCanFrame make_spd_frame(
+        // static constexpr hal::ClassicCanFrame make_spd_frame(
         //     const NodeId id, 
         //     const SpdCtrlParams & p
         // ){
-        //     return hal::BxCanFrame::from_parts(
+        //     return hal::ClassicCanFrame::from_parts(
         //         hal::CanStdId::from_u11(0x100 | id), 
-        //         hal::BxCanPayload::from_bytes(
+        //         hal::ClassicCanPayload::from_bytes(
         //             std::bit_cast<std::array<uint8_t, 4>>(float(p.x2))
         //         )
         //     );
         // }
 
-        // static constexpr hal::BxCanFrame make_posspd_frame(
+        // static constexpr hal::ClassicCanFrame make_posspd_frame(
         //     const NodeId id, 
         //     const PosSpdCtrlParams & p
         // ){
-        //     return hal::BxCanFrame::from_parts(
+        //     return hal::ClassicCanFrame::from_parts(
         //         hal::CanStdId::from_u11(0x100 | id), 
-        //         hal::BxCanPayload::from_bytes(
+        //         hal::ClassicCanPayload::from_bytes(
         //             std::bit_cast<std::array<uint8_t, 8>>(p)
         //         )
         //     );

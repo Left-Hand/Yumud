@@ -89,10 +89,10 @@ struct alignas(8) [[nodiscard]] EcuName final{
 
 
 
-    [[nodiscard]] hal::BxCanFrame to_can_frame(const Pdn pdn) const{
-        return hal::BxCanFrame::from_parts(
+    [[nodiscard]] hal::ClassicCanFrame to_can_frame(const Pdn pdn) const{
+        return hal::ClassicCanFrame::from_parts(
             pdn.to_can_id(),
-            hal::BxCanPayload::from_u64(to_u64())
+            hal::ClassicCanPayload::from_u64(to_u64())
         );
     }
 };

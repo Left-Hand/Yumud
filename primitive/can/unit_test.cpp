@@ -102,8 +102,8 @@ static_assert(!hal::details::is_canid<uint32_t>);
 static_assert(!hal::details::is_canid<int>);
 
 // Test basic type properties
-static_assert(std::is_standard_layout_v<hal::BxCanFrame>);
-static_assert(sizeof(hal::BxCanFrame) == 16, "hal::BxCanFrame should be 16 bytes due to alignment");
+static_assert(std::is_standard_layout_v<hal::ClassicCanFrame>);
+static_assert(sizeof(hal::ClassicCanFrame) == 16, "hal::ClassicCanFrame should be 16 bytes due to alignment");
 
 
 static_assert(hal::CanStdId::try_from_u11(0xABCU).is_none());
@@ -112,12 +112,12 @@ static_assert(hal::CanExtId::try_from_u29(UINT32_MAX).is_none());
 
 // Test constructors and factory methods
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
+    constexpr auto frame = hal::ClassicCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
     return frame.is_remote() && frame.id_u32() == 0x123U;
 }());
 
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
+    constexpr auto frame = hal::ClassicCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
     return (!frame.is_remote()) && frame.length() == 0;
 }());
 
@@ -126,27 +126,27 @@ static_assert([]{
 // Test byte array construction with sized range
 static_assert([]{
     constexpr std::array<uint8_t, 3> data{1, 2, 3};
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_bytes(data));
+        hal::ClassicCanPayload::from_bytes(data));
     return frame.length() == 3 && frame[0] == 1 && frame[1] == 2 && frame[2] == 3;
 }());
 
 // Test try_from_bytes with valid sized range
 static_assert([]{
     constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        static_cast<hal::BxCanPayload>(hal::BxCanPayload::try_from_bytes(data).unwrap())
+        static_cast<hal::ClassicCanPayload>(hal::ClassicCanPayload::try_from_bytes(data).unwrap())
     );
     return frame.length() == 5;
 }());
 
 // Test initializer list construction
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_list({1, 2, 3, 4})
+        hal::ClassicCanPayload::from_list({1, 2, 3, 4})
     );
     return frame.length() == 4 && frame[0] == 1 && frame[3] == 4;
 }());
@@ -154,7 +154,7 @@ static_assert([]{
 
 // Test try_from_list with oversized data (should return None)
 static_assert([]{
-    constexpr auto may_payload = hal::BxCanPayload::try_from_list({1, 2, 3, 4, 5, 6, 7, 8, 9});
+    constexpr auto may_payload = hal::ClassicCanPayload::try_from_list({1, 2, 3, 4, 5, 6, 7, 8, 9});
     return may_payload.is_none();
 }());
 
@@ -162,14 +162,14 @@ static_assert([]{
 
 // Test accessors
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
+    constexpr auto frame = hal::ClassicCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
     return frame.identifier().id_u32() == 0x123U;
 }());
 
 
 // Test span-based payload access
 static_assert([]{
-    constexpr auto may_frame = hal::BxCanFrame::from_parts(hal::CanStdId::from_bits(0x123U), hal::BxCanPayload::from_list({1, 2, 3}));
+    constexpr auto may_frame = hal::ClassicCanFrame::from_parts(hal::CanStdId::from_bits(0x123U), hal::ClassicCanPayload::from_list({1, 2, 3}));
     constexpr auto frame = may_frame;
     constexpr auto payload_bits = frame.payload_u64();
     static_assert(frame.dlc().length() == 3);   
@@ -183,25 +183,25 @@ static_assert([]{
 
 // Test direct array access operators
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_list({10, 20, 30}));
+        hal::ClassicCanPayload::from_list({10, 20, 30}));
     return frame[0] == 10 && frame[1] == 20 && frame[2] == 30;
 }());
 
 // Test at() method with valid indices
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_list({5, 10, 15}));
+        hal::ClassicCanPayload::from_list({5, 10, 15}));
     return frame.at(0) == 5 && frame.at(1) == 10 && frame.at(2) == 15;
 }());
 
 // Test try_at() with valid indices
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_list({7, 14, 21}));
+        hal::ClassicCanPayload::from_list({7, 14, 21}));
     constexpr auto val0 = frame.try_at(0);
     constexpr auto val1 = frame.try_at(1);
     return val0.is_some() && val0.unwrap() == 7 && val1.is_some() && val1.unwrap() == 14;
@@ -209,9 +209,9 @@ static_assert([]{
 
 // Test try_at() with invalid index (should return None)
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::from_list({1, 2, 3}));
+        hal::ClassicCanPayload::from_list({1, 2, 3}));
     constexpr auto result = frame.try_at(5); // Index out of bounds
     return result.is_none();
 }());
@@ -220,15 +220,15 @@ static_assert([]{
 
 // Test frame type identification
 static_assert([]{
-    constexpr auto remote_msg = hal::BxCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
-    constexpr auto data_msg = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
+    constexpr auto remote_msg = hal::ClassicCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
+    constexpr auto data_msg = hal::ClassicCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
     return remote_msg.is_remote() && !data_msg.is_remote();
 }());
 
 // Test standard vs extended ID
 static_assert([]{
-    constexpr auto std_msg = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x123U));
-    constexpr auto ext_msg = hal::BxCanFrame::from_empty_data(hal::CanExtId::from_bits(0x123456U));
+    constexpr auto std_msg = hal::ClassicCanFrame::from_empty_data(hal::CanStdId::from_bits(0x123U));
+    constexpr auto ext_msg = hal::ClassicCanFrame::from_empty_data(hal::CanExtId::from_bits(0x123456U));
     return std_msg.is_standard() && !std_msg.is_extended() && 
            ext_msg.is_extended() && !ext_msg.is_standard();
 }());

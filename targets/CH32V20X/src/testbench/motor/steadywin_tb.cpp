@@ -122,7 +122,7 @@ void steadywin_main(){
         }
     };
 
-    [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){
+    [[maybe_unused]] auto parse_can_frame = [&](const hal::ClassicCanFrame & frame){
         if(frame.is_extended()) PANIC{};
         if(frame.length() != 8) PANIC{frame.length()};
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
@@ -238,7 +238,7 @@ void steadywin_main(){
         }
     };
 
-    [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame, const Milliseconds delay_ms = 0ms){
+    [[maybe_unused]] auto write_can_frame = [](const hal::ClassicCanFrame & frame, const Milliseconds delay_ms = 0ms){
         can.try_write(frame).examine();
         if(delay_ms != 0ms) clock::delay(delay_ms);
     };
@@ -356,9 +356,9 @@ void steadywin_main(){
         DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
 
-        // const auto frame = hal::BxCanFrame::from_parts(
+        // const auto frame = hal::ClassicCanFrame::from_parts(
         //     hal::CanStdId::from_u11(0x111),
-        //     hal::BxCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
+        //     hal::ClassicCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
         // );
 
 

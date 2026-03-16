@@ -56,9 +56,9 @@ void mks_stepper_main(){
     #endif
     
     auto write_packet = [&](const mksmotor::FlatPacket & packet) {
-        const auto can_frame = hal::BxCanFrame::from_parts(
+        const auto can_frame = hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_u11(static_cast<uint16_t>(packet.node_id.to_u8())),
-            hal::BxCanPayload::from_bytes(packet.buf.view())
+            hal::ClassicCanPayload::from_bytes(packet.buf.view())
         );
 
         COMM_CAN.try_write(can_frame).examine();

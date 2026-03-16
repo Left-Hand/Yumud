@@ -63,7 +63,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
     }
 
 
-    [[nodiscard]] constexpr hal::BxCanFrame next(){
+    [[nodiscard]] constexpr hal::ClassicCanFrame next(){
 
         const auto frame_len = std::min(
             size_t(bytes_.size() - offset_),
@@ -83,7 +83,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
         return frame;
     }
 private:
-    static constexpr hal::BxCanFrame make_can_frame(
+    static constexpr hal::ClassicCanFrame make_can_frame(
         const NodeId node_id,
         const FuncCode func_code,
         const uint8_t piece_cnt,
@@ -95,9 +95,9 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::BxCanFrame::from_parts(
+        return hal::ClassicCanFrame::from_parts(
             nodeid_and_piececnt_to_canid(node_id, piece_cnt),
-            hal::BxCanPayload::from_bytes(buf.as_slice())
+            hal::ClassicCanPayload::from_bytes(buf.as_slice())
         );
     }
 

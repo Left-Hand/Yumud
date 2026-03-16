@@ -152,9 +152,9 @@ template<
     typename T, 
     size_t N = sizeof(T)
 >
-requires (std::is_same_v<Protocol, hal::BxCanFrame>)
-static constexpr auto deserialize(const hal::BxCanFrame frame){
-    return ImplFor<DeserializeFrom<hal::BxCanFrame>, T>::deserialize(frame);
+requires (std::is_same_v<Protocol, hal::ClassicCanFrame>)
+static constexpr auto deserialize(const hal::ClassicCanFrame frame){
+    return ImplFor<DeserializeFrom<hal::ClassicCanFrame>, T>::deserialize(frame);
 }
 
 }
@@ -173,8 +173,8 @@ struct MyStruct {
 
 
 template<>
-struct ImplFor<DeserializeFrom<hal::BxCanFrame>, MyStruct> {
-    static constexpr Option<MyStruct> deserialize(const hal::BxCanFrame & frame){
+struct ImplFor<DeserializeFrom<hal::ClassicCanFrame>, MyStruct> {
+    static constexpr Option<MyStruct> deserialize(const hal::ClassicCanFrame & frame){
 
         
         switch(frame.length()){
@@ -225,13 +225,13 @@ namespace{
     static constexpr auto deserialized4f = std::get<0>(deserialized4);
     static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
-    static constexpr auto frame = hal::BxCanFrame::from_parts(
+    static constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123), 
-        hal::BxCanPayload::from_bytes(std::span(serialized2))
+        hal::ClassicCanPayload::from_bytes(std::span(serialized2))
     );
-    // static constexpr auto deserialized4m = deserialize<BxCanFrame, MyStruct>(frame);
+    // static constexpr auto deserialized4m = deserialize<ClassicCanFrame, MyStruct>(frame);
     [[maybe_unused]] static constexpr auto msg_size = frame.length();
-    [[maybe_unused]] static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
+    [[maybe_unused]] static constexpr auto deserialized4m = deserialize<hal::ClassicCanFrame, MyStruct>(frame).unwrap();
 
     // static_assert(deserialized1 == 42, "deserialized1 != 42");
     static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");

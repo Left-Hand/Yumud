@@ -121,7 +121,7 @@ struct MsgSerde<nmt_msgs::NetManage>{
         self.fill_bytes(bytes);
         return CanFrame::from_parts(
             Self::COBID.to_stdid(), 
-            hal::BxCanPayload::from_bytes(std::span(bytes))
+            hal::ClassicCanPayload::from_bytes(std::span(bytes))
         );
     }
 

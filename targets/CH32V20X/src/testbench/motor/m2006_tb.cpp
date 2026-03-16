@@ -46,9 +46,9 @@ void m2006_main(){
             }
         };
 
-        hal::BxCanFrame msg = hal::BxCanFrame::from_parts(
+        hal::ClassicCanFrame msg = hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_bytes(
+            hal::ClassicCanPayload::from_bytes(
                 Payload{__bswap16(d), __bswap16(d2)}.to_bytes()
             )
         );
