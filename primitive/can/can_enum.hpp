@@ -7,6 +7,7 @@
 #include <memory>
 #include <functional>
 
+
 namespace ymd{
     struct OutputStream;
 }
@@ -21,117 +22,146 @@ enum struct [[nodiscard]] LibError:uint8_t{
 };
 
 
-/// @brief CAN Swj时间长度
-enum struct [[nodiscard]] Swj:uint8_t{
-    _1tq = 0x00,
-    _2tq = 0x01,
-    _3tq = 0x02,
-    _4tq = 0x03
+struct [[nodiscard]] Tq final{
+
+    using Self = Tq;
+    static constexpr Self from_num(const uint8_t count){
+        if(count == 0) __builtin_abort();
+        return std::bit_cast<Self>(static_cast<uint8_t>(count - 1));
+    }
+
+    static constexpr Self from_bits(const uint8_t bits){
+        return std::bit_cast<Self>(static_cast<uint8_t>(bits));
+    }
+
+    constexpr bool operator ==(const Self& other) const {return bits == other.bits;}
+    [[nodiscard]] constexpr uint8_t to_num() const {return bits + 1;}
+
+    [[nodiscard]] constexpr uint8_t to_bits() const {return bits;}
+private:
+    uint8_t bits;
 };
 
+
+// /// @brief CAN Swj时间长度
+struct Swj{Tq tq;};
+
 /// @brief CAN Bs1时间长度
-enum struct [[nodiscard]] Bs1:uint8_t{
-    _1tq = 0x00,
-    _2tq = 0x01,
-    _3tq = 0x02,
-    _4tq = 0x03,
-    _5tq = 0x04,
-    _6tq = 0x05,
-    _7tq = 0x06,
-    _8tq = 0x07,
-    _9tq = 0x08,
-    _10tq = 0x09,
-    _11tq = 0x0A,
-    _12tq = 0x0B,
-    _13tq = 0x0C,
-    _14tq = 0x0D,
-    _15tq = 0x0E,
-    _16tq = 0x0F
-};
+struct Bs1{Tq tq;};
 
 
 /// @brief CAN Bs2时间长度
-enum struct [[nodiscard]] Bs2:uint8_t{
-    _1tq = 0x00,
-    _2tq = 0x01,
-    _3tq = 0x02,
-    _4tq = 0x03,
-    _5tq = 0x04,
-    _6tq = 0x05,
-    _7tq = 0x06,
-    _8tq = 0x07,
-};
+struct Bs2{Tq tq;};
+
+
+// 标称比特率
 struct [[nodiscard]] NominalBitTimmingCoeffs final{
+    // ・Set the sample point to be approximately between 60% and 80% of the bit time.
+    //     In most cases, a setting between 75% and 80% is recommended.
+
+    // ・It is recommended to set the synchronization jump width (SJW) and time segment 2 (TSeg2) to the same value.
+
+    // ・For specific parameter setting examples, please refer to the [Parameter Setting Example with Sample Point Position] topic.
+
+    // CiA（CAN in Automation）推荐：87.5% 作为默认值（对应 BS1=13, BS2=2, 总 TQ=16）。
+    // 工业常用值：75% ~ 80% 以兼顾延迟和时钟容差。
+
+    // 对于低精度 RC 振荡器（±1% ~ ±2%）
+    // 适当提前采样点（75% 左右）并增大 SJW 是更稳健的策略，既能容忍时钟漂移，又不会因信号延迟而导致采样错误
+    // 可配置采样点 75%~80%，SJW 取 2~4 TQ，并确保 BS2 ≥ SJW。
+
+    // 常用配置表
+    // https://help.contec.com/pc-helper/api-tool-wdm/en/mergedProjects/CCAN/faq/sampling_point/sample_point_for_can_4pf_pe.htm
+
+    // 各时序段说明
+    // https://help.contec.com/pc-helper/api-tool-lnx/en/mergedProjects/ccan/glossary/norminal_bit_time.htm
+
+    // http://www.bittiming.can-wiki.info/
+    // https://blog.csdn.net/q601785959/article/details/105312419
+
+
+    using Self = NominalBitTimmingCoeffs;
     uint16_t prescale;
     Swj swj;
     Bs1 bs1;
     Bs2 bs2;
 
-    [[nodiscard]] static constexpr NominalBitTimmingCoeffs from(
+
+    [[nodiscard]] constexpr uint32_t to_baudrate_hz(
+        const uint32_t aligned_bus_clk_freq_hz
+    ) const {
+        uint32_t total_tq = 1 + bs1.tq.to_num() + bs2.tq.to_num();
+        return aligned_bus_clk_freq_hz / (prescale * total_tq);
+    }
+
+    [[nodiscard]] constexpr Percentage<uint8_t> to_sample_point() const {
+        const uint8_t bs1_tq = bs1.tq.to_num();
+        const uint8_t bs2_tq = bs2.tq.to_num();
+        const uint8_t total_tq = 1 + bs1_tq + bs2_tq;
+        const uint8_t sample_tq = 1 + bs1_tq;  // 采样点位于同步段结束后
+        // 四舍五入计算百分比
+        const uint8_t percent = (sample_tq * 100 + total_tq / 2) / total_tq;
+        return Percentage<uint8_t>::from_percents_unchecked(percent);
+    }
+
+    [[nodiscard]] static constexpr Option<NominalBitTimmingCoeffs> try_from(
         const uint32_t aligned_bus_clk_freq_hz,
         const uint32_t baud_freq_hz,
         const Percentage<uint8_t> sample_point
     ){
-        //works only at 144mhz pclk1 freq
-        //TODO : support other freq
-        if(aligned_bus_clk_freq_hz != 144'000'000) 
-            __builtin_trap();
+    const auto sample_percents = sample_point.percents();
 
-        //TODO use percents;
-        [[maybe_unused]] const auto sample_percents = sample_point.percents();
+        // 尝试不同的 TQ 总数（典型范围为 8~25）
+        for(uint8_t ntq = 25; ntq >= 8; --ntq){
+            // 计算分频系数（整数除法）
+            const uint32_t denominator = static_cast<uint32_t>(baud_freq_hz) * ntq;
+            if (denominator == 0) continue;                     // 防御性检查
+            const uint32_t prescale_calc = aligned_bus_clk_freq_hz / denominator;
 
-        switch(baud_freq_hz){
-            case 10'000:    
-                return {
-                    .prescale = 900, .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 20'000:    
-                return {
-                    .prescale = 450, .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 50'000:    
-                return {
-                    .prescale = 180, .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 100'000:   
-                return {
-                    .prescale = 90,  .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 125'000:   
-                return {
-                    .prescale = 72,  .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 250'000:   
-                return {
-                    .prescale = 36,  .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-            case 500'000:   
-                return {
-                    .prescale = 18,  .swj = Swj::_1tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
+            // 分频系数必须在有效范围内（常见 CAN 控制器为 1~1024）
+            if(prescale_calc == 0 || prescale_calc > 1024) continue;
+            // 验证是否能精确整除
+            if(aligned_bus_clk_freq_hz != prescale_calc * denominator) continue;
 
-            case 800'000:       
-                return {
-                    .prescale = 9,   .swj = Swj::_2tq, 
-                    .bs1 = Bs1::_15tq,     .bs2 = Bs2::_4tq
-                };
-            case 1000'000:      
-                return {
-                    .prescale = 9,   .swj = Swj::_2tq, 
-                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
-                };
-        };
+            // 同步段固定为 1 TQ
+            const uint8_t sync_seg_tq = 1;
 
-        __builtin_trap();
+            // 计算采样点所在的 TQ 位置（四舍五入）
+            const uint8_t sample_tq = (ntq * sample_percents + 50) / 100;
+
+            // 采样点不能落在同步段内，也不能超出 NTQ
+            if(sample_tq <= sync_seg_tq || sample_tq >= ntq) continue;
+
+            // 分配 BS1 和 BS2
+            const uint8_t bs1_tq = sample_tq - sync_seg_tq;     // BS1 = 采样点 - 同步段
+            const uint8_t bs2_tq = ntq - sample_tq;             // BS2 = NTQ - 采样点
+
+            // 检查 BS1 和 BS2 是否在常见控制器允许的范围内
+            if(bs1_tq < 1 || bs1_tq > 16 || bs2_tq < 1 || bs2_tq > 8) continue;
+
+            // 确定同步跳转宽度（SJW）
+            uint8_t swj_tq = (ntq >= 20) ? 2 : 1;
+            if (swj_tq > bs2_tq) {
+                swj_tq = bs2_tq;      // 不能超过 BS2
+            }
+
+            // 所有参数有效，返回结果
+            return Some(NominalBitTimmingCoeffs{
+                .prescale = static_cast<uint16_t>(prescale_calc),
+                .swj = Swj(Tq::from_num(swj_tq)),
+                .bs1 = Bs1(Tq::from_num(bs1_tq)),
+                .bs2 = Bs2(Tq::from_num(bs2_tq)),
+            });
+        }
+
+        // 未找到可行配置
+        return None;
     }
 };
+
+
+
+
 
 enum struct [[nodiscard]] FifoIndex:uint8_t{
     _0 = 0,
@@ -164,25 +194,6 @@ enum struct [[nodiscard]] InterruptFlagBit:uint16_t{
     ERR = (1u << 13),
 };
 
-struct [[nodiscard]] Tq final{
-    using Self = Tq;
-    static constexpr Self from_count(const uint8_t count){
-        if(count == 0) __builtin_abort();
-        return Self{static_cast<uint8_t>(count - 1)};
-    }
-
-    static constexpr Self from_bits(const uint8_t bits){
-        return Self{static_cast<uint8_t>(bits)};
-    }
-
-    [[nodiscard]] constexpr uint8_t to_bits() const {return bits_;}
-    [[nodiscard]] constexpr uint8_t count() const {return static_cast<uint8_t>(bits_ + 1);}
-
-private:
-    uint8_t bits_;
-
-    constexpr Tq(const uint8_t bits):bits_{bits}{}
-};
 
 //can错误
 enum class [[nodiscard]] Error:uint8_t{
@@ -203,6 +214,9 @@ public:
     static constexpr Percentage<uint8_t> DEFAULT_SAMPLE_POINT = 
         Percentage<uint8_t>::from_percents(80).unwrap();
 
+    uint32_t bitrate_hz;
+    Percentage<uint8_t> sample_point;
+
     enum struct [[nodiscard]] Kind:uint8_t{
         _10K,
         _20K,
@@ -218,44 +232,39 @@ public:
     using enum Kind;
     constexpr Baudrate(
         Kind kind, 
-        Percentage<uint8_t> sample_point = DEFAULT_SAMPLE_POINT
+        Percentage<uint8_t> _sample_point = DEFAULT_SAMPLE_POINT
     ):
-        freq_(kind2freq(kind)),
-        sample_point_(sample_point){}
+        bitrate_hz(kind2freq(kind)),
+        sample_point(_sample_point){}
     constexpr Baudrate(
         const uint32_t ferq, 
-        const Percentage<uint8_t> sample_point = DEFAULT_SAMPLE_POINT
+        const Percentage<uint8_t> _sample_point = DEFAULT_SAMPLE_POINT
     ):
-        freq_(ferq),
-        sample_point_(sample_point){}
+        bitrate_hz(ferq),
+        sample_point(_sample_point){}
 
-    constexpr NominalBitTimmingCoeffs to_coeffs(
+    constexpr Option<NominalBitTimmingCoeffs> try_into_coeffs(
         const uint32_t aligned_bus_clk_freq_hz,
-        const Percentage<uint8_t> sample_point = DEFAULT_SAMPLE_POINT
+        const Percentage<uint8_t> _sample_point = DEFAULT_SAMPLE_POINT
     ) const {
-        return NominalBitTimmingCoeffs::from(
+        return NominalBitTimmingCoeffs::try_from(
             aligned_bus_clk_freq_hz, 
-            freq_, 
-            sample_point
+            bitrate_hz, 
+            _sample_point
         );
     }
 
     [[nodiscard]] constexpr bool has_same_freq(const Baudrate& rhs) const {
-        return freq_ == rhs.freq_;
+        return bitrate_hz == rhs.bitrate_hz;
     }
 
     [[nodiscard]] constexpr bool has_same_freq(const Kind kind) const {
-        return freq_ == kind2freq(kind);
+        return bitrate_hz == kind2freq(kind);
     }
 
-    [[nodiscard]] constexpr uint32_t freq() const {return freq_;}
-
-    [[nodiscard]] constexpr Percentage<uint8_t> sample_point() const {
-        return sample_point_;}
-
+    [[nodiscard]] constexpr uint32_t freq() const {return bitrate_hz;}
 private:
-    uint32_t freq_;
-    Percentage<uint8_t> sample_point_;
+
     static constexpr uint32_t kind2freq(const Kind kind) {
         switch(kind){
             case Kind::_10K: return 10'000;
@@ -287,8 +296,8 @@ private:
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Baudrate & self){
-        return os << os.field("baudrate")(self.freq_) << os.splitter() <<
-            os.field("sample_point")(self.sample_point_.percents(), '%')
+        return os << os.field("baudrate")(self.bitrate_hz) << os.splitter() <<
+            os.field("sample_point")(self.sample_point.percents(), '%')
         ;
 
         __builtin_unreachable();
@@ -362,9 +371,12 @@ enum struct TxBufferMode:uint8_t {
 
 namespace ymd::hal{
 using CanSwj = can::Swj;
+using CanBs1 = can::Bs1;
+using CanBs2 = can::Bs2;
 using CanBaudrate = can::Baudrate;
 using CanWiringMode = can::WiringMode;
 using CanError = can::Error;
+using CanTq = can::Tq;
 using CanLibError = can::LibError;
 using CanRtrSpecfier = can::RtrSpecfier;
 using CanRtr = can::Rtr;
@@ -374,6 +386,5 @@ using CanMailboxIndex = can::MailboxIndex;
 using CanFifoIndex = can::FifoIndex;
 using CanIT = can::InterruptFlagBit;
 
-static constexpr auto CAN_BAUD_1M = CanBaudrate(1000'000, CanBaudrate::DEFAULT_SAMPLE_POINT);
 }
 

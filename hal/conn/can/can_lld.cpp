@@ -372,16 +372,11 @@ hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx
 
 
 
-
-uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
+Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 {
     CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(_CANx);
     const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);
     static constexpr size_t INAK_TIMEOUT = 0x0000FFFF;
-
-
-	uint8_t InitStatus = CAN_InitStatus_Failed;
-	uint32_t wait_ack = 0x00000000;
 
     #ifdef CANFD_PRESENT
 	notify_thisis_bxnotfd();
@@ -394,99 +389,66 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 	CANx->CTLR &= (~(uint32_t)CAN_CTLR_SLEEP);
 	CANx->CTLR |= CAN_CTLR_INRQ ;
 
-	while (((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
-	{
-		wait_ack++;
-	}
+    auto is_init_mode = [&] -> bool { 
+        return (CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK;
+    };
 
-	if ((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK)
-	{
-		InitStatus = CAN_InitStatus_Failed;
-	}
-	else 
-	{
-		if (CAN_InitStruct->CAN_TTCM == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_TTCM;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
-		}
 
-		if (CAN_InitStruct->CAN_ABOM == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_ABOM;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
-		}
+    for(volatile size_t wait_ack = 0;; wait_ack++){
+        //进入初始化模式
+        if(is_init_mode()) break;
+        if(wait_ack >= INAK_TIMEOUT) return Err();
+    }
 
-		if (CAN_InitStruct->CAN_AWUM == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_AWUM;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
-		}
+    auto set_or_reset_bit = [&] (const bool cond, const uint32_t origin, const uint32_t mask) -> uint32_t { 
+        return cond ? (origin | mask) : (origin & ~mask);
+    };
 
-		if (CAN_InitStruct->CAN_NART == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_NART;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
-		}
+    {
+        uint32_t tempreg = SPL_INST(_CANx)->CTLR;
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg, CAN_CTLR_TTCM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg, CAN_CTLR_ABOM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg, CAN_CTLR_AWUM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg, CAN_CTLR_NART);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg, CAN_CTLR_RFLM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg, CAN_CTLR_TXFP);
+        SPL_INST(_CANx)->CTLR = tempreg;
+    }
 
-		if (CAN_InitStruct->CAN_RFLM == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_RFLM;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_RFLM;
-		}
+    {
+        uint32_t tempreg = SPL_INST(_CANx)->BTIMR;
+        tempreg |= ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
+        tempreg |= ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
+        tempreg |= ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
+        tempreg |= ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
+        tempreg |= ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
+        SPL_INST(_CANx)->BTIMR = tempreg;
+    }
 
-		if (CAN_InitStruct->CAN_TXFP == ENABLE)
-		{
-			CANx->CTLR |= CAN_CTLR_TXFP;
-		}
-		else
-		{
-			CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
-		}
+    CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
 
-		CANx->BTIMR = (uint32_t)((uint32_t)CAN_InitStruct->CAN_Mode << 30) | \
-								((uint32_t)CAN_InitStruct->CAN_SJW << 24) | \
-								((uint32_t)CAN_InitStruct->CAN_BS1 << 16) | \
-								((uint32_t)CAN_InitStruct->CAN_BS2 << 20) | \
-								((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
-		CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
-		wait_ack = 0;
+    for(volatile size_t wait_ack = 0;; wait_ack++){
+        //退出初始化模式
+        if(not is_init_mode()) break;
+        if(wait_ack >= INAK_TIMEOUT) return Err();
+    }
 
-		while (((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
-		{
-			wait_ack++;
-		}
-
-		if ((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK)
-		{
-			InitStatus = CAN_InitStatus_Failed;
-		}
-		else
-		{
-			InitStatus = CAN_InitStatus_Success ;
-		}
-	}
-
-	return InitStatus;
+	return Ok();
 }
 
 
 }
+
+
+/********************************** (C) COPYRIGHT  *******************************
+ * File Name          : ch32v20x_can.c
+ * Author             : WCH
+ * Version            : V1.0.0
+ * Date               : 2021/06/06
+ * Description        : This file provides all the CAN firmware functions.
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * SPDX-License-Identifier: Apache-2.0
+ *******************************************************************************/
 
 [[maybe_unused]] static void ch32v20xd6_can_bugfix(){
     //见数据手册 我认为是给usbd和can的共享sram打补丁
@@ -505,16 +467,18 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 
 
 /********************************** (C) COPYRIGHT  *******************************
- * File Name          : ch32l103_can.c
- * Author             : WCH
- * Version            : V1.0.0
- * Date               : 2023/07/08
- * Description        : This file provides all the CAN firmware functions.
- *********************************************************************************
- * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for
- * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
+* File Name          : ch32h417_can.c
+* Author             : WCH
+* Version            : V1.0.2
+* Date               : 2025/10/21
+* Description        : This file provides all the CAN firmware functions.
+*********************************************************************************
+* Copyright (c) 2025 Nanjing Qinheng Microelectronics Co., Ltd.
+* Attention: This software (modified or not) and binary are used for 
+* microcontroller manufactured by Nanjing Qinheng Microelectronics.
+*******************************************************************************/
+
+
 
 #ifdef CH32H417
 [[maybe_unused]] static void ch32h417_can_bugfix(){
@@ -523,16 +487,16 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 	{
 		if(CAN1 == CANx)
         {
-            (*(__IO uint32_t *)(0x40021014)) |= 0x02000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x02000000);
+            (*(volatile uint32_t *)(0x40021014)) |= 0x02000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x02000000);
         }else if(CAN2 == CANx)
         {
-            (*(__IO uint32_t *)(0x40021014)) |= 0x04000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x04000000);
+            (*(volatile uint32_t *)(0x40021014)) |= 0x04000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x04000000);
         }else if(CAN3 == CANx)
 		{
-			(*(__IO uint32_t *)(0x40021014)) |= 0x01000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x01000000);
+			(*(volatile uint32_t *)(0x40021014)) |= 0x01000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x01000000);
 		}
         
         CANx->CTLR &= ~0x2;
@@ -546,7 +510,7 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
         if((CANx->STATR & 0x1))
         {
             CANx->BTIMR = ( uint32_t)0xC1100000| \
-                                    ((uint32_t)SystemCoreClock/(((((*(__IO uint32_t *)(0x40021004)) >> 8) & 0x7) < 0x4) ? 1 : (uint32_t)0x2<<(((*(__IO uint32_t *)(0x40021004)) >> 8) & 0x3))/4000000 - 1);
+                                    ((uint32_t)SystemCoreClock/(((((*(volatile uint32_t *)(0x40021004)) >> 8) & 0x7) < 0x4) ? 1 : (uint32_t)0x2<<(((*(volatile uint32_t *)(0x40021004)) >> 8) & 0x3))/4000000 - 1);
         }
         else
         {
@@ -563,55 +527,55 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
             return CAN_InitStatus_Failed;
         }
 
-        (*(__IO uint32_t *)(0x4000660C)) |= 0xFFFFFFF;
-		(*(__IO uint32_t *)(0x40006620)) |= 0x3FF;
-        (*(__IO uint32_t *)(0x40006640)) = 0x0;
-        (*(__IO uint32_t *)(0x40006644)) = 0x0;
-        (*(__IO uint32_t *)(0x40006648)) = 0x0;
-        (*(__IO uint32_t *)(0x4000664C)) = 0x0;
-		(*(__IO uint32_t *)(0x40006650)) = 0x0;
-        (*(__IO uint32_t *)(0x40006654)) = 0x0;
-        (*(__IO uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
-		(*(__IO uint32_t *)(0x40006620)) |= 0x3FF;	
-		(*(__IO uint32_t *)(0x40006600)) = 0x2A010101;
-        (*(__IO uint32_t *)(0x40006600)) &= ~0x1; 	
+        (*(volatile uint32_t *)(0x4000660C)) |= 0xFFFFFFF;
+		(*(volatile uint32_t *)(0x40006620)) |= 0x3FF;
+        (*(volatile uint32_t *)(0x40006640)) = 0x0;
+        (*(volatile uint32_t *)(0x40006644)) = 0x0;
+        (*(volatile uint32_t *)(0x40006648)) = 0x0;
+        (*(volatile uint32_t *)(0x4000664C)) = 0x0;
+		(*(volatile uint32_t *)(0x40006650)) = 0x0;
+        (*(volatile uint32_t *)(0x40006654)) = 0x0;
+        (*(volatile uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
+		(*(volatile uint32_t *)(0x40006620)) |= 0x3FF;	
+		(*(volatile uint32_t *)(0x40006600)) = 0x2A010101;
+        (*(volatile uint32_t *)(0x40006600)) &= ~0x1; 	
         if(CAN1 == CANx)
         {
-            (*(__IO uint32_t *)(0x40006580)) |= 0x3;
-            while(!((*(__IO uint32_t *)(0x4000640C)) & 0x3));
-            (*(__IO uint32_t *)(0x4000640C)) = 0x38;
+            (*(volatile uint32_t *)(0x40006580)) |= 0x3;
+            while(!((*(volatile uint32_t *)(0x4000640C)) & 0x3));
+            (*(volatile uint32_t *)(0x4000640C)) = 0x38;
         }else if (CAN2 == CANx)
         {
-            (*(__IO uint32_t *)(0x40006980)) |= 0x3;
-            while(!((*(__IO uint32_t *)(0x4000680C)) & 0x3));
-            (*(__IO uint32_t *)(0x4000680C)) = 0x38;
+            (*(volatile uint32_t *)(0x40006980)) |= 0x3;
+            while(!((*(volatile uint32_t *)(0x4000680C)) & 0x3));
+            (*(volatile uint32_t *)(0x4000680C)) = 0x38;
         }else if (CAN3 == CANx)
         {
-            (*(__IO uint32_t *)(0x40007980)) |= 0x3;
-            while(!((*(__IO uint32_t *)(0x4000780C)) & 0x3));
-            (*(__IO uint32_t *)(0x4000780C)) = 0x38;
+            (*(volatile uint32_t *)(0x40007980)) |= 0x3;
+            while(!((*(volatile uint32_t *)(0x4000780C)) & 0x3));
+            (*(volatile uint32_t *)(0x4000780C)) = 0x38;
         }
 
         if(CAN1 == CANx)
         {
-            (*(__IO uint32_t *)(0x40021014)) |= 0x02000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x02000000);
+            (*(volatile uint32_t *)(0x40021014)) |= 0x02000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x02000000);
         }else if(CAN2 == CANx)
         {
-            (*(__IO uint32_t *)(0x40021014)) |= 0x04000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x04000000);
+            (*(volatile uint32_t *)(0x40021014)) |= 0x04000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x04000000);
         }else if(CAN3 == CANx)
 		{
-			(*(__IO uint32_t *)(0x40021014)) |= 0x01000000;
-            (*(__IO uint32_t *)(0x40021014)) &= ~(0x01000000);
+			(*(volatile uint32_t *)(0x40021014)) |= 0x01000000;
+            (*(volatile uint32_t *)(0x40021014)) &= ~(0x01000000);
 		}
-        (*(__IO uint32_t *)(0x40006600)) |= 0x1; 	
-        (*(__IO uint32_t *)(0x4000660C)) |= 0xFFFFFFF;	
-        (*(__IO uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
-        (*(__IO uint32_t *)(0x40006600)) &= ~0x1;
-		(*(__IO uint32_t *)(0x40006600)) |= 0x1; 	
-		(*(__IO uint32_t *)(0x40006600)) = 0x2A010101;
-		(*(__IO uint32_t *)(0x40006600)) &= ~0x1;
+        (*(volatile uint32_t *)(0x40006600)) |= 0x1; 	
+        (*(volatile uint32_t *)(0x4000660C)) |= 0xFFFFFFF;	
+        (*(volatile uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
+        (*(volatile uint32_t *)(0x40006600)) &= ~0x1;
+		(*(volatile uint32_t *)(0x40006600)) |= 0x1; 	
+		(*(volatile uint32_t *)(0x40006600)) = 0x2A010101;
+		(*(volatile uint32_t *)(0x40006600)) &= ~0x1;
         wait_ack = 0;
 	}
 }
@@ -619,6 +583,17 @@ uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 
 
 #ifdef FDCAN_PRESENT
+/********************************** (C) COPYRIGHT  *******************************
+ * File Name          : ch32l103_can.c
+ * Author             : WCH
+ * Version            : V1.0.0
+ * Date               : 2023/07/08
+ * Description        : This file provides all the CAN firmware functions.
+ *********************************************************************************
+ * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Attention: This software (modified or not) and binary are used for
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
+ *******************************************************************************/
 
 
 /* CAN_BS1_Mode */
@@ -725,78 +700,6 @@ uint8_t     CANFD_GetTransmitDelayOffsetVal(CAN_TypeDef *CANx);
 void        CANFD_TransmitMailbox_DMAAdr(CAN_TypeDef *CANx, uint8_t MailboxNumber, uint32_t Address);
 void        CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Address);
 
-
-/*********************************************************************
- * @fn      CAN_BS1_ModeConfig
- *
- * @brief   Configures the CAN the number of time quanta in Bit and mode.
- *
- * @param   CANx - where x can be 1 to select the CAN peripheral.
- *          CAN_BS1_Mode - CAN BS1 Mode
- *            CAN_BS1_4bit - 4bit mode
- *              CAN_BS1_tq = TS1[3:0];(CANx->BTIMR)
- *                This parameter must range from 0x00 to 0x0F.
- *            CAN_BS1_6bit - 6bit mode
- *              CAN_BS1_tq = (TS1[1:0] << 4) + BTR_TS1_T[3:0];(CANx->BTIMR)
- *                This parameter must range from 0x00 to 0x3F.
- *
- * @return  none
- */
-void CAN_BS1_ModeConfig(CAN_TypeDef* CANx, uint32_t CAN_BS1_Mode, uint8_t CAN_BS1_tq)
-{
-    CANx->CANFD_CR &= ~(CAN_BS1_6bit);
-    CANx->BTIMR &= ~(0x000FF000);
-
-    if(CAN_BS1_Mode == CAN_BS1_6bit)
-    {
-        CANx->CANFD_CR |= CAN_BS1_6bit;
-        CANx->BTIMR |= (CAN_BS1_tq << 16);
-    }
-    else if(CAN_BS1_Mode == CAN_BS1_4bit)
-    {
-        CANx->BTIMR |= (CAN_BS1_tq << 12);
-    }
-}
-
-/*********************************************************************
- * @fn      CAN_BusOff_ErrCntConfig
- *
- * @brief   Configures the CAN the number of err count bus off.
- *
- * @param   CANx - where x can be 1 to select the CAN peripheral.
- *          BusOff_ErrCnt - Err count bus off.
- *            This parameter must range from 0x00 to 0xFF.
- *
- * @return  none
- */
-void CAN_BusOff_ErrCntConfig(CAN_TypeDef *CANx, uint8_t BusOff_ErrCnt)
-{
-    CANx->TERR_CNT &= ~(0x000000FF);
-    CANx->TERR_CNT |= (uint32_t)BusOff_ErrCnt;
-}
-
-/*********************************************************************
- * @fn      CANFD_Restrict_ModeCmd
- *
- * @brief   Enables or disables the CANFD restrict mode.
- *
- * @param   CANx - where x can be 1 to select the CANFD peripheral.
- *          NewState - ENABLE or DISABLE.
- *
- * @return  none
- */
-void CANFD_Restrict_ModeCmd(CAN_TypeDef *CANx, FunctionalState NewState)
-{
-
-    if(NewState)
-    {
-        CANx->CANFD_CR |= (1<<9);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<9);
-    }
-}
 
 /*********************************************************************
  * @fn      CANFD_Init
@@ -1205,6 +1108,7 @@ void CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Ad
 
 #endif
 
+#ifdef YMD_CANFD_SPECIFIC_CH32L103
 [[maybe_unused]] static void fdcan_set_receive_addr(
     void * p_inst, 
     hal::CanFifoIndex fifo_idx,
@@ -1284,3 +1188,4 @@ static void store_volatile_reg(volatile T * p_reg, const uint32_t x){
     }
     store_volatile_reg(&RAL_INST(p_inst)->BTIMR, tempreg_u32);
 }
+#endif

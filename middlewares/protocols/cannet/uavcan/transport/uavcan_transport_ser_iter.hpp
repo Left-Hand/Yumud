@@ -29,15 +29,15 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         }
     };
 
-    explicit constexpr Bytes2CanFrameSlicingIterator(const Parameters & paras):paras_(paras){
-        if(paras_.bytes.data() == nullptr)
+    explicit constexpr Bytes2CanFrameSlicingIterator(const Parameters & params):params_(params){
+        if(params_.bytes.data() == nullptr)
             __builtin_trap();
-        if(paras_.bytes.size() > 256) // UAVCAN 有最大传输大小限制
+        if(params_.bytes.size() > 256) // UAVCAN 有最大传输大小限制
             __builtin_trap();
     }
 
     [[nodiscard]] constexpr hal::ClassicCanFrame next() {
-        const auto bytes = paras_.bytes;
+        const auto bytes = params_.bytes;
         const auto bytes_offset = state_.bytes_offset;
 
         if(bytes_offset >= bytes.size()){
@@ -53,7 +53,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         if(bytes_offset == 0){//first frame
             if(pending_length > 7){//multi frame
                 const auto crc = CrcBuilder(0xffff)
-                    .push_signature(paras_.signature)
+                    .push_signature(params_.signature)
                     .push_bytes(bytes)
                     .get()
                 ;
@@ -86,7 +86,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         len += copy_len;
 
         const auto tail_byte = TailByte{
-            .transfer_id = paras_.transfer_id.bits,
+            .transfer_id = params_.transfer_id.bits,
             .toggle = state_.toggle_bit,
             .is_end_of_transfer = is_end_of_transfer,
             .is_start_of_transfer = is_start_of_transfer
@@ -96,17 +96,17 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         len += 1;
 
         return hal::ClassicCanFrame::from_parts(
-            paras_.header.to_can_id(),
+            params_.header.to_can_id(),
             hal::ClassicCanPayload::from_bytes(std::span(payload.data(), len))
         );
     }
 
     [[nodiscard]] constexpr bool has_next() const {
-        return state_.bytes_offset < paras_.bytes.size();
+        return state_.bytes_offset < params_.bytes.size();
     }
 
 private:
-    Parameters paras_;
+    Parameters params_;
     State state_ = State::zero();
 };
 

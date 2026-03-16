@@ -1,5 +1,7 @@
 #include "bxcan_frame.hpp"
 #include "can_event.hpp"
+#include "can_enum.hpp"
+#include "can_bit_calc.hpp"
 
 using namespace ymd;
 
@@ -262,4 +264,150 @@ namespace {
 }
 
 static_assert(sizeof(hal::CanEvent) == 8);
+
+
+
+[[maybe_unused]] inline void test_bit_timming_calc(){
+    {
+        static constexpr auto coeffs = hal::CanNominalBitTimmingCoeffs::try_from(
+            144'000'000,
+            1'000'000,
+            Percentage<uint8_t>::from_percents_unchecked(80)
+        ).unwrap();
+
+        static_assert(coeffs.prescale == 8);
+        static_assert(coeffs.swj.tq.to_bits() == hal::CanTq::from_num(1).to_bits());
+        static_assert(coeffs.bs1.tq.to_bits() == hal::CanTq::from_num(13).to_bits());
+        static_assert(coeffs.bs2.tq.to_bits() == hal::CanTq::from_num(4).to_bits());
+
+        // 验证波特率计算正确
+        static_assert(coeffs.to_baudrate_hz(144'000'000) == 1'000'000);
+        static_assert(coeffs.to_sample_point().percents() == 78);
+    }
+
+    {
+        static constexpr auto coeffs = hal::CanNominalBitTimmingCoeffs::try_from(
+            144'000'000,
+            1'000'000,
+            Percentage<uint8_t>::from_percents_unchecked(89)
+        ).unwrap();
+
+        static_assert(coeffs.prescale == 8);
+        static_assert(coeffs.swj.tq.to_bits() == hal::CanTq::from_num(1).to_bits());
+        static_assert(coeffs.bs1.tq.to_bits() == hal::CanTq::from_num(15).to_bits());
+        static_assert(coeffs.bs2.tq.to_bits() == hal::CanTq::from_num(2).to_bits());
+
+        // 验证波特率计算正确
+        static_assert(coeffs.to_baudrate_hz(144'000'000) == 1'000'000);
+        static_assert(coeffs.to_sample_point().percents() == 89);
+    }
+
+    {
+        static constexpr auto coeffs = hal::CanNominalBitTimmingCoeffs::try_from(
+            144'000'000,
+            250'000,
+            Percentage<uint8_t>::from_percents_unchecked(80)
+        ).unwrap();
+
+        static_assert(coeffs.prescale == 32);
+        static_assert(coeffs.swj.tq.to_bits() == hal::CanTq::from_num(1).to_bits());
+        static_assert(coeffs.bs1.tq.to_bits() == hal::CanTq::from_num(13).to_bits());
+        static_assert(coeffs.bs2.tq.to_bits() == hal::CanTq::from_num(4).to_bits());
+
+        // 验证波特率计算正确
+        static_assert(coeffs.to_baudrate_hz(144'000'000) == 250'000);
+        static_assert(coeffs.to_sample_point().percents() == 78);
+    }
+
+    {
+
+        constexpr auto result = ({
+            hal::can::BitTimmingCalculateIterator iter({
+                .aligned_bus_clk_freq_hz = 144'000'000,
+                .baud_freq_hz = 1'000'000,
+                .sample_point = Percentage<uint8_t>::from_percents_unchecked(88)
+            });
+            iter.next();
+        });
+
+        static_assert(result.coeffs.unwrap().swj.tq.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.unwrap().bs1.tq.to_bits() == hal::CanTq::from_num(15).to_bits());
+        static_assert(result.coeffs.unwrap().bs2.tq.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.unwrap().prescale == 8);
+        static_assert(result.percents.percents() == 89);  // 实际采样点可能因四舍五入略有偏差
+    }
 }
+
+
+[[maybe_unused]] inline void test_predefined_configs() {
+    constexpr uint32_t clk = 144'000'000;
+
+    // 辅助宏，用于构造 NominalBitTimmingCoeffs
+    #define MAKE_COEFFS(baud, pre, swj_tq, bs1_tq, bs2_tq) \
+        hal::CanNominalBitTimmingCoeffs { \
+            .prescale = static_cast<uint16_t>(pre), \
+            .swj = hal::CanSwj(hal::CanTq::from_num(swj_tq)), \
+            .bs1 = hal::CanBs1(hal::CanTq::from_num(bs1_tq)), \
+            .bs2 = hal::CanBs2(hal::CanTq::from_num(bs2_tq)) \
+        }
+
+    // 10k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(10'000, 900, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 10'000);
+        static_assert(coeffs.to_sample_point().percents() == 81); // 13/16=81.25% -> 81
+    }
+    // 20k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(20'000, 450, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 20'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 50k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(50'000, 180, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 50'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 100k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(100'000, 90, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 100'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 125k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(125'000, 72, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 125'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 250k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(250'000, 36, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 250'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 500k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(500'000, 18, 1, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 500'000);
+        static_assert(coeffs.to_sample_point().percents() == 81);
+    }
+    // 800k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(800'000, 9, 2, 15, 4);
+        static_assert(coeffs.to_baudrate_hz(clk) == 800'000);
+        static_assert(coeffs.to_sample_point().percents() == 80); // 16/20=80%
+    }
+    // 1000k
+    {
+        constexpr auto coeffs = MAKE_COEFFS(1'000'000, 9, 2, 12, 3);
+        static_assert(coeffs.to_baudrate_hz(clk) == 1'000'000);
+        static_assert(coeffs.to_sample_point().percents() == 81); // 13/16=81.25% -> 81
+    }
+
+    #undef MAKE_COEFFS
+}
+
+}
+

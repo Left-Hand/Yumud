@@ -326,7 +326,14 @@ void Can::init(const Config & cfg){
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
         const auto & bit_timming = cfg.bit_timming;
         if(bit_timming.is<CanBaudrate>()){
-            return (bit_timming.unwrap_as<CanBaudrate>()).to_coeffs(get_aligned_bus_clk_freq());
+            const auto coeffs = ({
+                const auto may_coeffs = (bit_timming.unwrap_as<CanBaudrate>())
+                    .try_into_coeffs(get_aligned_bus_clk_freq());
+                if(may_coeffs.is_none()) ABORT("can't parse baudrate");
+                may_coeffs.unwrap();
+            });
+
+            return coeffs;
         }else if(bit_timming.is<CanNominalBitTimmingCoeffs>()){
             return bit_timming.unwrap_as<CanNominalBitTimmingCoeffs>();
         }else{
@@ -339,9 +346,9 @@ void Can::init(const Config & cfg){
     const CAN_InitTypeDef CAN_InitConf = {
         .CAN_Prescaler = bit_timming_coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.wiring_mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(bit_timming_coeffs.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs2),
+        .CAN_SJW = bit_timming_coeffs.swj.tq.to_bits(),
+        .CAN_BS1 = bit_timming_coeffs.bs1.tq.to_bits(),
+        .CAN_BS2 = bit_timming_coeffs.bs2.tq.to_bits(),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,
@@ -351,8 +358,8 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    if(const auto status = lld::my_barecan_init(SPL_INST(p_inst_), &CAN_InitConf);
-        status == CAN_InitStatus_Failed){
+    if(const auto res = lld::my_barecan_init(SPL_INST(p_inst_), &CAN_InitConf);
+        res.is_err()){
         //初始化失败
         DEBUG_TRAP();
     }
@@ -474,13 +481,18 @@ Result<void, Infallible> Can::set_filter_origin(
     return Ok();
 }
 
-uint32_t Can::get_aligned_bus_clk_freq(){
+uint32_t can_get_aligned_bus_clk_freq(){
     #if defined(CH32V203) || defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
     //所有的CAN外设都使用APB1时钟
     return sys::clock::get_apb1_clk_freq();
     #elif defined(CH32H417)
     return sys::clock::get_ahb_clk_freq();
     #endif
+}
+
+
+uint32_t Can::get_aligned_bus_clk_freq(){
+    return can_get_aligned_bus_clk_freq();
 }
 
 size_t Can::free_capacity(){
