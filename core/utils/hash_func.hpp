@@ -107,7 +107,7 @@ __inline static constexpr HashCode hash(Args &&... args) {
     return (hasher << ... << std::forward<Args>(args)).get();
 }
 
-__inline constexpr uint32_t operator "" _ha(char const* p, const size_t size)  {
+__inline constexpr uint32_t operator ""_ha(char const* p, const size_t size)  {
     return hash(std::span<const char>{p, size});
 }
 

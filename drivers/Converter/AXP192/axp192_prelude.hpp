@@ -166,11 +166,11 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
 
     // 01           电源模式/充电状态寄存器 R  
     struct R8_PowerModeChargeState:public Reg8<>{
-        uint8_t :1;
+        uint8_t __resv1__:1;
         uint8_t powerdown_strategy_is_b_either_a:1;
         uint8_t is_charging_current_less_than_expected:1;
         uint8_t is_on_battery_activate_mode:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
         uint8_t is_battery_present:1;
         uint8_t is_charing:1;
         uint8_t is_overheat:1;
@@ -181,15 +181,15 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         uint8_t is_session_end:1;
         uint8_t is_vbus_session_valid:1;
         uint8_t is_vbus_valid:1;
-        uint8_t :5;
+        uint8_t __resv1__:5;
     }DEF_R8(usb_otg_vbus_state_reg)
 
     // 10           EXTEN & DC-DC2开关控制寄存器 R/W X5H 
     struct R8_ExtenDcDc2SwitchCtrl:public Reg8<>{
         uint8_t dcdc2_en:1;
-        uint8_t :1;
+        uint8_t __resv1__:1;
         uint8_t ext_en:1;
-        uint8_t :5;
+        uint8_t __resv2__:5;
     }DEF_R8(exten_dcdc2_switch_ctrl_reg)
     // 12           DC-DC1/3 & LDO2/3开关控制寄存器 R/W XFH 
 
@@ -199,9 +199,9 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         uint8_t ldo2_en:1;
         uint8_t ldo3_en:1;
         uint8_t dcdc2_en:1;
-        uint8_t :1;
+        uint8_t __resv1__:1;
         uint8_t ext_en:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     }DEF_R8(power_output_ctrl_reg)
 
     // 23           DC-DC2电压设置寄存器 R/W 16H 
@@ -209,7 +209,7 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
 
     struct R8_DcDc2VoltageSetting:public Reg8<>{
         uint8_t dcdc2_voltage_setting:7;
-        uint8_t :1;
+        uint8_t __resv1__:1;
     }DEF_R8(dcdc2_voltage_setting_reg)
     // 25           DC-DC2电压斜率参数设置寄存器 R/W 00H 
     // 26           DC-DC1电压设置寄存器 R/W 68H 
@@ -217,14 +217,14 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
 
     struct R8_DcDc1VoltageSetting:public Reg8<>{
         uint8_t dcdc1_voltage_setting:7;
-        uint8_t :1;
+        uint8_t __resv1__:1;
     }DEF_R8(dcdc1_voltage_setting_reg)
 
     // 27           DC-DC3电压设置寄存器 R/W 48H 
 
     struct R8_DcDc3VoltageSetting:public Reg8<>{
         uint8_t dcdc3_voltage_setting:7;
-        uint8_t :1;
+        uint8_t __resv1__:1;
     }DEF_R8(dcdc3_voltage_setting_reg)
 
     // 28           LDO2/3电压设置寄存器 R/W CFH 
@@ -239,7 +239,7 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
     struct R8_VbusIpsoutRaouteManage:public Reg8<>{
         VbusCurrentLimit vbus_current_limit:1;
         uint8_t vbus_current_limit_en:1;
-        uint8_t :1;
+        uint8_t __resv1__:1;
         VholdVoltage vhold_setting:3;
         uint8_t vhold_voltage_limit_en:1;
         uint8_t is_vbus_ipsout_en_nomatter_v_busen:1;

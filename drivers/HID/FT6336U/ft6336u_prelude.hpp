@@ -229,9 +229,9 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
 
     struct [[nodiscard]] R8_DevMode:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
-        uint8_t :4;
+        uint8_t __resv1__:4;
         DeviceMode device_mode:3;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     }DEF_R8(devmode)
 
     struct [[nodiscard]] R8_GestId:public Reg8<>{
@@ -242,13 +242,13 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_TdStatus:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         uint8_t touch_cnt:4;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(td_status)
 
     struct [[nodiscard]] R8_P1xh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         uint8_t p1xh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p1ev:2;
     }DEF_R8(p1xh)
 
@@ -260,7 +260,7 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_P1yh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         uint8_t p1yh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p1id:2;
     }DEF_R8(p1yh)
 
@@ -277,13 +277,13 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_P1Misc:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
         uint8_t touch_area:4;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(p1misc)
 
     struct [[nodiscard]] R8_P2xh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
         uint8_t p2xh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p2ev:2;
     }DEF_R8(p2xh)
 
@@ -295,7 +295,7 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_P2yh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
         uint8_t p2yh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p2id:2;
     }DEF_R8(p2yh)
 
@@ -312,7 +312,7 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_P2Misc:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0e};
         uint8_t touch_area:4;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(p2misc)
 
     struct [[nodiscard]] R8_ThGroup:public Reg8<>{
@@ -328,7 +328,7 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
     struct [[nodiscard]] R8_Ctrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x86};
         uint8_t enable_touch_detect:1;
-        uint8_t :7;
+        uint8_t __resv1__:7;
     }DEF_R8(ctrl)
 
     struct [[nodiscard]] R8_TimeEnterMonnitor:public Reg8<>{

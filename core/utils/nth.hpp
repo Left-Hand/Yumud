@@ -16,7 +16,7 @@ private:
     size_t count_;
 };
 
-consteval Nth operator"" _nth(uint64_t count){
+consteval Nth operator""_nth(uint64_t count){
     return Nth(count);
 };
 

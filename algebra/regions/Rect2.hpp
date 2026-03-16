@@ -359,7 +359,7 @@ public:
 
     [[nodiscard]] constexpr Rect2<T> scale_around_center(const auto & amount)const {
         return Rect2<T>::from_center_and_size(
-            this->get_center(), this->size * amount);
+            this->center(), this->size * amount);
     }
 
     [[nodiscard]] constexpr Range2<T> x_range() const{

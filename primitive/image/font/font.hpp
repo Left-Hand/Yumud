@@ -22,7 +22,7 @@ protected:
 
 
 struct [[nodiscard]] Font8x5:public Font{
-    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) const {
+    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) {
         if (!size.has_point(offset)) return false;
         return font_res::enfont_8x5[MAX(token - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
@@ -95,7 +95,7 @@ struct [[nodiscard]] Font16x8:public Font{
 public:
     static constexpr auto & RES = font_res::enfont_16x8;
     constexpr Font16x8():Font(math::Vec2<uint8_t>(8,16)){;}
-    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) const {
+    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) {
         if (!size.has_point(offset)) return false;
 
         return RES[MAX(token - ' ', 0)][offset.y] & (1 << offset.x);

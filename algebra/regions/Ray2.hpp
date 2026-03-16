@@ -126,7 +126,8 @@ public:
 using Ray2f = Ray2<float>;
 using Ray2d = Ray2<double>;
 
-__inline OutputStream & operator <<(OutputStream & os, const Ray2<auto> & ray){
+template<typename T>
+__inline OutputStream & operator <<(OutputStream & os, const Ray2<T> & ray){
     return os << os.brackets<'('>() << 
         ray.center << os.splitter() << 
         ray.orientation << os.brackets<')'>();

@@ -91,11 +91,11 @@ struct alignas(2) [[nodiscard]] bf16 final{
 
 static_assert(sizeof(bf16) == 2);
 
-consteval bf16 operator"" _bf16(long double x){
+consteval bf16 operator""_bf16(long double x){
     return bf16(x);
 }
 
-consteval bf16 operator"" _bf16(unsigned long long x){
+consteval bf16 operator""_bf16(unsigned long long x){
     return bf16(x);
 }
 

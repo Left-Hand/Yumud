@@ -72,16 +72,6 @@ struct [[nodiscard]] Quat{
     T z;
     T w;
 
-    static_assert(not std::is_integral_v<T>);
-
-    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(
-        static_cast<T>(0),
-        static_cast<T>(0),
-        static_cast<T>(0),
-        static_cast<T>(1)
-    );
-
-
 
     [[nodiscard]]
     __fast_inline static constexpr Quat identity() {
@@ -473,6 +463,18 @@ struct [[nodiscard]] Quat{
     [[nodiscard]] Matrix3x3<T> to_mat3x3() const {
         return details::quat_to_mat3x3(*this);
     }
+
+
+    static_assert(not std::is_integral_v<T>);
+
+    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(1)
+    );
+
+
 
 private:
     constexpr void set(T _x, T _y, T _z, T _w){

@@ -92,8 +92,9 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
 
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec2(
-        const math::Matrix<auto, 2, 1> mat):
+        const math::Matrix<U, 2, 1> mat):
         x(mat(0, 0)), y(mat(1, 0)){;}
 
     [[nodiscard]] static constexpr Vec2<T> from_uninitialized(){
@@ -265,7 +266,18 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     }
 
 
-    [[nodiscard]] constexpr bool has_point(const Vec2<auto> & _v)const;
+    template<typename U>
+    [[nodiscard]] constexpr bool has_point(const Vec2<U> & _v)const{
+        bool ret = true;
+        Vec2<T> v = _v;
+
+        if(x < 0) ret &= (x <= v.x && v.x <= 0);
+        else ret &= (0 <= v.x && v.x <= x);
+        if(y < 0) ret &= (y <= v.y && v.y <= 0);
+        else ret &= (0 <= v.y && v.y <= y);
+
+        return ret;
+    }
     [[nodiscard]] constexpr bool is_normalized() const {
             return (math::abs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
     [[nodiscard]] constexpr T length() const {
@@ -308,20 +320,22 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> swap_xy() const {return {y,x};}
 
-    __fast_inline constexpr Vec2<T> & operator=(const Vec2<auto> & b){
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator=(const Vec2<U> & b){
         x = static_cast<T>(b.x);
         y = static_cast<T>(b.y);
         return *this;
     }
 
-
-    __fast_inline constexpr Vec2<T> & operator+=(const Vec2<auto> & b){
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator+=(const Vec2<U> & b){
         x += static_cast<T>(b.x);
         y += static_cast<T>(b.y);
         return *this;
     }
 
-    __fast_inline constexpr Vec2<T> & operator-=(const Vec2<auto> & b){
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator-=(const Vec2<U> & b){
         x -= static_cast<T>(b.x);
         y -= static_cast<T>(b.y);
         return *this;
@@ -547,18 +561,6 @@ constexpr T Vec2<T>::project(const T & rad) const{
 }
 
 
-template<typename T>
-constexpr bool Vec2<T>::has_point(const Vec2<auto> & _v) const{
-    bool ret = true;
-    Vec2<T> v = _v;
-
-    if(x < 0) ret &= (x <= v.x && v.x <= 0);
-    else ret &= (0 <= v.x && v.x <= x);
-    if(y < 0) ret &= (y <= v.y && v.y <= 0);
-    else ret &= (0 <= v.y && v.y <= y);
-
-    return ret;
-}
 
 template<typename T>
 constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
@@ -667,14 +669,14 @@ namespace std{
     template<typename T>
     struct tuple_element<1, ymd::math::Vec2<T>> { using type = T; };
     
-    template<size_t I>
-    constexpr auto& get(ymd::math::Vec2<auto>& p_vector2) {
+    template<size_t I, typename U>
+    constexpr auto& get(ymd::math::Vec2<U>& p_vector2) {
         if constexpr (I == 0) return p_vector2.x;
         else return p_vector2.y;
     }
     
-    template<size_t I>
-    constexpr const auto& get(const ymd::math::Vec2<auto>& p_vector2) {
+    template<size_t I, typename U>
+    constexpr const auto& get(const ymd::math::Vec2<U>& p_vector2) {
         if constexpr (I == 0) return p_vector2.x;
         else return p_vector2.y;
     }
