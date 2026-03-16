@@ -59,8 +59,8 @@ struct AK8963_Regs:public AK8963_Prelude{
         uint8_t dor:1;
         uint8_t :6;
 
-        bool is_data_ready() const {return drdy;}
-        bool is_data_overrun() const {return dor;}
+        [[nodiscard]] constexpr bool is_data_ready() const {return drdy;}
+        [[nodiscard]] constexpr bool is_data_overrun() const {return dor;}
     } DEF_R8(st1_reg)
 
     REG16_QUICK_DEF(0x03, MagXReg, mag_x_reg);

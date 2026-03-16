@@ -72,8 +72,8 @@ struct alignas(4) PreComputedOf<RotatedZebraRect, bool>{
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
-            .s = s,
-            .c = c
+            .s = static_cast<iq16>(s),
+            .c = static_cast<iq16>(c)
         };
     }
 

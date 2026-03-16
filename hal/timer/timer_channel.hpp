@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "hal/timer/timer_utils.hpp"
+#include "hal/timer/timer_lld.hpp"
 #include "primitive/pwm_channel.hpp"
 #include "core/utils/Option.hpp"
 
@@ -22,15 +22,15 @@ public:
     Option<DmaChannel &> dma() const;
 
 protected:
-    void * inst_;
+    void * p_inst_;
 
     const ChannelSelection sel_;
 
     static volatile uint16_t & from_channel_to_cvr(
         void * timer, const ChannelSelection sel);
 
-    TimerChannel(void * inst, const ChannelSelection sel):
-        inst_(inst), 
+    TimerChannel(void * p_inst, const ChannelSelection sel):
+        p_inst_(p_inst), 
         sel_(sel){;}
 };
 

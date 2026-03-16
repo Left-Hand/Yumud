@@ -59,12 +59,12 @@ struct alignas(8) [[nodiscard]] TxContext final{
 
     std::array<CurrentCode, 4> current_codes; 
 
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::ClassicCanPayload to_can_payload() const {
+        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 
-    constexpr Self from_can_payload(const hal::BxCanPayload& payload){
-        return std::bit_cast<Self>(payload.u8x8());
+    constexpr Self from_can_payload(const hal::ClassicCanPayload& payload){
+        return std::bit_cast<Self>(payload.to_u64());
     }
 };
 

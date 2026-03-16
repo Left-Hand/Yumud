@@ -182,6 +182,7 @@ struct [[nodiscard]] StateFeedback{
 struct [[nodiscard]] SetLoopMode{
     using Self = SetLoopMode;
     static constexpr uint16_t NUM_CANID_BASE = 0x200;
+    
     MotorId motor_id;
     LoopMode loop_mode;
 
@@ -241,6 +242,7 @@ struct [[nodiscard]] SetLoopMode{
 //     using Self = QueryItems ;
 //     static constexpr uint16_t NUM_CANID_BASE = 0x96;
 
+
 //     MotorId motor_id;
 //     std::array<uint16_t, 3> values;
 //     uint8_t custom_key = 0;
@@ -263,6 +265,7 @@ struct [[nodiscard]] SetLoopMode{
 struct [[nodiscard]] QueryFirmwareVersion{
     using Self = QueryFirmwareVersion;
     static constexpr uint16_t NUM_CANID_BASE = 0x200;
+    
     MotorId motor_id;
     uint8_t software_major;
     uint8_t software_minor;

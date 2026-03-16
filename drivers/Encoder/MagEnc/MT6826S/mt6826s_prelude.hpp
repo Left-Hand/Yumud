@@ -6,7 +6,7 @@
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "drivers/Encoder/encoder.hpp"
 
@@ -107,9 +107,9 @@ struct MT6826S:
     explicit MT6826S(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angular<uq32>> get_lap_angle();
-    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
+    IResult<> init();
+    IResult<Angular<uq32>> get_lap_angle();
+    IResult<EncoderFaultBitFields> get_fault();
     // [[nodiscard]] IResult<void> update();
 
 
@@ -117,7 +117,7 @@ private:
     hal::SpiDrv spi_drv_;
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto address = T::ADDRESS;
         const uint8_t data = reg.to_bits();
         const auto tx = uint16_t(
@@ -130,7 +130,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> read_packet(Packet & packet){
+    IResult<> read_packet(Packet & packet){
         return Ok();
     }
 };

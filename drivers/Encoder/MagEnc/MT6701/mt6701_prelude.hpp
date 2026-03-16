@@ -6,8 +6,8 @@
 
 #include "drivers/Encoder/encoder.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -97,8 +97,8 @@ public:
     MT6701_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         MT6701_Transport(std::nullopt, hal::SpiDrv(spi, rank)){;}
 
-    MT6701_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        MT6701_Transport(hal::I2cDrv(i2c, addr), std::nullopt){;}
+    MT6701_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        MT6701_Transport(hal::I2cDrv(i2c, i2c_addr), std::nullopt){;}
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

@@ -67,17 +67,17 @@ public:
         transport_(std::forward<Args>(args)...){;}
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> reconf(const Config & cfg);
+    IResult<> init(const Config & cfg);
+    IResult<> reconf(const Config & cfg);
 
-    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
-    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
-    [[nodiscard]] IResult<> set_gain(const Gain gain);
-    [[nodiscard]] IResult<> enable_pwm3(const Enable en);
+    IResult<> set_peak_current(const PeakCurrent peak_current);
+    IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    IResult<> set_gain(const Gain gain);
+    IResult<> enable_pwm3(const Enable en);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
-    [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
+    IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
+    IResult<> set_drive_time(const PeakDriveTime ptime);
 
 private:
     using Phy = DRV8323H_Transport;

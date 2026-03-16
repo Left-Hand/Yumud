@@ -8,18 +8,18 @@
 #include "core/string/utils/split_iter.hpp"
 #include "robots/vendor/zdt/zdt_frame_factory.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "middlewares/script/script_primitive.hpp"
 #include "middlewares/repl/repl_server.hpp"
+#include "middlewares/gcode/gcode.hpp"
 
 #include "algebra/vectors/polar.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "robots/gcode/gcode.hpp"
 #include "details/gcode_file.hpp"
 
 #ifdef USART1_PRESENT
@@ -248,8 +248,8 @@ struct [[nodiscard]] PolarRobotCurveGenerator final{
         step_iter_.set_target_coord(coord.flip_y());
     }
 
-    constexpr void set_move_speed(const iq24 x2_limit){
-        delta_dist_ = (x2_limit / fs_);
+    constexpr void set_move_speed(const iq16 x2_limit){
+        delta_dist_ = (static_cast<iq24>(x2_limit) / fs_);
     }
 
     constexpr bool has_next(){
@@ -307,14 +307,16 @@ void polar_robot_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     can.enable_hw_retransmit(DISEN);
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
     zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
     zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
@@ -351,7 +353,7 @@ void polar_robot_main(){
 
     static constexpr uint32_t POINT_GEN_FREQ = 500;
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
-    static constexpr auto MAX_MOVE_SPEED = 0.002_iq24; // 2cm / s
+    static constexpr auto MAX_MOVE_SPEED = 0.002_iq16; // 2cm / s
 
     static constexpr auto CURVE_GEN_CONFIG = PolarRobotCurveGenerator::Config{
         .fs = POINT_GEN_FREQ,
@@ -475,16 +477,6 @@ void polar_robot_main(){
             &DBG_UART, &DBG_UART
         };
         repl_server.invoke(list);
-    };
-
-    [[maybe_unused]] auto can_watch_service = [&]{
-        while(COMM_CAN.available()){
-            DEBUG_PRINTLN(COMM_CAN.read());
-        }
-
-        // static size_t cnt = 0;
-        // cnt++;
-        // if(cnt > 10) PANIC();
     };
 
     [[maybe_unused]] auto report_service = [&]{

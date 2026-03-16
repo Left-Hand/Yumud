@@ -4,7 +4,7 @@
 
 using namespace ymd::drivers;
 
-void JQ8900::Phy::write(const uint8_t data){
+void JQ8900_Transport::write(const uint8_t data){
     ser_.set_high();
     clock::delay(1000us);
     ser_.set_low();

@@ -39,7 +39,7 @@
 
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 namespace ymd::drivers{
@@ -47,8 +47,8 @@ namespace ymd::drivers{
 struct INA3221_Prelude{
 public:
     enum class Error_Kind:uint8_t{
-        WrongChipId,
-        WrongManuId,
+        ChipIdMismatch,
+        ManuIdMisMatch,
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -70,13 +70,13 @@ public:
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
-    enum class ChannelSelection:uint8_t{
+    enum class [[nodiscard]] ChannelSelection:uint8_t{
         CH1 = 0,
         CH2,
         CH3
     };
 
-    enum class Source:uint16_t{
+    enum class [[nodiscard]] Source:uint16_t{
         CH1_BusBar,
         CH1_Shunt,
         CH2_BusBar,
@@ -85,9 +85,9 @@ public:
         CH3_Shunt
     };
 
-    class AverageTimes{
+    struct [[nodiscard]] AverageTimes final{
     public:
-        enum class Kind:uint16_t{
+        enum class [[nodiscard]] Kind:uint16_t{
             _1 = 0,
             _4 = 1,
             _16 = 2,
@@ -114,7 +114,7 @@ public:
             return {static_cast<Kind>(temp2)};
         }
 
-        constexpr uint8_t as_raw() const {
+        constexpr uint8_t to_bits() const {
             return static_cast<uint8_t>(kind_);}
         constexpr Kind kind() const {return kind_;}
     
@@ -122,7 +122,7 @@ public:
         Kind kind_;
     };
 
-    enum class ConversionTime:uint16_t{
+    enum class [[nodiscard]] ConversionTime:uint16_t{
         _140us = 0, 
         _204us, 
         _332us, 
@@ -133,7 +133,7 @@ public:
         _8_244ms
     };
 
-    struct Config{
+    struct [[nodiscard]] Config final{
         ConversionTime shunt_conv_time;
         ConversionTime bus_conv_time;
         AverageTimes average_times;
@@ -147,112 +147,138 @@ public:
         }
     };
 
-};
 
-struct INA3221_Regs:public INA3221_Prelude {
-    struct [[nodiscard]] R16_Config:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
-        uint16_t shunt_measure_en :1;
-        uint16_t bus_measure_en :1;
-        uint16_t continuous :1;
-        ConversionTime shunt_conv_time:3;
-        ConversionTime bus_conv_time:3;
-        uint16_t average_times:3;
-        uint16_t ch3_en:1;
-        uint16_t ch2_en:1;
-        uint16_t ch1_en:1;
-        uint16_t rst:1;
-    };
 
-    static_assert(sizeof(R16_Config) == 2);
+    struct [[nodiscard]] ShuntVoltCode final{
+        using Self = ShuntVoltCode;
 
-    static constexpr int16_t volt_to_i16(const iq16 volt){
-        return int16_t(iq16(volt) * 100000) & 0xfff8;
-    }
+        uint16_t bits;
 
-    struct [[nodiscard]] R16_ShuntVolt:public Reg16<>{
-
-        int16_t bits;
-
-        constexpr iq16 to_volt() const {
-            return iq24(iq16(this->to_bits() >> 3) / 25) / 1000;
-            // return iq16(this->to_bits());
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_sv_code(mv)};
         }
 
-        constexpr int32_t to_uv() const {
-            return ((this->to_bits() >> 3) * 40);
-            // return (this->to_bits());
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return sv_code_to_mv(bits); 
         }
 
-        static constexpr int16_t to_i16(const iq16 volt){
-            return volt_to_i16(volt);
-        }
-    };
-
-    struct [[nodiscard]] R16_ShuntVolt1:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x01};};
-    struct [[nodiscard]] R16_ShuntVolt2:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x03};};
-    struct [[nodiscard]] R16_ShuntVolt3:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x05};};
-    struct [[nodiscard]] R16_ShuntVoltSum:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0D};};
-    struct [[nodiscard]] R16_ShuntVoltSumLimit:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0E};};
-
-    struct [[nodiscard]] R16_BusVolt:public Reg16<>{
-
-        int16_t bits;
-
-        constexpr iq16 to_volt() const {
-            return iq16((int16_t(this->to_bits()) >> 3) * 8) * iq16(0.001);
+        [[nodiscard]] constexpr int32_t to_uv() const { 
+            return sv_code_to_uv(bits); 
         }
 
-        constexpr int to_mv() const {
-            return int16_t((int16_t(this->to_bits()) >> 3) * 8);
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return sv_code_to_volts(bits); 
         }
 
-        static constexpr int16_t to_i16(const iq16 volt){
-            return int16_t(iq16(volt) * 1000) & 0xfff8;
+    private:
+        [[nodiscard]] static constexpr uint16_t mv_to_sv_code(const int32_t mv){
+            uint16_t bits = uint16_t(mv * (1000 / 40)) << 3;
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t sv_code_to_mv(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 32) * 40 / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(static_cast<int64_t>(signed_bits >> 3) * RATIO >> 32);
+        }
+
+        [[nodiscard]] static constexpr int32_t sv_code_to_uv(const uint16_t bits){
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits >> 3) * 40;
+        }
+
+        [[nodiscard]] static constexpr iq16 sv_code_to_volts(const uint16_t bits){
+            constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 48) * 40 / (1000000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return iq16::from_bits(static_cast<int32_t>(static_cast<int64_t>(signed_bits >> 3) * RATIO >> 32));
         }
     };
 
-    struct [[nodiscard]] R16_BusVolt1:public R16_BusVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+    struct [[nodiscard]] ShuntVoltSumCode final{
+        using Self = ShuntVoltSumCode;
+
+        uint16_t bits;
+
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_svsum_code(mv)};
+        }
+
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return svsum_code_to_mv(bits); 
+        }
+
+        [[nodiscard]] constexpr int32_t to_uv() const { 
+            return svsum_code_to_uv(bits); 
+        }
+
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return svsum_code_to_volts(bits); 
+        }
+    private:
+        [[nodiscard]] static constexpr uint16_t mv_to_svsum_code(const int32_t mv){
+            uint16_t bits = uint16_t(mv * (1000 / 40)) << 1;
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t svsum_code_to_mv(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 32) * 40 / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>((static_cast<int64_t>(signed_bits >> 1) * RATIO) >> 32);
+        }
+
+        [[nodiscard]] static constexpr iq16 svsum_code_to_volts(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 48) * 40 / (1000000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(signed_bits >> 1) * RATIO) >> 32));
+        }
+
+        [[nodiscard]] static constexpr int32_t svsum_code_to_uv(const uint16_t bits){
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits >> 1) * 40;
+        }
     };
-    struct [[nodiscard]] R16_BusVolt2:public R16_BusVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
+
+    struct [[nodiscard]] BusVoltCode final{
+        //lsb 8mv
+        using Self = BusVoltCode;
+        uint16_t bits;
+
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_bv_code(mv)};
+        }
+
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return bv_code_to_mv(bits); 
+        }
+
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return bv_code_to_volts(bits); 
+        }
+
+    private:
+        [[nodiscard]] static constexpr uint16_t mv_to_bv_code(const int32_t mv){ 
+            uint16_t bits = uint16_t(mv & (~0x07));
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t bv_code_to_mv(const uint16_t bits){ 
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits & (~0x07));
+        }
+
+        [[nodiscard]] static constexpr iq16 bv_code_to_volts(const uint16_t bits){ 
+            constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 48) / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            // return iq16(static_cast<int32_t>(signed_bits & (~0x07))) / 1000;
+            return iq16::from_bits((static_cast<int64_t>(signed_bits & (~0x07)) * RATIO) >> 32);
+        }
+
     };
-    struct [[nodiscard]] R16_BusVolt3:public R16_BusVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
-    };
 
 
-
-    struct [[nodiscard]] R16_InstantOVC:public Reg16<>{
-        int16_t bits;
-    };
-
-    struct [[nodiscard]] R16_InstantOVC1:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x07};};
-    struct [[nodiscard]] R16_InstantOVC2:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x09};};
-    struct [[nodiscard]] R16_InstantOVC3:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0b};};
-
-    struct [[nodiscard]] R16_ConstantOVC:public Reg16<>{
-        int16_t bits;
-    };
-
-    struct [[nodiscard]] R16_ConstantOVC1:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x08};};
-    struct [[nodiscard]] R16_ConstantOVC2:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0A};};
-    struct [[nodiscard]] R16_ConstantOVC3:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0C};};
-
-    struct [[nodiscard]] R16_Mask:public Reg16<>{
+    struct [[nodiscard]] MaskCode final{
         uint16_t conv_ready:1;
         uint16_t timing_alert:1;
         uint16_t power_valid_alert:1;
@@ -269,28 +295,211 @@ struct INA3221_Regs:public INA3221_Prelude {
         uint16_t :1;
     };
 
-    struct [[nodiscard]] R16_PowerHo:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x10};
-        int16_t bits;
+};
+
+struct INA3221_Regs:public INA3221_Prelude {
+    struct [[nodiscard]] R16_Config:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+        static constexpr uint16_t RESET_VALUE = 0x7127;
+
+        uint16_t shunt_measure_en :1;
+        uint16_t bus_measure_en :1;
+        uint16_t continuous_en :1;
+        ConversionTime shunt_conv_time:3;
+        ConversionTime bus_conv_time:3;
+        AverageTimes::Kind average_times:3;
+        uint16_t ch3_en:1;
+        uint16_t ch2_en:1;
+        uint16_t ch1_en:1;
+
+        // Reset bit. Set this bit = 1 to generate a system reset that is the
+        // same as a power-on reset (POR). This bit resets all registers to
+        // default values and self-clears.
+        uint16_t rst:1;
     };
 
-    struct [[nodiscard]] R16_PowerLo:public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVolt1: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        ShuntVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_BusVolt1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        BusVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_ShuntVolt2: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        ShuntVoltCode code;
+    };
+
+
+    struct [[nodiscard]] R16_BusVolt2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        BusVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_ShuntVolt3: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        ShuntVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_BusVolt3:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        BusVoltCode code;
+    };
+
+    //0x07
+    struct [[nodiscard]] R16_InstantOVC1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+    //0x08
+    struct [[nodiscard]] R16_ConstantOVC1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+
+    //0x09
+    struct [[nodiscard]] R16_InstantOVC2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+    //0x0a
+    struct [[nodiscard]] R16_ConstantOVC2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+    //0x0b
+    struct [[nodiscard]] R16_InstantOVC3:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+
+    //0x0c
+    struct [[nodiscard]] R16_ConstantOVC3:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
+        static constexpr uint16_t RESET_VALUE = 0x7ff8;
+
+        ShuntVoltCode code;
+    };
+
+
+    //0x0d
+    struct [[nodiscard]] R16_ShuntVoltSum: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0D};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        ShuntVoltSumCode code;
+    };
+
+    //0x0e
+    struct [[nodiscard]] R16_ShuntVoltSumLimit: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0E};
+        static constexpr uint16_t RESET_VALUE = 0x7ffe;
+
+        ShuntVoltSumCode code;
+    };
+
+
+    //0x0f
+    struct [[nodiscard]] R16_Mask:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0f};
+        static constexpr uint16_t RESET_VALUE = 0x0002;
+
+        MaskCode code;
+
+    };
+
+
+
+    // This register contains the value used to determine if the power-valid conditions are met. The power-valid
+    // condition is reached when all bus-voltage channels exceed the value set in this limit register. When the power-
+    // valid condition is met, the PV alert pin asserts high to indicate that the INA3221 has confirmed all bus voltage
+    // channels are above the power-valid upper-limit value. In order for the power-valid conditions to be monitored, the
+    // bus measurements must be enabled through one of the corresponding MODE bits set in the Configuration
+    // register. The power-valid upper-limit LSB value is 8 mV. Power-on reset value is 2710h = 10.000 V.
+    struct [[nodiscard]] R16_PowerValidUp:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x10};
+        static constexpr uint16_t RESET_VALUE = 0x2710;
+        BusVoltCode code;
+    };
+
+
+    // This register contains the value used to determine if any of the bus-voltage channels drops below the power-valid
+    // lower-limit when the power-valid conditions are met. This limit contains the value used to compare all bus-
+    // channel readings to make sure that all channels remain above the power-valid lower-limit, thus maintaining the
+    // power-valid condition. If any bus-voltage channel drops below the power-valid lower-limit, the PV alert pin pulls
+    // low to indicate that the INA3221 detects a bus voltage reading below the power-valid lower-limit. In order for the
+    // power-valid condition to be monitored, the bus measurements must be enabled through the mode (MODE3-1)
+    // bits set in the Configuration register. The power-valid lower-limit LSB value is 8 mV. Power-on reset value is
+    // 2328h = 9.000 V
+    struct [[nodiscard]] R16_PowerValidLo:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
-        int16_t bits;
+        static constexpr uint16_t RESET_VALUE = 0x2328;
+        BusVoltCode code;
     };
 
     struct [[nodiscard]] R16_ManuId:public Reg16<>{
-        static constexpr uint16_t KEY = 0x5449;
         static constexpr RegAddr REG_ADDR = RegAddr{0xfe};
+        static constexpr uint16_t KEY = 0x5449;
         uint16_t bits;
     };
 
     
     struct [[nodiscard]] R16_ChipId:public Reg16<>{
-        static constexpr uint16_t KEY = 0x3220;
         static constexpr RegAddr REG_ADDR = RegAddr{0xff};
+        static constexpr uint16_t KEY = 0x3220;
         uint16_t bits;
     };
+
+    VALIDATE_R16(R16_Config)
+    VALIDATE_R16(R16_ShuntVolt1)
+    VALIDATE_R16(R16_BusVolt1)
+    VALIDATE_R16(R16_ShuntVolt2)
+    VALIDATE_R16(R16_BusVolt2)
+    VALIDATE_R16(R16_ShuntVolt3)
+    VALIDATE_R16(R16_BusVolt3)
+    VALIDATE_R16(R16_InstantOVC1)
+    VALIDATE_R16(R16_ConstantOVC1)
+    VALIDATE_R16(R16_InstantOVC2)
+    VALIDATE_R16(R16_ConstantOVC2)
+    VALIDATE_R16(R16_InstantOVC3)
+    VALIDATE_R16(R16_ConstantOVC3)
+    VALIDATE_R16(R16_ShuntVoltSum)
+    VALIDATE_R16(R16_ShuntVoltSumLimit)
+    VALIDATE_R16(R16_Mask)
+    VALIDATE_R16(R16_PowerValidUp)
+    VALIDATE_R16(R16_PowerValidLo)
+    VALIDATE_R16(R16_ManuId)
+    VALIDATE_R16(R16_ChipId)
 
     R16_Config       config_reg = {};
     R16_ShuntVolt1    shuntvolt1_reg = {};
@@ -299,21 +508,13 @@ struct INA3221_Regs:public INA3221_Prelude {
     R16_BusVolt2      busvolt2_reg = {};
     R16_ShuntVolt3    shuntvolt3_reg = {};
     R16_BusVolt3      busvolt3_reg = {};
-    R16_InstantOVC1   instant_ovc1_reg = {};
-    R16_ConstantOVC1  constant_ovc1_reg = {};
-    R16_InstantOVC2   instant_ovc2_reg = {};
-    R16_ConstantOVC2  constant_ovc2_reg = {};
-    R16_InstantOVC3   instant_ovc3_reg = {};
-    R16_ConstantOVC3  constant_ovc3_reg = {};
 
     R16_ShuntVoltSum    shuntvolt_sum_reg = {};
     R16_ShuntVoltSumLimit    shuntvolt_sum_limit_reg = {};
     R16_Mask         mask_reg = {};
-    R16_PowerHo      power_ho_reg = {};
-    R16_PowerLo      power_lo_reg = {};
+    R16_PowerValidUp      power_ho_reg = {};
+    R16_PowerValidLo      power_lo_reg = {};
 
-    R16_ManuId       manu_id_reg = {};
-    R16_ChipId       chip_id_reg = {};
 };
 
 class INA3221_Transport final : public INA3221_Prelude{
@@ -323,7 +524,7 @@ public:
     explicit INA3221_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     
-    [[nodiscard]] IResult<> read_reg(
+    IResult<> read_reg(
         const RegAddr addr, uint16_t & data
     ){
         if(const auto res = i2c_drv_.read_reg((addr), data, ENDIAN);
@@ -331,7 +532,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(
+    IResult<> write_reg(
         const RegAddr addr, const uint16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
@@ -339,7 +540,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(
+    IResult<> read_reg(
         const RegAddr addr, int16_t & data
     ){
         if(const auto res = (i2c_drv_.read_reg((addr), data, ENDIAN));
@@ -347,7 +548,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(
+    IResult<> write_reg(
         const RegAddr addr, const int16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
@@ -355,7 +556,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(
+    IResult<> read_burst(
         const RegAddr addr, std::span<uint16_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());

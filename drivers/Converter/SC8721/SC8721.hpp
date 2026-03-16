@@ -10,49 +10,52 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit SC8721(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit SC8721(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit SC8721(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> set_target_voltage(const iq16 volt);
+    IResult<> set_target_voltage(const iq16 volt);
 
-    [[nodiscard]] IResult<> enable_external_fb(const Enable en);
+    IResult<> enable_external_fb(const Enable en);
 
-    [[nodiscard]] IResult<> set_dead_zone(const DeadZone dz);
+    IResult<> set_dead_zone(const DeadZone dz);
 
-    [[nodiscard]] IResult<> set_switch_freq(const SwitchFreq freq);
+    IResult<> set_switch_freq(const SwitchFreq freq);
 
-    [[nodiscard]] IResult<Status> get_status();
+    IResult<Status> get_status();
 
-    [[nodiscard]] IResult<> set_slope_comp(const SlopComp sc);
+    IResult<> set_slope_comp(const SlopComp sc);
 private:
     hal::I2cDrv i2c_drv_;
     SC8721_Regs regs_;
-    [[nodiscard]] IResult<> write_reg(const RegAddr address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
+    IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -60,7 +63,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 };

@@ -17,7 +17,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Option.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
@@ -45,8 +45,8 @@ public:
 public:
     explicit TCA9548A(hal::I2cDrv && i2c_drv):
         i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
-    explicit TCA9548A(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit TCA9548A(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     auto & operator [](const size_t ch){
         if((ch >= 8)) while(true);

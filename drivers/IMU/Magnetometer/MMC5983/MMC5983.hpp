@@ -45,45 +45,51 @@ public:
 
     explicit MMC5983(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit MMC5983(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv{i2c, addr}){;}
+
+    explicit MMC5983(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
+
     explicit MMC5983(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
+
     explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> reset();
+    IResult<> init(const Config & cfg);
+    IResult<> validate();
+    IResult<> update();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> set_odr(const Odr odr);
-    [[nodiscard]] IResult<> set_bandwidth(const BandWidth bw);
-    [[nodiscard]] IResult<> enable_x(const Enable en);
-    [[nodiscard]] IResult<> enable_yz(const Enable en);
+    IResult<> set_odr(const Odr odr);
+    IResult<> set_bandwidth(const BandWidth bw);
+    IResult<> enable_x(const Enable en);
+    IResult<> enable_yz(const Enable en);
     
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
-    [[nodiscard]] IResult<iq16> read_temp();
+    IResult<math::Vec3<iq24>> read_mag();
+    IResult<iq16> read_temp();
     
-    [[nodiscard]] IResult<bool> is_mag_meas_done();
-    [[nodiscard]] IResult<bool> is_temp_meas_done();
+    IResult<bool> is_mag_meas_done();
+    IResult<bool> is_temp_meas_done();
     
-    [[nodiscard]] IResult<> set_prd_mag_set(const PrdSet prdset);
-    [[nodiscard]] IResult<> enable_mag_set(const Enable en);
-    [[nodiscard]] IResult<> enable_mag_reset(const Enable en);
-    [[nodiscard]] IResult<math::Vec3<iq24>> do_mag_set();
-    [[nodiscard]] IResult<math::Vec3<iq24>> do_mag_reset();
-    [[nodiscard]] IResult<> enable_auto_mag_sr(const Enable en);
+    IResult<> set_prd_mag_set(const PrdSet prdset);
+    IResult<> enable_mag_set(const Enable en);
+    IResult<> enable_mag_reset(const Enable en);
+    IResult<math::Vec3<iq24>> do_mag_set();
+    IResult<math::Vec3<iq24>> do_mag_reset();
+    IResult<> enable_auto_mag_sr(const Enable en);
     
-    [[nodiscard]] IResult<> enable_mag_meas(const Enable en);
-    [[nodiscard]] IResult<> enable_temp_meas(const Enable en);
+    IResult<> enable_mag_meas(const Enable en);
+    IResult<> enable_temp_meas(const Enable en);
 private:    
     using Phy = MMC5983_Transport;
     Phy transport_;
     MMC5983_Regs regs_ = {};
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -91,12 +97,12 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+        return transport_.read_burst(reg_addr, pbuf);
     }
 
 };

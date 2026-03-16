@@ -30,12 +30,6 @@ struct [[nodiscard]] TransferId final{
     constexpr Self rounded_inc() const {
         return Self{static_cast<uint8_t>((bits + 1) & 0b11111)};
     }
-
-    constexpr Self & operator++() {
-        auto & self = *this;
-        self = self.rounded_inc();
-        return self;
-    }
 };
 
 }

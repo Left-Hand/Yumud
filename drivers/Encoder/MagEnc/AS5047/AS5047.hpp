@@ -17,10 +17,10 @@ public:
     explicit AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init() ;
+    IResult<> init() ;
 
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle() {
+    IResult<> update();
+    IResult<Angular<uq32>> read_lap_angle() {
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 private:
@@ -33,8 +33,8 @@ private:
 
     uint16_t get_angle_bits();
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
 
 };
 

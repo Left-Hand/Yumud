@@ -11,9 +11,9 @@
 #include "core/utils/zero.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "drivers/CommonIO/Key/Key.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
@@ -66,18 +66,20 @@ void steadywin_main(){
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
         //波特率为1M
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M), 
     });
     
     //配置can过滤器为接收标准数据帧（滤除拓展和远程帧）
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::from_pairs(
             hal::CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY,
             hal::CanStdIdMaskPair::reject_all()
         )
         // hal::CanFilterConfig::accept_all()
         // FILTER_CONFIG
-    );
+    ).unwrap();
 
     can.enable_hw_retransmit(EN);
     std::array<EncoderFeedback, 2> encoder_feedbacks = {Zero, Zero};
@@ -120,7 +122,7 @@ void steadywin_main(){
         }
     };
 
-    [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){
+    [[maybe_unused]] auto parse_can_frame = [&](const hal::ClassicCanFrame & frame){
         if(frame.is_extended()) PANIC{};
         if(frame.length() != 8) PANIC{frame.length()};
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
@@ -129,9 +131,9 @@ void steadywin_main(){
         // const auto payload_bytes = std::span(frame.payload().u8x8());
         
         // const auto payload_bytes = frame.payload_bytes_fixed<8>();
-        const auto payload_bytes = std::span(frame.payload().u8x8());
+        const auto payload_bytes = std::span(frame.payload().u8x8);
         switch(command.kind()){
-            case Command::Undefined:{
+            case Command::Nop:{
                 //nothing
             }break;
             case Command::Heartbeat:{
@@ -236,7 +238,7 @@ void steadywin_main(){
         }
     };
 
-    [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame, const Milliseconds delay_ms = 0ms){
+    [[maybe_unused]] auto write_can_frame = [](const hal::ClassicCanFrame & frame, const Milliseconds delay_ms = 0ms){
         can.try_write(frame).examine();
         if(delay_ms != 0ms) clock::delay(delay_ms);
     };
@@ -271,8 +273,8 @@ void steadywin_main(){
             {
                 const auto num_rx_frames = can.available();
                 for(size_t i = 0; i < num_rx_frames; ++i){
-                    parse_can_frame(can.read());
-                    // (void)(can.read());
+                    parse_can_frame(can.try_read().unwrap());
+                    // (void)(can.try_read().unwrap());
                 }
             }
 
@@ -302,7 +304,7 @@ void steadywin_main(){
     });
 
     //使能更新事件的中断
-    timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(), EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
 
     //启动定时器
@@ -347,16 +349,16 @@ void steadywin_main(){
 
 
         // while(can.available()){
-        //     parse_can_frame(can.read());
-        //     // (void)(can.read());
+        //     parse_can_frame(can.try_read().unwrap());
+        //     // (void)(can.try_read().unwrap());
         // }
 
         DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
 
-        // const auto frame = hal::BxCanFrame::from_parts(
+        // const auto frame = hal::ClassicCanFrame::from_parts(
         //     hal::CanStdId::from_u11(0x111),
-        //     hal::BxCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
+        //     hal::ClassicCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
         // );
 
 

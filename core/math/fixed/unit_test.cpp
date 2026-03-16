@@ -87,6 +87,16 @@ static_assert(std::abs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
 static_assert(std::abs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
 static_assert(std::abs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
 
+static_assert(math::abs(iq16(0.5)) == iq16(0.5));
+static_assert(math::abs(iq16(-0.5)) == iq16(0.5));
+static_assert(math::abs(iq24(50.5)) == iq24(50.5));
+static_assert(math::abs(iq24(-50.5)) == iq24(50.5));
+
+static_assert(math::abs(iq31(0.9999)) == iq31(0.9999));
+static_assert(math::abs(iq31(-0.9999)) == iq31(0.9999));
+
+static_assert(math::abs(uq32(0.4999)) == iq31(0.4999));
+
 static_assert(double(std::get<0>(sincospu(0.5_uq32))) == 0);
 
 static_assert(math::closer_to_zero(iiq32(2), iiq32(7)) == 2);
@@ -126,10 +136,10 @@ static_assert(math::signbit(iq16(-167)) == 1);
 static_assert(math::signbit(iq31(0.5)) == 0);
 static_assert(math::signbit(iq31(-0.5)) == 1);
 
-static_assert(math::square(iq16(2)) = 4);
-static_assert(math::square(uq29(2)) = 4);
-static_assert(math::square(iq29(-2)) = 4);
-static_assert(math::square(uq16(2)) = 4);
-static_assert(math::square(uq16(100)) = 10000);
+static_assert(math::square(iq16(2)) == 4);
+static_assert(math::square(uq29(2)) == 4);
+static_assert(math::square(iq29(-2)) == 4);
+static_assert(math::square(uq16(2)) == 4);
+static_assert(math::square(uq16(100)) == 10000);
 
 }

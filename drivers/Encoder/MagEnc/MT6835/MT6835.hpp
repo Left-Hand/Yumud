@@ -13,10 +13,10 @@ public:
     explicit MT6835(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+    IResult<> update();
+    IResult<Angular<uq32>> read_lap_angle(){
         return last_packet_.parse();
     }
 private:
@@ -24,10 +24,10 @@ private:
     hal::SpiDrv spi_drv_;
     AnglePacket last_packet_;
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
-    [[nodiscard]] IResult<> burn_eeprom();
-    [[nodiscard]] IResult<> transceive_3b(std::span<uint8_t, 3> resp, std::span<const uint8_t, 3> req);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
+    IResult<> burn_eeprom();
+    IResult<> transceive_3b(std::span<uint8_t, 3> resp, std::span<const uint8_t, 3> req);
 };
 
 };

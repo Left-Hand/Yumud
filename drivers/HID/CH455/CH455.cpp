@@ -17,7 +17,7 @@ IResult<> CH455::init() {
 
 IResult<> CH455::enable_seg7_mode(Enable en){
     return transport_.write_u16(
-            (en == EN ? CH455_7SEG_ON : CH455_8SEG_ON));
+            ((en == EN) ? CH455_7SEG_ON : CH455_8SEG_ON));
 }
 
 IResult<> CH455::set_brightness(const uint8_t br){

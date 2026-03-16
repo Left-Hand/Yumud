@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "core/math/realmath.hpp"
@@ -22,12 +22,14 @@ void m2006_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M), 
     });
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
     while(true){
         const auto now_secs = clock::seconds();
@@ -38,16 +40,19 @@ void m2006_main(){
         struct Payload{
             int16_t d;
             int16_t d2;
+
+            constexpr std::array<uint8_t, 4> to_bytes() const{
+                return std::bit_cast<std::array<uint8_t, 4>>(*this);
+            }
         };
 
-        hal::BxCanFrame msg = hal::BxCanFrame(
+        hal::ClassicCanFrame msg = hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_bytes(
-                std::bit_cast<std::array<uint8_t, 4>>(
-                Payload{__bswap16(d), __bswap16(d2)})
+            hal::ClassicCanPayload::from_bytes(
+                Payload{__bswap16(d), __bswap16(d2)}.to_bytes()
             )
         );
-        DEBUG_PRINTLN(can.read());
+        DEBUG_PRINTLN(can.try_read().unwrap());
         can.try_write(msg).examine();
         clock::delay(10ms);
     }

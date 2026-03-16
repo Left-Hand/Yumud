@@ -11,8 +11,11 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit FDC2X1X(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit FDC2X1X(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    explicit FDC2X1X(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){};
 
 
     IResult<> init();
@@ -28,21 +31,21 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    IResult<> read_reg(const RegAddr addr, uint16_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> write_reg(const RegAddr addr, const uint16_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::big);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

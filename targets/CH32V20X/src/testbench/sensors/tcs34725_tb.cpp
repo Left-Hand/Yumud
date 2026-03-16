@@ -1,13 +1,14 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
+#include "core/utils/default.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HumitureSensor/TCS34725/tcs34725.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;
 
@@ -17,7 +18,7 @@ using namespace ymd::drivers;
 #define SDA_PIN hal::PD<1>()
 void tcs34725_tb(OutputStream & logger, hal::I2cBase & i2c){
     TCS34725 tcs{&i2c};
-    tcs.init({}).examine();
+    tcs.init(Default).examine();
     tcs.start_conv().examine();
     while(true){
         logger.println(tcs.get_crgb());
@@ -35,7 +36,7 @@ void tcs34725_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
 
-    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{scl_pin_, sda_pin_};
     i2c.init({hal::NearestFreq(100000)});
     tcs34725_tb(DEBUGGER, i2c);
 }

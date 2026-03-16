@@ -9,16 +9,214 @@ namespace ymd::drivers{
 
 
 struct TCAN1145_Prelude{
-    // using Error = Infallible;
-    enum class Error:uint8_t{
-        UnknownDevice
-    };
+// using Error = Infallible;
+enum class Error:uint8_t{
+    UnknownDevice
+};
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
+enum class Mode:uint8_t{
+    Sleep,
+    Standy,
+    Listen,
+    Normal
+};
 
 
 
+
+static constexpr uint8_t REG_TCAN114X_DEVICEID0 = 0x00; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID1 = 0x01; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID2 = 0x02; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID3 = 0x03; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID4 = 0x04; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID5 = 0x05; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID6 = 0x06; 
+static constexpr uint8_t REG_TCAN114X_DEVICEID7 = 0x07; 
+
+static constexpr uint8_t REG_TCAN114X_REVID_MAJOR = 0x08; 
+static constexpr uint8_t REG_TCAN114X_REVID_MINOR = 0x09; 
+
+//formula RSVD Registers not included     0x0A+
+//Scratch Pad SPI register not included   0x0F
+
+static constexpr uint8_t REG_TCAN114X_MODE_CONTROL = 0x10; 
+static constexpr uint8_t REG_TCAN114X_WAKE_PIN_CONFIG = 0x11; 
+static constexpr uint8_t REG_TCAN114X_PIN_CONFIG = 0x12; 
+static constexpr uint8_t REG_TCAN114X_WD_CONFIG_1 = 0x13; 
+static constexpr uint8_t REG_TCAN114X_WD_CONFIG_2 = 0x14; 
+static constexpr uint8_t REG_TCAN114X_WD_INPUT_TRIG = 0x15; 
+static constexpr uint8_t REG_TCAN114X_WD_RST_PULSE = 0x16; 
+static constexpr uint8_t REG_TCAN114X_FSM_CONFIG = 0x17; 
+static constexpr uint8_t REG_TCAN114X_FSM_COUNTER = 0x18; 
+static constexpr uint8_t REG_TCAN114X_DEVICE_RESET = 0x19; 
+static constexpr uint8_t REG_TCAN114X_DEVICE_CONFIG = 0x1A; 
+
+// DEVICE_CONFIG2 not included            0x1B
+//
+// SWE_DIS not included                   0x1C
+//
+//#define REG_TCAN114X_SWE_DIS            0x1C
+//
+//
+// SO_CONFIG not included                 0x29
+
+static constexpr uint8_t REG_TCAN114X_WD_QA_CONFIG = 0x2D; 
+static constexpr uint8_t REG_TCAN114X_WD_QA_ANSWER = 0x2E; 
+static constexpr uint8_t REG_TCAN114X_WD_QA_QUESTION = 0x2F; 
+
+/*
+ * Selective wake registers
+ */
+static constexpr uint8_t REG_TCAN114X_SW_ID_1 = 0x30; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_2 = 0x31; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_3 = 0x32; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_4 = 0x33; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_1 = 0x34; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_2 = 0x35; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_3 = 0x36; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_4 = 0x37; 
+static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_DLC = 0x38; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_0 = 0x39; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_1 = 0x3A; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_2 = 0x3B; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_3 = 0x3C; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_4 = 0x3D; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_5 = 0x3E; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_6 = 0x3F; 
+static constexpr uint8_t REG_TCAN114X_SW_DATA_7 = 0x40; 
+
+// SW_RSVD_y not included                 0x41+
+
+static constexpr uint8_t REG_TCAN114X_SW_CONFIG_1 = 0x44; 
+static constexpr uint8_t REG_TCAN114X_SW_CONFIG_2 = 0x45; 
+static constexpr uint8_t REG_TCAN114X_SW_CONFIG_3 = 0x46; 
+static constexpr uint8_t REG_TCAN114X_SW_CONFIG_4 = 0x47; 
+
+// SW_CONFIG_RSVD_y not included          0x48+
+
+static constexpr uint8_t REG_TCAN114X_INT_GLOBAL = 0x50; 
+static constexpr uint8_t REG_TCAN114X_INT_1 = 0x51; 
+static constexpr uint8_t REG_TCAN114X_INT_2 = 0x52; 
+static constexpr uint8_t REG_TCAN114X_INT_3 = 0x53; 
+static constexpr uint8_t REG_TCAN114X_INT_CANBUS = 0x54; 
+static constexpr uint8_t REG_TCAN114X_INT_GLOBAL_ENABLE = 0x55; 
+static constexpr uint8_t REG_TCAN114X_INT_ENABLE_1 = 0x56; 
+static constexpr uint8_t REG_TCAN114X_INT_ENABLE_2 = 0x57; 
+static constexpr uint8_t REG_TCAN114X_INT_ENABLE_3 = 0x58; 
+static constexpr uint8_t REG_TCAN114X_INT_ENABLE_CANBUS = 0x59; 
+
+// INT_RSVD_y not included                0x5A+
+
+//_________________________________________________________________________________________________________________
+
+/*
+ *  Bit masks
+ */
+
+//REG_TCAN114X_DEVICE_RESET
+//Addr 19h
+//--------------------------------------------------------------------
+static constexpr uint8_t REG_BITS_TCAN114X_DEVICE_RESET_HARD_RESET = 0x01; 
+static constexpr uint8_t REG_BITS_TCAN114X_DEVICE_RESET_SOFT_RESET = 0x02; 
+
+//MODE_CNTRL
+//Addr 10h
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_SW_EN = 0x80; 
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_FD_EN = 0x20;   //0x10
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_SEL_MSK = 0x07; 
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_SLEEP = 0x01; 
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_STANDBY = 0x04; 
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_LISTEN = 0x05; 
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_NORMAL = 0x07; 
+//Added
+
+static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_DTO_DIS = 0x40; 
+
+/*RSVD now
+ *
+ *#define REG_BITS_TCAN114X_MODE_CNTRL_TM_EN              0x08
+ *
+ *#define REG_BITS_TCAN114X_MODE_CNTRL_SWE_DIS            0x20
+ *
+ */
+
+/*Changed to DTO_DIS
+ *
+ * #define REG_BITS_TCAN114X_MODE_CNTRL_FS_DIS            0x40
+ */
+
+//----------------------------------------------------------------------
+
+//REG_TCAN114X_SWE_DIS
+//Addr 1Ch
+/*
+#define REG_BITS_TCAN114X_SWE_DIS_SWE_DIS               0x80
+#define REG_BITS_TCAN114X_SWE_DIS_CANSLNT_SWE_DIS       0x04
+*/
+
+//----------------------------------------------------------------------
+
+//INT_GLOBAL
+//ADDR 50h
+static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_GLOBALERR = 0x80; 
+static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_1 = 0x40; 
+static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_2 = 0x20; 
+static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_3 = 0x10; 
+static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_CANBUS = 0x08; 
+
+//----------------------------------------------------------------------
+
+//SW_ID_3
+//Addr 32h
+static constexpr uint8_t REG_BITS_TCAN114X_SW_ID3_IDE = 0x20; 
+
+//SW_IDM_DLC
+//Addr 38h
+static constexpr uint8_t REG_BITS_TCAN114X_SW_ID_MASK_DLC_DATA_MASK_EN = 0x01; 
+
+//SW_CONFIG_4
+//Addr 47h
+static constexpr uint8_t REG_BITS_TCAN114X_SW_CONFIG_4_SWCFG = 0x80; 
+
+//WD_CONFIG_1
+//Addr 13h
+// Not sure if this does what is intended
+// This sets WD_CONFIG to Q&A
+static constexpr uint8_t REG_BITS_TCAN114X_WD_CONFIG_1_WD_CONFIG_MASK = 0xC0; 
+
+//WD_QA_QUESTION
+//Addr 2Fh
+static constexpr uint8_t REG_BITS_TCAN114X_WD_QA_QUESTION_QA_ERROR = 0x40; 
+
+static constexpr size_t TCAN114X_PN_DLC_0B = 0;
+static constexpr size_t TCAN114X_PN_DLC_1B = 1;
+static constexpr size_t TCAN114X_PN_DLC_2B = 2;
+static constexpr size_t TCAN114X_PN_DLC_3B = 3;
+static constexpr size_t TCAN114X_PN_DLC_4B = 4;
+static constexpr size_t TCAN114X_PN_DLC_5B = 5;
+static constexpr size_t TCAN114X_PN_DLC_6B = 6;
+static constexpr size_t TCAN114X_PN_DLC_7B = 7;
+static constexpr size_t TCAN114X_PN_DLC_8B = 8;
+
+static constexpr size_t TCAN114X_PN_CAN_50KBPS = 0;
+static constexpr size_t TCAN114X_PN_CAN_100KBPS = 1;
+static constexpr size_t TCAN114X_PN_CAN_125KBPS = 2;
+static constexpr size_t TCAN114X_PN_CAN_250KBPS = 3;
+static constexpr size_t TCAN114X_PN_CAN_500KBPS = 5;
+static constexpr size_t TCAN114X_PN_CAN_1MBPS = 7;
+
+static constexpr size_t TCAN114X_PN_CANFD_LESSTHAN4XCANRATE = 0;
+static constexpr size_t TCAN114X_PN_CANFD_GT5x_LT10x = 1;
+static constexpr size_t TCAN114X_PN_CANFD_8MBPS_WITH500KCAN = 2;
+
+// };
+
+
+// struct TCAN1145_Regset:public TCAN1145_Prelude{
 
     typedef union
     {
@@ -45,14 +243,6 @@ struct TCAN1145_Prelude{
 
 
 
-
-
-    enum class Mode:uint8_t{
-        Sleep,
-        Standy,
-        Listen,
-        Normal
-    };
 
 
     typedef union {
@@ -348,193 +538,6 @@ struct TCAN1145_Prelude{
         uint8_t wd10 : 2;
         uint8_t wd11 : 2;
     } wdt_bits;
-
-
-static constexpr uint8_t REG_TCAN114X_DEVICEID0 = 0x00; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID1 = 0x01; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID2 = 0x02; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID3 = 0x03; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID4 = 0x04; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID5 = 0x05; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID6 = 0x06; 
-static constexpr uint8_t REG_TCAN114X_DEVICEID7 = 0x07; 
-
-static constexpr uint8_t REG_TCAN114X_REVID_MAJOR = 0x08; 
-static constexpr uint8_t REG_TCAN114X_REVID_MINOR = 0x09; 
-
-//formula RSVD Registers not included     0x0A+
-//Scratch Pad SPI register not included   0x0F
-
-static constexpr uint8_t REG_TCAN114X_MODE_CONTROL = 0x10; 
-static constexpr uint8_t REG_TCAN114X_WAKE_PIN_CONFIG = 0x11; 
-static constexpr uint8_t REG_TCAN114X_PIN_CONFIG = 0x12; 
-static constexpr uint8_t REG_TCAN114X_WD_CONFIG_1 = 0x13; 
-static constexpr uint8_t REG_TCAN114X_WD_CONFIG_2 = 0x14; 
-static constexpr uint8_t REG_TCAN114X_WD_INPUT_TRIG = 0x15; 
-static constexpr uint8_t REG_TCAN114X_WD_RST_PULSE = 0x16; 
-static constexpr uint8_t REG_TCAN114X_FSM_CONFIG = 0x17; 
-static constexpr uint8_t REG_TCAN114X_FSM_COUNTER = 0x18; 
-static constexpr uint8_t REG_TCAN114X_DEVICE_RESET = 0x19; 
-static constexpr uint8_t REG_TCAN114X_DEVICE_CONFIG = 0x1A; 
-
-// DEVICE_CONFIG2 not included            0x1B
-//
-// SWE_DIS not included                   0x1C
-//
-//#define REG_TCAN114X_SWE_DIS            0x1C
-//
-//
-// SO_CONFIG not included                 0x29
-
-static constexpr uint8_t REG_TCAN114X_WD_QA_CONFIG = 0x2D; 
-static constexpr uint8_t REG_TCAN114X_WD_QA_ANSWER = 0x2E; 
-static constexpr uint8_t REG_TCAN114X_WD_QA_QUESTION = 0x2F; 
-
-/*
- * Selective wake registers
- */
-static constexpr uint8_t REG_TCAN114X_SW_ID_1 = 0x30; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_2 = 0x31; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_3 = 0x32; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_4 = 0x33; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_1 = 0x34; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_2 = 0x35; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_3 = 0x36; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_4 = 0x37; 
-static constexpr uint8_t REG_TCAN114X_SW_ID_MASK_DLC = 0x38; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_0 = 0x39; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_1 = 0x3A; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_2 = 0x3B; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_3 = 0x3C; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_4 = 0x3D; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_5 = 0x3E; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_6 = 0x3F; 
-static constexpr uint8_t REG_TCAN114X_SW_DATA_7 = 0x40; 
-
-// SW_RSVD_y not included                 0x41+
-
-static constexpr uint8_t REG_TCAN114X_SW_CONFIG_1 = 0x44; 
-static constexpr uint8_t REG_TCAN114X_SW_CONFIG_2 = 0x45; 
-static constexpr uint8_t REG_TCAN114X_SW_CONFIG_3 = 0x46; 
-static constexpr uint8_t REG_TCAN114X_SW_CONFIG_4 = 0x47; 
-
-// SW_CONFIG_RSVD_y not included          0x48+
-
-static constexpr uint8_t REG_TCAN114X_INT_GLOBAL = 0x50; 
-static constexpr uint8_t REG_TCAN114X_INT_1 = 0x51; 
-static constexpr uint8_t REG_TCAN114X_INT_2 = 0x52; 
-static constexpr uint8_t REG_TCAN114X_INT_3 = 0x53; 
-static constexpr uint8_t REG_TCAN114X_INT_CANBUS = 0x54; 
-static constexpr uint8_t REG_TCAN114X_INT_GLOBAL_ENABLE = 0x55; 
-static constexpr uint8_t REG_TCAN114X_INT_ENABLE_1 = 0x56; 
-static constexpr uint8_t REG_TCAN114X_INT_ENABLE_2 = 0x57; 
-static constexpr uint8_t REG_TCAN114X_INT_ENABLE_3 = 0x58; 
-static constexpr uint8_t REG_TCAN114X_INT_ENABLE_CANBUS = 0x59; 
-
-// INT_RSVD_y not included                0x5A+
-
-//_________________________________________________________________________________________________________________
-
-/*
- *  Bit masks
- */
-
-//REG_TCAN114X_DEVICE_RESET
-//Addr 19h
-//--------------------------------------------------------------------
-static constexpr uint8_t REG_BITS_TCAN114X_DEVICE_RESET_HARD_RESET = 0x01; 
-static constexpr uint8_t REG_BITS_TCAN114X_DEVICE_RESET_SOFT_RESET = 0x02; 
-
-//MODE_CNTRL
-//Addr 10h
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_SW_EN = 0x80; 
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_FD_EN = 0x20;   //0x10
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_SEL_MSK = 0x07; 
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_SLEEP = 0x01; 
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_STANDBY = 0x04; 
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_LISTEN = 0x05; 
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_NORMAL = 0x07; 
-//Added
-
-static constexpr uint8_t REG_BITS_TCAN114X_MODE_CNTRL_MODE_DTO_DIS = 0x40; 
-
-/*RSVD now
- *
- *#define REG_BITS_TCAN114X_MODE_CNTRL_TM_EN              0x08
- *
- *#define REG_BITS_TCAN114X_MODE_CNTRL_SWE_DIS            0x20
- *
- */
-
-/*Changed to DTO_DIS
- *
- * #define REG_BITS_TCAN114X_MODE_CNTRL_FS_DIS            0x40
- */
-
-//----------------------------------------------------------------------
-
-//REG_TCAN114X_SWE_DIS
-//Addr 1Ch
-/*
-#define REG_BITS_TCAN114X_SWE_DIS_SWE_DIS               0x80
-#define REG_BITS_TCAN114X_SWE_DIS_CANSLNT_SWE_DIS       0x04
-*/
-
-//----------------------------------------------------------------------
-
-//INT_GLOBAL
-//ADDR 50h
-static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_GLOBALERR = 0x80; 
-static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_1 = 0x40; 
-static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_2 = 0x20; 
-static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_3 = 0x10; 
-static constexpr uint8_t REG_BITS_TCAN114X_INT_GLOBAL_INT_CANBUS = 0x08; 
-
-//----------------------------------------------------------------------
-
-//SW_ID_3
-//Addr 32h
-static constexpr uint8_t REG_BITS_TCAN114X_SW_ID3_IDE = 0x20; 
-
-//SW_IDM_DLC
-//Addr 38h
-static constexpr uint8_t REG_BITS_TCAN114X_SW_ID_MASK_DLC_DATA_MASK_EN = 0x01; 
-
-//SW_CONFIG_4
-//Addr 47h
-static constexpr uint8_t REG_BITS_TCAN114X_SW_CONFIG_4_SWCFG = 0x80; 
-
-//WD_CONFIG_1
-//Addr 13h
-// Not sure if this does what is intended
-// This sets WD_CONFIG to Q&A
-static constexpr uint8_t REG_BITS_TCAN114X_WD_CONFIG_1_WD_CONFIG_MASK = 0xC0; 
-
-//WD_QA_QUESTION
-//Addr 2Fh
-static constexpr uint8_t REG_BITS_TCAN114X_WD_QA_QUESTION_QA_ERROR = 0x40; 
-
-static constexpr size_t TCAN114X_PN_DLC_0B = 0;
-static constexpr size_t TCAN114X_PN_DLC_1B = 1;
-static constexpr size_t TCAN114X_PN_DLC_2B = 2;
-static constexpr size_t TCAN114X_PN_DLC_3B = 3;
-static constexpr size_t TCAN114X_PN_DLC_4B = 4;
-static constexpr size_t TCAN114X_PN_DLC_5B = 5;
-static constexpr size_t TCAN114X_PN_DLC_6B = 6;
-static constexpr size_t TCAN114X_PN_DLC_7B = 7;
-static constexpr size_t TCAN114X_PN_DLC_8B = 8;
-
-static constexpr size_t TCAN114X_PN_CAN_50KBPS = 0;
-static constexpr size_t TCAN114X_PN_CAN_100KBPS = 1;
-static constexpr size_t TCAN114X_PN_CAN_125KBPS = 2;
-static constexpr size_t TCAN114X_PN_CAN_250KBPS = 3;
-static constexpr size_t TCAN114X_PN_CAN_500KBPS = 5;
-static constexpr size_t TCAN114X_PN_CAN_1MBPS = 7;
-
-static constexpr size_t TCAN114X_PN_CANFD_LESSTHAN4XCANRATE = 0;
-static constexpr size_t TCAN114X_PN_CANFD_GT5x_LT10x = 1;
-static constexpr size_t TCAN114X_PN_CANFD_8MBPS_WITH500KCAN = 2;
-
 };
 
 }

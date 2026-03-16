@@ -10,6 +10,7 @@
 #include "core/clock/clock.hpp"
 #include "core/math_defs.hpp"
 #include "core/debug/debug.hpp"
+#include "core/string/view/string_view.hpp"
 
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk
@@ -386,15 +387,70 @@ void sys::trip(){
     #endif
 }
 
+static constexpr const char * unwrap_str_or(const char * str, const char * or_str){
+    return str != nullptr ? str : or_str;
+}
+
+static constexpr const char * str_or_unknown(const char * str){
+    return unwrap_str_or(str, "unknown");
+}
+
+static constexpr const char * str_or_null(const char * str){
+    return unwrap_str_or(str, "null");
+}
+
+
 //关闭所有外设
-void sys::abort(){
+void sys::abort(const AbortInfo & info){
     sys::trip();
 
 
     DISABLE_INT;
     DISABLE_INT;
 
-    DEBUG_PRINTLN("system aborted");
+    DEBUGGER.set_splitter('\0');
+    DEBUG_PRINTLN("\r\nsystem aborted");
+    DEBUG_PRINTLN("-----------");
+
+    DEBUG_PRINTS("file name:", str_or_unknown(info.file_name));
+
+    // DEBUG_PRINT("function name:", str_or_unknown(info.function_name), 
+    //     '(', info.line, ':', info.column, ')', DEBUGGER.endl());
+
+    if(info.function_name) {
+        DEBUG_PRINTLN("function name:", info.function_name, 
+            '(', info.line, ':', info.column, ')'
+        );
+    }else{
+        DEBUG_PRINTLN("function name:", str_or_unknown(nullptr));
+    }
+
+    DEBUG_PRINTS("reason:", str_or_unknown(info.reason));
+
+    const auto & arguments = info.arguments;
+    const auto flag = arguments.flag;
+    DEBUG_PRINTS("flag:", std::hex, flag.to_u32());
+
+    auto print_arg = [&](
+        const char * str, 
+        const AbortInfo::Arguments::ArgDescr arg_descr, 
+        const void * arg
+    ){
+        DEBUG_PRINT(str);
+        do{
+            if(arg_descr.is_cstr()) {
+                DEBUG_PRINTS((str_or_null(reinterpret_cast<const char *>(arg))));
+                return;
+            }
+        }while(false);
+
+        DEBUG_PRINTS("unspecified");
+    };
+
+    print_arg("arg1:", flag.arg_descr<1>(), arguments.arg1);
+    print_arg("arg2:", flag.arg_descr<2>(), arguments.arg2);
+
+    DEBUG_PRINTLN("-----------");
 
 
     RCC_DeInit();

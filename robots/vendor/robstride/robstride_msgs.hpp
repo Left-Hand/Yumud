@@ -307,7 +307,7 @@ struct [[nodiscard]] GetDeviceId final{
     NodeId motor_id;
     uint64_t serial_number;
 
-    constexpr Result<Self, DeMsgError> try_from_can_frame(const hal::BxCanFrame & frame){
+    constexpr Result<Self, DeMsgError> try_from_can_frame(const hal::ClassicCanFrame & frame){
         if(frame.length() != 8) return Err(DeMsgError::PayloadNot8Bytes);
         if(frame.is_standard()) return Err(DeMsgError::StdFrame);
         const auto depack = ({

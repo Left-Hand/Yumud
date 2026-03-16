@@ -8,7 +8,7 @@
 
 #include "core/math/real.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 
@@ -19,7 +19,7 @@ struct TCS34725_Prelude{
 
 
     enum class [[nodiscard]] Error_Kind:uint8_t{
-        WrongChipId
+        ChipIdMismatch
     };
     
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)

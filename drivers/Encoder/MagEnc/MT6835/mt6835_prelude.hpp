@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "drivers/Encoder/encoder.hpp"
 #include "core/io/regs.hpp"
@@ -62,7 +62,7 @@ struct MT6835_Prelude{
             // if(mag_weak) [[unlikely]]
             //     return Err(Error::MagnetLow);
 
-            const auto turns = uq20::from_bits(angle21());
+            const auto turns = uq32::from_bits(uint32_t(angle21() << (32 - 21)));
             return Ok(Angular<uq32>::from_turns(turns));
         }
     private:

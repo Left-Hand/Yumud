@@ -5,7 +5,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 // https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122

@@ -420,13 +420,21 @@ uint8_t CAN_Transmit(CAN_TypeDef* CANx, const CanTxMsg* TxMessage)
         {
             switch(TxMessage->DLC){
                 case 8: data_h |= (((uint32_t)TxMessage->Data[7] << 24));
+                  [[fallthrough]];
                 case 7: data_h |= (((uint32_t)TxMessage->Data[6] << 16));
+                  [[fallthrough]];
                 case 6: data_h |= (((uint32_t)TxMessage->Data[5] << 8));
+                  [[fallthrough]];
                 case 5: data_h |= (((uint32_t)TxMessage->Data[4] << 0));
+                  [[fallthrough]];
                 case 4: data_l |= (((uint32_t)TxMessage->Data[3] << 24));
+                  [[fallthrough]];
                 case 3: data_l |= (((uint32_t)TxMessage->Data[2] << 16));
+                  [[fallthrough]];
                 case 2: data_l |= (((uint32_t)TxMessage->Data[1] << 8));
+                  [[fallthrough]];
                 case 1: data_l |= (((uint32_t)TxMessage->Data[0] << 0));
+                  [[fallthrough]];
                 case 0:
                 default:
                     break;

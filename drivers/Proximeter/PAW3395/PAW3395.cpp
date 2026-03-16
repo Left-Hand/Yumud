@@ -142,7 +142,7 @@ IResult<> Self::enable_ripple(const Enable en){
 	if(const auto res = read_reg(RegAddr::RIPPLE_CONTROL, temp);
 		res.is_err()) return res;
 	
-	const auto temp2 = en == EN ? 
+	const auto temp2 = (en == EN) ? 
 		(temp | 0x80) : temp & (~0x80);
 	if(const auto res = write_reg(RegAddr::RIPPLE_CONTROL, temp2);
 		res.is_err()) return res;

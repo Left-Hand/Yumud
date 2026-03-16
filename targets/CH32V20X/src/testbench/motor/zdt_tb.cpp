@@ -8,8 +8,8 @@
 #include "algebra/vectors/vec2.hpp"
 
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "robots/vendor/zdt/zdt_frame_factory.hpp"
 
@@ -45,7 +45,7 @@ void zdt_main(){
     COMM_CAN.init({
         .remap = hal::CanRemap::_0,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -85,15 +85,15 @@ void zdt_main(){
         }
         #else
         if(COMM_CAN.available()){
-            DEBUG_PRINTLN("rx", COMM_CAN.read());
+            DEBUG_PRINTLN("rx", COMM_CAN.try_read().unwrap());
         }
 
         // DEBUG_PRINTLN(COMM_CAN.pending());
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = math::sin(clock::seconds()*0.7_r);
-        const auto d2 = math::sin(clock::seconds()*0.2_r);
+        const auto d1 = static_cast<iq16>(math::sin(clock::seconds()*0.7_r));
+        const auto d2 = static_cast<iq16>(math::sin(clock::seconds()*0.2_r));
         write_packet(factory1.set_angle(
             Angular<iq16>::from_turns(d1), 
             0

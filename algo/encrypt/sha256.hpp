@@ -164,7 +164,7 @@ private:
     uint64_t    length = 0;
     std::array<uint32_t, 8>    state = INITIAL_STATE;
     uint32_t    curlen = 0;
-    std::array<uint8_t, BLOCK_SIZE>     buf = {};
+    std::array<uint8_t, BLOCK_SIZE>     buf;
 
     constexpr void transform(std::span<const uint8_t, BLOCK_SIZE> block){
         std::array<uint32_t, 8> S = state;

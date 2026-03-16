@@ -150,7 +150,7 @@ private:
 
     void set_target_current(const iq16 curr_, const size_t index);
 
-    void update_slave(const hal::BxCanFrame & frame, const size_t index);
+    void update_slave(const hal::ClassicCanFrame & frame, const size_t index);
 
 };
 #endif

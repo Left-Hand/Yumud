@@ -26,51 +26,13 @@ __inline void TIM_ASSERT(bool x){
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
 
-[[maybe_unused]] static Nth _timer_to_nth(const void * inst){
-
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef TIM1_PRESENT
-        case TIM1_BASE: return Nth(1);
-        #endif
-        #ifdef TIM2_PRESENT
-        case TIM2_BASE: return Nth(2);
-        #endif
-        #ifdef TIM3_PRESENT
-        case TIM3_BASE: return Nth(3);
-        #endif
-        #ifdef TIM4_PRESENT
-        case TIM4_BASE: return Nth(4);
-        #endif
-        #ifdef TIM5_PRESENT
-        case TIM5_BASE: return Nth(5);
-        #endif
-        #ifdef TIM6_PRESENT
-        case TIM6_BASE: return Nth(6);
-        #endif
-        #ifdef TIM7_PRESENT
-        case TIM7_BASE: return Nth(7);
-        #endif
-        #ifdef TIM8_PRESENT
-        case TIM8_BASE: return Nth(8);
-        #endif
-        #ifdef TIM9_PRESENT
-        case TIM9_BASE: return Nth(9);
-        #endif
-        #ifdef TIM10_PRESENT
-        case TIM10_BASE: return Nth(10);
-        #endif
-    }
-    __builtin_trap();
-}
-
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch1_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch1_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -109,8 +71,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch2_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch2_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -149,8 +110,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch3_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch3_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -189,8 +149,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch4_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch4_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -229,8 +188,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch1n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch1n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -269,8 +227,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch2n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch2n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -309,8 +266,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch3n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch3n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -349,8 +305,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_bkin_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_bkin_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -373,12 +328,12 @@ template<TimerRemap REMAP>
 }
 
 #define DEF_TIM_BIND_PIN_LAYOUTER(name)\
-[[maybe_unused]] static Gpio tim_to_##name##_pin(const void * inst, const TimerRemap remap){\
+[[maybe_unused]] static Gpio tim_to_##name##_pin(const Nth nth, const TimerRemap remap){\
     switch(remap){\
-        case TimerRemap::_0: return _timer_to_##name##_pin<TimerRemap::_0>(inst);\
-        case TimerRemap::_1: return _timer_to_##name##_pin<TimerRemap::_1>(inst);\
-        case TimerRemap::_2: return _timer_to_##name##_pin<TimerRemap::_2>(inst);\
-        case TimerRemap::_3: return _timer_to_##name##_pin<TimerRemap::_3>(inst);\
+        case TimerRemap::_0: return _timer_to_##name##_pin<TimerRemap::_0>(nth);\
+        case TimerRemap::_1: return _timer_to_##name##_pin<TimerRemap::_1>(nth);\
+        case TimerRemap::_2: return _timer_to_##name##_pin<TimerRemap::_2>(nth);\
+        case TimerRemap::_3: return _timer_to_##name##_pin<TimerRemap::_3>(nth);\
     }\
     __builtin_trap();\
 }\
@@ -394,8 +349,8 @@ DEF_TIM_BIND_PIN_LAYOUTER(bkin)
 
 
 
-volatile uint16_t & BasicTimer::cnt(){return SDK_INST(inst_)->CNT;}
-volatile uint16_t & BasicTimer::arr(){return SDK_INST(inst_)->ATRLR;}
+volatile uint16_t & BasicTimer::cnt(){return SPL_INST(inst_)->CNT;}
+volatile uint16_t & BasicTimer::arr(){return SPL_INST(inst_)->ATRLR;}
 
 
 Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_pins(
@@ -404,25 +359,25 @@ Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_
     for(const auto & sel : list){
         switch(sel.kind()){
         case ChannelSelection::CH1:
-            tim_to_ch1_pin(inst_, remap_).afpp();
+            tim_to_ch1_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH2:
-            tim_to_ch2_pin(inst_, remap_).afpp();
+            tim_to_ch2_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH3:
-            tim_to_ch3_pin(inst_, remap_).afpp();
+            tim_to_ch3_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH4:
-            tim_to_ch4_pin(inst_, remap_).afpp();
+            tim_to_ch4_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH1N:
-            tim_to_ch1n_pin(inst_, remap_).afpp();
+            tim_to_ch1n_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH2N:
-            tim_to_ch2n_pin(inst_, remap_).afpp();
+            tim_to_ch2n_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH3N:
-            tim_to_ch3n_pin(inst_, remap_).afpp();
+            tim_to_ch3n_pin(tim_nth_, remap_).afpp();
             break;
         }
     }
@@ -434,12 +389,12 @@ TimerPinSetuper::Next TimerPinSetuper::dont_alter_to_pins(){
 }
 
 void BasicTimer::enable_rcc(const Enable en){
-    timer::details::enable_rcc(SDK_INST(inst_), en);
+    lld::timer_enable_rcc(tim_nth_, en);
 }
 
 void BasicTimer::set_remap(const TimerRemap rm){
     // PANIC{uint8_t(rm)};
-    timer::details::set_remap(SDK_INST(inst_), rm);
+    lld::timer_set_remap(tim_nth_, rm);
 }
 
 void BasicTimer::start(){
@@ -451,21 +406,21 @@ void BasicTimer::stop(){
 }
 
 void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
-    TIM_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), en == EN);
+    TIM_ITConfig(SPL_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
-    return timer::details::is_advanced_timer(SDK_INST(inst_)) ? 
+    return lld::is_advanced_timer(tim_nth_) ? 
         sys::clock::get_apb2_clk_freq() : 
         sys::clock::get_apb1_clk_freq();
 }
 
 void BasicTimer::set_psc(const uint16_t psc){
-    SDK_INST(inst_)->PSC = psc;
+    SPL_INST(inst_)->PSC = psc;
 }
 
 void BasicTimer::set_arr(const uint16_t arr){
-    SDK_INST(inst_)->ATRLR = arr;
+    SPL_INST(inst_)->ATRLR = arr;
 }
 
 //ckd = 0 : 1分频
@@ -475,52 +430,52 @@ void BasicTimer::set_arr(const uint16_t arr){
 void BasicTimer::set_ckd(const uint8_t ckd){
     if(ckd > 2) __builtin_trap();
 
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
     
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (static_cast<uint16_t>(ckd) << 8);
 
-    SDK_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(inst_)->CTLR1 = tmpcr1;
 }
 
 
 void BasicTimer::set_count_mode(const TimerCountMode mode){
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
     tmpcr1 |= (mode.to_bits() << 4);
 
 
-    SDK_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(inst_)->CTLR1 = tmpcr1;
 }
 
 void BasicTimer::enable_arr_sync(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->CTLR1 = SDK_INST(inst_)->CTLR1 | TIM_ARPE;
+        SPL_INST(inst_)->CTLR1 = SPL_INST(inst_)->CTLR1 | TIM_ARPE;
     }else{
-        SDK_INST(inst_)->CTLR1 = (SDK_INST(inst_)->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
+        SPL_INST(inst_)->CTLR1 = (SPL_INST(inst_)->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
     }
 }
 
 void BasicTimer::enable_psc_sync(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->SWEVGR = SDK_INST(inst_)->SWEVGR | TIM_PSCReloadMode_Immediate;
+        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR | TIM_PSCReloadMode_Immediate;
     }else{
-        SDK_INST(inst_)->SWEVGR = SDK_INST(inst_)->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
+        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
     }
 }
 
 void BasicTimer::enable_udis(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->CTLR1 |= TIM_UDIS;
+        SPL_INST(inst_)->CTLR1 |= TIM_UDIS;
     }else{
-        SDK_INST(inst_)->CTLR1 &= ~TIM_UDIS;
+        SPL_INST(inst_)->CTLR1 &= ~TIM_UDIS;
     }
 }
 
 void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
-    const auto [arr, psc] = timer::details::calc_arr_and_psc(
+    const auto [arr, psc] = lld::timer_calc_arr_and_psc(
         get_periph_clk_freq(), count_freq);
     set_arr(arr);
     set_psc(psc);
@@ -528,12 +483,12 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
-    TIM_DeInit(SDK_INST(inst_));
+    TIM_DeInit(SPL_INST(inst_));
     set_remap(cfg.remap);
-    SDK_INST(inst_)->CNT = 0;
+    SPL_INST(inst_)->CNT = 0;
     this->enable_rcc(EN);
 
-    TIM_InternalClockConfig(SDK_INST(inst_));
+    TIM_InternalClockConfig(SPL_INST(inst_));
     set_count_freq(cfg.count_freq);
     set_count_mode(cfg.count_mode);
 
@@ -541,8 +496,8 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
     set_ckd(0);
     enable_arr_sync(EN);
 
-    TIM_ClearFlag(SDK_INST(inst_), 0x1e7f);
-    TIM_ClearITPendingBit(SDK_INST(inst_), 0x00ff);
+    TIM_ClearFlag(SPL_INST(inst_), 0x1e7f);
+    TIM_ClearITPendingBit(SPL_INST(inst_), 0x00ff);
 
 
     return Ok(TimerPinSetuper{inst_, cfg.remap});
@@ -556,10 +511,10 @@ void BasicTimer::deinit(){
 
 
 void BasicTimer::enable(const Enable en){
-    TIM_Cmd(SDK_INST(inst_), en == EN);
+    TIM_Cmd(SPL_INST(inst_), (en == EN));
     
-    if((en == EN) and timer::details::is_advanced_timer(SDK_INST(inst_))){
-        TIM_CtrlPWMOutputs(SDK_INST(inst_), en == EN);
+    if((en == EN) and lld::is_advanced_timer(tim_nth_)){
+        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
     }
 }
 
@@ -575,7 +530,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_RepetitionCounter = 0,
         };
 
-        TIM_TimeBaseInit(SDK_INST(inst_), &TIM_TimeBaseStructure);
+        TIM_TimeBaseInit(SPL_INST(inst_), &TIM_TimeBaseStructure);
     }
 
 
@@ -588,7 +543,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
     }
 
     {
@@ -600,43 +555,43 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
     }
 
-	TIM_EncoderInterfaceConfig(SDK_INST(inst_),
+	TIM_EncoderInterfaceConfig(SPL_INST(inst_),
         TIM_EncoderMode_TI12, 
         TIM_ICPolarity_Rising,
         TIM_ICPolarity_Rising
     );
 
-    TIM_Cmd(SDK_INST(inst_), ENABLE);
+    TIM_Cmd(SPL_INST(inst_), ENABLE);
 }
 
 bool GeneralTimer::is_up_counting(){
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
     return (tmpcr1 & TIM_DIR) == 0;
 }
 
 
 void GeneralTimer::enable_single_shot(const Enable en){
-    TIM_SelectOnePulseMode(SDK_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
+    TIM_SelectOnePulseMode(SPL_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
 void GeneralTimer::set_trgo_source(const TrgoSource source){
-    TIM_SelectOutputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectOutputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_trgi_source(const TrgiSource source){
-    TIM_SelectInputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectInputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_slave_mode(const SlaveMode slave_mode){
-    TIM_SelectSlaveMode(SDK_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
+    TIM_SelectSlaveMode(SPL_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
 }
 
 void GeneralTimer::enable_master_slave_mode(const Enable en){
-    TIM_SelectMasterSlaveMode(SDK_INST(inst_), 
-        en == EN ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
+    TIM_SelectMasterSlaveMode(SPL_INST(inst_), 
+        (en == EN) ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
 
 void TimerBdtr::init(const Config & cfg){
@@ -670,53 +625,53 @@ void TimerBdtr::init(const Config & cfg){
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
     };
 
-    TIM_BDTRConfig(SDK_INST(inst_), &TIM_BDTRInitStructure);
+    TIM_BDTRConfig(SPL_INST(inst_), &TIM_BDTRInitStructure);
 }
 
 #if 0
 void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
-    uint16_t tempreg = SDK_INST(inst_)->BDTR;
+    uint16_t tempreg = SPL_INST(inst_)->BDTR;
     tempreg &= 0xff00;
     tempreg |= deadzone_code.bits;
-    SDK_INST(inst_)->BDTR = tempreg;
+    SPL_INST(inst_)->BDTR = tempreg;
 }
 #endif
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
-    TIM_CCPreloadControl(SDK_INST(inst_), en == EN);
+    TIM_CCPreloadControl(SPL_INST(inst_), (en == EN));
 }
 
 
-#define TRY_ACCEPT_AND_CLEAR_IT(I)\
+#define TRY_HANDLE_AND_CLEAR_IT(itstatus, I)\
 if((itstatus & static_cast<uint16_t>(I))) {\
-    accept_interrupt(I); \
-    TIM_ClearITPendingBit(SDK_INST(inst_), uint8_t(I)); \
+    invoke_callback(I); \
+    TIM_ClearITPendingBit(SPL_INST(inst_), uint8_t(I)); \
     return;\
 }\
 
 void AdvancedTimer::on_cc_interrupt(){
-    const uint16_t itstatus = SDK_INST(inst_)->INTFR;
+    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
 }
 
-void GeneralTimer::on_interrupt(){
-    const uint16_t itstatus = SDK_INST(inst_)->INTFR;
+void BasicTimer::isr_common(){
+    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Update);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC4);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::COM);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Trigger);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Break);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Update);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::COM);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Trigger);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Break);
 }
 
-void AdvancedTimer::set_repeat_times(const uint8_t rep){
-    SDK_INST(inst_)->RPTCR = rep;
+void AdvancedTimer::set_repeat_times(const uint16_t rep){
+    SPL_INST(inst_)->RPTCR = rep;
 }
 

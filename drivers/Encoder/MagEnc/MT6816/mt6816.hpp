@@ -6,7 +6,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 #include "drivers/Encoder/encoder.hpp"
 
@@ -57,7 +57,7 @@ private:
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        [[nodiscard]] IResult<Angular<uq32>> parse() const {
+        IResult<Angular<uq32>> parse() const {
             if(not is_pc_valid()) [[unlikely]]
                 return Err(EncoderError::InvalidPc);
 

@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "algebra/vectors/vec2.hpp"
 
@@ -124,8 +124,6 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
 
     struct [[nodiscard]] R8_Guesture : public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
-        
-
         
         GestureId gesture_id;
     } DEF_R8(guesture)

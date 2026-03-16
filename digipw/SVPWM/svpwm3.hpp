@@ -6,36 +6,37 @@
 namespace ymd::digipw{
 
 
-enum class SvmSector:uint8_t{
-    _1 = 0b010,
-    _2 = 0b000,
-    _3 = 0b100,
-    _4 = 0b101,
-    _5 = 0b111,
-    _6 = 0b011
-};
-
 struct alignas(16) [[nodiscard]] SvmIntermediate final{
 
     using Self = SvmIntermediate;
-    using Sector = SvmSector;
     // static constexpr iq16 ONE_BY_SQRT3 = iq16::from_bits(0.57735026919 * (1ull << 16));
     static constexpr uq32 ONE_BY_SQRT3 = uq32::from_bits(0.57735026919 * (1ull << 32));
     static constexpr iq16 HALF_ONE = iq16(0.5);
 
     iq16 alpha_dutycycle;
     iq16 beta_dutycycle_by_sqrt3;
+
+
+    enum class [[nodiscard]] Sector:uint32_t{
+        _1 = 0b010,
+        _2 = 0b000,
+        _3 = 0b100,
+        _4 = 0b101,
+        _5 = 0b111,
+        _6 = 0b011
+    };
+
     Sector sector;
 
-    __attribute__((optimize("O3"), hot, flatten))
+    __attribute__((optimize("Ofast"), always_inline, hot, flatten))
     static constexpr Self from(const AlphaBetaCoord<iq16> alphabeta_dutycycle){
         const auto [alpha_dutycycle, beta_dutycycle] = alphabeta_dutycycle;
         const auto beta_dutycycle_by_sqrt3 = beta_dutycycle * ONE_BY_SQRT3;
     
-        const auto sector = Sector{static_cast<uint8_t>(
-            (  static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3 + alpha_dutycycle)) << 2)
-            | (static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3 - alpha_dutycycle)) << 1)
-            | (static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3)))
+        const auto sector = Sector{static_cast<uint32_t>(
+            (  static_cast<uint32_t>(std::signbit(beta_dutycycle_by_sqrt3 + alpha_dutycycle)) << 2)
+            | (static_cast<uint32_t>(std::signbit(beta_dutycycle_by_sqrt3 - alpha_dutycycle)) << 1)
+            | (static_cast<uint32_t>(std::signbit(beta_dutycycle_by_sqrt3)))
         )};
 
         return Self{
@@ -45,7 +46,7 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
         };
     }
 
-    __attribute__((optimize("O3"), hot, flatten))
+    __attribute__((optimize("Ofast"), always_inline, hot, flatten))
     constexpr UvwCoord<iq16> to_uvw_dutycycle() const{
         switch(sector){
             case Sector::_1:

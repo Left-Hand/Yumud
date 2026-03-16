@@ -149,12 +149,12 @@ IResult<> PCA9685::reset(){
 
 IResult<> PCA9685::enable_ext_clk(const Enable en){
     auto reg = RegCopy(regs_.mode1_reg);
-    reg.extclk = en == EN;
+    reg.extclk = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> PCA9685::enable_sleep(const Enable en){
     auto reg = RegCopy(regs_.mode1_reg);
-    reg.sleep = en == EN;
+    reg.sleep = (en == EN);
     return write_reg(reg);
 }

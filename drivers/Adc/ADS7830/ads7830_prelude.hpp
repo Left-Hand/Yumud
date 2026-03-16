@@ -7,7 +7,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 
@@ -21,7 +21,7 @@ struct ADS7830_Prelude{
     static constexpr size_t CHANNEL_COUNT = 8;
 
     enum class Error_Kind:uint8_t{
-        WrongChipId,
+        ChipIdMismatch,
         NoChannelCombination
     };
 
@@ -165,7 +165,13 @@ struct ADS7830_Prelude{
 
     VALIDATE_R8(CommandByte)
 
-    using ConvData = uint8_t;
+    struct ConvResult{
+        uint8_t bits;
+
+        constexpr uint8_t to_u8() const {
+            return bits;
+        }
+    };
 };
 
 class ADS7830_Transport final:
@@ -177,11 +183,11 @@ public:
     ADS7830_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
-    IResult<ConvData> fs_read(const CommandByte cmd){
-        ConvData ret;
+    IResult<ConvResult> fs_read(const CommandByte cmd){
+        ConvResult ret;
         if(const auto res = i2c_drv_.read_reg(
             cmd.to_u8(),
-            ret 
+            ret.bits
         ); res.is_err()) return Err(res.unwrap_err());
 
         return Ok(ret);

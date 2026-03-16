@@ -9,23 +9,23 @@ class BMM150:
 public:
     explicit BMM150(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
 
-    struct Config{
+    struct [[nodiscard]] Config final{
 
     };
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
+    IResult<math::Vec3<iq24>> read_mag();
 private:
 
     BoschImu_Transport transport_;
@@ -33,7 +33,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = transport_.write_reg(
             std::bit_cast<uint8_t>(T::ADDRESS), 
             reg.to_bits()
@@ -44,15 +44,15 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(
             std::bit_cast<uint8_t>(T::ADDRESS), 
             reg.as_bits_mut()
         );
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+        return transport_.read_burst(reg_addr, pbuf);
     }
 };
 

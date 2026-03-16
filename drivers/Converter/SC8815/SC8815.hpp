@@ -27,57 +27,60 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit SC8815(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit SC8815(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
-        :i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit SC8815(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    )
+        :i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
-    [[nodiscard]] IResult<Interrupts> get_interrupts();
+    IResult<Interrupts> get_interrupts();
 
-    [[nodiscard]] IResult<> init(const BatConfig & bat_conf);
+    IResult<> init(const BatConfig & bat_conf);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<iq16> get_bus_voltage();
-    [[nodiscard]] IResult<iq16> get_bus_current();
-    [[nodiscard]] IResult<iq16> get_bat_voltage();
-    [[nodiscard]] IResult<iq16> get_bat_current();
-    [[nodiscard]] IResult<iq16> get_adin_voltage();
+    IResult<> reset();
+    IResult<iq16> get_bus_voltage();
+    IResult<iq16> get_bus_current();
+    IResult<iq16> get_bat_voltage();
+    IResult<iq16> get_bat_current();
+    IResult<iq16> get_adin_voltage();
 
-    [[nodiscard]] IResult<> set_bus_current_limit(const iq16 current);
-    [[nodiscard]] IResult<> set_bat_current_limit(const iq16 current);
-    [[nodiscard]] IResult<> set_output_voltage(const iq16 voltage);
+    IResult<> set_bus_current_limit(const iq16 current);
+    IResult<> set_bat_current_limit(const iq16 current);
+    IResult<> set_output_voltage(const iq16 voltage);
 
-    [[nodiscard]] IResult<> set_internal_vbus_ref(const uq10 voltage);
-    [[nodiscard]] IResult<> set_external_vbus_ref(const uq10 voltage);
+    IResult<> set_internal_vbus_ref(const uq10 voltage);
+    IResult<> set_external_vbus_ref(const uq10 voltage);
 
-    [[nodiscard]] IResult<> set_ibat_lim_ratio();
+    IResult<> set_ibat_lim_ratio();
 
-    [[nodiscard]] IResult<> enable_otg(const Enable en);
-    [[nodiscard]] IResult<> enable_trikle_charge(const Enable en);
-    [[nodiscard]] IResult<> enable_ovp_protect(const Enable en);
-    [[nodiscard]] IResult<> enable_dither(const Enable en);
-    [[nodiscard]] IResult<> enable_adc_conv(const Enable en);
-    [[nodiscard]] IResult<> enable_pfm_mode(const Enable en);
-    [[nodiscard]] IResult<> enable_sfb(const Enable en);
-    [[nodiscard]] IResult<> enable_gpo(const Enable en);
-    [[nodiscard]] IResult<> enable_pgate(const Enable en);
+    IResult<> enable_otg(const Enable en);
+    IResult<> enable_trikle_charge(const Enable en);
+    IResult<> enable_ovp_protect(const Enable en);
+    IResult<> enable_dither(const Enable en);
+    IResult<> enable_adc_conv(const Enable en);
+    IResult<> enable_pfm_mode(const Enable en);
+    IResult<> enable_sfb(const Enable en);
+    IResult<> enable_gpo(const Enable en);
+    IResult<> enable_pgate(const Enable en);
 
-    [[nodiscard]] IResult<> set_bat_voltage(const BatVolt bat_voltage);
+    IResult<> set_bat_voltage(const BatVolt bat_voltage);
 
-    [[nodiscard]] IResult<> set_bat_cells(const BatCells bat_cells);
+    IResult<> set_bat_cells(const BatCells bat_cells);
 
-    [[nodiscard]] IResult<> enable_vbat_use_extneral(const Enable en);
-    [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrComp bat_ir_comp);
+    IResult<> enable_vbat_use_extneral(const Enable en);
+    IResult<> set_bat_ir_comp(const BatIrComp bat_ir_comp);
     
-    [[nodiscard]] IResult<> set_ibat_ratio(const IBatRatio ratio);
-    [[nodiscard]] IResult<> set_ibus_ratio(const IBusRatio ratio);
-    [[nodiscard]] IResult<> set_vbat_mon_ratio(const VBatMonRatio ratio);
-    [[nodiscard]] IResult<> set_vbus_ratio(const VBusRatio ratio);
+    IResult<> set_ibat_ratio(const IBatRatio ratio);
+    IResult<> set_ibus_ratio(const IBusRatio ratio);
+    IResult<> set_vbat_mon_ratio(const VBatMonRatio ratio);
+    IResult<> set_vbus_ratio(const VBusRatio ratio);
     
     
-    [[nodiscard]] IResult<> reconf_bat(const BatConfig & config);
-    [[nodiscard]] IResult<> reconf_ratio(const RatioConfig & config);
-    [[nodiscard]] IResult<> reconf_interrupt_mask(const Interrupts mask);
+    IResult<> reconf_bat(const BatConfig & config);
+    IResult<> reconf_ratio(const RatioConfig & config);
+    IResult<> reconf_interrupt_mask(const Interrupts mask);
 private:
     using Regs = SC8815_Regs;
     hal::I2cDrv i2c_drv_;
@@ -90,7 +93,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = i2c_drv_.write_reg(
             uint8_t(T::REG_ADDR), 
             reg.to_bits(), std::endian::little);
@@ -100,7 +103,7 @@ private:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         const auto res = i2c_drv_.read_reg(
             uint8_t(T::REG_ADDR), 
             reg.as_bits_mut(), std::endian::little);
@@ -109,17 +112,17 @@ private:
     }
 
     
-    [[nodiscard]] IResult<> read_burst(
-        const RegAddr addr, 
+    IResult<> read_burst(
+        const RegAddr reg_addr, 
         const std::span<uint8_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
 
-    [[nodiscard]] IResult<> power_up();
+    IResult<> power_up();
 };
 
 }

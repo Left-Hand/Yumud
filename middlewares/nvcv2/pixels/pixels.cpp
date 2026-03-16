@@ -254,6 +254,7 @@ void iter_threshold(
 }
 
 void calc_max_entropy(const Image<Gray>& src, const int32_t thresh){
+    (void)thresh;
     const math::Vec2u size = src.size();
     float probability = 0.0; //概率
     float max_Entropy = 0.0; //最大熵

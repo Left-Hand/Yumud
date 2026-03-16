@@ -15,7 +15,7 @@
 #include "core/clock/time.hpp"
 #include "core/string/utils/simularity/ngram.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
@@ -277,7 +277,8 @@ void stl06n_main(){
                 //find min
 
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
-                [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
+                [](const PackedLidarPoint & a, const PackedLidarPoint & b){ 
+                    return a.distance_code.millis < b.distance_code.millis; });
             })
             // | std::views::filter([i = 0](const auto&) mutable { 
             //     return (i++) % 4 == 0; 

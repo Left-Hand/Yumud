@@ -9,7 +9,7 @@ using namespace ymd::nvcv2;
 DigitsProbability match_numbers(
         const Image<Gray> & src, 
         const math::Rect2u16 & roi, 
-        const iq16 threshold
+        [[maybe_unused]] const iq16 threshold
 ){
     const auto tmp_size = roi.size;
     auto ret = src.clone(math::Rect2u16(roi.top_left, tmp_size));
@@ -45,11 +45,14 @@ DigitsProbability match_numbers(const Image<Binary> & src, const math::Rect2u16 
 
 
 Option<uint> match_number(const Image<Gray> &, const math::Rect2u16 & roi){
+    (void)roi;
     TODO();
     return Some(0);
 }
 
 Option<uint> match_number(const Image<Binary> & src, const math::Rect2u16 & roi){
+    (void)src;
+    (void)roi;
     // using Vertex = std::array<Vec2i, 4>;
 
     // Vertex vertex;
@@ -64,6 +67,8 @@ Option<uint> match_number(const Image<Binary> & src, const math::Rect2u16 & roi)
 
 
 iq16 number_match(const Image<Gray> &src, const uint index){
+    (void)src;
+    (void)index;
     TODO();
     return iq16();
 }

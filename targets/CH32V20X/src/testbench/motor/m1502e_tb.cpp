@@ -6,8 +6,8 @@
 #include "core/async/timer.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "robots/vendor/bmkj/m1502e_highlayer.hpp"
@@ -186,12 +186,15 @@ void m1502e_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PB9_PB8,//tx:b9 rx:b8
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_500K)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_500K)
     });
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    )
+        .unwrap();
 
     sync::AtomicCell<iq16> left_torque;
     sync::AtomicCell<iq16> right_torque;
@@ -217,7 +220,7 @@ void m1502e_main(){
 
     static constexpr auto frame_factory = m1502e::FrameFactory{};
 
-    auto write_can_frame = [](const hal::BxCanFrame & frame){
+    auto write_can_frame = [](const hal::ClassicCanFrame & frame){
         can.try_write(frame).examine();
     };
 
@@ -288,7 +291,7 @@ void m1502e_main(){
         }
     };
 
-    auto handle_received_frame = [&](const hal::BxCanFrame & frame) -> void {
+    auto handle_received_frame = [&](const hal::ClassicCanFrame & frame) -> void {
         
         //  请求的CANID       响应的CANID
         //  0x32             0x96   +   MOTOR_ID           设置低四个电机的参数
@@ -364,7 +367,7 @@ void m1502e_main(){
     }).unwrap().dont_alter_to_pins();
 
 
-    timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(), EN);
 
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -413,7 +416,7 @@ void m1502e_main(){
         // right_torque.set(0.2_iq16);
 
         if(can.available()){
-            const auto frame = can.read();
+            const auto frame = can.try_read().unwrap();
             handle_received_frame(frame);
         }
         static auto report_timer = async::RepeatTimer::from_duration(2ms);

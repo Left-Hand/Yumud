@@ -5,15 +5,15 @@
 #include "core/utils/errno.hpp"
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 
 namespace ymd::drivers{
 
 struct LT8920_Prelude{
     enum class Error_Kind:uint8_t{
-        WrongChipId,
+        ChipIdMismatch,
         NoAvailablePhy
     };
 

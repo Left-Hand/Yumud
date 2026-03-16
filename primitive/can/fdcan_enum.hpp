@@ -1,5 +1,10 @@
 #pragma once
 
+
+// ISO CAN FD 和 BOSCH CAN FD的小差异
+// https://zhuanlan.zhihu.com/p/9479350766
+
+
 namespace ymd::hal{
 
 #if 0

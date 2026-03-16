@@ -9,13 +9,13 @@
 
 #include "core/tmp/serialize_traits.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
-#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
+#include "drivers/wireless/Radio/LT8960L/lt8960l.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 
@@ -132,8 +132,8 @@ void lt8960_tb(){
     auto scl2_pin_ = hal::PA<9>();
     auto sda2_pin_ = hal::PA<10>();
 
-    LT8960L tx_ltr{&scl1_pin_, &sda1_pin_};
-    LT8960L rx_ltr{&scl2_pin_, &sda2_pin_};
+    LT8960L tx_ltr{scl1_pin_, sda1_pin_};
+    LT8960L rx_ltr{scl2_pin_, sda2_pin_};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;
@@ -234,7 +234,7 @@ void lt8960_tb(){
             hal::TimerChannelSelection::CH3,
         })
         .unwrap();
-        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback([&](hal::TimerEvent ev){
             switch(ev){
@@ -261,7 +261,7 @@ void lt8960_tb(){
             // hal::TimerChannelSelection::CH2,
             // hal::TimerChannelSelection::CH3
         }).unwrap();
-        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback([&](hal::TimerEvent ev){
             switch(ev){

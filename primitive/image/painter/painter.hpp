@@ -47,7 +47,6 @@ public:
                 may_src_imageput_pixel_unchecked(math::Vec2u(x,y), ptr[i]);
     }
 
-    [[nodiscard]]
     IResult<> draw_char(const math::Vec2u & pos,const wchar_t chr){
         const Font * font = chr > 0x80 ? chfont : enfont;
         // if(font == nullptr){
@@ -94,7 +93,6 @@ public:
         TODO();
     }
 
-    [[nodiscard]]
     IResult<> draw_filled_rect(const math::Rect2u & rect){
         if(may_src_image_.is_none()) 
             return Err(Error(Error::Kind::ImageNotSet));
@@ -123,7 +121,6 @@ public:
         src_image.put_pixel_unchecked(pos, color_cast<ColorType>(color_));
     }
 
-    [[nodiscard]]
     IResult<> draw_line(const math::Vec2u & from, const math::Vec2u & to){
         if(may_src_image_.is_none()) 
             return Err(Error(Error::Kind::ImageNotSet));
@@ -167,7 +164,6 @@ public:
         return Ok();
     }
     
-    [[nodiscard]]
     IResult<> draw_wchar(const math::Vec2u & pos, const wchar_t chr){
         if(may_src_image_.is_none())
             return Err(Error(Error::Kind::ImageNotSet));

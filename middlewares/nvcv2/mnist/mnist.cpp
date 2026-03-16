@@ -131,6 +131,8 @@ Mnist::Result Mnist::update(const Image<Gray> & img){
     if(err==TM_OK){
         parse_output();        
     }
+    #else
+    (void)img;
 
     #endif
     return output;

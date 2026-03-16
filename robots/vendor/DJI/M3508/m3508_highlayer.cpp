@@ -164,22 +164,22 @@ void M3508Port::tick(){
     TODO();
 
 
-    auto write_can_frame = [&](const hal::BxCanFrame & frame) {
+    auto write_can_frame = [&](const hal::ClassicCanFrame & frame) {
         return can_.write(frame);
     };
 
 
     if((connected_flags_ & std::bitset<8>(0x0f)).any()){
-        write_can_frame(hal::BxCanFrame(
+        write_can_frame(hal::ClassicCanFrame(
             hal::CanStdId::from_bits(HIGHER_ADDRESS), 
-            hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[0]))
+            hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[0]))
         )).examine();
     }
 
     if((connected_flags_ & std::bitset<8>(0xf0)).any()){
-        write_can_frame(hal::BxCanFrame(
+        write_can_frame(hal::ClassicCanFrame(
             hal::CanStdId::from_bits(LOWER_ADDRESS), 
-            hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[1]))
+            hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[1]))
         )).examine();
     }
 
@@ -200,7 +200,7 @@ void M3508Port::set_target_current(const iq16 current, const size_t index){
     curr_cache[index - 1] = curr_to_currdata(current);
 }
 
-void M3508Port::update_slave(const hal::BxCanFrame & frame, const size_t index){
+void M3508Port::update_slave(const hal::ClassicCanFrame & frame, const size_t index){
     M3508_CHECK_INDEX
     const auto rx_context = std::bit_cast<RxContext>(frame.payload_u64());
     auto & slave = slaves_[index - 1];

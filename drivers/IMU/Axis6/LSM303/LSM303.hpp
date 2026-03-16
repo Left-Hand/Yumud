@@ -17,14 +17,14 @@ public:
 
     LSM303(void);
 
-    [[nodiscard]] IResult<> init(deviceType device = device_auto, sa0State sa0 = sa0_auto);
+    IResult<> init(deviceType device = device_auto, sa0State sa0 = sa0_auto);
 
-    [[nodiscard]] IResult<> enable_default();
+    IResult<> enable_default();
 
 
-    [[nodiscard]] IResult<> read_acc();
-    [[nodiscard]] IResult<> read_mag();
-    [[nodiscard]] IResult<> read();
+    IResult<> read_acc();
+    IResult<> read_mag();
+    IResult<> read();
 private:
     details::LSM303_Regs regs_ = {};
 
@@ -39,15 +39,15 @@ private:
     static const int dummy_reg_count = 6;
     regAddr translated_regs[dummy_reg_count + 1]; // index 0 not used
 
-    [[nodiscard]] IResult<> test_reg(const uint8_t reg, const uint8_t val){return Ok();}
+    IResult<> test_reg(const uint8_t reg, const uint8_t val){return Ok();}
     
-    [[nodiscard]] IResult<> write_acc_reg(uint8_t reg, uint8_t value);
+    IResult<> write_acc_reg(uint8_t reg, uint8_t value);
     // uint8_t readAccReg(uint8_t reg);
-    [[nodiscard]] IResult<> write_mag_reg(uint8_t reg, uint8_t value);
+    IResult<> write_mag_reg(uint8_t reg, uint8_t value);
     // uint8_t readMagReg(int reg);
 
-    [[nodiscard]] IResult<> write_reg(uint8_t reg, uint8_t value);
-    [[nodiscard]] IResult<> read_reg(int reg, uint8_t & data);
+    IResult<> write_reg(uint8_t reg, uint8_t value);
+    IResult<> read_reg(int reg, uint8_t & data);
 };
 
 }

@@ -14,48 +14,49 @@
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include "mlx90393_prelude.hpp"
+#include "mlx90393_transport.hpp"
 
 
 namespace ymd::drivers{
 
 class MLX90393 final: public MLX90393_Prelude{
 public:
-    explicit MLX90393(MLX90393_Transport && phy):
-        transport_(phy){;}
+    explicit MLX90393(MLX90393_TransportIntf & transport):
+        transport_(transport){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> exit_mode();
+    IResult<> init();
+    IResult<> reset();
+    IResult<> exit_mode();
     
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_measurement();
-    [[nodiscard]] IResult<> start_single_measurement();
+    IResult<math::Vec3<iq24>> read_measurement();
+    IResult<> start_single_measurement();
     
-    [[nodiscard]] IResult<> set_gain(Gain gain);
+    IResult<> set_gain(Gain gain);
     
-    [[nodiscard]] IResult<> set_resolution(Axis, Resolution resolution);
+    IResult<> set_resolution(Axis, Resolution resolution);
     
-    [[nodiscard]] IResult<> set_filter(Filter filter);
+    IResult<> set_filter(Filter filter);
     
-    [[nodiscard]] IResult<> set_oversampling(OverSampling oversampling);
+    IResult<> set_oversampling(OverSampling oversampling);
     
-    [[nodiscard]] IResult<> enable_trig_interrupt(Enable en);
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_data();
+    IResult<> enable_trig_interrupt(Enable en);
+    IResult<math::Vec3<iq24>> read_data();
 
     
 private:
-    MLX90393_Transport transport_;
-    [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint16_t & data);
-    [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint16_t data);
+    MLX90393_TransportIntf & transport_;
+    IResult<> read_reg(uint8_t reg_addr, uint16_t & reg_val);
+    IResult<> write_reg(uint8_t reg_addr, uint16_t reg_val);
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res =write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> transceive(
+    IResult<> transceive(
         std::span<uint8_t> rx_pbuf, 
         std::span<const uint8_t> tx_pbuf, 
         const uint8_t interdelay

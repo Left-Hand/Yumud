@@ -15,41 +15,48 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
     explicit TCS34725(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(i2c, addr){;}
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, i2c_addr){;}
 
     TCS34725(const TCS34725 &) = delete;
     TCS34725(TCS34725 &&) = delete;
     ~TCS34725() = default;
 
-    struct Config{
-        Milliseconds integration_time = 240ms;
-        Gain gain = Gain::_1x;
+    struct [[nodiscard]] Config final{
+        Milliseconds integration_time;
+        Gain gain;
+
+        static constexpr Config from_default() noexcept {
+            return Config{
+                .integration_time = 240ms,
+                .gain = Gain::_1x,
+            };
+        }
     };
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_integration_time(const Milliseconds ms);
+    IResult<> set_integration_time(const Milliseconds ms);
 
-    [[nodiscard]] IResult<> set_wait_time(const Milliseconds ms);
+    IResult<> set_wait_time(const Milliseconds ms);
 
-    [[nodiscard]] IResult<> set_int_thr_low(const uint16_t thr);
+    IResult<> set_int_thr_low(const uint16_t thr);
 
-    [[nodiscard]] IResult<> set_int_thr_high(const uint16_t thr);
+    IResult<> set_int_thr_high(const uint16_t thr);
 
-    [[nodiscard]] IResult<> set_int_persistence(const uint8_t times);
+    IResult<> set_int_persistence(const uint8_t times);
 
-    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    IResult<> set_gain(const Gain gain);
 
-    [[nodiscard]] IResult<uint8_t> get_id();
-    [[nodiscard]] IResult<bool> is_idle();
+    IResult<uint8_t> get_id();
+    IResult<bool> is_idle();
 
-    [[nodiscard]] IResult<> set_power(const bool on);
-    [[nodiscard]] IResult<> start_conv();
-    [[nodiscard]] IResult<> update();
+    IResult<> set_power(const bool on);
+    IResult<> start_conv();
+    IResult<> update();
 
     [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
 
@@ -60,7 +67,7 @@ private:
     std::array<uint16_t, 4> crgb_ = {0};
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
             conv_reg_address_repeated(T::ADDRESS), 
             reg.to_bits(), std::endian::little);
@@ -70,21 +77,21 @@ private:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
             conv_reg_address_repeated(T::ADDRESS), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
+    IResult<> read_burst(const RegAddr reg_addr, const std::span<uint16_t> pbuf);
 
-    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
-        return (std::bit_cast<uint8_t>(addr) | 0x80);
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr reg_addr){
+        return (std::bit_cast<uint8_t>(reg_addr) | 0x80);
     }
 
-    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
-        return conv_reg_address_norepeat(addr) | (1 << 5);
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr reg_addr){
+        return conv_reg_address_norepeat(reg_addr) | (1 << 5);
     }
 
 };

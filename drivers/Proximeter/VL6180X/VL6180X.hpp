@@ -11,60 +11,63 @@ public:
         transport_(i2c_drv){;}
     explicit VL6180X(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit VL6180X(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_{hal::I2cDrv(i2c, addr)}{;}
+    explicit VL6180X(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_{hal::I2cDrv(i2c, i2c_addr)}{;}
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> configure_default();
+    IResult<> configure_default();
 
-    [[nodiscard]] IResult<> set_scaling(uint8_t new_scaling);
-    [[nodiscard]] IResult<> start_range_continuous(uint16_t period);
-    [[nodiscard]] IResult<> start_ambient_continuous(uint16_t period);
-    [[nodiscard]] IResult<> start_interleaved_continuous(uint16_t period);
-    [[nodiscard]] IResult<> stop_continuous();
+    IResult<> set_scaling(uint8_t new_scaling);
+    IResult<> start_range_continuous(uint16_t period);
+    IResult<> start_ambient_continuous(uint16_t period);
+    IResult<> start_interleaved_continuous(uint16_t period);
+    IResult<> stop_continuous();
     
-    [[nodiscard]] IResult<uint16_t> read_ambient();
+    IResult<uint16_t> read_ambient();
     
 
-    [[nodiscard]] IResult<uint8_t> read_range_status();
+    IResult<uint8_t> read_range_status();
 
-    [[nodiscard]] IResult<> set_max_convergence_time(const uint8_t ms){
+    IResult<> set_max_convergence_time(const uint8_t ms){
         return write_reg(RegAddr::SYSRANGE__MAX_CONVERGENCE_TIME, ms);
     }
 
-    [[nodiscard]] IResult<>  set_inter_measurement_period(const uint8_t ms){
+    IResult<>  set_inter_measurement_period(const uint8_t ms){
         return write_reg(RegAddr::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
     }
 
-    [[nodiscard]] IResult<uint16_t> read_range_millimeters() { 
+    IResult<uint16_t> read_range_millimeters() { 
         if(const auto res = read_range(); 
             res.is_err()) return Err(res.unwrap_err());
         else return Ok(uint16_t(scaling) * res.unwrap());
     }
 
-    [[nodiscard]] IResult<> invoke_read_range(){
+    IResult<> invoke_read_range(){
         return write_reg<uint8_t>(RegAddr::SYSRANGE__START, 0x01);
     }
 
-    [[nodiscard]] IResult<> invoke_read_ambient(){
+    IResult<> invoke_read_ambient(){
         return write_reg<uint8_t>(RegAddr::SYSALS__START, 0x01);
     }
 private:
     template<typename T>
     requires (sizeof(T) <= 2)
-    [[nodiscard]] IResult<> write_reg(RegAddr reg_addr, T reg_val){
+    IResult<> write_reg(RegAddr reg_addr, T reg_val){
         return transport_.write_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
     
     template<typename T>
     requires (sizeof(T) <= 2)
-    [[nodiscard]] IResult<> read_reg(RegAddr reg_addr, T reg_val){
+    IResult<> read_reg(RegAddr reg_addr, T reg_val){
         return transport_.read_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
-    [[nodiscard]] IResult<uint8_t> read_range();
+    IResult<uint8_t> read_range();
 private:
     VL6180X_Transport transport_;
     uint8_t scaling;

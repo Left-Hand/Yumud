@@ -2,11 +2,11 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 
 using namespace ymd;
@@ -29,47 +29,47 @@ void can_ring_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Loopback,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
-    auto write_frame = [&](const hal::BxCanFrame & frame){
+    auto write_frame = [&](const hal::ClassicCanFrame & frame){
         DEBUG_PRINTLN("tx", frame);
         return can.try_write(frame);
     };
 
     static constexpr auto UNREACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x100), 
-            hal::BxCanPayload::from_list({0, 1, 3})
+            hal::ClassicCanPayload::from_list({0, 1, 3})
         ),
-        hal::BxCanFrame(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x300), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
-        hal::BxCanFrame(
+        hal::ClassicCanFrame::from_parts(
             hal::CanExtId::from_bits(0x400), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         )
     });
 
     static constexpr auto REACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_list({0, 1, 2})
+            hal::ClassicCanPayload::from_list({0, 1, 2})
         ),
-        hal::BxCanFrame(
+        hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
-            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
     });
 
     while(true){
-        for(const auto frame : UNREACHABLE_FRAMES){
+        for(const auto & frame : UNREACHABLE_FRAMES){
             write_frame(frame).examine();
             clock::delay(2ms);
         }
 
-        for(const auto frame : REACHABLE_FRAMES){
+        for(const auto & frame : REACHABLE_FRAMES){
             write_frame(frame).examine();
             clock::delay(2ms);
         }
@@ -79,7 +79,7 @@ void can_ring_main(){
         if(can.available()){
             DEBUG_PRINTLN(can.available());
             while(can.available()){
-                auto rx_frame = can.read();
+                auto rx_frame = can.try_read().unwrap();
                 DEBUG_PRINTLN("rx", rx_frame);
             }
         }else{

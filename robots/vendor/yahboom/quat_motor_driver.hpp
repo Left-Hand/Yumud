@@ -6,8 +6,8 @@
 #include "core/utils/Errno.hpp"
 #include "core/tmp/reflect/enum.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "algebra/regions/range2.hpp"
 

@@ -7,7 +7,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -132,10 +132,10 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_u8(const uint8_t data);
-    [[nodiscard]] IResult<uint8_t> transrecive_u8(const uint8_t data);
-    [[nodiscard]] IResult<> write_u32(const uint32_t data);
-    [[nodiscard]] IResult<uint32_t> trans_u8_receive_u32(const uint8_t data);
+    IResult<> write_u8(const uint8_t data);
+    IResult<uint8_t> transrecive_u8(const uint8_t data);
+    IResult<> write_u32(const uint32_t data);
+    IResult<uint32_t> trans_u8_receive_u32(const uint8_t data);
 private:
     Option<hal::GpioIntf &> may_nrst_pin_;
 };

@@ -1,9 +1,10 @@
 #include "../tb.h"
 
 #include "core/debug/debug.hpp"
+#include "core/utils/default.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Adc/INA3221/ina3221.hpp"
@@ -33,12 +34,12 @@ void ina3221_main(){
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    auto i2c = hal::SoftI2c(&scl_pin_, &sda_pin_);
+    auto i2c = hal::SoftI2c(scl_pin_, sda_pin_);
     i2c.init({hal::NearestFreq(1200_KHz)});
 
     INA3221 ina{&i2c};
 
-    ina.init(INA3221::Config::from_default()).examine();
+    ina.init(Default).examine();
 
     while(true){
         const auto ch = INA3221::ChannelSelection::CH1;
@@ -46,8 +47,8 @@ void ina3221_main(){
         ina.update(INA3221::ChannelSelection::CH2).examine();
         ina.update(INA3221::ChannelSelection::CH3).examine();
         DEBUG_PRINTLN(
-            ina.get_bus_volt(ch).examine(), 
-            ina.get_shunt_volt(ch).examine() * iq16(INV_SHUNT_RES)
+            ina.get_bus_volt_code(ch).examine().to_mv(), 
+            ina.get_shunt_volt_code(ch).examine().to_volts() * iq16(INV_SHUNT_RES)
         );
         clock::delay(1ms);
     }

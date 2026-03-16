@@ -5,7 +5,7 @@
 #include "core/utils/result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -183,16 +183,16 @@ protected:
         uint8_t cmd_;
     };
 
-    [[nodiscard]] IResult<> write_command(const Command cmd);
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
+    IResult<> write_command(const Command cmd);
+    IResult<> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
+    IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
+    IResult<> read_reg(const uint8_t addr, uint8_t & data);
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
+    IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
 
     
 

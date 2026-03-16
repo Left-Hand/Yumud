@@ -10,9 +10,9 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 
 
 
@@ -57,7 +57,7 @@ struct TM1650_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class PulseWidth:uint8_t{
+    enum class [[nodiscard]] PulseWidth:uint8_t{
         _1_16 = 0,
         _2_16,
         _4_16,
@@ -69,14 +69,14 @@ struct TM1650_Prelude{
     };
 
 
-    enum class DataCommand:uint8_t{
+    enum class [[nodiscard]] DataCommand:uint8_t{
         MODE_CMD = 0b0100'1000,
         READ_KEY = 0b1000'1001
     };
 
     static_assert(sizeof(DataCommand) == 1);
 
-    struct [[nodiscard]] AddressCommand{
+    struct [[nodiscard]] AddressCommand final{
         static constexpr AddressCommand from_idx(const uint8_t idx){
             return {uint8_t(0x68 + (idx << 1))};
         }
@@ -87,7 +87,7 @@ struct TM1650_Prelude{
 
     static_assert(sizeof(AddressCommand) == 1);
 
-    struct [[nodiscard]] DisplayCommand{
+    struct [[nodiscard]] DisplayCommand final{
         uint8_t display_on:1;
         const uint8_t __resv1__:2 = 0b0;
         uint8_t seg7_else_sge8:1;
@@ -100,9 +100,9 @@ struct TM1650_Prelude{
     static_assert(sizeof(DisplayCommand) == 1);
 
 
-    [[nodiscard]] static constexpr KeyEvent key_event_from_bits(const uint8_t data){
-        const uint8_t high = data >> 3;
-        const uint8_t low = data & 0b111;
+    [[nodiscard]] static constexpr KeyEvent key_event_from_bits(const uint8_t bits){
+        const uint8_t high = static_cast<uint8_t>(bits >> 3);
+        const uint8_t low = static_cast<uint8_t>(bits & 0b111);
 
         if(low < 4) return KeyEvent{None, None};
         if(high < 8 or high > 14) return KeyEvent{None, None};
@@ -118,8 +118,8 @@ private:
     hal::SoftI2c i2c_;
 public:
 
-    explicit TM1650_Transport(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
-        i2c_{scl_io, sda_io}{;}
+    explicit TM1650_Transport(const hal::Gpio & scl_pin, const hal::Gpio & sda_pin):
+        i2c_{scl_pin, sda_pin}{;}
 
     IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
         if(const auto res = write_display_cmd(cmd);
@@ -152,13 +152,15 @@ public:
         return Ok(key_event_from_bits(0));
     }
 private:
-    [[nodiscard]] IResult<> write_display_cmd(const DisplayCommand cmd){
+    IResult<> write_display_cmd(const DisplayCommand cmd){
         return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_bits());
     }
 
-    [[nodiscard]] IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
+    IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
+        (void) payload1;
+        (void) payload2;
         TODO();
         // auto res = i2c_.begin(I2cs payload1)
         //     .then([&](){return bus_.write(payload2);})
@@ -181,8 +183,8 @@ public:
 
     static constexpr auto NAME = "TM1650";
 
-    explicit TM1650(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
-        transport_(scl_io, sda_io){;}
+    explicit TM1650(const hal::Gpio & scl_pin, const hal::Gpio & sda_pin):
+        transport_(scl_pin, sda_pin){;}
 
     IResult<> write_screen(
         const DisplayCommand cmd, 
@@ -200,49 +202,5 @@ private:
     TM1650_Transport transport_;
 };
 
-#if 0
-
-class TM1650_Display final{
-public:
-    explicit TM1650_Display(TM1650 & owner):
-        owner_(owner){;}
-
-    std::span<uint8_t, 4> into_iter(){
-        return std::span(buf_);
-    }
-
-    void set_brightness(const uint8_t brightness){
-        display_command_.lim = brightness;
-    }
-
-    void turn_on(){
-        display_command_.display_on = true;
-    }
-
-    void turn_off(){
-        display_command_.display_on = false;
-    }
-
-    void enable_seg7(const Enable en){
-        display_command_.seg7_else_sge8 = en == EN;
-    }
-
-private:
-    DisplayCommand display_command_;
-    std::array<uint8_t, 4> buf_;
-
-    TM1650 & owner_;
-};
-
-class TM1650_Keyboard final{
-public:
-    explicit TM1650_Keyboard(TM1650 & owner):
-        owner_(owner){;}
-
-private:
-    TM1650 & owner_;
-};
-
-#endif
 
 }

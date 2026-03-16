@@ -3,11 +3,11 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
@@ -63,7 +63,7 @@ static void icm42688_tb(icm42688::ICM42688 & imu){
         })
         .unwrap();
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -116,7 +116,7 @@ void icm42688_main(){
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{scl_pin_, sda_pin_};
     // i2c.init(400_KHz);
     i2c.init({2000_KHz});
 

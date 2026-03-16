@@ -5,7 +5,7 @@
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "tcan1145_prelude.hpp"
 
 namespace ymd::drivers{
@@ -52,14 +52,14 @@ private:
 
 
     #if 0
-    uint8_t write_reg(uint8_t address, uint8_t *data)
+    uint8_t write_reg(uint8_t reg_addr, uint8_t *reg_val)
     {
         uint16_t out        = 0;
         uint8_t intRegister = 0;
         uint16_t dataAddr   = 0;
 
-        dataAddr = ((((uint16_t) address << 1) | 0x01) << 8);  // 1 for write
-        dataAddr |= *data;
+        dataAddr = ((((uint16_t) reg_addr << 1) | 0x01) << 8);  // 1 for write
+        dataAddr |= *reg_val;
 
         DL_SPI_transmitDataBlocking16(SPI_0_INST, (dataAddr));
         while (DL_SPI_isBusy(SPI_0_INST) == true)
@@ -70,29 +70,27 @@ private:
         intRegister = (uint8_t)(out & 0xFF);
         return intRegister;
     }
-    uint8_t read_reg(uint8_t address, uint8_t *data)
+    uint8_t read_reg(uint8_t reg_addr, uint8_t *reg_val)
     {
         uint16_t out        = 0;
         uint8_t intRegister = 0;
 
-        DL_SPI_transmitDataBlocking16(SPI_0_INST, (((uint16_t) address) << 9U));
+        DL_SPI_transmitDataBlocking16(SPI_0_INST, (((uint16_t) reg_addr) << 9U));
         while (DL_SPI_isBusy(SPI_0_INST) == true)
             ;
 
         DL_SPI_receiveDataCheck16(SPI_0_INST, &out);
         intRegister = (uint8_t)((out & 0xFF00U) >> 8U);
 
-        *data = (uint8_t)(out & 0x00FFU);
+        *reg_val = (uint8_t)(out & 0x00FFU);
         return intRegister;
     }
-    #endif
 
-    IResult<> write_reg(uint8_t address, uint8_t data){
-        return Ok();
-    }
-    IResult<> read_reg(uint8_t address, uint8_t *data){
-        return Ok();
-    }
+    #endif
+    IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val);
+    IResult<> read_reg(uint8_t reg_addr, uint8_t *reg_val);
+
+
 
 };
 

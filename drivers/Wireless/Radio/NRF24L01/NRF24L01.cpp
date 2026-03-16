@@ -2,11 +2,12 @@
 
 
 
-// #define NRF24L01_DEBUG_EN
 
-#ifdef NRF24L01_DEBUG_EN
+#define NRF24L01_DEBUG_EN 0
+
+#if NRF24L01_DEBUG_EN == 1
 #define NRF24L01_TODO(...) TODO()
-#define NRF24L01_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define NRF24L01_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__);
 #define NRF24L01_PANIC(...) PANIC{__VA_ARGS__}
 #define NRF24L01_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else
@@ -31,6 +32,7 @@ IResult<> NRF24L01::write_command(const NRF24L01::Command cmd){
     return Ok();
 }
 
+#if 0
 IResult<> NRF24L01::write_reg(const uint8_t addr, const uint8_t data){
     TODO();
     return Ok();
@@ -50,6 +52,7 @@ IResult<size_t> NRF24L01::receive(std::span<uint8_t> buf){
     TODO();
     return Ok(0u);
 }
+#endif
 
 // Result<_NRF24L01_Regs, Error> NRF24L01::dump(){
 //     Regs regs = {

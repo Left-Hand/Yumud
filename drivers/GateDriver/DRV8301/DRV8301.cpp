@@ -60,7 +60,7 @@ IResult<> DRV8301::set_oc_ad_table(const OcAdTable oc_ad_table){
 
 IResult<> DRV8301::enable_pwm3(const Enable en){
     auto reg = RegCopy(regs_.ctrl1_reg);
-    reg.pwm3_en = en == EN;
+    reg.pwm3_en = (en == EN);
     return write_reg(reg);
 }
 

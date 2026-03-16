@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class INA226 final:public INA226_Regs{
+class INA226 final:public INA226_Prelude{
 public:
     
     struct Config{
@@ -20,64 +20,71 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit INA226(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit INA226(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    explicit INA226(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){};
+
+    INA226(const INA226 &) = delete;
+    INA226(INA226 &&) = delete;
+    ~INA226() = default;
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_a);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_a);
 
-    [[nodiscard]] IResult<> update();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_average_times(const uint16_t times);
+    IResult<> update();
 
-    [[nodiscard]] IResult<iq16> get_voltage();
+    IResult<> set_average_times(const uint16_t times);
 
-    [[nodiscard]] IResult<int> get_shunt_voltage_uv();
+    IResult<BusVoltageCode> get_bus_voltage_code();
 
-    [[nodiscard]] IResult<iq16> get_shunt_voltage();
+    IResult<ShuntVoltageCode> get_shunt_voltage_code();
 
-    [[nodiscard]] IResult<iq16> get_current();
+    IResult<iq16> get_current();
 
-    [[nodiscard]] IResult<iq16> get_power();
+    IResult<iq16> get_power();
 
-    [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
+    IResult<> set_average_times(const AverageTimes times);
 
-    [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
+    IResult<> set_bus_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
+    IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const Enable en);
+    IResult<> enable_shunt_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_bus_voltage_measure(const Enable en);
+    IResult<> enable_bus_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_continuous_measure(const Enable en);
+    IResult<> enable_continuous_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_alert_latch(const Enable en);
+    IResult<> enable_alert_latch(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
+    INA226_Regs regs_ = {};
     
     iq16 current_lsb_ma_ = iq16(0.2);
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
+    IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
+    IResult<> read_reg(const RegAddr addr, uint16_t & data);
     
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, int16_t & data);
+    IResult<> read_reg(const RegAddr addr, int16_t & data);
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();

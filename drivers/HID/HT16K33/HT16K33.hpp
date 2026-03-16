@@ -32,40 +32,40 @@ public:
         package_ = set.PACKAGE;
     }
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<bool> is_any_key_pressed();
+    IResult<bool> is_any_key_pressed();
     
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_int_pin_func(const IntPinFunc func);
+    IResult<> set_int_pin_func(const IntPinFunc func);
 
-    [[nodiscard]] IResult<BoolLevel> get_intreg_status();
+    IResult<BoolLevel> get_intreg_status();
 
-    [[nodiscard]] IResult<> update_displayer(const GcRam & gc_ram){
+    IResult<> update_displayer(const GcRam & gc_ram){
         return update_displayer(0,gc_ram.as_bytes());
     }
 
 
-    [[nodiscard]] IResult<> update_displayer(
+    IResult<> update_displayer(
         const size_t offset, std::span<const uint8_t> pbuf);
 
 
-    [[nodiscard]] IResult<> clear_displayer();
+    IResult<> clear_displayer();
 
-    [[nodiscard]] IResult<KeyData> get_key_data();
+    IResult<KeyData> get_key_data();
 private:
     using Phy = HT16K33_Transport;
     Phy transport_;
     Package package_;
 
-    [[nodiscard]] IResult<> write_command(const Command cmd);
+    IResult<> write_command(const Command cmd);
 
-    [[nodiscard]] IResult<> setup_system(const Enable en);
+    IResult<> setup_system(const Enable en);
 
-    [[nodiscard]] IResult<> setup_displayer(const BlinkFreq freq, const Enable en);
+    IResult<> setup_displayer(const BlinkFreq freq, const Enable en);
 
-    [[nodiscard]] IResult<> set_pulse_duty(const PulseDuty duty);
+    IResult<> set_pulse_duty(const PulseDuty duty);
 
 };
 }

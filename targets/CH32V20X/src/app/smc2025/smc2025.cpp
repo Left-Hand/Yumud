@@ -7,10 +7,10 @@
 #include "core/stream/BufStream.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "algebra/vectors/quat.hpp"
@@ -199,12 +199,12 @@ void smc2025_main(){
 
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
-    hal::SoftI2c cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
+    hal::SoftI2c cam_i2c{cam_i2c_scl, cam_i2c_sda};
     cam_i2c.init({.baudrate = hal::NearestFreq(100_KHz)});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
-    hal::SoftI2c i2c{&i2c_scl, &i2c_sda};
+    hal::SoftI2c i2c{i2c_scl, i2c_sda};
     i2c.init({.baudrate = hal::NearestFreq(400_KHz)});
     
     #if 0
@@ -330,7 +330,7 @@ void smc2025_main(){
         .dont_alter_to_pins()
         ;
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -338,7 +338,9 @@ void smc2025_main(){
             mpu.update().examine();
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
-            yaw_angle = Angular<iq16>::from_turns((yaw_angle + Angular<iq16>::from_radians(gyr.z) * 0.04_iq16).unsigned_normalized().to_turns());
+            yaw_angle = Angular<iq16>::from_turns(
+                (yaw_angle + Angular<iq16>::from_radians(static_cast<iq16>(gyr.z)) * 0.04_iq16)
+                .unsigned_normalized().to_turns());
             break;
         }
         default: break;

@@ -8,7 +8,7 @@
 #include "core/math/matrix/static_matrix.hpp"
 #include "core/math/matrix/ceres/ceres.hpp"
 
-#include "hal/bus/sdi/sdi.hpp"
+#include "hal/conn/sdi/sdi.hpp"
 
 #include "algebra/regions/plane.hpp"
 #include "algebra/regions/aabb.hpp"
@@ -28,7 +28,7 @@
 #include "robots/kinematics/Mecanum4/mecanum4_kinematics.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_kinematics.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 
 

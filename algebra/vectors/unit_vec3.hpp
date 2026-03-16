@@ -41,7 +41,7 @@ struct [[nodiscard]] UnitVec3 final{
 
 
     constexpr Vec3<T> cross(const UnitVec3<T> & other) const {
-        return cross(Vec3<T>(*this));
+        return cross(Vec3<T>(other));
     }
 
     constexpr Vec3<T> cross(const Vec3<T> & other) const {

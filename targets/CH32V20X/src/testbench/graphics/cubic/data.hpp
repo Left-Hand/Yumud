@@ -11,7 +11,7 @@ struct mat4_t
 };
 
 
-static const std::array vertex =
+[[maybe_unused]] static constexpr std::array vertex =
 {
 	math::Vec3<float>{-1.0f, -1.0f, -1.0f}, // 0
 	math::Vec3<float>{ 1.0f,  1.0f, -1.0f}, // 1
@@ -22,8 +22,8 @@ static const std::array vertex =
 	math::Vec3<float>{ 1.0f,  1.0f,  1.0f}, // 6
 	math::Vec3<float>{-1.0f,  1.0f,  1.0f}, // 7
 };
-// static const std::array<math::Vec2<float>, 36> texcoord =
-static const std::array texcoord =
+// [[maybe_unused]] static const std::array<math::Vec2<float>, 36> texcoord =
+[[maybe_unused]] static constexpr std::array texcoord =
 {
 	// back face
 	math::Vec2<float>{0.0f, 1.0f}, // bottom-left
@@ -68,7 +68,7 @@ static const std::array texcoord =
 	math::Vec2<float>{1.0f, 0.0f}, // top-left
 	math::Vec2<float>{0.0f, 0.0f}  // bottom-left     
 };
-static const auto cubic_index = std::to_array<uint8_t>(
+static constexpr auto cubic_index = std::to_array<uint8_t>(
 {
 	// back face
 	1, // top-right
@@ -113,7 +113,7 @@ static const auto cubic_index = std::to_array<uint8_t>(
 	3, // top-left
 	7, // bottom-left     
 });
-static const uint16_t doge[32][32] =
+static constexpr uint16_t doge[32][32] =
 {
 	{0xfc2d,0xfc2d,0xfdcd,0xfdcd,0xff8d,0xff8d,0xcfed,0xcfed,0x97ed,0x97ed,0x67ce,0x6fce,0x67d4,0x67d4,0x6fba,0x6fba,0x6edd,0x6ede,0x653e,0x655e,0x6b9f,0x6b9f,0x935f,0x935e,0xa319,0xb33b,0xfb5d,0xfb5d,0xfb57,0xfb57,0xfb50,0xfb50},
 	{0xfc2d,0xfc2d,0xfdcd,0xfdcd,0xff8d,0xff8d,0xcfed,0xcfed,0x97cd,0x97ed,0x67ad,0x772c,0x8ed1,0x9e2f,0x9df2,0x9db1,0x9d53,0x9d74,0x9496,0x8cd9,0x737c,0x639e,0x935e,0x8b7a,0x8b2f,0xb2da,0xeb1c,0xeb1c,0xeb15,0xe2f4,0xf330,0xfb50},

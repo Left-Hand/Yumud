@@ -44,7 +44,6 @@ IResult<> PainterBase::draw_hollow_circle(const math::Vec2u & pos, const uint ra
     ) return Ok();
 
     if(radius == 0) return Ok();
-    if(radius < 0) return Err(Error::NegativeRadius);
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -84,7 +83,6 @@ IResult<> PainterBase::draw_filled_circle(const math::Vec2u & pos, const uint ra
         .is_inside(get_expose_rect().unwrap())) return Ok();
     
 
-    if(radius < 0) return Err(Error::NegativeRadius);
     if(radius == 0) return Ok();
 
     if(radius == 1){

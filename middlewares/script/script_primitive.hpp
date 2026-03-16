@@ -51,8 +51,8 @@ public:
         return views_[idx];
     }
 
-    AccessProvider_ByStringViews subspan(const size_t idx) const {
-        return AccessProvider_ByStringViews(views_.subspan(1));
+    AccessProvider_ByStringViews subspan(const size_t offset) const {
+        return AccessProvider_ByStringViews(views_.subspan(offset));
     }
 private:    
     std::span<const StringView> views_;
@@ -275,7 +275,7 @@ struct alignas(4) [[nodiscard]] List final{
                 [](auto && obj){return obj.name().hash();}, 
                 entries...); // 修复：传递解包的entries
             if(res.is_err()) 
-                PANIC("Hash collision detected", res.unwrap_err());
+                PANIC_NSRC("Hash collision detected", res.unwrap_err());
         }
 
     constexpr const auto & entries() const { return entries_; } 

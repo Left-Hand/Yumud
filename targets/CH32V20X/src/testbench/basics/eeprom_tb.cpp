@@ -4,8 +4,8 @@
 
 #include "hal/storage/flash/flash.hpp"
 #include "hal/sysmisc/bkp/bkp.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 #include "drivers/Storage/Flash/W25QXX/w25q16.hpp"
@@ -13,7 +13,7 @@
 #include "algo/random/random_generator.hpp"
 
 #include "core/math/real.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -319,7 +319,7 @@ void eeprom_main(){
     auto scl_pin = hal::PB<13>();
     auto sda_pin = hal::PB<12>();
 
-    hal::SoftI2c SoftI2c = hal::SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c SoftI2c = hal::SoftI2c{scl_pin, sda_pin};
     SoftI2c.init({
         .baudrate = hal::NearestFreq(400000)
     });

@@ -53,4 +53,11 @@ static_assert(clz32(0x40000000) == 1, "clz(0x40000000) should be 1");
 static_assert(clz32(0x00008000) == 16, "clz(0x00008000) should be 16");
 static_assert(clz32(0x00010000) == 15, "clz(0x00010000) should be 15");
 static_assert(clz32(0xFFFFFFFF) == 0, "clz(0xFFFFFFFF) should be 0");
+
+
+[[maybe_unused]] void test_reverse(){
+    {
+        // static_assert(reverse_u8x4(0x12345678) == 0b0100'1000'1101'0110)
+    }
+}
 }

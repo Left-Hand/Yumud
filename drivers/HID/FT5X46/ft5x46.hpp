@@ -16,55 +16,62 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
     explicit FT5X46(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+        i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
 private:
     hal::I2cDrv i2c_drv_;
-    FT5X46_Regs regs_;
+    FT5X46_Regs regs_ = {};
 
     using Points = std::array<Option<Point>, NUM_MAX_TOUCH_POINTS>;
-    Points points_;
+    Points points_ = {None, None, None, None, None};
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
+
+
+    
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
+    
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
+
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         return write_reg(T::REG_ADDR, reg.to_bits());
     }
 
-    [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr);
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         const auto res = read_reg(T::REG_ADDR);
         if(res.is_err()) return Err(res.unwrap_err());
         reg.as_bits_mut() = res.unwrap();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> buffer){
+        if(const auto res = i2c_drv_.read_burst(reg_addr, buffer);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<uint16_t> read_u12(const uint8_t addr){
+    IResult<uint16_t> read_u12(const uint8_t reg_addr){
         uint16_t ret;
-        if(const auto res = read_burst_u12(addr, std::span(&ret, 1));
+        if(const auto res = read_burst_u12(reg_addr, std::span(&ret, 1));
             res.is_err()) return Err(res.unwrap_err());
         return Ok(ret);
     }
 
-    [[nodiscard]] IResult<> read_burst_u12(const uint8_t addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
+    IResult<> read_burst_u12(const uint8_t reg_addr, std::span<uint16_t> buffer){
+        if(const auto res = i2c_drv_.read_burst(reg_addr, buffer, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
-        for(auto & item : pbuf){
+
+        for(auto & item : buffer){
             item = item & 0x0fff;
         }
+
         return Ok();
     }
 };

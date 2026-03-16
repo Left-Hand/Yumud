@@ -67,7 +67,7 @@ static constexpr size_t SECTOR_PAYLOAD_LENGTH = 2 + 2 + 12 * 3 + 2 + 2 ;
 
 struct alignas(2) [[nodiscard]] LidarDistanceCode final{
     using Self = LidarDistanceCode;
-    uint16_t bits;
+    uint16_t millis;
 
     __attribute__((always_inline))
     static constexpr Self zero() {
@@ -77,12 +77,12 @@ struct alignas(2) [[nodiscard]] LidarDistanceCode final{
     __attribute__((always_inline))
     [[nodiscard]] constexpr uq16 to_meters() const {
         constexpr uint64_t FACTOR = static_cast<uint64_t>(static_cast<double>(0.001f) * (1ull << 48));
-        return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(bits) * FACTOR) >> 32u));
+        return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(millis) * FACTOR) >> 32u));
     }
 
     __attribute__((always_inline))
     [[nodiscard]] constexpr uint16_t to_milimeters() const {
-        return bits;
+        return millis;
     }
 };
 
@@ -177,18 +177,26 @@ struct alignas(1) [[nodiscard]] Command final{
 
     constexpr Command(Kind kind):kind_(kind){}
 
-    [[nodiscard]] static constexpr Option<Self> try_from_u8(const uint8_t bits){
+    [[nodiscard]] static constexpr bool is_valid(const uint8_t bits){ 
         switch(bits){
-            case 0x2c:
-            case 0xa0:
-            case 0xa1:
-            case 0xa2:
-            case 0xa3:{
-                return Some(Self(static_cast<Kind>(bits)));
+            case static_cast<uint8_t>(Sector):
+            case static_cast<uint8_t>(Start):
+            case static_cast<uint8_t>(Stop):
+            case static_cast<uint8_t>(SetSpeed):
+            case static_cast<uint8_t>(GetSpeed):{
+                return true;
             }
         }
-        return None;
+        return false;
     }
+
+    [[nodiscard]] static constexpr Option<Self> try_from_u8(const uint8_t bits){
+        if(not is_valid(bits))
+            return None;
+        return Some(Self(static_cast<Kind>(bits)));
+    }
+
+
     [[nodiscard]] constexpr uint8_t to_u8() const{
         return static_cast<uint8_t>(kind_);
     }

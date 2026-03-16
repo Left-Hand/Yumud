@@ -6,7 +6,7 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 namespace ymd{
 struct TransferSysEvaluator{
@@ -46,7 +46,7 @@ struct TransferSysEvaluator{
             })
             .unwrap();
 
-        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback([&](hal::TimerEvent ev){
             switch(ev){

@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio.hpp"
 
 
@@ -77,8 +77,8 @@ struct CH455_Prelude{
 class CH455_phy final :public CH455_Prelude{
 public:
     CH455_phy(
-        Some<hal::Gpio *> scl, 
-        Some<hal::Gpio *> sda
+        const hal::Gpio & scl, 
+        const hal::Gpio & sda
     ):
         i2c_(scl, sda){;}
 

@@ -6,7 +6,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 // 参考来源
@@ -49,12 +49,23 @@ enum class [[nodiscard]] RegAddr:uint8_t{
 
 };
 
-struct [[nodiscard]] Coeffs final{
+
+enum class [[nodiscard]] Error_Kind:uint8_t{
+    InvalidId
+};
+
+DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
+struct [[nodiscard]] CalibrateCoeffs final{
+    using Self = CalibrateCoeffs;
     int16_t ac1, ac2, ac3, b1, b2, mb, mc, md;
     uint16_t ac4, ac5, ac6;
 
-    static constexpr Coeffs from_default(){
-        return Coeffs {
+    static constexpr Self from_default(){
+        return Self {
             .ac1 = 408,
             .ac2 = -72,
             .ac3 = -14383,
@@ -69,13 +80,13 @@ struct [[nodiscard]] Coeffs final{
         };
     }
 
-    constexpr int32_t compute_B5(int32_t UT) const {
-        int32_t X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) >> 15;
+    constexpr int32_t compute_b5(int32_t raw_temperature) const {
+        int32_t X1 = (raw_temperature - (int32_t)ac6) * ((int32_t)ac5) >> 15;
         int32_t X2 = ((int32_t)mc << 11) / (X1 + (int32_t)md);
         return X1 + X2;
     }
 
-    struct [[nodiscard]] SeaLevelPresure{
+    struct [[nodiscard]] SeaLevelPresure final{
         int32_t count;
 
         constexpr float to_altitude(const float pressure) const{
@@ -83,27 +94,31 @@ struct [[nodiscard]] Coeffs final{
         }
     };
 
-    constexpr auto to_sea_level_pressure_converter(float altitude_meters) const {
+    constexpr auto curried_to_sea_level_pressure(float altitude_meters) const {
         return [=](const int32_t pressure) -> SeaLevelPresure{
-            return {(int32_t)(pressure / std::pow(1.0 - altitude_meters / 44330, 5.255))};
+            return SeaLevelPresure{(int32_t)(pressure / std::pow(1.0 - altitude_meters / 44330, 5.255))};
         };
     }
 
-    constexpr float requalify_temperature(const int32_t UT) const{
+    constexpr float requalify_temperature(const int32_t raw_temperature) const{
         float temp;
 
-        const auto B5 = compute_B5(UT);
-        temp = (B5 + 8) >> 4;
+        const auto b5 = compute_b5(raw_temperature);
+        temp = (b5 + 8) >> 4;
         temp /= 10;
 
         return temp;
     }
 
-    constexpr int32_t requalify_pressure(const int32_t UT, const int32_t UP, const Mode mode) const{
+    constexpr int32_t requalify_pressure(
+        const int32_t raw_temperature, 
+        const int32_t raw_pressure, 
+        const Mode mode
+    ) const{
         int32_t B3, B5, B6, X1, X2, X3, p;
         uint32_t B4, B7;
 
-        B5 = compute_B5(UT);
+        B5 = compute_b5(raw_temperature);
 
         #if BMP085_DEBUG_EN == 1
         DEBUG_PRINT("X1 = ", X1);
@@ -129,7 +144,7 @@ struct [[nodiscard]] Coeffs final{
         X2 = ((int32_t)b1 * ((B6 * B6) >> 12)) >> 16;
         X3 = ((X1 + X2) + 2) >> 2;
         B4 = ((uint32_t)ac4 * (uint32_t)(X3 + 32768)) >> 15;
-        B7 = ((uint32_t)UP - B3) * (uint32_t)(50000UL >> std::bit_cast<uint8_t>(mode));
+        B7 = ((uint32_t)raw_pressure - B3) * (uint32_t)(50000UL >> std::bit_cast<uint8_t>(mode));
 
         #if BMP085_DEBUG_EN == 1
         DEBUG_PRINT("X1 = ", X1);
@@ -161,7 +176,7 @@ struct [[nodiscard]] Coeffs final{
     }
 
 
-    friend OutputStream & operator<<(OutputStream & os, const Coeffs & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const CalibrateCoeffs & self){ 
         return os << os.field("ac1")(self.ac1) << os.splitter()
             << os.field("ac2")(self.ac2) << os.splitter()
             << os.field("ac3")(self.ac3) << os.splitter()
@@ -175,14 +190,6 @@ struct [[nodiscard]] Coeffs final{
             << os.field("md")(self.md);
     }
 };
-
-enum class [[nodiscard]] Error_Kind:uint8_t{
-    InvalidId
-};
-
-DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-template<typename T = void>
-using IResult = Result<T, Error>;
 };
 
 

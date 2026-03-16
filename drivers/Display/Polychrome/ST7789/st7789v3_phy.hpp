@@ -4,7 +4,7 @@
 #include "core/container/bits_queue.hpp"
 #include "core/utils/data_iter.hpp"
 #include "core/io/regs.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 namespace ymd::drivers{
 struct ST7789V3_Transport final:
@@ -58,14 +58,14 @@ struct ST7789V3_Transport final:
         may_nrst_pin_(may_nrst_gpio)
         {};
 
-    [[nodiscard]] IResult<> init(){
+    IResult<> init(){
         if(may_nrst_pin_.is_some())
             may_nrst_pin_.unwrap().outpp(HIGH);
 
         return reset();
     }
 
-    [[nodiscard]] IResult<> reset(){
+    IResult<> reset(){
         if(may_nrst_pin_.is_none()) return Ok();
         auto & nrst_gpio = may_nrst_pin_.unwrap();
         clock::delay(10ms);
@@ -75,21 +75,21 @@ struct ST7789V3_Transport final:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_back_light_brightness(const iq16 brightness){
+    IResult<> set_back_light_brightness(const iq16 brightness){
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_command(const uint8_t cmd){
+    IResult<> write_command(const uint8_t cmd){
         const auto temp = (uint16_t(cmd) << 7) | 0x8000;
         return write_by_iter<uint16_t>(OnceIter<uint16_t>(temp));
     }
 
-    [[nodiscard]] IResult<> write_data8(const uint8_t data){
+    IResult<> write_data8(const uint8_t data){
         const auto temp = uint16_t(data) << 7;
         return write_by_iter<uint16_t>(OnceIter<uint16_t>(temp));
     }
 
-    [[nodiscard]] IResult<> write_data16(const uint16_t data){
+    IResult<> write_data16(const uint16_t data){
         auto map_u16_to_be_u8 = [](const uint16_t u16) -> std::array<uint8_t, 2> { 
             return {uint8_t(u16 >> 8), uint8_t(u16 & 0xFF)};
         };
@@ -103,13 +103,13 @@ struct ST7789V3_Transport final:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
+    IResult<> write_burst_pixels(std::span<const T> pbuf){
         return IResult<>(write_by_iter<uint16_t>(U18BurstPixelDataIter(BurstIter<T>(pbuf))));
     }
 
 
     template<typename T, typename Iter>
-    [[nodiscard]] IResult<> write_by_iter(Iter iter){
+    IResult<> write_by_iter(Iter iter){
         if (const auto res = spi_
             .borrow(rank_); 
             res.is_err()) 

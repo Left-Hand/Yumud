@@ -51,7 +51,7 @@ IResult<> MP2980::enable_power_switching(const Enable en){
     // the previous VOUT value after ENPWR = 0. 
     // After ENPWER is set to 0, the discharge function works for 200ms. 
     auto reg = RegCopy(regs_.ctrl1_reg);
-    reg.en_pwr = en == EN;
+    reg.en_pwr = (en == EN);
     return write_reg(reg);
 }
 
@@ -74,7 +74,7 @@ IResult<> MP2980::enable_vref_change_func(const Enable en){
     // conditions. After GO_BIT resets to 0, the discharge continues and turn off 
     // after a 20ms delay. 
     auto reg = RegCopy(regs_.ctrl1_reg);
-    reg.go_bit = en == EN;
+    reg.go_bit = (en == EN);
     return write_reg(reg);
 }
 
@@ -92,7 +92,7 @@ IResult<> MP2980::set_png_state(const bool state){
 
 IResult<> MP2980::enable_dither(const Enable en){
     auto reg = RegCopy(regs_.ctrl1_reg);
-    reg.dither = en == EN;
+    reg.dither = (en == EN);
     return write_reg(reg);
 }
 

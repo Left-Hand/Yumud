@@ -18,7 +18,7 @@ using namespace ymd;
 using namespace ymd::robots;
 using namespace ymd::robots::cybergear::details;
 
-using BxCanFrame = hal::BxCanFrame;
+using ClassicCanFrame = hal::ClassicCanFrame;
 using TemperatureCode = cybergear::details::TemperatureCode;
 using RadCode = cybergear::details::RadCode;
 using OmegaCode = cybergear::details::OmegaCode;
@@ -26,6 +26,8 @@ using TorqueCode = cybergear::details::TorqueCode;
 using KpCode = cybergear::details::KpCode;
 using KdCode = cybergear::details::KdCode;
 
+
+#if 0
 using Self = cybergear::CyberGear;
 
 using Error = cybergear::Error;
@@ -113,6 +115,7 @@ static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
 
 }
 
+
 namespace ymd::robots::cybergear{
 
 IResult<> Self::init(){
@@ -167,7 +170,7 @@ IResult<> Self::set_current_as_machine_home(){
         CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, host_id_, node_id_).to_bits(), 1, 0);
 }
 
-IResult<> Self::transmit(const BxCanFrame & frame){
+IResult<> Self::transmit(const ClassicCanFrame & frame){
     MOTOR_DEBUG("write_msg", frame);
     TODO();
     // can_drv_.transmit(frame);
@@ -200,14 +203,14 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t context, const uint
         return Err(Error::RET_DLC_LONGER);
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(context);
-    const auto frame = BxCanFrame(
+    const auto frame = ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(bits), 
-        hal::BxCanPayload::from_bytes(std::span(buf.data(), dlc))
+        hal::ClassicCanPayload::from_bytes(std::span(buf.data(), dlc))
     );
     return this->transmit(frame);
 }
 
-IResult<> Self::on_receive(const BxCanFrame & frame){
+IResult<> Self::on_receive(const ClassicCanFrame & frame){
     if(!frame.is_extended())
         __builtin_trap();
     const auto id_u32 = frame.id_u32();
@@ -236,23 +239,35 @@ IResult<> Self::on_receive(const BxCanFrame & frame){
     return Err{Error::PRAGRAM_UNHANDLED};
 }
 
-IResult<> Self::on_mcu_id_feed_back(const uint32_t id_u32, const uint64_t bits, const uint8_t dlc){
+IResult<> Self::on_mcu_id_feed_back(
+    const uint32_t id_u32, 
+    const uint64_t payload_u64, 
+    const uint8_t dlc
+){
+    (void)id_u32;
+
     if (dlc != 8){
         return Err(Error::RET_DLC_SHORTER);
     }
 
-    device_mcu_id_ = Some(bits);
+    device_mcu_id_ = Some(payload_u64);
     return Ok();
 }
 
 
 
-IResult<> Self::on_ctrl2_feed_back(const uint32_t id_u32, const uint64_t bits, const uint8_t dlc){
+IResult<> Self::on_ctrl2_feed_back(
+    const uint32_t id_u32, 
+    const uint64_t payload_u64, 
+    const uint8_t dlc
+){
+    (void)id_u32;
+
     if(dlc != sizeof(TxContext)){
         return Err(Error::RET_DLC_SHORTER);
     }
 
-    const RxContext context = {bits};
+    const RxContext context = {payload_u64};
 
     feedback_.radians =         context.radians().get().to<iq16>();
     feedback_.omega =       context.omega().get().to<iq16>();
@@ -263,3 +278,5 @@ IResult<> Self::on_ctrl2_feed_back(const uint32_t id_u32, const uint64_t bits, c
 }
 
 }
+
+#endif

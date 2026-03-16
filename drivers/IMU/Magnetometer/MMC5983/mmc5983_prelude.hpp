@@ -17,8 +17,8 @@
 #include "drivers/IMU/IMU.hpp"
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 // The MMC5983MA is an AEC-Q100 qualified complete 3-axis magnetic sensor with on-chip 
 // signal processing and integrated I2C/SPI bus suitable for use in automotive applications.
@@ -67,14 +67,20 @@ struct MMC5983_Prelude{
 
 
 struct MMC5983_Regs final:public MMC5983_Prelude{
-    struct DataPacket{
-        static constexpr uint8_t address = 0;
+    struct [[nodiscard]] DataPacket final{
+        static constexpr RegAddr BASE_ADDR = RegAddr{0};
 
         constexpr math::Vec3<int32_t> to_vec3_bits() const{
             //每个数据18位
-            const int32_t x_bits = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
-            const int32_t y_bits = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
-            const int32_t z_bits = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
+            const int32_t x_bits = static_cast<int32_t>(
+                (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6));
+
+            const int32_t y_bits = static_cast<int32_t>(
+                (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4));
+
+            const int32_t z_bits = static_cast<int32_t>(
+                (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2));
+
 
             return {x_bits,y_bits,z_bits};
         }
@@ -145,16 +151,16 @@ class MMC5983_Transport: public MMC5983_Prelude{
 public:
     explicit MMC5983_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit MMC5983_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        MMC5983_Transport(hal::I2cDrv{i2c, addr}){;}
+    explicit MMC5983_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        MMC5983_Transport(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit MMC5983_Transport(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
     explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    IResult<> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(addr, data);
+            if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){
@@ -163,9 +169,9 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    IResult<> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
+            if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){
@@ -174,9 +180,9 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf);
+            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(reg_addr), pbuf);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){

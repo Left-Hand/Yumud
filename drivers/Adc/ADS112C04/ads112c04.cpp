@@ -37,7 +37,7 @@ IResult<> ADS112C04::set_gain(const Gain gain){
 
 IResult<> ADS112C04::enable_turbo(const Enable en){
     auto reg = RegCopy(config1_reg);
-    reg.turbo_mode = en == EN;
+    reg.turbo_mode = (en == EN);
     return write_reg(reg);
 }
 

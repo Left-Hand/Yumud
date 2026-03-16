@@ -21,7 +21,7 @@ IResult<> Self::validate(){
         res.is_err()) return res;
     BMP280_DEBUG("CHIP code: ", uint8_t(chip_id_reg));
     if(reg.to_bits() != VALID_CHIPID) 
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 
@@ -71,7 +71,7 @@ IResult<bool> Self::is_idle(){
 
 IResult<> Self::enable_3wire_spi(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.spi3_en = en == EN;
+    reg.spi3_en = (en == EN);
     return write_reg(reg);
 }
 

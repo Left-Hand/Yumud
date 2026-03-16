@@ -6,11 +6,11 @@
 
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
-namespace ymd{
-struct INA228_Prelude{
+namespace ymd::drivers{
+struct [[nodiscard]] INA228_Prelude{
     using RegAddr = uint8_t;
 
     enum class AverageTimes:uint8_t{
@@ -154,7 +154,7 @@ struct INA228_Regs:public INA228_Prelude{
 
     
 
-    struct R8_ShuntTempco:public Reg8<>{
+    struct R16_ShuntTempco:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         // 13-0
@@ -180,7 +180,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_reg_bus_v:public Reg16<>{   
+    struct R24_reg_bus_v:public Reg24<>{   
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};  // 24 bit, 195.3125 uV / LSB, 4 low bits == 0
 
         // 23-4
@@ -461,6 +461,28 @@ struct INA228_Regs:public INA228_Prelude{
         static constexpr uint16_t KEY = 0x2281;
         uint16_t DIEID;
     };
+
+
+    VALIDATE_R16(R16_Config)
+    VALIDATE_R16(R16_AccConfig)
+    VALIDATE_R16(R16_ShuntCal)
+    VALIDATE_R16(R16_ShuntTempco)
+    // VALIDATE_R24(R24_reg_shunt_v)
+    // VALIDATE_R24(R24_reg_bus_v)
+    VALIDATE_R16(R16_DieTemp)
+    // VALIDATE_R24(R24_Current)
+    // VALIDATE_R24(R24_Power)
+    // VALIDATE_R64(R64_Energy)
+    // VALIDATE_R64(R64_Charge)
+    VALIDATE_R16(R16_Alert)
+    VALIDATE_R16(R16_SOVL)
+    VALIDATE_R16(R16_SUVL)
+    VALIDATE_R16(R16_BOVL)
+    VALIDATE_R16(R16_BUVL)
+    VALIDATE_R16(R16_TempLimit)
+    VALIDATE_R16(R16_PowerLimit)
+    VALIDATE_R16(R16_ManfId)
+    VALIDATE_R16(R16_DieId)
 };
 
 }

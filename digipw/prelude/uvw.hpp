@@ -9,7 +9,7 @@
 namespace ymd::digipw{
 
 template<typename T>
-struct UvwCoord{
+struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
     static_assert(std::is_signed_v<T>);
     
     T u;

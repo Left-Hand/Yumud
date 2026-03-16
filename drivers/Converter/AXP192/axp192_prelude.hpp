@@ -24,7 +24,7 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "core/utils/enum/strong_type_gradation.hpp"
 
@@ -312,8 +312,11 @@ struct AXP192_Coulometre_RegSet:public AXP192_Prelude{
 
 class AXP192 final: public AXP192_Prelude{
 
-    explicit AXP192(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c.get(), addr)){}
+    explicit AXP192(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){}
 
     explicit AXP192(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){}
@@ -329,19 +332,19 @@ private:
     AXP192_PowerCtl_Regset pw_regs_ = {};
     AXP192_GpioCtl_RegSet gp_regs_ = {};
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr address, const uint8_t reg){
+    IResult<> write_reg(const RegAddr address, const uint8_t reg){
         if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr address, uint8_t & reg){
+    IResult<> read_reg(const RegAddr address, uint8_t & reg){
         if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
+    IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -349,7 +352,7 @@ private:
 
     #if 0
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -357,7 +360,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
     #endif

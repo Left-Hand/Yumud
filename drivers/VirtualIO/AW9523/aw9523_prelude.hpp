@@ -8,7 +8,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "primitive/pwm_channel.hpp"
 
@@ -19,7 +19,7 @@ struct AW9523_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
     enum class [[nodiscard]] Error_Kind:uint8_t{
-        WrongChipId,
+        ChipIdMismatch,
         IndexOutOfRange
     };
 

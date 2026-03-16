@@ -10,8 +10,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
@@ -458,7 +458,6 @@ void light_tracking_main(void){
         .remap = hal::SPI1_REMAP_PB3_PB4_PB5_PA15,
         .baudrate = hal::NearestFreq(LCD_SPI_FREQ_HZ)
     });
-    // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
     (void)spi.set_bitorder(MSB);
     // spi.set_bitorder(std::endian::little
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);

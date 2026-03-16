@@ -276,15 +276,15 @@ IResult<> Self::set_distance_zoom(uint8_t val) {
 }
 
 
-IResult<> Self::write_reg(const uint8_t addr, const uint8_t val) {
-    if(const auto res = i2c_drv_.write_reg(addr, val);
+IResult<> Self::write_reg(const uint8_t reg_addr, const uint8_t reg_val) {
+    if(const auto res = i2c_drv_.write_reg(reg_addr, reg_val);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<uint8_t> Self::read_reg(const uint8_t addr) {
-    uint8_t val;
-    if(const auto res = i2c_drv_.read_reg(addr, val);
+IResult<uint8_t> Self::read_reg(const uint8_t reg_addr) {
+    uint8_t reg_val;
+    if(const auto res = i2c_drv_.read_reg(reg_addr, reg_val);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(val);
+    return Ok(reg_val);
 }

@@ -1,4 +1,5 @@
 acmemach:机致科技
+briter: 布瑞特科技 https://www.buruiter.com/
 bmkj:本末科技
 damiao:达妙
 dfrobot:上海智位机器人

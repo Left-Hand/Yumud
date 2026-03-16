@@ -3,23 +3,26 @@
 #include "hal/gpio/gpio_intf.hpp"
 
 namespace ymd::drivers{
+
+class JQ8900_Transport{
+public:
+    JQ8900_Transport(hal::GpioIntf & ser):ser_(ser){}
+    void tick();
+    bool pending();
+    void write(const uint8_t data);
+
+    void init(){
+        ser_.outpp();
+    }
+private:
+    hal::GpioIntf & ser_;
+};
 class JQ8900{
 public: 
-    class Phy{
-    public:
-        Phy(hal::GpioIntf & ser):ser_(ser){}
-        void tick();
-        bool pending();
-        void write(const uint8_t data);
 
-        void init(){
-            ser_.outpp();
-        }
-    private:
-        hal::GpioIntf & ser_;
-    };
 private:
-    Phy transport_;
+    using Transport = JQ8900_Transport;
+    Transport transport_;
 
     enum class Command:uint8_t{
         Clear = 0x0A,

@@ -129,7 +129,7 @@ private:
     constexpr explicit BitArray() {
     }
 
-    std::array<uint8_t, NUM_BYTES> flag_ = {};
+    std::array<uint8_t, NUM_BYTES> flag_;
 
     void on_out_of_range(){
         __builtin_abort();

@@ -2,8 +2,8 @@
 
 #include "drivers/IMU/IMU.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -15,8 +15,8 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit StmicroImu_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit StmicroImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    explicit StmicroImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit StmicroImu_Transport(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
     explicit StmicroImu_Transport(hal::SpiDrv && spi_drv):
@@ -26,11 +26,11 @@ public:
 
 
 
-    [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t reg_addr, const uint8_t data);
 
-    [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t reg_addr, uint8_t & data);
 
-    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, std::span<int16_t> pbuf);
+    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf);
 
     [[nodiscard]] Result<void, ImuError> validate();
 private:

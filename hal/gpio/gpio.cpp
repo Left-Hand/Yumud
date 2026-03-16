@@ -10,24 +10,24 @@ namespace ymd::hal{
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, GPIO_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, GPIO_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
 void Gpio::set_high(){
-    SDK_INST(inst_)->BSHR = static_cast<uint16_t>(pin_nth_);
+    SPL_INST(inst_)->BSHR = static_cast<uint16_t>(pin_nth_);
 }
 void Gpio::set_low(){
-    SDK_INST(inst_)->BCR = static_cast<uint16_t>(pin_nth_);
+    SPL_INST(inst_)->BCR = static_cast<uint16_t>(pin_nth_);
 }
 
 //BSHR的寄存器在BCR前 {1->BSHR; 0->BCR} 使用逻辑操作而非判断以提高速度
 void Gpio::write(const BoolLevel val){
-    *(&SDK_INST(inst_)->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);
+    *(&SPL_INST(inst_)->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);
 }
 
 BoolLevel Gpio::read() const {
-    return BoolLevel::from(SDK_INST(inst_)->INDR & static_cast<uint16_t>(pin_nth_));
+    return BoolLevel::from(SPL_INST(inst_)->INDR & static_cast<uint16_t>(pin_nth_));
 }
 
 Gpio::Gpio(void * inst, const PinSource pin):
@@ -49,7 +49,7 @@ Gpio::Gpio(void * inst, const PinSource pin):
 
 void Gpio::set_mode(const GpioMode mode){
     const auto ctz_pin = __builtin_ctz(uint16_t(pin_nth_));
-    auto & pin_cfg = (ctz_pin >= 8 ? ((SDK_INST(inst_) -> CFGHR)) : ((SDK_INST(inst_) -> CFGLR)));
+    auto & pin_cfg = (ctz_pin >= 8 ? ((SPL_INST(inst_) -> CFGHR)) : ((SPL_INST(inst_) -> CFGLR)));
     uint32_t tempreg = pin_cfg;
     const auto shifts = ((ctz_pin % 8) * 4);
     tempreg &= (~(0xf << shifts));
@@ -57,9 +57,9 @@ void Gpio::set_mode(const GpioMode mode){
     pin_cfg = tempreg;
 
     if(mode == GpioMode::InPullUP){
-        SDK_INST(inst_) -> OUTDR |= uint16_t(pin_nth_);
+        SPL_INST(inst_) -> OUTDR |= uint16_t(pin_nth_);
     }else if(mode == GpioMode::InPullDN){
-        SDK_INST(inst_) -> OUTDR &= ~uint16_t(pin_nth_);
+        SPL_INST(inst_) -> OUTDR &= ~uint16_t(pin_nth_);
     }
 }
 
@@ -123,7 +123,7 @@ static inline void * portsource_to_inst(PortSource port) {
 
 
 PortSource Gpio::port() const {
-    return inst_to_portsource(SDK_INST(inst_));
+    return inst_to_portsource(SPL_INST(inst_));
 }
 
 Gpio make_gpio(const PortSource port_source, const PinSource pin_source){

@@ -10,23 +10,29 @@
 #include "core/utils/Result.hpp"
 
 
-//这个文件描述了BxCanFrame类 表示标准Can2.0(bxcan)的消息
+//这个文件描述了ClassicCanFrame类 表示标准Can2.0(bxcan)的消息
 
 namespace ymd::hal{
 
-struct alignas(16) [[nodiscard]] BxCanFrame final{
+struct [[nodiscard]] ClassicCanFrame final{
 public:
-    using Payload = BxCanPayload;
+    using Payload = ClassicCanPayload;
 
     using U8X8 = std::array<uint8_t, 8>;
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
-    using Self = BxCanFrame;
-    constexpr BxCanFrame(const BxCanFrame & other) = default;
-    constexpr BxCanFrame & operator = (const BxCanFrame & other) = default;
-    constexpr BxCanFrame(BxCanFrame && other) = default;
-    constexpr BxCanFrame & operator = (BxCanFrame && other) = default;
+    using Self = ClassicCanFrame;
+
+
+    constexpr ClassicCanFrame(const ClassicCanFrame & other):
+        identifier_(other.identifier_), 
+        payload_(other.payload_){}
+
+
+    constexpr ClassicCanFrame(ClassicCanFrame && other):
+        identifier_(other.identifier_), 
+        payload_(other.payload_){}
 
 
     /// \brief 从创建一个未初始化的帧
@@ -55,17 +61,11 @@ public:
     /// \brief 从id和载荷创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(
         details::is_canid auto id,
-        Payload payload
+        const Payload payload
     ) noexcept{
-        return Self(CanIdentifier::from_parts(id, CanRtr::Data), payload);
+        return Self(CanIdentifier::from_parts(id, CanRtr::Data), std::move(payload));
     }
 
-    __attribute__((always_inline)) constexpr BxCanFrame(
-        details::is_canid auto id,
-        const Payload payload
-    ):
-        identifier_(CanIdentifier::from_parts(id, CanRtr::Data)),
-        payload_(payload){}
 
     /// \brief (SXX32专属)从寄存器值构造报文 不对比特做任何检查
     __attribute__((always_inline)) static constexpr Self from_sxx32_regs(
@@ -74,8 +74,8 @@ public:
         uint8_t dlc_bits
     ) noexcept{
         return Self(
-            CanIdentifier::from_sxx32_reg_bits(id_bits), 
-            Payload::from_u64_and_dlc(payload_bits, BxCanDlc::from_bits(dlc_bits))
+            CanIdentifier::from_sxx32_rxmir(id_bits), 
+            Payload::from_u64_and_dlc(payload_bits, ClassicCanDlc::from_bits(dlc_bits))
         );
     }
 
@@ -85,8 +85,8 @@ public:
     }
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __attribute__((always_inline)) constexpr BxCanDlc dlc() 
-    const noexcept{return payload_.dlc_;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr  ClassicCanDlc dlc() 
+    const noexcept{return payload_.dlc;}
 
     /// \brief 获取dlc标识符
     [[nodiscard]] __attribute__((always_inline)) constexpr const Payload & 
@@ -224,7 +224,7 @@ public:
     /// @brief 不顾帧长度直接获取载荷的64位数据
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint64_t payload_u64() const noexcept{
-        return std::bit_cast<uint64_t>(payload_.bytes_);
+        return payload_.to_u64();
     }
 
     /// @brief 获取首部标识符
@@ -235,27 +235,28 @@ public:
 private:
 
     alignas(4) CanIdentifier identifier_;
-    alignas(4) Payload payload_;
+    Payload payload_;
 
 
-    __attribute__((always_inline)) constexpr BxCanFrame(
+    __attribute__((always_inline)) constexpr ClassicCanFrame(
         const CanIdentifier identifier,
-        const Payload payload
+        const Payload && payload
     ):
         identifier_(identifier),
         payload_(payload){}
 
-    __attribute__((always_inline)) imconstexpr BxCanFrame():
+    __attribute__((always_inline)) constexpr ClassicCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),
         payload_(Payload::from_uninitialized()){;}
 };
 
-static_assert(sizeof(BxCanFrame) == 16);
+// static_assert(sizeof(ClassicCanFrame) == 12 + 1);
+static_assert(sizeof(ClassicCanFrame) == 16);
 
 
 }
 
 namespace ymd{
     class OutputStream;
-    OutputStream & operator<<(OutputStream & os, const hal::BxCanFrame & frame);
+    OutputStream & operator<<(OutputStream & os, const hal::ClassicCanFrame & frame);
 }

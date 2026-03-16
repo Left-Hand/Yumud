@@ -7,7 +7,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/hw_singleton.hpp"
@@ -19,14 +19,11 @@
 
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
-#include "drivers/Adc/HX711/HX711.hpp"
 
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "digipw/spll/spll_1ph_sogi_iq.hpp"
-
-
 
 
 
@@ -105,7 +102,7 @@ void test_sogi(){
 
     Microseconds dm = 0us;
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -140,10 +137,10 @@ void digipw_main(){
     auto scl_pin = hal::PB<15>();
     auto sda_pin = hal::PB<14>();
     
-    hal::SoftI2c SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c{scl_pin, sda_pin};
     // SoftI2c.init({1000000});
 
-    SoftI2c.init({
+    i2c.init({
         .baudrate = hal::NearestFreq(100_KHz)
     });
 
@@ -200,7 +197,7 @@ void digipw_main(){
 
 
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){

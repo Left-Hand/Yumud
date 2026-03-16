@@ -85,14 +85,18 @@ struct AK09911C_Regset : public AK09911C_Prelude{
         static constexpr uint8_t KEY = 0x48;
 
         uint8_t bits;
-    } DEF_R8(wia1_reg)
+    };
+
+    VALIDATE_R8(R8_WIA1)
 
     struct R8_WIA2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         static constexpr uint8_t KEY = 0x05;
 
         uint8_t bits;
-    } DEF_R8(wia2_reg)
+    };
+
+    VALIDATE_R8(R8_WIA2)
 
     struct R8_INFO1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};

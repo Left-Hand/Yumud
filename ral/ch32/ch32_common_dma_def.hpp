@@ -4,20 +4,19 @@
 #include "core/io/regs.hpp"
 
 
-#ifndef ASSERT_REG_IS_32BIT
-#define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 4 bytes"); 
-#endif
 
 namespace ymd::ral::ch32::common_dma{
 
 struct [[nodiscard]] R32_DMA_INTFR{
     uint32_t BITS;
-};ASSERT_REG_IS_32BIT(R32_DMA_INTFR)
+};
+VALIDATE_R32(R32_DMA_INTFR)
 
 struct [[nodiscard]] R32_DMA_INTFCR{
     uint32_t BITS;
 
-};ASSERT_REG_IS_32BIT(R32_DMA_INTFCR)
+};
+VALIDATE_R32(R32_DMA_INTFCR)
 
 struct [[nodiscard]] R32_DMA_CFGR{
     uint32_t EN:1;
@@ -35,11 +34,21 @@ struct [[nodiscard]] R32_DMA_CFGR{
     uint32_t MEM2MEM:1;
 
     uint32_t :17;
-};ASSERT_REG_IS_32BIT(R32_DMA_CFGR)
+};
+VALIDATE_R32(R32_DMA_CFGR)
 
-using R32_DMA_CNTR = uint32_t;
-using R32_DMA_PADDR = uint32_t;
-using R32_DMA_MADDR = uint32_t;
+struct [[nodiscard]] R32_DMA_CNTR{
+    uint32_t BITS;
+};
+
+struct [[nodiscard]] R32_DMA_PADDR{
+    uint32_t BITS;
+};
+
+struct [[nodiscard]] R32_DMA_MADDR{
+    uint32_t BITS;
+};
+
 
 struct [[nodiscard]] R32_DMA2_EXTEM_INTFR{
     volatile uint32_t BITS;
@@ -52,35 +61,35 @@ struct [[nodiscard]] DMA_CH_Def{
     volatile R32_DMA_MADDR MADDR;
 
     constexpr void enable(const Enable en){
-        CFGR.EN = en == EN;
+        CFGR.EN = (en == EN);
     }
 
     constexpr void enable_transfer_done_interrupt(const Enable en){
-        CFGR.TCIE = en == EN;
+        CFGR.TCIE = (en == EN);
     }
 
     constexpr void enable_transfer_onhalf_interrupt(const Enable en){
-        CFGR.HTIE = en == EN;
+        CFGR.HTIE = (en == EN);
     }
 
     void enable_transfer_error_interrupt(const Enable en){
-        CFGR.TEIE = en == EN;
+        CFGR.TEIE = (en == EN);
     }
 
     void set_source_is_mem(const Enable en){
-        CFGR.DIR = en == EN;
+        CFGR.DIR = (en == EN);
     }
 
     void enable_circular_mode(const Enable en){
-        CFGR.CIRC = en == EN;
+        CFGR.CIRC = (en == EN);
     }
 
     void enable_periph_increment(const Enable en){
-        CFGR.PINC = en == EN;
+        CFGR.PINC = (en == EN);
     }
 
     void enable_mem_increment(const Enable en){
-        CFGR.MINC = en == EN;
+        CFGR.MINC = (en == EN);
     }
 
     void set_priority(const uint8_t prio){
@@ -88,19 +97,19 @@ struct [[nodiscard]] DMA_CH_Def{
     }
 
     void enable_mem2mem(const Enable en){
-        CFGR.MEM2MEM = en == EN;
+        CFGR.MEM2MEM = (en == EN);
     }
 
     void set_periph_address(const uint32_t addr){
-        PADDR = addr;
+        PADDR.BITS = addr;
     }
 
     void set_mem_address(const uint32_t addr){
-        MADDR = addr;
+        MADDR.BITS = addr;
     }
 
     void set_data_len(const uint16_t len){
-        CNTR = len;
+        CNTR.BITS = len;
     }
 };
 
@@ -112,7 +121,6 @@ struct [[nodiscard]] DMA1_Def{
     volatile R32_DMA_INTFCR INTFCR;
     DMA_CH_Def CH[8];
 
-    // 使用宏定义每个通道的特定掩码
     template<uint8_t CHANNEL_NUM>
     static constexpr uint32_t TRANSFER_DONE_MASK = [] -> uint32_t{
         static_assert(CHANNEL_NUM <= 8);
@@ -140,28 +148,28 @@ struct [[nodiscard]] DMA1_Def{
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]] 
-    constexpr bool get_transfer_done_flag() const noexcept {
+    bool get_transfer_done_flag() const noexcept {
         constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
         return (INTFR.BITS & MASK) != 0;
     }
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_transfer_onhalf_flag() const noexcept {
+    bool get_transfer_onhalf_flag() const noexcept {
         constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
         return (INTFR.BITS & MASK) != 0;
     }
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_transfer_error_flag() const noexcept {
+    bool get_transfer_error_flag() const noexcept {
         constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
         return (INTFR.BITS & MASK) != 0;
     }
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_direct_mode_error_flag() const noexcept {
+    bool get_direct_mode_error_flag() const noexcept {
         constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
         return (INTFR.BITS & MASK) != 0;
     }
@@ -234,7 +242,7 @@ struct [[nodiscard]] DMA2_Def{
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]] 
-    constexpr bool get_transfer_done_flag() const noexcept {
+    bool get_transfer_done_flag() const noexcept {
         constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
         auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
         return (reg.BITS & MASK) != 0;
@@ -242,7 +250,7 @@ struct [[nodiscard]] DMA2_Def{
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_transfer_onhalf_flag() const noexcept {
+    bool get_transfer_onhalf_flag() const noexcept {
         constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
         auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
         return (reg.BITS & MASK) != 0;
@@ -250,7 +258,7 @@ struct [[nodiscard]] DMA2_Def{
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_transfer_error_flag() const noexcept {
+    bool get_transfer_error_flag() const noexcept {
         constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
         auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
         return (reg.BITS & MASK) != 0;
@@ -258,7 +266,7 @@ struct [[nodiscard]] DMA2_Def{
 
     template<uint8_t CHANNEL_NUM>
     [[nodiscard]]
-    constexpr bool get_direct_mode_error_flag() const noexcept {
+    bool get_direct_mode_error_flag() const noexcept {
         constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
         auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
         return (reg.BITS & MASK) != 0;

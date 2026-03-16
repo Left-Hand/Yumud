@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 #include "core/utils/zero.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
@@ -69,8 +69,8 @@ void sincospll_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        // .baudrate = hal::NearestFreq(576_KHz),
-        .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576_KHz),
+        // .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -84,7 +84,7 @@ void sincospll_main(){
         .count_freq =  hal::NearestFreq(F_SAMPLE),
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().dont_alter_to_pins();
-    hal::timer2.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
 
     Angular<uq32> simulated_angle_ = Zero;
@@ -107,7 +107,8 @@ void sincospll_main(){
         // if(false){//simulate input
             static uq32 now_secs = 0;
             now_secs += uq32::from_rcp(F_SAMPLE);
-            // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 164 * iq16(math::sinpu(32 * now_secs));
+            // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 14 * iq16(math::sinpu(32 * now_secs));
+            // const iq16 angular_speed = 45;
             // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(32 * now_secs));
             const iq16 angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(10 * now_secs));
             // const iq16 angular_speed = 45 * iq16(math::sinpu(now_secs));

@@ -46,30 +46,89 @@ public:
         return std::span<const uint8_t, sizeof(T)>(reinterpret_cast<const uint8_t *>(this), sizeof(T));
     }
     
-    constexpr RegBase<T> & set_bits(T bits) {
-        this->as_bits_mut() = static_cast<T>(this->to_bits() | static_cast<T>(bits)); 
-        return *this;
+
+    /**
+     * @brief 获取底层位字段的非 volatile 可变引用。
+     * 
+     * 此函数用于普通内存访问。若对象表示硬件寄存器，
+     * 应确保其底层存储为 non-volatile 或由用户自行管理同步。
+     * 
+     * @return T& 对底层位字段的引用
+     */
+    [[nodiscard]] T & as_bits_mut()
+    requires (std::is_const_v<T> == false)
+    {
+        return reinterpret_cast<T &>(*this);
     }
 
-    constexpr RegBase<T> & unset_bits(T bits) {
-        this->as_bits_mut() = static_cast<T>(this->to_bits() & static_cast<T>(~static_cast<T>(bits))); 
-        return *this;
+    /**
+     * @brief 获取底层位字段的 volatile 可变引用。
+     * 
+     * 此重载用于当对象被声明为 volatile 时（如映射到 MMIO 地址），
+     * 确保对寄存器的写入不会被编译器优化掉。
+     * 
+     * @return volatile T& 对底层 volatile 位字段的引用
+     */
+    [[nodiscard]] volatile T & as_bits_mut()
+    volatile requires (std::is_const_v<T> == false) 
+    {
+        return reinterpret_cast<volatile T &>(*this);
     }
 
-    constexpr RegBase<T> & write_bits(T bits) {
+    /**
+     * @brief 以普通方式写入整个寄存器值。
+     * 
+     * 直接覆盖底层位字段。适用于普通内存或已知安全的寄存器访问。
+     * 
+     * @param bits 要写入的位值
+     * @return RegBase<T>& 返回自身以支持链式调用
+     */
+    RegBase<T> & write_bits(T bits) 
+    requires (std::is_const_v<T> == false)
+    {
         this->as_bits_mut() = static_cast<T>(bits); 
         return *this;
     }
     
-    [[nodiscard]] constexpr T & as_bits_mut()
-    requires (std::is_const_v<T> == false)
+    /**
+     * @brief 以 volatile 方式写入整个寄存器值。
+     * 
+     * 确保写入操作不会被编译器优化，并实际写入内存（如硬件寄存器）。
+     * 仅在对象为 volatile 时调用此重载。
+     * 
+     * @param bits 要写入的位值
+     * @return RegBase<T>& 返回自身以支持链式调用
+     */
+    RegBase<T> & write_bits(T bits) 
+    volatile requires (std::is_const_v<T> == false)
     {
-        return (reinterpret_cast<T &>(*this));
+        this->as_bits_mut() = static_cast<T>(bits); 
+        return *this;
     }
 
-    [[nodiscard]] constexpr T to_bits() const 
+    /**
+     * @brief 以普通方式读取整个寄存器值。
+     * 
+     * 直接返回底层位字段的副本。适用于普通内存。
+     * 
+     * @return T 寄存器当前的位值
+     */
+    [[nodiscard]] T to_bits() const {
+        return reinterpret_cast<const T &>(*this);
+    }
+
+    /**
+     * @brief 以 volatile 方式读取整个寄存器值。
+     * 
+     * 强制从内存中读取（如从硬件寄存器），防止编译器缓存或优化。
+     * 仅在对象为 volatile 时调用此重载。
+     * 
+     * @return T 寄存器当前的位值（从 volatile 内存加载）
+     */
+    [[nodiscard]] T to_bits() const volatile
     {
-        return (reinterpret_cast<const T &>(*this));
+        // 正确保留 volatile 语义：直接 reinterpret 为 const volatile T&
+        return reinterpret_cast<const volatile T&>(*this);
     }
 
     template<typename TOther>

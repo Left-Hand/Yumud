@@ -346,9 +346,9 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
 
             auto make_duty = [&]() -> digipw::AlphaBetaCoord<iq16>{
                 if(is_beta_){
-                    return {duty, 0};
+                    return {static_cast<iq16>(duty), 0};
                 }else{
-                    return {0, duty};
+                    return {0, static_cast<iq16>(duty)};
                 }
             };
             tick_cnt_++;

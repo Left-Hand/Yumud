@@ -1,9 +1,17 @@
 #include "si24r1.hpp"
 
-#ifdef Si24R1_DEBUG
-#define Si24R1_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#define SI24R1_DEBUG_EN 0
+
+#if SI24R1_DEBUG_EN == 1
+#define SI24R1_TODO(...) TODO()
+#define SI24R1_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__);
+#define SI24R1_PANIC(...) PANIC{__VA_ARGS__}
+#define SI24R1_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else
-#define Si24R1_DEBUG(...)
+#define SI24R1_DEBUG(...)
+#define SI24R1_TODO(...) PANIC_NSRC()
+#define SI24R1_PANIC(...)  PANIC_NSRC()
+#define SI24R1_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

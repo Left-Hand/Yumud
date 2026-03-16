@@ -33,7 +33,7 @@ void Dvp::plant(){
 
 
 void Dvp::enable_rcc(const Enable en){
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DVP, en == EN);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DVP, (en == EN));
 }    
 
 void Dvp::init(const Config & cfg){

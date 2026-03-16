@@ -4,24 +4,32 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-// #define MMC5983_DEBUG_EN
-
 #ifdef MMC5983_DEBUG_EN
+#define MMC5983_TODO(...) TODO()
+#define MMC5983_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MMC5983_PANIC(...) PANIC{__VA_ARGS__}
+#define MMC5983_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), __res_check_res.unwrap_err(), ##__VA_ARGS__};\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    PANIC{x.unwrap(), ##__VA_ARGS__};\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
+#define MMC5983_DEBUG(...)
+#define MMC5983_TODO(...) PANIC_NSRC()
+#define MMC5983_PANIC(...)  PANIC_NSRC()
+#define MMC5983_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
 #define CHECK_RES(x, ...) (x)
 #define CHECK_ERR(x, ...) (x)
 #endif
@@ -59,7 +67,7 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
 
 IResult<> MMC5983::update(){
     auto & packet = regs_.data_packet_;
-    return read_burst(packet.address, packet.as_bytes_mut());
+    return read_burst(packet.BASE_ADDR, packet.as_bytes_mut());
 }
 
 
@@ -202,13 +210,13 @@ IResult<> MMC5983::set_prd_mag_set(const PrdSet prdset){
 }
 IResult<> MMC5983::enable_mag_set(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.set = en == EN;
+    reg.set = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> MMC5983::enable_mag_reset(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.reset = en == EN;
+    reg.reset = (en == EN);
     return write_reg(reg);
 }
 
@@ -222,6 +230,6 @@ MMC5983::IResult<math::Vec3<iq24>> MMC5983::do_mag_reset(){
 
 IResult<> MMC5983::enable_auto_mag_sr(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.auto_sr_en = en == EN;
+    reg.auto_sr_en = (en == EN);
     return write_reg(reg);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bitreverse.hpp"
+#include "reverse.hpp"
 
 namespace ymd::intrinsics{
 static constexpr bool has_b_clz = __has_builtin(__builtin_clz);

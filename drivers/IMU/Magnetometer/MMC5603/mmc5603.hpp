@@ -11,24 +11,27 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit MMC5603(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit MMC5603(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
-        :i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit MMC5603(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    )
+        :i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> set_datarate(const DataRate dr);
+    IResult<> set_datarate(const DataRate dr);
 
-    [[nodiscard]] IResult<> set_band_width(const BandWidth bw);
+    IResult<> set_band_width(const BandWidth bw);
 
-    [[nodiscard]] IResult<> enable_continuous(const Enable en);
+    IResult<> enable_continuous(const Enable en);
 
-    [[nodiscard]] IResult<> inhibit_channels(bool x, bool y, bool z);
+    IResult<> inhibit_channels(bool x, bool y, bool z);
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
+    IResult<math::Vec3<iq24>> read_mag();
 
 protected:
 
@@ -36,14 +39,14 @@ protected:
     MMC5603_Regset regs_ = {};  
 
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
+    IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = i2c_drv_.write_reg(
             uint8_t(T::REG_ADDR), 
             reg.to_bits(), std::endian::little);
@@ -53,7 +56,7 @@ protected:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         const auto res = i2c_drv_.read_reg(
             uint8_t(reg.REG_ADDR), 
             reg.as_bits_mut(), std::endian::little);
@@ -62,7 +65,7 @@ protected:
     }
 
 
-    [[nodiscard]] IResult<> set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z);
+    IResult<> set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z);
 
 };
 

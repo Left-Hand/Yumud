@@ -1,7 +1,7 @@
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "src/testbench/tb.h"
@@ -31,7 +31,7 @@ void ads7830_main(){
 
     auto scl_pin = SCL_PIN;
     auto sda_pin = SDA_PIN;
-    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c = hal::SoftI2c{scl_pin, sda_pin};
 
     i2c.init({
         .baudrate = hal::NearestFreq(400_KHz)
@@ -47,7 +47,7 @@ void ads7830_main(){
         auto read_channel = [&](size_t i) -> uint8_t{
             return ads7830.read_pos_channel(
                 ADS7830::ChannelSelection::from_nth(i).unwrap()
-            ).examine();
+            ).examine().to_u8();
         };
     
         for (size_t i = 0; i < 4; i++){

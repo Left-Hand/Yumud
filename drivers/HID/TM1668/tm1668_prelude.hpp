@@ -10,7 +10,7 @@
 #include "core/utils/errno.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 
@@ -28,8 +28,8 @@ struct TM1668_Prelude{
 class TM1668_Transport final:public TM1668_Prelude{
 public:
 
-    explicit TM1668_Transport(hal::I2cBase & i2c, hal::GpioIntf & scb_io):
-        i2c_(i2c), scb_io_(scb_io){;}
+    explicit TM1668_Transport(hal::I2cBase & i2c, hal::Gpio scb_pin):
+        i2c_(i2c), scb_pin_(scb_pin){;}
     
     enum class PulseWidth:uint8_t{
         _1_16 = 0,
@@ -126,15 +126,16 @@ public:
     }
 private:
     IResult<> write_display_cmd(const DisplayCommand cmd){
+        (void)cmd;
         // return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_u8());
         return Ok();
     }
 private:
     hal::I2cBase & i2c_;
-    hal::GpioIntf & scb_io_;
+    hal::Gpio scb_pin_;
 
-    void set_scb(){scb_io_.set_high();}
-    void clr_scb(){scb_io_.set_low();}
+    void set_scb(){scb_pin_.set_high();}
+    void clr_scb(){scb_pin_.set_low();}
 
     IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();

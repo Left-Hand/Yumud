@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "hal/bus/can/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 #include "middlewares/protocols/cannet/slcan/slcan.hpp"
 #include "middlewares/repl/repl.hpp"
@@ -26,7 +26,7 @@ void slcan_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     // asciican::AsciiCanPhy phy{can};

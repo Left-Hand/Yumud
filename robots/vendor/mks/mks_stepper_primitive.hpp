@@ -6,7 +6,7 @@
 #include "core/tmp/reflect/enum.hpp"
 
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 #include "algebra/regions/range2.hpp"
 
@@ -40,7 +40,7 @@ enum class [[nodiscard]] Error:uint8_t{
 DEF_DERIVE_DEBUG(Error)
 
 using Buf = HeaplessVector<uint8_t, 8>;
-struct [[nodiscard]]FlatPacket final{ 
+struct [[nodiscard]] FlatPacket final{ 
     NodeId node_id;
     Buf buf;
 };
@@ -207,7 +207,7 @@ struct [[nodiscard]] PulseCnt final{
         return (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
     }
 
-    uint8_t bytes[3];
+    std::array<uint8_t, 3> bytes;
 };
 #pragma pack(pop)
 static_assert(sizeof(PulseCnt) == 3);

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "timer_oc.hpp"
-#include "timer_utils.hpp"
+#include "timer_lld.hpp"
 #include "hal/sysmisc/nvic/nvic.hpp"
 #include "core/utils/result.hpp"
-
+#include "core/utils/nth.hpp"
 
 #ifdef HDW_SXX32
 
@@ -118,12 +118,14 @@ struct [[nodiscard]] TimerPinSetuper final{
 
     explicit TimerPinSetuper(void * inst, const TimerRemap remap) : 
         inst_(inst),
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_))),
         remap_(remap){}
 
     Result<Next, Error> alter_to_pins(const std::initializer_list<TimerChannelSelection> list);
     Next dont_alter_to_pins();
 private:
     void * inst_;
+    Nth tim_nth_;
     TimerRemap remap_;
 };
 
@@ -137,11 +139,18 @@ public:
     using CountMode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(TimerEvent)>;
-private:
+protected:
     Callback event_callback_ = nullptr;
     void enable(const Enable en);
+    void invoke_callback(TimerEvent event){
+        if(event_callback_ == nullptr) [[unlikely]] return;
+        event_callback_(event);
+    }
 public:
-    explicit BasicTimer(void * inst):inst_(inst){;}
+    explicit BasicTimer(void * inst):
+        inst_(inst),
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+        {;}
 
     struct [[nodiscard]] Config{
         TimerRemap remap;
@@ -187,8 +196,10 @@ public:
 
     //将中断优先级注册到NVIC
     template<IT I>
-    void register_nvic(const NvicPriority priority, const Enable en){
-        priority.with_irqn(timer::details::it_to_irq(inst_, I)).enable(en);
+    void register_nvic(const NvicPriorityCode priority, const Enable en){
+        const auto irqn = lld::timer_it_to_irq(tim_nth_, I);
+        lld::nvic_set_irqn_priority(irqn, priority);
+        lld::nvic_enable_irqn(irqn, en == EN);
     }
 
     //使能ARR同步更新（shadow）
@@ -210,16 +221,12 @@ public:
     void set_remap(const TimerRemap rm);
 protected:
     void * inst_;
+    Nth tim_nth_;
 
     [[nodiscard]] uint32_t get_periph_clk_freq();
     void enable_rcc(const Enable en);
 
-    //处理中断响应
-    void accept_interrupt(const IT I){
-        if(event_callback_ == nullptr) [[unlikely]]
-            return;
-        event_callback_(I);
-    }
+    void isr_common();
 
     void dyn_enable_interrupt(IT I,Enable en);
 
@@ -236,7 +243,6 @@ class [[nodiscard]] GeneralTimer:public BasicTimer{
 protected:
     TimerOC channels_[4];
 private:
-    void on_interrupt();
 public:
     explicit GeneralTimer(void * inst):
         BasicTimer(inst),
@@ -260,6 +266,12 @@ public:
         return channels_[I - 1];
     }
 
+    //处理中断响应
+    void isr_specified(const IT I){
+        if(event_callback_ == nullptr) [[unlikely]]
+            return;
+        event_callback_(I);
+    }
 
     [[nodiscard]] bool is_up_counting();
 
@@ -301,7 +313,7 @@ public:
         .inst_ = inst_,
         .bus_freq = this->get_periph_clk_freq()
     };}
-    void set_repeat_times(const uint8_t rep);
+    void set_repeat_times(const uint16_t rep);
 
     template<size_t I>
     requires(I >= 1 and I <= 4)

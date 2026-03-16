@@ -8,7 +8,7 @@ namespace ymd::robots::bmkj::m1502e{
 struct motor_recipes{
     struct [[nodiscard]] Timeout{};
     struct [[nodiscard]] ShutDown{};
-    struct [[nodiscard]] SendFrame{const hal::BxCanFrame frame;};
+    struct [[nodiscard]] SendFrame{const hal::ClassicCanFrame frame;};
     struct [[nodiscard]] PropagationException{};
 };
 

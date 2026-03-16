@@ -3,7 +3,7 @@
 
 #include "core/io/regs.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 namespace ymd::drivers{
 struct MPR121_Prelude{
@@ -84,22 +84,22 @@ struct R16_OORStatus:public Reg16<>{
 
 
 
-    R16_TouchStatus         touch_status;
-    R16_OORStatus           oor_status;
-    R16_FiltteredData       filtered_datas[MAX_CHANNELS];
-    Misc                    misc;
-    Misc                    elep_misc;
+R16_TouchStatus         touch_status;
+R16_OORStatus           oor_status;
+R16_FiltteredData       filtered_datas[MAX_CHANNELS];
+Misc                    misc;
+Misc                    elep_misc;
 
-    uint8_t                 baseline_values[MAX_CHANNELS];
-    R16_Threshold           thresholds[MAX_CHANNELS];
-    uint8_t                 cdc_conf;
-    uint8_t                 cdt_conf;
-    uint8_t                 electrode_conf;
+uint8_t                 baseline_values[MAX_CHANNELS];
+R16_Threshold           thresholds[MAX_CHANNELS];
+uint8_t                 cdc_conf;
+uint8_t                 cdt_conf;
+uint8_t                 electrode_conf;
 
-    uint8_t                 electrode_current[MAX_CHANNELS];
-    R8_ChargeTime           charge_times[MAX_CHANNELS/2];
-    GpioCtrlSet                gpio_ctrl;
-    AutoConfigSet              auto_config;
+uint8_t                 electrode_current[MAX_CHANNELS];
+R8_ChargeTime           charge_times[MAX_CHANNELS/2];
+GpioCtrlSet                gpio_ctrl;
+AutoConfigSet              auto_config;
 
 };
 }

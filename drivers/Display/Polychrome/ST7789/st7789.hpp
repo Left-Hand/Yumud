@@ -57,19 +57,19 @@ public:
     }
     
     IResult<> enable_flip_y(const Enable en){
-        return modify_ctrl_reg(en == EN, 7);
+        return modify_ctrl_reg((en == EN), 7);
     }
 
     IResult<> enable_flip_x(const Enable en){
-        return modify_ctrl_reg(en == EN, 6);
+        return modify_ctrl_reg((en == EN), 6);
     }
 
     IResult<> enable_swap_xy(const Enable en){
-        return modify_ctrl_reg(en == EN, 5);
+        return modify_ctrl_reg((en == EN), 5);
     }
 
     IResult<> enable_flush_dir_v(const Enable en){
-        return modify_ctrl_reg(en == EN, 4);
+        return modify_ctrl_reg((en == EN), 4);
     }
 
     IResult<> enable_format_rgb(const Enable en){
@@ -77,13 +77,14 @@ public:
     }
 
     IResult<> enable_flush_dir_h(const Enable en){
-        return modify_ctrl_reg(en == EN, 2);
+        return modify_ctrl_reg((en == EN), 2);
     }
+
     IResult<> enable_inversion(const Enable inv_en){
         return write_command((inv_en == EN) ? 0x21 : 0x20);
     }
 
-    [[nodiscard]] __fast_inline IResult<> put_pixel_unchecked(
+    __fast_inline IResult<> put_pixel_unchecked(
         const math::Vec2<uint16_t> pos, 
         const RGB565 color
     ){
@@ -94,17 +95,17 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> putrect_unchecked(
+    IResult<> putrect_unchecked(
         const math::Rect2<uint16_t> rect, 
         const RGB565 color
     );
 
-    [[nodiscard]] IResult<> put_texture_unchecked(
+    IResult<> put_texture_unchecked(
         const math::Rect2<uint16_t> rect, 
         const RGB565 * pcolor
     );
 
-    [[nodiscard]] math::Rect2u get_expose_rect(){
+    math::Rect2u get_expose_rect(){
         return math::Rect2u::from_size(algo_.size());
     }
 
@@ -117,21 +118,21 @@ private:
     math::Vec2<uint16_t> offset_ = math::Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
-    [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
+    __fast_inline IResult<> write_command(const uint8_t cmd){
         return transport_.write_command(cmd);
     }
 
-    [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
+    __fast_inline IResult<> write_data8(const uint8_t data){
         return transport_.write_data8(data);
     }
 
-    [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
+    __fast_inline IResult<> write_data16(const uint16_t data){
         return transport_.write_data16(data);
     }
 
-    [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
+    IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
 
-    [[nodiscard]] IResult<> common_init();
+    IResult<> common_init();
     template<typename T>
     friend class DrawTarget;
 };

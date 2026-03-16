@@ -60,7 +60,7 @@ struct [[nodiscard]] CanFrameAssemblyIterator final {
         }
     }
     
-    [[nodiscard]] Result<bool, AssemblyError> poll(const hal::BxCanFrame& frame) {
+    [[nodiscard]] Result<bool, AssemblyError> poll(const hal::ClassicCanFrame& frame) {
         
         // 解析CAN帧
         const auto payload_bytes = frame.payload().bytes();

@@ -151,7 +151,7 @@ struct [[nodiscard]] HeaplessString final{
     }
 
 private:
-    std::array<char, N> buf_ = {};
+    std::array<char, N> buf_;
     size_t length_;
 };
 }

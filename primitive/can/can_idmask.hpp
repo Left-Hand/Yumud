@@ -5,40 +5,40 @@
 namespace ymd::hal{
 
 template<typename T>
-struct [[nodiscard]] _CanIdMaskPair final{
+struct [[nodiscard]] CanIdMaskPair final{
     using id_type = typename T::id_type;
     static constexpr size_t ID_NUM_BITS = id_type::NUM_BITS;
 
     T id;
     T mask;
 
-    static constexpr _CanIdMaskPair accept_all(){
-        return _CanIdMaskPair{
+    static constexpr CanIdMaskPair accept_all(){
+        return CanIdMaskPair{
             .id = T::zero(), 
             .mask = T::zero()
         };
     }
 
-    static constexpr _CanIdMaskPair reject_all(){
-        return _CanIdMaskPair{
+    static constexpr CanIdMaskPair reject_all(){
+        return CanIdMaskPair{
             .id = T::full(), 
             .mask = T::full()
         };
     }
 
-    static constexpr _CanIdMaskPair from_parts(
+    static constexpr CanIdMaskPair from_parts(
         id_type id, 
         id_type mask, 
         CanRtrSpecfier spec
     ){
 
-        return _CanIdMaskPair{
+        return CanIdMaskPair{
             .id = T(id, specifier_to_id_rtr(spec)), 
             .mask = T(mask, specifier_to_mask_rtr(spec))
         };
     }
 
-    static constexpr Option<_CanIdMaskPair> from_chars(
+    static constexpr Option<CanIdMaskPair> from_chars(
         const char (&p_chars)[ID_NUM_BITS + 1],
         CanRtrSpecfier spec
     ){
@@ -48,7 +48,7 @@ struct [[nodiscard]] _CanIdMaskPair final{
         );
     }
 
-    static constexpr Option<_CanIdMaskPair> from_chars(
+    static constexpr Option<CanIdMaskPair> from_chars(
         std::span<const char, ID_NUM_BITS> chars,
         CanRtrSpecfier spec
     ){
@@ -107,8 +107,8 @@ private:
     }
 };
 
-using CanStdIdMaskPair = _CanIdMaskPair<details::SXX32_CanStdIdMask>;
-using CanExtIdMaskPair = _CanIdMaskPair<details::SXX32_CanExtIdMask>;
+using CanStdIdMaskPair = CanIdMaskPair<details::SXX32_CanStdIdMask>;
+using CanExtIdMaskPair = CanIdMaskPair<details::SXX32_CanExtIdMask>;
 
 
 [[maybe_unused]] static constexpr auto CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY = 

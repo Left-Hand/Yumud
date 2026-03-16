@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "core/stream/ostream.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/dma/dma.hpp"
 #include "core/sdk.hpp"
 
@@ -119,8 +119,13 @@ void adc_tb(OutputStream & logger){
         }, {});
 
     std::array<uint16_t, 16> adc_dma_buf;
-    hal::dma1_ch1.init({hal::DmaMode::PeriphToBurstMemoryCircular, hal::DmaPriority::High});
-    hal::dma1_ch1.start_transfer_pph2mem<uint16_t>(adc_dma_buf.data(), &(ADC1->RDATAR), adc_dma_buf.size());
+    hal::dma1_ch1.init({
+        .mode = hal::DmaMode::PeriphToBurstMemoryCircular, 
+        .priority = hal::DmaPriority::High
+    });
+    hal::dma1_ch1.start_transfer_pph2mem<
+        hal::DmaWordSize::TwoByte, hal::DmaWordSize::TwoByte
+    >(adc_dma_buf.data(), &(ADC1->RDATAR), adc_dma_buf.size());
 
     hal::adc1.enable_dma(EN);
     hal::adc1.sw_start_regular(true);

@@ -42,7 +42,7 @@ struct [[nodiscard]] ReadCoils final{
     //基地址
     uint16_t base_addr;
 
-    //数量
+    //响应数量
     uint16_t quantity; 
 
     static constexpr size_t context_length(){
@@ -56,7 +56,7 @@ struct [[nodiscard]] ReadCoils final{
     }
 };
 
-// REQ[2] 读取离散状态
+// REQ[2] 读取离散输入
 struct [[nodiscard]] ReadDiscreteInputs final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadDiscreteInputs;
     static constexpr size_t CONSTANT_LENGTH = 4;
@@ -113,7 +113,7 @@ struct [[nodiscard]] ReadInputRegisters final{
     //基地址
     uint16_t base_addr;
 
-    //数量
+    //数量(1至125(0x7D))
     uint16_t quantity; 
 
     static constexpr size_t context_length(){
@@ -133,7 +133,9 @@ struct [[nodiscard]] WriteSingleCoil final{
     static constexpr size_t CONSTANT_LENGTH = 4;
 
     uint16_t coil_addr;
-    bool coil_value;
+
+    //线圈是否开启
+    Enable coil_enabled;
 
     static constexpr size_t context_length(){
         return CONSTANT_LENGTH;
@@ -142,7 +144,10 @@ struct [[nodiscard]] WriteSingleCoil final{
     template<typename Receiver>
     constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
         auto & self = *this;
-        return serialize_u16x2(receiver, self.coil_addr, self.coil_value ? 0xFF00 : 0x0000);
+        return serialize_u16x2(receiver, 
+            self.coil_addr, 
+            (self.coil_enabled == EN) ? 0xFF00 : 0x0000
+        );
     }
 };
 
@@ -166,6 +171,45 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     }
 };
 
+
+// REQ[0x0f/15] 写入多个线圈
+struct [[nodiscard]] WriteMultipleCoils final{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleCoils;
+    //length not constant
+
+    uint16_t base_addr;
+    std::span<const uint8_t> coils_values;
+
+    constexpr size_t context_length() const {
+        return 4 + coils_values.size();
+    }
+
+    template<typename Receiver>
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+        auto & self = *this;
+
+        {
+            const uint16_t quantity = static_cast<uint16_t>(coils_values.size());
+
+            const std::array<uint8_t, 4> buffer = {
+                static_cast<uint8_t>(self.base_addr >> 8),
+                static_cast<uint8_t>(self.base_addr & 0xFF),
+                static_cast<uint8_t>(quantity >> 8),
+                static_cast<uint8_t>(quantity & 0xFF)
+            };
+
+            if(const auto res = receiver.push_bytes(std::span(buffer)); 
+                res.is_err()) return Err(res.unwrap_err());
+        }
+
+        {
+            if(const auto res = receiver.push_bytes(coils_values); 
+                res.is_err()) return Err(res.unwrap_err());
+        }
+
+        return Ok();
+    }
+};
 
 
 // REQ[0x10/16] 写入多个寄存器
@@ -196,7 +240,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
                 static_cast<uint8_t>(num_bytes)
             };
 
-            if(const auto res = receiver.push_bytes(buffer); 
+            if(const auto res = receiver.push_bytes(std::span(buffer)); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -207,7 +251,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
                     static_cast<uint8_t>(reg_values[i] & 0xFF)
                 };
 
-                if(const auto res = receiver.push_bytes(buffer); 
+                if(const auto res = receiver.push_bytes(std::span(buffer)); 
                     res.is_err()) return Err(res.unwrap_err());
             }
         }

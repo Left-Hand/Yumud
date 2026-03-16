@@ -13,14 +13,18 @@ struct [[nodiscard]] Rotation2 final{
     [[nodiscard]] static constexpr 
     Rotation2 from_angle(auto angle) {
         const auto [s, c] = angle.sincos();
-        return Rotation2{s, c};
+        return Rotation2{
+            static_cast<T>(s), 
+            static_cast<T>(c)
+        };
     }
 
-    [[nodiscard]] static constexpr 
-    Rotation2 from_radians(const T radians) {
-        const auto [s, c] = math::sincos(radians);
-        return Rotation2{s, c};
-    }
+    // [[nodiscard]] static constexpr 
+    // Rotation2 from_radians(const T radians) {
+    //     const auto [s, c] = math::sincos(radians);
+    //     return Rotation2{
+    //         s, c};
+    // }
 
 
     // 恒等旋转（单位旋转）

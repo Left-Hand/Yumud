@@ -13,9 +13,9 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
@@ -176,17 +176,20 @@ void nuedc_2025e_joint_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M), 
     });
 
-    can.filters<0>() 
-        .apply(hal::CanFilterConfig::from_pair(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
+        hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanStdId::from_bits(0b1111'000'0000), hal::CanRtrSpecfier::Discard
-            ))
-        )
-    ;
+                hal::CanStdId::from_bits(0b1111'000'0000), 
+                hal::CanRtrSpecfier::Discard
+            )))
+        .unwrap();
+
 
     spi.init({
         .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
@@ -257,7 +260,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::BxCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::ClassicCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -405,7 +408,7 @@ void nuedc_2025e_joint_main(){
         meas_elec_angle_ = meas_elec_angle;
     };
 
-    adc.register_nvic({0,0}, EN);
+    adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
     adc.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -435,17 +438,33 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_frame = [&] -> Option<hal::BxCanFrame>{
-        while(can.available()){
-            auto frame = can.read();
-            if(frame.is_extended()) continue;
+    auto read_can_frame = [&] -> Option<hal::ClassicCanFrame>{
+
+        static constexpr size_t MAX_TIMES = 3u;
+        const size_t iter_times = std::min(MAX_TIMES, can.available());
+
+        for(size_t _ = 0; _ < iter_times; _++){
+            const auto frame = ({
+                if(can.available() == 0){
+                    //cant read more can frame;
+                    break;
+                }
+
+                const auto may_frame = can.try_read();
+                if(may_frame.is_none()){
+                    //cant read more can frame;
+                    break;
+                }
+                may_frame.unwrap();
+            });
+
             (void)msg_queue_.try_push(frame);
         }
 
         if(not msg_queue_.length())
             return None;
 
-        hal::BxCanFrame frame = hal::BxCanFrame::from_uninitialized();
+        hal::ClassicCanFrame frame = hal::ClassicCanFrame::from_uninitialized();
         if(msg_queue_.try_pop(frame) == 0)
             return None;
         return Some(frame);
@@ -545,7 +564,7 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::BxCanFrame & frame){
+        auto handle_msg = [&](const hal::ClassicCanFrame & frame){
             const auto stdid = frame.identifier().try_to_stdid().examine();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(stdid);
             if(msg_role != self_node_role_) return;

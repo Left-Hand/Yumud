@@ -17,41 +17,41 @@ public:
 
     ~MT6701(){};
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> read_lap_angle();
     
-    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
+    IResult<EncoderFaultBitFields> get_fault();
 
-    [[nodiscard]] IResult<> enable_uvwmux(const Enable en);
+    IResult<> enable_uvwmux(const Enable en);
 
-    [[nodiscard]] IResult<> enable_abzmux(const Enable en);
+    IResult<> enable_abzmux(const Enable en);
 
-    [[nodiscard]] IResult<> set_direction(const RotateDirection dir);
+    IResult<> set_direction(const RotateDirection dir);
 
-    [[nodiscard]] IResult<> set_pole_pairs(const uint8_t pole_pairs);
+    IResult<> set_pole_pairs(const uint8_t pole_pairs);
 
-    [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abz_resolution);
+    IResult<> set_abz_resolution(const uint16_t abz_resolution);
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
+    IResult<> set_zero_angle(const Angular<uq32> angle);
 
-    [[nodiscard]] IResult<> set_zero_pulse_width(const ZeroPulseWidth zero_pulse_width);
+    IResult<> set_zero_pulse_width(const ZeroPulseWidth zero_pulse_width);
 
-    [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
+    IResult<> set_hysteresis(const Hysteresis hysteresis);
 
-    [[nodiscard]] IResult<> enable_fast_mode(const Enable en);
+    IResult<> enable_fast_mode(const Enable en);
 
-    [[nodiscard]] IResult<> enable_pwm(const Enable en);
+    IResult<> enable_pwm(const Enable en);
 
-    [[nodiscard]] IResult<> set_pwm_polarity(const bool polarity);
+    IResult<> set_pwm_polarity(const bool polarity);
 
-    [[nodiscard]] IResult<> set_pwm_freq(const PwmFreq pwm_freq);
+    IResult<> set_pwm_freq(const PwmFreq pwm_freq);
 
-    [[nodiscard]] IResult<> set_start_angle(const Angular<uq32> start);
+    IResult<> set_start_angle(const Angular<uq32> start);
 
-    [[nodiscard]] IResult<> set_stop_angle(const Angular<uq32> stop);
+    IResult<> set_stop_angle(const Angular<uq32> stop);
 private:
     MT6701_Regs regs_ = {};
     MT6701_Transport transport_;

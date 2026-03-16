@@ -14,7 +14,7 @@ using namespace asciican::primitive::operations;
 #define constexpr
 #define RETURN_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
 #else
-#define RETURN_ERR(e, ...) ({return Err(e);})
+#define RETURN_ERR(e, ...) {return Err(e);}
 #endif
 
 template<typename T = void>
@@ -22,8 +22,14 @@ using IResult = Result<T, Error>;
 
 static constexpr size_t STD_ID_STR_LEN = 3;
 static constexpr size_t EXT_ID_STR_LEN = 8;
-static constexpr size_t NUM_MAX_CAN_DLC = 8;
 
+#if 1
+static constexpr size_t NUM_MAX_CAN_DLC = 8;
+#else
+//TODO fully support CANFD
+// canfd: 0-8: Same as standard CAN,        F: Length = 64
+static constexpr size_t NUM_MAX_CAN_DLC = 16;
+#endif
 
 [[nodiscard]] static constexpr 
 Option<uint8_t> _char2digit(char c){
@@ -46,7 +52,6 @@ IResult<uint32_t> _parse_hex_str(const StringView str){
 
     uint32_t ret = 0;
 
-    #pragma GCC unroll 8
     for(size_t i = 0; i < str.length(); i++){
         const auto chr = str[i];
         const auto may_digit = _char2digit(chr);
@@ -196,7 +201,7 @@ IResult<uint32_t> _parse_id_u32(const StringView str){
 
 template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr
-IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
+IResult<hal::ClassicCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
 
@@ -237,15 +242,15 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::BxCanFrame(
+            return Ok(hal::ClassicCanFrame::from_parts(
                 ID::from_bits(id_u32_checked), 
-                hal::BxCanPayload::from_bytes(bytes))
+                hal::ClassicCanPayload::from_bytes(bytes))
             );
         }
         case hal::CanRtr::Remote:{
             if(payload_str.length() != 0) 
                 RETURN_ERR(Error::PayloadFoundedInRemote);
-            return Ok(hal::BxCanFrame::from_remote(ID::from_bits(id_u32_checked)));
+            return Ok(hal::ClassicCanFrame::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
     //unreachable
@@ -269,7 +274,7 @@ uint32_t _chr_to_baud_unchecked(char chr){
     __builtin_trap();
 }
 
-auto _msg_to_operation = [](const hal::BxCanFrame & frame) { 
+auto _msg_to_operation = [](const hal::ClassicCanFrame & frame) { 
     return Operation(SendCanFrame{frame}); };
 
 
@@ -344,6 +349,15 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
 
             case 'R': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
                 .map(_msg_to_operation);
+
+            case 'd': //标准canfd(无brs)
+                RETURN_ERR(Error::WillSoonSupport);
+            case 'D': //拓展canfd(无brs)
+                RETURN_ERR(Error::WillSoonSupport);
+            case 'b': //标准canfd(无有brs)
+                RETURN_ERR(Error::WillSoonSupport);
+            case 'B': //拓展canfd(无有brs)
+                RETURN_ERR(Error::WillSoonSupport);
 
             // Sets Acceptance Code Register (ACn Register of SJA1000).
             // This command is only active if the CAN channel is initiated and

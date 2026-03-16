@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 #include "drivers/Encoder/encoder.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 //参考文档：https://www.cnblogs.com/c17VV-blogs/p/18864288
 
@@ -339,8 +339,8 @@ struct [[nodiscard]] R16_IIFCNT : public Reg16<> {
 
 struct TLE5012_Transport final: public TLE5012_Prelude{
 public:
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
 private:
 
 };

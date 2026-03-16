@@ -11,8 +11,8 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 #include "algebra/vectors/vec3.hpp"
 
@@ -22,6 +22,8 @@
 #include "data.hpp"
 
 using namespace ymd;
+
+#if 0
 
 
 #define RADIANS(x) ((3.1415926f / 180) * (x))
@@ -505,3 +507,6 @@ void cubic_main(void){
 		DEBUG_PRINTLN(clock::millis() - m);
 	}
 }
+
+
+#endif

@@ -10,7 +10,7 @@
 namespace ymd::math{
 
 template<typename T>
-class [[nodiscard]] Rect2{
+struct [[nodiscard]] Rect2 final{
 public:
     using Self = Rect2;
     using Tsigned = std::make_signed_t<T>;

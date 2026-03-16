@@ -8,29 +8,29 @@ public:
     explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(Transport{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> validate();
+    IResult<> init();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+    IResult<Angular<uq32>> read_lap_angle(){
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> burn_zero_angle(const Angular<uq32> angle);
+    IResult<> burn_zero_angle(const Angular<uq32> angle);
 
-    [[nodiscard]] IResult<> set_trim(const uq16 x, const uq16 y);
+    IResult<> set_trim(const uq16 x, const uq16 y);
 
-    [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
+    IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
-    [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
+    IResult<> set_direction(const RotateDirection direction);
 
-    [[nodiscard]] IResult<> set_abz_freq_limit(const AbzFreqLimit freq_lim);
+    IResult<> set_abz_freq_limit(const AbzFreqLimit freq_lim);
 
 
-    [[nodiscard]] IResult<> set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
+    IResult<> set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
 
-    [[nodiscard]] IResult<> set_pulse_per_turn(const uint16_t num_ppt);
+    IResult<> set_pulse_per_turn(const uint16_t num_ppt);
 
 private:
     Regset regset_ = {};
@@ -44,7 +44,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> burn_reg(const RegCopy<T> & reg){
+    IResult<> burn_reg(const RegCopy<T> & reg){
         if(const auto res = transport_.burn_reg(T::REG_ADDR, reg.to_bits()); 
             res.is_err()) return res;
         reg.apply();

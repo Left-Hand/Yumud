@@ -15,34 +15,34 @@ struct [[nodiscard]] FrameFactory final{
     can_simple::AxisId axis_id;
 
 
-    constexpr hal::BxCanFrame clear_errors()  const {
+    constexpr hal::ClassicCanFrame clear_errors()  const {
         return ser_msg(req_msgs::ClearErrors{});
     }
 
-    constexpr hal::BxCanFrame set_axis_state(const req_msgs::SetAxisState msg)  const {
+    constexpr hal::ClassicCanFrame set_axis_state(const req_msgs::SetAxisState msg)  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_controller_mode(const req_msgs::SetControllerMode msg)  const {
+    constexpr hal::ClassicCanFrame set_controller_mode(const req_msgs::SetControllerMode msg)  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_input_velocity(const req_msgs::SetInputVelocity msg)  const {
+    constexpr hal::ClassicCanFrame set_input_velocity(const req_msgs::SetInputVelocity msg)  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_input_torque(const req_msgs::SetInputTorque msg)  const {
+    constexpr hal::ClassicCanFrame set_input_torque(const req_msgs::SetInputTorque msg)  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_input_position(const req_msgs::SetInputPosition msg)  const {
+    constexpr hal::ClassicCanFrame set_input_position(const req_msgs::SetInputPosition msg)  const {
         return ser_msg(msg);
     }
 
 private:
 
     template<typename T>
-    constexpr hal::BxCanFrame ser_msg(T && msg) const {
+    constexpr hal::ClassicCanFrame ser_msg(T && msg) const {
         return can_simple::serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
     }
 };

@@ -11,71 +11,44 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
 volatile uint16_t & TimerChannel::from_channel_to_cvr(
-    void * inst, 
-    const ChannelSelection sel
+    void * p_inst, 
+    const hal::TimerChannelSelection sel
 ){
-
-    switch(sel.kind()){
-        default: __builtin_trap();
-        case ChannelSelection::CH1:
-        case ChannelSelection::CH1N:
-            return (SDK_INST(inst)->CH1CVR);
-        case ChannelSelection::CH2:
-        case ChannelSelection::CH2N:
-            return (SDK_INST(inst)->CH2CVR);
-        case ChannelSelection::CH3:
-        case ChannelSelection::CH3N:
-            return (SDK_INST(inst)->CH3CVR);
-        case ChannelSelection::CH4:
-            return (SDK_INST(inst)->CH4CVR);
-    }
+    return lld::timer_channel_find_cvr(p_inst, sel);
 }
+
+
 
 
 void TimerChannel::enable_dma(const Enable en){
-
-    const uint16_t source = [&] -> uint16_t{
-        switch(sel_.kind()){
-        case ChannelSelection::CH1:
-            return TIM_DMA_CC1;
-        case ChannelSelection::CH2:
-            return TIM_DMA_CC2;
-        case ChannelSelection::CH3:
-            return TIM_DMA_CC3;
-        case ChannelSelection::CH4:
-            return TIM_DMA_CC4;
-        default:
-            __builtin_trap();
-        }
-    }();
-
-    TIM_DMACmd(SDK_INST(inst_), source, en == EN);
+    lld::timer_channel_enable_dma(p_inst_, sel_, en);
 }
 
 
-Option<DmaChannel &> TimerChannel::dma() const {
+static Option<DmaChannel &> timch_to_dma(const Nth nth, timer::ChannelSelection::Kind ch_sel) {
+    using Kind = timer::ChannelSelection::Kind;
     #define FULL_DMA_CASE(x)\
-        case TIM##x##_BASE:\
-        switch(sel_.kind()){\
-            case ChannelSelection::CH1:\
+        case x:\
+        switch(ch_sel){\
+            case Kind::CH1:\
                 return Some(&TIM##x##_CH1_DMA_CH);\
-            case ChannelSelection::CH2:\
+            case Kind::CH2:\
                 return Some(&TIM##x##_CH2_DMA_CH);\
-            case ChannelSelection::CH3:\
+            case Kind::CH3:\
                 return Some(&TIM##x##_CH3_DMA_CH);\
-            case ChannelSelection::CH4:\
+            case Kind::CH4:\
                 return Some(&TIM##x##_CH4_DMA_CH);\
             default:\
                 break;\
         }\
         break;\
         
-    switch(reinterpret_cast<uint32_t>(SDK_INST(inst_))){
+    switch(nth.count()){
         #ifdef TIM1_PRESENT
         FULL_DMA_CASE(1)
         #endif
@@ -86,12 +59,12 @@ Option<DmaChannel &> TimerChannel::dma() const {
 
         #ifdef TIM3_PRESENT
         case TIM3_BASE:
-        switch(sel_.kind()){
-            case ChannelSelection::CH1:
+        switch(ch_sel){
+            case Kind::CH1:
                 return Some(&TIM3_CH1_DMA_CH);
-            case ChannelSelection::CH3:
+            case Kind::CH3:
                 return Some(&TIM3_CH3_DMA_CH);
-            case ChannelSelection::CH4:
+            case Kind::CH4:
                 return Some(&TIM3_CH4_DMA_CH);
             default:
                 break;
@@ -101,12 +74,12 @@ Option<DmaChannel &> TimerChannel::dma() const {
 
         #ifdef TIM4_PRESENT
         case TIM4_BASE:
-        switch(sel_.kind()){
-            case ChannelSelection::CH1:
+        switch(ch_sel){
+            case Kind::CH1:
                 return Some(&TIM4_CH1_DMA_CH);
-            case ChannelSelection::CH2:
+            case Kind::CH2:
                 return Some(&TIM4_CH2_DMA_CH);
-            case ChannelSelection::CH3:
+            case Kind::CH3:
                 return Some(&TIM4_CH3_DMA_CH);
             default:
                 break;
@@ -130,6 +103,12 @@ Option<DmaChannel &> TimerChannel::dma() const {
 
     return None;
     #undef FULL_DMA_CASE
+}
+
+
+
+Option<DmaChannel &> TimerChannel::dma() const {
+    return timch_to_dma(lld::timer_to_nth(reinterpret_cast<uintptr_t>(p_inst_)), sel_.kind());
 }
 
 

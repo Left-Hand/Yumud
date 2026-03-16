@@ -10,7 +10,7 @@ class String;
 template<size_t Extents>
 struct [[nodiscard]] ExtentsStorage final {
     static constexpr size_t MAX_SIZE = Extents;
-    static consteval size_t length() const { return MAX_SIZE; }
+    static consteval size_t length() { return MAX_SIZE; }
 };
 
 template<std::size_t Extents = std::dynamic_extent>
@@ -152,8 +152,9 @@ public:
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(p_data_), size_);
     }
 
-    [[nodiscard]] std::span<const unsigned Encoding> as_uchars() const noexcept{
-        return std::span<const unsigned Encoding>(reinterpret_cast<const unsigned Encoding *>(p_data_), size_);
+    template<typename Encoding>
+    [[nodiscard]] std::span<Encoding> as_uchars() const noexcept{
+        return std::span<Encoding>(reinterpret_cast<Encoding *>(p_data_), size_);
     }
 
     [[nodiscard]] constexpr std::span<const Encoding> chars() const noexcept{

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/PerUnit.hpp"
@@ -83,6 +83,8 @@ struct [[nodiscard]] Feedback final{
 };
 }
 
+
+#if 0
 class CyberGear{
 public:
 
@@ -90,7 +92,7 @@ public:
     // using Error = details::Error;
     // using IResult = details::IResult;
 
-    using CanFrame = hal::BxCanFrame; 
+    using CanFrame = hal::ClassicCanFrame; 
 
     using Feedback = details::Feedback;
     using TemperatureCode = details::TemperatureCode;
@@ -101,16 +103,16 @@ public:
     using KdCode = details::KdCode;
 
 
-    CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
+    explicit CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
         can_(can), host_id_(host_id), node_id_(node_id){;}
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> transmit(const CanFrame & frame);
+    IResult<> transmit(const CanFrame & frame);
 
-    [[nodiscard]] IResult<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
+    IResult<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
 
-    [[nodiscard]] IResult<> request_mcu_id();
+    IResult<> request_mcu_id();
 
     struct MitParams{
         iq16 torque;
@@ -120,20 +122,20 @@ public:
         iq16 kd;
     };
 
-    [[nodiscard]] IResult<> ctrl(const MitParams & params);
+    IResult<> ctrl(const MitParams & params);
 
     
-    [[nodiscard]] IResult<> on_receive(const CanFrame & frame);
+    IResult<> on_receive(const CanFrame & frame);
 
-    [[nodiscard]] IResult<> enable(const Enable en, const bool clear_fault = true);
+    IResult<> enable(const Enable en, const bool clear_fault = true);
 
-    [[nodiscard]] IResult<> set_current_as_machine_home();
+    IResult<> set_current_as_machine_home();
 
-    [[nodiscard]] IResult<> change_node_id(const uint8_t id);
+    IResult<> change_node_id(const uint8_t id);
 
-    [[nodiscard]] IResult<> request_read_para(const uint16_t idx);
+    IResult<> request_read_para(const uint16_t idx);
 
-    [[nodiscard]] IResult<> request_write_para(const uint16_t idx, const uint32_t data);
+    IResult<> request_write_para(const uint16_t idx, const uint32_t data);
 
     [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
 
@@ -148,9 +150,10 @@ private:
 
     Feedback feedback_ = {};
 
-    [[nodiscard]] IResult<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] IResult<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] IResult<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    IResult<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    IResult<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    IResult<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
 };
 
+#endif
 }

@@ -7,9 +7,9 @@
 namespace ymd::hal{
 
 //描述了CAN2.0B(传统CAN)的数据载荷
-struct [[nodiscard]] BxCanPayload final{
+struct [[nodiscard]] ClassicCanPayload final{
 public:    
-    using Self = BxCanPayload;
+    using Self = ClassicCanPayload;
 
     using U8X8 = std::array<uint8_t, 8>;
 
@@ -39,7 +39,7 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Self(
             buf, 
-            BxCanDlc::from_bits(std::ranges::size(bytes))
+            ClassicCanDlc::from_bits(std::ranges::size(bytes))
         );
     }
 
@@ -65,7 +65,7 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(std::ranges::size(bytes))
+            ClassicCanDlc::from_bits(std::ranges::size(bytes))
         ));
     }
 
@@ -73,20 +73,15 @@ public:
         return Self();
     }
 
-    __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
-        Self self{};
-        self.dlc_ = BxCanDlc::from_length(len);
-        return self;
-    }
+    // __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
+    //     Self self = Self();
+    //     self.dlc = ClassicCanDlc::from_length(len);
+    //     return self;
+    // }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
-        return Self(std::move(array), BxCanDlc::full());
+        return Self(std::move(array), ClassicCanDlc::full());
     }
-
-
-
-
-
 
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
     template<typename Iter>
@@ -95,22 +90,23 @@ public:
         U8X8 buf = ZERO_U8X8;
         size_t len = 0;
         
-        #pragma GCC unroll 8
         for(;len < 8; len++) {
             if(not iter.has_next()) break;
             buf[len] = iter.next();
         }
+
         if(iter.has_next()) [[unlikely]]
             __builtin_trap();
+
         #pragma GCC unroll 8
         for(;len < 8; len++){
             buf[len] = 0;
         }
 
-        return Some(Self(
+        return Self(
             buf, 
-            BxCanDlc::from_bits(len)
-        ));
+            ClassicCanDlc::from_bits(len)
+        );
     }
 
     /// \brief 尝试从给定的id和迭代器创建一个数据帧 当数据超长时返回空
@@ -133,7 +129,7 @@ public:
         // 使用数组视图构造CanFrame
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(len)
+            ClassicCanDlc::from_bits(len)
         ));
     }
 
@@ -148,7 +144,7 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Self(
             buf, 
-            BxCanDlc::from_bits(bytes.size())
+            ClassicCanDlc::from_bits(bytes.size())
         );
     }
 
@@ -162,14 +158,14 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Some(Self(
             buf, 
-            BxCanDlc::from_bits(bytes.size())
+            ClassicCanDlc::from_bits(bytes.size())
         ));
     }
 
     /// \brief 从64位整数和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_u64_and_dlc(
         const uint64_t int_val,
-        const BxCanDlc dlc
+        const ClassicCanDlc dlc
     ){
         return Self(std::bit_cast<U8X8>(int_val),dlc);
     }
@@ -178,13 +174,13 @@ public:
     __attribute__((always_inline)) static constexpr Self from_u64(
         const uint64_t int_val
     ){
-        return Self(std::bit_cast<U8X8>(int_val), BxCanDlc::full());
+        return Self(std::bit_cast<U8X8>(int_val), ClassicCanDlc::full());
     }
 
     /// \brief 从数组和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(
         const U8X8 arr,
-        const BxCanDlc dlc
+        const ClassicCanDlc dlc
     ){
         return Self(arr,dlc);
     }
@@ -192,31 +188,31 @@ public:
     /// \brief 零
     __attribute__((always_inline)) static constexpr Self zero(
     ){
-        return Self(ZERO_U8X8, BxCanDlc::zero());
+        return Self(ZERO_U8X8, ClassicCanDlc::zero());
     }
 
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t * data() {return bytes_.data();}
+    uint8_t * data() {return u8x8.data();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t * begin() {return bytes_.begin();}
+    uint8_t * begin() {return u8x8.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const uint8_t * data() const noexcept {return bytes_.data();}
+    const uint8_t * data() const noexcept {return u8x8.data();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const uint8_t * begin() const noexcept {return bytes_.begin();}
+    const uint8_t * begin() const noexcept {return u8x8.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t size() const noexcept {return dlc_.to_bits();}
+    uint8_t size() const noexcept {return dlc.to_bits();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t operator[](uint8_t i) const noexcept {return bytes_[i];}
+    uint8_t operator[](uint8_t i) const noexcept {return u8x8[i];}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t & operator[](uint8_t i) noexcept {return bytes_[i];}
+    uint8_t & operator[](uint8_t i) noexcept {return u8x8[i];}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     std::span<const uint8_t> bytes() const noexcept {
-        return std::span(bytes_.data(), dlc_.length());
+        return std::span(u8x8.data(), dlc.length());
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -226,7 +222,7 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     std::span<uint8_t> bytes_mut() noexcept {
-        return std::span(bytes_.data(), dlc_.length());
+        return std::span(u8x8.data(), dlc.length());
     }
 
 
@@ -239,27 +235,73 @@ public:
     uint8_t & get() {return get_element<I>(*this);}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const U8X8 & u8x8() const {return bytes_;}
+    std::array<uint32_t, 2> to_u32x2() const {
+        // return u8x8;
+        if(std::is_constant_evaluated()){
+            return std::bit_cast<std::array<uint32_t, 2>>(u8x8);
+        }else{
+            return {
+                *reinterpret_cast<const uint32_t *>(&u8x8[0]),
+                *reinterpret_cast<const uint32_t *>(&u8x8[4])
+            };
+        }
+    }
 
-    alignas(4) U8X8 bytes_;
-    BxCanDlc dlc_;
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint64_t to_u64() const {
+        const auto [low32, high32] = to_u32x2();
+        return static_cast<uint64_t>(low32) | (static_cast<uint64_t>(high32) << 32);
+    }
+
+    #if 0
+    alignas(4) U8X8 u8x8;
+    alignas(4) ClassicCanDlc dlc;
+    #else
+    #pragma pack(push, 1)
+    U8X8 u8x8;
+    ClassicCanDlc dlc;
+    #pragma pack(pop)
+    #endif
+
+    __attribute__((always_inline)) constexpr explicit
+    ClassicCanPayload(const ClassicCanPayload & other):dlc(other.dlc){
+        if(std::is_constant_evaluated()){
+            u8x8 = other.u8x8;
+        }else{
+            const auto p_dst = reinterpret_cast<uint32_t *>(u8x8.data());
+            const auto p_src = reinterpret_cast<const uint32_t *>(other.u8x8.data());
+            p_dst[0] = p_src[0];
+            p_dst[1] = p_src[1];
+        }
+    }
+
 private:
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
-        bytes_(bytes), dlc_(dlc){;}
+    ClassicCanPayload(const U8X8 _u8x8, const ClassicCanDlc _dlc):
+        u8x8(_u8x8), dlc(_dlc){
+            if(std::is_constant_evaluated()){
+                u8x8 = _u8x8;
+            }else{
+                const auto p_dst = reinterpret_cast<uint32_t *>(u8x8.data());
+                const auto p_src = reinterpret_cast<const uint32_t *>(_u8x8.data());
+                p_dst[0] = p_src[0];
+                p_dst[1] = p_src[1];
+            }
+        }
 
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload():
-        bytes_({}), dlc_(BxCanDlc::from_uninitialized()){;}
+    ClassicCanPayload():dlc(ClassicCanDlc::from_uninitialized()){;}
 
-    friend class BxCanFrame;
+    friend class ClassicCanFrame;
 
     template<size_t I>
     [[nodiscard]] static __attribute__((always_inline)) constexpr 
     auto get_element(auto & self) noexcept {
-        return std::get<I>(self.bytes_);
+        return std::get<I>(self.u8x8);
     }
 };
+
+static_assert(sizeof(ClassicCanPayload) == 8 + 1);
 
 
 }

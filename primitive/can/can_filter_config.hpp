@@ -2,13 +2,11 @@
 
 #include "can_idmask.hpp"
 
-namespace ymd::hal{
 
-class CanFilter;
+namespace ymd::hal{
 
 struct [[nodiscard]] CanFilterConfig final{ 
 public:
-    friend class CanFilter;
 
     static constexpr CanFilterConfig accept_all(){
         return from_pairs(
@@ -25,12 +23,16 @@ public:
         switch(list.size()){
             case 4:
                 ret.mask16[1] =     std::next(list.begin(), 3) -> to_bits();
+                [[fallthrough]];
             case 3:
                 ret.mask16[0] =     std::next(list.begin(), 2) -> to_bits();
+                [[fallthrough]];
             case 2:
                 ret.id16[1] =       std::next(list.begin(), 1) -> to_bits();
+                [[fallthrough]];
             case 1:
                 ret.id16[0] =       std::next(list.begin(), 0) -> to_bits();
+                [[fallthrough]];
                 break;
             default:
                 __builtin_trap();
@@ -81,24 +83,31 @@ public:
 
     static Option<CanFilterConfig> from_str(const StringView str);
 
+    constexpr bool is_list_mode() const{
+        return is_list_mode_;
+    }
+
+    constexpr bool is_32bit() const{
+        return is_32bit_;
+    }
+
 // private:
-public:
     union{
         std::array<uint16_t, 2> id16;
         uint32_t id32;
     };
-    
+
     union{
         std::array<uint16_t, 2> mask16;
         uint32_t mask32;
     };
-    
+// public:
+private:
     bool is_32bit_;
     bool is_list_mode_;
 
     friend OutputStream & operator << (OutputStream & os, const CanFilterConfig & self);
 
-    friend class CanFilter;
 
 };
 

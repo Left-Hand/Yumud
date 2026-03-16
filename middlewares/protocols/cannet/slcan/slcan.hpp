@@ -93,7 +93,7 @@ public:
     using StdId = hal::CanStdId;
     using ExtId = hal::CanExtId;
 
-    [[nodiscard]] IResult<Operation> process_line(const StringView str) const;
+    IResult<Operation> process_line(const StringView str) const;
 private:
 
     [[nodiscard]] operations::SendString response_version() const ;

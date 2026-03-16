@@ -17,7 +17,10 @@ public:
     explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv(spi, rank)){;}
 
-    explicit BMI160(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+    explicit BMI160(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         transport_(i2c, i2c_addr){;}
 
 
@@ -37,21 +40,21 @@ public:
         }
     };
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> reset();
+    IResult<> init(const Config & cfg);
+    IResult<> update();
+    IResult<> validate();
+    IResult<> reset();
     
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
-    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
+    IResult<> set_acc_odr(const AccOdr odr);
+    IResult<> set_acc_fs(const AccFs fs);
+    IResult<> set_gyr_odr(const GyrOdr odr);
+    IResult<> set_gyr_fs(const GyrFs fs);
+    IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
 
-    [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pmu);
+    IResult<PmuMode> get_pmu_mode(const PmuType pmu);
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> read_gyr();
 
 private:
     BoschImu_Transport transport_;
@@ -60,27 +63,27 @@ private:
     iq20 acc_scale_ = 0;
     iq20 gyr_scale_ = 0;
 
-    [[nodiscard]] IResult<> write_command(uint8_t cmd){
+    IResult<> write_command(uint8_t cmd){
         return transport_.write_command(std::bit_cast<uint8_t>(cmd));
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         return transport_.write_reg(reg);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(reg);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, T & data){
+    IResult<> read_reg(const uint8_t addr, T & data){
         return transport_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> self_test_acc();
-    [[nodiscard]] IResult<> self_test_gyr();
+    IResult<> self_test_acc();
+    IResult<> self_test_gyr();
     [[nodiscard]] static constexpr 
     iq20 accfs_to_scale(const AccFs fs){
         switch(fs){

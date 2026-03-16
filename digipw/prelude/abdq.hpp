@@ -11,7 +11,7 @@ struct DqCoord;
 
 namespace details{
 template<typename To, typename From>
-__attribute__((optimize("O3"))) __attribute__((always_inline))
+__attribute__((optimize("Ofast"), always_inline))
 static constexpr void alphabeta_to_dq(
     To & dq, const From & alphabeta, const auto & angle
 ){
@@ -22,7 +22,7 @@ static constexpr void alphabeta_to_dq(
 
 
 template<typename To, typename From>
-__attribute__((optimize("O3"))) __attribute__((always_inline))
+__attribute__((optimize("Ofast"), always_inline))
 static constexpr void dq_to_alphabeta(
     To & alphabeta, const From & dq, const auto & angle
 ){
@@ -33,7 +33,7 @@ static constexpr void dq_to_alphabeta(
 }
 
 template<typename T>
-struct [[nodiscard]] AlphaBetaCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     static_assert(std::is_signed_v<T>);
 
     T alpha;
@@ -174,7 +174,7 @@ private:
 };
 
 template<typename T>
-struct [[nodiscard]] AlphaBetaZeroCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaZeroCoord final{
     static_assert(std::is_signed_v<T>);
 
     T alpha;
@@ -213,7 +213,7 @@ private:
 
 
 template<typename T>
-struct [[nodiscard]] DqCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
     static_assert(std::is_signed_v<T>);
     
     T d;

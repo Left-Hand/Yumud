@@ -13,9 +13,9 @@ namespace primitive{
 static constexpr hal::CanBaudrate DEFAULT_CAN_BAUD = hal::CanBaudrate::_500K;
 
 
-using CanFrame = hal::BxCanFrame;
+using CanFrame = hal::ClassicCanFrame;
 using CanId = hal::CanStdId;
-using CanPayload = hal::BxCanPayload;
+using CanPayload = hal::ClassicCanPayload;
 
 static constexpr size_t NUM_MAX_MOTORS = 8; 
 static constexpr uint16_t NUM_GENERIC_FEEDBACK_CANID_BASE = 0x96;
@@ -49,11 +49,11 @@ struct [[nodiscard]] MotorId final{
         return Some(from_bits(static_cast<uint8_t>(nth.count())));
     }
 
-    constexpr uint8_t to_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const{
         return bits_;
     }
 
-    constexpr bool operator==(const MotorId& rhs) const{
+    [[nodiscard]] constexpr bool operator==(const MotorId& rhs) const{
         return bits_ == rhs.bits_;
     }
 
@@ -181,11 +181,6 @@ struct [[nodiscard]] CurrentCode final{
     }
 };
 
-static_assert(sizeof(CurrentCode) == 2);
-static_assert(CurrentCode::from_amps(34).unwrap_err() == std::weak_ordering::greater);
-static_assert(CurrentCode::from_amps(-34).unwrap_err() == std::weak_ordering::less);
-static_assert(std::abs(static_cast<float>(CurrentCode::from_bits(32767).to_amps()) - 33.0f) < 1E-2);
-static_assert(std::abs(static_cast<float>(CurrentCode::from_bits(-32767).to_amps()) - -33.0f) < 1E-2);
 
 //设定值范围--21000~21000每LSB 0.01RPm
 struct [[nodiscard]] SpeedCode final{

@@ -13,7 +13,7 @@
 #include "detectors/ShockDetector.hpp"
 #include "detectors/SecondOrderTransferFunc.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;
 

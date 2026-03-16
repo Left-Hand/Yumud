@@ -171,6 +171,7 @@ tm_err_t __attribute__((weak)) tml_gap(tm_mat_t* in, tm_mat_t* out, sctype_t in_
 tm_err_t __attribute__((weak)) tml_fc(tm_mat_t* in, tm_mat_t* out,  wtype_t* w, btype_t* b, \
     sctype_t* ws, sctype_t in_s, zptype_t in_zp, sctype_t out_s, zptype_t out_zp)
 {
+    (void)in_zp;
     mtype_t* data = in->data;
     for(int c=0; c <out->c; c++){
         sumtype_t sum = 0;
@@ -222,6 +223,14 @@ tm_err_t __attribute__((weak)) tml_softmax(tm_mat_t* in, tm_mat_t* out, sctype_t
 /*************************** TML_RESHAPE **********************************/
 tm_err_t __attribute__((weak)) tml_reshape(tm_mat_t* in, tm_mat_t* out, sctype_t in_s, zptype_t in_zp, sctype_t out_s, zptype_t out_zp)
 {   
+    //add unused
+    (void)in;
+    (void)out;
+    (void)in_s;
+    (void)in_zp;
+    (void)out_s;
+    (void)out_zp;
+
     //in fact do nothing... out shape
     return TM_OK;
 }

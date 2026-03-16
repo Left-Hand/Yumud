@@ -3,8 +3,8 @@
 #include <compare>
 #include "core/tmp/integral.hpp"
 
-#include "details/_IQNdiv.hpp"
-#include "details/_IQNconv.hpp"
+#include "fxmath/div.hpp"
+#include "fxmath/fconv.hpp"
 
 #include <numeric>
 #include <cstddef>
@@ -114,8 +114,13 @@ public:
         return fixed<Q, D>::from_bits(bits);
     };
 
-    __attribute__((always_inline)) constexpr fixed(const fixed<Q, D> & other):
-        bits(other.bits){};
+    template<size_t P>
+    __attribute__((always_inline)) constexpr fixed(const fixed<P, D> & other):
+        bits(fixed<P, D>::template transform<Q>(other.to_bits())){};
+
+    template<size_t P>
+    __attribute__((always_inline)) constexpr fixed(fixed<P, D> && other):
+        bits(fixed<P, D>::template transform<Q>(other.to_bits())){};
 
 
     template<size_t P, typename U>
@@ -367,12 +372,19 @@ __attribute__((always_inline)) constexpr
 fixed<Q, D> operator /(const fixed<Q, D1> lhs, const fixed<P, D2> rhs) {
     static_assert(sizeof(D1) == sizeof(D2));
     if (std::is_constant_evaluated()) {
-        return fixed<Q, D>::from(float(lhs) / float(rhs));
+        return fixed<Q, D>::from(static_cast<long double>(lhs) / static_cast<long double>(rhs));
     }else{
         constexpr bool result_is_signed = std::is_signed_v<D1> or std::is_signed_v<D2>;
-        return fixed<Q, D>::from_bits(fxmath::details::__IQNdiv_impl<Q, result_is_signed>(
-            lhs.to_bits(), rhs.to_bits()
-        ));
+        static_assert(sizeof(D) == 4);
+        if constexpr(result_is_signed){
+            return fixed<Q, D>::from_bits(fxmath::details::div32i<Q>(
+                lhs.to_bits(), rhs.to_bits()
+            ));
+        }else{
+            return fixed<Q, D>::from_bits(fxmath::details::div32u<Q>(
+                lhs.to_bits(), rhs.to_bits()
+            ));
+        }
     }
 }
 

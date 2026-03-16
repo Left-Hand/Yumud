@@ -2,9 +2,9 @@
 
 #include "core/clock/time.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
@@ -56,7 +56,7 @@ class Environment{
 public:
     hal::Gpio scl_pin = SCL_PIN;
     hal::Gpio sda_pin = SDA_PIN;
-    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c = hal::SoftI2c{scl_pin, sda_pin};
     PCA9685 pca{&i2c};
 
 
@@ -113,7 +113,7 @@ public:
     template<typename Fn>
     void register_servo_ctl_callback(Fn && fn){
         auto & timer = hal::timer1;
-        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback(std::forward<Fn>(fn));
     }

@@ -7,8 +7,8 @@
 #include "core/clock/clock.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "primitive/colors/rgb/rgb.hpp"

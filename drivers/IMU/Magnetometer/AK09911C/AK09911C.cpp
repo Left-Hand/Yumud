@@ -1,24 +1,33 @@
 #include "ak09911c.hpp"
 
 
-#define DEBUG_EN
 
-#ifdef DEBUG_EN
+#ifdef AK09911C_DEBUG_EN
+#define AK09911C_TODO(...) TODO()
+#define AK09911C_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define AK09911C_PANIC(...) PANIC{__VA_ARGS__}
+#define AK09911C_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
-    if(x.is_err()) DEBUG_SRC{__VA_ARGS__};\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    DEBUG_SRC{#x, ##__VA_ARGS__};\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
+#define AK09911C_DEBUG(...)
+#define AK09911C_TODO(...) PANIC_NSRC()
+#define AK09911C_PANIC(...)  PANIC_NSRC()
+#define AK09911C_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
 #define CHECK_RES(x, ...) (x)
 #define CHECK_ERR(x, ...) (x)
 #endif
@@ -43,10 +52,17 @@ __inline Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_du
 }
 
 
+
 template<typename Fn>
 __inline Result<void, Error> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
+
+[[nodiscard]] static constexpr math::Vec3<iq24> 
+transform_coeff_into_scale(const math::Vec3<int8_t> coeff){
+    return math::Vec3<iq24>(coeff) / 128 + math::Vec3<iq24>(1, 1, 1); 
+}
+
 
 IResult<> Self::init(){
     if(const auto res = validate(); 
@@ -185,8 +201,8 @@ IResult<> Self::selftest(){
 IResult<> Self::validate(){
     
     auto check_vendor = [&] -> IResult<> {
-        auto & wia1_reg = regs_.wia1_reg;
-        auto & wia2_reg = regs_.wia2_reg;
+        auto wia1_reg = Regs::R8_WIA1{};
+        auto wia2_reg = Regs::R8_WIA2{};
         
         if(const auto res = read_reg(wia1_reg);
             res.is_err()) return CHECK_RES(
@@ -200,7 +216,7 @@ IResult<> Self::validate(){
                 "failed to read reg when validate, check RSTN pin is HIGH",
                 "error is", res.unwrap_err());
 
-        if(wia1_reg.to_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
+        if(wia1_reg.to_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::CompanyIdMisMatch),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.to_bits());
 
         if(wia2_reg.to_bits() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 

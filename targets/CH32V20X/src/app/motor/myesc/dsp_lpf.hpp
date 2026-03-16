@@ -98,10 +98,8 @@ static constexpr math::fixed<Q, D> lpf_with_given_alpha(math::fixed<Q, D> x_stat
     const uq32 beta = uq32::from_bits(~alpha.to_bits());
     using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
     return math::fixed<Q, D>::from_bits(
-        static_cast<D>(
-            ((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) 
-            + (static_cast<acc_t>(x_state.to_bits()) * beta.to_bits())) >> 32
-        )
+        D((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
+        + D((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
     );
 }
 

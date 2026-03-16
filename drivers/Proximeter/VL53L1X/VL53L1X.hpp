@@ -94,7 +94,7 @@
 
 #pragma once
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "core/utils/Result.hpp"
 #include "details/reg_map.hpp"
 

@@ -68,24 +68,31 @@ static constexpr uint8_t CRC_HIGH_TABLE[] = {
 };
 
 struct [[nodiscard]] Crc16ModbusAccumulator final{
+    using Self = Crc16ModbusAccumulator;
+
     uint8_t crc_low = 0xFF;
     uint8_t crc_high = 0xFF;
     
-    constexpr void push_bytes(std::span<const uint8_t> bytes) {
-        const uint8_t* data = bytes.data();
-        uint16_t len = bytes.size();
-        
-        while(len--) {
-            const uint8_t index = crc_low ^ *data++;
-            crc_low = crc_high ^ CRC_HIGH_TABLE[index];
-            crc_high = CRC_LOW_TABLE[index];
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
+        Self self = *this;
+
+        #pragma GCC unroll 4
+        for(size_t i = 0; i < bytes.size(); i++) {
+            self = self.push_byte(bytes[i]);
         }
+
+        return self;
     }
 
-    constexpr void push_byte(const uint8_t byte) {
-        const uint8_t index = crc_low ^ byte;
-        crc_low = crc_high ^ CRC_HIGH_TABLE[index];
-        crc_high = CRC_LOW_TABLE[index];
+
+    __attribute__((always_inline))
+    constexpr Self push_byte(const uint8_t byte) const {
+        Self self = *this;
+        const uint8_t index = self.crc_low ^ byte;
+        self.crc_low = self.crc_high ^ CRC_HIGH_TABLE[index];
+        self.crc_high = CRC_LOW_TABLE[index];
+
+        return self;
     }
 
     [[nodiscard]] constexpr uint16_t finalize()const {

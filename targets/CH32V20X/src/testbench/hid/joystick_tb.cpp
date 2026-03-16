@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
-#include "hal/bus/spi/soft/soft_spi.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/spi/soft/soft_spi.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HID/ps2_joystick/ps2_joystick.hpp"

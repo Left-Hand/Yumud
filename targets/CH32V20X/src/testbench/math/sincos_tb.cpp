@@ -3,9 +3,10 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "core/stream/BufStream.hpp"
 #include "core/utils/Result.hpp"
+#include "core/intrinsics/reverse.hpp"
 #include <cmath>
 
 using namespace ymd;
@@ -19,6 +20,7 @@ __no_inline Microseconds eval_one_func(GFn && g_fn, size_t times, EFn && fn){
     for(size_t i = 0; i < times; ++i){
         
         (y) += std::apply(std::forward<EFn>(fn), std::make_tuple(std::forward<GFn>(g_fn)(x)));
+        // (y) += (std::forward<EFn>(fn(std::forward<GFn>(g_fn)(x))));
         x+= step;
     }
 
@@ -52,6 +54,141 @@ __attribute__((always_inline))
 static_assert(div_10000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 10000);
 
 
+template<int8_t Q, bool IS_SIGNED>
+constexpr int32_t m__IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
+{
+    using namespace fxmath::details;
+    bool is_neg = 0;
+    uint32_t uiqNResult;
+
+    if constexpr(IS_SIGNED == true) {
+        /* save sign of denominator */
+        if (iqNInput2 == 0) [[unlikely]]{
+            return INT32_MAX;
+        }else if(iqNInput2 < 0){
+            if(iqNInput2 == INT32_MIN) [[unlikely]] {
+                iqNInput2 = INT32_MAX;
+                is_neg = 1;
+            }else{
+                iqNInput2 = -iqNInput2;
+                is_neg = 1;
+            }
+        }
+
+        /* save sign of numerator */
+        if (iqNInput1 < 0) {
+            is_neg = !is_neg;
+
+            if(iqNInput1 == INT32_MIN) [[unlikely]] {
+                iqNInput1 = INT32_MAX;
+            }else{
+                iqNInput1 = -iqNInput1;
+            }
+        }
+
+    } else {
+        /* Check for divide by zero */
+        if (iqNInput2 == 0) [[unlikely]] {
+            return INT32_MAX;
+        }
+    }
+
+
+    /* Scale inputs so that 0.5 <= uiq32Input2 < 1.0. */
+    // Handle zero case to avoid undefined behavior in __builtin_clz
+    // Find the number of leading zeros to determine the shift amount
+    #if 0
+    //1.046us per call @ch32v303 144mhz(fpu present)
+    #if 0
+    const size_t shift_amount = [&] -> size_t __no_inline{
+        return size_t(CLZ(iqNInput2));
+    }();
+    #else
+    const size_t shift_amount = size_t(CLZ(iqNInput2));
+    #endif
+    #else
+    //0.79us per call @ch32v303 144mhz(fpu present)
+    const size_t shift_amount = __builtin_clz(iqNInput2);
+    #endif
+
+    if(shift_amount >= 32) __builtin_unreachable();
+    
+    uint32_t uiq32Input2 = iqNInput2 << shift_amount;
+    uint64_t uiiqNInput1 = uint64_t(iqNInput1);
+    if constexpr(Q < 31) {
+        const int32_t shifts = (31 - Q - 1 - shift_amount);
+        if(shifts >= 0) {
+            uiiqNInput1 >>= shifts;
+        } else {
+            uiiqNInput1 <<= -shifts;
+        }
+    } else {
+        uiiqNInput1 <<= 1 + shift_amount;
+    }
+
+    /*
+     * Shift input1 back from iq31 to iqN but scale by 2 since we multiply
+     * by result in iq30 format.
+     */
+
+
+    /* Check for saturation. */
+    if (uint32_t(uiiqNInput1 >> 32)) {
+        if (is_neg) {
+            return INT32_MIN;
+        } else {
+            return INT32_MAX;
+        }
+    }
+
+    /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
+    const size_t ui8Index = size_t((uiq32Input2 >> 25) - 64);
+    uint32_t uiq30Guess = uint32_t(fxmath::details::IQ6DIV_LOOPUP[ui8Index]) << 24;
+
+    
+
+    uint32_t ui30Temp;
+
+    /* 牛顿迭代 lambda - 无分支 */
+    auto newton_iter = [&]() __attribute__((always_inline)){
+        ui30Temp = static_cast<uint32_t>(
+            static_cast<uint64_t>(uiq30Guess) * 
+            static_cast<uint64_t>(uiq32Input2) >> 32
+        );
+        ui30Temp = 0x80000000 - ui30Temp;  /* - (temp - 0x80000000) */
+        uiq30Guess = static_cast<uint64_t>(uiq30Guess) * 
+                    static_cast<uint64_t>(ui30Temp) >> 32;
+        uiq30Guess <<= 2;
+    };
+
+    newton_iter();
+    newton_iter();
+    
+    if constexpr (Q >= 24) {
+        newton_iter();
+    }
+
+    /* Multiply 1/uiq32Input2 and uiqNInput1. */
+    uiqNResult = (static_cast<uint64_t>(uiq30Guess) * static_cast<uint64_t>(uint32_t(uiiqNInput1))) >> 32;
+
+
+    /* Saturate, add the sign and return. */
+    if constexpr(IS_SIGNED == true) {
+        if(is_neg){
+            if(uiqNResult > uint32_t(INT32_MIN)) [[unlikely]] {
+                return INT32_MIN;
+            }
+            return -(int32_t)uiqNResult;
+        }else{
+            if(uiqNResult > uint32_t(INT32_MAX)) [[unlikely]] {
+                return INT32_MAX;
+            }
+            return (int32_t)uiqNResult;
+        }
+    } else {
+        return uiqNResult;
+    }
+}
 
 void test_div_10000(){
     static constexpr size_t NUM_BLOCKS = 256;
@@ -83,26 +220,26 @@ void test_div_10000(){
 }
 
 
-template<typename Fn>
-__no_inline auto eval_func(Fn && fn){
-    auto y = std::forward<Fn>(fn)(clock::seconds());
+// template<typename Fn>
+// __no_inline auto eval_func(Fn && fn){
+//     auto y = std::forward<Fn>(fn)(clock::seconds());
 
-    static constexpr size_t times = 10000;
+//     static constexpr size_t times = 10000;
 
-    const auto begin_us = clock::micros();
-    const auto t = clock::seconds();
-    for(size_t i = 0; i < times; ++i){
-        // __nop;
-        // (y) += (std::forward<Fn>(fn)(t));
-        // __nop;
-        // __nop;
-    }
+//     const auto begin_us = clock::micros();
+//     const auto t = clock::seconds();
+//     for(size_t i = 0; i < times; ++i){
+//         // __nop;
+//         // (y) += (std::forward<Fn>(fn)(t));
+//         // __nop;
+//         // __nop;
+//     }
 
-    const auto end_us = clock::micros();
-    // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
-    DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
-    return (end_us - begin_us);
-}
+//     const auto end_us = clock::micros();
+//     // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
+//     DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
+//     return (end_us - begin_us);
+// }
 
 
 
@@ -139,20 +276,330 @@ void play_func(Fn && fn){
     }
 }
 
+// #define MAY_INLINE __no_inline constexpr
+#define MAY_INLINE constexpr
+// #define MAY_INLINE __attribute__((always_inline)) constexpr
+// #define MAY_INLINE 
+
+#if 0
+__attribute__((always_inline))
+static int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
+    #if 0
+    int32_t res;
+    int32_t tC, tSh, t2S, th;
+    
+    
+    __asm__ (
+        "mulhsu  %[tC], %[C], %[t]       \n\t"  // tC = C*t
+        "srli    %[th], %[t], 1          \n\t"  // th = t/2
+        "mulhsu  %[tSh], %[S], %[th]     \n\t"  // tSh = S*(t/2)
+        "add     %[S], %[S], %[tC]       \n\t"  // S = S + C*t
+        "mulhsu  %[t2S], %[tSh], %[t]    \n\t"  // t2S = S*(t/2)*t = S*t²/2
+        "sub     %[res], %[S], %[t2S]    \n\t"  // res = S + C*t - S*t²/2
+        : [res] "=r" (res),
+          [S] "+r" (S),
+          [tC] "=&r" (tC),
+          [tSh] "=&r" (tSh),
+          [t2S] "=&r" (t2S),
+          [th] "=&r" (th)
+        : [t] "r" (t),
+          [C] "r" (C)
+        : "cc"
+    );
+    
+    return res;
+    #else
+    return t + S +C;
+    #endif
+}
+#else
+
+
+__attribute__((always_inline))
+static constexpr int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
+    // 计算 C*t
+    int32_t tC = intrinsics::mul32hsu(C, t);
+    
+    // 计算 t/2
+    uint32_t th = t >> 1;
+    
+    // 计算 S*(t/2)
+    int32_t tSh = intrinsics::mul32hsu(S, th);
+    
+    // S = S + C*t
+    S = S + tC;
+    
+    // 计算 S*t²/2 = [S*(t/2)] * t
+    int32_t t2S = intrinsics::mul32hsu(tSh, t);
+    
+    // 最终结果: S + C*t - S*t²/2
+    int32_t res = S - t2S;
+    
+    return res;
+}
+
+
+#endif
+
+// 常数：1/3 和 1/6 的Q31表示
+static constexpr uint32_t ONE_THIRD_Q31 = 0x15555555;  // (1/3) 的Q31近似
+static constexpr uint32_t ONE_SIXTH_Q31 = 0x0AAAAAAB;  // (1/6) 的Q31近似
+__attribute__((always_inline))
+static constexpr int32_t taylor_3o_optimized(uint32_t t, int32_t S, int32_t C) {
+    // 并行计算独立项
+    int32_t tC = intrinsics::mul32hsu(C, t);           // C*t
+    uint32_t t_half = t >> 1;               // t/2
+    
+    // 计算 S*t/2 和 S*t²/6 可以并行
+    int32_t S_t_half = intrinsics::mul32hsu(S, t_half); // S*t/2
+    int32_t C_t_half = intrinsics::mul32hsu(C, t_half); // C*t/2 (用于t³项)
+    
+    // S + C*t
+    int32_t S_plus_tC = S + tC;
+    
+    // 计算 t²项: -S*t²/2
+    int32_t t2_term = intrinsics::mul32hsu(S_t_half, t);  // S*t²/2
+    
+    // 计算 t³项: -C*t³/6
+    // C*t/2 * t = C*t²/2
+    int32_t C_t2_half = intrinsics::mul32hsu(C_t_half, t);  // C*t²/2
+    // 再乘 t/3 得到 C*t³/6
+    int32_t t3_term = intrinsics::mul32hsu(C_t2_half, intrinsics::mul32hu(t, ONE_THIRD_Q31));  // C*t³/6
+    
+    // 最终结果: S + C*t - S*t²/2 - C*t³/6
+    int32_t result = S_plus_tC - t2_term - t3_term;
+    
+    return result;
+}
+
+
+
+template<typename Fn>
+__attribute__((always_inline, optimize("-Ofast"))) constexpr 
+math::fixed<31, int32_t> ds_exact_sin(fxmath::details::IqSincosIntermediate inter, Fn&& taylor_law) {
+
+    #if 0
+        //获取查找表的校准值
+        int32_t a, b;
+        switch(inter.sect_num){
+            case 0:
+                a = inter.iq31_sin_coeff;
+                b =  inter.iq31_cos_coeff;
+                break;
+            case 1:
+                a = inter.iq31_cos_coeff;
+                b = -inter.iq31_sin_coeff;
+                break;
+            case 2:
+                a = inter.iq31_cos_coeff;
+                b = -inter.iq31_sin_coeff;
+                break;
+            case 3:
+                a = inter.iq31_sin_coeff;
+                b =  inter.iq31_cos_coeff;
+                break;
+            case 4:
+                a = -inter.iq31_sin_coeff;
+                b = -inter.iq31_cos_coeff;
+                break;
+            case 5:
+                a = -inter.iq31_cos_coeff;
+                b =  inter.iq31_sin_coeff;
+                break;
+            case 6:
+                a = -inter.iq31_cos_coeff;
+                b =  inter.iq31_sin_coeff;
+                break;
+            case 7:
+                a = -inter.iq31_sin_coeff;
+                b = -inter.iq31_cos_coeff;
+                break;
+            default:
+                __builtin_unreachable();
+        }
+        return math::fixed<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(inter.uq32_x_offset, a, b));
+    #else
+    int32_t a = inter.iq31_sin_coeff;
+    int32_t b =  inter.iq31_cos_coeff;
+
+    bool b01 = bool(inter.sect_num & 0b10) ^ bool(inter.sect_num & 0b01);
+    if(b01) std::swap(a, b);
+    const bool b2 = (inter.sect_num & 0b100);
+
+    #if 0
+    if(b2) a = -a;
+    if(b01 ^ b2) b = -b;
+    #else
+    a = uint32_t(-(b2)) ^ a;
+    b = uint32_t(-(b01 ^ b2)) ^ b;
+    #endif
+
+
+    return math::fixed<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(inter.uq32_x_offset, a, b));
+    #endif
+}
+
+__attribute__((always_inline,  optimize( "-Ofast" )))
+constexpr std::tuple<uint32_t, uint32_t> left_shift_two_part(const uint32_t x, const size_t shift){
+    #if 0
+    const uint32_t rhs = 1u << shift;
+    const uint32_t low = intrinsics::mul32(x, rhs);
+    const uint32_t high = intrinsics::mul32hu(x, rhs);
+    #else
+    const uint32_t high= x >> (32 - shift);
+    const uint32_t low = x << shift;
+    #endif
+    return {high, low};
+}
+
+
+__attribute__((always_inline,  optimize( "-Ofast" )))
+constexpr fxmath::details::IqSincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bits){
+    #if 0
+    constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
+
+    //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
+    // const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
+    // const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
+    uint32_t sect_num;
+    std::tie(sect_num, uq32_x_pu_bits) = left_shift_two_part(uq32_x_pu_bits, 3);
+    
+    //将x由锯齿波变为三角波
+    #if 0
+    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
+    #else
+    const uint32_t inverse_mask = static_cast<uint32_t>(-(int32_t(bool(sect_num & 0b1))));
+    // uq32_x_pu_bits = (uq32_x_pu_bits ^ inverse_mask);
+    #endif
+
+    #if 1
+    //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits ^ inverse_mask, uq32_quatpi_bits);
+    #endif
+
+    #else
+    constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
+
+    //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
+    const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
+    
+    //将x由锯齿波变为三角波
+    #if 0
+    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
+    #else
+    const uint32_t inverse_mask = static_cast<uint32_t>(-(int32_t(bool(sect_num & 0b1))));
+    uq32_x_pu_bits = (uq32_x_pu_bits ^ inverse_mask);
+    #endif
+
+    //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+
+    #endif
+
+
+    #if 1
+    //获取每个扇区的偏移值
+    const uint32_t uq32_x_offset = (uq32_eeq_x)& 0x03ffffff;
+
+    const uint32_t lut_index = uint32_t(uq32_eeq_x >> 26);
+
+
+    #else
+
+    // 优化后：一次计算，两次使用
+    uint32_t idx_offset = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+    uint32_t lut_index = idx_offset >> 26;        // 高6位
+    uint32_t uq32_x_offset = static_cast<uint32_t>(idx_offset << 6) >> 6; // 低26位
+    #endif
+
+
+    #if 1
+    __builtin_prefetch(&fxmath::details::IQ31_SINCOS_TABLE[lut_index], 0, 3);
+    const auto & pair = fxmath::details::IQ31_SINCOS_TABLE[lut_index];
+    const int32_t iq31_sin_coeff = pair[0];
+    const int32_t iq31_cos_coeff = pair[1];
+    #else
+    const int32_t iq31_sin_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][0];
+    const int32_t iq31_cos_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][1];
+    #endif
+
+    return fxmath::details::IqSincosIntermediate{
+        uq32_x_offset, 
+        iq31_sin_coeff,
+        iq31_cos_coeff,
+        sect_num
+    };
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> ds_sinpu2o(const math::fixed<Q, D> x){
+    return ds_exact_sin((DsCosSinPU(math::pu_to_uq32(x).to_bits()))
+        ,fxmath::details::sincos_exact_laws::taylor_2o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> ds_sinpu3o(const math::fixed<Q, D> x){
+    // return ds_exact_sin((DsCosSinPU(math::pu_to_uq32(x).to_bits()))
+
+
+
+    return ds_exact_sin((DsCosSinPU(math::pu_to_uq32(x).to_bits()))
+        ,fxmath::details::sincos_exact_laws::taylor_3o);
+
+    // return DsCosSinPU(math::pu_to_uq32(x).to_bits())
+    //     .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
+
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> my_sinpu2o(const math::fixed<Q, D> x){
+    return math::sinpu_approx(x);
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> my_cos2o(const math::fixed<Q, D> x){
+    return math::cos_approx(x);
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> ds_sin3o(const math::fixed<Q, D> x){
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
+        .exact_sin(taylor_3o_optimized);
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+MAY_INLINE math::fixed<31, int32_t> my_sinpu3o(const math::fixed<Q, D> x){
+    return math::sinpu(x);
+}
+
 void sincos_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         .baudrate = hal::NearestFreq(576_KHz), 
         // .baudrate = hal::NearestFreq(6000000), 
-        .tx_strategy = CommStrategy::Blocking,
+        .tx_strategy = CommStrategy::Dma,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
+    // DEBUGGER.force_sync(EN);
     // DEBUGGER.set_eps(4);
     DEBUGGER.set_eps(6);
 
-
-    clock::delay(200ms);
+    while(true){
+        clock::delay(1ms);
+        // DEBUGGER.println(clock::seconds());
+        // DEBUGGER.println(std::hex, intrinsics::reverse_u8x4(0x12345678));
+    }
 
     // const auto dur = eval_func(func);
     // PANIC{riscv_has_native_hard_f32};
@@ -161,33 +608,38 @@ void sincos_main(){
     // PANIC{riscv_has_native_ctz};
 
 
+
     auto fn1 = [](const iq16 x) -> auto {
-        // const auto [s, c] = sincospu_approx(x);
-        // return iq20(math::cospu_approx(x));
-        return iq20(math::atan2pu(iq16(1),x));
-        // return iq20(math::atan2pu(iq16(x),iq16(1)));
+        // const auto [s, c] = math::sincospu(x);
+        // const auto s = math::sinpu_approx(x);
+        // return iq20(math::(x));
+        // return iq20((s) + iq20(c));
         // return iq20(math::cospu(x));
         // return iq20(math::sinpu_approx(x));
         // return iq20(s) + iq20(c);
+        return ds_sinpu3o(x);
+        // return math::sinpu(x);
+        // return my_sinpu2o(x);
         // return math::exp(iq16(math::inv_mag(2 * s, c)));
         // return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
         // return iq20(s);
     };
 
     auto fn2 = [](const iq16 x) -> auto {
-            // const auto [s, c] = sincospu_approx(x);
-            // return math::atan2pu(s,c);
-            // return math::atanpu(s/c);
-            // return iq20(m__sinpu_approx(x));
-            return iq20(math::sqrt(x));
-            // return s / c;
-            // return iq31(0);
-            // const auto fx = float(x);
-            // const auto s = std::sin(fx);
-            // const auto c = std::cos(fx);
-            // return iq20::from(s) + iq20::from(c);
-            // return iq20(s);
+        // const auto [s, c] = sincospu_approx(x);
+        // return math::atan2pu(s,c);
+
+        return my_sinpu3o(x);
+        // return 
+        // return s / c;
+        // return iq31(0);
+        // const auto fx = float(x);
+        // const auto s = std::sin(fx);
+        // const auto c = std::cos(fx);
+        // return iq20::from(s) + iq20::from(c);
+        // return iq20(s);
     };
+
 
     std::array<uint8_t, 128> format_buf;
     auto formatter = BufStream (std::span(format_buf));
@@ -195,8 +647,19 @@ void sincos_main(){
     // formatter.set_splitter(", ");
     formatter.set_splitter(",");
     formatter.set_eps(4);
-    while(true){
-        const auto now_secs = clock::seconds_precious();
+
+
+    // for(size_t i = 0; i < 128; i++){
+    //     const uq32 x = uq32::from_bits(i * (1u << 23));
+    //     // DEBUG_PRINTLN(i, math::sinpu_approx(x).to_bits());
+    //     DEBUG_PRINTLN(i, ds_sinpu3o(x).to_bits());
+    // }
+    // __builtin_trap();
+    while(false){
+    // while(true){
+        // const auto now_secs = clock::seconds_precious();
+        static uq32 now_secs = 0;
+        now_secs += 0.001_uq32;
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
         // const auto x = pu_to_uq32((now_secs * 2));
@@ -212,9 +675,23 @@ void sincos_main(){
         // const auto y5 = math::atan2pu(iq16(s), iq16(c));
         const auto y5 = math::atan2(s, c);
         // const auto y5 = math::atanpu(iq16(s) / iq16(c));
+        // const auto sx = std::sin(float(math::uq32_to_rad(x)));
+        const auto sx = std::sin(double(float(math::uq32_to_rad(x))));
+        const auto sx_iq31 = iq31::from(sx);
+
+        const auto f1x = fn1(x);
+        const auto f2x = fn2(x);
         const auto elapsed_us = measure_total_elapsed_us([&]{
             formatter.println(
                 // uq30(x),
+                f1x,
+                f2x,
+                f1x.to_bits() - f2x.to_bits(),
+                sx_iq31.to_bits() - f1x.to_bits(),
+                sx_iq31.to_bits() - f2x.to_bits(),
+                // f1x.to_bits(),
+                // f2x.to_bits(),
+                int32_t(sx * (std::numeric_limits<int32_t>::max()) ),
                 // std::showpos, 
                 // std::showbase,
                 // std::hex,
@@ -247,12 +724,13 @@ void sincos_main(){
 
     compare_func(
         [](const uq16 x){return iq16(x);},
-        4096,
+        4096 * 16,
         // 32,
         // +fn1, 
         // +fn2
-        fn1, 
-        fn2
+        fn2,
+        fn1
     );
     PANIC{};
 }
+

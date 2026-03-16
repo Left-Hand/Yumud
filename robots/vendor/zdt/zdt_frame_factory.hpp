@@ -51,7 +51,7 @@ public:
 
     constexpr FlatPacket activate(const Enable en) const {
         return ser_req(req_msgs::Actvation{
-            .en = en == EN,
+            .en = (en == EN),
             .is_sync = is_multi_axis_sync
         });
     }

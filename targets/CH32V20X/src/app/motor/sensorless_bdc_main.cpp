@@ -8,11 +8,11 @@
 #include "core/utils/default.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/soft/soft_uart.hpp"
+#include "hal/conn/uart/soft/soft_uart.hpp"
 
 
 #include "dsp/filter/butterworth/side.hpp"
@@ -52,7 +52,7 @@ void at8222_tb(){
     hal::usart2.init({
         hal::USART2_REMAP_PA2_PA3,
         hal::NearestFreq(4000000), 
-        CommStrategy::Nil
+        CommStrategy::Disabled
     });
 
     DEBUGGER.retarget(&hal::usart2);
@@ -197,7 +197,7 @@ void at8222_tb(){
     watch_gpio.outpp();
 
 
-    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){

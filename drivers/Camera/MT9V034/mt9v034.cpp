@@ -147,7 +147,7 @@ IResult<> MT9V034::validate(){
         res.is_err()) return res;
 
     if(chip_version != CHIP_ID_VALUE)
-        return Err(Error::WrongChipVersion);
+        return Err(Error::ChipVersionMisMatch);
 
     return Ok();
 }
@@ -157,14 +157,14 @@ IResult<> MT9V034::set_exposure_value(const uint16_t value){
 }
 
 
-IResult<> MT9V034::write_reg(const uint8_t addr, const uint16_t reg_data){
-    if(const auto res = sccb_drv_.write_reg(addr, reg_data);
+IResult<> MT9V034::write_reg(const uint8_t reg_addr, const uint16_t reg_data){
+    if(const auto res = sccb_drv_.write_reg(reg_addr, reg_data);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pbuf){
-    if(const auto res = sccb_drv_.read_reg(addr, pbuf);
+IResult<> MT9V034::read_reg(const uint8_t reg_addr, uint16_t & pbuf){
+    if(const auto res = sccb_drv_.read_reg(reg_addr, pbuf);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

@@ -634,6 +634,7 @@ public:
         }
 
         __inline friend OutputStream & operator<<(OutputStream & os, const FieldName & self){
+            (void)self;
             return os;
         }
     private:
@@ -666,6 +667,7 @@ public:
         }
 
         friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){
+            (void)info;//unused
             return os;
         }
     private:
@@ -682,26 +684,32 @@ public:
 
     OutputStream & flush();
 
-    OutputStream & reconf(const Config config){
+
+    
+    inline OutputStream & reconf(Config && config){
         config_ = config;
         return *this;
     }
 
-    const Config & config() const {return config_;}
+    
+    inline const Config & config() const {return config_;}
 
     class [[nodiscard]] ConfigGuard{
         OutputStream & os_;
-        const Config config_;
+        Config config_;
     public:
-        ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
 
-        constexpr const Config & config() const {return config_;}
-        ~ConfigGuard(){
-            os_.reconf(config_);
+        
+        inline ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
+
+        inline constexpr const Config & config() const {return config_;}
+        inline ~ConfigGuard(){
+            os_.reconf(std::move(config_));
         }
     };
 
-    [[nodiscard]] ConfigGuard create_guard(){
+    
+    [[nodiscard]] inline ConfigGuard create_guard(){
         return ConfigGuard(*this);
     }
 

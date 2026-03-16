@@ -5,7 +5,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
@@ -161,7 +161,7 @@ void sincos_pwm_main(){
     trig_gpio.outpp();
 
 
-    adc.register_nvic({0,0}, EN);
+    adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
     adc.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -184,8 +184,8 @@ void sincos_pwm_main(){
         const auto t = clock::seconds() * iq16(3 * TAU);
         const auto [st, ct] = math::sincospu(t);
         
-        pwm_a.set_dutycycle(st);
-        pwm_b.set_dutycycle(ct);
+        pwm_a.set_dutycycle(static_cast<iq16>(st));
+        pwm_b.set_dutycycle(static_cast<iq16>(ct));
 
         DEBUG_PRINTLN_IDLE(st, ct, inj.get_perunit());
     }

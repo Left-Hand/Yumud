@@ -20,7 +20,7 @@ struct EllipseCalibrator_Prelude{
     static constexpr math::Vec2<iq24> project_idx_to_v2(const size_t i, const size_t n){
         const auto r = 1 - 2 * iq16(i) / (n - 1);
         // iq24 phi = std::cos(r); // 极角
-        iq24 phi = r; // 极角
+        iq24 phi = static_cast<iq24>(r); // 极角
         // iq24 phi = 0;
         iq24 theta = iq24(M_PI) * (1.0_iq24 + std::sqrt(5.0_iq24)) * i; // 方位角
         return {phi, theta};

@@ -5,7 +5,7 @@
 #include "hal/media/dvp/dvp.hpp"
 #include "primitive/image/image.hpp"
 #include "core/utils/Errno.hpp"
-#include "hal/bus/sccb/sccb_drv.hpp"
+#include "hal/conn/sccb/sccb_drv.hpp"
 
 namespace ymd::drivers{
 
@@ -25,8 +25,11 @@ public:
         sccb_drv_(sccb_drv){;}
     explicit OV2640(hal::SccbDrv && sccb_drv):
         sccb_drv_(std::move(sccb_drv)){;}
-    explicit OV2640(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        OV2640(hal::SccbDrv{i2c, addr}){;}
+    explicit OV2640(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        OV2640(hal::SccbDrv{i2c, i2c_addr}){;}
 
     IResult<> init();
 

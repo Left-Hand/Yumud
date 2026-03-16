@@ -193,7 +193,7 @@ static constexpr Result<AxisState, DeMsgError> try_into_axis_state(const uint8_t
 }
 
 enum class [[nodiscard]] CommandKind:uint8_t{
-    Undefined = 0,
+    Nop = 0,
     Heartbeat = 1,
     Estop = 2,
     GetError = 3,
@@ -286,7 +286,7 @@ struct [[nodiscard]] Command final{
     constexpr CommandKind kind() const{ return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
         switch(kind){
-            case Kind::Undefined:   return "Undefined";
+            case Kind::Nop:   return "Nop";
             case Kind::Heartbeat:   return "Heartbeat";
             case Kind::Estop:   return "Estop";
             case Kind::GetError:   return "GetError";

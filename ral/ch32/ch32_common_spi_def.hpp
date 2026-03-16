@@ -133,19 +133,19 @@ struct [[nodiscard]] SPI_Def{
     }
 
     constexpr void enable_spi(const Enable en){
-        CTLR1.SPE = en == EN;
+        CTLR1.SPE = (en == EN);
     }
 
     constexpr void enable_i2s(const Enable en){
-        I2S_CFGR.ISSE = en == EN;
+        I2S_CFGR.ISSE = (en == EN);
     }
 
     constexpr void enable_dma_tx(const Enable en){
-        CTLR2.TXDMAEN = en == EN;
+        CTLR2.TXDMAEN = (en == EN);
     }
 
     constexpr void enable_dma_rx(const Enable en){
-        CTLR2.RXDMAEN = en == EN;
+        CTLR2.RXDMAEN = (en == EN);
     }
 
     constexpr void send(const uint32_t data){
@@ -157,15 +157,15 @@ struct [[nodiscard]] SPI_Def{
     }
 
     constexpr void enable_soft_cs(const Enable en){
-        CTLR1.SSI = en == EN;
+        CTLR1.SSI = (en == EN);
     }
 
     constexpr void enable_ss_output(const Enable en){
-        CTLR2.SSOE = en == EN;
+        CTLR2.SSOE = (en == EN);
     }
 
     constexpr void enable_dualbyte(const Enable en){
-        CTLR1.DFF = en == EN;
+        CTLR1.DFF = (en == EN);
     }
 
     constexpr void set_bitorder(const BitOrder bitorder){
@@ -177,7 +177,7 @@ struct [[nodiscard]] SPI_Def{
     }
 
     constexpr void enable_crc(const Enable en){
-        CTLR1.CRCNEXT = 1;
+        CTLR1.CRCNEXT = (en == EN);
     }
 
     constexpr uint32_t get_rx_crc(){
@@ -201,7 +201,7 @@ struct [[nodiscard]] SPI_Def{
     }
 
     constexpr void enable_bidi(const Enable en){
-        CTLR1.BIDIMODE = en == EN;
+        CTLR1.BIDIMODE = (en == EN);
     }
 
     constexpr Events get_events(){

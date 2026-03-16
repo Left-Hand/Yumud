@@ -12,7 +12,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "algebra/vectors/vec3.hpp"
 
@@ -63,7 +63,7 @@ static constexpr auto useDRDYPin = 1; //0 = not using DRDYPin ; 1 = using DRDYPi
 //   gain = (0.3671 * (float)cycleCount) + 1.5; //linear equation to calculate the gain from cycle count
 
 enum class Error_Kind:uint8_t{
-    WrongChipId,
+    ChipIdMismatch,
     IndexOutOfRange
 };
 
@@ -121,8 +121,11 @@ private:
 };
 
 struct RM3100:public RM3100_Prelude{
-    explicit RM3100(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv(i2c, addr)){}
+    explicit RM3100(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv(i2c, i2c_addr)){}
 
 
     IResult<bool> is_conv_done(){

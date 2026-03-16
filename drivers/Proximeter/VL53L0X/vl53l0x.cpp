@@ -32,24 +32,6 @@ using Error = VL53L0X::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
-	const auto res = i2c_drv_.read_reg(reg, data);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
-IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
-	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
-IResult<> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
-	const auto res = i2c_drv_.write_reg(reg, byte);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
 
 IResult<> VL53L0X::init(){
 	uint8_t data;
@@ -121,12 +103,12 @@ IResult<> VL53L0X::flush(){
 }
 
 IResult<> VL53L0X::enable_high_precision(const Enable en){
-    high_prec_en_ = en == EN;
+    high_prec_en_ = (en == EN);
 	return write_byte_data(VL53L0X_REG_SYSTEM_RANGE_CONFIG, high_prec_en_);
 }
 
 IResult<> VL53L0X::enable_cont_mode(const Enable en){
-    continuous_en_ = en == EN;
+    continuous_en_ = (en == EN);
 	return Ok();
 }
 
@@ -180,3 +162,22 @@ IResult<uint16_t> VL53L0X::read_ambient_count(){
 IResult<uint16_t> VL53L0X::read_signal_count(){
 	return Ok(result.signal_count);
 }
+
+IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
+	const auto res = i2c_drv_.read_reg(reg, data);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+
+IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
+	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+
+IResult<> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
+	const auto res = i2c_drv_.write_reg(reg, byte);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+

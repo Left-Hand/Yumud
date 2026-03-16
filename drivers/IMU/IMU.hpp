@@ -19,8 +19,8 @@ enum class ImuError_Kind:uint8_t{
     PackageNotMatch,
     UnknownDevice,
     InvalidChipId,
-    WrongCompanyId,
-    WrongPmuMode,
+    CompanyIdMisMatch,
+    PmuModeMisMatch,
 
     AccCantSetup,
     GyrCantSetup,

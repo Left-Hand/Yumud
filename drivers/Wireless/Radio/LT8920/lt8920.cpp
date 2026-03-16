@@ -53,6 +53,29 @@ using IResult = Result<T, Error>;
 
 using R16_Flag = LT8920_Regset::R16_Flag;
 
+IResult<> LT8920_SpiTransport::write_reg(FlagReg & flag_reg, const uint8_t reg_addr, const uint16_t reg_val){
+    if(const auto res = 
+        spi_drv_.transceive_single(
+            reinterpret_cast<uint8_t &>(flag_reg), 
+            uint8_t(reg_addr), CONT);
+        res.is_err()) return Err(res.unwrap_err());
+    delayT3();
+
+    if(const auto res = 
+        spi_drv_.write_single<uint16_t>(reg_val);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
+
+IResult<> LT8920_SpiTransport::read_reg(FlagReg & flag_reg, const uint8_t reg_addr, uint16_t & reg_val){
+    if(const auto res = spi_drv_.transceive_single(
+        (flag_reg.as_bytes_mut()[0]), 
+        uint8_t(reg_addr | 0x80), CONT); 
+    res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = spi_drv_.read_single<uint16_t>(reg_val);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
 
 
 IResult<> LT8920::validate(){
@@ -60,7 +83,7 @@ IResult<> LT8920::validate(){
     if(const auto res = read_reg(30, reg);
         res.is_err()) return res;
     if(reg != 0xf413)
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 
@@ -173,13 +196,13 @@ IResult<> LT8920::set_retrans_time(const uint8_t times) {
 
 IResult<> LT8920::enable_auto_ack(const Enable en) {
     auto reg = RegCopy(regs_.config3_reg);
-    reg.auto_ack = en == EN;
+    reg.auto_ack = (en == EN);
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_crc(const Enable en){
     auto reg = RegCopy(regs_.config3_reg);
-    reg.crc_en = en == EN;
+    reg.crc_en = (en == EN);
     return write_reg((reg));
 }
 

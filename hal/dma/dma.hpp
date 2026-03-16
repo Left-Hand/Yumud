@@ -1,15 +1,8 @@
 #pragma once
 
-#include <stddef.h>
-#include <initializer_list>
-#include <functional>
-#include <type_traits>
-#include <array>
-
-#include "hal/sysmisc/nvic/nvic.hpp"
-
-#include "dma_utils.hpp"
-
+#include "dma_lld.hpp"
+#include "ral/ch32/ch32_common_dma_def.hpp"
+#include "core/intrinsics/volatile.hpp"
 
 namespace ymd::hal{
 
@@ -26,7 +19,7 @@ static constexpr dma::WordSize type_to_dma_wordsize_v = [] -> dma::WordSize{
 };
 
 
-struct DmaInterruptDispatcher{};
+struct DmaIrqHandler{};
 struct DmaChannel final{
 
 public:
@@ -50,46 +43,46 @@ public:
 
     void init(const Config & cfg);
 
-    void clear_it_flag_and_start();
+    void clear_pending_flag_and_restart();
 
-    template <typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
 
-    template <typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_mem2pph(volatile void * dst, const void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
 
-    template<typename T>
+    template <DmaWordSize DST_WS, DmaWordSize SRC_WS>
     void start_transfer_mem2mem(void * dst, const void * src, size_t size){
         set_src_and_dst_wordsize(
-            details::type_to_dma_wordsize_v<T>, 
-            details::type_to_dma_wordsize_v<T>
+            DST_WS,
+            SRC_WS
         );
 
         start_transfer(
-            reinterpret_cast<size_t>(dst),
-            reinterpret_cast<size_t>(src),
+            reinterpret_cast<uintptr_t>(dst),
+            reinterpret_cast<uintptr_t>(src),
             size
         );
     }
@@ -97,14 +90,14 @@ public:
     //返回待传输的数目
     [[nodiscard]] size_t pending_count();
 
-    void register_nvic(const NvicPriority _priority, const Enable en);
+    void register_nvic(const NvicPriorityCode priority_code, const Enable en);
 
     template<DmaIT I>
     void enable_interrupt(const Enable en){
         if constexpr(I == DmaIT::Half){
-            enable_half_it(en);
+            enable_transfer_onhalf_interrupt(en);
         }else if constexpr(I == DmaIT::Done){
-            enable_done_it(en);
+            enable_transfer_complete_interrupt(en);
         }
     }
 
@@ -113,23 +106,24 @@ public:
         event_callback_ = std::forward<Fn>(cb);
     }
 
-    [[nodiscard]] bool is_done();
+    [[nodiscard]] bool is_transfer_complete();
 
 public:
     void * inst_;
     
-    const uint32_t done_mask_;
-    const uint32_t half_mask_;
+    const Nth dma_nth_;
+    const Nth ch_sel_nth_;
+
+    const uint32_t transfer_complete_mask_;
+    const uint32_t transfer_onhalf_mask_;
     
-    const uint8_t dma_nth_;
-    const uint8_t ch_sel_nth_;
     Mode mode_ = Mode::Default;
     
     Callback event_callback_ = nullptr;
 
 
-    void enable_done_it(const Enable en);
-    void enable_half_it(const Enable en);
+    void enable_transfer_complete_interrupt(const Enable en);
+    void enable_transfer_onhalf_interrupt(const Enable en);
 
     void enable_rcc(const Enable en);
 
@@ -144,18 +138,27 @@ public:
         }
     }
 
+    __fast_inline
     void set_mem_and_periph_wordsize(
-        const WordSize src_wordsize, 
-        const WordSize dst_wordsize
-    );
+        const WordSize mem_wordsize, 
+        const WordSize periph_wordsize
+    ){ 
+        auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
+        intrinsics::modify_reg32(&dma_ch->CFGR, [&](auto reg){
+            reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
+            reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
+            return reg;
+        });
+    }
 
-    __fast_inline void accept_interrupt(DmaEvent event){
+    __fast_inline void on_interrupt(DmaEvent event){
         EXECUTE(event_callback_, event);
     }
-    
-    void start_transfer(const size_t dst_addr, const size_t src_addr, size_t size);
 
-    friend class DmaInterruptDispatcher;
+    
+    void start_transfer(const uintptr_t dst_addr, const uintptr_t src_addr, size_t size);
+
+    friend class DmaIrqHandler;
 };
 
 

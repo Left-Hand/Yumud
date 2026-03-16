@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"

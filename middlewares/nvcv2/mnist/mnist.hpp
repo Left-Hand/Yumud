@@ -32,6 +32,8 @@ protected:
     tm_mat_t outs[1];
 
     static tm_err_t layer_cb(tm_mdl_t* mdl, tml_head_t* lh){
+        (void)mdl;
+        (void)lh;
         return TM_OK;
     }
 

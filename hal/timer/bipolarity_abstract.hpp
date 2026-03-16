@@ -61,7 +61,7 @@ public:
     }
 
     void inverse(const Enable en){
-        is_inversed_ = en == EN;
+        is_inversed_ = (en == EN);
     }
 
     auto & pos_channel() {

@@ -1,18 +1,18 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "core/utils/BitField.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
+#include "hal/conn/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
-struct XL2400P_Prelude{
+struct [[nodiscard]] XL2400P_Prelude{
     using RegAddr = uint8_t;
 };
 
-struct XL2400P_Regset:public XL2400P_Prelude {
-    struct R8_TopConfig:public Reg8<>{
+struct [[nodiscard]] XL2400P_Regset:public XL2400P_Prelude {
+    struct [[nodiscard]] R8_TopConfig:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t rx_on:1;
@@ -41,20 +41,19 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t pmu_en:1;
     };
 
-    class R8_AutoAcknowledge:public Reg8<>{
-        uint8_t data;
-    public:
-        auto p(const size_t n){return make_bfarray<0, 6, 6>(data);}
+    struct R8_AutoAcknowledge:public Reg8<>{
+        uint8_t bits;
+        auto p(){return make_bfarray_proxy<0, 6, 6>(bits);}
     };
 
-    struct R8_EnableRxAddress:public Reg8<>{
-        uint8_t data;
-    public:
+    struct [[nodiscard]] R8_EnableRxAddress:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
-        auto p(const size_t n){return make_bfarray<0, 6, 6>(data);}
+
+        uint8_t bits;
+        auto p(){return make_bfarray_proxy<0, 6, 6>(bits);}
     };
 
-    struct R8_AddressWidth:public Reg8<>{
+    struct [[nodiscard]] R8_AddressWidth:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t pipex_address_width:2;
@@ -62,7 +61,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t pillon_lock_time:4;
     };
 
-    struct R8_AutoRetransmission{
+    struct [[nodiscard]] R8_AutoRetransmission{
 
         uint8_t retrans_times:4;
 
@@ -77,14 +76,14 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t gpio_config:2;
     };
 
-    struct R8_RFChannel{
+    struct [[nodiscard]] R8_RFChannel{
         uint16_t rx_channel:14;
 
         uint8_t __resv__ :2;
         uint8_t rf_power:6;
     };
 
-    struct R8_RFSetting{
+    struct [[nodiscard]] R8_RFSetting{
         uint8_t cyclix_pattern_tx_enable:1;
         uint8_t __resv__ :2;
         uint8_t rf_datarate_high_bit:1;
@@ -95,7 +94,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t tx_pattern:8;
     };
 
-    struct R8_Status{
+    struct [[nodiscard]] R8_Status{
         uint8_t tx_full:1;
         uint8_t rx_pipe_number:2;
         uint8_t max_rt:1;
@@ -104,7 +103,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t __resv__ :1;
     };
 
-    struct R8_TransmissionObservation{
+    struct [[nodiscard]] R8_TransmissionObservation{
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
         uint8_t dc_offset_i:8;
@@ -112,7 +111,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t freq_offset:8;
     };
 
-    struct R8_Rssi{
+    struct [[nodiscard]] R8_Rssi{
         uint8_t rssi1:1;
         uint8_t rssi2:1;
         uint8_t __resv1__:2;
@@ -124,19 +123,19 @@ struct XL2400P_Regset:public XL2400P_Prelude {
     using R8_RxAddrP0 = uint64_t;
     using R8_RxAddrP1 = uint64_t;
 
-    struct R8_RxAddrP2Tops{//0x0c
+    struct [[nodiscard]] R8_RxAddrP2Tops{//0x0c
         uint8_t rx_addr_p2:8;
         uint8_t rx_addr_p3:8;
         uint8_t rx_addr_p4:8;
         uint8_t rx_addr_p5:8;
     };
 
-    struct R8_Bn9Result{
+    struct [[nodiscard]] R8_Bn9Result{
         uint32_t total_bit_counter:32;
         uint32_t err_bit_counter:32;
     };
 
-    struct R8_AGCSetting{
+    struct [[nodiscard]] R8_AGCSetting{
         uint8_t agc_gain_1:7;
         uint8_t agc_gain_2:7;
         uint8_t agc_gain_3:7;
@@ -146,7 +145,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
 
     using R8_TxAddr = uint64_t;
 
-    struct R8_RxPower{
+    struct [[nodiscard]] R8_RxPower{
         uint8_t rx_power_p0:6;
         uint8_t __resv1__:2;
         uint8_t rx_power_p1:6;
@@ -167,7 +166,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
     // using R8_AnalogConfig3 = __uint128_t;
 
 
-    struct R8_FifoStatus{
+    struct [[nodiscard]] R8_FifoStatus{
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t pend_rxfrm_num_l:2;
@@ -181,7 +180,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t R8_bb_ana3_7t3:5;
     };
 
-    struct R8_RssiRecoder{
+    struct [[nodiscard]] R8_RssiRecoder{
         uint8_t rssirec1:8;
         uint8_t rssirec2:8;
         uint8_t rssi1x_vref_sel:3;
@@ -191,7 +190,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
     };
 
 
-    struct R8_TxProcessConfig{
+    struct [[nodiscard]] R8_TxProcessConfig{
         uint8_t     freq_dev:8;
         uint8_t        gasflt_bt_sel:1;
         uint8_t        gasflt_bps:1;
@@ -199,7 +198,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t        kmod_bps:1;
     };
 
-    struct R8_RxProcessConfig {
+    struct [[nodiscard]] R8_RxProcessConfig {
         uint8_t rx_iq_swap : 1;        // IF ADC data IQ swap
         uint8_t adc_sample_pha : 1;    // IF ADC data sample edge select; 1: invert
         uint8_t pre_dc_manu : 1;    // Freq offset manual setting enable
@@ -213,7 +212,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t rx_dem_start_cf : 1;    // Enable RX Start Delay
     };
 
-    struct R8_Feature {
+    struct [[nodiscard]] R8_Feature {
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
         uint8_t en_dpl : 1;              // Set 1 enables dynamic payload length
@@ -223,7 +222,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
         uint8_t stat_setup : 2;       // Adjust the output of SDO during command input
     };
 
-    struct R8_PayloadLength{
+    struct [[nodiscard]] R8_PayloadLength{
         uint8_t dpl_p0:1;
         uint8_t dpl_p1:1;
         uint8_t dpl_p2:1;
@@ -234,7 +233,7 @@ struct XL2400P_Regset:public XL2400P_Prelude {
     };
 
 
-    struct R8_PARampConfig{
+    struct [[nodiscard]] R8_PARampConfig{
         uint8_t ramp_time:3;
         uint8_t ramp_1:5;
         uint8_t ramp_2:5;

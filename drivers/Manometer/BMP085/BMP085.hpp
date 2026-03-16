@@ -17,29 +17,32 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit BMP085(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit BMP085(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    explicit BMP085(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){};
 
 
     struct Config{
         Mode mode;
     };
 
-    [[nodiscard]] IResult<> init(const Config & config);
+    IResult<> init(const Config & config);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<Coeffs> get_coeffs();
+    IResult<CalibrateCoeffs> get_coeffs();
 
-    [[nodiscard]] IResult<uint16_t> read_raw_temperature();
+    IResult<uint16_t> read_raw_temperature();
 
-    [[nodiscard]] IResult<uint32_t> read_raw_pressure();
+    IResult<uint32_t> read_raw_pressure();
 
 private:
     hal::I2cDrv i2c_drv_;
     Mode mode_;
 
-    [[nodiscard]] IResult<> read8(RegAddr reg_addr, uint8_t & data) {
+    IResult<> read_reg8(RegAddr reg_addr, uint8_t & data) {
         if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(reg_addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -47,13 +50,13 @@ private:
 
     template<typename T>
     requires (sizeof(T) == 2)
-    [[nodiscard]] IResult<> read16(RegAddr reg_addr, T & data) {
+    IResult<> read_reg16(RegAddr reg_addr, T & data) {
         if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(reg_addr), data, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write8(RegAddr reg_addr, uint8_t data) {
+    IResult<> write_reg8(RegAddr reg_addr, uint8_t data) {
         if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(reg_addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -61,7 +64,7 @@ private:
 
 
 
-    Coeffs coeffs_ = Coeffs::from_default();
+    CalibrateCoeffs coeffs_ = CalibrateCoeffs::from_default();
 
 };
 

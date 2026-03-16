@@ -4,9 +4,9 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/conn/can/can.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/spi/hw_singleton.hpp"
 
 
 #include "src/testbench/tb.h"
@@ -290,7 +290,7 @@ void myservo_main(){
     can.init({
         .remap = CAN1_REMAP,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
     init_adc();
 
@@ -323,7 +323,7 @@ void myservo_main(){
 
 
 
-    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
@@ -380,7 +380,7 @@ void myservo_main(){
         // }
 
 
-        // constexpr auto msg = BxCanFrame::from_remote(CanStdId(0xff));
+        // constexpr auto msg = ClassicCanFrame::from_remote(CanStdId(0xff));
         // can.try_write(msg);
         const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(

@@ -8,8 +8,8 @@
 #include "core/sync/barrier.hpp"
 #include "core/string/owned/heapless_string.hpp"
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 
@@ -295,6 +295,7 @@ private:
                 cursor_ = cursor_
                     .shift(1, str_.length())
                     .unwrap_or(cursor_);
+                return;
 
             case KeyCode::ArrowUp:
             case KeyCode::ArrowDown:{
@@ -478,7 +479,7 @@ void ht16k33_main(){
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c = hal::SoftI2c{scl_pin_, sda_pin_};
 
     i2c.init({
         .baudrate = hal::NearestFreq(200_KHz)

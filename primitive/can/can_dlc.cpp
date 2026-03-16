@@ -2,7 +2,7 @@
 
 namespace ymd::hal{
 
-OutputStream & operator <<(OutputStream & os, hal::BxCanDlc & self){
+OutputStream & operator <<(OutputStream & os, hal::ClassicCanDlc & self){
     return os << os.field("length")(self.length());
 } 
 

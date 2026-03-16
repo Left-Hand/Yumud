@@ -39,8 +39,11 @@ public:
         transport_(i2c_drv){;}
     explicit AK8975(hal::I2cDrv && i2c_drv):
         transport_(i2c_drv){;}
-    explicit AK8975(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+    explicit AK8975(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
     explicit AK8975(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
     explicit AK8975(hal::SpiDrv && spi_drv):
@@ -48,14 +51,14 @@ public:
     explicit AK8975(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv(spi, rank)){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<bool> is_busy();
-    [[nodiscard]] IResult<bool> is_stable();
-    [[nodiscard]] IResult<> set_mode(const Mode mode);
-    [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag() ;
+    IResult<> init();
+    IResult<> update();
+    IResult<> validate();
+    IResult<bool> is_busy();
+    IResult<bool> is_stable();
+    IResult<> set_mode(const Mode mode);
+    IResult<> disable_i2c();
+    IResult<math::Vec3<iq24>> read_mag() ;
 private:
     AsahiKaseiImu_Transport transport_;
     struct{
@@ -68,7 +71,7 @@ private:
         uint8_t z_adj;
     };
 
-    [[nodiscard]] IResult<> update_adj();
+    IResult<> update_adj();
 };
 
 };

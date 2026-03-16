@@ -3,10 +3,10 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/conn/i2c/soft/soft_i2c.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/IMU/Magnetometer/AK09911C/AK09911C.hpp"
@@ -54,7 +54,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
     
 
 
-    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
@@ -86,7 +86,7 @@ void ak09911c_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
 
-    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{scl_pin_, sda_pin_};
     i2c.init({
         .baudrate = hal::NearestFreq(200_KHz)
     });

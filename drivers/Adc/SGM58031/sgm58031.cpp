@@ -47,11 +47,12 @@ IResult<> Self::init(){
 }
 
 IResult<> Self::validate(){
-    auto & reg = regs_.device_id_reg;
+    // auto & reg = regs_.device_id_reg;
+    auto reg = Regs::R16_DeviceId{};
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.to_u16() != reg.KEY) 
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 IResult<> Self::set_datarate(const DataRate dr){
@@ -147,6 +148,6 @@ IResult<> Self::set_mux(const MUX _mux){
 
 IResult<> Self::enable_ch3_as_bits_mut(const Enable en){
     auto reg = RegCopy(regs_.config1_reg);
-    reg.ext_ref = en == EN;
+    reg.ext_ref = (en == EN);
     return write_reg(reg);
 }

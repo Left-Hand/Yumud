@@ -294,6 +294,22 @@ TCAN114X::WDT_Config_Write(const WatchdogConfig & WDTConfig){
     return Ok();
 }
 
+
+
+IResult<> TCAN114X::write_reg(uint8_t reg_addr, uint8_t reg_val){
+    (void)reg_addr;
+    (void)reg_val;
+    TODO();
+    return Ok();
+}
+IResult<> TCAN114X::read_reg(uint8_t reg_addr, uint8_t *reg_val){
+    (void)reg_addr;
+    (void)reg_val;
+    TODO();
+    return Ok();
+}
+
+
 /*
  * @brief Reads the current configuration of the watchdog and updates the passed struct
  * @param *WDTConfig is a pointer to a @c WatchdogConfig struct

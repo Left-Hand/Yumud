@@ -8,8 +8,8 @@
 #include "primitive/colors/color/color.hpp"
 
 
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
 
 #include "robots/vendor/mks/mks_frame_factory.hpp"
 
@@ -47,7 +47,7 @@ void mks_stepper_main(){
     COMM_CAN.init({
         .remap = hal::CanRemap::_0,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -56,9 +56,9 @@ void mks_stepper_main(){
     #endif
     
     auto write_packet = [&](const mksmotor::FlatPacket & packet) {
-        const auto can_frame = hal::BxCanFrame::from_parts(
+        const auto can_frame = hal::ClassicCanFrame::from_parts(
             hal::CanStdId::from_u11(static_cast<uint16_t>(packet.node_id.to_u8())),
-            hal::BxCanPayload::from_bytes(packet.buf.view())
+            hal::ClassicCanPayload::from_bytes(packet.buf.view())
         );
 
         COMM_CAN.try_write(can_frame).examine();
@@ -88,7 +88,7 @@ void mks_stepper_main(){
         }
         #else
         if(COMM_CAN.available()){
-            DEBUG_PRINTLN("rx", COMM_CAN.read());
+            DEBUG_PRINTLN("rx", COMM_CAN.try_read().unwrap());
         }
 
         // DEBUG_PRINTLN(COMM_CAN.pending());

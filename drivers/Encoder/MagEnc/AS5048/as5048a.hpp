@@ -23,10 +23,10 @@ public:
     explicit AS5048A(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init() ;
+    IResult<> init() ;
 
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle() {
+    IResult<> update();
+    IResult<Angular<uq32>> read_lap_angle() {
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 private:
@@ -39,8 +39,8 @@ private:
 
     uint16_t get_position_data();
 
-    [[nodiscard]] IResult<> write_reg(const uint16_t addr, const uint8_t data);
-    [[nodiscard]] IResult<> read_reg(const uint16_t addr, uint8_t & data);
+    IResult<> write_reg(const uint16_t addr, const uint8_t data);
+    IResult<> read_reg(const uint16_t addr, uint8_t & data);
 
 };
 

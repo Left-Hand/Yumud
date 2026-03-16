@@ -7,8 +7,8 @@
 #include "core/utils/default.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/can/hw_singleton.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/conn/can/hw_singleton.hpp"
+#include "hal/conn/uart/hw_singleton.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "middlewares/repl/repl_server.hpp"
@@ -122,13 +122,15 @@ void nuedc_2025e_laser_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth,
+        hal::CanFifoIndex::_0, 
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
 
     bool is_basic3 = false;
@@ -148,7 +150,7 @@ void nuedc_2025e_laser_main(){
     };
 
 
-    auto write_can_frame = [&](const hal::BxCanFrame & frame){
+    auto write_can_frame = [&](const hal::ClassicCanFrame & frame){
         if(frame.is_extended()) PANIC();
         can.try_write(frame).examine();
     };

@@ -38,10 +38,33 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = MPU6050::Error;
+
+using Self = MPU6050;
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
+
+static constexpr iq16 calculate_acc_scaler(const Self::AccFs fs){
+    constexpr double g = 9.806;
+    switch(fs){
+        case Self::AccFs::_2G: return iq16(g * 4);
+        case Self::AccFs::_4G: return iq16(g * 8);
+        case Self::AccFs::_8G: return iq16(g * 16);
+        case Self::AccFs::_16G: return iq16(g * 32);
+    }
+    __builtin_unreachable();
+}
+
+static constexpr iq16 calculate_gyr_scaler(const Self::GyrFs fs){
+    switch(fs){
+        case Self::GyrFs::_250deg: return iq16(500 * DEG2RAD_RATIO);
+        case Self::GyrFs::_500deg: return iq16(1000 * DEG2RAD_RATIO);
+        case Self::GyrFs::_1000deg: return iq16(2000 * DEG2RAD_RATIO);
+        case Self::GyrFs::_2000deg: return iq16(4000 * DEG2RAD_RATIO);
+    }
+    __builtin_unreachable();
+}
 
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     transport_(i2c_drv),

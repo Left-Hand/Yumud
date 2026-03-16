@@ -8,35 +8,28 @@ namespace ymd::hal::can{
 
 /// @brief CAN发送事件
 struct alignas(4) TransmitEvent{
-    enum class [[nodiscard]] Kind:uint8_t{
-        Failed,
-        Success
-    };
-
     using Self = TransmitEvent;
-    using enum Kind;
 
-    Kind kind;
     MailboxIndex mbox_idx;
-    uint16_t padding = 0;
+    uint8_t code;
 };
 
 static_assert(sizeof(TransmitEvent) == 4);
 
 /// @brief CAN接收事件
-struct alignas(4) [[nodiscard]] ReceiveEvent{
+struct alignas(4) [[nodiscard]] ReceiveEvent final{
     enum class [[nodiscard]] Kind:uint8_t{
-        Pending,
-        Full,
-        Overrun,
+        FifoFull,
+        FifoOverrun,
+        FrameEnqueued,
+        FrameEnqueueFailed,
     };
 
     using Self = ReceiveEvent;
     using enum Kind;
 
-    Kind kind;
     FifoIndex fifo_idx;
-    uint16_t padding = 0;
+    Kind kind;
 };
 
 static_assert(sizeof(ReceiveEvent) == 4);
@@ -51,7 +44,7 @@ struct alignas(4) [[nodiscard]] StatusFlag final{
     uint32_t bus_off:1 = 0;
     uint32_t last_error_code:1 = 0;
     uint32_t error:1 = 0;
-    uint32_t __resv__:1+16 = 0;
+    uint32_t __resv__:1 = 0;
 
     static consteval Self zero(){
         return Self{};
@@ -65,7 +58,7 @@ struct alignas(4) [[nodiscard]] Event final{
     enum class [[nodiscard]] Type:uint32_t{
         Transmit,
         Receive,
-        Status
+        StatusChange
     };
 
     struct ErasuredArg{
@@ -102,7 +95,7 @@ struct alignas(4) [[nodiscard]] Event final{
             return Self{Type::Receive, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
             // return Self{Type::Receive, ErasuredArg{.u32_digit = ev.to_u16()}};
         }else if constexpr (std::is_same_v<E, StatusFlag>){
-            return Self{Type::Status, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
+            return Self{Type::StatusChange, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
         }
         __builtin_unreachable();
     }
