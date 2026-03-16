@@ -42,16 +42,6 @@ struct [[nodiscard]] R32_MCR{
 
     uint32_t BRSTDMA_0:1;//30
     uint32_t BRSTDMA_1:1;//31
-
-    void set_clock_prescale(uint32_t prescale){
-        CKPSC = prescale;
-    }
-
-    void enable_cont_mode(bool en){
-        CONT = en;
-    }
-
-
 };
 
 struct [[nodiscard]] R32_MISR{
@@ -118,21 +108,7 @@ struct [[nodiscard]] R32_MDIER{
 // };
 
 
-struct [[nodiscard]] HRTIM_Master_Def{
-    volatile R32_MCR MCR;            /*!< HRTIM Master Timer control register,                     Address offset: 0x00 */
-    volatile R32_MISR MISR;           /*!< HRTIM Master Timer interrupt status register,            Address offset: 0x04 */
-    volatile R32_MICR MICR;           /*!< HRTIM Master Timer interupt clear register,              Address offset: 0x08 */
-    volatile R32_MDIER MDIER;          /*!< HRTIM Master Timer DMA/interrupt enable register         Address offset: 0x0C */
-    volatile uint32_t MCNTR;          /*!< HRTIM Master Timer counter register,                     Address offset: 0x10 */
-    volatile uint32_t MPER;           /*!< HRTIM Master Timer period register,                      Address offset: 0x14 */
-    volatile uint32_t MREP;           /*!< HRTIM Master Timer repetition register,                  Address offset: 0x18 */
-    volatile uint32_t MCMP1R;         /*!< HRTIM Master Timer compare 1 register,                   Address offset: 0x1C */
-    uint32_t      RESERVED0;     /*!< Reserved,                                                                0x20 */
-    volatile uint32_t MCMP2R;         /*!< HRTIM Master Timer compare 2 register,                   Address offset: 0x24 */
-    volatile uint32_t MCMP3R;         /*!< HRTIM Master Timer compare 3 register,                   Address offset: 0x28 */
-    volatile uint32_t MCMP4R;         /*!< HRTIM Master Timer compare 4 register,                   Address offset: 0x2C */
-    uint32_t      RESERVED1[20];  /*!< Reserved,                                                          0x30..0x7C */
-}; 
+
 
 struct [[nodiscard]] R32_TIMxCR{
     uint32_t :3;
@@ -165,27 +141,33 @@ struct [[nodiscard]] R32_TIMxISR{
     uint32_t CMP2:1;
     uint32_t CMP3:1;
     uint32_t CMP4:1;
+
     uint32_t REP:1;
     uint32_t :1;
     uint32_t UPD:1;
     uint32_t CPT1:1;
+
     uint32_t CPT2:1;
     uint32_t SETx1:1;
     uint32_t RSTx1:1;
     uint32_t SETx2:1;
+
     uint32_t RSTx2:1;
     uint32_t RSTx2:1;
     uint32_t RST:1;
     uint32_t DLYPRT:1;
+
     uint32_t :1;
 
 
     uint32_t CPPSTAT:1;
     uint32_t IPPSTAT:1;
     uint32_t O1STAT:1;
+
     uint32_t O2STAT:1;
     uint32_t O1CPY:1;
     uint32_t O2CPY:1;
+
     uint32_t :10;
 };
 
@@ -1091,76 +1073,167 @@ struct [[nodiscard]] FLTxR{
     uint32_t FLTCLK:1;
 };
 
+struct [[nodiscard]] HRTIM_Master_Def{
+    volatile R32_MCR MCR;            /*!< HRTIM Master Timer control register,                     Address offset: 0x00 */
+    volatile R32_MISR MISR;           /*!< HRTIM Master Timer interrupt status register,            Address offset: 0x04 */
+    volatile R32_MICR MICR;           /*!< HRTIM Master Timer interupt clear register,              Address offset: 0x08 */
+    volatile R32_MDIER MDIER;          /*!< HRTIM Master Timer DMA/interrupt enable register         Address offset: 0x0C */
+    volatile uint32_t MCNTR;          /*!< HRTIM Master Timer counter register,                     Address offset: 0x10 */
+    volatile uint32_t MPER;           /*!< HRTIM Master Timer period register,                      Address offset: 0x14 */
+    volatile uint32_t MREP;           /*!< HRTIM Master Timer repetition register,                  Address offset: 0x18 */
+    volatile uint32_t MCMP1R;         /*!< HRTIM Master Timer compare 1 register,                   Address offset: 0x1C */
+    uint32_t      RESERVED0;     /*!< Reserved,                                                                0x20 */
+    volatile uint32_t MCMP2R;         /*!< HRTIM Master Timer compare 2 register,                   Address offset: 0x24 */
+    volatile uint32_t MCMP3R;         /*!< HRTIM Master Timer compare 3 register,                   Address offset: 0x28 */
+    volatile uint32_t MCMP4R;         /*!< HRTIM Master Timer compare 4 register,                   Address offset: 0x2C */
+    uint32_t      RESERVED1[20];  /*!< Reserved,                                                          0x30..0x7C */
+}; 
 
-typedef struct{[[nodiscard]] 
-    __IO R32_TIMxCR TIMxCR;     /*!< HRTIM Timerx control register,                              Address offset: 0x00  */
-    __IO R32_TIMxISR TIMxISR;    /*!< HRTIM Timerx interrupt status register,                     Address offset: 0x04  */
-    __IO R32_TIMxICR TIMxICR;    /*!< HRTIM Timerx interrupt clear register,                      Address offset: 0x08  */
-    __IO R32_TIMxDIER TIMxDIER;   /*!< HRTIM Timerx DMA/interrupt enable register,                 Address offset: 0x0C  */
-    __IO uint32_t CNTxR;      /*!< HRTIM Timerx counter register,                              Address offset: 0x10  */
-    __IO uint32_t PERxR;      /*!< HRTIM Timerx period register,                               Address offset: 0x14  */
-    __IO uint32_t REPxR;      /*!< HRTIM Timerx repetition register,                           Address offset: 0x18  */
-    __IO uint32_t CMP1xR;     /*!< HRTIM Timerx compare 1 register,                            Address offset: 0x1C  */
-    __IO uint32_t CMP1CxR;    /*!< HRTIM Timerx compare 1 compound register,                   Address offset: 0x20  */
-    __IO uint32_t CMP2xR;     /*!< HRTIM Timerx compare 2 register,                            Address offset: 0x24  */
-    __IO uint32_t CMP3xR;     /*!< HRTIM Timerx compare 3 register,                            Address offset: 0x28  */
-    __IO uint32_t CMP4xR;     /*!< HRTIM Timerx compare 4 register,                            Address offset: 0x2C  */
-    __IO uint32_t CPT1xR;     /*!< HRTIM Timerx capture 1 register,                            Address offset: 0x30  */
-    __IO uint32_t CPT2xR;     /*!< HRTIM Timerx capture 2 register,                            Address offset: 0x34 */
-    __IO R32_DTxR DTxR;       /*!< HRTIM Timerx dead time register,                            Address offset: 0x38 */
-    __IO R32_SETx1_2R SETx1R;     /*!< HRTIM Timerx output 1 set register,                         Address offset: 0x3C */
-    __IO R32_RSTx1_2R RSTx1R;     /*!< HRTIM Timerx output 1 reset register,                       Address offset: 0x40 */
-    __IO R32_SETx1_2R SETx2R;     /*!< HRTIM Timerx output 2 set register,                         Address offset: 0x44 */
-    __IO R32_RSTx1_2R RSTx2R;     /*!< HRTIM Timerx output 2 reset register,                       Address offset: 0x48 */
-    __IO R32_EEFxR1 EEFxR1;     /*!< HRTIM Timerx external event filtering 1 register,           Address offset: 0x4C */
-    __IO R32_EEFxR2 EEFxR2;     /*!< HRTIM Timerx external event filtering 2 register,           Address offset: 0x50 */
-    __IO uint32_t RSTxR;      /*!< HRTIM Timerx Reset register,                                Address offset: 0x54 */
-    __IO uint32_t CHPxR;      /*!< HRTIM Timerx Chopper register,                              Address offset: 0x58 */
-    __IO uint32_t CPT1xCR;    /*!< HRTIM Timerx Capture 1 register,                            Address offset: 0x5C */
-    __IO uint32_t CPT2xCR;    /*!< HRTIM Timerx Capture 2 register,                            Address offset: 0x60 */
-    __IO uint32_t OUTxR;      /*!< HRTIM Timerx Output register,                               Address offset: 0x64 */
-    __IO uint32_t FLTxR;      /*!< HRTIM Timerx Fault register,                                Address offset: 0x68 */
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCR)     == 0x00);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MISR)    == 0x04);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MICR)    == 0x08);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MDIER)   == 0x0C);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCNTR)   == 0x10);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MPER)    == 0x14);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MREP)    == 0x18);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCMP1R)  == 0x1C);
+// RESERVED0 at 0x20 (1 register gap)
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCMP2R)  == 0x24);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCMP3R)  == 0x28);
+static_assert(__builtin_offsetof(HRTIM_Master_Def, MCMP4R)  == 0x2C);
+// RESERVED1 occupies 0x30 to 0x7C (20 registers = 80 bytes)
+static_assert(sizeof(HRTIM_Master_Def) == 0x80); // Total size: 128 bytes (0x00 to 0x7F)
+
+struct [[NODISCARD]] HRTIM_Timerx_Def {
+    volatile R32_TIMxCR TIMxCR;     /*!< HRTIM Timerx control register,                              Address offset: 0x00  */
+    volatile R32_TIMxISR TIMxISR;    /*!< HRTIM Timerx interrupt status register,                     Address offset: 0x04  */
+    volatile R32_TIMxICR TIMxICR;    /*!< HRTIM Timerx interrupt clear register,                      Address offset: 0x08  */
+    volatile R32_TIMxDIER TIMxDIER;   /*!< HRTIM Timerx DMA/interrupt enable register,                 Address offset: 0x0C  */
+    volatile uint32_t CNTxR;      /*!< HRTIM Timerx counter register,                              Address offset: 0x10  */
+    volatile uint32_t PERxR;      /*!< HRTIM Timerx period register,                               Address offset: 0x14  */
+    volatile uint32_t REPxR;      /*!< HRTIM Timerx repetition register,                           Address offset: 0x18  */
+    volatile uint32_t CMP1xR;     /*!< HRTIM Timerx compare 1 register,                            Address offset: 0x1C  */
+    volatile uint32_t CMP1CxR;    /*!< HRTIM Timerx compare 1 compound register,                   Address offset: 0x20  */
+    volatile uint32_t CMP2xR;     /*!< HRTIM Timerx compare 2 register,                            Address offset: 0x24  */
+    volatile uint32_t CMP3xR;     /*!< HRTIM Timerx compare 3 register,                            Address offset: 0x28  */
+    volatile uint32_t CMP4xR;     /*!< HRTIM Timerx compare 4 register,                            Address offset: 0x2C  */
+    volatile uint32_t CPT1xR;     /*!< HRTIM Timerx capture 1 register,                            Address offset: 0x30  */
+    volatile uint32_t CPT2xR;     /*!< HRTIM Timerx capture 2 register,                            Address offset: 0x34 */
+    volatile R32_DTxR DTxR;       /*!< HRTIM Timerx dead time register,                            Address offset: 0x38 */
+    volatile R32_SETx1_2R SETx1R;     /*!< HRTIM Timerx output 1 set register,                         Address offset: 0x3C */
+    volatile R32_RSTx1_2R RSTx1R;     /*!< HRTIM Timerx output 1 reset register,                       Address offset: 0x40 */
+    volatile R32_SETx1_2R SETx2R;     /*!< HRTIM Timerx output 2 set register,                         Address offset: 0x44 */
+    volatile R32_RSTx1_2R RSTx2R;     /*!< HRTIM Timerx output 2 reset register,                       Address offset: 0x48 */
+    volatile R32_EEFxR1 EEFxR1;     /*!< HRTIM Timerx external event filtering 1 register,           Address offset: 0x4C */
+    volatile R32_EEFxR2 EEFxR2;     /*!< HRTIM Timerx external event filtering 2 register,           Address offset: 0x50 */
+    volatile uint32_t RSTxR;      /*!< HRTIM Timerx Reset register,                                Address offset: 0x54 */
+    volatile uint32_t CHPxR;      /*!< HRTIM Timerx Chopper register,                              Address offset: 0x58 */
+    volatile uint32_t CPT1xCR;    /*!< HRTIM Timerx Capture 1 register,                            Address offset: 0x5C */
+    volatile uint32_t CPT2xCR;    /*!< HRTIM Timerx Capture 2 register,                            Address offset: 0x60 */
+    volatile uint32_t OUTxR;      /*!< HRTIM Timerx Output register,                               Address offset: 0x64 */
+    volatile uint32_t FLTxR;      /*!< HRTIM Timerx Fault register,                                Address offset: 0x68 */
     uint32_t      RESERVED0[5];  /*!< Reserved,                                                              0x6C..0x7C */
-}HRTIM_Timerx_TypeDef;
+};
 
-typedef struct
-{
-  __IO uint32_t CR1;        /*!< HRTIM control register1,                                    Address offset: 0x00 */
-  __IO uint32_t CR2;        /*!< HRTIM control register2,                                    Address offset: 0x04 */
-  __IO uint32_t ISR;        /*!< HRTIM interrupt status register,                            Address offset: 0x08 */
-  __IO uint32_t ICR;        /*!< HRTIM interrupt clear register,                             Address offset: 0x0C */
-  __IO uint32_t IER;        /*!< HRTIM interrupt enable register,                            Address offset: 0x10 */
-  __IO uint32_t OENR;       /*!< HRTIM Output enable register,                               Address offset: 0x14 */
-  __IO uint32_t ODISR;      /*!< HRTIM Output disable register,                              Address offset: 0x18 */
-  __IO uint32_t ODSR;       /*!< HRTIM Output disable status register,                       Address offset: 0x1C */
-  __IO uint32_t BMCR;       /*!< HRTIM Burst mode control register,                          Address offset: 0x20 */
-  __IO uint32_t BMTRGR;     /*!< HRTIM Busrt mode trigger register,                          Address offset: 0x24 */
-  __IO uint32_t BMCMPR;     /*!< HRTIM Burst mode compare register,                          Address offset: 0x28 */
-  __IO uint32_t BMPER;      /*!< HRTIM Burst mode period register,                           Address offset: 0x2C */
-  __IO uint32_t EECR1;      /*!< HRTIM Timer external event control register1,               Address offset: 0x30 */
-  __IO uint32_t EECR2;      /*!< HRTIM Timer external event control register2,               Address offset: 0x34 */
-  __IO uint32_t EECR3;      /*!< HRTIM Timer external event control register3,               Address offset: 0x38 */
-  __IO uint32_t ADC1R;      /*!< HRTIM ADC Trigger 1 register,                               Address offset: 0x3C */
-  __IO uint32_t ADC2R;      /*!< HRTIM ADC Trigger 2 register,                               Address offset: 0x40 */
-  __IO uint32_t ADC3R;      /*!< HRTIM ADC Trigger 3 register,                               Address offset: 0x44 */
-  __IO uint32_t ADC4R;      /*!< HRTIM ADC Trigger 4 register,                               Address offset: 0x48 */
-  __IO uint32_t DLLCR;      /*!< HRTIM DLL control register,                                 Address offset: 0x4C */
-  __IO uint32_t FLTINR1;    /*!< HRTIM Fault input register1,                                Address offset: 0x50 */
-  __IO uint32_t FLTINR2;    /*!< HRTIM Fault input register2,                                Address offset: 0x54 */
-  __IO uint32_t BDMUPR;     /*!< HRTIM Burst DMA Master Timer update register,               Address offset: 0x58 */
-  __IO uint32_t BDTAUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x5C */
-  __IO uint32_t BDTBUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x60 */
-  __IO uint32_t BDTCUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x64 */
-  __IO uint32_t BDTDUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x68 */  
-  __IO uint32_t BDTEUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x6C */  
-  __IO uint32_t BDMADR;     /*!< HRTIM Burst DMA Master Data register,                       Address offset: 0x70 */
-[[nodiscard]] }HRTIM_Common_TypeDef;
 
-typedef struct [[nodiscard]] {
-  HRTIM_Master_Def sMasterRegs;
-  HRTIM_Timerx_TypeDef sTimerxRegs[5];
-  uint32_t             RESERVED0[32];
-  HRTIM_Common_TypeDef sCommonRegs;
-}HRTIM_TypeDef;
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, TIMxCR)    == 0x00);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, TIMxISR)   == 0x04);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, TIMxICR)   == 0x08);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, TIMxDIER)  == 0x0C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CNTxR)     == 0x10);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, PERxR)     == 0x14);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, REPxR)     == 0x18);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CMP1xR)    == 0x1C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CMP1CxR)   == 0x20);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CMP2xR)    == 0x24);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CMP3xR)    == 0x28);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CMP4xR)    == 0x2C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CPT1xR)    == 0x30);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CPT2xR)    == 0x34);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, DTxR)      == 0x38);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, SETx1R)    == 0x3C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, RSTx1R)    == 0x40);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, SETx2R)    == 0x44);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, RSTx2R)    == 0x48);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, EEFxR1)    == 0x4C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, EEFxR2)    == 0x50);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, RSTxR)     == 0x54);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CHPxR)     == 0x58);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CPT1xCR)   == 0x5C);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, CPT2xCR)   == 0x60);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, OUTxR)     == 0x64);
+static_assert(__builtin_offsetof(HRTIM_Timerx_Def, FLTxR)     == 0x68);
+// RESERVED0 occupies 0x6C to 0x7C (5 * 4 = 20 bytes)
+static_assert(sizeof(HRTIM_Timerx_Def) == 0x80); // Total size: 128 bytes (0x00 to 0x7F)
+
+struct HRTIM_Common_TypeDef{
+    volatile uint32_t CR1;        /*!< HRTIM control register1,                                    Address offset: 0x00 */
+    volatile uint32_t CR2;        /*!< HRTIM control register2,                                    Address offset: 0x04 */
+    volatile uint32_t ISR;        /*!< HRTIM interrupt status register,                            Address offset: 0x08 */
+    volatile uint32_t ICR;        /*!< HRTIM interrupt clear register,                             Address offset: 0x0C */
+    volatile uint32_t IER;        /*!< HRTIM interrupt enable register,                            Address offset: 0x10 */
+    volatile uint32_t OENR;       /*!< HRTIM Output enable register,                               Address offset: 0x14 */
+    volatile uint32_t ODISR;      /*!< HRTIM Output disable register,                              Address offset: 0x18 */
+    volatile uint32_t ODSR;       /*!< HRTIM Output disable status register,                       Address offset: 0x1C */
+    volatile uint32_t BMCR;       /*!< HRTIM Burst mode control register,                          Address offset: 0x20 */
+    volatile uint32_t BMTRGR;     /*!< HRTIM Busrt mode trigger register,                          Address offset: 0x24 */
+    volatile uint32_t BMCMPR;     /*!< HRTIM Burst mode compare register,                          Address offset: 0x28 */
+    volatile uint32_t BMPER;      /*!< HRTIM Burst mode period register,                           Address offset: 0x2C */
+    volatile uint32_t EECR1;      /*!< HRTIM Timer external event control register1,               Address offset: 0x30 */
+    volatile uint32_t EECR2;      /*!< HRTIM Timer external event control register2,               Address offset: 0x34 */
+    volatile uint32_t EECR3;      /*!< HRTIM Timer external event control register3,               Address offset: 0x38 */
+    volatile uint32_t ADC1R;      /*!< HRTIM ADC Trigger 1 register,                               Address offset: 0x3C */
+    volatile uint32_t ADC2R;      /*!< HRTIM ADC Trigger 2 register,                               Address offset: 0x40 */
+    volatile uint32_t ADC3R;      /*!< HRTIM ADC Trigger 3 register,                               Address offset: 0x44 */
+    volatile uint32_t ADC4R;      /*!< HRTIM ADC Trigger 4 register,                               Address offset: 0x48 */
+    volatile uint32_t DLLCR;      /*!< HRTIM DLL control register,                                 Address offset: 0x4C */
+    volatile uint32_t FLTINR1;    /*!< HRTIM Fault input register1,                                Address offset: 0x50 */
+    volatile uint32_t FLTINR2;    /*!< HRTIM Fault input register2,                                Address offset: 0x54 */
+    volatile uint32_t BDMUPR;     /*!< HRTIM Burst DMA Master Timer update register,               Address offset: 0x58 */
+    volatile uint32_t BDTAUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x5C */
+    volatile uint32_t BDTBUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x60 */
+    volatile uint32_t BDTCUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x64 */
+    volatile uint32_t BDTDUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x68 */  
+    volatile uint32_t BDTEUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x6C */  
+    volatile uint32_t BDMADR;     /*!< HRTIM Burst DMA Master Data register,                       Address offset: 0x70 */
+};
+
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::CR1)      == 0x00);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::CR2)      == 0x04);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ISR)      == 0x08);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ICR)      == 0x0C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::IER)      == 0x10);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::OENR)     == 0x14);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ODISR)    == 0x18);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ODSR)     == 0x1C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BMCR)     == 0x20);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BMTRGR)   == 0x24);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BMCMPR)   == 0x28);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BMPER)    == 0x2C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::EECR1)    == 0x30);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::EECR2)    == 0x34);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::EECR3)    == 0x38);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ADC1R)    == 0x3C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ADC2R)    == 0x40);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ADC3R)    == 0x44);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::ADC4R)    == 0x48);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::DLLCR)    == 0x4C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::FLTINR1)  == 0x50);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::FLTINR2)  == 0x54);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDMUPR)   == 0x58);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDTAUPR)  == 0x5C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDTBUPR)  == 0x60);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDTCUPR)  == 0x64);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDTDUPR)  == 0x68);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDTEUPR)  == 0x6C);
+static_assert(__builtin_offsetof(HRTIM_Common_TypeDef, HRTIM_Common_TypeDef::BDMADR)   == 0x70);
+static_assert(sizeof(HRTIM_Common_TypeDef) == 0x74);
+
+struct [[nodiscard]] HRTIM_TypeDef{
+    HRTIM_Master_Def sMasterRegs;
+    HRTIM_Timerx_Def sTimerxRegs[5];
+    uint32_t             RESERVED0[32];
+    HRTIM_Common_TypeDef sCommonRegs;
+};
 
 }

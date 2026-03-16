@@ -21,13 +21,14 @@
 
 using namespace ymd;
 
-static void set_or_reset_reg_bits(bool cond, volatile uint32_t & reg, uint32_t mask){
-    if(cond){
-        reg = reg | mask;
-    }else{
-        reg = reg & (~mask);
-    }
-}
+[[nodiscard]] static constexpr uint32_t set_or_reset_bit(
+    const bool cond, 
+    const uint32_t origin, 
+    const uint32_t mask
+){ 
+    return cond ? (origin | mask) : (origin & ~mask);
+};
+
 
 [[maybe_unused]] static void ch32v20xd6_can_bugfix();
 
@@ -56,10 +57,10 @@ void can_configure_filter(
 ){
     auto * p_inst = ral::CAN_Filt;
     
-    const uint32_t bitmask = 1u << filter_nth;
+    const uint32_t filter_pos_mask = 1u << filter_nth;
     auto guard = FinitGuard();
 
-    set_or_reset_reg_bits(false, p_inst->FWR.BITS, bitmask);
+    p_inst->FWR.BITS = set_or_reset_bit(false, p_inst->FWR.BITS, filter_pos_mask);
 
     uint32_t FR1;
     uint32_t FR2;
@@ -81,10 +82,10 @@ void can_configure_filter(
     p_inst->FILTER_PAIR[filter_nth].FR1.BITS = FR1;
     p_inst->FILTER_PAIR[filter_nth].FR2.BITS = FR2;
 
-    set_or_reset_reg_bits(
+    p_inst->FSCFGR.BITS = set_or_reset_bit(
         filter_cfg.is_32bit(),
         p_inst->FSCFGR.BITS,
-        bitmask
+        filter_pos_mask
     );
 
     #if defined (CH32V20x_D6)
@@ -92,23 +93,23 @@ void can_configure_filter(
     #endif
 
     
-    set_or_reset_reg_bits(
+    p_inst->FMCFGR.BITS = set_or_reset_bit(
         filter_cfg.is_list_mode(),
         p_inst->FMCFGR.BITS,
-        bitmask
+        filter_pos_mask
     );
 
-    set_or_reset_reg_bits(
+    p_inst->FAFIFOR.BITS = set_or_reset_bit(
         fifo_idx == hal::CanFifoIndex::_1,
         p_inst->FAFIFOR.BITS,
-        bitmask
+        filter_pos_mask
     );
 
-    set_or_reset_reg_bits(
+    p_inst->FWR.BITS = set_or_reset_bit(
         // filter_en == EN,
         true,
         p_inst->FWR.BITS,
-        bitmask
+        filter_pos_mask
     );
 }
 
@@ -140,22 +141,28 @@ void can_set_filter_origin(
     return;
 }
 
-Nth can_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
-        #ifdef CAN1_PRESENT
-        case CAN1_BASE:
-            return Nth(1);
-        #endif
-        #ifdef CAN2_PRESENT
-        case CAN2_BASE:
-            return Nth(2);
-        #endif
-        #ifdef CAN3_PRESENT
-        case CAN3_BASE:
-            return Nth(3);
-        #endif
-    }
-    __builtin_trap();
+
+
+void can_reset(void * p_inst){
+    SPL_INST(p_inst)->CTLR = 1u << 15;
+}
+
+void can_request_initialization(void * p_inst, const Enable en){
+    // SPL_INST(p_inst)->CTLR = (1u << 0);
+    SPL_INST(p_inst)->CTLR = set_or_reset_bit(
+        en == EN,
+        SPL_INST(p_inst)->CTLR,
+        1u << 0
+    );
+}
+
+void can_request_sleep(void * p_inst, const Enable en){
+    // SPL_INST(p_inst)->CTLR = 1u << ;
+    SPL_INST(p_inst)->CTLR = set_or_reset_bit(
+        en == EN,
+        SPL_INST(p_inst)->CTLR,
+        1u << 1
+    );
 }
 
 
@@ -369,7 +376,23 @@ hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx
     return hal::ClassicCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
 }
 
-
+Nth can_to_nth(const uintptr_t inst_base){
+    switch(inst_base){
+        #ifdef CAN1_PRESENT
+        case CAN1_BASE:
+            return Nth(1);
+        #endif
+        #ifdef CAN2_PRESENT
+        case CAN2_BASE:
+            return Nth(2);
+        #endif
+        #ifdef CAN3_PRESENT
+        case CAN3_BASE:
+            return Nth(3);
+        #endif
+    }
+    __builtin_trap();
+}
 
 
 Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
@@ -394,15 +417,12 @@ Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
     };
 
 
-    for(volatile size_t wait_ack = 0;; wait_ack++){
+    for(volatile size_t wait_times = 0;; wait_times++){
         //进入初始化模式
         if(is_init_mode()) break;
-        if(wait_ack >= INAK_TIMEOUT) return Err();
+        if(wait_times >= INAK_TIMEOUT) return Err();
     }
 
-    auto set_or_reset_bit = [&] (const bool cond, const uint32_t origin, const uint32_t mask) -> uint32_t { 
-        return cond ? (origin | mask) : (origin & ~mask);
-    };
 
     {
         uint32_t tempreg = SPL_INST(_CANx)->CTLR;
@@ -417,20 +437,20 @@ Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 
     {
         uint32_t tempreg = SPL_INST(_CANx)->BTIMR;
-        tempreg |= ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
-        tempreg |= ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
-        tempreg |= ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
-        tempreg |= ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
-        tempreg |= ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
+        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
+        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
+        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
+        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
+        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
         SPL_INST(_CANx)->BTIMR = tempreg;
     }
 
     CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
 
-    for(volatile size_t wait_ack = 0;; wait_ack++){
+    for(volatile size_t wait_times = 0;; wait_times++){
         //退出初始化模式
         if(not is_init_mode()) break;
-        if(wait_ack >= INAK_TIMEOUT) return Err();
+        if(wait_times >= INAK_TIMEOUT) return Err();
     }
 
 	return Ok();
@@ -596,109 +616,9 @@ Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
  *******************************************************************************/
 
 
-/* CAN_BS1_Mode */
-#define CAN_BS1_4bit                        ((uint32_t)0x00000000)
-#define CAN_BS1_6bit                        ((uint32_t)0x00000100)
-
-/* CANFD_data_length_code */
-#define CANFD_DLC_BYTES_0                   ((uint32_t)0x0000) /* 0 bytes data field  */
-#define CANFD_DLC_BYTES_1                   ((uint32_t)0x0001) /* 1 bytes data field  */
-#define CANFD_DLC_BYTES_2                   ((uint32_t)0x0002) /* 2 bytes data field  */
-#define CANFD_DLC_BYTES_3                   ((uint32_t)0x0003) /* 3 bytes data field  */
-#define CANFD_DLC_BYTES_4                   ((uint32_t)0x0004) /* 4 bytes data field  */
-#define CANFD_DLC_BYTES_5                   ((uint32_t)0x0005) /* 5 bytes data field  */
-#define CANFD_DLC_BYTES_6                   ((uint32_t)0x0006) /* 6 bytes data field  */
-#define CANFD_DLC_BYTES_7                   ((uint32_t)0x0007) /* 7 bytes data field  */
-#define CANFD_DLC_BYTES_8                   ((uint32_t)0x0008) /* 8 bytes data field  */
-#define CANFD_DLC_BYTES_12                  ((uint32_t)0x0009) /* 12 bytes data field */
-#define CANFD_DLC_BYTES_16                  ((uint32_t)0x000A) /* 16 bytes data field */
-#define CANFD_DLC_BYTES_20                  ((uint32_t)0x000B) /* 20 bytes data field */
-#define CANFD_DLC_BYTES_24                  ((uint32_t)0x000C) /* 24 bytes data field */
-#define CANFD_DLC_BYTES_32                  ((uint32_t)0x000D) /* 32 bytes data field */
-#define CANFD_DLC_BYTES_48                  ((uint32_t)0x000E) /* 48 bytes data field */
-#define CANFD_DLC_BYTES_64                  ((uint32_t)0x000F) /* 64 bytes data field */
-
-/* CANFD_synchronisation_jump_width */
-#define CANFD_SJW_1tq                          ((uint8_t)0x00) /* 1 time quantum */
-#define CANFD_SJW_2tq                          ((uint8_t)0x01) /* 2 time quantum */
-#define CANFD_SJW_3tq                          ((uint8_t)0x02) /* 3 time quantum */
-#define CANFD_SJW_4tq                          ((uint8_t)0x03) /* 4 time quantum */
-#define CANFD_SJW_5tq                          ((uint8_t)0x04) /* 5 time quantum */
-#define CANFD_SJW_6tq                          ((uint8_t)0x05) /* 6 time quantum */
-#define CANFD_SJW_7tq                          ((uint8_t)0x06) /* 7 time quantum */
-#define CANFD_SJW_8tq                          ((uint8_t)0x07) /* 8 time quantum */
-#define CANFD_SJW_9tq                          ((uint8_t)0x08) /* 9 time quantum */
-#define CANFD_SJW_10tq                         ((uint8_t)0x09) /* 10 time quantum */
-#define CANFD_SJW_11tq                         ((uint8_t)0x0A) /* 11 time quantum */
-#define CANFD_SJW_12tq                         ((uint8_t)0x0B) /* 12 time quantum */
-#define CANFD_SJW_13tq                         ((uint8_t)0x0C) /* 13 time quantum */
-#define CANFD_SJW_14tq                         ((uint8_t)0x0D) /* 14 time quantum */
-#define CANFD_SJW_15tq                         ((uint8_t)0x0E) /* 15 time quantum */
-#define CANFD_SJW_16tq                         ((uint8_t)0x0F) /* 16 time quantum */
-
-/* CANFD_time_quantum_in_bit_segment_1 */
-#define CANFD_BS1_1tq                         ((uint8_t)0x00) /* 1 time quantum */
-#define CANFD_BS1_2tq                         ((uint8_t)0x01) /* 2 time quantum */
-#define CANFD_BS1_3tq                         ((uint8_t)0x02) /* 3 time quantum */
-#define CANFD_BS1_4tq                         ((uint8_t)0x03) /* 4 time quantum */
-#define CANFD_BS1_5tq                         ((uint8_t)0x04) /* 5 time quantum */
-#define CANFD_BS1_6tq                         ((uint8_t)0x05) /* 6 time quantum */
-#define CANFD_BS1_7tq                         ((uint8_t)0x06) /* 7 time quantum */
-#define CANFD_BS1_8tq                         ((uint8_t)0x07) /* 8 time quantum */
-#define CANFD_BS1_9tq                         ((uint8_t)0x08) /* 9 time quantum */
-#define CANFD_BS1_10tq                        ((uint8_t)0x09) /* 10 time quantum */
-#define CANFD_BS1_11tq                        ((uint8_t)0x0A) /* 11 time quantum */
-#define CANFD_BS1_12tq                        ((uint8_t)0x0B) /* 12 time quantum */
-#define CANFD_BS1_13tq                        ((uint8_t)0x0C) /* 13 time quantum */
-#define CANFD_BS1_14tq                        ((uint8_t)0x0D) /* 14 time quantum */
-#define CANFD_BS1_15tq                        ((uint8_t)0x0E) /* 15 time quantum */
-#define CANFD_BS1_16tq                        ((uint8_t)0x0F) /* 16 time quantum */
-#define CANFD_BS1_17tq                         ((uint8_t)0x10) /* 17 time quantum */
-#define CANFD_BS1_18tq                         ((uint8_t)0x11) /* 18 time quantum */
-#define CANFD_BS1_19tq                         ((uint8_t)0x12) /* 19 time quantum */
-#define CANFD_BS1_20tq                         ((uint8_t)0x13) /* 20 time quantum */
-#define CANFD_BS1_21tq                         ((uint8_t)0x14) /* 21 time quantum */
-#define CANFD_BS1_22tq                         ((uint8_t)0x15) /* 22 time quantum */
-#define CANFD_BS1_23tq                         ((uint8_t)0x16) /* 23 time quantum */
-#define CANFD_BS1_24tq                         ((uint8_t)0x17) /* 24 time quantum */
-#define CANFD_BS1_25tq                         ((uint8_t)0x18) /* 25 time quantum */
-#define CANFD_BS1_26tq                         ((uint8_t)0x19) /* 26 time quantum */
-#define CANFD_BS1_27tq                         ((uint8_t)0x1A) /* 27 time quantum */
-#define CANFD_BS1_28tq                         ((uint8_t)0x1B) /* 28 time quantum */
-#define CANFD_BS1_29tq                         ((uint8_t)0x1C) /* 29 time quantum */
-#define CANFD_BS1_30tq                         ((uint8_t)0x1D) /* 30 time quantum */
-#define CANFD_BS1_31tq                         ((uint8_t)0x1E) /* 31 time quantum */
-#define CANFD_BS1_32tq                         ((uint8_t)0x1F) /* 32 time quantum */
-
-/* CANFD_time_quantum_in_bit_segment_2 */
-#define CANFD_BS2_1tq                          ((uint8_t)0x00) /* 1 time quantum */
-#define CANFD_BS2_2tq                          ((uint8_t)0x01) /* 2 time quantum */
-#define CANFD_BS2_3tq                          ((uint8_t)0x02) /* 3 time quantum */
-#define CANFD_BS2_4tq                          ((uint8_t)0x03) /* 4 time quantum */
-#define CANFD_BS2_5tq                          ((uint8_t)0x04) /* 5 time quantum */
-#define CANFD_BS2_6tq                          ((uint8_t)0x05) /* 6 time quantum */
-#define CANFD_BS2_7tq                          ((uint8_t)0x06) /* 7 time quantum */
-#define CANFD_BS2_8tq                          ((uint8_t)0x07) /* 8 time quantum */
-#define CANFD_BS2_9tq                          ((uint8_t)0x08) /* 9 time quantum */
-#define CANFD_BS2_10tq                         ((uint8_t)0x09) /* 10 time quantum */
-#define CANFD_BS2_11tq                         ((uint8_t)0x0A) /* 11 time quantum */
-#define CANFD_BS2_12tq                         ((uint8_t)0x0B) /* 12 time quantum */
-#define CANFD_BS2_13tq                         ((uint8_t)0x0C) /* 13 time quantum */
-#define CANFD_BS2_14tq                         ((uint8_t)0x0D) /* 14 time quantum */
-#define CANFD_BS2_15tq                         ((uint8_t)0x0E) /* 15 time quantum */
-#define CANFD_BS2_16tq                         ((uint8_t)0x0F) /* 16 time quantum */
-
-
-void        CAN_BS1_ModeConfig(CAN_TypeDef* CANx, uint32_t CAN_BS1_Mode, uint8_t CAN_BS1_tq);
-void        CAN_BusOff_ErrCntConfig(CAN_TypeDef *CANx, uint8_t BusOff_ErrCnt);
-void        CANFD_Restrict_ModeCmd(CAN_TypeDef *CANx, FunctionalState NewState);
 uint8_t     CANFD_Init(CAN_TypeDef *CANx, CANFD_InitTypeDef *CANFD_InitStruct);
-void        CANFD_StructInit(CANFD_InitTypeDef *CANFD_InitStruct);
 uint8_t     CANFD_Transmit(CAN_TypeDef *CANx, CanFDTxMsg *TxMessage);
 ErrorStatus CANFD_Receive(CAN_TypeDef *CANx, uint8_t FIFONumber, CanFDRxMsg *RxMessage);
-uint8_t     CANFD_GetTransmitDelayOffsetVal(CAN_TypeDef *CANx);
-void        CANFD_TransmitMailbox_DMAAdr(CAN_TypeDef *CANx, uint8_t MailboxNumber, uint32_t Address);
-void        CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Address);
 
 
 /*********************************************************************
@@ -715,7 +635,7 @@ void        CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint
 *             CAN_InitStatus_Failed.
 *             CAN_InitStatus_Success.
  */
-uint8_t CANFD_Init(CAN_TypeDef* CANx, CANFD_InitTypeDef* CANFD_InitStruct)
+Result<void, void> CANFD_Init(CAN_TypeDef* CANx, CANFD_InitTypeDef* CANFD_InitStruct)
 {
     uint8_t InitStatus = CAN_InitStatus_Failed;
     uint32_t wait_ack = 0x00000000;
@@ -725,194 +645,181 @@ uint8_t CANFD_Init(CAN_TypeDef* CANx, CANFD_InitTypeDef* CANFD_InitStruct)
     CANx->CTLR &= (~(uint32_t)CAN_CTLR_SLEEP);
     CANx->CTLR |= CAN_CTLR_INRQ ;
 
-    while (((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
-    {
-        wait_ack++;
+	CANx->CTLR &= (~(uint32_t)CAN_CTLR_SLEEP);
+	CANx->CTLR |= CAN_CTLR_INRQ ;
+
+    auto is_init_mode = [&] -> bool { 
+        return (CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK;
+    };
+
+    static constexpr size_t INAK_TIMEOUT = 0xffff;    
+    for(volatile size_t wait_times = 0;; wait_times++){
+        //进入初始化模式
+        if(is_init_mode()) break;
+        if(wait_times >= INAK_TIMEOUT) return Err();
     }
 
-    if ((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK)
+
+
+    #if 0
+    if (CANFD_InitStruct->CANFD_TTCM == ENABLE)
     {
-        InitStatus = CAN_InitStatus_Failed;
+        CANx->CTLR |= CAN_CTLR_TTCM;
     }
     else
     {
-        if (CANFD_InitStruct->CANFD_TTCM == ENABLE)
-        {
-            CANx->CTLR |= CAN_CTLR_TTCM;
-        }
-        else
-        {
-            CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
-        }
-
-        if (CANFD_InitStruct->CANFD_ABOM == ENABLE)
-        {
-            CANx->CTLR |= CAN_CTLR_ABOM;
-        }
-        else
-        {
-            CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
-        }
-
-        if (CANFD_InitStruct->CANFD_AWUM == ENABLE)
-        {
-            CANx->CTLR |= CAN_CTLR_AWUM;
-        }
-        else
-        {
-            CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
-        }
-
-        if (CANFD_InitStruct->CANFD_NART == ENABLE)
-        {
-            CANx->CTLR |= CAN_CTLR_NART;
-        }
-        else
-        {
-            CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
-        }
-
-        if (CANFD_InitStruct->CANFD_TXFP == ENABLE)
-        {
-            CANx->CTLR |= CAN_CTLR_TXFP;
-        }
-        else
-        {
-            CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
-        }
-
-        if (CANFD_InitStruct->CANFD_RES_Error == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<7);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<7);
-        }
-
-        if (CANFD_InitStruct->CANFD_BRS_TXM0 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<1);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<1);
-        }
-
-        if (CANFD_InitStruct->CANFD_BRS_TXM1 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<2);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<2);
-        }
-
-        if (CANFD_InitStruct->CANFD_BRS_TXM2 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<3);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<3);
-        }
-
-        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM0 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<4);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<4);
-        }
-
-        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM1 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<5);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<5);
-        }
-
-        if (CANFD_InitStruct->CANFD_ESI_Auto_TXM2 == ENABLE)
-        {
-            CANx->CANFD_CR |= (1<<6);
-        }
-        else
-        {
-            CANx->CANFD_CR &= ~(1<<6);
-        }
-
-        CANx->CANFD_BTR &= ~(0x009F1FFF);
-        CANx->CANFD_TDCT &= ~(0x00003F3F);
-
-        CANx->CANFD_TDCT = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDC_FILTER << 8) | \
-                                     ((uint32_t)CANFD_InitStruct->CANFD_TDC0);
-
-        CANx->CANFD_BTR = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDCE << 23) | \
-                                    ((uint32_t)CANFD_InitStruct->CANFD_Prescaler-1 << 16) | \
-                                    ((uint32_t)CANFD_InitStruct->CANFD_BS1 << 8) | \
-                                    ((uint32_t)CANFD_InitStruct->CANFD_BS2 << 4) | \
-                                    ((uint32_t)CANFD_InitStruct->CANFD_SJW);
-
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
-        wait_ack = 0;
-
-        while (((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
-        {
-            wait_ack++;
-        }
-
-        if ((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK)
-        {
-            InitStatus = CAN_InitStatus_Failed;
-        }
-        else
-        {
-            InitStatus = CAN_InitStatus_Success ;
-        }
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
     }
 
-    return InitStatus;
+    if (CANFD_InitStruct->CANFD_ABOM == ENABLE)
+    {
+        CANx->CTLR |= CAN_CTLR_ABOM;
+    }
+    else
+    {
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
+    }
+
+    if (CANFD_InitStruct->CANFD_AWUM == ENABLE)
+    {
+        CANx->CTLR |= CAN_CTLR_AWUM;
+    }
+    else
+    {
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
+    }
+
+    if (CANFD_InitStruct->CANFD_NART == ENABLE)
+    {
+        CANx->CTLR |= CAN_CTLR_NART;
+    }
+    else
+    {
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
+    }
+
+    if (CANFD_InitStruct->CANFD_TXFP == ENABLE)
+    {
+        CANx->CTLR |= CAN_CTLR_TXFP;
+    }
+    else
+    {
+        CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
+    }
+
+    if (CANFD_InitStruct->CANFD_RES_Error == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<7);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<7);
+    }
+
+    if (CANFD_InitStruct->CANFD_BRS_TXM0 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<1);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<1);
+    }
+
+    if (CANFD_InitStruct->CANFD_BRS_TXM1 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<2);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<2);
+    }
+
+    if (CANFD_InitStruct->CANFD_BRS_TXM2 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<3);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<3);
+    }
+
+    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM0 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<4);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<4);
+    }
+
+    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM1 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<5);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<5);
+    }
+
+    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM2 == ENABLE)
+    {
+        CANx->CANFD_CR |= (1<<6);
+    }
+    else
+    {
+        CANx->CANFD_CR &= ~(1<<6);
+    }
+    #else
+    {
+        uint32_t tempreg = SPL_INST(_CANx)->CTLR;
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg, CAN_CTLR_TTCM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg, CAN_CTLR_ABOM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg, CAN_CTLR_AWUM);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg, CAN_CTLR_NART);
+        #if 0
+        // tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg, CAN_CTLR_RFLM);
+        #endif
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg, CAN_CTLR_TXFP);
+        SPL_INST(_CANx)->CTLR = tempreg;
+    }
+
+    {
+        uint32_t tempreg = SPL_INST(_CANx)->CANFD_CR;
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM0 == ENABLE, tempreg, 1 << 1);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM1 == ENABLE, tempreg, 1 << 2);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM2 == ENABLE, tempreg, 1 << 3);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM0 == ENABLE, tempreg, 1 << 4);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM1 == ENABLE, tempreg, 1 << 5);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM2 == ENABLE, tempreg, 1 << 6);
+        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RES_Error == ENABLE, tempreg, 1 << 7);
+        SPL_INST(_CANx)->CANFD_CR = tempreg;
+    }
+    #endif
+
+    CANx->CANFD_BTR &= ~(0x009F1FFF);
+    CANx->CANFD_TDCT &= ~(0x00003F3F);
+
+    CANx->CANFD_TDCT = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDC_FILTER << 8) | \
+                                    ((uint32_t)CANFD_InitStruct->CANFD_TDC0);
+
+    CANx->CANFD_BTR = (uint32_t)((uint32_t)CANFD_InitStruct->CANFD_TDCE << 23) | \
+                                ((uint32_t)CANFD_InitStruct->CANFD_Prescaler-1 << 16) | \
+                                ((uint32_t)CANFD_InitStruct->CANFD_BS1 << 8) | \
+                                ((uint32_t)CANFD_InitStruct->CANFD_BS2 << 4) | \
+                                ((uint32_t)CANFD_InitStruct->CANFD_SJW);
+
+    CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
+    wait_ack = 0;
+
+    for(volatile size_t wait_times = 0;; wait_times++){
+        //进入初始化模式
+        if(is_init_mode()) break;
+        if(wait_times >= INAK_TIMEOUT) return Err();
+    }
+
+    return Ok();
 }
 
-/*********************************************************************
- * @fn      CANFD_StructInit
- *
- * @brief   Fills each CANFD_InitStruct member with its default value.
- *
- * @param   CANFD_InitStruct - pointer to a CANFD_InitTypeDef structure which
- *        will be initialized.
- *
- * @return  none
- */
-void CANFD_StructInit(CANFD_InitTypeDef* CANFD_InitStruct)
-{
-    CANFD_InitStruct->CANFD_TTCM = DISABLE;
-    CANFD_InitStruct->CANFD_ABOM = DISABLE;
-    CANFD_InitStruct->CANFD_AWUM = DISABLE;
-    CANFD_InitStruct->CANFD_NART = DISABLE;
-    CANFD_InitStruct->CANFD_TXFP = DISABLE;
-
-    CANFD_InitStruct->CANFD_RES_Error = DISABLE;
-    CANFD_InitStruct->CANFD_ESI_Auto_TXM0 = DISABLE;
-    CANFD_InitStruct->CANFD_ESI_Auto_TXM1 = DISABLE;
-    CANFD_InitStruct->CANFD_ESI_Auto_TXM2 = DISABLE;
-    CANFD_InitStruct->CANFD_BRS_TXM0 = DISABLE;
-    CANFD_InitStruct->CANFD_BRS_TXM1 = DISABLE;
-    CANFD_InitStruct->CANFD_BRS_TXM2 = DISABLE;
-
-    CANFD_InitStruct->CANFD_TDC_FILTER = 0;
-    CANFD_InitStruct->CANFD_TDC0 = 2;
-    CANFD_InitStruct->CANFD_TDCE = ENABLE;
-
-    CANFD_InitStruct->CANFD_Mode = CAN_Mode_Normal;
-    CANFD_InitStruct->CANFD_SJW = CANFD_SJW_8tq;
-    CANFD_InitStruct->CANFD_BS1 = CANFD_BS1_7tq;
-    CANFD_InitStruct->CANFD_BS2 = CANFD_BS2_4tq;
-    CANFD_InitStruct->CANFD_Prescaler = 1;
-}
 
 /*********************************************************************
  * @fn      CANFD_Transmit
@@ -1050,61 +957,6 @@ ErrorStatus CANFD_Receive(CAN_TypeDef* CANx, uint8_t FIFONumber, CanFDRxMsg* RxM
     return sta;
 }
 
-
-/*********************************************************************
- * @fn      CANFD_GetTransmitDelayOffsetVal
- *
- * @brief   Returns the CANx Transmit Delay Offset Value.
- *
- * @param   CANx - where x can be 1 to select the CAN peripheral.
- *
- * @return  val - CAN Transmit Delay Offset Value.
- */
-uint8_t CANFD_GetTransmitDelayOffsetVal(CAN_TypeDef *CANx)
-{
-    uint8_t val=0;
-
-    val = (uint8_t)((CANx->CANFD_PSR & 0x00FF0000)>> 16);
-
-    return val;
-}
-
-/*********************************************************************
- * @fn      CANFD_TransmitMailbox_DMAAdr
- *
- * @brief   Set Transmit Mailbox DMA address.
- *
- * @param   CANx - where x can be 1 to select the CAN peripheral.
- *          MailboxNumber - Transmit Mailbox.
- *            CAN_Transmit_Mailbox0.
- *            CAN_Transmit_Mailbox1.
- *            CAN_Transmit_Mailbox2.
- *          address - DMA address.
- *
- * @return  none.
- */
-void CANFD_TransmitMailbox_DMAAdr(CAN_TypeDef *CANx, uint8_t MailboxNumber, uint32_t Address)
-{
-    CANx->CANFD_DMA_T[MailboxNumber] = Address;
-}
-
-/*********************************************************************
- * @fn      CANFD_ReceiveFIFO_DMAAdr
- *
- * @brief   Set receives FIFO DMA address.
- *
- * @param   CANx - where x can be 1 to select the CAN peripheral.
- *          FIFONumber - Receive FIFO number.
- *            CAN_FIFO0.
- *            CAN_FIFO1.
- *          address - DMA address.
- *
- * @return  none.
- */
-void CANFD_ReceiveFIFO_DMAAdr(CAN_TypeDef *CANx, uint8_t FIFONumber, uint32_t Address)
-{
-    CANx->CANFD_DMA_R[FIFONumber] = Address;
-}
 
 #endif
 

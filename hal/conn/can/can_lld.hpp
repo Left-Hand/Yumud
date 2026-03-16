@@ -20,7 +20,10 @@ static constexpr size_t NUM_CAN_FILTERS = 14 * 2;
 
 
 void can_deinit(const Nth can_nth);
+void can_reset(void * p_inst);
 Nth can_to_nth(const uintptr_t inst_base);
+void can_request_initialization(void * p_inst, const Enable en);
+void can_request_sleep(void * p_inst, const Enable en);
 void can_enable_rcc(const Nth can_nth, const Enable en);
 void can_set_remap(const Nth can_nth, const hal::CanRemap remap);
 
@@ -51,6 +54,7 @@ void can_configure_filter(
 );
 
 void can_set_filter_origin(const size_t inst_nth, const size_t origin);
+
 
 
 [[nodiscard]] static constexpr 

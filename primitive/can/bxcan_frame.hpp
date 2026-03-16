@@ -74,7 +74,7 @@ public:
         uint8_t dlc_bits
     ) noexcept{
         return Self(
-            CanIdentifier::from_sxx32_reg_bits(id_bits), 
+            CanIdentifier::from_sxx32_rxmir(id_bits), 
             Payload::from_u64_and_dlc(payload_bits, ClassicCanDlc::from_bits(dlc_bits))
         );
     }

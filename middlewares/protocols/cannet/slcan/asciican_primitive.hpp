@@ -121,7 +121,8 @@ enum class Error:uint8_t{
     InvalidCharInHex,
     PayloadFoundedInRemote,
     NotImplemented,
-    WillNeverSupport
+    WillNeverSupport,
+    WillSoonSupport
 };
 
 enum class Flags:uint8_t{

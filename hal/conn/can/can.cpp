@@ -321,6 +321,9 @@ void Can::init(const Config & cfg){
     set_remap(cfg.remap);
     alter_to_pins(cfg.remap);
 
+    #if 1
+    lld::can_reset(p_inst_);
+    #endif
     lld::can_enable_rcc(inst_nth_, EN);
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
@@ -428,8 +431,18 @@ void Can::enable_debug_freeze(const Enable en){
     RAL_INST(p_inst_)->CTLR.DBF = (en == EN);
 }
 
+
+void Can::abort_all_transmits(){
+    static constexpr uint32_t MASK = 
+        lld::can_statr_abrq_mask(CanMailboxIndex::_0)  
+        | lld::can_statr_abrq_mask(CanMailboxIndex::_1)  
+        | lld::can_statr_abrq_mask(CanMailboxIndex::_2)
+    ;
+    SPL_INST(p_inst_)->TSTATR = MASK;
+}
+
 void Can::abort_transmit(const CanMailboxIndex mbox_idx){
-    SPL_INST(p_inst_)->TSTATR = lld::can_statr_rqcp_mask(mbox_idx);
+    SPL_INST(p_inst_)->TSTATR = lld::can_statr_abrq_mask(mbox_idx);
 }
 
 uint8_t Can::get_rx_errcnt(){
@@ -447,14 +460,6 @@ Option<Can::Error> Can::last_error(){
 }
 
 
-void Can::abort_all_transmits(){
-    static constexpr uint32_t MASK = 
-        lld::can_statr_rqcp_mask(CanMailboxIndex::_0)  
-        | lld::can_statr_rqcp_mask(CanMailboxIndex::_1)  
-        | lld::can_statr_rqcp_mask(CanMailboxIndex::_2)
-    ;
-    SPL_INST(p_inst_)->TSTATR = MASK;
-}
 
 Result<void, Infallible> Can::configure_filter(
     const Nth filter_nth, 

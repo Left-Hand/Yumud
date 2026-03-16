@@ -57,7 +57,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
 
     /// @brief 从原始32位bit构造
     __attribute__((always_inline)) 
-    static constexpr Self from_sxx32_reg_bits(uint32_t bits){
+    static constexpr Self from_sxx32_rxmir(uint32_t bits){
         return std::bit_cast<Self>(bits | 0x01);
     }
 
@@ -69,7 +69,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
     /// @brief 转换为原始32位bit
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr uint32_t to_sxx32_txmir_with_txrq() const{
-        return bits;
+        return static_cast<uint32_t>(bits | 0x01);
     }
 
     /// @brief 是否为拓展帧
