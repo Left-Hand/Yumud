@@ -321,7 +321,10 @@ void Can::init(const Config & cfg){
     set_remap(cfg.remap);
     alter_to_pins(cfg.remap);
 
-    #if 1
+    #if 0
+    //不要启用这句 否则会直接变砖
+    //破解方式 1.poweroff erase 此时会失败 2.然后给单片机手动复位 3.再次power erase就会成功
+    //原因待后续查明
     lld::can_reset(p_inst_);
     #endif
     lld::can_enable_rcc(inst_nth_, EN);
@@ -353,15 +356,16 @@ void Can::init(const Config & cfg){
         .CAN_BS1 = bit_timming_coeffs.bs1.tq.to_bits(),
         .CAN_BS2 = bit_timming_coeffs.bs2.tq.to_bits(),
 
+
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,
         .CAN_AWUM = DISABLE,
-        .CAN_NART = ENABLE,
+        .CAN_NART = DISABLE,
         .CAN_RFLM = DISABLE,
         .CAN_TXFP = DISABLE,
     };
 
-    if(const auto res = lld::my_barecan_init(SPL_INST(p_inst_), &CAN_InitConf);
+    if(const auto res = lld::my_barecan_init(p_inst_, &CAN_InitConf);
         res.is_err()){
         //初始化失败
         DEBUG_TRAP();

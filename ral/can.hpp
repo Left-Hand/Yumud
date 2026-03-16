@@ -1,10 +1,20 @@
 #pragma once
 
 #if \
-    defined(AT32F435)  || defined(AT32F437)\
+    defined(APM32F465xE) \
+    || defined(APM32F423)  || defined(APM32F425) || defined(APM32F427)\
+    \
+    || defined(AT32F435)  || defined(AT32F437)\
+    \
     || defined(CH32V20x_D8W) || defined(CH32V20x_D8) || defined(CH32V20x_D6) \
     || defined(CH32V30x_D8) || defined(CH32V30x_D8C) \
+    \
+    || defined(GD32F205xx) || defined(GD32F207xx)\
+    || defined(GD32F405xx) || defined(GD32F407xx) || defined(GD32F425xx)\
+    || defined(GD32F427xx) || defined(GD32F450xx) || defined(GD32F470xx)\
+    \
     || defined(MH245X) \
+    \
     || defined(N32G452) || defined(N32G455)\
     || defined(N32L401) || defined(N32L43x)\
     \
@@ -69,5 +79,19 @@ static constexpr uint8_t CAN_MAX_BS2_BITS = 0x0f;
     defined(STM32H7xx)\
 
 //fdcan v2
+//TODO
+#endif
+
+#if \
+    defined (GD32E50x)
+
+//TODO
+#endif
+
+
+
+#if \
+    defined (GD32A50x) 
+
 //TODO
 #endif

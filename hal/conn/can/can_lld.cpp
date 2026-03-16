@@ -395,9 +395,9 @@ Nth can_to_nth(const uintptr_t inst_base){
 }
 
 
-Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
+Result<void, void> my_barecan_init(void * p_inst, const void * _CAN_InitStruct)
 {
-    CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(_CANx);
+    CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(p_inst);
     const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);
     static constexpr size_t INAK_TIMEOUT = 0x0000FFFF;
 
@@ -425,24 +425,24 @@ Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 
 
     {
-        uint32_t tempreg = SPL_INST(_CANx)->CTLR;
+        uint32_t tempreg = SPL_INST(p_inst)->CTLR;
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg, CAN_CTLR_TTCM);
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg, CAN_CTLR_ABOM);
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg, CAN_CTLR_AWUM);
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg, CAN_CTLR_NART);
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg, CAN_CTLR_RFLM);
         tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg, CAN_CTLR_TXFP);
-        SPL_INST(_CANx)->CTLR = tempreg;
+        SPL_INST(p_inst)->CTLR = tempreg;
     }
 
     {
-        uint32_t tempreg = SPL_INST(_CANx)->BTIMR;
+        uint32_t tempreg = SPL_INST(p_inst)->BTIMR;
         tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
         tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
         tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
         tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
         tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
-        SPL_INST(_CANx)->BTIMR = tempreg;
+        SPL_INST(p_inst)->BTIMR = tempreg;
     }
 
     CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
@@ -455,7 +455,6 @@ Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
 
 	return Ok();
 }
-
 
 }
 
