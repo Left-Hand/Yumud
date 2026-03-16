@@ -54,22 +54,12 @@
 
 1. 禁止修改 datasheet 原始位名称、位宽、功能描述；
 
-2. 禁止使用 `const_cast`、 `reinterpret_cast` 等不安全转换；
+2. 禁止使用 `const_cast`、 `reinterpret_cast` 等不安全转换, 使用 `std::bit_cast` 进行类型转换
 
-3. 所有方法使用 `constexpr` 修饰（如 `constexpr bool is_host_mode() const`）；
+3. 所有方法使用 `constexpr` 修饰（如 `constexpr bool is_host_mode() const`）；所有有返回值的函数/结构体标注为 `[[nodiscard]]`
 
 4. 方法功能明确：覆盖寄存器核心操作（设置位值、使能 / 禁止功能、读取状态、清零标志等），参数添加合法性校验（如地址对齐、端点号范围）。
 
 5. 禁止遗漏保留位、复位值、关键操作注释（如 DMA 地址 4 字节对齐要求）。
 
 6. 注释规范遵守doxygen规范。
-
-### 3.4 额外规范
-
-1. 提供寄存器基地址与映射定义（如 `static constexpr USBHS_BASE = 0x40023400;`），支持工程直接使用；
-
-2. 所有有返回值的函数/结构体标注为 `[[nodiscard]]`
-
-3. 适配 C++20 标准，使用 `std::bit_cast` 进行类型转换（替代 `reinterpret_cast`），避免未定义行为；
-
-4. 枚举类型：响应类型、触发位类型等定义枚举（如 `TxResp`、`RxTog`），提高代码可读性。

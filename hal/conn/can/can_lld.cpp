@@ -118,7 +118,7 @@ void can_set_filter_origin(
     [[maybe_unused]] const size_t origin
 ){
     auto guard = FinitGuard();
-    auto temp_reg = intrinsics::load_volatile(&ral::CAN_Filt->FCTLR);
+    auto tempreg_u32 = intrinsics::load_volatile_to_u32(&ral::CAN_Filt->FCTLR);
     
     switch(inst_nth){
         #ifdef CAN1_PRESENT
@@ -127,28 +127,27 @@ void can_set_filter_origin(
         #endif
         #ifdef CAN2_PRESENT
         case 2:
-            temp_reg.CAN2SB = origin;
+            tempreg_u32.CAN2SB = origin;
             break;
         #endif
         #ifdef CAN3_PRESENT
         case 3:
-            temp_reg.CAN3SB = origin;
+            tempreg_u32.CAN3SB = origin;
             break;
         #endif
     }
 
-    intrinsics::store_volatile(&ral::CAN_Filt->FCTLR, temp_reg);
+    intrinsics::store_volatile_with_u32(&ral::CAN_Filt->FCTLR, tempreg_u32);
     return;
 }
 
 
 
 void can_reset(void * p_inst){
-    SPL_INST(p_inst)->CTLR = 1u << 15;
+    intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->CTLR, 1u << 15);
 }
 
 void can_request_initialization(void * p_inst, const Enable en){
-    // SPL_INST(p_inst)->CTLR = (1u << 0);
     SPL_INST(p_inst)->CTLR = set_or_reset_bit(
         en == EN,
         SPL_INST(p_inst)->CTLR,
@@ -157,7 +156,6 @@ void can_request_initialization(void * p_inst, const Enable en){
 }
 
 void can_request_sleep(void * p_inst, const Enable en){
-    // SPL_INST(p_inst)->CTLR = 1u << ;
     SPL_INST(p_inst)->CTLR = set_or_reset_bit(
         en == EN,
         SPL_INST(p_inst)->CTLR,
@@ -285,14 +283,14 @@ void can_transmit_nott(
     notify_thisis_bxnotfd();
     #endif
 
-    auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
+    auto & mailbox = SPL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
 
     const uint32_t tempmir = frame.identifier().to_sxx32_txmir_with_txrq();
     const auto [low32, high32] = frame.payload().to_u32x2();
 
 
-    mailbox_inst.TXMDTR = [&]{
+    mailbox.TXMDTR = [&]{
         uint32_t temp_txmdtr = 0;
 
         #if 0
@@ -306,14 +304,14 @@ void can_transmit_nott(
     }();
 
     //将低四字节装载到txmdlr
-    mailbox_inst.TXMDLR = low32;
+    mailbox.TXMDLR = low32;
 
     //将高四字节装载到txmdhr
-    mailbox_inst.TXMDHR = high32;
+    mailbox.TXMDHR = high32;
 
     //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
-    mailbox_inst.TXMIR = tempmir;
+    mailbox.TXMIR = tempmir;
 }
 
 void can_transmit_ttcan(
@@ -328,42 +326,45 @@ void can_transmit_ttcan(
     notify_thisis_bxnotfd();
     #endif
 
-    auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
+    auto & mailbox = RAL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
 
     const uint32_t tempmir = frame.identifier().to_sxx32_txmir_with_txrq();
     const auto [low32, high32] = frame.payload().to_u32x2();
     
-    mailbox_inst.TXMDTR = [&]{
-        uint32_t temp_txmdtr = 0;
-        temp_txmdtr |= static_cast<uint32_t>(tick) << 16;
-        temp_txmdtr |= static_cast<uint32_t>(1u) << 8;
+    const uint32_t temp_txmdtr = [&]{
+        uint32_t temp_txmdtr_ = 0;
+        temp_txmdtr_ |= static_cast<uint32_t>(tick) << 16;
+        temp_txmdtr_ |= static_cast<uint32_t>(1u) << 8;
 
         #if 0
-        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
+        temp_txmdtr_ |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
         #else
         //dlc 为4位以上被视为ub 不需要进行掩码操作
-        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits());
+        temp_txmdtr_ |= static_cast<uint32_t>(frame.dlc().to_bits());
         #endif
 
-        return temp_txmdtr;
+        return temp_txmdtr_;
     }();
 
+
+    intrinsics::store_volatile_with_u32(&mailbox.TXMDTR, temp_txmdtr);
+
     //将低四字节装载到txmdlr
-    mailbox_inst.TXMDLR = low32;
+    mailbox.TXMDLR = low32;
 
     //将高四字节装载到txmdhr
-    mailbox_inst.TXMDHR = high32;
+    mailbox.TXMDHR = high32;
 
     //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
-    mailbox_inst.TXMIR = tempmir;
+    intrinsics::store_volatile_with_u32(&mailbox.TXMIR, tempmir);
 }
 
 hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
-    const auto & mailbox = SPL_INST(p_inst)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
-    const uint32_t rxmir = mailbox.RXMIR;
-    const uint32_t rxmdtr = mailbox.RXMDTR;
+    auto & mailbox = RAL_INST(p_inst)->sFifoMailBox[std::bit_cast<uint8_t>(fifo_idx)];
+    const uint32_t rxmir = intrinsics::load_volatile_to_u32(&mailbox.RXMIR);
+    const uint32_t rxmdtr = intrinsics::load_volatile_to_u32(&mailbox.RXMDTR);
 
     //获取载荷长度
     const uint8_t dlc_bits = static_cast<uint8_t>(rxmdtr & (0x0F << 0u));
@@ -425,24 +426,24 @@ Result<void, void> my_barecan_init(void * p_inst, const void * _CAN_InitStruct)
 
 
     {
-        uint32_t tempreg = SPL_INST(p_inst)->CTLR;
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg, CAN_CTLR_TTCM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg, CAN_CTLR_ABOM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg, CAN_CTLR_AWUM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg, CAN_CTLR_NART);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg, CAN_CTLR_RFLM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg, CAN_CTLR_TXFP);
-        SPL_INST(p_inst)->CTLR = tempreg;
+        uint32_t tempreg_u32 = intrinsics::load_volatile_to_u32(&RAL_INST(p_inst)->CTLR);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg_u32, CAN_CTLR_TTCM);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg_u32, CAN_CTLR_ABOM);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg_u32, CAN_CTLR_AWUM);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg_u32, CAN_CTLR_NART);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg_u32, CAN_CTLR_RFLM);
+        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg_u32, CAN_CTLR_TXFP);
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->CTLR, tempreg_u32);
     }
 
     {
-        uint32_t tempreg = SPL_INST(p_inst)->BTIMR;
-        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
-        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
-        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
-        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
-        tempreg = tempreg | ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
-        SPL_INST(p_inst)->BTIMR = tempreg;
+        uint32_t tempreg_u32 = intrinsics::load_volatile_to_u32(&RAL_INST(p_inst)->BTIMR);
+        tempreg_u32 = tempreg_u32 | ((uint32_t)CAN_InitStruct->CAN_Mode << 30);
+        tempreg_u32 = tempreg_u32 | ((uint32_t)CAN_InitStruct->CAN_SJW << 24);
+        tempreg_u32 = tempreg_u32 | ((uint32_t)CAN_InitStruct->CAN_BS1 << 16);
+        tempreg_u32 = tempreg_u32 | ((uint32_t)CAN_InitStruct->CAN_BS2 << 20);
+        tempreg_u32 = tempreg_u32 | ((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->BTIMR, tempreg_u32);
     }
 
     CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;

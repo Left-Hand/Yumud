@@ -144,7 +144,7 @@ public:
         const WordSize periph_wordsize
     ){ 
         auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
-        intrinsics::modify_reg(&dma_ch->CFGR, [&](auto reg){
+        intrinsics::modify_reg32(&dma_ch->CFGR, [&](auto reg){
             reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
             reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
             return reg;
