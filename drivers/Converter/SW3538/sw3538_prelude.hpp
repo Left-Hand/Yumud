@@ -79,7 +79,7 @@ struct [[nodiscard]] R8_ProConf:public Reg8<> {
 struct [[nodiscard]] R8_PdoConf0:public Reg8<> { 
     uint8_t pd_src_cfg_cur_f05v:5;
     uint8_t pd_src_cfg_cur_enable:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
     uint8_t pd_src_ctrl_rp_enable:1;
 };
 

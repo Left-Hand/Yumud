@@ -170,9 +170,9 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
 
         uint8_t oc_detect:1;
         uint8_t over_temp:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t diag_result:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
         uint8_t device_id;
     };
 
@@ -197,7 +197,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t lib_sel:3;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t hiz:1;
         uint8_t :3;
     };
@@ -319,7 +319,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
 
         uint8_t drive_time:5;
         uint8_t ac_couple:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t startup_boost:1;
     };
 
@@ -349,9 +349,9 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
 
         uint8_t otp_program:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t otp_status:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
         uint8_t autocal_time:2;
         uint8_t :2;
     };
@@ -367,6 +367,29 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
 
         uint8_t bits;
     };
+
+    // VALIDATE_R8(R8_Status)
+    // VALIDATE_R8(R8_Mode)
+    // VALIDATE_R8(R8_Rtp)
+    // VALIDATE_R8(R8_LibrarySel)
+    // VALIDATE_R8(R8_WaveformSeg)
+    // VALIDATE_R8(R8_Go)
+    // VALIDATE_R8(R8_OverrideTimeOffset)
+    // VALIDATE_R8(R8_SustainTimeOffsetPositive)
+    // VALIDATE_R8(R8_SustainTimeOffsetNegitive)
+    // VALIDATE_R8(R8_BrakeTimeOffset)
+    // VALIDATE_R8(R8_Audio2Vibe)
+    // VALIDATE_R8(R8_Audio2VibeMinimalInputLevel)
+    // VALIDATE_R8(R8_Audio2VibeMaxmalInputLevel)
+    // VALIDATE_R8(R8_Audio2VibeMinimalOutputDrive)
+    // VALIDATE_R8(R8_Audio2VibeMaxmalOutputDrive)
+    // VALIDATE_R8(R8_RatedVoltage)
+    // VALIDATE_R8(R8_OverdriveClampVoltage)
+    // VALIDATE_R8(R8_AutoCaliCompResult)
+    // VALIDATE_R8(R8_AutoCaliBackEMF)
+    // VALIDATE_R8(R8_FeedbackControl)
+    // VALIDATE_R8(R8_Control1)
+    // VALIDATE_R8(R8_Control2)
     
     R8_Status status_reg = {};
     R8_Mode mode_reg = {};

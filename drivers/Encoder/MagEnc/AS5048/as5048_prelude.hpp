@@ -95,7 +95,7 @@ struct AS5048B_Regs{
         uint8_t burn:1;
         uint8_t :2;
         uint8_t verify:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     };
 
     struct [[nodiscard]] R8_I2cSlaveAddress:public Reg8<>{

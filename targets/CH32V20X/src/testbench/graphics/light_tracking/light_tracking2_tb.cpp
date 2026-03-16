@@ -200,8 +200,8 @@ static Option<std::pair<RGB<iq16>, iq16>> sample_bsdf(
 
 [[nodiscard]] __pure
 static Ray3<iq16> cos_weighted_hemi(
-    const __restrict Interaction<iq16> & interaction, 
-    const __restrict Quat<iq16> & rotation
+    const Interaction<iq16> & interaction, 
+    const Quat<iq16> & rotation
 ){
     const auto [u0, u1] = rand01_2();
 
@@ -223,8 +223,8 @@ static Ray3<iq16> cos_weighted_hemi(
 
 [[nodiscard]]
 static Option<RGB<iq16>> sample_light(
-    const __restrict Interaction<iq16> & interaction, 
-    const __restrict Quat<iq16> & rotation, 
+    const Interaction<iq16> & interaction, 
+    const Quat<iq16> & rotation, 
     std::span<const TriangleSurfaceCache<iq16>> co_triangles
 ){
     const auto [u0, u1] = rand01_2();
@@ -378,7 +378,7 @@ static RGB565 draw3drt(
 [[maybe_unused]]
 __no_inline
 static void render_row(
-    const __restrict std::span<RGB565> row, 
+    const std::span<RGB565> row, 
     const uint y, 
     std::span<const TriangleSurfaceCache<iq16>> co_triangles
 ){

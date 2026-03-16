@@ -115,7 +115,7 @@ struct AK09911C_Regset : public AK09911C_Prelude{
 
         uint8_t drdy:1;
         uint8_t dor:1;
-        uint8_t :5;
+        uint8_t __resv__:5;
         uint8_t hsm:1;
 
         [[nodiscard]] constexpr bool is_data_ready() const {return drdy;}
@@ -129,9 +129,9 @@ struct AK09911C_Regset : public AK09911C_Prelude{
     struct R8_ST2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
-        uint8_t :3;
+        uint8_t __resv__:3;
         uint8_t hofl:1;
-        uint8_t :4;
+        uint8_t __resv2__:4;
 
     } DEF_R8(st2_reg)
 
@@ -141,14 +141,14 @@ struct AK09911C_Regset : public AK09911C_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x31};
 
         Mode mode:5;
-        uint8_t :3;
+        uint8_t __resv__:3;
     } DEF_R8(cntl2_reg)
 
     struct R8_CNTL3:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x32};
 
         uint8_t srst:1;
-        uint8_t :7;
+        uint8_t __resv__:7;
     } DEF_R8(cntl3_reg)
 
     //test reg is a dummy reg, it is not listed here

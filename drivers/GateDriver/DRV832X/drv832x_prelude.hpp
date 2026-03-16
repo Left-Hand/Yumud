@@ -223,7 +223,7 @@ struct DRV832X_Prelude{
         uint16_t vds_ocp:1;
         uint16_t fault:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     };
 
     struct [[nodiscard]] Status2 final{
@@ -239,7 +239,7 @@ struct DRV832X_Prelude{
         uint16_t sb_oc:1;
         uint16_t sa_oc:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     };
 };
 
@@ -272,7 +272,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t dis_gdf:1;
         uint16_t dis_cpuv:1;
 
-        uint16_t :6;
+        uint16_t __resv__:6;
     }DEF_R16(ctrl1_reg)
 
     struct [[nodiscard]] R16_GateDriveHs:public Reg16<>{
@@ -282,7 +282,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         IDriveP idrive_p_hs:4;
         uint16_t lock:3;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     }DEF_R16(gate_drv_hs_reg)
 
     struct [[nodiscard]] R16_GateDriveLs:public Reg16<>{
@@ -293,7 +293,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         PeakDriveTime tdrive:2;
         uint16_t cbc:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     }DEF_R16(gate_drv_ls_reg)
 
     struct [[nodiscard]] R16_OcpCtrl:public Reg16<>{
@@ -305,7 +305,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         Deadzone dead_time:2;
         uint16_t tretry:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     }DEF_R16(ocp_ctrl_reg)
 
     struct [[nodiscard]] R16_CsaCtrl{
@@ -321,7 +321,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t vref_div:1;
         uint16_t csa_fet:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     }DEF_R16(csa_ctrl_reg)
 
 };

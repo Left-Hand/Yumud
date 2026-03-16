@@ -20,11 +20,16 @@
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "details/gcode_file.hpp"
+
+
+
 
 #ifdef USART1_PRESENT
 using namespace ymd;
 
+constexpr unsigned char NANJING_GCODE_FILE[] = {
+    #embed "nanjing.gcode"
+};
 using namespace ymd::robots;
 
 #define DBG_UART hal::usart2
@@ -362,7 +367,12 @@ void polar_robot_main(){
 
     PolarRobotCurveGenerator curve_gen_{CURVE_GEN_CONFIG};
 
-    [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
+    const auto GCODE_LINES_NANJING = StringView{
+        reinterpret_cast<const char *>(std::begin(NANJING_GCODE_FILE)),
+        std::size(NANJING_GCODE_FILE)
+    };
+
+    [[maybe_unused]] auto fetch_next_gcode_line = [&] -> Option<StringView>{
         static StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
             const auto next_line = line_iter.next();

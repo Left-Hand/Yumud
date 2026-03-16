@@ -328,16 +328,16 @@ public:
         return data_[index];
     }
     
-    // 比较运算符
-    template<size_t M, typename OtherCompare>
-    bool operator==(const BinaryHeap<T, M, OtherCompare>& other) const {
-        if (len_ != other.length()) {
-            return false;
-        }
-        auto temp1 = this->into_sorted_vec();
-        auto temp2 = other.into_sorted_vec();
-        return temp1 == temp2;
-    }
+    // // 比较运算符
+    // template<size_t M, typename OtherCompare>
+    // bool operator==(const BinaryHeap<T, M, OtherCompare>& other) const {
+    //     if (len_ != other.length()) {
+    //         return false;
+    //     }
+    //     auto temp1 = this->into_sorted_vec();
+    //     auto temp2 = other.into_sorted_vec();
+    //     return temp1 == temp2;
+    // }
     
     template<size_t M, typename OtherCompare>
     bool operator!=(const BinaryHeap<T, M, OtherCompare>& other) const {

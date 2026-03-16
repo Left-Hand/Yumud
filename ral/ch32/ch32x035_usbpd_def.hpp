@@ -55,7 +55,7 @@ struct [[nodiscard]] R32_STATUS{
 
 struct [[nodiscard]] R32_PORT{
     uint16_t PA_CC2_AI:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t CC2_PU:2;
     uint16_t CC2_LVE:1; 
     uint16_t CC2_CE:3;

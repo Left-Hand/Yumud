@@ -21,10 +21,11 @@ struct TriangleSurface{
         v2(static_cast<Vec>(other.v2))
         {;}
 
+
     constexpr TriangleSurface(
-        const math::Vec3<auto> _v0,
-        const math::Vec3<auto> _v1,
-        const math::Vec3<auto> _v2
+        const math::Vec3<T> _v0,
+        const math::Vec3<T> _v1,
+        const math::Vec3<T> _v2
     ):
         v0(static_cast<math::Vec3<T>>(_v0)), 
         v1(static_cast<math::Vec3<T>>(_v1)), 
@@ -40,8 +41,7 @@ template<typename T>
 struct PreComputedOf<TriangleSurface<T>> : public TriangleSurface<T>{
     math::Vec3<T> normal;
 
-    template<typename U>
-    constexpr PreComputedOf<TriangleSurface<T>> (const TriangleSurface<U> & other):
+    constexpr PreComputedOf(const TriangleSurface<T> & other):
         TriangleSurface<T>(other),
         normal(calc_normal_from_points(
             static_cast<math::Vec3<T>>(other.v0), 

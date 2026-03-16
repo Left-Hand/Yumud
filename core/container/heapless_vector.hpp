@@ -33,16 +33,16 @@ public:
         std::copy(elements.begin(), elements.end(), buf_);
     }
 
-    template<typename ... Ts>
-    requires (sizeof...(Ts) == N)
-    constexpr Vector(Ts&& ... args) noexcept : 
-        size_(sizeof...(Ts))
-    {
-        // Use an index sequence to properly forward each argument to the corresponding element
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
-            ((buf_[Is] =  T(std::forward<Ts>(args))), ...);
-        }(std::make_index_sequence<N>{});
-    }
+    // template<typename ... Ts>
+    // requires (sizeof...(Ts) == N)
+    // constexpr Vector(Ts&& ... args) noexcept : 
+    //     size_(sizeof...(Ts))
+    // {
+    //     // Use an index sequence to properly forward each argument to the corresponding element
+    //     [&]<size_t... Is>(std::index_sequence<Is...>) {
+    //         ((buf_[Is] =  T(std::forward<Ts>(args))), ...);
+    //     }(std::make_index_sequence<N>{});
+    // }
 
 
     constexpr Vector from_array(const std::array<T, N> & arr) noexcept{

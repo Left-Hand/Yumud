@@ -42,7 +42,7 @@ struct IST8310_Regset:public IST8310_Prelude{
 
         uint8_t drdy:1;
         uint8_t ovf:1;
-        uint8_t :6;
+        uint8_t __resv__:6;
     }DEF_R8(status1_reg)
 
     //小端
@@ -71,9 +71,9 @@ struct IST8310_Regset:public IST8310_Prelude{
     struct R8_Status2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
-        uint8_t :3;
+        uint8_t __resv__:3;
         uint8_t interrupt_acting:1;
-        uint8_t :4;
+        uint8_t __resv2__:4;
     }DEF_R8(status2_reg)
 
     struct R8_Ctrl1:public Reg8<>{
@@ -82,7 +82,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         //1:工作 0:休眠
         uint8_t awake:1;
         uint8_t continous:1;
-        uint8_t :6;
+        uint8_t __resv__:6;
     }DEF_R8(ctrl1_reg)
 
     struct R8_Ctrl2:public Reg8<>{
@@ -90,20 +90,20 @@ struct IST8310_Regset:public IST8310_Prelude{
 
         //1:重启 0:不重启
         uint8_t reset:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t drdy_level:1;
         uint8_t interrupt_en:1;
-        uint8_t :4;
+        uint8_t __resv2__:4;
     }DEF_R8(ctrl2_reg)
 
     struct R8_SelfTest:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
-        uint8_t :6;
+        uint8_t __resv__:6;
 
         //置1自检
         uint8_t st_en:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     }DEF_R8(self_test_reg)
 
 
@@ -130,7 +130,7 @@ struct IST8310_Regset:public IST8310_Prelude{
 
         AverageTimes x_and_z_times:3;
         AverageTimes y_times:3;
-        uint8_t :2;
+        uint8_t __resv__:2;
     }DEF_R8(average_reg)
 
 };

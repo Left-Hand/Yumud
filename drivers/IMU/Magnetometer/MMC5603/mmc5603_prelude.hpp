@@ -89,7 +89,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
 
         uint8_t do_mag_measure:1;
         uint8_t do_temp_measure:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t do_set:1;
 
         uint8_t do_reset:1;

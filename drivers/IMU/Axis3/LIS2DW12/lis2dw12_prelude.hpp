@@ -124,7 +124,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
         uint8_t if_add_inc:1;
         uint8_t bdu:1;
         uint8_t cs_pu_disc:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t soft_reset:1;
         uint8_t boot:1;
     };
@@ -133,7 +133,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x22};
         uint8_t slp_mode_1:1;
         uint8_t slp_mode_sel:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t h_active:1;
         uint8_t lir:1;
         uint8_t pp_od:1;

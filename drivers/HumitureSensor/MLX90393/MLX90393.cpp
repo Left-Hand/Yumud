@@ -162,7 +162,7 @@ IResult<math::Vec3<iq24>> MLX90393::read_measurement() {
 
 
     return Ok(
-        math::Vec3{
+        math::Vec3<iq24>{
             iq16(xi) * get_lsb(false, gain, res_x, 0),
             iq16(yi) * get_lsb(false, gain, res_y, 0),
             iq16(zi) * get_lsb(false, gain, res_z, 1)

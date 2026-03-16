@@ -7,7 +7,7 @@ namespace ymd::ral::ch32::ch32l103_usbpd{
 struct [[nodiscard]] R16_CONFIG{
     static constexpr uint32_t offset = 0x00;
 
-    uint16_t :1;
+    uint16_t __resv__:1;
     
     uint16_t PD_ALL_CLR:1;
     uint16_t CC_SEL:1;
@@ -46,7 +46,7 @@ struct [[nodiscard]] R8_CONTROL{
 struct [[nodiscard]] R8_TX_SEL{
     static constexpr uint32_t offset = 0x05;
     uint8_t TX_SEL1:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
     uint8_t TX_SEL2:2;
     uint8_t TX_SEL3:2;
     uint8_t TX_SEL4:2;

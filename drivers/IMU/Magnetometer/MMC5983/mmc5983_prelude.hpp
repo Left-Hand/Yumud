@@ -119,7 +119,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
         uint8_t reset:1;
         uint8_t auto_sr_en:1;
         uint8_t otp_read:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     }DEF_R8(internal_control_0_reg)
 
     struct [[nodiscard]] R8_InternalControl1:public Reg8<>{

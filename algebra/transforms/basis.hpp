@@ -34,7 +34,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/vectors/quat.hpp"
 
-#if 0
+#if 1
 namespace ymd::math{
 
 template <arithmetic T>

@@ -32,13 +32,13 @@ static constexpr iq16 conv_data_to_ut(const int16_t bits, const bool is_16_bits)
 
 template<typename T = void>
 using IResult= Result<T, Error>;
-IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t data){
-    auto res = transport_.write_reg(std::bit_cast<uint8_t>(addr), data);
+IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t bits){
+    auto res = transport_.write_reg(std::bit_cast<uint8_t>(addr), bits);
     return res;
 }
 
-IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & data){
-    auto res = transport_.read_reg(std::bit_cast<uint8_t>(addr), data);
+IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & bits){
+    auto res = transport_.read_reg(std::bit_cast<uint8_t>(addr), bits);
     return res;
 }
 
@@ -94,10 +94,10 @@ IResult<> AK8963::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    if (reg.data != reg.correct){
-        if(reg.data == 63)
+    if (reg.bits != reg.correct){
+        if(reg.bits == 63)
             AK8963_DEBUG("it is normal to read 63 when comm speed too high");
-        AK8963_DEBUG("AK8963 verify failed", reg.data);
+        AK8963_DEBUG("AK8963 verify failed", reg.bits);
         return Err{Error::InvalidChipId};
     }
     return Ok();
@@ -114,9 +114,9 @@ Result<math::Vec3<uint8_t>, Error> AK8963::get_coeff(){
     if(const auto res = read_reg(regs_.asaz_reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(math::Vec3<uint8_t>{
-        regs_.asax_reg.data, 
-        regs_.asay_reg.data, 
-        regs_.asaz_reg.data
+        regs_.asax_reg.bits, 
+        regs_.asay_reg.bits, 
+        regs_.asaz_reg.bits
     });
 }
 
@@ -149,7 +149,7 @@ IResult<> AK8963::disable_i2c(){
 
 IResult<> AK8963::update(){
     // ak8963c-datasheet 8.3.5
-    // when any of measurement data is read, be sure to read 
+    // when any of measurement bits is read, be sure to read 
     // ST2 register at the end. 
     std::array<int16_t, 3> buf;
     if(const auto res = this->read_burst(regs_.mag_x_reg.REG_ADDR, std::span(buf));
@@ -162,7 +162,7 @@ IResult<> AK8963::update(){
     auto & reg = regs_.st2_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    AK8963_ASSERT(!reg.hofl, "data overflow");
+    AK8963_ASSERT(!reg.hofl, "bits overflow");
     data_valid_ &= !reg.hofl;
     return Ok();
 }

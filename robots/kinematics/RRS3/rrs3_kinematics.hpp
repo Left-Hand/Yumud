@@ -243,9 +243,15 @@ private:
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的位置
-    static constexpr math::Vec3<T> get_top_point(const Config & cfg, const math::Vec2<T> xy_norm, const Gesture & gest){
+    static constexpr math::Vec3<T> get_top_point(
+        const Config & cfg, 
+        const math::Vec2<T> xy_norm, 
+        const Gesture & gest
+    ){
         const auto top_point_2 = math::Vec2<T>{cfg.top_plate_radius, 0}.improduct(xy_norm);
-        return gest.orientation.xform(math::Vec3<T>{top_point_2.x, top_point_2.y, 0}) + math::Vec3<T>(0, 0, gest.z);
+        return gest.orientation.xform(
+            math::Vec3<T>{top_point_2.x, top_point_2.y, static_cast<T>(0)}) 
+            + math::Vec3<T>(static_cast<T>(0), static_cast<T>(0), gest.z);
     }
 
 

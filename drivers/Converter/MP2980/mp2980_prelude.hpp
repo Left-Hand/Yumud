@@ -73,7 +73,7 @@ struct MP2980_Prelude{
         uint8_t png:1;
         uint8_t ocp:1;
         uint8_t ovp:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t otp:1;
         uint8_t :3;
     };
@@ -107,7 +107,7 @@ struct MP2980_Regs:public MP2980_Prelude{
 
         uint8_t en_pwr:1;
         uint8_t go_bit:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t png_latch:1;
         uint8_t dither:1;
         uint8_t dischg:1;
@@ -120,7 +120,7 @@ struct MP2980_Regs:public MP2980_Prelude{
         uint8_t ovp_mode:1;
         uint8_t ocp_mode:1;
         uint8_t bb_fsw:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t fsw:2;
     };
 

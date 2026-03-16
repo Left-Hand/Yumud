@@ -104,13 +104,13 @@ struct AABB{
 
 	AABB expand(const math::Vec3<T> & p_vector) const;
 
-	template<typename... Args>
-	requires std::conjunction_v<std::is_same_v<math::Vec3<T>, Args>...>
-	AABB<T> expand(const Args&... points) const {
-		AABB<T> aabb = *this;
-		(aabb.expand_to(points), ...);
-		return aabb;
-	}
+	// template<typename... Args>
+	// requires std::conjunction_v<std::is_same_v<math::Vec3<T>, Args>...>
+	// AABB<T> expand(const Args&... points) const {
+	// 	AABB<T> aabb = *this;
+	// 	(aabb.expand_to(points), ...);
+	// 	return aabb;
+	// }
 
 	__fast_inline void project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const;
 	__fast_inline void expand_to(const math::Vec3<T> & p_vector); /** expand to contain a point if necessary */
