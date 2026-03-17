@@ -32,15 +32,6 @@
 
 namespace ymd{
 
-
-template <typename T> constexpr 
-bool RGBA<T>::is_equal_approx(const RGBA<T> &p_Color) const {
-	return is_equal_approx(r, p_Color.r) && is_equal_approx(g, p_Color.g) && is_equal_approx(b, p_Color.b) && is_equal_approx(a, p_Color.a);
-}
-
-
-
-
 #define COLOR_ADD_SUB_MUL_OPERATOR(op) \
 template <typename T> \
 __fast_inline constexpr RGBA<T> operator op(const RGBA<T> &p_Color, const auto &rvalue){ \
@@ -57,7 +48,7 @@ __fast_inline constexpr RGBA<T> operator op(const auto &lvalue, const RGBA<T> &p
 }\
 \
 template <typename T> \
-__fast_inline constexpr RGBA<T> operator op(const RGBA<T> &p_Color, const RGBA<auto> &d_Color){ \
+__fast_inline constexpr RGBA<T> operator op(const RGBA<T> &p_Color, const RGBA<T> &d_Color){ \
     RGBA<T> final = p_Color; \
     final op##= d_Color; \
     return final; \
@@ -69,29 +60,7 @@ COLOR_ADD_SUB_MUL_OPERATOR(*)
 
 #undef COLOR_ADD_SUB_MUL_OPERATOR
 
-template <typename T>
-RGBA<T> operator/(const RGBA<T> &p_Color, const auto &rvalue){
-    RGBA<T> final = p_Color;
-    final /= rvalue;
-    return final;
-}
 
-template <typename T>
-RGBA<T> operator/(const RGBA<T> &p_Color, const RGBA<auto> &d_Color){
-    RGBA<T> final = p_Color;
-    final /= d_Color;
-    return final;
-}
-
-
-template <typename T> constexpr 
-RGBA<T> RGBA<T>::operator-() const {
-	return RGBA<T>(
-			1.0 - r,
-			1.0 - g,
-			1.0 - b,
-			1.0 - a);
-}
 
 
 }

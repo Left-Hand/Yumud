@@ -59,7 +59,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto err = i2c_drv_.write_reg(
-            std::bit_cast<uint8_t>(T::ADDRESS), 
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.to_bits(), std::endian::little); 
             err.is_err()) return Err(err.unwrap_err());
         reg.apply();
@@ -69,7 +69,7 @@ private:
     template<typename T>
     IResult<> read_reg(T & reg){
         if(const auto err = i2c_drv_.read_reg(
-            std::bit_cast<uint8_t>(T::ADDRESS), 
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.as_bits_mut(), std::endian::little); 
             err.is_err()) return Err(err.unwrap_err());
         return Ok();

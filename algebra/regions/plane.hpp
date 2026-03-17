@@ -41,18 +41,25 @@ struct Plane {
 	math::Vec3<T> normal;
 	T d = 0;
 
-
-	__fast_inline constexpr Plane(const math::Vec3<auto> & p_normal, const arithmetic auto p_d) :
+	template<typename U>
+	__fast_inline constexpr Plane(const math::Vec3<U> & p_normal, const U p_d) :
 			normal(p_normal),
 			d(p_d) {
 	}
 
-	__fast_inline constexpr Plane(const math::Vec3<auto> & p_normal, const math::Vec3<auto> & p_point) :
+	template<typename U>
+	__fast_inline constexpr Plane(const math::Vec3<U> & p_normal, const math::Vec3<U> & p_point) :
 			normal(p_normal),
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane(const math::Vec3<auto> &p_point1, const math::Vec3<auto> &p_point2, const math::Vec3<auto> &p_point3,const RotateDirection p_dir = CW) {
+	template<typename U>
+	__fast_inline constexpr Plane(
+		const math::Vec3<U> &p_point1, 
+		const math::Vec3<U> &p_point2, 
+		const math::Vec3<U> &p_point3,
+		const RotateDirection p_dir = CW
+	) {
 		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {
@@ -62,8 +69,10 @@ struct Plane {
 		normal.normalize();
 		d = normal.dot(p_point1);
 	}
-	
-	void set_normal(const math::Vec3<auto> &p_normal);
+
+
+	template<typename U>
+	void set_normal(const math::Vec3<U> &p_normal);
 	__fast_inline math::Vec3<T> get_normal() const { return normal; };
 
 	void normalize();
@@ -152,11 +161,6 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & valu
 
 
 namespace ymd{
-
-template<arithmetic T>
-void Plane<T>::set_normal(const math::Vec3<auto> &p_normal) {
-	normal = p_normal;
-}
 
 
 template<arithmetic T>

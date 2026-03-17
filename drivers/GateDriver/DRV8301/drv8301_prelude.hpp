@@ -109,7 +109,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t gvdd_uv:1;
         uint16_t fault:1;
 
-        uint16_t :5;
+        uint16_t __resv__:5;
     };
 
     VALIDATE_R16(R16_Status1)
@@ -119,9 +119,9 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
         uint16_t device_id:4;
-        uint16_t :3;
+        uint16_t __resv__:3;
         uint16_t gvdd_ov:1;
-        uint16_t :8;
+        uint16_t __resv2__:8;
     };
 
 
@@ -136,7 +136,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t pwm3_en:1;
         OcpMode ocp_mode:2;
         OcAdTable oc_adj_set:5;
-        uint16_t :5;
+        uint16_t __resv__:5;
     };
 
     VALIDATE_R16(R16_Ctrl1)
@@ -151,7 +151,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t dc_cal_ch2:1;
 
         uint16_t oc_toff:1;
-        uint16_t :9;
+        uint16_t __resv__:9;
     };
 
     VALIDATE_R16(R16_Ctrl2)

@@ -57,7 +57,7 @@ Option<math::Vec2<T>> calculate_fillet_center(
 
 template<arithmetic T>
 
-math::Vec2<T> get_square_rounded_position(const math::Rect2<T> & rect, const uint8_t index){
+math::Vec2<T> get_square_rounded_position(const math::Rect2<T> & rect, uint8_t index){
     index = index - 1;
     const auto x_i = 1 - (T(index % 3) / 2);
     const auto y_i = T(index / 3) / 2;

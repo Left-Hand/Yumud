@@ -26,30 +26,28 @@ using TorqueCode = cybergear::details::TorqueCode;
 using KpCode = cybergear::details::KpCode;
 using KdCode = cybergear::details::KdCode;
 
-
-#if 0
-using Self = cybergear::CyberGear;
-
 using Error = cybergear::Error;
-
-template<typename T = void>
-using IResult = Result<T, Error>;
-
 namespace{
 struct alignas(4) [[nodiscard]] CgId final{
 
     uint32_t bits;
 
-    [[nodiscard]] constexpr auto cmd() {
-        return make_bitfield_proxy<24, 29, cybergear::Command>(bits);}
-    [[nodiscard]] constexpr auto cmd() const {
-        return make_bitfield_proxy<24, 29, cybergear::Command>(bits);}
-    [[nodiscard]] constexpr auto high() {
-        return make_bitfield_proxy<8, 24, uint16_t>(bits);}
-    [[nodiscard]] constexpr auto fault() {
-        return make_bitfield_proxy<8, 24, uint16_t>(bits);}
-    [[nodiscard]] constexpr auto low() {
-        return make_bitfield_proxy<0, 8, uint8_t>(bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto cmd(this Self && self) {
+        return make_bitfield_proxy<24, 29, cybergear::Command>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto high(this Self && self) {
+        return make_bitfield_proxy<8, 24, uint16_t>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto fault(this Self && self) {
+        return make_bitfield_proxy<8, 24, uint16_t>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto low(this Self && self) {
+        return make_bitfield_proxy<0, 8, uint8_t>(self.bits);}
 
     [[nodiscard]] static constexpr 
     CgId from_parts(const cybergear::Command cmd, const uint16_t high, const uint8_t low) {
@@ -70,34 +68,52 @@ struct alignas(4) [[nodiscard]] CgId final{
 
     [[nodiscard]] constexpr uint32_t to_bits() const {return bits;}
 
-
+    [[nodiscard]] constexpr hal::CanExtId to_extid() const {return hal::CanExtId::from_bits(bits);}
 };
 
 
-struct alignas(8)  [[nodiscard]] TxContext final{
+struct alignas(4)  [[nodiscard]] TxContext final{
     uint64_t bits;
-    [[nodiscard]] constexpr auto cmd_rad() {
-        return make_bitfield_proxy<0, 16, RadCode>(bits);}
-    [[nodiscard]] constexpr auto cmd_omega() {
-        return make_bitfield_proxy<16, 32, OmegaCode>(bits);}
-    [[nodiscard]] constexpr auto cmd_kp() {
-        return make_bitfield_proxy<32, 48, KpCode>(bits);}
-    [[nodiscard]] constexpr auto cmd_kd() {
-        return make_bitfield_proxy<48, 64, KdCode>(bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto cmd_rad(this Self && self) {
+        return make_bitfield_proxy<0, 16, RadCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto cmd_omega(this Self && self) {
+        return make_bitfield_proxy<16, 32, OmegaCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto cmd_kp(this Self && self) {
+        return make_bitfield_proxy<32, 48, KpCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto cmd_kd(this Self && self) {
+        return make_bitfield_proxy<48, 64, KdCode>(self.bits);}
+
+    constexpr hal::ClassicCanPayload to_can_payload() const {return hal::ClassicCanPayload::from_u64(bits);}
 };
 
 static_assert(sizeof(TxContext) == 8);  
 
-struct alignas(8)  [[nodiscard]] RxContext final{
+struct alignas(4)  [[nodiscard]] RxContext final{
     uint64_t bits;
-    [[nodiscard]] constexpr auto radians() const {            
-        return make_bitfield_proxy<0, 16, RadCode>(bits);}
-    [[nodiscard]] constexpr auto omega() const {          
-        return make_bitfield_proxy<16, 32, OmegaCode>(bits);}
-    [[nodiscard]] constexpr auto torque() const {         
-        return make_bitfield_proxy<32, 48, TorqueCode>(bits);}
-    [[nodiscard]] constexpr auto temperature() const {    
-        return make_bitfield_proxy<48, 64, TemperatureCode>(bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto radians(this Self && self) {            
+        return make_bitfield_proxy<0, 16, RadCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto omega(this Self && self) {          
+        return make_bitfield_proxy<16, 32, OmegaCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto torque(this Self && self) {         
+        return make_bitfield_proxy<32, 48, TorqueCode>(self.bits);}
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto temperature(this Self && self) {    
+        return make_bitfield_proxy<48, 64, TemperatureCode>(self.bits);}
 };
 
 static_assert(sizeof(RxContext) == 8);
@@ -116,101 +132,132 @@ static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
 }
 
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
 namespace ymd::robots::cybergear{
+hal::ClassicCanFrame CyberGearFactory::request_mcu_id(){
+    const auto extid = CgId::from_parts(
+        cybergear::Command::GET_DEVICE_ID, host_id, node_id).to_extid();
 
-IResult<> Self::init(){
-    return Ok{};
+    return hal::ClassicCanFrame::from_empty_data(
+        extid
+    );
 }
 
-IResult<> Self::request_mcu_id(){
-    const auto bits = CgId::from_parts(cybergear::Command::GET_DEVICE_ID, host_id_, node_id_).to_bits();
-    return this->transmit(bits, 0, 0);
-}
-
-IResult<> Self::ctrl(const MitParams & params){
-    TxContext context = {0};
+hal::ClassicCanFrame CyberGearFactory::ctrl(const MitParams & params){
+    TxContext tx_context = {0};
 
     #define TRY_DESERIALIZE_PAYLOAD(class_name, field_name)\
     ({\
         const auto res = class_name::with_validation((field_name));\
-        if(res.is_err()) return make_err_from_cmp(res.unwrap_err());\
+        if(res.is_err()) PANIC(res.unwrap_err());\
         res.unwrap();\
     });\
 
-    context.cmd_rad() = TRY_DESERIALIZE_PAYLOAD(RadCode, params.radians); 
-    context.cmd_omega() = TRY_DESERIALIZE_PAYLOAD(OmegaCode, params.omega);
-    context.cmd_kd() = TRY_DESERIALIZE_PAYLOAD(KdCode, params.kd);
-    context.cmd_kp() = TRY_DESERIALIZE_PAYLOAD(KpCode, params.kp);
+    tx_context.cmd_rad() = TRY_DESERIALIZE_PAYLOAD(RadCode, params.radians); 
+    tx_context.cmd_omega() = TRY_DESERIALIZE_PAYLOAD(OmegaCode, params.omega);
+    tx_context.cmd_kd() = TRY_DESERIALIZE_PAYLOAD(KdCode, params.kd);
+    tx_context.cmd_kp() = TRY_DESERIALIZE_PAYLOAD(KpCode, params.kp);
 
-    return this->transmit(
-        CgId::from_parts(cybergear::Command::SEND_CTRL1, 
-        TorqueCode(params.torque).count(), node_id_).to_bits(),
-        context.bits, sizeof(context)
+    const auto extid = CgId::from_parts(
+        cybergear::Command::SEND_CTRL1, 
+        TorqueCode(params.torque).count(), 
+        node_id).to_extid();
+
+    return hal::ClassicCanFrame::from_parts(
+        extid,
+        tx_context.to_can_payload()
     );
 }
 
 
 
-IResult<> Self::enable(const Enable en, const bool clear_fault){
+hal::ClassicCanFrame CyberGearFactory::enable(const Enable en, const bool clear_fault){
     if(en == EN){
-        return this->transmit(
-            CgId::from_parts(cybergear::Command::EN_MOT, host_id_, node_id_).to_bits(), 0, 0);
+        const auto extid = CgId::from_parts(cybergear::Command::EN_MOT, host_id, node_id).to_extid();
+        return hal::ClassicCanFrame::from_empty_data(extid);
     }else{
+        uint64_t data_u64 = 0;
+        data_u64 |= (clear_fault) ? 1u << 0 : 0;
+
         // 正常运行时，data区需清0；
         // byte[0]=1 时：清故障；
-        return this->transmit(
-            CgId::from_parts(cybergear::Command::DISEN_MOT, host_id_, node_id_).to_bits(), 
-            uint64_t(clear_fault), 8);
+        return hal::ClassicCanFrame::from_parts(
+            CgId::from_parts(cybergear::Command::DISEN_MOT, host_id, node_id).to_extid(), 
+            hal::ClassicCanPayload::from_u64(data_u64)
+        );
     }
 }
 
 
-IResult<> Self::set_current_as_machine_home(){
-    return this->transmit(
-        CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, host_id_, node_id_).to_bits(), 1, 0);
-}
+hal::ClassicCanFrame CyberGearFactory::set_current_as_machine_home(){
+    static constexpr size_t LENGTH = 8;
+    static constexpr std::array<uint8_t, LENGTH> buffer = {
+        1,
+        0, 0, 0, 
+        0, 0, 0, 0
+    };
 
-IResult<> Self::transmit(const ClassicCanFrame & frame){
-    MOTOR_DEBUG("write_msg", frame);
-    TODO();
-    // can_drv_.transmit(frame);
-    return Ok{};
-}
+    const auto extid = CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, 
+        host_id, node_id).to_extid();
 
-IResult<> Self::change_node_id(const uint8_t node_id){
-    node_id_ = node_id;
-    return this->transmit(
-        CgId::from_parts(cybergear::Command::SET_CAN_ID, host_id_, node_id_).to_bits(),
-            0, 0);
-}
-
-IResult<> Self::request_read_para(const uint16_t idx){
-    return this->transmit(
-        CgId::from_parts(cybergear::Command::READ_PARA, host_id_, node_id_).to_bits(), 
-            uint64_t(idx), 8);
-}
-
-IResult<> Self::request_write_para(const uint16_t idx, const uint32_t bits){
-    return this->transmit(
-        CgId::from_parts(cybergear::Command::WRITE_PARA, host_id_, node_id_).to_bits(), 
-        uint64_t(idx) | (uint64_t(bits) << 32), 
-        8
+    return hal::ClassicCanFrame::from_parts(
+        extid, 
+        hal::ClassicCanPayload::from_u8x8(buffer)
     );
 }
 
-IResult<> Self::transmit(const uint32_t bits, const uint64_t context, const uint8_t dlc){
-    if (dlc > 8) 
-        return Err(Error::RET_DLC_LONGER);
+// hal::ClassicCanFrame CyberGearFactory::change_node_id(const uint8_t node_id){
+//     node_id = node_id;
+//     return hal::ClassicCanFrame(
+//         CgId::from_parts(cybergear::Command::SET_CAN_ID, host_id, node_id).to_bits(),
+//             0, 0);
+// }
 
-    const auto buf = std::bit_cast<std::array<uint8_t, 8>>(context);
-    const auto frame = ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(bits), 
-        hal::ClassicCanPayload::from_bytes(std::span(buf.data(), dlc))
+hal::ClassicCanFrame CyberGearFactory::request_read_para(const uint16_t idx){
+    static constexpr size_t LENGTH = 8;
+    std::array<uint8_t, LENGTH> buffer = {
+        static_cast<uint8_t>(idx & 0xFF),
+        static_cast<uint8_t>(idx >> 8),
+        0, 0, 
+        0, 0, 0, 0
+    };
+
+    return hal::ClassicCanFrame::from_parts(
+        CgId::from_parts(cybergear::Command::READ_PARA, host_id, node_id).to_extid(), 
+        hal::ClassicCanPayload::from_u8x8(std::move(buffer))
     );
-    return this->transmit(frame);
 }
 
-IResult<> Self::on_receive(const ClassicCanFrame & frame){
+hal::ClassicCanFrame CyberGearFactory::request_write_para(
+    const uint16_t idx, 
+    const uint32_t param_bits
+){
+
+    static constexpr size_t LENGTH = 8;
+    std::array<uint8_t, LENGTH> buffer = {
+        static_cast<uint8_t>(idx & 0xFF),
+        static_cast<uint8_t>(idx >> 8),
+        0, 0, 
+        static_cast<uint8_t>(param_bits & 0xff),
+        static_cast<uint8_t>((param_bits >> 8) & 0xff),
+        static_cast<uint8_t>((param_bits >> 16) & 0xff),
+        static_cast<uint8_t>((param_bits >> 24) & 0xff)
+    };
+
+
+    return hal::ClassicCanFrame::from_parts(
+        CgId::from_parts(cybergear::Command::WRITE_PARA, host_id, node_id).to_extid(), 
+        hal::ClassicCanPayload::from_u8x8(std::move(buffer))
+    );
+}
+
+
+
+#if 1
+IResult<> CyberGearRx::on_receive(const ClassicCanFrame & frame){
     if(!frame.is_extended())
         __builtin_trap();
     const auto id_u32 = frame.id_u32();
@@ -239,7 +286,7 @@ IResult<> Self::on_receive(const ClassicCanFrame & frame){
     return Err{Error::PRAGRAM_UNHANDLED};
 }
 
-IResult<> Self::on_mcu_id_feed_back(
+IResult<> CyberGearRx::on_mcu_id_feed_back(
     const uint32_t id_u32, 
     const uint64_t payload_u64, 
     const uint8_t dlc
@@ -256,14 +303,14 @@ IResult<> Self::on_mcu_id_feed_back(
 
 
 
-IResult<> Self::on_ctrl2_feed_back(
+IResult<> CyberGearRx::on_ctrl2_feed_back(
     const uint32_t id_u32, 
     const uint64_t payload_u64, 
     const uint8_t dlc
 ){
     (void)id_u32;
 
-    if(dlc != sizeof(TxContext)){
+    if(dlc != sizeof(RxContext)){
         return Err(Error::RET_DLC_SHORTER);
     }
 
@@ -276,7 +323,6 @@ IResult<> Self::on_ctrl2_feed_back(
 
     return Ok();
 }
+#endif
 
 }
-
-#endif

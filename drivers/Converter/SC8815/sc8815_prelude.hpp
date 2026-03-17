@@ -110,14 +110,14 @@ struct SC8815_Prelude{
     };
 
     struct Interrupts{
-        uint8_t :1;
+        uint8_t __resv1__:1 = 0;
         uint8_t eoc:1;
         uint8_t otp:1;
         uint8_t vbus_short:1;
-        uint8_t :1;
+        uint8_t __resv2__:1 = 0;
         uint8_t indet:1;
         uint8_t ac_ok:1;
-        uint8_t :1;
+        uint8_t __resv3__:1 = 0;
     };
 
     static_assert(sizeof(Interrupts) == 1);
@@ -149,19 +149,19 @@ struct SC8815_Regs:public SC8815_Prelude {
     struct R8_IBusLimSet:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         
-        uint8_t :8;
+        uint8_t __resv1__:8;
     }DEF_R8(ibus_lim_set_reg)
     
     struct R8_IBatLimSet:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
-        uint8_t :8;
+        uint8_t __resv1__:8;
     }DEF_R8(ibat_lim_set_reg)
 
     struct R8_VinSet:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
-        uint8_t :8;
+        uint8_t __resv1__:8;
     }DEF_R8(vin_set_reg)
     
     struct R8_Ratio:public Reg8<>{
@@ -171,7 +171,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         VBatMonRatio vbat_mon_ratio:1;
         IBusRatio ibus_ratio:2;
         IBatRatio ibat_ratio:1;
-        uint8_t :3;
+        uint8_t __resv1__:3;
     }DEF_R8(ratio_reg)
 
     struct R8_Ctrl0Set:public Reg8<>{
@@ -180,14 +180,14 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t dt_set:2;
         uint8_t freq_set:2;
         uint8_t vinreg_ratio:1;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t en_otg:1;
     }DEF_R8(ctrl0_set_reg)
 
     struct R8_Ctrl1Set:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
         
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t dis_ovp:1;
         uint8_t trickle_set:1;
         uint8_t fb_sel:1;
@@ -202,7 +202,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t slew_set:2;
         uint8_t en_dither:1;
         uint8_t factory:1;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(ctrl2_set_reg)
 
     struct R8_Ctrl3Set:public Reg8<>{

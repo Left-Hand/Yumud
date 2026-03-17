@@ -64,25 +64,25 @@ public:
 
     [[nodiscard]] __fast_inline constexpr Vec3() = delete;
 
-    [[nodiscard]] __fast_inline constexpr Vec3(const Vec3<arithmetic auto>& v) :
+
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec3(const Vec3<U> & v) :
         x(static_cast<T>(v.x)), 
         y(static_cast<T>(v.y)), 
         z(static_cast<T>(v.z)) {;}
 
-    [[nodiscard]] __fast_inline constexpr Vec3(
-        const Vec2<arithmetic auto>& v, const arithmetic auto z_) : 
-        
-        x(v.x), y(v.y), z(z_) {;}
 
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec3(
-        const Matrix<auto, 3, 1> mat):
+        const Matrix<U, 3, 1> mat):
         x(mat(0, 0)), y(mat(1, 0)), z(mat(2, 0)){;}
     
 
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec3(
-        const arithmetic auto _x, 
-        const arithmetic auto _y, 
-        const arithmetic auto _z
+        const U _x, 
+        const U _y, 
+        const U _z
     ): 
         x(static_cast<T>(_x)), 
         y(static_cast<T>(_y)), 
@@ -405,7 +405,7 @@ public:
 
     [[nodiscard]]
     static constexpr bool sort_by_length(const Vec3 & a, const Vec3 & b){
-        return a.length_squared() < b.length_square();
+        return a.length_squared() < b.length_squared();
     };
 
     template<std::size_t I>

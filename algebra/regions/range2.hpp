@@ -148,8 +148,9 @@ public:
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     const T * end() const { return &this->stop;}
 
+    template<typename U>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    Range2<T> & operator=(const Range2<auto> & other) {
+    Range2<T> & operator=(const Range2<U> & other) {
         this->start = static_cast<T>(other.start);
         this->stop = static_cast<T>(other.stop);
         return *this;
@@ -201,23 +202,28 @@ public:
     }
 
 
-    [[nodiscard]] constexpr bool operator == (const Range2<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr bool operator == (const Range2<U> & other) const {
         return (this->start == other.start && this->stop == other.stop);
     }
 
-    [[nodiscard]] constexpr bool operator != (const Range2<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr bool operator != (const Range2<U> & other) const {
         return !(*this == other);
     }
 
-    [[nodiscard]] constexpr bool intersects(const Range2<auto> & other) const {
-        return(this->has(other.start) || other.has(this->start));
+    template<typename U>
+    [[nodiscard]] constexpr bool intersects(const Range2<U> & other) const {
+        return(this->contains(other.start) || other.contains(this->start));
     }
 
-    [[nodiscard]] constexpr bool contains(const Range2<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr bool contains(const Range2<U> & other) const {
         return (this->start <= other.start && this->stop >= other.stop);
     }
 
-    [[nodiscard]] constexpr bool is_inside(const Range2<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr bool is_inside(const Range2<U> & other) const {
         return other.contains(*this);
     }
 
@@ -231,7 +237,8 @@ public:
         return MIN((other.stop - this->start), (other.start - this->stop));
     }
 
-    [[nodiscard]] constexpr Range2<T> intersection(const Range2<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr Range2<T> intersection(const Range2<U> & other) const {
         if(false == this->intersects(other)) return Range2<T>();
         return Range2<T>(MAX(T(this->start), T(other.start)), MIN(T(this->stop), T(other.stop)));
     }
@@ -243,7 +250,7 @@ public:
 
     [[nodiscard]] constexpr Range2<T> scale_around_center(const auto & amount){
         const T len = this->length();
-        const T center = this->get_center();
+        const T center = this->center();
         const Range2<T> ret = Range2<T>(center - len * amount / 2, center + len * amount / 2);
         if (ret.is_regular()) return ret;
         else return Range2<T>();
@@ -319,7 +326,7 @@ private:
 };
 
 using Range2i = Range2<int>;
-using Range2u = Range2<uint>;
+using Range2u = Range2<size_t>;
 
 using Range2u8 = Range2<uint8_t>;
 using Range2u16 = Range2<uint16_t>;
@@ -377,7 +384,7 @@ private:
 
     static constexpr Range2u32 begin_of_range(
         const Range2u32 range,
-        const uint gsize
+        const size_t gsize
     ){
         const auto grid_remaining = gsize - range.start % gsize;
         return Range2u32(range.start, std::min(range.start + grid_remaining, range.stop));
@@ -385,7 +392,7 @@ private:
 
     static constexpr Range2u32 end_of_range(
         const Range2u32 range,
-        const uint gsize
+        const size_t gsize
     ){
         const uint32_t grid_begin = range.stop - range.stop % gsize;
         return Range2u32(std::max(range.start, grid_begin), range.stop);
@@ -393,7 +400,7 @@ private:
     static constexpr Option<Range2u32> next_of_range(
         const Range2u32 range_in,
         const Range2u32 range_targ,
-        const uint gsize
+        const size_t gsize
     ){
         const auto end_range = end_of_range(range_targ, gsize);
         if(range_in.stop >= end_range.stop) return None;
@@ -406,7 +413,7 @@ private:
     static constexpr Option<Range2u32> prev_of_range(
         const Range2u32 range_in,
         const Range2u32 range_targ,
-        const uint gsize
+        const size_t gsize
     ){
         const auto begin_range = begin_of_range(range_targ, gsize);
         if(range_in.start <= begin_range.start) return None;

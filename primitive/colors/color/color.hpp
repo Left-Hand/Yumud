@@ -230,9 +230,8 @@ public:
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
 
-	constexpr RGBA operator-() const;
-
-    __fast_inline constexpr RGBA &operator+=(const RGBA<auto> &other) {
+    template<typename U>
+    __fast_inline constexpr RGBA &operator+=(const RGBA<U> &other) {
         r += static_cast<T>(other.r);
         g += static_cast<T>(other.g);
         b += static_cast<T>(other.b);
@@ -240,7 +239,8 @@ public:
         return *this;
     }
 
-    __fast_inline constexpr RGBA &operator-=(const RGBA<auto> &other) {
+    template<typename U>
+    __fast_inline constexpr RGBA &operator-=(const RGBA<U> &other) {
         r -= static_cast<T>(other.r);
         g -= static_cast<T>(other.g);
         b -= static_cast<T>(other.b);
@@ -248,7 +248,8 @@ public:
         return *this;
     }
 
-    __fast_inline constexpr RGBA &operator*=(const RGBA<auto> &other) {
+    template<typename U>
+    __fast_inline constexpr RGBA &operator*=(const RGBA<U> &other) {
         r *= static_cast<T>(other.r);
         g *= static_cast<T>(other.g);
         b *= static_cast<T>(other.b);
@@ -279,7 +280,13 @@ public:
         return *this;
     };
 
-	constexpr bool is_equal_approx(const RGBA &other) const;
+	constexpr bool is_equal_approx(const RGBA &other) const {
+        return is_equal_approx(r, other.r) 
+            && is_equal_approx(g, other.g) 
+            && is_equal_approx(b, other.b) 
+            && is_equal_approx(a, other.a);
+    }
+
     constexpr void invert() {
         r = static_cast<T>(1) - r;
         g = static_cast<T>(1) - g;
@@ -381,7 +388,19 @@ public:
         );
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const RGBA<auto> & rgba){
+
+
+
+    constexpr RGBA operator-() const {
+        return RGBA<T>(
+                1.0 - r,
+                1.0 - g,
+                1.0 - b,
+                1.0 - a);
+    }
+
+    template<typename U>
+    friend OutputStream & operator<<(OutputStream & os, const RGBA<U> & rgba){
         const auto splt = os.splitter();
         return os << os.brackets<'('>() << rgba.r << splt
             << rgba.g << splt 
@@ -390,10 +409,19 @@ public:
             << os.brackets<')'>();
     }
 
+
 private:
 	constexpr RGBA() = default;
 
 };
+
+template <typename T, typename U>
+RGBA<T> operator/(const RGBA<T> & self, const RGBA<U> &rhs){
+    RGBA<T> ret = self;
+    ret /= rhs;
+    return ret;
+}
+
 
 template<typename T>
 struct [[nodiscard]] RGB{
@@ -488,7 +516,7 @@ struct [[nodiscard]] RGB{
     }
 
 
-    friend OutputStream & operator<<(OutputStream & os, const RGB<auto> & rgb){
+    friend OutputStream & operator<<(OutputStream & os, const RGB<T> & rgb){
         const auto splt = os.splitter();
         return os << os.brackets<'('>() << rgb.r << splt
             << rgb.g << splt 
@@ -548,7 +576,7 @@ struct [[nodiscard]] sRGB{
         return get_element<I>(*this);
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const sRGB<auto> & srgb){
+    friend OutputStream & operator<<(OutputStream & os, const sRGB<T> & srgb){
         const auto splt = os.splitter();
         return os << os.brackets<'('>() << srgb.r << splt
             << srgb.g << splt 

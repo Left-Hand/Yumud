@@ -277,7 +277,7 @@ struct [[nodiscard]] RxContext final{
     struct [[nodiscard]] Misc final{
         uint16_t err_bits : 3;
         uint16_t force_bits : 12;
-        uint16_t :1;
+        uint16_t __resv__:1;
 
         static constexpr Misc from_bytes(std::span<const uint8_t, 2> bytes){
             const uint16_t ret = bytes[0] | (bytes[1] << 8);

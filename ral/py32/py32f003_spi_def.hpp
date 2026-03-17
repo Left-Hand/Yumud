@@ -78,7 +78,7 @@ namespace ymd::ral::py32::py32f003{
         uint16_t CKPOL:1;
 
         uint16_t I2SSTD:2;
-        uint16_t :1;
+        uint16_t __resv__:1;
         uint16_t PCMSYNC:1;
 
         uint16_t I2SCFG:2;

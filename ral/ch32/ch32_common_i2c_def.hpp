@@ -13,7 +13,7 @@ namespace ymd::ral::ch32::common_i2c{
 struct [[nodiscard]] R16_I2C_CTLR1{
     uint16_t PE:1;
     uint16_t SMBUS:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t SMBTYPE:1;
 
 
@@ -28,7 +28,7 @@ struct [[nodiscard]] R16_I2C_CTLR1{
     uint16_t POS:1;
     uint16_t PEC:1;
     uint16_t ALERT:1;
-    uint16_t :1;
+    uint16_t __resv2__:1;
     uint16_t SWRST:1;
 };
 
@@ -72,7 +72,7 @@ struct [[nodiscard]] R16_I2C_STAR1{
     uint16_t BTF:1;
     uint16_t ADD10:1;
     uint16_t STOPF:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t RXNE:1;
     uint16_t TXE:1;
     uint16_t BERR:1;
@@ -80,7 +80,7 @@ struct [[nodiscard]] R16_I2C_STAR1{
     uint16_t AF:1;
     uint16_t OVR:1;
     uint16_t PECERR:1;
-    uint16_t :1;
+    uint16_t __resv2__:1;
     uint16_t TIMEOUT:1;
     uint16_t SMBALERT:1;
 };
@@ -90,7 +90,7 @@ struct [[nodiscard]] R16_I2C_STAR2{
     uint8_t MSL:1;
     uint8_t BUSY:1;
     uint8_t TRA:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
 
     uint8_t GENCALL:1;
     uint8_t SMBDEFAULT:1;

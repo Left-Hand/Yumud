@@ -45,6 +45,7 @@ using IResult = Result<T, Error>;
 
 IResult<> SC8721::update(){
     TODO();
+    return Ok();
 }
 
 IResult<> SC8721::validate(){
@@ -54,21 +55,26 @@ IResult<> SC8721::validate(){
 
 IResult<> SC8721::reset(){
     TODO();
+    return Ok();
 }
 
 
 IResult<> SC8721::set_target_voltage(const iq16 volt){
-    uint16_t data = int(volt * 50);
+    uint16_t bits = int(volt * 50);
 
-    auto vout_set_msb_reg_copy = RegCopy(regs_.vout_set_msb_reg);
-    auto vout_set_lsb_reg_copy = RegCopy(regs_.vout_set_lsb_reg);
-    vout_set_msb_reg_copy.vout_set_msb = data >> 2;
-    vout_set_lsb_reg_copy.vout_set_lsb = data & 0b11;
+    {
+        auto reg = RegCopy(regs_.vout_set_lsb_reg);
+        reg.vout_set_lsb = bits & 0b11;
+        if(const auto res = write_reg(reg);
+            res.is_err()) return res;
+    }
 
-    if(const auto res = write_reg(vout_set_msb_reg_copy);
-        res.is_err()) return res;
-    if(const auto res = write_reg(vout_set_lsb_reg_copy);
-        res.is_err()) return res;
+    {
+        auto reg = RegCopy(regs_.vout_set_msb_reg);
+        reg.vout_set_msb = bits >> 2;
+        if(const auto res = write_reg(reg);
+            res.is_err()) return res;
+    }
     return Ok();
 }
 

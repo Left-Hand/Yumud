@@ -66,7 +66,7 @@ struct R8_IER:public Reg8<>{
     uint8_t rlsi :1; 
     /* Enable Modem status interrupt */
     uint8_t msi  :1; 
-    uint8_t :1;
+    uint8_t __resv__:1;
 
     /* IER enhanced register bits */
 

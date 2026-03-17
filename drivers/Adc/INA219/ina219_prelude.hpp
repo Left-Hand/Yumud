@@ -136,7 +136,7 @@ struct INA219_Regs:public INA219_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         uint16_t overflow:1;
         uint16_t conversion_ready:1;
-        uint16_t :1;
+        uint16_t __resv__:1;
         uint16_t bd:13;
 
         constexpr BusVoltageCode volt_code() const{

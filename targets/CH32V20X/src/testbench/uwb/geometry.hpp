@@ -10,7 +10,7 @@
 namespace ymd::geometry { 
 
 
-
+#if 0
 template<typename T>
 requires (not std::is_integral_v<T>)
 constexpr HeaplessVector<math::Vec2<T>, 2> compute_intersection_points(
@@ -61,6 +61,7 @@ constexpr HeaplessVector<math::Vec2<T>, 2> compute_intersection_points(
         math::Vec2<T>(x0 - rx, y0 - ry)
     );
 }
+#endif
 
 template<typename T>
 requires (not std::is_integral_v<T>)

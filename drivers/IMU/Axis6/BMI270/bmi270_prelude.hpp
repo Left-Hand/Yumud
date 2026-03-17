@@ -65,7 +65,7 @@ struct BMI270_Regset:public BMI270_Prelude{
 
         uint8_t fatal_err:1;
         uint8_t internal_err:4;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t fifo_err:1;
         uint8_t aux_err:1;
     };
@@ -75,7 +75,7 @@ struct BMI270_Regset:public BMI270_Prelude{
 
         uint8_t :2;
         uint8_t aux_busy:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t cmd_rdy:1;
         uint8_t drdy_aux:1;
         uint8_t drdy_gyr:1;
@@ -99,7 +99,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     struct [[nodiscard]] R8_Event:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1B};
         uint8_t por_detected:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t error_code:3;
         uint8_t :3;
     };
@@ -114,7 +114,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t wrist_gesture_out:1;
         uint8_t no_motion_out:1;
         uint8_t any_motion_out:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     };
 
     struct [[nodiscard]] R8_IntStatus1:public Reg8<>{
@@ -147,10 +147,10 @@ struct BMI270_Regset:public BMI270_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x21};
 
         uint8_t message:4;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t axes_remap_error:1;
         uint8_t odr_50hz_err:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     };
 
     struct [[nodiscard]] R16_Temperature:public Reg16<>{
@@ -271,7 +271,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     struct [[nodiscard]] R8_AuxDevId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4b};
 
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t i2c_device_addr:7;
     };
 
@@ -308,7 +308,7 @@ struct BMI270_Regset:public BMI270_Prelude{
 
         uint8_t fatal_err:1;
         uint8_t internal_err:4;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t fifo_err:1;
         uint8_t aux_err:1;
     };
@@ -316,7 +316,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     struct [[nodiscard]] R8_IntIoCtrl1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x53};
 
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t lvl:1;
         uint8_t od:1;
         uint8_t output_en:1;
@@ -327,7 +327,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     struct [[nodiscard]] R8_IntIoCtrl2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x54};
 
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t lvl:1;
         uint8_t od:1;
         uint8_t output_en:1;
@@ -352,7 +352,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t wrist_gesuture_out:1;
         uint8_t no_motion_out:1;
         uint8_t any_motion_out:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     };
 
     struct [[nodiscard]] R8_Int2MapFeat:public Reg8<>{
@@ -365,7 +365,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t wrist_gesuture_out:1;
         uint8_t no_motion_out:1;
         uint8_t any_motion_out:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     };
 
     struct [[nodiscard]] R8_IntCtrl:public Reg8<>{
@@ -406,10 +406,10 @@ struct BMI270_Regset:public BMI270_Prelude{
     };
 
     struct [[nodiscard]] R8_InternalError:public Reg8<>{
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t int_err_1:1;
         uint8_t int_err_2:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
         uint8_t feat_eng_disabled:1;
         uint8_t :3;
     };

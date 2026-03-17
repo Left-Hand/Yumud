@@ -135,7 +135,7 @@ struct Regset final{
         PmuMode mag_pmu_status:2;
         PmuMode gyr_pmu_status:2;
         PmuMode acc_pmu_status:2;
-        uint8_t:2;
+        uint8_t __resv__:2;
     }DEF_R8(pmu_status)
 
     struct R8_Rhall:public Reg8<>{
@@ -324,7 +324,7 @@ struct Regset final{
         uint8_t int_anymo_x_en:1;
         uint8_t int_anymo_y_en:1;
         uint8_t int_anymo_z_en:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
 
         uint8_t int_d_tap_en : 1;
         uint8_t int_s_tap_en : 1;
@@ -478,7 +478,7 @@ struct Regset final{
         uint8_t acc_self_test_sign:1;
         uint8_t acc_self_test_amp:1;
         uint8_t gyr_self_test_en:1; 
-        uint8_t :3;
+        uint8_t __resv__:3;
     }DEF_R8(self_test)
 
 

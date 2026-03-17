@@ -747,11 +747,11 @@ private:
         }
     }
 
-
+    #if 1
     [[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const {
         // 手动展开4x4矩阵的3x3子矩阵行列式计算
         // 选择展开行（跳过第i行）
-        const size_t rows[3];
+        size_t rows[3];
         size_t r_idx = 0;
         for (size_t r = 0; r < 4; ++r) {
             if (r != i) rows[r_idx++] = r;
@@ -765,6 +765,7 @@ private:
             + this->at(rows[0], (j+3)%4) * (this->at(rows[1], (j+1)%4) * this->at(rows[2], (j+2)%4) - 
                                             this->at(rows[1], (j+2)%4) * this->at(rows[2], (j+1)%4));
     }
+    #endif
 };
 
 

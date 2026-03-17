@@ -275,10 +275,12 @@ struct [[nodiscard]] Binary final{
         return Binary(static_cast<uint8_t>(WHITE));
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Binary& rhs){
+    [[nodiscard]] constexpr bool operator ==(const Binary& rhs) const {
         return bits == rhs.bits;
     }
-    [[nodiscard]] constexpr bool operator !=(const Binary& rhs){
+
+
+    [[nodiscard]] constexpr bool operator !=(const Binary& rhs) const {
         return bits != rhs.bits;
     }
 

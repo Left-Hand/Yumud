@@ -22,7 +22,7 @@ struct [[nodiscard]] R32_CFGR1{
     uint16_t IF_OUT1:1;
     uint16_t IF_OUT2:1;
     uint16_t IF_CNT:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R32_CFGR2{

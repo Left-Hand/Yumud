@@ -128,7 +128,7 @@ public:
         noexcept(std::is_nothrow_move_constructible_v<T> && noexcept(fn(std::declval<T&&>())))
     {
         const size_t avail = length();
-        const size_t count = std::min({avail, max_count, MAX_CAPACITY});
+        const size_t count = std::min(std::min(avail, max_count), MAX_CAPACITY);
         if (count == 0) return 0;
 
         size_t read_idx = read_idx_.load(std::memory_order_acquire);

@@ -3,6 +3,7 @@
 #include "core/utils/hash_func.hpp"
 #include "core/utils/option.hpp"
 #include <cstring>
+#include "core/string/utils/c_style/strnlen.hpp"
 
 namespace ymd{
 
@@ -36,15 +37,17 @@ public:
         const char * p_chars, 
         size_t max_size = std::dynamic_extent
     ) noexcept{
-        const size_t size = (p_chars != nullptr) ? strnlen(p_chars, max_size) : 0;
+        const size_t size = (p_chars != nullptr) ? str::strnlen_from_left(p_chars, max_size) : 0;
         return StringView(p_chars, size);
     }
 
     template<size_t N>
     constexpr StringView(const char (&str)[N]) noexcept:
         p_str_(str), length_(strnlen(str, N)){}
+
     constexpr StringView(const StringView & other) noexcept: 
         p_str_(other.p_str_), length_(other.length_){;}
+
     constexpr StringView(StringView && other) noexcept: 
         p_str_(other.p_str_), length_(other.length_){;}
 

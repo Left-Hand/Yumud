@@ -52,7 +52,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         uint16_t tx_bits = uint16_t(0x8000);
-        tx_bits |= (static_cast<uint16_t>(T::ADDRESS) << 8);
+        tx_bits |= (static_cast<uint16_t>(T::REG_ADDR) << 8);
         tx_bits |= reg.to_bits();
 
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits);
@@ -67,7 +67,7 @@ private:
         uint16_t rx_bits;
 
         uint16_t tx_bits = uint16_t(0x4000);
-        tx_bits |= (static_cast<uint16_t>(T::ADDRESS) << 8);
+        tx_bits |= (static_cast<uint16_t>(T::REG_ADDR) << 8);
 
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits); 
             res.is_err()) return Err(Error(res.unwrap_err()));

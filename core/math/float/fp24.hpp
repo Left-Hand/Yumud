@@ -157,11 +157,11 @@ private:
 
 static_assert(sizeof(fp24) == 4);
 
-consteval fp24 operator"" _fp24(long double x){
+consteval fp24 operator""_fp24(long double x){
     return fp24(x);
 }
 
-consteval fp24 operator"" _fp24(unsigned long long x){
+consteval fp24 operator""_fp24(unsigned long long x){
     return fp24(x);
 }
 

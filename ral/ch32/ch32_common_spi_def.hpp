@@ -33,11 +33,11 @@ struct [[nodiscard]] R32_SPI_CTLR2{
     uint32_t RXDMAEN:1;
     uint32_t TXDMAEN:1;
     uint32_t SSOE:1;
-    uint32_t :2;
+    uint32_t __RESV1__:2;
     uint32_t ERRIR:1;
     uint32_t RXNEIE:1;
     uint32_t TXEIE:1;
-    uint32_t :24;
+    uint32_t __RESV2__:24;
 };VALIDATE_R32(R32_SPI_CTLR2);
 
 
@@ -54,7 +54,7 @@ struct [[nodiscard]] R32_SPI_STATR{
     uint32_t OVR:1;
     uint32_t BSY:1;
 
-    uint32_t :24;
+    uint32_t __RESV1__:24;
 };VALIDATE_R32(R32_SPI_STATR);
 
 struct [[nodiscard]] R32_SPI_DATAR{

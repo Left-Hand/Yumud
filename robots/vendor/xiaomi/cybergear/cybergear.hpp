@@ -75,45 +75,12 @@ DEF_PER_UNIT(KpCode, uint16_t, 0, 500)
 DEF_PER_UNIT(KdCode, uint16_t, 0, 5)
 
 
-struct [[nodiscard]] Feedback final{
-    iq16 radians;
-    iq16 omega;
-    iq16 torque;
-    iq16 celsius;
-};
 }
 
 
-#if 0
-class CyberGear{
+#if 1
+class CyberGearFactory{
 public:
-
-
-    // using Error = details::Error;
-    // using IResult = details::IResult;
-
-    using CanFrame = hal::ClassicCanFrame; 
-
-    using Feedback = details::Feedback;
-    using TemperatureCode = details::TemperatureCode;
-    using RadCode = details::RadCode;
-    using OmegaCode = details::OmegaCode;
-    using TorqueCode = details::TorqueCode;
-    using KpCode = details::KpCode;
-    using KdCode = details::KdCode;
-
-
-    explicit CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
-        can_(can), host_id_(host_id), node_id_(node_id){;}
-
-    IResult<> init();
-
-    IResult<> transmit(const CanFrame & frame);
-
-    IResult<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
-
-    IResult<> request_mcu_id();
-
     struct MitParams{
         iq16 torque;
         iq16 radians;
@@ -122,37 +89,62 @@ public:
         iq16 kd;
     };
 
-    IResult<> ctrl(const MitParams & params);
+    // using Error = details::Error;
+    // using IResult = details::IResult;
+    using TemperatureCode = details::TemperatureCode;
+    using RadCode = details::RadCode;
+    using OmegaCode = details::OmegaCode;
+    using TorqueCode = details::TorqueCode;
+    using KpCode = details::KpCode;
+    using KdCode = details::KdCode;
 
-    
-    IResult<> on_receive(const CanFrame & frame);
+    uint8_t host_id;
+    uint8_t node_id;
 
-    IResult<> enable(const Enable en, const bool clear_fault = true);
 
-    IResult<> set_current_as_machine_home();
 
-    IResult<> change_node_id(const uint8_t id);
+    hal::ClassicCanFrame request_mcu_id();
 
-    IResult<> request_read_para(const uint16_t idx);
 
-    IResult<> request_write_para(const uint16_t idx, const uint32_t data);
 
-    [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
+    hal::ClassicCanFrame ctrl(const MitParams & params);
 
-private:
-    hal::Can & can_;
-    const uint8_t host_id_;
-    uint8_t node_id_;
-    
+    hal::ClassicCanFrame enable(const Enable en, const bool clear_fault = true);
+
+    hal::ClassicCanFrame set_current_as_machine_home();
+
+    hal::ClassicCanFrame change_node_id(const uint8_t id);
+
+    hal::ClassicCanFrame request_read_para(const uint16_t idx);
+
+    hal::ClassicCanFrame request_write_para(const uint16_t idx, const uint32_t data);
+
+
+};
+
+
+struct [[nodiscard]] CyberGearRx{
+
+    struct [[nodiscard]] Feedback final{
+        iq16 radians;
+        iq16 omega;
+        iq16 torque;
+        iq16 celsius;
+    };
+
     StatusBitFields fault_ = {};
     Option<uint64_t> device_mcu_id_ = None;
 
 
     Feedback feedback_ = {};
 
+    [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
+
     IResult<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
     IResult<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
     IResult<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+
+    IResult<> on_receive(const hal::ClassicCanFrame & frame);
 };
 
 #endif

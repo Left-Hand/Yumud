@@ -33,7 +33,7 @@ struct [[nodiscard]] R32_DMA_CFGR{
     uint32_t PL:2;
     uint32_t MEM2MEM:1;
 
-    uint32_t :17;
+    uint32_t __RESV__:17;
 };
 VALIDATE_R32(R32_DMA_CFGR)
 

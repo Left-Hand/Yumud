@@ -46,7 +46,7 @@ public:
         FilterMatch filter_match:3;
         uint8_t is_rtr:1;
         uint8_t is_ext:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t rx0i:1;
         uint8_t rx1i:1;
     };

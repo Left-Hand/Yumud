@@ -69,9 +69,9 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            conv_reg_address_repeated(T::ADDRESS), 
-            reg.to_bits(), std::endian::little);
-        res.is_err()) return Err(res.unwrap_err());
+            conv_reg_address_repeated(T::REG_ADDR), 
+            reg.to_bits(), std::endian::little
+        ); res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
@@ -79,7 +79,7 @@ private:
     template<typename T>
     IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            conv_reg_address_repeated(T::ADDRESS), reg.as_bits_mut(), std::endian::little);
+            conv_reg_address_repeated(T::REG_ADDR), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

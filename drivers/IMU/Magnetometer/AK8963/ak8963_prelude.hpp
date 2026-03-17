@@ -43,13 +43,13 @@ struct AK8963_Regs:public AK8963_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint8_t correct = 0x48;
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(wia_reg)
 
     struct R8_INFO:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(info_reg)
 
     struct R8_ST1:public Reg8<>{
@@ -57,7 +57,7 @@ struct AK8963_Regs:public AK8963_Prelude{
 
         uint8_t drdy:1;
         uint8_t dor:1;
-        uint8_t :6;
+        uint8_t __resv__:6;
 
         [[nodiscard]] constexpr bool is_data_ready() const {return drdy;}
         [[nodiscard]] constexpr bool is_data_overrun() const {return dor;}
@@ -70,10 +70,10 @@ struct AK8963_Regs:public AK8963_Prelude{
     struct R8_ST2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
-        uint8_t :3;
+        uint8_t __resv__:3;
         uint8_t hofl:1;
         uint8_t bitm:1;
-        uint8_t :3;
+        uint8_t __resv2__:3;
     } DEF_R8(st2_reg)
 
     struct R8_CNTL1:public Reg8<>{
@@ -81,33 +81,33 @@ struct AK8963_Regs:public AK8963_Prelude{
 
         Mode mode:4;
         uint8_t bit:1;
-        uint8_t :3;
+        uint8_t __resv__:3;
     } DEF_R8(cntl1_reg)
 
     struct R8_CNTL2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0B};
 
         uint8_t srst:1;
-        uint8_t :7;
+        uint8_t __resv__:7;
     } DEF_R8(cntl2_reg)
 
     struct R8_ASTC:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
-        uint8_t :6;
+        uint8_t __resv__:6;
         uint8_t self:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     } DEF_R8(astc_reg)
 
     struct R8_I2CDIS:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0F};
 
         static constexpr uint8_t key = 0b00011011;
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(i2cdis_reg)
 
     struct _R8_ASA:public Reg8<>{
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_ASAX:public _R8_ASA{

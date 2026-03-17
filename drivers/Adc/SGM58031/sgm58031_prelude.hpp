@@ -106,7 +106,7 @@ struct SGM58031_Prelude{
 
 struct SGM58031_Regset:public SGM58031_Prelude{
     struct R16_Config:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Config;
+        static constexpr RegAddr REG_ADDR = RegAddr::Config;
         static constexpr uint16_t RESET_VALUE = 0x8583;
 
         // Comparator Queue and Disable Function
@@ -152,7 +152,7 @@ struct SGM58031_Regset:public SGM58031_Prelude{
     }DEF_R16(config_reg)
 
     struct R16_Config1:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Config1;        
+        static constexpr RegAddr REG_ADDR = RegAddr::Config1;        
         uint16_t __resv1__    :3;
 
         // 0 = None (default)
@@ -188,7 +188,7 @@ struct SGM58031_Regset:public SGM58031_Prelude{
     }DEF_R16(config1_reg)
 
     struct R16_DeviceId:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::DeviceID;
+        static constexpr RegAddr REG_ADDR = RegAddr::DeviceID;
         static constexpr uint16_t KEY = 0x0080; 
         uint16_t __resv1__   :5;
         uint16_t ver         :3;
@@ -199,24 +199,24 @@ struct SGM58031_Regset:public SGM58031_Prelude{
     VALIDATE_R16(R16_DeviceId)
 
     struct R16_Trim:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Trim;
+        static constexpr RegAddr REG_ADDR = RegAddr::Trim;
         uint16_t gn         :11;
         uint16_t __resv__    :5;
         
     }DEF_R16(trim_reg)
 
     struct R16_Conv:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Conv;
+        static constexpr RegAddr REG_ADDR = RegAddr::Conv;
         ConvCode code;
     }DEF_R16(conv_reg)
 
     struct R16_LowThr:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::LowThr;
+        static constexpr RegAddr REG_ADDR = RegAddr::LowThr;
         ConvCode code;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::HighThr;
+        static constexpr RegAddr REG_ADDR = RegAddr::HighThr;
         ConvCode code;
     }DEF_R16(high_thr_reg)
 };

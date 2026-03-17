@@ -292,7 +292,7 @@ public:
         uint16_t instant_en:1;
         uint16_t constant_en:1;
         uint16_t sum_en:3;
-        uint16_t :1;
+        uint16_t __resv__:1;
     };
 
 };

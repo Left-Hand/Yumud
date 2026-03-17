@@ -32,7 +32,7 @@ public:
         return val_;
     }
 private:
-    using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+    // using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
 
     T val_;
 };

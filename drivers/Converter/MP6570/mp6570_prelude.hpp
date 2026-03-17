@@ -150,7 +150,7 @@ struct [[nodiscard]] R16_Gain1:public Reg16<>{
 
     uint16_t iq_limit:11;
     uint16_t gain_coe:4;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R16_ThetaBias:public Reg16<>{

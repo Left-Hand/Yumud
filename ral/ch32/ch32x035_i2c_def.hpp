@@ -63,7 +63,7 @@ struct R32_STAR1{
     uint16_t BTF:1;
     uint16_t ADD10:1;
     uint16_t STOPF:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t RXNE:1;
     uint16_t TXE:1;
     uint16_t BERR:1;
@@ -71,7 +71,7 @@ struct R32_STAR1{
     uint16_t AF:1;
     uint16_t OVR:1;
     uint16_t PECERR:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t TIMEOUT:1;
     uint16_t SMBALERT:1;
 };
@@ -81,7 +81,7 @@ struct R32_STAR2{
     uint16_t MSL:1;
     uint16_t BUSY:1;
     uint16_t TRA:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
 
     uint16_t GENCALL:1;
     uint16_t :2;
