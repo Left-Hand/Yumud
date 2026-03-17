@@ -41,8 +41,8 @@ using namespace ymd;
 // #define CHANGE_STATE(x) state_ = x; LT8920_DEBUG("state_ = ", (uint8_t)state_)
 #define CHANGE_STATE(x) state_ = x;
 
-#define CRCERR_FLAG regs_.flag_reg.crc_error_flag
-#define PKT_FLAG regs_.flag_reg.pkt_flag
+#define QUERY_CRCERR_FLAG regs_.flag_reg.crc_error_flag
+#define QUERY_PKT_FLAG regs_.flag_reg.pkt_flag
 #define FIFO_FLAG flag_reg.fifo_flag
 
 
@@ -271,7 +271,7 @@ IResult<> LT8920::tick(){
         case Role::BROADCASTER:
             switch(state_){
                 case State::TX_WAIT_ACK:
-                    if(PKT_FLAG == true){
+                    if(QUERY_PKT_FLAG == true){
                         CHANGE_STATE(State::IDLE);
                     }
                     break;
@@ -290,7 +290,7 @@ IResult<> LT8920::tick(){
                     break;
                 
                 case State::RX_WAIT_ACK:
-                    if(PKT_FLAG == true){
+                    if(QUERY_PKT_FLAG == true){
                             //pass
                     }
                     break;
@@ -309,8 +309,8 @@ IResult<> LT8920::read_block(std::span<uint8_t> bytes){
 
     if(role_ != Role::LISTENER) return Ok();
     
-    if(PKT_FLAG == false) return Ok();
-    if(CRCERR_FLAG == true) return Ok();
+    if(QUERY_PKT_FLAG == false) return Ok();
+    if(QUERY_CRCERR_FLAG == true) return Ok();
 
     uint8_t len = static_cast<uint8_t>(std::min(bytes.size(), 32u));
     if(len == 0) return Ok();

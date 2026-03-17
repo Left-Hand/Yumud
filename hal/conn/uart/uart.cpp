@@ -740,10 +740,10 @@ void UartIrqHandler::isr_txe(Uart & self){
         case CommStrategy::Dma:
             break;
         case CommStrategy::Interrupt:{
-            uint8_t byte;
-            if(const auto quantity = self.tx_queue_.try_pop(byte);
-                quantity != 0){
+            if(const auto quantity = self.tx_queue_.consume_one([&](uint8_t byte){
                 SPL_INST(self.p_inst_)->DATAR = byte;
+            }); quantity != 0){
+                //nothing to do
             }
         }
             break;

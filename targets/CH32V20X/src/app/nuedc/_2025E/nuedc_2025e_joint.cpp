@@ -464,10 +464,12 @@ void nuedc_2025e_joint_main(){
         if(not msg_queue_.length())
             return None;
 
-        hal::ClassicCanFrame frame = hal::ClassicCanFrame::from_uninitialized();
-        if(msg_queue_.try_pop(frame) == 0)
-            return None;
-        return Some(frame);
+        Option<hal::ClassicCanFrame> may_frame = None;
+
+        if(const auto quantity = msg_queue_.consume_one([&](const hal::ClassicCanFrame & frame){
+            may_frame = Some(frame);
+        }); quantity == 0) return None;
+        return may_frame;
     };
 
     [[maybe_unused]] auto delta_target_position_by_command = 

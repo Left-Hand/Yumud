@@ -1,14 +1,14 @@
 #include "soft_i2c.hpp"
-#include "core/clock/monotic_clock.hpp"
+#include "core/clock/monotonic_clock.hpp"
 #include "core/debug/debug.hpp"
 #include "hal/gpio/gpio.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
-#define SoftI2c_SCL_USE_PP_THAN_OD
-// #define SoftI2c_DISCARD_ACK
-// #define SoftI2c_TEST_TIMEOUT (1000)
+#define SOFT_I2C_SCL_USE_PP_THAN_OD
+// #define SOFT_I2C_DISCARD_ACK
+// #define SOFT_I2C_TEST_TIMEOUT (1000)
 
 
 void SoftI2c::delay_dur(){
@@ -27,12 +27,12 @@ HalResult SoftI2c::wait_ack(){
 
     bool ovt = false;
 
-    #ifndef SoftI2c_DISCARD_ACK
+    #ifndef SOFT_I2C_DISCARD_ACK
     const auto m = clock::micros();
     while(sda_pin().read() == HIGH){
         if(clock::micros() - m >= 
-        #if SoftI2c_TEST_TIMEOUT
-            SoftI2c_TEST_TIMEOUT
+        #if SOFT_I2C_TEST_TIMEOUT
+            SOFT_I2C_TEST_TIMEOUT
         #else
             timeout_
         #endif
@@ -72,7 +72,7 @@ HalResult SoftI2c::borrow(const I2cSlaveAddrWithRw req){
 
 
 HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
-    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
+    #ifdef SOFT_I2C_SCL_USE_PP_THAN_OD
     scl_pin().outpp();
     #else
     scl_pin().outod();
@@ -161,7 +161,7 @@ void SoftI2c::init(const Config & cfg){
     sda_pin().outod();
     scl_pin().set_high();
 
-    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
+    #ifdef SOFT_I2C_SCL_USE_PP_THAN_OD
     scl_pin().outpp();
     #else
     scl_pin().outod();
