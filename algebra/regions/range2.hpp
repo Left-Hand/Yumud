@@ -326,7 +326,7 @@ private:
 };
 
 using Range2i = Range2<int>;
-using Range2u = Range2<uint>;
+using Range2u = Range2<size_t>;
 
 using Range2u8 = Range2<uint8_t>;
 using Range2u16 = Range2<uint16_t>;
@@ -384,7 +384,7 @@ private:
 
     static constexpr Range2u32 begin_of_range(
         const Range2u32 range,
-        const uint gsize
+        const size_t gsize
     ){
         const auto grid_remaining = gsize - range.start % gsize;
         return Range2u32(range.start, std::min(range.start + grid_remaining, range.stop));
@@ -392,7 +392,7 @@ private:
 
     static constexpr Range2u32 end_of_range(
         const Range2u32 range,
-        const uint gsize
+        const size_t gsize
     ){
         const uint32_t grid_begin = range.stop - range.stop % gsize;
         return Range2u32(std::max(range.start, grid_begin), range.stop);
@@ -400,7 +400,7 @@ private:
     static constexpr Option<Range2u32> next_of_range(
         const Range2u32 range_in,
         const Range2u32 range_targ,
-        const uint gsize
+        const size_t gsize
     ){
         const auto end_range = end_of_range(range_targ, gsize);
         if(range_in.stop >= end_range.stop) return None;
@@ -413,7 +413,7 @@ private:
     static constexpr Option<Range2u32> prev_of_range(
         const Range2u32 range_in,
         const Range2u32 range_targ,
-        const uint gsize
+        const size_t gsize
     ){
         const auto begin_range = begin_of_range(range_targ, gsize);
         if(range_in.start <= begin_range.start) return None;

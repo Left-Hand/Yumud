@@ -423,7 +423,7 @@ private:
 
 using Rect2i = Rect2<int>;
 using Rect2f = Rect2<float>;
-using Rect2u = Rect2<uint>;
+using Rect2u = Rect2<size_t>;
 
 using Rect2u8 = Rect2<uint8_t>;
 using Rect2u16 = Rect2<uint16_t>;

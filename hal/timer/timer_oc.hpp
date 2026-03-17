@@ -73,7 +73,7 @@ public:
     __fast_inline void set_dutycycle(const uq16 dutycycle){
         cvr_ = static_cast<uint16_t>(dutycycle * arr_);
     }
-    __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
+    __fast_inline void set_cvr(const uint16_t cvr){cvr_ = cvr;}
     __fast_inline uq16 get_dutycycle(){return uq16(cvr_) / uint32_t(arr_);}
 protected:
     volatile uint16_t & cvr_;

@@ -46,7 +46,7 @@ enum class [[nodiscard]] RegAddr:uint8_t{
 };
 
 
-struct [[nodiscard]] Packet final{
+struct [[nodiscard]] alignas(4) Packet final{
     union{
         struct [[nodiscard]] { 
             uint32_t crc:6;
@@ -66,12 +66,23 @@ struct [[nodiscard]] Packet final{
         };
     };
     
-    constexpr Packet(const uint16_t bits):
-        data8(0), data16(bits){;}
+    static constexpr Packet from_u16(const uint16_t bits){
+        Packet self;
+        self.data16 = bits;
+        return self;
+    }
 
-    constexpr Packet(const uint8_t _data8, const uint16_t _data16):
-        data8(_data8), data16(_data16){;}
-    
+    static constexpr Packet from_u8u16(const uint8_t bits8, const uint16_t bits16){
+        Packet self;
+        self.data8 = bits8;
+        self.data16 = bits16;
+        return self;
+    }
+
+    static constexpr Packet zero(){
+        return Packet::from_u8u16(0, 0);
+    }
+
     __inline constexpr IResult<> validate_fast() const {
         return Ok();
     }
@@ -90,78 +101,127 @@ private:
 
 };
 
-class MT6701_Transport:public MT6701_Prelude{
+
+class MT6701_TransportIntf:public MT6701_Prelude{
 public:
-    using RegAddr = MT6701_Transport::RegAddr;
+    virtual IResult<> write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size) = 0;
+    virtual IResult<> read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size) = 0;
+};
 
-    MT6701_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        MT6701_Transport(std::nullopt, hal::SpiDrv(spi, rank)){;}
 
-    MT6701_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
-        MT6701_Transport(hal::I2cDrv(i2c, i2c_addr), std::nullopt){;}
+class MT6701_SpiTransport final:public MT6701_TransportIntf{
+public:
 
-    template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg){
+    MT6701_SpiTransport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(
-                    std::bit_cast<uint8_t>(T::ADDRESS), 
-                    reg.to_bits(), 
-                    std::endian::big
-                );
-                res.is_err()) return Err(res.unwrap_err());
-            reg.apply();
-            return Ok();
-        }else{
-            return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
-        }
+    IResult<> write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size){
+        return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
     }
 
-    template<typename T>
-    IResult<> read_reg(T & reg){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(
-                    std::bit_cast<uint8_t>(T::ADDRESS), 
-                    reg.as_bits_mut(), 
-                    std::endian::big);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else{
-            return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
-        }
+    IResult<> read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size){
+        return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
     }
 
 private:
-    MT6701_Transport(
-        std::optional<hal::I2cDrv> && i2c_drv, 
-        std::optional<hal::SpiDrv> && spi_drv
-    ):
-        i2c_drv_(std::move(i2c_drv)),
-        spi_drv_(std::move(spi_drv)){;}
 
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+    hal::SpiDrv spi_drv_;
+};
+
+
+class MT6701_I2cTransport final:public MT6701_TransportIntf{
+public:
+
+    MT6701_I2cTransport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        MT6701_I2cTransport(hal::I2cDrv(i2c, i2c_addr)){;}
+
+    IResult<> write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size){
+        switch(data_size){
+            case 1: return write_reg8(reg_addr, *reinterpret_cast<const uint8_t *>(p_reg_data));
+            case 2: return write_reg16(reg_addr, *reinterpret_cast<const uint16_t *>(p_reg_data));
+        }
+        __builtin_unreachable();
+    }
+
+    IResult<> write_reg8(const RegAddr reg_addr, const uint8_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(
+            std::bit_cast<uint8_t>(reg_addr), 
+            reg_val, 
+            std::endian::big
+        );
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
+
+    IResult<> write_reg16(const RegAddr reg_addr, const uint16_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(
+            std::bit_cast<uint8_t>(reg_addr), 
+            reg_val, 
+            std::endian::big
+        );
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
+
+    IResult<> read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size){
+        switch(data_size){
+            case 1: return read_reg8(reg_addr, *reinterpret_cast<uint8_t *>(p_reg_data));
+            case 2: return read_reg16(reg_addr, *reinterpret_cast<uint16_t *>(p_reg_data));
+        }
+        __builtin_unreachable();
+    }
+
+
+    IResult<> read_reg8(const RegAddr reg_addr, uint8_t & reg_val){ 
+        if(const auto res = i2c_drv_.read_reg(
+            std::bit_cast<uint8_t>(reg_addr), 
+            reg_val, 
+            std::endian::big
+        );
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> read_reg16(const RegAddr reg_addr, uint16_t & reg_val){ 
+        if(const auto res = i2c_drv_.read_reg(
+            std::bit_cast<uint8_t>(reg_addr), 
+            reg_val, 
+            std::endian::big
+        );
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+private:
+    MT6701_I2cTransport(
+        hal::I2cDrv && i2c_drv
+    ):
+        i2c_drv_(std::move(i2c_drv)){;}
+
+    hal::I2cDrv i2c_drv_;
 };
 
 struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
     struct [[nodiscard]] AngleCodeLeftAligned14bit final{
-        static constexpr auto ADDRESS = RegAddr::RawAngle;
+        static constexpr RegAddr REG_ADDR = RegAddr::RawAngle;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_RawAngle : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::RawAngle;
+        static constexpr RegAddr REG_ADDR = RegAddr::RawAngle;
         uint16_t bits;
     }DEF_R16(raw_angle_reg)
 
     struct [[nodiscard]] R8_UVWMux : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::UVWMux;
+        static constexpr RegAddr REG_ADDR = RegAddr::UVWMux;
         uint8_t __resv__:7;
         uint8_t uvw_mux:1;
     };
 
     struct [[nodiscard]] R8_ABZMux : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ABZMux;
+        static constexpr RegAddr REG_ADDR = RegAddr::ABZMux;
 
         uint8_t __resv1__:1;
         uint8_t is_clockwise:1;
@@ -171,27 +231,27 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
     };
 
     struct [[nodiscard]] R16_Resolution : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Resolution;
+        static constexpr RegAddr REG_ADDR = RegAddr::Resolution;
         uint16_t abz_resolution:10;
         uint16_t __resv__:2;
         uint16_t pole_pairs:4;
     };
 
     struct [[nodiscard]] R16_ZeroConfig : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::ZeroConfig;
+        static constexpr RegAddr REG_ADDR = RegAddr::ZeroConfig;
         uint16_t zero_position:12;
         ZeroPulseWidth zero_pulse_width:3;
         uint16_t hysteresis:1;
     };
 
     struct [[nodiscard]] R8_Hystersis : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Hystersis;
+        static constexpr RegAddr REG_ADDR = RegAddr::Hystersis;
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
     struct [[nodiscard]] R8_WireConfig : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::WireConfig;
+        static constexpr RegAddr REG_ADDR = RegAddr::WireConfig;
         uint8_t __resv__:5;
         uint8_t pwm_en:1;
         uint8_t pwm_polarity_low:1;
@@ -199,18 +259,18 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
     };
 
     struct [[nodiscard]] R8_StartStop : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::StartStop;
+        static constexpr RegAddr REG_ADDR = RegAddr::StartStop;
         uint8_t start:4;
         uint8_t stop:4;
     };
 
     struct [[nodiscard]] R8_Start:public  Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Start;
+        static constexpr RegAddr REG_ADDR = RegAddr::Start;
         uint8_t bits;
     };
 
     struct [[nodiscard]] R8_Stop:public  Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Stop;
+        static constexpr RegAddr REG_ADDR = RegAddr::Stop;
         uint8_t bits;
     };
 

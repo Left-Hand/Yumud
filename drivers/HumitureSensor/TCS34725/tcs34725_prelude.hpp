@@ -60,7 +60,7 @@ struct TCS34725_Prelude{
 
 struct TCS34725_Regset final:public TCS34725_Prelude{
     struct R8_Enable:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Enable;
+        static constexpr RegAddr REG_ADDR = RegAddr::Enable;
         uint8_t powerOn : 1;
         uint8_t adc_en : 1;
         uint8_t __resv1__ :1;
@@ -70,33 +70,33 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
     }DEF_R8(enable_reg)
 
     struct R8_Integration:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Integration;
+        static constexpr RegAddr REG_ADDR = RegAddr::Integration;
         uint8_t data;
     }DEF_R8(integration_reg)
 
     struct R8_IntPersistence:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::IntPersistence;
+        static constexpr RegAddr REG_ADDR = RegAddr::IntPersistence;
 
         uint8_t __resv__ :4;
         uint8_t apers   :4;
     }DEF_R8(int_persistence_reg)
 
     struct R8_LongWait:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::LongWait;
+        static constexpr RegAddr REG_ADDR = RegAddr::LongWait;
         uint8_t __resv1__ :1;
         uint8_t wait_long : 1;
         uint8_t __resv2__ :6;
     }DEF_R8(long_wait_reg)
 
     struct R8_Gain:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Gain;
+        static constexpr RegAddr REG_ADDR = RegAddr::Gain;
 
         Gain gain        :2;
         uint8_t __resv2__   :6;
     }DEF_R8(gain_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Status;
+        static constexpr RegAddr REG_ADDR = RegAddr::Status;
         uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
         uint8_t interrupt_flag     :1;
@@ -105,22 +105,22 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
 
     struct R8_WaitTime:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::WaitTime;
+        static constexpr RegAddr REG_ADDR = RegAddr::WaitTime;
         uint8_t wait_time;
     }DEF_R8(wait_time_reg)
 
     struct R16_LowThr:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::LowThr;
+        static constexpr RegAddr REG_ADDR = RegAddr::LowThr;
         uint16_t data;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::HighThr;
+        static constexpr RegAddr REG_ADDR = RegAddr::HighThr;
         uint16_t data;
     }DEF_R16(high_thr_reg)
 
     struct R8_DeviceId:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::DeviceId;
+        static constexpr RegAddr REG_ADDR = RegAddr::DeviceId;
 
         // 0x44 = TCS34721 and TCS34725
         // 0x4D = TCS34723 and TCS34727

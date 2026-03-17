@@ -471,7 +471,7 @@ template<typename T>
 
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
-using Vec2u = Vec2<uint>;
+using Vec2u = Vec2<unsigned int>;
 using Vec2u8 = Vec2<uint8_t>;
 using Vec2u16 = Vec2<uint16_t>;
 
