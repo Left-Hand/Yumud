@@ -27,7 +27,7 @@ void can_request_sleep(void * p_inst, const Enable en);
 void can_enable_rcc(const Nth can_nth, const Enable en);
 void can_set_remap(const Nth can_nth, const hal::CanRemap remap);
 
-Result<void, void> my_barecan_init(void * _CANx, const void * _CAN_InitStruct);
+Result<void, void> can_initialze(void * p_inst, const void * _CAN_InitStruct);
 
 //can发送数据帧(非ttcan)
 void can_transmit_nott(

@@ -13,17 +13,17 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-static constexpr const NvicPriorityCode UART_RX_DMA_INTERRUPT_NVIC_PRIORITY 
+static constexpr NvicPriorityCode UART_RX_DMA_INTERRUPT_NVIC_PRIORITY 
     = NvicPriorityCode::from_pre_sub_d2(1,0);
 
-static constexpr const NvicPriorityCode UART_TX_DMA_INTERRUPT_NVIC_PRIORITY 
+static constexpr NvicPriorityCode UART_TX_DMA_INTERRUPT_NVIC_PRIORITY 
     = NvicPriorityCode::from_pre_sub_d2(1,2);
 
-static constexpr const NvicPriorityCode UART_INTERRUPT_NVIC_PRIORITY 
+static constexpr NvicPriorityCode UART_INTERRUPT_NVIC_PRIORITY 
     = NvicPriorityCode::from_pre_sub_d2(1,1);
 
-static constexpr const DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
-static constexpr const DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+static constexpr DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+static constexpr DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
 
 
 static_assert(std::has_single_bit(UART_RX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
@@ -87,19 +87,23 @@ namespace {
 #if 1
 template<typename T>
 static T clone_volatile(volatile T * p_reg){
-    return *const_cast<T *>(p_reg);
+    static_assert(sizeof(T) == 4);
+    const uint32_t temp_u32 = *reinterpret_cast<volatile uint32_t *>(p_reg);
+    return std::bit_cast<T>(temp_u32);
 }
 
 template<typename T>
 static void notify_volatile_readed(volatile T * p_reg){
-    const T dummy = *const_cast<T *>(p_reg);
-    UNUSED(dummy);
+    static_assert(sizeof(T) == 4);
+    const uint32_t temp_u32 = *reinterpret_cast<volatile uint32_t *>(p_reg);
+    UNUSED(temp_u32);
     return;
 }
 
 template<typename T>
-static void store_volatile(volatile T * p_reg, const auto x){
-    *const_cast<T *>(p_reg) = std::bit_cast<T>(x);
+static void store_volatile(volatile T * p_reg, const uint32_t x){
+    static_assert(sizeof(T) == 4);
+    *reinterpret_cast<volatile uint32_t *>(p_reg) = x;
 }
 
 
@@ -742,8 +746,9 @@ void UartIrqHandler::isr_txe(Uart & self){
         case CommStrategy::Interrupt:{
             if(const auto quantity = self.tx_queue_.consume_one([&](uint8_t byte){
                 SPL_INST(self.p_inst_)->DATAR = byte;
-            }); quantity != 0){
-                //nothing to do
+            }); quantity == 0){
+                // 队列空，禁用TXE中断
+                RAL_INST(self.p_inst_)->CTLR1.TXEIE = 0;
             }
         }
             break;
@@ -764,16 +769,16 @@ void UartIrqHandler::isr_idle(Uart & self){
         case CommStrategy::Dma:{
             const size_t supposed_dma_buf_index = UART_RX_DMA_BUF_SIZE - self.rx_dma_.pending_count();
 
-            if(supposed_dma_buf_index >= UART_RX_DMA_BUF_SIZE) [[unlikely]]
-                UNREACHABLE();
+            constexpr uint32_t half_unaligned_mask = (HALF_UART_RX_DMA_BUF_SIZE - 1);
 
-            const uint32_t half_unaligned_mask = (HALF_UART_RX_DMA_BUF_SIZE - 1);
-
-            // 如果这个索引已经被对齐到全部传输完成或者一半传输完成 
-            // dma半满和全满中断将会接管缓冲填充操作 
+            // 如果这个索引已经被对齐到全部传输完成或者一半传输完成
+            // dma半满和全满中断将会接管缓冲填充操作
             if(supposed_dma_buf_index & half_unaligned_mask) [[likely]] {
                 const auto rx_dma_buf_index = self.rx_dma_buf_index_;
-                const auto required_quantity = size_t(supposed_dma_buf_index - rx_dma_buf_index);
+                const auto required_quantity = (supposed_dma_buf_index >= rx_dma_buf_index)
+                    ? (supposed_dma_buf_index - rx_dma_buf_index)
+                    : (UART_RX_DMA_BUF_SIZE - rx_dma_buf_index + supposed_dma_buf_index);
+
                 const auto actual_quantity = self.rx_queue_.try_push(std::span(
                     self.rx_dma_buf_.data() + rx_dma_buf_index, required_quantity
                 ));
@@ -785,9 +790,9 @@ void UartIrqHandler::isr_idle(Uart & self){
                 }
             }
 
-            self.rx_dma_buf_index_ = supposed_dma_buf_index;
+            self.rx_dma_buf_index_ = supposed_dma_buf_index & (UART_RX_DMA_BUF_SIZE - 1);
             emit_idle_event();
-        };
+        }
             break;
 
         case CommStrategy::Interrupt:{
@@ -860,12 +865,21 @@ void UartIrqHandler::on_interrupt(Uart & self){
     // fe:帧错误
     // pe:奇偶校验错误
 
-    if(std::bit_cast<uint32_t>(temp_statr) & 0x0f){
+
+    static constexpr uint32_t STATR_PE_MASK = 1u << 0;
+    static constexpr uint32_t STATR_FE_MASK = 1u << 1;
+    static constexpr uint32_t STATR_NE_MASK = 1u << 2;
+    static constexpr uint32_t STATR_ORE_MASK = 1u << 3;
+
+    static constexpr uint32_t STATR_LOWEST_MASK = 0x0f;
+    
+
+    if(std::bit_cast<uint32_t>(temp_statr) & STATR_LOWEST_MASK){
         // 过载错误标志。当接收移位寄存器存在数据需
         // 要转到数据寄存器时，但是数据寄存器的接收
         // 域还有数据未读出时，此位将会被置位。如果
         // RXNEIE 被置位了，还会产生对应中断
-        if(temp_statr.ORE){
+        if(std::bit_cast<uint32_t>(temp_statr) & STATR_ORE_MASK){
             {
                 //TODO
             }
@@ -875,7 +889,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 帧错误标志。当检测到同步错误，过多的噪声
         // 或者断开符，该位将会被硬件置位。读此位再
         // 读数据寄存器的操作会复位此位。
-        if(temp_statr.FE){
+        if(std::bit_cast<uint32_t>(temp_statr) & STATR_FE_MASK){
             //帧错误
             {
                 //TODO
@@ -889,7 +903,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 必须等 RXNE 标志位被置位。如果 PEIE 之前已
         // 经被置位，那么此位被置位会产生对应的中
         // 断。
-        if(temp_statr.PE){
+        if(std::bit_cast<uint32_t>(temp_statr) & STATR_PE_MASK){
             //奇偶校验位错误
             {
                 //TODO
@@ -901,7 +915,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 噪声错误标志。当检测到噪声错误标志时，由
         // 硬件置位。读状态寄存器后，再读数据寄存器
         // 的操作会复位此位。
-        if(temp_statr.NE){
+        if(std::bit_cast<uint32_t>(temp_statr) & STATR_NE_MASK){
             // 噪声错误标志
             {
                 //TODO
@@ -915,18 +929,26 @@ void UartIrqHandler::on_interrupt(Uart & self){
     // ctlr1和statr在这部分共用相同字段
     // |  7  |  6   |  5   |  4  |
     // | txe |  tc  | rxne |  idle  |
-    const uint32_t transmission_flags_mask = 
-        std::bit_cast<uint32_t>(temp_ctlr1) & 
-        std::bit_cast<uint32_t>(temp_statr) & 0xf0;
 
-    if(transmission_flags_mask){
+    static constexpr uint32_t CTLR1_IDLE_MASK = 1u << 4;
+    static constexpr uint32_t CTLR1_RXNE_MASK = 1u << 5;
+    static constexpr uint32_t CTLR1_TC_MASK = 1u << 6;
+    static constexpr uint32_t CTLR1_TXE_MASK = 1u << 7;
+    static constexpr uint32_t UNION_MASK = 0xf0;
+
+    const uint32_t union_flags_mask = 
+        std::bit_cast<uint32_t>(temp_ctlr1) 
+        & std::bit_cast<uint32_t>(temp_statr) 
+        & UNION_MASK;
+
+    if(union_flags_mask){
         // rxne
         // 读数据寄存器非空标志，当移位寄存器中的数
         // 据被转移到数据寄存器中，该位会被硬件置
         // 位。如果 RXNEIE 已经被置位，则还会产生对应
         // 的中断。对数据寄存器的读操作可以将该位清
         // 除。也可以直接写 0 来清除该位。
-        if(transmission_flags_mask & (1u << 5)){
+        if(union_flags_mask & CTLR1_RXNE_MASK){
             UartIrqHandler::isr_rxne(self);
 
             // 也可以直接写 0 来清除该位
@@ -939,7 +961,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 硬件置位。如果 TXEIE 已经被置位时，就会产
         // 生中断，对数据寄存器进行写操作，此位将会
         // 被复位。
-        if(transmission_flags_mask & (1u << 7)){
+        if(union_flags_mask & CTLR1_TXE_MASK){
             UartIrqHandler::isr_txe(self);
             // 对数据寄存器进行写操作，此位将会
             // 被复位。
@@ -951,11 +973,11 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 如果 TCIE 被置位，还会产生对应中断，软件读
         // 了此位再写数据寄存器则会清除此位。也可以
         // 直接写 0 来清除此位。
-        if(transmission_flags_mask & (1u << 6)){
+        if(union_flags_mask & CTLR1_TC_MASK){
             UartIrqHandler::isr_tc(self);
 
             // 也可以直接写 0 来清除此位
-            store_volatile(&ral_inst->STATR, (~(1u << 6)));
+            store_volatile(&ral_inst->STATR, (~CTLR1_TC_MASK));
             // USART_ClearITPendingBit(SPL_INST(self.p_inst_), USART_IT_TC);
         }
 
@@ -964,7 +986,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
         // 件置位。如果 IDLEIE 已经被置位，则会产生对
         // 应的中断。读状态寄存器再读数据寄存器的操
         // 作会清除此位。
-        if(transmission_flags_mask & (1u << 4)){
+        if(union_flags_mask & CTLR1_IDLE_MASK){
             UartIrqHandler::isr_idle(self);
 
             //已经读了状态寄存器了，

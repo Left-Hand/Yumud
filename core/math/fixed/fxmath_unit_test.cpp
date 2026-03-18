@@ -12,6 +12,16 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
     else return b - a;
 }
 
+static constexpr double SQRT3_F64 = std::sqrt(3.0);
+
+template<size_t Q, typename T>
+static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, T> b){
+    // if(a > b) return a - b;
+    // else return b - a;
+    if(b > a) return (double)(b.to_bits() - a.to_bits()) / static_cast<double>(1ull << Q);
+    return (double)(a.to_bits() - b.to_bits()) / static_cast<double>(1ull << Q);
+}
+
 [[maybe_unused]] void test_sqrt(){
     static_assert(math::sqrt(iq16(0)) == iq16(0));
     static_assert(math::sqrt(iq16(4)) == iq16(2));
@@ -64,21 +74,39 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
 
 
 [[maybe_unused]] static void test_sin(){
-    static_assert(math::sinpu(iq16(0)) == 0);
-    static_assert(math::sinpu(iq16(0.25)) == std::numeric_limits<iq31>::max());
-    static_assert(math::sinpu(iq16(0.5)) == iq16(0));
-    static_assert(math::sinpu(iq16(1.0)) == iq16(0));
+    static_assert(math::sinpu(iq16(0)).to_bits() == 0);
+    static_assert(math::sinpu(iq16(0.25)).to_bits() == std::numeric_limits<iq31>::max().to_bits());
+    static_assert(math::sinpu(iq16(0.5)).to_bits() == iq16(0).to_bits());
+    static_assert(math::sinpu(iq16(1.0)).to_bits() == iq16(0).to_bits());
 
-    static_assert(math::sinpu(iq10(0)) == iq10(0));
-    static_assert(math::sinpu(iq10(0.25)) == std::numeric_limits<iq31>::max());
-    static_assert(math::sinpu(iq10(0.5)) == iq10(0));
-    static_assert(math::sinpu(iq10(1.0)) == iq10(0));
+    static_assert(math::sinpu(iq31(0)).to_bits() == iq31(0).to_bits());
+    static_assert(math::sinpu(iq31(0.25)).to_bits() == std::numeric_limits<iq31>::max().to_bits());
+    static_assert(math::sinpu(iq31(0.5)).to_bits() == iq31(0).to_bits());
 
-    static_assert(math::sinpu(iq30(0)) == iq30(0));
-    static_assert(math::sinpu(iq30(0.25)) == std::numeric_limits<iq31>::max());
-    static_assert(math::sinpu(iq30(0.5)) == iq30(0));
-    static_assert(math::sinpu(iq30(1.0)) == iq30(0));
+
+    static_assert(err_f64(math::sinpu(iq31(0.75)), std::numeric_limits<iq31>::min()) < 1E-7);
+
+
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(1.0 / 3))), iq31(0.5)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(5.0 / 3))), iq31(0.5)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(7.0 / 3))), iq31(-0.5)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(11.0 / 3))), iq31(-0.5)) < 1E-7);
+
+
+
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(2.0 / 3))), iq31(SQRT3_F64 / 2)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(4.0 / 3))), iq31(SQRT3_F64 / 2)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(8.0 / 3))), iq31(-SQRT3_F64 / 2)) < 1E-7);
+    static_assert(err_f64(math::sinpu(iq31(0.25 *(10.0 / 3))), iq31(-SQRT3_F64 / 2)) < 1E-7);
+
+
+    static_assert(math::sinpu(iq30(0)).to_bits() == iq30(0).to_bits());
+    static_assert(math::sinpu(iq30(0.25)).to_bits() == std::numeric_limits<iq31>::max().to_bits());
+    static_assert(math::sinpu(iq30(0.5)).to_bits() == iq30(0).to_bits());
+    static_assert(math::sinpu(iq30(1.0)).to_bits() == iq30(0).to_bits());
+
 }
+
 
 
 
@@ -90,6 +118,12 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
 
     static_assert(std::abs((double)math::atanpu(iq16(1.0)) - 0.125) < 1E-7);
     static_assert(std::abs((double)math::atanpu(-iq16(1.0)) - 0.875) < 1E-7);
+
+    static_assert(err_f64(math::atanpu(iq29(1.0 / SQRT3_F64)), uq32(0.25 * (1.0 / 3))) < 1E-7);
+    static_assert(err_f64(math::atanpu(iq29(SQRT3_F64)), uq32(0.25 * (2.0 / 3))) < 1E-7);
+
+    static_assert(err_f64(math::atanpu(iq29(-1.0 / SQRT3_F64)), uq32(1.0 - 0.25 * (1.0 / 3))) < 1E-7);
+    static_assert(err_f64(math::atanpu(iq29(-SQRT3_F64)), uq32(1.0 - 0.25 * (2.0 / 3))) < 1E-7);
 }
 
 [[maybe_unused]] static void test_asin(){
@@ -135,9 +169,11 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
         constexpr float f_n2 = float(math::lg(uq16(0.01)));
         constexpr float f1 = float(math::lg(uq16(10)));
         constexpr float f3 = float(math::lg(uq16(1000)));
+        constexpr float f4 = float(math::lg(uq10(10000)));
         static_assert(std::abs(f_n2 - -2.0) < 3e-4);
         static_assert(std::abs(f1 - 1.0) < 1e-4);
         static_assert(std::abs(f3 - 3.0) < 1e-4);
+        static_assert(std::abs(f4 - 4.0) < 1e-3);
     }
 
 }

@@ -1,4 +1,6 @@
 #include "ctzclz.hpp"
+#include "mask.hpp"
+
 
 using namespace ymd::intrinsics;
 namespace {
@@ -60,4 +62,8 @@ static_assert(clz32(0xFFFFFFFF) == 0, "clz(0xFFFFFFFF) should be 0");
         // static_assert(reverse_u8x4(0x12345678) == 0b0100'1000'1101'0110)
     }
 }
+
+
+static_assert(bmask32(false) == 0x000);
+static_assert(bmask32(true) == 0xffffffff);
 }

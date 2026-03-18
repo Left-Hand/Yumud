@@ -396,7 +396,7 @@ Nth can_to_nth(const uintptr_t inst_base){
 }
 
 
-Result<void, void> my_barecan_init(void * p_inst, const void * _CAN_InitStruct)
+Result<void, void> can_initialze(void * p_inst, const void * _CAN_InitStruct)
 {
     CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(p_inst);
     const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);

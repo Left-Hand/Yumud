@@ -365,7 +365,7 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    if(const auto res = lld::my_barecan_init(p_inst_, &CAN_InitConf);
+    if(const auto res = lld::can_initialze(p_inst_, &CAN_InitConf);
         res.is_err()){
         //初始化失败
         DEBUG_TRAP();
@@ -491,7 +491,7 @@ Result<void, Infallible> Can::set_filter_origin(
 }
 
 uint32_t can_get_aligned_bus_clk_freq(){
-    #if defined(CH32V203) || defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
+    #if defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
     //所有的CAN外设都使用APB1时钟
     return sys::clock::get_apb1_clk_freq();
     #elif defined(CH32H417)
@@ -528,7 +528,11 @@ Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     const bool is_any_mailbox_idle = (temp_tstar & ANY_MAILBOX_IDLE_BITMASK) != 0;
 
     if(is_any_mailbox_idle){
+
+        //根据数据手册 这里不可能为3
         const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
+        if(idle_mbox_idx_bits > 2) __builtin_unreachable();
+
         const auto idle_mbox_idx = std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits);
         lld::can_transmit_nott(p_inst_, idle_mbox_idx, frame);
         return Ok();
@@ -572,7 +576,7 @@ void CanIrqHandler::isr_tx(Can & self){
 
         for(size_t i = 0; i < 3; i++){
             
-            auto guard = make_scope_guard([&]{
+            [[maybe_unused]] auto guard = make_scope_guard([&]{
                 temp_tstatr >>= 8;
                 clear_mask <<= 8;
             });
@@ -612,11 +616,10 @@ void CanIrqHandler::isr_tx(Can & self){
     temp_tme >>= TME_BASE_SHIFT;
 
     size_t desired_dequeue_quantity = self.tx_queue_.length();
-    uint32_t tme_is_set_mask = 1;
 
     for(size_t i = 0; i < 3; i++){
-        auto guard = make_scope_guard([&]{
-            tme_is_set_mask <<= 1;
+        [[maybe_unused]] auto guard = make_scope_guard([&]{
+            temp_tme >>= 1;
         });
 
         // 不是空的
@@ -654,7 +657,7 @@ void CanIrqHandler::isr_rx(
 
    // 1. 处理 FIFO 满
     if(temp_rfifo_reg & CAN_RFIFO_FFULL_MASK){
-        auto isr_flag_clear_guard = make_scope_guard([&](){
+        [[maybe_unused]] auto isr_flag_clear_guard = make_scope_guard([&](){
             rfifo_reg = CAN_RFIFO_FFULL_MASK;
         });
 
@@ -670,7 +673,7 @@ void CanIrqHandler::isr_rx(
     
     // 2. 处理 FIFO 溢出
     if(temp_rfifo_reg & CAN_RFIFO_FOV_MASK){
-        auto isr_flag_clear_guard = make_scope_guard([&](){
+        [[maybe_unused]] auto isr_flag_clear_guard = make_scope_guard([&](){
             rfifo_reg = CAN_RFIFO_FOV_MASK;
         });
 
@@ -687,7 +690,7 @@ void CanIrqHandler::isr_rx(
     // 3. FIFO中的报文入队
     {
 
-        // 每次都访问寄存器以确保在中断发生过程中有新数据也能被处理
+        // 每次都访问寄存器以确保在中断发生过程中有新报文被收到 也能被处理
         auto get_latest_rfifo_pending_quantity = [&] -> size_t {
             const uint32_t readed_rfifo_reg = rfifo_reg;
             return static_cast<size_t>((readed_rfifo_reg & CAN_RFIFO_FMP_MASK) >> 0);
@@ -717,9 +720,9 @@ void CanIrqHandler::isr_rx(
                     .kind = CanReceiveEvent::Kind::FrameEnqueued,
                 });
                 TRY_EMIT_EVENT(self, ev)
-                rfifo_pending_quantity--;
+                rfifo_pending_quantity -= enqueued_quantity;
             }else{
-                self.queue_full_count++;
+                self.queue_ovf_count.fetch_add(1u, std::memory_order_relaxed);
                 const auto ev = CanEvent::from(hal::CanReceiveEvent{
                     .fifo_idx = fifo_idx,
                     .kind = CanReceiveEvent::Kind::FrameEnqueueFailed,
@@ -728,7 +731,8 @@ void CanIrqHandler::isr_rx(
                 break;
             }
 
-            //临别之前确保中断过程中收到的报文也被消费 避免再次进入中断
+            //临别之前确保中断过程中收到的报文也被消费 避免频繁进入中断
+            //理论上如果频繁被置位会导致死循环 但实际由于can报文最短接收间隔也有数十微秒 不会造成这样的问题
             if(rfifo_pending_quantity == 0)
                 rfifo_pending_quantity = get_latest_rfifo_pending_quantity();
         }
