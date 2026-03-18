@@ -53,7 +53,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 
             const auto [st, ct] = math::sincospu(700 * t);
 
-            static constexpr const iq16 depth = 0.7_r;
+            static constexpr iq16 depth = 0.7_r;
             const auto uvw_dutycycle = digipw::SVM({ct * depth, st * depth});
             pwm_gen.set_dutycycle(uvw_dutycycle);
             break;
