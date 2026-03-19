@@ -149,6 +149,15 @@ public:
     Option(const S & other):Option(custom::option_converter<T, S>::convert(other)){}
     [[nodiscard]] __fast_inline constexpr bool 
     is_some() const{ return exists_; }
+
+    template<typename Fn>
+    [[nodiscard]] __fast_inline constexpr bool 
+    is_some_and(Fn && fn) const{ 
+        if(not exists_) return false;
+        return std::forward<Fn>(fn)(get_inner());
+    }
+
+
     [[nodiscard]] __fast_inline constexpr bool 
     is_none() const{ return !exists_; }
 
@@ -156,11 +165,6 @@ public:
     is_value(const T value) const{
         if(not exists_) return false;
         return value == unwrap();
-    }
-
-    [[nodiscard]] __fast_inline constexpr const T & 
-    value_or(const T & default_value) const{
-        return exists_ ? get_inner() : default_value;
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 

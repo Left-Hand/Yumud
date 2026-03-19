@@ -233,9 +233,16 @@ static constexpr Result<CommandKind, DeMsgError> try_into_command_kind(const uin
 
 
 enum class [[nodiscard]] LoopMode:uint8_t {
+    //电压闭环
     VoltageLoop = 0,
+
+    //电流闭环
     CurrentLoop = 1,
+
+    //速度闭环
     VelocityLoop = 2,
+
+    //位置闭环
     PositionLoop = 3,
 };
 

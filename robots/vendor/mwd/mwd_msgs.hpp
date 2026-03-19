@@ -2,6 +2,8 @@
 
 #include "mwd_primitive.hpp"
 #include "core/utils/bytes/bytes_caster.hpp"
+#include "primitive/can/can_id.hpp"
+#include "primitive/can/bxcan_payload.hpp"
 #include "mwd_utils.hpp"
 #include <utility>
 
@@ -149,22 +151,30 @@ struct [[nodiscard]] SetParamRam{
 
 namespace resp{
 
+// RESP[0x9a] 读取电机状态1和错误标志命令（1帧）
+struct [[nodiscard]] GetStatus1{
+    static constexpr CommandKind COMMAND_KIND = CommandKind::GetStatus1;
+    static constexpr size_t PAYLOAD_LENGTH = 7;
+    PackedStatus1 status;
+};
+
+
 }
 
 template<typename Receiver, typename Msg>
-Result<void, typename Receiver::Error> 
-serialize_rs485_msg_header(
-    Receiver && receiver, 
+static constexpr Result<void, typename Receiver::Error> 
+serialize_rs485_frame_header(
+    Receiver & receiver, 
     uint8_t motor_id,
     const Msg & msg
 ){
-    static constexpr uint8_t HEADER = 0x3e;
-    const CommandKind COMMAND_KIND = Msg::COMMAND_KIND;
-    const size_t PAYLOAD_LENGTH = Msg::PAYLOAD_LENGTH;
+    constexpr uint8_t RS485_FRAME_HEADER_TOKEN = 0x3e;
+    constexpr CommandKind COMMAND_KIND = Msg::COMMAND_KIND;
+    constexpr size_t PAYLOAD_LENGTH = Msg::PAYLOAD_LENGTH;
     if(PAYLOAD_LENGTH >= 256) __builtin_unreachable();
 
     std::array<uint8_t, 5> buf = {
-        HEADER,
+        RS485_FRAME_HEADER_TOKEN,
         static_cast<uint8_t>(COMMAND_KIND),
         static_cast<uint8_t>(motor_id),
         static_cast<uint8_t>(PAYLOAD_LENGTH),
@@ -182,5 +192,65 @@ serialize_rs485_msg_header(
 
     return Ok();
 };
+
+
+
+template<typename Receiver, typename Msg>
+static constexpr Result<void, typename Receiver::Error> 
+serialize_rs485_frame_payload(
+    Receiver & receiver, 
+    const Msg & msg
+){
+    if(const auto res = msg.serialize(receiver);
+        res.is_err()) return Err(res.unwrap_err());
+
+    const uint8_t crc_val = WrapAddAccumulator()
+        .push_bytes(receiver.collected_bytes())
+        .finalize();
+
+    if(const auto res = msg.push_byte(crc_val);
+        res.is_err()) return Err(res.unwrap_err());
+    
+    return Ok();
+}
+
+template<typename Receiver, typename Msg>
+static constexpr  Result<void, typename Receiver::Error>
+serialize_rs485_frame(
+    Receiver & receiver, 
+    uint8_t motor_id,
+    const Msg & msg
+){
+    if(const auto res = serialize_rs485_frame_header(receiver, motor_id, msg);
+        res.is_err()) return Err(res.unwrap_err());
+
+    const auto remaining_receiver = ({
+        const auto res = receiver.split_remaining();
+        if(res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
+
+    if(const auto res = serialize_rs485_frame_payload(remaining_receiver, msg);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
+}
+
+static constexpr hal::CanStdId
+serialize_can_frame_id(
+    uint8_t motor_id
+){
+    return hal::CanStdId::from_u11(0x140 + motor_id);
+}
+
+template<typename Msg>
+static constexpr hal::ClassicCanPayload
+serialize_can_frame_payload(
+    const Msg & msg
+){
+    std::array<uint8_t, 8> u8x8;
+
+    return hal::ClassicCanPayload::from_u8x8(u8x8);
+}
 
 }

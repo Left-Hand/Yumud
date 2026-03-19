@@ -326,34 +326,6 @@ struct PackedStatus3{
     }
 };
 
-
-// struct [[nodiscard]] AxisId final{
-//     using Self = AxisId;
-
-//     static constexpr Self from_bits(const uint8_t bits){
-//         return std::bit_cast<Self>(bits);
-//     }
-
-//     static constexpr Self from_b6(const literals::bs6 bs){
-//         return from_bits(bs.to_bits());
-//     }
-
-//     [[nodiscard]] constexpr uint8_t to_bits() const {
-//         return bits_;
-//     }
-
-//     constexpr literals::bs6 to_b6() const {
-//         return literals::bs6::from_bits(to_bits());
-//     }
-
-//     friend OutputStream & operator <<(OutputStream & os, const Self & self){
-//         return os << self.to_bits();
-//     }
-// private:
-//     uint8_t bits_;
-// };
-
-
 }
 
 // using namespace primitive;
