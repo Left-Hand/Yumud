@@ -208,13 +208,6 @@ struct [[nodiscard]] SPI_Def{
         return BIT_CAST(Events, uint8_t(std::bit_cast<uint32_t>(STATR)));
     }
 
-    constexpr void clear_events(const Events events){
-        uint32_t mask = BIT_CAST(uint8_t, events);
-        const_cast<R32_SPI_STATR &>(STATR) = 
-            BIT_CAST(R32_SPI_STATR, 
-                uint32_t((~mask) & std::bit_cast<uint32_t>(STATR))
-            );
-    }
 };
 
 

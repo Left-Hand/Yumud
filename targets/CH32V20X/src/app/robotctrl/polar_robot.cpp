@@ -220,7 +220,7 @@ private:
 };
 
 
-struct [[nodiscard]] GcodeStateHolder final{
+struct [[nodiscard]] GcodeParseState final{
     static constexpr auto X_LIMIT = 0.2_r;
     static constexpr auto Y_LIMIT = 0.2_r;
 
@@ -389,7 +389,7 @@ void polar_robot_main(){
         ASSERT(line.query_mnemonic().examine().to_letter() == 'G', 
             "only G gcode is supported");
 
-        static GcodeStateHolder state_;
+        static GcodeParseState state_;
 
         auto parse_g_command = [&](const gcode::GcodeArg & arg){
             const uint16_t major = static_cast<uint16_t>(arg.value);

@@ -299,21 +299,6 @@ struct [[nodiscard]] I2C_Def{
             | (std::bit_cast<uint16_t>(STAR2) << 16)
         );
     }
-
-    constexpr void clear_events(const Events events){
-        const auto low16 = events.low16();
-        const auto high8 = events.high8();
-
-        if(low16){
-            const_cast<R16_I2C_STAR1 &>(STAR1) = 
-                BIT_CAST(R16_I2C_STAR1, uint16_t(BIT_CAST(uint16_t, STAR1) & (~low16)));
-        }
-
-        if(high8){
-            const_cast<R16_I2C_STAR2 &>(STAR2) = 
-            BIT_CAST(R16_I2C_STAR2, uint16_t(BIT_CAST(uint16_t, STAR2) & ((~high8) | 0xff00)));
-        }
-    }
 };
 
 

@@ -204,13 +204,6 @@ namespace ymd::ral::py32::py32f003{
             return BIT_CAST(Events, uint8_t(std::bit_cast<uint16_t>(STATR)));
         }
 
-        constexpr void clear_events(const Events events){
-            uint16_t mask = BIT_CAST(uint8_t, events);
-            const_cast<R16_SPI_STATR &>(STATR) = 
-                BIT_CAST(R16_SPI_STATR, 
-                    uint16_t((~mask) & std::bit_cast<uint16_t>(STATR))
-                );
-        }
     };
 
 

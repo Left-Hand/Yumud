@@ -10,12 +10,13 @@ namespace ymd::ral::ch32::common_dma{
 struct [[nodiscard]] R32_DMA_INTFR{
     uint32_t BITS;
 };
+
 VALIDATE_R32(R32_DMA_INTFR)
 
 struct [[nodiscard]] R32_DMA_INTFCR{
     uint32_t BITS;
-
 };
+
 VALIDATE_R32(R32_DMA_INTFCR)
 
 struct [[nodiscard]] R32_DMA_CFGR{
@@ -51,7 +52,7 @@ struct [[nodiscard]] R32_DMA_MADDR{
 
 
 struct [[nodiscard]] R32_DMA2_EXTEM_INTFR{
-    volatile uint32_t BITS;
+    uint32_t BITS;
 };
 
 struct [[nodiscard]] DMA_CH_Def{
@@ -59,60 +60,14 @@ struct [[nodiscard]] DMA_CH_Def{
     volatile R32_DMA_CNTR CNTR;
     volatile R32_DMA_PADDR PADDR;
     volatile R32_DMA_MADDR MADDR;
-
-    constexpr void enable(const Enable en){
-        CFGR.EN = (en == EN);
-    }
-
-    constexpr void enable_transfer_done_interrupt(const Enable en){
-        CFGR.TCIE = (en == EN);
-    }
-
-    constexpr void enable_transfer_onhalf_interrupt(const Enable en){
-        CFGR.HTIE = (en == EN);
-    }
-
-    void enable_transfer_error_interrupt(const Enable en){
-        CFGR.TEIE = (en == EN);
-    }
-
-    void set_source_is_mem(const Enable en){
-        CFGR.DIR = (en == EN);
-    }
-
-    void enable_circular_mode(const Enable en){
-        CFGR.CIRC = (en == EN);
-    }
-
-    void enable_periph_increment(const Enable en){
-        CFGR.PINC = (en == EN);
-    }
-
-    void enable_mem_increment(const Enable en){
-        CFGR.MINC = (en == EN);
-    }
-
-    void set_priority(const uint8_t prio){
-        CFGR.PL = prio;
-    }
-
-    void enable_mem2mem(const Enable en){
-        CFGR.MEM2MEM = (en == EN);
-    }
-
-    void set_periph_address(const uint32_t addr){
-        PADDR.BITS = addr;
-    }
-
-    void set_mem_address(const uint32_t addr){
-        MADDR.BITS = addr;
-    }
-
-    void set_data_len(const uint16_t len){
-        CNTR.BITS = len;
-    }
 };
 
+
+
+static_assert(__builtin_offsetof(DMA_CH_Def, DMA_CH_Def::CFGR) == 0x00);
+static_assert(__builtin_offsetof(DMA_CH_Def, DMA_CH_Def::CNTR) == 0x04);
+static_assert(__builtin_offsetof(DMA_CH_Def, DMA_CH_Def::PADDR) == 0x08);
+static_assert(__builtin_offsetof(DMA_CH_Def, DMA_CH_Def::MADDR) == 0x0c);
 
 static_assert((sizeof(DMA_CH_Def) == 16)); 
 
@@ -197,7 +152,11 @@ struct [[nodiscard]] DMA1_Def{
         constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
         INTFCR.BITS = MASK;
     }
+
 };
+
+
+static_assert(__builtin_offsetof(DMA1_Def, DMA1_Def::CH[0]) == 0x08);
 
 struct [[nodiscard]] DMA2_Def{
     volatile R32_DMA_INTFR INTFR;
@@ -300,6 +259,8 @@ struct [[nodiscard]] DMA2_Def{
         reg.BITS = MASK;
     }
 };
+
+static_assert(__builtin_offsetof(DMA1_Def, DMA1_Def::CH[0]) == 0x08);
 
 }
 

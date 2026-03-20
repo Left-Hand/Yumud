@@ -433,11 +433,6 @@ struct [[nodiscard]] TIM_Def{
         DEF_TIM_EVENT_FLAGS_FIELDS
     };
 
-    constexpr void set_dma_interrupts_en(const Events events){
-        const_cast<R16_TIM_DMAINTENR &>(DMAINTENR) = 
-            BIT_CAST(R16_TIM_DMAINTENR, events);
-    }
-
     constexpr void add_dma_interrupts_en(const Events events){
         (uint16_t &)(DMAINTENR) |= BIT_CAST(uint16_t, events);
     }

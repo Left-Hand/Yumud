@@ -295,7 +295,7 @@ Uart::Uart(
 
 
 
-static constexpr uint32_t calc_buadrate_hz(hal::UartBaudrate baudrate){ 
+[[nodiscard]] static constexpr uint32_t calc_buadrate_hz(hal::UartBaudrate baudrate){ 
     const auto baudrate_hz = [&] -> uint32_t{
         if(baudrate.is<hal::NearestFreq>()){
             return baudrate.unwrap_as<hal::NearestFreq>().count;
@@ -313,7 +313,7 @@ void Uart::init(const Config & cfg){
 
     enable_rcc(EN);
 
-    USART_Cmd(SPL_INST(p_inst_), DISABLE);
+    RAL_INST(p_inst_)->CTLR1.UE = false;
 
     set_remap(cfg.remap);
 
@@ -356,11 +356,11 @@ void Uart::init(const Config & cfg){
 
 
 
-    #if 1
     //清除中断标志位
-    if(1){
+    {
         //清除statr标志位
-        store_volatile(reinterpret_cast<volatile uint32_t*>(&SPL_INST(self.p_inst_)->STATR)
+        store_volatile(
+            reinterpret_cast<volatile uint32_t*>(&RAL_INST(self.p_inst_)->STATR)
             ,  ~STATR_CLEARABLE_MASK
         );
 
@@ -368,8 +368,6 @@ void Uart::init(const Config & cfg){
         RAL_INST((self).p_inst_)->STATR;
         RAL_INST((self).p_inst_)->DATAR;
     }
-    #endif
-
 
     lld::usart_enable_error_interrupt(p_inst_, EN);
     register_nvic(UART_INTERRUPT_NVIC_PRIORITY, EN);
@@ -377,7 +375,7 @@ void Uart::init(const Config & cfg){
     set_tx_strategy(cfg.tx_strategy);
     set_rx_strategy(cfg.rx_strategy);
 
-    USART_Cmd(SPL_INST(p_inst_), ENABLE);
+    RAL_INST(p_inst_)->CTLR1.UE = ENABLE;
 }
 
 void Uart::enable_tx(const Enable en){
@@ -440,7 +438,7 @@ void Uart::set_remap(const UartRemap remap){
 }
 
 void Uart::enable_single_line_mode(const Enable en){
-    USART_HalfDuplexCmd(SPL_INST(p_inst_), (en == EN));
+    RAL_INST(p_inst_)->CTLR3.HDSEL = (en == EN);
 }
 
 
@@ -494,7 +492,7 @@ void Uart::poll_tx_dma(){
                 std::span(tx_dma_buf_.begin(), req_dequeue_quantity)
             );
             tx_dma_.start_transfer_mem2pph<DmaWordSize::OneByte, DmaWordSize::OneByte>(
-                (&SPL_INST(self.p_inst_)->DATAR), 
+                (&RAL_INST(self.p_inst_)->DATAR.DR), 
                 tx_dma_buf_.begin(), 
                 act_dequeue_quantity
             );
@@ -745,7 +743,7 @@ void UartIrqHandler::isr_txe(Uart & self){
             break;
         case CommStrategy::Interrupt:{
             if(const auto quantity = self.tx_queue_.consume_one([&](uint8_t byte){
-                SPL_INST(self.p_inst_)->DATAR = byte;
+                RAL_INST(self.p_inst_)->DATAR.DR = byte;
             }); quantity == 0){
                 // 队列空，禁用TXE中断
                 RAL_INST(self.p_inst_)->CTLR1.TXEIE = 0;
@@ -773,7 +771,7 @@ void UartIrqHandler::isr_idle(Uart & self){
 
             // 如果这个索引已经被对齐到全部传输完成或者一半传输完成
             // dma半满和全满中断将会接管缓冲填充操作
-            if(supposed_dma_buf_index & half_unaligned_mask) [[likely]] {
+            if(supposed_dma_buf_index & half_unaligned_mask) [[unlikely]] {
                 const auto rx_dma_buf_index = self.rx_dma_buf_index_;
                 const auto required_quantity = (supposed_dma_buf_index >= rx_dma_buf_index)
                     ? (supposed_dma_buf_index - rx_dma_buf_index)
@@ -978,7 +976,6 @@ void UartIrqHandler::on_interrupt(Uart & self){
 
             // 也可以直接写 0 来清除此位
             store_volatile(&ral_inst->STATR, (~CTLR1_TC_MASK));
-            // USART_ClearITPendingBit(SPL_INST(self.p_inst_), USART_IT_TC);
         }
 
         // idle

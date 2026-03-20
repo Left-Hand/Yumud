@@ -105,6 +105,7 @@ volatile uint16_t & timer_channel_find_cvr(
         case hal::TimerChannelSelection::CH4:
             return (SPL_INST(p_inst)->CH4CVR);
     }
+    __builtin_trap();
 }
 
 

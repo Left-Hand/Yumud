@@ -136,14 +136,6 @@ struct LPTIM_Def{
         ISR.UP = dir;
     }
 
-    void clear_interrupts(const Events ev){
-        const_cast<R32_LPTIM_ICR &>(ICR) = BIT_CAST(R32_LPTIM_ICR, ev);
-    }
-
-    void enable_intrrupts(const Events ev){
-        const_cast<R32_LPTIM_IER &>(IER) = BIT_CAST(R32_LPTIM_IER, ev);
-    }
-
     void enable_use_ext_clock(const Enable en){
         CFGR.CKSEL = en;
     }
