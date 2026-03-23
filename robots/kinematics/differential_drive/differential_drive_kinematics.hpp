@@ -9,14 +9,14 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
 
     struct [[nodiscard]] Config final{
         uq16 wheel_radius;
-        uq16 wheel_padding;
+        uq16 track_width;
 
         constexpr Self into() const {
-            const auto angular_body2wheel_ratio = wheel_padding / wheel_radius / iq16(2);
-            const auto angular_wheel2body_ratio = iq16(1) / angular_body2wheel_ratio;
+            const uq16 angular_body2wheel_ratio = (track_width / wheel_radius * uq16(2));
+            const uq16 angular_wheel2body_ratio = uq16(1) / angular_body2wheel_ratio;
             
-            const auto linear_body2wheel_ratio = 1 / wheel_radius;
-            const auto linear_wheel2body_ratio = wheel_radius;
+            const uq16 linear_body2wheel_ratio = 1 / wheel_radius;
+            const uq16 linear_wheel2body_ratio = wheel_radius;
             return Self{
                 .angular_body2wheel_ratio = angular_body2wheel_ratio,
                 .angular_wheel2body_ratio = angular_wheel2body_ratio,
@@ -26,13 +26,13 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
         }
     };
 
-    iq16 angular_body2wheel_ratio;
-    iq16 angular_wheel2body_ratio;
+    uq16 angular_body2wheel_ratio;
+    uq16 angular_wheel2body_ratio;
 
-    iq16 linear_body2wheel_ratio;
-    iq16 linear_wheel2body_ratio;
+    uq16 linear_body2wheel_ratio;
+    uq16 linear_wheel2body_ratio;
 
-    //逆运动学 输入机体的横向和纵向任意阶量 返回左右轮的等阶量
+    //逆运动学 输入机体的纵向速度和自转速度 得到轮速度
     constexpr std::tuple<Angular<iq16>, Angular<iq16>> inverse(
         iq16 body_linear_xn, Angular<iq16> body_angular_xn 
     ) const { 

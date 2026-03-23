@@ -13,7 +13,7 @@ namespace ymd::drivers::alx_aoa{
 
 static constexpr uint32_t DEFAULT_UART_BAUD = 115200;
 static constexpr uint16_t PROTOCOL_VERSION = 0x0100;
-static constexpr size_t LEADER_SIZE = 6; //4 bytes(header) + 2 bytes(len)
+static constexpr size_t HEADER_SIZE = 6; //4 bytes(header) + 2 bytes(len)
 enum class [[nodiscard]] Error:uint8_t{
     InvalidCommand,
     InvalidProtocolVersion,
@@ -38,15 +38,15 @@ struct [[nodiscard]] TargetDistanceCode final{
     using Self = TargetDistanceCode;
     uint32_t bits;
 
-    template<typename T = uq16> 
+    template<typename T> 
     [[nodiscard]] constexpr T to_meters() const{
-        return T(bits) / 100;
+        return T(bits) * static_cast<T>(1.0 / 100);
     }
     static constexpr Self from_bits(const uint32_t bits){
         return Self{bits};
     }
     friend OutputStream & operator <<(OutputStream & os, const TargetDistanceCode & self){ 
-        return os << self.to_meters() << "m";
+        return os << self.to_meters<uq16>() << "m";
     }
 };
 
@@ -54,15 +54,16 @@ struct [[nodiscard]] TargetAngleCode final{
     using Self = TargetAngleCode;
     int16_t bits;
 
-    template<typename T = uq16>
+    template<typename T>
     [[nodiscard]] constexpr Angular<T> to_angle() const{
         return Angular<T>::from_degrees(bits);
     }
+
     static constexpr Self from_bits(const int16_t bits){
         return Self{bits};
     }
     friend OutputStream & operator <<(OutputStream & os, const TargetAngleCode & self){ 
-        return os << self.to_angle().to_degrees() << "deg";
+        return os << self.to_angle<uq16>().to_degrees() << "deg";
     }
 };
 
@@ -83,16 +84,16 @@ struct [[nodiscard]] DeviceIdCode final{
 struct [[nodiscard]] Location final{
     DeviceIdCode anchor_id;
     DeviceIdCode target_id;
-    TargetDistanceCode distance;
-    TargetAngleCode azimuth;
-    TargetAngleCode elevation;
+    TargetDistanceCode distance_code;
+    TargetAngleCode azimuth_code;
+    TargetAngleCode elevation_code;
 
     template<typename T>
     constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const{
         return math::SphericalCoordinates<T>{
-            distance.to_meters<T>(),
-            azimuth.to_angle<T>(), 
-            elevation.to_angle<T>() 
+            distance_code.to_meters<T>(),
+            azimuth_code.to_angle<T>(), 
+            elevation_code.to_angle<T>() 
         };
     };
 
@@ -100,9 +101,9 @@ struct [[nodiscard]] Location final{
         return os
             << os.field("anchor_id")(self.anchor_id) << os.splitter()
             << os.field("target_id")(self.target_id) << os.splitter()
-            << os.field("distance")(self.distance) << os.splitter()
-            << os.field("azimuth")(self.azimuth) << os.splitter()
-            << os.field("elevation")(self.elevation)
+            << os.field("distance_code")(self.distance_code) << os.splitter()
+            << os.field("azimuth_code")(self.azimuth_code) << os.splitter()
+            << os.field("elevation_code")(self.elevation_code)
         ;
     }
 };
@@ -118,7 +119,7 @@ struct [[nodiscard]] HeartBeat final{
 struct [[nodiscard]] Event:public Sumtype<std::monostate, HeartBeat, Location>{};
 using Callback = std::function<void(Result<Event, Error>)>;
 
-struct [[nodiscard]] LeaderInfo final{
+struct [[nodiscard]] HeaderInfo final{
     uint8_t len;
     uint16_t command;
 };
@@ -167,7 +168,7 @@ private:
     volatile FsmState fsm_state_ = FsmState::Header0;
     Callback callback_ = nullptr;
 
-    LeaderInfo leader_info_ = {};
+    HeaderInfo header_info_ = {};
 
 };
 

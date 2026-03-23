@@ -19,7 +19,6 @@ namespace CH32L103{
     uint32_t DOWN:1;\
 
 struct R32_LPTIM_ISR{
-    static constexpr uint32_t offset = 0x00;
 
     DEF_LPTIM_FLAGS;
     uint32_t DIR_SYNC:1;
@@ -27,7 +26,6 @@ struct R32_LPTIM_ISR{
 };
 
 struct R32_LPTIM_ICR{
-    static constexpr uint32_t offset = 04;
 
     DEF_LPTIM_FLAGS;
     uint32_t :25;
@@ -35,13 +33,11 @@ struct R32_LPTIM_ICR{
 
 
 struct R32_LPTIM_IER{
-    static constexpr uint32_t offset = 0x08;
 
     DEF_LPTIM_FLAGS;
 };
 
 struct R32_LPTIM_CFGR{
-    static constexpr uint32_t offset = 0x0C;
 
     uint32_t CKSEL:1;
     uint32_t CKPOL:2;
@@ -66,7 +62,6 @@ struct R32_LPTIM_CFGR{
 };
 
 struct R32_LPTIM_CR{
-    static constexpr uint32_t offset = 0x10;
 
     uint32_t ENABLE:1;
     uint32_t SNGSTRT:1;
@@ -77,23 +72,20 @@ struct R32_LPTIM_CR{
 };
 
 struct R32_LPTIM_CMP{
-    static constexpr uint32_t offset = 0x10;
 
-    uint16_t CMP;
+    uint16_t BITS;
     uint16_t :16;
 };
 
 struct R32_LPTIM_ARR{
-    static constexpr uint32_t offset = 0x10;
 
-    uint16_t ARR;
+    uint16_t BITS;
     uint16_t :16;
 };
 
 struct R32_LPTIM_CNT{
-    static constexpr uint32_t offset = 0x10;
 
-    uint16_t CNT;
+    uint16_t BITS;
     uint16_t :16;
 };
 
@@ -232,31 +224,31 @@ struct LPTIM_Def{
     }
 
     void set_cmp(const uint16_t cmp){
-        CMP.CMP = cmp;
+        CMP.BITS = cmp;
     }
 
     uint16_t get_cmp(){
-        return CMP.CMP;
+        return CMP.BITS;
     }
 
     void set_arr(const uint16_t arr){
-        ARR.ARR = arr;
+        ARR.BITS = arr;
     }
 
     uint16_t get_arr(){
-        return ARR.ARR;
+        return ARR.BITS;
     }
 
     void set_cnt(const uint16_t cnt){
-        CNT.CNT = cnt;
+        CNT.BITS = cnt;
     }
 
     uint16_t get_cnt(){
-        return CNT.CNT;
+        return CNT.BITS;
     }
 };
 
-static constexpr LPTIM_Def * LPTIM1 = reinterpret_cast<LPTIM_Def *>(0x40007C00);
+[[nodiscard]] static constexpr LPTIM_Def * LPTIM1_Inst = reinterpret_cast<LPTIM_Def *>(0x40007C00);
 
 
 #undef DEF_LPTIM_FLAGS

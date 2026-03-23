@@ -1,12 +1,10 @@
 #pragma once
 
-#include <core/io/regs.hpp>
+#include "core/io/regs.hpp"
 
 namespace ymd::ral::ch32::ch32l103_usbpd{
 
 struct [[nodiscard]] R16_CONFIG{
-    static constexpr uint32_t offset = 0x00;
-
     uint16_t __resv__:1;
     
     uint16_t PD_ALL_CLR:1;
@@ -26,15 +24,11 @@ struct [[nodiscard]] R16_CONFIG{
 };
 
 struct [[nodiscard]] R16_BMC_CLK{
-    static constexpr uint32_t offset = 0x02;
-
     uint16_t BMC_CLK_CNT:9;
     uint16_t :7;
 };
 
 struct [[nodiscard]] R8_CONTROL{
-    static constexpr uint32_t offset = 0x04;
-
     uint8_t PD_TX_EN:1;
     uint8_t BMC_START:1;
     uint8_t :3;
@@ -44,7 +38,6 @@ struct [[nodiscard]] R8_CONTROL{
 };
 
 struct [[nodiscard]] R8_TX_SEL{
-    static constexpr uint32_t offset = 0x05;
     uint8_t TX_SEL1:1;
     uint8_t __resv__:1;
     uint8_t TX_SEL2:2;
@@ -53,22 +46,16 @@ struct [[nodiscard]] R8_TX_SEL{
 };
 
 struct [[nodiscard]] R16_BMC_TX_SZ{
-    static constexpr uint32_t offset = 0x06;
-
     uint16_t BMC_TX_SZ:9;
     uint16_t :7;
 };
 
 
 struct [[nodiscard]] R8_DATA_BUF{
-    static constexpr uint32_t offset = 0x09;
-
     uint8_t DATA_BUF:8;
 };
 
 struct [[nodiscard]] R8_STATUS{
-    static constexpr uint32_t offset = 0x09;
-
     uint8_t BMC_AUX:2;
     uint8_t BUF_ERR:1;
     uint8_t IF_RX_BIT:1;
@@ -79,8 +66,6 @@ struct [[nodiscard]] R8_STATUS{
 };
 
 struct [[nodiscard]] R16_BMC_BYTE_CNT{
-    static constexpr uint32_t offset = 0x0A;
-
     uint16_t BMC_BYTE_CNT:9;
     uint16_t :7;
 };
@@ -95,16 +80,13 @@ struct [[nodiscard]] __R16_PORT_CC{
 };
 
 struct [[nodiscard]] R16_PORT_CC1:public __R16_PORT_CC{
-    static constexpr uint32_t offset = 0x0C;
 };
 
 struct [[nodiscard]] R16_PORT_CC2:public __R16_PORT_CC{
-    static constexpr uint32_t offset = 0x0E;
 };
 
 struct [[nodiscard]] R16_DMA{
-    static constexpr uint32_t offset = 0x10;
-    uint16_t DMA_ADDR:15;
+    uint16_t BITS;
 };
 
 
@@ -114,7 +96,6 @@ struct [[nodiscard]] USBPD_Def{
     volatile R8_CONTROL CONTROL;
     volatile R8_TX_SEL TX_SEL;
     volatile R16_BMC_TX_SZ BMC_TX_SZ;
-    uint8_t :8;
     volatile R8_DATA_BUF DATA_BUF;
     volatile R8_STATUS STATUS;
     volatile R16_BMC_BYTE_CNT BMC_BYTE_CNT;
@@ -123,5 +104,30 @@ struct [[nodiscard]] USBPD_Def{
     volatile R16_DMA DMA;
 };
 
-static constexpr USBPD_Def * USB_PD = (USBPD_Def *)0x40027000; 
+
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::CONFIG) == 0x00);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::BMC_CLK_CNT) == 0x02);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::CONTROL) == 0x04);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::TX_SEL) == 0x05);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::BMC_TX_SZ) == 0x06);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::DATA_BUF) == 0x08);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::STATUS) == 0x09);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::BMC_BYTE_CNT) == 0x0a);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::PORT_CC1) == 0x0c);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::PORT_CC2) == 0x0e);
+static_assert(__builtin_offsetof(USBPD_Def, USBPD_Def::DMA) == 0x10);
+
+VALIDATE_R16(R16_CONFIG)
+VALIDATE_R16(R16_BMC_CLK)
+VALIDATE_R8(R8_CONTROL)
+VALIDATE_R8(R8_TX_SEL)
+VALIDATE_R16(R16_BMC_TX_SZ)
+VALIDATE_R8(R8_DATA_BUF)
+VALIDATE_R8(R8_STATUS)
+VALIDATE_R16(R16_BMC_BYTE_CNT)
+VALIDATE_R16(R16_PORT_CC1)
+VALIDATE_R16(R16_PORT_CC2)
+VALIDATE_R16(R16_DMA)
+
+[[maybe_unused]] static constexpr USBPD_Def * USB_PD_Inst = reinterpret_cast<USBPD_Def *>(0x40027000); 
 }

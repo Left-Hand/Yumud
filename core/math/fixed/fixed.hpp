@@ -174,7 +174,7 @@ public:
     fixed from (const std::floating_point auto fv){
         const D bits = [&]() -> D{
             if(std::is_constant_evaluated()){
-                return D(fv * uint64_t(uint64_t(1) << Q));
+                return D(static_cast<long double>(fv) * uint64_t(uint64_t(1) << Q));
             }
             return static_cast<D>(fxmath::details::_IQFtoN(fv, Q));
         }();
@@ -257,7 +257,15 @@ public:
         if(std::is_constant_evaluated()){
             return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{
-            return fxmath::details::_IQNtoF(this->to_bits(), Q);
+            if constexpr(std::is_signed_v<D>){
+                static_assert(sizeof(D) <= 4);
+                return fxmath::details::_IQNtoF(this->to_bits(), Q);
+            }else{
+                static_assert(sizeof(D) <= 4);
+                return fxmath::details::_IQNtoF(
+                    (this->to_bits() + 1) >> 1u, 
+                    Q - 1);
+            }
         }
     }
 };

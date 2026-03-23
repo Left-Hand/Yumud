@@ -40,13 +40,13 @@ struct [[nodiscard]] R32_LCKR{
 };
 struct GPIO_Def{
 
-    volatile CFGLR cfglr;
-    volatile CFGHR cfghr;
-    volatile INDR indr;
-    volatile OUTDR outdr;
-    volatile BSHR bshr;
-    volatile BCR bcr;
-    volatile LCKR lckr;
+    volatile R32_CFGLR cfglr;
+    volatile R32_CFGHR cfghr;
+    volatile R32_INDR indr;
+    volatile R32_OUTDR outdr;
+    volatile R32_BSHR bshr;
+    volatile R32_BCR bcr;
+    volatile R32_LCKR lckr;
 };
 
 static inline GPIO_Def * gpio_a_def = (GPIO_Def *)(0x40010800);

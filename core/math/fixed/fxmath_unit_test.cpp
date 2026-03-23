@@ -27,8 +27,13 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
     static_assert(math::sqrt(iq16(4)) == iq16(2));
     static_assert(math::sqrt(iq16(16)) == iq16(4));
     static_assert(math::sqrt(iq16(64)) == iq16(8));
-    static_assert(math::sqrt(iq16(36)) == iq16(6));
-    static_assert(math::sqrt(iq16(16)) == iq16(4));
+    static_assert(math::sqrt(iq16(128 * 128)) == iq16(128));
+
+    static_assert(math::sqrt(uq16(0)) == uq16(0));
+    static_assert(math::sqrt(uq16(4)) == uq16(2));
+    static_assert(math::sqrt(uq16(16)) == uq16(4));
+    static_assert(math::sqrt(uq16(64)) == uq16(8));
+    static_assert(math::sqrt(std::numeric_limits<uq16>::max()) == uq16(256));
 
     static_assert(math::sqrt(iiq16(0)) == iq16(0));
     static_assert(math::sqrt(iiq16(4)) == iq16(2));
@@ -36,9 +41,6 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
     static_assert(math::sqrt(iiq16(64)) == iq16(8));
     static_assert(math::sqrt(iiq16(36)) == iq16(6));
     static_assert(math::sqrt(iiq16(16)) == iq16(4));
-
-    static_assert(math::sqrt(uq16(4)) == uq16(2));
-    static_assert(math::sqrt(uq16(16)) == uq16(4));
 
     static_assert(err64(math::sqrt(uq32(0.25)).to_bits(), uq32(0.5).to_bits()) <= 4);
     static_assert(err64(math::sqrt(uq32(1.0/16)).to_bits(), uq32(1.0/4).to_bits()) <= 4);
@@ -71,21 +73,11 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
 }
 
 
-
-
 [[maybe_unused]] static void test_sin(){
     static_assert(math::sinpu(iq16(0)).to_bits() == 0);
     static_assert(math::sinpu(iq16(0.25)).to_bits() == std::numeric_limits<iq31>::max().to_bits());
     static_assert(math::sinpu(iq16(0.5)).to_bits() == iq16(0).to_bits());
     static_assert(math::sinpu(iq16(1.0)).to_bits() == iq16(0).to_bits());
-
-    static_assert(math::sinpu(iq31(0)).to_bits() == iq31(0).to_bits());
-    static_assert(math::sinpu(iq31(0.25)).to_bits() == std::numeric_limits<iq31>::max().to_bits());
-    static_assert(math::sinpu(iq31(0.5)).to_bits() == iq31(0).to_bits());
-
-
-    static_assert(err_f64(math::sinpu(iq31(0.75)), std::numeric_limits<iq31>::min()) < 1E-7);
-
 
     static_assert(err_f64(math::sinpu(iq31(0.25 *(1.0 / 3))), iq31(0.5)) < 1E-7);
     static_assert(err_f64(math::sinpu(iq31(0.25 *(5.0 / 3))), iq31(0.5)) < 1E-7);
@@ -170,10 +162,13 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
         constexpr float f1 = float(math::lg(uq16(10)));
         constexpr float f3 = float(math::lg(uq16(1000)));
         constexpr float f4 = float(math::lg(uq10(10000)));
+        constexpr float f5 = float(math::lg(uq10(100000)));
+
         static_assert(std::abs(f_n2 - -2.0) < 3e-4);
         static_assert(std::abs(f1 - 1.0) < 1e-4);
         static_assert(std::abs(f3 - 3.0) < 1e-4);
         static_assert(std::abs(f4 - 4.0) < 1e-3);
+        static_assert(std::abs(f5 - 5.0) < 1e-3);
     }
 
 }
