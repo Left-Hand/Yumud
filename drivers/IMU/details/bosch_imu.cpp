@@ -98,6 +98,21 @@ BoschImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     TRANSPORT_PANIC("no available phy");
 }
 
+[[nodiscard]] Result<void, BoschImu_Transport::Error> 
+BoschImu_Transport::release(){
+    // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, reg_val);
+    if(i2c_drv_){
+        if(const auto res = i2c_drv_->release();
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(spi_drv_){
+
+        return Ok();
+    }
+    TRANSPORT_PANIC("no available phy");
+}
+
+
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
 InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val) {
@@ -115,6 +130,7 @@ InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val
     }
     TRANSPORT_PANIC("no available phy");
 }
+
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
 InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val) {
@@ -284,6 +300,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     TODO();
     return Ok();
 }
+
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::validate(){
     TODO();

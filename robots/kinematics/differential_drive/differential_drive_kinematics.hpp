@@ -12,7 +12,7 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
         uq16 track_width;
 
         constexpr Self into() const {
-            const uq16 angular_body2wheel_ratio = (track_width / wheel_radius * uq16(2));
+            const uq16 angular_body2wheel_ratio = (track_width / (wheel_radius * 2));
             const uq16 angular_wheel2body_ratio = uq16(1) / angular_body2wheel_ratio;
             
             const uq16 linear_body2wheel_ratio = 1 / wheel_radius;

@@ -83,6 +83,7 @@ Option<AccOdr> from_acc_odr(const iq16 odr){
 #endif
 
 IResult<> BMI160::init(const Config & cfg){
+
     if(const auto res = reset();
         res.is_err()) return res;
 
@@ -207,7 +208,7 @@ IResult<> BMI160::self_test_gyr(){
             res.is_err()) return res;
     }
 
-    #if 0
+    #if 1
     if(const auto res = 
         retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             auto & reg = regs_.status_reg;
@@ -276,6 +277,8 @@ IResult<> BMI160::validate(){
 }
 
 IResult<> BMI160::reset(){
+    if(const auto res = transport_.validate();
+        res.is_err()) return Err(res.unwrap_err());
     return write_command(std::bit_cast<uint8_t>(Command::SOFT_RESET));
 }
 
