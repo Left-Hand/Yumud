@@ -23,7 +23,7 @@ public:
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
 
     explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
@@ -114,7 +114,7 @@ public:
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
 
     explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}

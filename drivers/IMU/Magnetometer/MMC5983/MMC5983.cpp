@@ -50,7 +50,7 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
             res.is_err()) return Err(res.unwrap_err());
         else if(res.unwrap() == true)
             break;
-        if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
+        if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagSetupFailed));
     }
 
     if(const auto res = imu.update();
@@ -62,6 +62,39 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
     return imu.read_mag();
 };
 
+
+IResult<> MMC5983_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    if(i2c_drv_){
+        if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(spi_drv_){
+        MMC5983_PANIC("spi not supported yet");
+    }
+    MMC5983_PANIC("no available phy");
+}
+
+IResult<> MMC5983_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    if(i2c_drv_){
+        if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(spi_drv_){
+        MMC5983_PANIC("spi not supported yet");
+    }
+    MMC5983_PANIC("no available phy");
+}
+
+IResult<> MMC5983_Transport::read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+    if(i2c_drv_){
+        if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(reg_addr), pbuf);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(spi_drv_){
+        MMC5983_PANIC("spi not supported yet");
+    }
+    MMC5983_PANIC("no available phy");
+}
 
 
 

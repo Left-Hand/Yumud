@@ -405,8 +405,8 @@ void sys::abort(const AbortInfo & info){
     sys::trip();
 
 
-    DISABLE_INT;
-    DISABLE_INT;
+    __disable_irq();
+    __disable_irq();
 
     DEBUGGER.set_splitter('\0');
     DEBUG_PRINTLN("\r\nsystem aborted");

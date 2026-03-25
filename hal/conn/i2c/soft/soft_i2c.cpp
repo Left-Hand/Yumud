@@ -6,7 +6,11 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-#define SOFT_I2C_SCL_USE_PP_THAN_OD
+// 对于部分i2c驱动能力弱的外设芯片(LT8960) 使用推挽输出的scl能避免由于人体触摸等问题导致的通信死锁问题
+// 但对于另一部分芯片(如BMI160) 这可能会导致通信误码
+// #define SOFT_I2C_SCL_USE_PP_THAN_OD
+
+
 // #define SOFT_I2C_DISCARD_ACK
 // #define SOFT_I2C_TEST_TIMEOUT (1000)
 

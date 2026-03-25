@@ -340,6 +340,11 @@ static constexpr Angular<T> make_angular_from_turns(T turns) noexcept{
 }
 
 template<typename T>
+static constexpr Angular<T> make_angular_from_radians(T radians) noexcept{
+	return Angular<T>::from_radians(radians);
+}
+
+template<typename T>
 static constexpr bool is_equal_approx(const Angular<T> a, const Angular<T> b) noexcept{
 	return a.is_equal_approx(b);
 }

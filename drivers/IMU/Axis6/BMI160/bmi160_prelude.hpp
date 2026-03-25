@@ -136,7 +136,7 @@ struct Regset final{
         PmuMode gyr_pmu_status:2;
         PmuMode acc_pmu_status:2;
         uint8_t __resv__:2;
-    }DEF_R8(pmu_status)
+    }DEF_R8(pmu_status_reg)
 
     struct R8_Rhall:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
@@ -145,10 +145,10 @@ struct Regset final{
     static constexpr RegAddr GYR_ADDRESS = 0x0c;
 
 
-    struct R8_SensorTime:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x18}; // SENSOR_TIME_2
-        uint32_t time: 24; // Assuming 8 bits for sensor time
-    };
+    // struct R8_SensorTime:public Reg8<>{
+    //     static constexpr RegAddr REG_ADDR = RegAddr{0x18}; // SENSOR_TIME_2
+    //     uint32_t time: 24; // Assuming 8 bits for sensor time
+    // };
 
     struct R8_Status:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1B};
@@ -160,7 +160,7 @@ struct Regset final{
         uint8_t drdy_mag: 1;
         uint8_t drdy_gyr: 1;
         uint8_t drdy_acc: 1;
-    }DEF_R8(status)
+    }DEF_R8(status_reg)
 
     struct R8_IntStatus0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1c}; // INT_STATUS_3
@@ -235,26 +235,26 @@ struct Regset final{
 
         //undersample enable
         uint8_t acc_us:1;
-    }DEF_R8(acc_conf)
+    }DEF_R8(acc_conf_reg)
     
     struct R8_AccFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
         AccFs acc_fs:4;
         uint8_t __resv__:4;
-    }DEF_R8(acc_fs)
+    }DEF_R8(acc_fs_reg)
 
     struct R8_GyrConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x42};
         GyrOdr gyr_odr:4;
         uint8_t gyr_bwp:2;
         uint8_t __resv__:2 = 0;
-    }DEF_R8(gyr_conf)
+    }DEF_R8(gyr_conf_reg)
 
     struct R8_GyrFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x43};
         GyrFs gyr_fs:3;
         uint8_t __resv__:5 = 0;
-    }DEF_R8(gyr_fs)
+    }DEF_R8(gyr_fs_reg)
 
     struct R8_MagConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x44};

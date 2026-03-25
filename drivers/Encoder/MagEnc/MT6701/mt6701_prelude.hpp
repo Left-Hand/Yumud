@@ -115,14 +115,9 @@ public:
     MT6701_SpiTransport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
-    IResult<> write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size){
-        return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
-    }
+    IResult<> write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size);
 
-    IResult<> read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size){
-        return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
-    }
-
+    IResult<> read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size);
 private:
 
     hal::SpiDrv spi_drv_;

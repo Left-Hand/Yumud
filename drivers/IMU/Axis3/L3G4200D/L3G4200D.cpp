@@ -167,6 +167,7 @@ IResult<> L3G4200D::reconf(const Config & cfg){
 
 
 IResult<> L3G4200D::calibrate(uint8_t samples){
+    (void)(samples);
     // int32_t sum[3] = {0,0,0}, sigma[3] = {0,0,0};
 
     // // Read samples

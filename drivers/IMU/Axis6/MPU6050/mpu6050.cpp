@@ -199,6 +199,7 @@ IResult<> MPU6050::reset(){
 }
 
 IResult<> MPU6050::enable_direct_mode(const Enable en){
+    (void)(en);
     auto reg = RegCopy(regs_.int_pin_cfg_reg);
     reg.as_bits_mut() = 0x22;
     if(const auto res = write_reg(reg);

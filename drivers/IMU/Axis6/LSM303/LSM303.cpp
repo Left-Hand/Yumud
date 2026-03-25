@@ -244,48 +244,50 @@ IResult<> LSM303::enable_default()
     // MD = 00 (continuous-conversion mode)
     if(const auto res = write_mag_reg(MR_REG_M, 0x00);
         res.is_err()) return res;
-  }
-  return Ok();
+    }
+    return Ok();
 }
 
 // Writes an accelerometer register
-IResult<> LSM303::write_acc_reg(uint8_t reg, uint8_t value)
-{
+IResult<> LSM303::write_acc_reg(uint8_t reg_addr, uint8_t reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     TODO();
     return Ok();
 }
 
 
 // Writes a magnetometer register
-IResult<> LSM303::write_mag_reg(uint8_t reg, uint8_t value)
-{
+IResult<> LSM303::write_mag_reg(uint8_t reg_addr, uint8_t reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     TODO();
     return Ok();
 }
 
-IResult<> LSM303::write_reg(uint8_t reg, uint8_t value)
-{
+IResult<> LSM303::write_reg(uint8_t reg_addr, uint8_t reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     TODO();
     return Ok();
 }
 
 // Note that this function will not work for reading TEMP_OUT_H_M and TEMP_OUT_L_M on the DLHC.
 // To read those two registers, use readMagReg() instead.
-IResult<> LSM303::read_reg(int reg, uint8_t & data)
-{
+IResult<> LSM303::read_reg(uint8_t reg_addr, uint8_t & reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     TODO();
     return Ok();
 }
 
 // Reads the 3 accelerometer channels and stores them in math::Vec3 a
-IResult<> LSM303::read_acc()
-{
+IResult<> LSM303::read_acc(){
     TODO();
     return Ok();
 }
 
-IResult<> LSM303::read_mag()
-{
+IResult<> LSM303::read_mag(){
     TODO();
     return Ok();
 }

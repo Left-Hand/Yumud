@@ -95,8 +95,10 @@ IResult<> AK8963::validate(){
         res.is_err()) return Err(res.unwrap_err());
 
     if (reg.bits != reg.correct){
-        if(reg.bits == 63)
+        if(reg.bits == 63){
             AK8963_DEBUG("it is normal to read 63 when comm speed too high");
+        }
+
         AK8963_DEBUG("AK8963 verify failed", reg.bits);
         return Err{Error::InvalidChipId};
     }

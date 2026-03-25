@@ -8,7 +8,7 @@
 #define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 4 bytes"); 
 #endif
 
-namespace ymd::ral::CH32{
+namespace ymd::ral::ch32h417{
 
 struct [[nodiscard]] R32_LTDC_SSCR{
     uint32_t VSH:11;

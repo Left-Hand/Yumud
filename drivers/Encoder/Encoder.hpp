@@ -26,12 +26,7 @@ enum class [[nodiscard]] EncoderError_Kind:uint8_t{
     RegProgramResponseFormatInvalid,
     ValueOverflow,
     ValueUnderflow,
-    InvalidRxFormat,
-
-    SpiIsNotImplementedYet,
-    I2cIsNotImplementedYet,
-
-    Unreachable
+    InvalidRxFormat
 };
 
 // Magnetic,//磁编码器

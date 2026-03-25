@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace CH32L103{
+namespace ymd::ral::ch32l103{
 
 struct [[nodiscard]] R16_OPA_CFGR1{
     uint16_t POLL_EN:1;

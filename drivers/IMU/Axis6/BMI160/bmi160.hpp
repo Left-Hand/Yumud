@@ -32,9 +32,9 @@ public:
 
         static constexpr Config from_default(){
             return Config{
-                .acc_odr = AccOdr::_800Hz,
+                .acc_odr = AccOdr::_200Hz,
                 .acc_fs = AccFs::_8G,
-                .gyr_odr = GyrOdr::_800Hz,
+                .gyr_odr = GyrOdr::_200Hz,
                 .gyr_fs = GyrFs::_1000deg
             };
         }
@@ -98,56 +98,16 @@ private:
     [[nodiscard]] static constexpr 
     iq20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return iq20(DEG2RAD_RATIO) * (2 * 125);
-            case GyrFs::_250deg:    return iq20(DEG2RAD_RATIO) * (2 * 250);
-            case GyrFs::_500deg:    return iq20(DEG2RAD_RATIO) * (2 * 500);
-            case GyrFs::_1000deg:   return iq20(DEG2RAD_RATIO) * (2 * 1000);
-            case GyrFs::_2000deg:   return iq20(DEG2RAD_RATIO) * (2 * 2000);
+            case GyrFs::_125deg:    return iq20(DEG2RAD_RATIO * (2 * 125));
+            case GyrFs::_250deg:    return iq20(DEG2RAD_RATIO * (2 * 250));
+            case GyrFs::_500deg:    return iq20(DEG2RAD_RATIO * (2 * 500));
+            case GyrFs::_1000deg:   return iq20(DEG2RAD_RATIO * (2 * 1000));
+            case GyrFs::_2000deg:   return iq20(DEG2RAD_RATIO * (2 * 2000));
         }
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr
-    Option<GyrOdr> from_gyr_odr(const iq16 odr){
-        constexpr std::array odr_map = {
-            25, 50, 100, 200, 400, 800, 1600, 3200
-        };
-    
-        auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
-    
-        if (it != odr_map.end()) {
-            return Some(GyrOdr( std::distance(odr_map.begin(), it)));
-        }
-        return None;
 
-    }
-
-    [[nodiscard]] static constexpr
-    Option<AccOdr> from_acc_odr(const iq16 odr){
-        constexpr std::array odr_map = {
-            iq16(25.0/32),
-            iq16(25.0/16),
-            iq16(25.0/8),
-            iq16(25.0/4),
-            iq16(25.0/2),
-            iq16(25), 
-            iq16(50), 
-            iq16(100), 
-            iq16(200), 
-            iq16(400), 
-            iq16(800),
-            iq16(1600)
-        };
-    
-        auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
-    
-        if (it != odr_map.end()) {
-            return Some(AccOdr(std::distance(odr_map.begin(), it)));
-        }
-        return None;
-
-
-    }
 };
 
 }

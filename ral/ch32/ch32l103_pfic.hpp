@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CH32L103{
+namespace ymd::ral::ch32l103{
 
 struct R32_PFIC_ISR1{};
 }

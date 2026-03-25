@@ -7,7 +7,7 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace CH32L103{
+namespace ymd::ral::ch32l103{
 
 #define DEF_LPTIM_FLAGS\
     uint32_t CMPM:1;\

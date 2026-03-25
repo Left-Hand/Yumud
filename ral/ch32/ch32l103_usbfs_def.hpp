@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ymd::CH32L103::USBFS{
+namespace ymd::ral::ch32l103::usbfs{
 struct [[nodiscard]] R8_USB_CTRL{
     uint8_t DMA_EN:1;
     uint8_t CLR_ALL:1;

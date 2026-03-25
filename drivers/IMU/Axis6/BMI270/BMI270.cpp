@@ -33,6 +33,8 @@ IResult<> BMI270::reset(){
 
 
 IResult<> BMI270::set_pmu_mode(const PmuType pmu, const PmuMode mode){
+        (void)(pmu);
+        (void)(mode);
     TODO();
     return Ok();
 }

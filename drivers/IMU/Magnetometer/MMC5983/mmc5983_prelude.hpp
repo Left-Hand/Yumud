@@ -158,38 +158,11 @@ public:
     explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotImplementedYet);
-        }
-        return Err(Error::NoAvailablePhy);
-    }
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
 
-    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotImplementedYet);
-        }
-        return Err(Error::NoAvailablePhy);
-    }
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf);
 
-    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(reg_addr), pbuf);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else if(spi_drv_){
-            return Err(Error::SpiPhyIsNotImplementedYet);
-        }
-        return Err(Error::NoAvailablePhy);
-    }
 
     IResult<> release(){
         if(i2c_drv_){

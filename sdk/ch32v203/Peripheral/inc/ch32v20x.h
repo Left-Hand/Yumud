@@ -13,8 +13,8 @@
 
 #include <stdint.h>
 #include "sdk/ch32v203/Core/core_riscv.h"
-#include "sdk/ch32v203/system_ch32v20x.h"
 #include "sdk/ch32v203/ch32v20x_irqn.h"
+#include "system_ch32v20x.h"
 
 
 #ifdef __cplusplus
