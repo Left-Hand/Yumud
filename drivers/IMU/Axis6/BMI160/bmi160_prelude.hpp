@@ -77,10 +77,10 @@ enum class [[nodiscard]] AccFs:uint8_t{
 
 enum class [[nodiscard]] GyrFs:uint8_t{
     _2000deg = 0b0000,
-    _1000deg,
-    _500deg,
-    _250deg,
-    _125deg
+    _1000deg = 0b0001,
+    _500deg = 0b0010,
+    _250deg = 0b0011,
+    _125deg = 0b0100
 };
 
 enum class [[nodiscard]] Command:uint8_t{
@@ -119,7 +119,7 @@ struct Regset final{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint8_t CORRECT_ID = 0xD1;
         uint8_t bits;
-    }DEF_R8(chip_id)
+    }DEF_R8(chip_id_reg)
 
     struct R8_Err:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
@@ -128,7 +128,7 @@ struct Regset final{
         uint8_t i2c_fail_err:1;
         uint8_t drop_cmd_err:1;
         uint8_t mag_drdy_err:1;
-    }DEF_R8(err)
+    }DEF_R8(err_reg)
 
     struct R8_PmuStatus:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
@@ -351,7 +351,7 @@ struct Regset final{
         uint8_t int_nomoy_en:1;
         uint8_t int_nomoz_en:1;
         uint8_t int_step_det_en:1;
-        uint8_t : 4; // Reserved
+        uint8_t __resv__: 4; // Reserved
     };
 
     struct R8_IntOutCtrl:public Reg8<>{
@@ -371,7 +371,7 @@ struct Regset final{
         uint8_t int_latch:4;
         uint8_t int1_input_en:1;
         uint8_t int2_input_en:1;
-        uint8_t : 2; // Reserved
+        uint8_t __resv__: 2; // Reserved
     };
 
     struct R8_IntMap0:public Reg8<>{

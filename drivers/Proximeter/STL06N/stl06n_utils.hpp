@@ -52,7 +52,7 @@ public:
         return Crc8Calculator{crc};
     }
 
-    [[nodiscard]] constexpr uint8_t get() const {
+    [[nodiscard]] constexpr uint8_t finalize() const {
         return crc_;
     }
 };
@@ -294,17 +294,19 @@ struct [[nodiscard]] LidarSectorPacket final{
     LidarPackedPoints packed_points;//[4:40]
     LidarAngleCode stop_angle_code;//[40:42]
     TimeStamp timestamp;//[42:44]
-    uint8_t crc8;//[44:45]
 
     static constexpr size_t PAYLOAD_LEN = 44;
+
+
     [[nodiscard]] uint8_t calc_crc() const {
         const auto payload_bytes = std::span<const uint8_t, PAYLOAD_LEN>(
             reinterpret_cast<const uint8_t *>(this),
             PAYLOAD_LEN
         );
 
-        Crc8Calculator calc = Crc8Calculator();
-        return calc.push_bytes(payload_bytes).get();
+        return Crc8Calculator()
+            .push_bytes(payload_bytes)
+            .finalize();
     }
 };
 

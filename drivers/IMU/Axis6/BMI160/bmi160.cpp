@@ -265,7 +265,7 @@ IResult<> BMI160::validate(){
     if(const auto res = read_reg(0x7f, dummy);
         res.is_err()) return Err(res.unwrap_err());
 
-    auto & reg = regs_.chip_id;
+    auto & reg = regs_.chip_id_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
