@@ -5,7 +5,7 @@
 #include "primitive/arithmetic/angular.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 
 
 namespace ymd::drivers{

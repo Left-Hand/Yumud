@@ -4,7 +4,7 @@
 
 #include "core/io/regs.hpp"
 
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/conn/spi/spidrv.hpp"

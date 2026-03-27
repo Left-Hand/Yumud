@@ -22,7 +22,7 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
 
-#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
 #include "algebra/regions/range2.hpp"

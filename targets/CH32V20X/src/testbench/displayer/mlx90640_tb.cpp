@@ -8,8 +8,8 @@
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 
-#include "drivers/HumitureSensor/MLX90640/mlx90640.hpp"
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/humiture/MLX90640/mlx90640.hpp"
+#include "drivers/display/Polychrome/ST7789/st7789.hpp"
 
 #include <ranges>
 

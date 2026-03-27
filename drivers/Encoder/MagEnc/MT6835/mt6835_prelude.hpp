@@ -2,7 +2,7 @@
 
 #include "hal/conn/spi/spidrv.hpp"
 
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 #include "core/io/regs.hpp"
 
 namespace ymd::drivers{

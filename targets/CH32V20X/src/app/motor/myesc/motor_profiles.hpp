@@ -1,8 +1,8 @@
 #pragma once
 
-#include "drivers/GateDriver/DRV832X/DRV8323h.hpp"
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-#include "drivers/Encoder/MagEnc/VCE2755/vce2755.hpp"
+#include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
+#include "drivers/encoder/MagEnc/MT6825/mt6825.hpp"
+#include "drivers/encoder/MagEnc/VCE2755/vce2755.hpp"
 #include "motor_leso.hpp"
 
 //常见电机参数：

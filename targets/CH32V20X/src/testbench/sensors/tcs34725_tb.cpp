@@ -7,7 +7,7 @@
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/HumitureSensor/TCS34725/tcs34725.hpp"
+#include "drivers/humiture/TCS34725/tcs34725.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;

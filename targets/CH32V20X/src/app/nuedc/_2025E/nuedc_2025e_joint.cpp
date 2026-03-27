@@ -18,9 +18,9 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 
 
-#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
-#include "drivers/GateDriver/MP6540/mp6540.hpp"
+#include "drivers/gatedrv/MP6540/mp6540.hpp"
 
 #include "algebra/vectors/quat.hpp"
 

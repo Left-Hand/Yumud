@@ -3,7 +3,7 @@
 //KTH7823是一款16位磁编码器
 
 #include "core/io/regs.hpp"
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"
 

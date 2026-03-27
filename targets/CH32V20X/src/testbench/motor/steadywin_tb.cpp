@@ -15,7 +15,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/conn/can/hw_singleton.hpp"
 
-#include "drivers/CommonIO/Key/Key.hpp"
+#include "drivers/common_io/Key/Key.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_factory.hpp"
 

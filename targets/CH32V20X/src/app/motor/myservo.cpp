@@ -16,7 +16,7 @@
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/utils.hpp"
 
-#include "drivers/Encoder/Encoder.hpp"
+#include "drivers/encoder/Encoder.hpp"
 
 using namespace ymd;
 
