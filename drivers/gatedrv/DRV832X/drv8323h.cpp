@@ -24,47 +24,57 @@ using IResult = Result<T, Error>;
 
 
 IResult<> DRV8323H::init(const Config & cfg){
-
+    (void)(cfg);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::reconf(const Config & cfg){
+    (void)(cfg);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_peak_current(const PeakCurrent peak_current){
+    (void)(peak_current);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_ocp_mode(const OcpMode ocp_mode){
+    (void)(ocp_mode);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_gain(const Gain gain){
+    (void)(gain);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::enable_pwm3(const Enable en){
+    (void)(en);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_drive_hs(const IDriveP pdrive, const IDriveN ndrive){
+    (void)(pdrive);
+    (void)(ndrive);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_drive_ls(const IDriveP pdrive, const IDriveN ndrive){
+    (void)(pdrive);
+    (void)(ndrive);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323H::set_drive_time(const PeakDriveTime ptime){
+    (void)(ptime);
     TODO();
     return Ok();
 }

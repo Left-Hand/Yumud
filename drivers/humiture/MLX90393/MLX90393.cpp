@@ -212,7 +212,12 @@ IResult<> MLX90393::read_reg(uint8_t reg_addr, uint16_t & reg_val) {
 }
 
 
-IResult<> MLX90393_I2cTransport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
+IResult<> MLX90393_I2cTransport::transceive(
+    std::span<uint8_t> rx_pbuf, 
+    std::span<const uint8_t> tx_pbuf
+){
+    (void)(rx_pbuf);
+    (void)(tx_pbuf);
     TODO();
     return Ok();
     // uint8_t status = 0;
@@ -241,6 +246,8 @@ IResult<> MLX90393_I2cTransport::transceive(std::span<uint8_t> rx_pbuf, std::spa
 }
 
 IResult<> MLX90393_SpiTransport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
+    (void)(rx_pbuf);
+    (void)(tx_pbuf);
     TODO();
     return Ok();
     // uint8_t status = 0;

@@ -48,7 +48,7 @@ struct BMM150_Prelude{
     };
 
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         ChipId = 0x40,
         X = 0x42,
         Y = 0x44,

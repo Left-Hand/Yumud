@@ -52,32 +52,6 @@ private:
 
     IResult<> verify_chip_id();
 
-    #if 0
-    // class InterruptChannel{
-    // protected:
-    //     using Error = BMI088_Acc::Error;
-    // public:
-    //     InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
-    //         bmi_(bmi), ctrl_(ctrl), address_(address){;}
-
-    //     IResult<> enable_output(const Enable en){
-    //         auto reg = RegCopy(ctrl_);
-    //         reg.int_out = (en == EN);
-    //         return bmi_.transport_.write_reg(reg);
-    //     }
-    // protected:
-    //     BMI088_Acc & bmi_;
-    //     _R8_IoCtrl & ctrl_;
-    //     uint8_t address_;
-    // };
-
-    // friend InterruptChannel;
-    // std::array<InterruptChannel, 2> interrupts = {
-    //     InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
-    //     InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
-    // };
-    #endif
-
     [[nodiscard]] static constexpr iq20
     calculate_acc_scale(const AccFs acc_fs){
         constexpr double g = 9.806;

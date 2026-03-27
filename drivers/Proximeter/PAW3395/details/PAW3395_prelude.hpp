@@ -29,7 +29,7 @@ struct PAW3395_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
 
         // 产品ID，RO，Default：0x51
         PRODUCT_ID = 0x00,   

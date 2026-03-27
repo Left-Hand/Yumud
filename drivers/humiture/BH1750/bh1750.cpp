@@ -50,8 +50,8 @@ IResult<> BH1750::send_command(const uint8_t cmd){
 
 
 IResult<uint32_t> BH1750::get_lx(){
-    uint8_t data[2] = {0};
-    // i2c_drv.read(data, 2);
+    uint8_t buf[2] = {0};
+    // i2c_drv.read(buf, 2);
     TODO();
-    return Ok(int(lsb.num * static_cast<int>((data[0] << 8) | data[1])) / lsb.den);
+    return Ok(int(lsb.num * static_cast<int>((buf[0] << 8) | buf[1])) / lsb.den);
 }

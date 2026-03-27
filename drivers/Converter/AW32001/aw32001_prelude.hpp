@@ -173,7 +173,7 @@ struct AW32001_Prelude{
         from_volt, iq16, 4.200, 4.95, 0.05);
 
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         InputSourceControl = 0x00,
         PowerOnConfiguration = 0x01,
         ChargeCurrentControl = 0x02,

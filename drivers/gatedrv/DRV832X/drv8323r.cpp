@@ -24,32 +24,37 @@ using IResult = Result<T, Error>;
 
 
 IResult<> DRV8323R::init(const Config & cfg){
-
+    (void)(cfg);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::reconf(const Config & cfg){
+    (void)(cfg);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_peak_current(const PeakCurrent peak_current){
+    (void)(peak_current);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_ocp_mode(const OcpMode ocp_mode){
+    (void)(ocp_mode);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_gain(const Gain gain){
+    (void)(gain);
     TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::enable_pwm3(const Enable en){
+    (void)(en);
     TODO();
     return Ok();
 }

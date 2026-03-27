@@ -9,7 +9,7 @@
 namespace ymd::drivers{
 
 struct DRV2605L_Prelude{
-    enum class RegAddr{
+    enum class [[nodiscard]] RegAddr{
         Status          = 0x00,
         Mode            = 0x01,
         RtpInput       = 0x02,

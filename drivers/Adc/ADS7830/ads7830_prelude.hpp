@@ -113,7 +113,7 @@ struct ADS7830_Prelude{
             const ChannelSelection pos, 
             const ChannelSelection neg
         ){
-            return posneg2kind(pos, ChannelSelection::COM).
+            return posneg2kind(pos, neg).
                 map([](const Kind kind){return PairSelection(kind);});
         }
 

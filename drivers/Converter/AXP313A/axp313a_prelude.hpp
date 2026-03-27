@@ -26,7 +26,7 @@ struct [[nodiscard]] AXP313A_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x34);
 
 // 寄存器地址枚举，严格对应AXP313A手册6.7.1寄存器列表地址
-enum class RegAddr : uint8_t{
+enum class [[nodiscard]] RegAddr : uint8_t{
     PowerOnSourceInd = 0x00,    // 00H 开机源指示寄存器 R
     PowerOutputCtrl  = 0x10,    // 10H 电源输出开关控制寄存器 R/W
     DcdcPwmCtrl      = 0x12,    // 12H DCDC PWM控制寄存器 R/W

@@ -24,7 +24,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-enum class RegAddr:uint16_t{
+enum class [[nodiscard]] RegAddr:uint16_t{
     UserId = 0x001,
     AngleHigh = 0x003,
     AngleLow = 0x004,

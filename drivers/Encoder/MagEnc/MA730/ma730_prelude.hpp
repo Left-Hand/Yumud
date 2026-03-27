@@ -28,7 +28,7 @@ struct MA730_Prelude{
         _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
     };
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         ZeroDataLow,
         ZeroDataHigh,
         Trim,

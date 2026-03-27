@@ -26,7 +26,7 @@ enum class Command:uint16_t{
     ReadAngle = 0b1010,
 };
 
-enum class RegAddr:uint16_t{
+enum class [[nodiscard]] RegAddr:uint16_t{
     UserId = 0x001,
     AngleHigh = 0x003,
     AngleLow = 0x004,

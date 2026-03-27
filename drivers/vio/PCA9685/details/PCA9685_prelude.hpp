@@ -15,7 +15,7 @@ struct PCA9685_Prelude{
 public:
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         Mode1,
         Mode2,
         LED0_ON_L = 0x06,

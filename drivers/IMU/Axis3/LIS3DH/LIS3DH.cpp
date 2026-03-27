@@ -31,7 +31,7 @@ Result<void, Error> LIS3DH::init(){
 	// LIS_Write_Byte(INT1_THS,0x10);			//设置阈值 16*16=256 mg
 	// LIS_Write_Byte(INT1_DURATION,0x00);		//中断持续时间设置，此处设为0，因为不读INT1_SRC中断就一直锁存
 	// LIS_Read_Byte(REFERENCE);				//读虚寄存器,强制将当前加速度值加载到高通滤波器值进行比较
- 
+
 	// //INT1_CFG使能中断  中断模式为 “OR”组合 只使能xyz轴高事件
 	// //LIS_Write_Byte(INT1_CFG,0x2A);
 	// //INT1_CFG使能中断  中断模式6-direction position  使能xyz轴高低事件

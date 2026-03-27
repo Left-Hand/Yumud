@@ -29,7 +29,7 @@ struct TCS34725_Prelude{
     using IResult = Result<T, Error>;
     
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         Enable = 0x00,
         Integration = 0x01,
         WaitTime = 0x03,

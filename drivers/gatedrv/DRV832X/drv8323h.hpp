@@ -4,57 +4,14 @@
 
 namespace ymd::drivers{
 
-class DRV8323H_Transport final:public DRV832X_Prelude{
+class DRV8323H_TransportIntf final:public DRV832X_Prelude{
 public:
-    struct Params{
-        hal::Gpio & gain_gpio;
-        hal::Gpio & vds_gpio;
-        hal::Gpio & idrive_gpio;
-        hal::Gpio & mode_gpio;
-    };
-
-    DRV8323H_Transport(const Params & params):
-        gain_pin_(params.gain_gpio),
-        vds_pin_(params.vds_gpio),
-        idrive_pin_(params.idrive_gpio),
-        mode_pin_(params.mode_gpio){;}
-
-    void set_pwm_mode(const PwmMode mode){
-        // _6x = GND,
-        // _3x = 47K to GND,
-        // _1x = HiZ,
-        // Independent = VDD,
-
-        switch(mode){
-            case PwmMode::_6x:
-                mode_pin_.outpp(LOW);
-                break;
-            case PwmMode::_3x:
-                mode_pin_.inpd();
-                break;
-            case PwmMode::_1x:
-                mode_pin_.inflt();
-                break;
-                // mode_pin_.outpp(HIGH);
-                break;
-            case  PwmMode::Independent:
-                mode_pin_.outpp(HIGH);
-                break;
-        }
-    }
-
-    void set_idrive(const IDriveP drive){
-        // switch(drive){
-        //     case IDriveP::
-        // }
-        idrive_pin_.inflt();
-    }
-
-private:
-    hal::Gpio & gain_pin_;
-    hal::Gpio & vds_pin_;
-    hal::Gpio & idrive_pin_;
-    hal::Gpio & mode_pin_;
+    // _6x = GND,
+    // _3x = 47K to GND,
+    // _1x = HiZ,
+    // Independent = VDD,
+    virtual void set_pwm_mode(const PwmMode mode) = 0;
+    virtual void set_idrive(const IDriveP drive) = 0;
 };
 
 
@@ -62,9 +19,9 @@ class DRV8323H final:
     public DRV832X_Prelude{
 public:
     static constexpr auto name = "DRV8323H";
-    template<typename ... Args>
-    explicit DRV8323H(Args && ... args):
-        transport_(std::forward<Args>(args)...){;}
+    using Transport = DRV8323H_TransportIntf;
+    explicit DRV8323H(Transport & transport):
+        transport_(transport){;}
 
 
     IResult<> init(const Config & cfg);
@@ -80,8 +37,8 @@ public:
     IResult<> set_drive_time(const PeakDriveTime ptime);
 
 private:
-    using Phy = DRV8323H_Transport;
-    Phy transport_;
+
+    Transport & transport_;
 };
 
 

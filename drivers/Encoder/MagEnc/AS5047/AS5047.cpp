@@ -34,10 +34,10 @@ protected:
     };
     uint16_t parity_:1;
 
-    static constexpr bool calc_parity(const uint16_t data){
+    static constexpr bool calc_parity(const uint16_t bits){
         int count = 0;
         for (int i = 0; i < 16; ++i) {
-            if (data & (1 << i)) {
+            if (bits & (1 << i)) {
                 count++;
             }
         }
@@ -48,30 +48,32 @@ protected:
 }
 
 
-IResult<> AS5047::write_reg(const RegAddr addr, const uint8_t data){
-
+IResult<> AS5047::write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     // WRFormat format = {
-    //     .addr = addr,
+    //     .reg_addr = reg_addr,
     //     .type = 0b0110
     // };
 
     // spi_drv_.write_single(format, CONT);
 
-    // spi_drv_.write_single(data);
+    // spi_drv_.write_single(reg_val);
     TODO();
     return Ok();
 }
 
 
-IResult<> AS5047::read_reg(const RegAddr addr, uint8_t & data){
-
+IResult<> AS5047::read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+    (void)(reg_addr);
+    (void)(reg_val);
     // WRFormat format = {
-    //     .addr = addr,
+    //     .reg_addr = reg_addr,
     //     .type = 0b0011
     // };
 
     // spi_drv_.write_single(format, CONT);
-    // spi_drv_.read_single(data);
+    // spi_drv_.read_single(reg_val);
     TODO();
     return Ok();
 }

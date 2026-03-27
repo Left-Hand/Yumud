@@ -13,7 +13,7 @@ struct ADXL345_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
     static constexpr uint8_t VALID_DEVICE_ID = 0xE5;
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         DeviceID = 0x00,
         TapThreshold = 0x1D,
         OffsetX = 0x1E,
