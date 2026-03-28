@@ -47,10 +47,13 @@ private:
     MLX90393_TransportIntf & transport_;
     IResult<> read_reg(uint8_t reg_addr, uint16_t & reg_val);
     IResult<> write_reg(uint8_t reg_addr, uint16_t reg_val);
+    IResult<> write_reg(RegAddr reg_addr, uint16_t reg_val){
+        return write_reg(static_cast<uint8_t>(reg_addr), reg_val);
+    }
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res =write_reg(T::REG_ADDR, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -61,6 +64,7 @@ private:
         std::span<const uint8_t> tx_pbuf, 
         const uint8_t interdelay
     ){
+        (void)(interdelay);
         return transport_.transceive(rx_pbuf, tx_pbuf);
     }
 

@@ -12,7 +12,7 @@ struct MAX31855_Prelude{
     static constexpr iq16 JUNC_TEMP_LSB = iq16(0.0625);
     static constexpr iq16 THER_TEMP_LSB = iq16(0.25);
 
-    struct MAX31855_Payload{
+    struct [[nodiscard]] MAX31855_Packet final{
         // D0 OC Fault This bit is a 1 when the thermocouple is open (no connections). Default value is 0.
         uint32_t oc_fault:1;
 
@@ -41,14 +41,14 @@ struct MAX31855_Prelude{
         }
 
         std::span<uint16_t, 2> to_u16_slice(){
-            static_assert(sizeof(MAX31855_Payload) == 4);
+            static_assert(sizeof(MAX31855_Packet) == 4);
             return std::span<uint16_t, 2>(reinterpret_cast<uint16_t *>(this), 2);
         }
     };
 
-    static_assert(sizeof(MAX31855_Payload) == 4);
+    static_assert(sizeof(MAX31855_Packet) == 4);
 
-    using IResult = Result<MAX31855_Payload, hal::HalError>;
+    using IResult = Result<MAX31855_Packet, hal::HalError>;
 };
 
 

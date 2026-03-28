@@ -59,7 +59,7 @@ IResult<> MLX90393::init() {
 
 IResult<> MLX90393::exit_mode() {
     const uint8_t tx[1] = {MLX90393_REG_EX};
-    uint8_t rx[1] = {0};
+    uint8_t rx[1];
     /* Perform the transaction. */
     return transceive(std::span(rx), std::span(tx), 0);
 }
@@ -171,7 +171,7 @@ IResult<math::Vec3<iq24>> MLX90393::read_measurement() {
 }
 IResult<math::Vec3<iq24>> MLX90393::read_data() {
     if(const auto res = start_single_measurement(); res.is_err())
-        return Err(Error::CantReadData);
+        return Err(res.unwrap_err());
     // See MLX90393 Getting Started Guide for fancy formula
     // tconv = f(OSR, DIG_FILT, OSR2, ZYXT)
     // For now, using Table 18 from datasheet
@@ -184,9 +184,9 @@ IResult<math::Vec3<iq24>> MLX90393::read_data() {
 IResult<> MLX90393::write_reg(uint8_t reg_addr, uint16_t reg_val) {
     const uint8_t tx[4] = {
         MLX90393_REG_WR,
-        (uint8_t)(reg_val >> 8),   // high byte
-        (uint8_t)(reg_val & 0xFF), // low byte
-        (uint8_t)(reg_addr << 2)
+        static_cast<uint8_t>(reg_val >> 8),   // high byte
+        static_cast<uint8_t>(reg_val & 0xFF), // low byte
+        static_cast<uint8_t>(reg_addr << 2)
     };   // the reg_addr itself, shift up by 2 bits!
 
     uint8_t rx[1] = {0};
@@ -197,7 +197,7 @@ IResult<> MLX90393::write_reg(uint8_t reg_addr, uint16_t reg_val) {
 IResult<> MLX90393::read_reg(uint8_t reg_addr, uint16_t & reg_val) {
     const uint8_t tx[2] = {
         MLX90393_REG_RR,
-        (uint8_t)(reg_addr << 2)
+        static_cast<uint8_t>(reg_addr << 2)
     }; // the reg_addr itself, shift up by 2 bits!
 
     uint8_t rx[2] = {0};

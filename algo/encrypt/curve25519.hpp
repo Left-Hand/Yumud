@@ -36,7 +36,7 @@ inline OutputStream & operator<<(OutputStream & os, Curve25519Error error) {
     __builtin_unreachable();
 }
 // Curve25519 面向对象封装
-class Curve25519 {
+struct Curve25519 {
 public:
     static constexpr size_t KEY_SIZE = 32;
     using Key = std::array<uint8_t, KEY_SIZE>;
@@ -46,79 +46,64 @@ public:
     using SharedSecret = std::array<uint8_t, KEY_SIZE>;
     
 
-    // 从现有密钥对构造
-    constexpr Curve25519(
-        std::span<const uint8_t, KEY_SIZE> public_key, 
-        std::span<const uint8_t, KEY_SIZE> private_key
-    ){
-        std::copy(public_key.begin(), public_key.end(), public_key_.begin());
-        std::copy(private_key.begin(), private_key.end(), private_key_.begin());
-    }
     
     // 生成随机密钥对
     [[nodiscard]] static constexpr Result<Key, Curve25519Error> generate_public_from_private(
         std::span<const uint8_t, KEY_SIZE> private_key
     ) {
-        const auto public_key = ({
-            const auto res = derive_public_key(private_key);
-            if(res.is_err()) return Err(res.unwrap_err());
-            res.unwrap();
-        });
+        const auto public_key = derive_public_key(private_key);
         
         return Ok(public_key);
     }
     
     // 从私钥推导公钥
-    [[nodiscard]] static constexpr Result<std::array<uint8_t, KEY_SIZE>, Curve25519Error>
+    [[nodiscard]] static constexpr std::array<uint8_t, KEY_SIZE>
     derive_public_key(std::span<const uint8_t, KEY_SIZE> private_key) {
         std::array<uint8_t, KEY_SIZE> public_key{};
         std::array<uint8_t, KEY_SIZE> basepoint = {9}; // Curve25519 默认基点
         
         generate_core(public_key, private_key, basepoint);
-        return Ok(public_key);
+        return public_key;
     }
     
     // 计算共享密钥
     [[nodiscard]] constexpr Result<SharedSecret,  Curve25519Error> 
-    compute_shared_secret(std::span<const uint8_t, KEY_SIZE> their_public_key) const {
+    compute_shared_secret(
+        std::span<const uint8_t, KEY_SIZE> their_public_key,
+        std::span<const uint8_t, KEY_SIZE> private_key
+    ) const {
         SharedSecret shared_secret{};
-        generate_core(shared_secret, private_key_, their_public_key);
+        generate_core(shared_secret, private_key, their_public_key);
         return Ok(shared_secret);
     }
     
-    // 获取公钥
-    [[nodiscard]] constexpr std::span<const uint8_t, KEY_SIZE> public_key() const {
-        return std::span(public_key_);
-    }
-    
-    // 获取私钥（谨慎使用！）
-    [[nodiscard]] constexpr std::span<const uint8_t, KEY_SIZE> private_key() const {
-        return std::span(private_key_);
-    }
     
     // 验证密钥对是否匹配
-    [[nodiscard]] constexpr Result<bool, Curve25519Error> validate_keypair() const {
-        auto derived_public = ({
-            const auto res =derive_public_key(private_key_);
-            if(res.is_err()) return Err(res.unwrap_err());
-            res.unwrap();
-        });
-        return Ok(derived_public == public_key_);
+    [[nodiscard]] static constexpr Result<void, void> validate_keypair(
+        std::span<const uint8_t, KEY_SIZE> public_key, 
+        std::span<const uint8_t, KEY_SIZE> private_key
+    ) {
+        auto derived_public = derive_public_key(private_key);
+        if(equal_key(derived_public, public_key) == false) return Err();
+        return Ok();
     }
     
 private:
-    std::array<uint8_t, KEY_SIZE> private_key_;
-    std::array<uint8_t, KEY_SIZE> public_key_;
-    
+    static constexpr bool equal_key(
+        std::span<const uint8_t, KEY_SIZE> a, 
+        std::span<const uint8_t, KEY_SIZE> b
+    ){
+        for(size_t i = 0; i < KEY_SIZE; i++){
+            if(a[i] != b[i]) return false;
+        }
+        return true;
+    }
     // 核心生成函数
-    static constexpr void generate_core(std::span<uint8_t, KEY_SIZE> mypublic, 
+    static constexpr void generate_core(
+        std::span<uint8_t, KEY_SIZE> mypublic, 
         std::span<const uint8_t, KEY_SIZE> secret, 
         std::span<const uint8_t, KEY_SIZE> basepoint
     ) {
-
-                
-        using namespace details; // 假设 details 命名空间的内容在这里
-        
         int64_t bp[10], x[10], z[11], zmone[10];
         uint8_t e[KEY_SIZE];
 
@@ -128,11 +113,11 @@ private:
         e[31] &= 127;
         e[31] |= 64;
 
-        fexpand(bp, basepoint.data());
-        cmult(x, z, e, bp);
-        crecip(zmone, z);
-        fmul(z, x, zmone);
-        fcontract(mypublic.data(), z);
+        details::fexpand(bp, basepoint.data());
+        details::cmult(x, z, e, bp);
+        details::crecip(zmone, z);
+        details::fmul(z, x, zmone);
+        details::fcontract(mypublic.data(), z);
     }
 };
 

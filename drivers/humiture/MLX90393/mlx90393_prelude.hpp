@@ -26,28 +26,42 @@ namespace ymd::drivers{
 
 struct MLX90393_Prelude{
     enum class Error_Kind{
-        CantReadData
     };
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
     
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddr = uint8_t;
-
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0C >> 1);
     /** Register map. */
-    static constexpr uint8_t MLX90393_REG_SB = (0x10);  /**< Start burst mode. */
-    static constexpr uint8_t MLX90393_REG_SW = (0x20);  /**< Start wakeup on change mode. */
-    static constexpr uint8_t MLX90393_REG_SM = (0x30);  /**> Start single-meas mode. */
-    static constexpr uint8_t MLX90393_REG_RM = (0x40);  /**> Read measurement. */
-    static constexpr uint8_t MLX90393_REG_RR = (0x50);  /**< Read register. */
-    static constexpr uint8_t MLX90393_REG_WR = (0x60);  /**< Write register. */
-    static constexpr uint8_t MLX90393_REG_EX = (0x80);  /**> Exit moode. */
-    static constexpr uint8_t MLX90393_REG_HR = (0xD0);  /**< Memory recall. */
-    static constexpr uint8_t MLX90393_REG_HS = (0x70);  /**< Memory store. */
-    static constexpr uint8_t MLX90393_REG_RT = (0xF0);  /**< Reset. */
-    static constexpr uint8_t MLX90393_REG_NOP = (0x00); /**< NOP. */
+
+
+    enum class [[nodiscard]] RegAddr:uint8_t{
+        SB = (0x10),  /**< Start burst mode. */
+        SW = (0x20),  /**< Start wakeup on change mode. */
+        SM = (0x30),  /**> Start single-meas mode. */
+        RM = (0x40),  /**> Read measurement. */
+        RR = (0x50),  /**< Read register. */
+        WR = (0x60),  /**< Write register. */
+        EX = (0x80),  /**> Exit moode. */
+        HR = (0xD0),  /**< Memory recall. */
+        HS = (0x70),  /**< Memory store. */
+        RT = (0xF0),  /**< Reset. */
+        NOP = (0x00), /**< NOP. */
+    };
+
+    static constexpr uint8_t MLX90393_REG_SB = static_cast<uint8_t>(RegAddr::SB);  /**< Start burst mode. */
+    static constexpr uint8_t MLX90393_REG_SW = static_cast<uint8_t>(RegAddr::SW);  /**< Start wakeup on change mode. */
+    static constexpr uint8_t MLX90393_REG_SM = static_cast<uint8_t>(RegAddr::SM);  /**> Start single-meas mode. */
+    static constexpr uint8_t MLX90393_REG_RM = static_cast<uint8_t>(RegAddr::RM);  /**> Read measurement. */
+    static constexpr uint8_t MLX90393_REG_RR = static_cast<uint8_t>(RegAddr::RR);  /**< Read register. */
+    static constexpr uint8_t MLX90393_REG_WR = static_cast<uint8_t>(RegAddr::WR);  /**< Write register. */
+    static constexpr uint8_t MLX90393_REG_EX = static_cast<uint8_t>(RegAddr::EX);  /**> Exit moode. */
+    static constexpr uint8_t MLX90393_REG_HR = static_cast<uint8_t>(RegAddr::HR);  /**< Memory recall. */
+    static constexpr uint8_t MLX90393_REG_HS = static_cast<uint8_t>(RegAddr::HS);  /**< Memory store. */
+    static constexpr uint8_t MLX90393_REG_RT = static_cast<uint8_t>(RegAddr::RT);  /**< Reset. */
+    static constexpr uint8_t MLX90393_REG_NOP = static_cast<uint8_t>(RegAddr::NOP); /**< NOP. */
+
 
     /** Gain settings for CONF1 register. */
     enum class Gain:uint16_t{

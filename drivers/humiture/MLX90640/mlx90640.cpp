@@ -75,13 +75,31 @@ static constexpr uint16_t CTRL_RESOLUTION_MASK  =REG_MASK(CTRL_RESOLUTION_SHIFT,
 //     uint16_t 
 // };
 
-static constexpr uint8_t NIBBLE1(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x000f)));}
-static constexpr uint8_t NIBBLE2(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x00f0) >> 4));}
-static constexpr uint8_t NIBBLE3(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x0f00) >> 8));}
-static constexpr uint8_t NIBBLE4(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0xf000) >> 12));}
+[[nodiscard]] static constexpr uint8_t 
+NIBBLE1(uint16_t reg16) {
+    return static_cast<uint8_t>(((reg16 & 0x000f)));
+}
+[[nodiscard]] static constexpr uint8_t 
+NIBBLE2(uint16_t reg16) {
+    return static_cast<uint8_t>(((reg16 & 0x00f0) >> 4));
+}
+[[nodiscard]] static constexpr uint8_t 
+NIBBLE3(uint16_t reg16) {
+    return static_cast<uint8_t>(((reg16 & 0x0f00) >> 8));
+}
+[[nodiscard]] static constexpr uint8_t 
+NIBBLE4(uint16_t reg16) {
+    return static_cast<uint8_t>(((reg16 & 0xf000) >> 12));
+}
 
-static constexpr uint8_t LS_BYTE(const uint16_t x){return static_cast<uint8_t>(x & 0xFF);}
-static constexpr uint8_t MS_BYTE(const uint16_t x){return static_cast<uint8_t>(x >> 8);}
+[[nodiscard]] static constexpr uint8_t 
+LS_BYTE(const uint16_t x){
+    return static_cast<uint8_t>(x & 0xFF);
+}
+[[nodiscard]] static constexpr uint8_t 
+MS_BYTE(const uint16_t x){
+    return static_cast<uint8_t>(x >> 8);
+}
 
 static constexpr float VCC_VOLTAGE = 3.3f;
 

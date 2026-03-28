@@ -151,30 +151,31 @@ public:
 
     [[nodiscard]] __fast_inline static constexpr 
     Rect2 from_minimal_bounding_box(
-        const std::initializer_list<Vec2<T>> & points){
-            return from_minimal_bounding_box(std::span(points.begin(), points.end()));
-        }
+        const std::initializer_list<Vec2<T>> & points
+    ){
+        return from_minimal_bounding_box(std::span(points.begin(), points.end()));
+    }
 
     // Add direct component accessors
     [[nodiscard]] __fast_inline constexpr 
     T & x() { return top_left.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & x() const { return top_left.x; }
+    const T x() const { return top_left.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & y() { return top_left.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & y() const { return top_left.y; }
+    const T y() const { return top_left.y; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & w() { return size.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & w() const { return size.x; }
+    const T w() const { return size.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & h() { return size.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & h() const { return size.y; }
+    const T h() const { return size.y; }
 
     [[nodiscard]] __fast_inline constexpr 
     bool contains_x(const T p_x) const{

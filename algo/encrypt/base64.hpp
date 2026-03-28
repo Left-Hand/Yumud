@@ -13,7 +13,7 @@ namespace details{
 static constexpr uint8_t BASE64_PAD = '=';
 
 /* BASE 64 encode table */
-static constexpr std::array<uint8_t, 64> BASE64EN = {
+static constexpr std::array<uint8_t, 64> BASE64_ENC_TABLE = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
     'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -24,7 +24,7 @@ static constexpr std::array<uint8_t, 64> BASE64EN = {
     '4', '5', '6', '7', '8', '9', '+', '/',
 };
 
-static constexpr std::array<uint8_t, 128> BASE64DE = {
+static constexpr std::array<uint8_t, 128> BASE64_DEC_TABLE = {
     /* nul, soh, stx, etx, eot, enq, ack, bel, */
     255, 255, 255, 255, 255, 255, 255, 255,
     /*  bs,  ht,  nl,  vt,  np,  cr,  so,  si, */
@@ -59,15 +59,14 @@ static constexpr std::array<uint8_t, 128> BASE64DE = {
     49,  50,  51, 255, 255, 255, 255, 255
 };
 
-static constexpr uint32_t get_enc_len(uint32_t beforeEncodeLen){
-	if(beforeEncodeLen%3) return (beforeEncodeLen/3+1)*4;
-	else return (beforeEncodeLen/3)*4;
+[[nodiscard]] static constexpr uint32_t get_enc_len(uint32_t before_encode_len){
+	if(before_encode_len%3) return (before_encode_len/3+1)*4;
+	else return (before_encode_len/3)*4;
 }
 
-static constexpr uint32_t get_dec_len(uint32_t beforeEncodeLen)
-{
-	if(beforeEncodeLen%4) return 0;
-	return (beforeEncodeLen/4)*3;
+[[nodiscard]] static constexpr uint32_t get_dec_len(uint32_t before_encode_len){
+	if(before_encode_len%4) return 0;
+	return (before_encode_len/4)*3;
 }
 
 }
@@ -131,16 +130,16 @@ Result<size_t, Base64Error> encode(std::span<uint8_t> dst, std::span<const uint8
         switch (s) {
         case 0:
             s = 1;
-            dst[j++] = details::BASE64EN[(c >> 2) & 0x3F];
+            dst[j++] = details::BASE64_ENC_TABLE[(c >> 2) & 0x3F];
             break;
         case 1:
             s = 2;
-            dst[j++] = details::BASE64EN[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
+            dst[j++] = details::BASE64_ENC_TABLE[((l & 0x3) << 4) | ((c >> 4) & 0xF)];
             break;
         case 2:
             s = 0;
-            dst[j++] = details::BASE64EN[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
-            dst[j++] = details::BASE64EN[c & 0x3F];
+            dst[j++] = details::BASE64_ENC_TABLE[((l & 0xF) << 2) | ((c >> 6) & 0x3)];
+            dst[j++] = details::BASE64_ENC_TABLE[c & 0x3F];
             break;
         }
         l = c;
@@ -148,12 +147,12 @@ Result<size_t, Base64Error> encode(std::span<uint8_t> dst, std::span<const uint8
     
     switch (s) {
     case 1:
-        dst[j++] = details::BASE64EN[(l & 0x3) << 4];
+        dst[j++] = details::BASE64_ENC_TABLE[(l & 0x3) << 4];
         dst[j++] = details::BASE64_PAD;
         dst[j++] = details::BASE64_PAD;
         break;
     case 2:
-        dst[j++] = details::BASE64EN[(l & 0xF) << 2];
+        dst[j++] = details::BASE64_ENC_TABLE[(l & 0xF) << 2];
         dst[j++] = details::BASE64_PAD;
         break;
     }
@@ -161,6 +160,8 @@ Result<size_t, Base64Error> encode(std::span<uint8_t> dst, std::span<const uint8
     // Return the number of bytes written
     return Ok(j);
 }
+
+
 Result<size_t, Base64Error> decode(std::span<uint8_t> dst, std::span<const uint8_t> src) {
     const size_t inlen = src.size();
     size_t j = 0;
@@ -193,7 +194,7 @@ Result<size_t, Base64Error> decode(std::span<uint8_t> dst, std::span<const uint8
             return Err(Base64Error(Base64Error::Kind::InvalidCharacter));
         }
         
-        const uint8_t value = details::BASE64DE[current_char];
+        const uint8_t value = details::BASE64_DEC_TABLE[current_char];
         if (value == 255) {
             return Err(Base64Error(Base64Error::Kind::InvalidCharacter));
         }

@@ -7,17 +7,6 @@
 // 码管或者32只LED；同时还可以进行28键的键盘扫描；CH455通过SCL和SDA组成的2线串行接口
 // 与单片机等交换数据。 
 
-// 接口
-    // I2cBase(1MHz)
-    //  Scl: Gpio;
-    //  Sda: Gpio;
-    //  ~Interrupt: Option<Gpio>;
-
-// 错误码:
-    // BrightnessGreaterThanMax,
-    // BrightnessLessThanMin,
-    // ReadKeyBit2VerifyFailed,
-    // ReadKeyBit7VerifyFailed,
 
 
 #include "details/CH455_Prelude.hpp"
@@ -31,7 +20,6 @@ public:
     struct Config{
         const hal::Gpio & scl_pin;
         const hal::Gpio & sda_pin;
-        Option<hal::Gpio &> int_gpio;
     };
 
     explicit CH455(const Config & cfg)

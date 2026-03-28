@@ -20,15 +20,6 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-
-enum class [[nodiscard]] DPS:uint8_t{
-    _250, _500, _1000, _2000
-};
-
-enum class [[nodiscard]] G:uint8_t{
-    _2, _4, _8, _16
-};
-
 enum class [[nodiscard]] AccOdr:uint8_t{
 
     _25_32Hz = 0b0001,
@@ -117,12 +108,16 @@ struct Regset final{
 
     struct R8_ChipId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+
         static constexpr uint8_t CORRECT_ID = 0xD1;
         uint8_t bits;
-    }DEF_R8(chip_id_reg)
+    };
+
+    VALIDATE_R8(R8_ChipId)
 
     struct R8_Err:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
         uint8_t fatal_err:1;
         uint8_t err_code:4;
         uint8_t i2c_fail_err:1;
@@ -176,6 +171,7 @@ struct Regset final{
 
     struct R8_IntStatus1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1d}; // INT_STATUS_3
+
         uint8_t __resv__:2;
         uint8_t highg_int:1;
         uint8_t lowg_int:1;
@@ -187,6 +183,7 @@ struct Regset final{
 
     struct R8_IntStatus2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1d}; // INT_STATUS_3
+
         
         uint8_t anym_first_x: 1;
         uint8_t anym_first_y: 1;
@@ -202,6 +199,7 @@ struct Regset final{
 
     struct R8_IntStatus3:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e}; // INT_STATUS_3
+
         uint8_t high_first_x: 1;
         uint8_t high_first_y: 1;
         uint8_t high_first_z: 1;
@@ -214,22 +212,26 @@ struct Regset final{
 
     struct R8_Temperature:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x21}; // TEMPERATURE_1
+
         uint16_t temperature: 16; // Assuming 8 bits for temperature
     };
 
     struct R8_FifoLength:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x23}; // FIFO_LENGTH_1
+
         uint16_t fifo_byte_counter: 11; // Assuming 8 bits for temperature
         uint16_t __resv__:5;
     };
     
     struct R8_FifoData:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x25};
+
         uint8_t bits;
     };
 
     struct R8_AccConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x40};
+
         AccOdr acc_odr:4;
         uint8_t acc_bwp:3;
 
@@ -239,12 +241,14 @@ struct Regset final{
     
     struct R8_AccFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
+
         AccFs acc_fs:4;
         uint8_t __resv__:4;
     }DEF_R8(acc_fs_reg)
 
     struct R8_GyrConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x42};
+
         GyrOdr gyr_odr:4;
         uint8_t gyr_bwp:2;
         uint8_t __resv__:2 = 0;
@@ -252,18 +256,21 @@ struct Regset final{
 
     struct R8_GyrFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x43};
+
         GyrFs gyr_fs:3;
         uint8_t __resv__:5 = 0;
     }DEF_R8(gyr_fs_reg)
 
     struct R8_MagConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x44};
+
         uint8_t mag_odr:4;
         uint8_t __resv__:4;
     };
 
     struct R8_FifoDowns:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x45};
+
         uint8_t gyr_fifo_down : 3; // 8 bits for acc_fifo_filt_data
         uint8_t gyr_fifo_filt_data:1;
         uint8_t acc_fifo_data : 3; // 8 bits for gyr_fifo_filt_data
@@ -272,6 +279,7 @@ struct Regset final{
 
     struct R8_FifoConfig0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x46};
+
         uint8_t fifo_water_mark : 8; // 8 bits for fifo_water_mark
     };
 
@@ -334,6 +342,7 @@ struct Regset final{
 
     struct R8_IntEn1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x51};
+
         uint8_t int_highg_x_en : 1;
         uint8_t int_highg_y_en : 1;
         uint8_t int_highg_z_en : 1;
@@ -347,6 +356,7 @@ struct Regset final{
 
     struct R8_IntEn2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x52};
+
         uint8_t int_nomox_en:1;
         uint8_t int_nomoy_en:1;
         uint8_t int_nomoz_en:1;
@@ -356,6 +366,7 @@ struct Regset final{
 
     struct R8_IntOutCtrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x53};
+
         uint8_t int1_edge_ctrl:1;
         uint8_t int1_lvl:1;
         uint8_t int1_od:1;
@@ -368,6 +379,7 @@ struct Regset final{
 
     struct R8_IntLatch:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x54};
+
         uint8_t int_latch:4;
         uint8_t int1_input_en:1;
         uint8_t int2_input_en:1;
@@ -417,30 +429,35 @@ struct Regset final{
 
     struct R8_IntData0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x58};
-        uint8_t:3;
+
+        uint8_t __resv__:3;
         uint8_t int_tap_src:1;
-        uint8_t:3;
+        uint8_t __resv2__:3;
         uint8_t int_low_high_src:1;
     };
 
     struct R8_IntData1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x59};
+
         uint8_t:7;
         uint8_t int_motion_src:1;
     };
 
     struct R8_IntLowHigh0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5A};
+
         uint8_t int_low_dur;
     };
 
     struct R8_IntLowHigh1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5B};
+
         uint8_t int_low_th;
     };
 
     struct R8_IntLowHigh2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5C};
+
         uint8_t int_low_hy:2;
         uint8_t :4;
         uint8_t int_high_hy:2;
@@ -448,38 +465,44 @@ struct Regset final{
 
     struct R8_IntLowHigh3:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5D};
+
         uint8_t int_high_dur;
     };
 
     struct R8_IntLowHigh4:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5E};
+
         uint8_t int_high_th;
     };
 
     struct R8_IntMotion0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5F};
+
         uint8_t int_anym_dur:2;
         uint8_t int_slo_nomo_dur:6;
     };
 
     struct R8_IntMotion1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x60};
+
         uint8_t int_anymo_th;
     };
 
     struct R8_IntMotion2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x61};
+
         uint8_t int_slo_nomo_th;
     };
 
     struct R8_SelfTest:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6D};
+
         uint8_t acc_self_test_en:2;
         uint8_t acc_self_test_sign:1;
         uint8_t acc_self_test_amp:1;
         uint8_t gyr_self_test_en:1; 
         uint8_t __resv__:3;
-    }DEF_R8(self_test)
+    }DEF_R8(self_test_reg)
 
 
     math::Vec3<int16_t> gyr = math::Vec3<int16_t>::ZERO;;

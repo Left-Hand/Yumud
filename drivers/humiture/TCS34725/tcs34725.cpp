@@ -159,10 +159,10 @@ IResult<> TCS34725::init(const Config & cfg){
 }
 
 IResult<> TCS34725::read_burst(
-    const TCS34725::RegAddr addr, 
+    const TCS34725::RegAddr reg_addr, 
     const std::span<uint16_t> pbuf
 ){
-    uint8_t address = conv_reg_address_repeated(addr);
+    uint8_t address = conv_reg_address_repeated(reg_addr);
     if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();

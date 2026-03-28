@@ -171,7 +171,7 @@ IResult<> BMI160::self_test_acc(){
     }
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.acc_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -185,7 +185,7 @@ IResult<> BMI160::self_test_acc(){
     TODO();
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.acc_self_test_en = 0;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -202,7 +202,7 @@ IResult<> BMI160::self_test_acc(){
 IResult<> BMI160::self_test_gyr(){
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -238,7 +238,7 @@ IResult<> BMI160::self_test_gyr(){
     #endif
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -265,7 +265,7 @@ IResult<> BMI160::validate(){
     if(const auto res = read_reg(0x7f, dummy);
         res.is_err()) return Err(res.unwrap_err());
 
-    auto & reg = regs_.chip_id_reg;
+    auto reg = Regset::R8_ChipId{};
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 

@@ -78,11 +78,10 @@ public:
         x(mat(0, 0)), y(mat(1, 0)), z(mat(2, 0)){;}
     
 
-    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec3(
-        const U _x, 
-        const U _y, 
-        const U _z
+        const T _x, 
+        const T _y, 
+        const T _z
     ): 
         x(static_cast<T>(_x)), 
         y(static_cast<T>(_y)), 

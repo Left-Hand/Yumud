@@ -412,14 +412,14 @@ public:
 
         for (size_t c = 0; c < 4; ++c)
         {
-            ret[0][c] = (uint8_t) ( (int32_t)gfmultby0e(state[0][c]) ^ (int32_t)gfmultby0b(state[1][c]) ^
-                (int32_t)gfmultby0d(state[2][c]) ^ (int32_t)gfmultby09(state[3][c]) );
-            ret[1][c] = (uint8_t) ( (int32_t)gfmultby09(state[0][c]) ^ (int32_t)gfmultby0e(state[1][c]) ^
-                (int32_t)gfmultby0b(state[2][c]) ^ (int32_t)gfmultby0d(state[3][c]) );
-            ret[2][c] = (uint8_t) ( (int32_t)gfmultby0d(state[0][c]) ^ (int32_t)gfmultby09(state[1][c]) ^
-                (int32_t)gfmultby0e(state[2][c]) ^ (int32_t)gfmultby0b(state[3][c]) );
-            ret[3][c] = (uint8_t) ( (int32_t)gfmultby0b(state[0][c]) ^ (int32_t)gfmultby0d(state[1][c]) ^
-                (int32_t)gfmultby09(state[2][c]) ^ (int32_t)gfmultby0e(state[3][c]) );
+            ret[0][c] = (uint8_t) (gfmultby0e(state[0][c]) ^gfmultby0b(state[1][c]) ^
+                gfmultby0d(state[2][c]) ^gfmultby09(state[3][c]) );
+            ret[1][c] = (uint8_t) (gfmultby09(state[0][c]) ^gfmultby0e(state[1][c]) ^
+                gfmultby0b(state[2][c]) ^gfmultby0d(state[3][c]) );
+            ret[2][c] = (uint8_t) (gfmultby0d(state[0][c]) ^gfmultby09(state[1][c]) ^
+                gfmultby0e(state[2][c]) ^gfmultby0b(state[3][c]) );
+            ret[3][c] = (uint8_t) (gfmultby0b(state[0][c]) ^gfmultby0d(state[1][c]) ^
+                gfmultby09(state[2][c]) ^gfmultby0e(state[3][c]) );
         }
         return ret;
     }  // inv_mix_columns
@@ -431,14 +431,14 @@ public:
         State ret;
         for (size_t c = 0; c < 4; ++c)
         {
-            ret[0][c] = (uint8_t) ( (int32_t)gfmultby02(state[0][c]) ^ (int32_t)gfmultby03(state[1][c]) ^
-                (int32_t)gfmultby01(state[2][c]) ^ (int32_t)gfmultby01(state[3][c]) );
-            ret[1][c] = (uint8_t) ( (int32_t)gfmultby01(state[0][c]) ^ (int32_t)gfmultby02(state[1][c]) ^
-                (int32_t)gfmultby03(state[2][c]) ^ (int32_t)gfmultby01(state[3][c]) );
-            ret[2][c] = (uint8_t) ( (int32_t)gfmultby01(state[0][c]) ^ (int32_t)gfmultby01(state[1][c]) ^
-                (int32_t)gfmultby02(state[2][c]) ^ (int32_t)gfmultby03(state[3][c]) );
-            ret[3][c] = (uint8_t) ( (int32_t)gfmultby03(state[0][c]) ^ (int32_t)gfmultby01(state[1][c]) ^
-                (int32_t)gfmultby01(state[2][c]) ^ (int32_t)gfmultby02(state[3][c]) );
+            ret[0][c] = (uint8_t) (gfmultby02(state[0][c]) ^gfmultby03(state[1][c]) ^
+                gfmultby01(state[2][c]) ^gfmultby01(state[3][c]) );
+            ret[1][c] = (uint8_t) (gfmultby01(state[0][c]) ^gfmultby02(state[1][c]) ^
+                gfmultby03(state[2][c]) ^gfmultby01(state[3][c]) );
+            ret[2][c] = (uint8_t) (gfmultby01(state[0][c]) ^gfmultby01(state[1][c]) ^
+                gfmultby02(state[2][c]) ^gfmultby03(state[3][c]) );
+            ret[3][c] = (uint8_t) (gfmultby03(state[0][c]) ^gfmultby01(state[1][c]) ^
+                gfmultby01(state[2][c]) ^gfmultby02(state[3][c]) );
         }
 
         return ret;
@@ -538,7 +538,7 @@ public:
         State ret;
         for (size_t r = 0; r < 4; ++r){
             for (size_t c = 0; c < 4; ++c){
-                ret[r][c] = (uint8_t) ( (int32_t)state[r][c] ^ (int32_t)this->w_[(round*4)+c][r] );
+                ret[r][c] = (uint8_t) (state[r][c] ^this->w_[(round*4)+c][r] );
             }
         }
         return ret;

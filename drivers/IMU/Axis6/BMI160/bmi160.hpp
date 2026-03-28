@@ -87,10 +87,14 @@ private:
     [[nodiscard]] static constexpr 
     iq20 accfs_to_scale(const AccFs fs){
         switch(fs){
-            case AccFs::_2G:    return iq20(9.80665 * 4);
-            case AccFs::_4G:    return iq20(9.80665 * 8);
-            case AccFs::_8G:    return iq20(9.80665 * 16);
-            case AccFs::_16G:   return iq20(9.80665 * 32);
+            case AccFs::_2G:    
+                return iq20(9.80665 * 4);
+            case AccFs::_4G:    
+                return iq20(9.80665 * 8);
+            case AccFs::_8G:    
+                return iq20(9.80665 * 16);
+            case AccFs::_16G:   
+                return iq20(9.80665 * 32);
         }
         __builtin_unreachable();
     }
@@ -98,11 +102,16 @@ private:
     [[nodiscard]] static constexpr 
     iq20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return iq20(DEG2RAD_RATIO * (2 * 125));
-            case GyrFs::_250deg:    return iq20(DEG2RAD_RATIO * (2 * 250));
-            case GyrFs::_500deg:    return iq20(DEG2RAD_RATIO * (2 * 500));
-            case GyrFs::_1000deg:   return iq20(DEG2RAD_RATIO * (2 * 1000));
-            case GyrFs::_2000deg:   return iq20(DEG2RAD_RATIO * (2 * 2000));
+            case GyrFs::_125deg:    
+                return iq20(DEG2RAD_RATIO * 2 * 125);
+            case GyrFs::_250deg:    
+                return iq20(DEG2RAD_RATIO * 2 * 250);
+            case GyrFs::_500deg:    
+                return iq20(DEG2RAD_RATIO * 2 * 500);
+            case GyrFs::_1000deg:   
+                return iq20(DEG2RAD_RATIO * 2 * 1000);
+            case GyrFs::_2000deg:   
+                return iq20(DEG2RAD_RATIO * 2 * 2000);
         }
         __builtin_unreachable();
     }
