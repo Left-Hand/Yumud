@@ -8,19 +8,19 @@ namespace ymd::drivers{
 class TM8211{
 // private:
 public:
-    I2sDrv i2s_drv_;
+    hal::I2sDrv i2s_drv_;
 
     int16_t left_data;
     int16_t right_data;
     uint32_t distort_mask = 0xFFFFFFFF;
-    iq16 voltH;
-    iq16 voltL;
-    iq16 voltComm;
-    iq16 voltDiff_2;
+    iq16 volt_h;
+    iq16 volt_l;
+    iq16 volt_comm;
+    iq16 volt_diff2;
 
     static constexpr int16_t voltage_to_data(iq16 volt){
-        volt = CLAMP(volt, voltL, voltH);
-        iq16 k = ((volt - voltComm) / voltDiff_2);
+        volt = CLAMP(volt, volt_l, volt_h);
+        iq16 k = ((volt - volt_comm) / volt_diff2);
         return (int16_t)(k * 0x7FFF);
     }
 
@@ -37,8 +37,8 @@ public:
 
 
 public:
-    TM8211(I2sDrv & i2c_drv):i2s_drv_(i2c_drv){
-        setRail(iq16(3.3 * 0.25f), iq16(3.3 * 0.75f)); 
+    TM8211(hal::I2sDrv & i2s_drv):i2s_drv_(i2s_drv){
+        set_rail(iq16(3.3 * 0.25f), iq16(3.3 * 0.75f)); 
     }
     void set_ch_data(const uint8_t index,const uint16_t data){
         if(index) right_data = data;
@@ -47,16 +47,16 @@ public:
         write(((left_data << 16) | right_data) & distort_mask);
     }
     void set_rail(const iq16 _voltL, const iq16 _voltH){
-        voltL = _voltL;
-        voltH = _voltH;
-        voltComm = (voltL + voltH) / 2;
-        voltDiff_2 = (voltH - voltL) / 2;
+        volt_l = _voltL;
+        volt_h = _voltH;
+        volt_comm = (volt_l + volt_h) / 2;
+        volt_diff2 = (volt_h - volt_l) / 2;
     }
 
 
 
     void set_ch_voltage(const uint8_t index, const iq16 volt){
-        setChData(index, VoltageToData(volt));
+        set_ch_data(index, voltage_to_data(volt));
     }
 
     void set_distort(uint8_t level){
@@ -64,8 +64,8 @@ public:
         distort_mask = (mask_16 << 16) | mask_16;
     }
     void set_voltage(const iq16 left_volt, const iq16 right_volt){
-        left_data = VoltageToData(left_volt);
-        right_data = VoltageToData(right_volt);
+        left_data = voltage_to_data(left_volt);
+        right_data = voltage_to_data(right_volt);
 
         write(((left_data << 16) | right_data) & distort_mask);
     }

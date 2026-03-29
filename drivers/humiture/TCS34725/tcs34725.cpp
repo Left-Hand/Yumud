@@ -110,8 +110,6 @@ IResult<> TCS34725::set_int_thr_high(const uint16_t thr){
     return write_reg(reg);
 }
 
-IResult<> TCS34725::set_int_persistence(const uint8_t times);
-
 IResult<> TCS34725::set_gain(const Gain gain){
     auto reg = RegCopy(regs_.gain_reg);
     reg.gain = gain;

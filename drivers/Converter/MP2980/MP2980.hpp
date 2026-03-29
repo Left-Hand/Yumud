@@ -27,7 +27,7 @@ public:
     IResult<> set_ocp_mode(const OcpMode mode);
     IResult<> set_fsw(const Fsw fsw);
     IResult<> set_buck_boost_fsw(const BuckBoostFsw fsw);
-    IResult<> set_curr_limit_threshold(const CurrLimitThreshold threshold);
+    IResult<> set_current_limit_threshold(const CurrLimitThreshold threshold);
     IResult<Interrupts> interrupts();
     IResult<> set_interrupt_mask(const Interrupts mask);
     IResult<> set_output_volt(const uq10 output_volt);

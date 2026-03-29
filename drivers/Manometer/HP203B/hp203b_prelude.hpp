@@ -82,7 +82,7 @@ struct [[nodiscard]] AdcConvertCommand final{
 // 存储。最高 4 位的数据是无用，而最低有效 20 位代表高度的值。用户应当把这 20 位以 2 的补码的二进制值转换
 // 成一个整数，然后整数除以 100 获得最终结果。
 
-struct [[nodiscard]] Data20{
+struct [[nodiscard]] Data20 final{
     static constexpr Data20 from_raw_bytes(
         const uint8_t msb, const uint8_t csb, const uint8_t lsb
     ){

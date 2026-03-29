@@ -6,17 +6,19 @@ namespace ymd::drivers{
 
 class JQ8900_Transport{
 public:
-    JQ8900_Transport(hal::GpioIntf & ser):ser_(ser){}
+    JQ8900_Transport(hal::GpioIntf & ser):pin_(ser){}
     void tick();
     bool pending();
-    void write(const uint8_t data);
+    void write_byte(const uint8_t data);
 
     void init(){
-        ser_.outpp();
+        pin_.outpp();
     }
 private:
-    hal::GpioIntf & ser_;
+    hal::GpioIntf & pin_;
 };
+
+
 class JQ8900{
 public: 
 
