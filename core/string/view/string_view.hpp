@@ -26,6 +26,9 @@ public:
     constexpr StringView(const char * p_chars, size_t size) noexcept: 
         p_str_(p_chars), length_(size) {}
 
+    constexpr StringView(const char * p_begin, const char * p_end) noexcept: 
+        p_str_(p_begin), length_(p_end - p_begin) {}
+
     static constexpr StringView from_cstr(
         const char * p_chars, 
         size_t max_size = std::dynamic_extent
@@ -151,11 +154,6 @@ public:
     [[nodiscard]] constexpr StringView trim_withfn(Fn && fn) const noexcept{
         auto & self = *this;
 
-        // Handle null data case
-        if (self.p_str_ == nullptr || self.length_ == 0) {
-            return StringView(nullptr, 0);
-        }
-
         // Find first non-whitespace character
         size_t start = 0;
         while (start < self.length_ && std::forward<Fn>(fn)(self[start])) {
@@ -163,7 +161,7 @@ public:
             
             // Prevent infinite loop in case all characters match predicate
             if (start >= self.length_) {
-                return StringView(self.p_str_ + start, 0);
+                return StringView(self.p_str_ + start, 0u);
             }
         }
 
@@ -175,7 +173,7 @@ public:
 
         // Ensure start and stop are within bounds
         if (stop <= start || start >= self.length_ || stop > self.length_) {
-            return StringView(self.p_str_ + start, 0);
+            return StringView(self.p_str_ + start, 0u);
         }
 
         return StringView(self.p_str_ + start, stop - start);

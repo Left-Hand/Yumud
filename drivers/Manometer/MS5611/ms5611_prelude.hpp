@@ -23,19 +23,19 @@ static constexpr uint8_t RESET_COMMAND = 0x1e;
 struct [[nodiscard]] Coeffs final{
     uint16_t c_table[6];
 
-    struct Intermediate{
+    struct [[nodiscard]] Intermediate final{
         uint32_t d1;
         int32_t dt;
         int32_t temp;
     };
 
     constexpr Intermediate calc_intermediate(const uint32_t d1, const uint32_t d2) const{
-        const int32_t dT = d2 - (c_table[4] * 256);
+        const int32_t dt = d2 - (c_table[4] * 256);
 
-        const int32_t TEMP = 2000 + ((static_cast<int64_t>(dT) * static_cast<int64_t>(c_table[5])) >> 23);
+        const int32_t TEMP = 2000 + ((static_cast<int64_t>(dt) * static_cast<int64_t>(c_table[5])) >> 23);
         return Intermediate{
             .d1 = d1,
-            .dt = dT,
+            .dt = dt,
             .temp = TEMP
         };
     }
@@ -47,13 +47,13 @@ struct [[nodiscard]] Coeffs final{
     };
 
     constexpr Product calc_product(const Intermediate intermediate) const {
-        const int64_t OFF = (static_cast<uint32_t>(c_table[1]) << 16) + ((static_cast<int64_t>(c_table[3]) * static_cast<int64_t>(intermediate.dt)) >> 7);
-        const int64_t SENS = (static_cast<uint32_t>(c_table[0]) << 15) + ((c_table[2] * intermediate.dt ) >> 8);
+        const int64_t off = (static_cast<uint32_t>(c_table[1]) << 16) + ((static_cast<int64_t>(c_table[3]) * static_cast<int64_t>(intermediate.dt)) >> 7);
+        const int64_t sens = (static_cast<uint32_t>(c_table[0]) << 15) + ((c_table[2] * intermediate.dt ) >> 8);
 
-        const int32_t P = ((intermediate.d1 * SENS >> 21) - OFF) >> 15;
+        const int32_t P = ((intermediate.d1 * sens >> 21) - off) >> 15;
         return Product{
-            .off = OFF,
-            .sens = SENS,
+            .off = off,
+            .sens = sens,
             .p = P
         };
     }
