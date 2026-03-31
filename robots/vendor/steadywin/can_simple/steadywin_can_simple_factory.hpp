@@ -19,23 +19,33 @@ struct [[nodiscard]] FrameFactory final{
         return ser_msg(req_msgs::ClearErrors{});
     }
 
-    constexpr hal::ClassicCanFrame set_axis_state(const req_msgs::SetAxisState msg)  const {
+    constexpr hal::ClassicCanFrame set_axis_state(
+        const req_msgs::SetAxisState & msg
+    )  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_controller_mode(const req_msgs::SetControllerMode msg)  const {
+    constexpr hal::ClassicCanFrame set_controller_mode(
+        const req_msgs::SetControllerMode & msg
+    )  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_velocity(const req_msgs::SetInputVelocity msg)  const {
+    constexpr hal::ClassicCanFrame set_input_velocity(
+        const req_msgs::SetInputVelocity & msg
+    )  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_torque(const req_msgs::SetInputTorque msg)  const {
+    constexpr hal::ClassicCanFrame set_input_torque(
+        const req_msgs::SetInputTorque & msg
+    )  const {
         return ser_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_position(const req_msgs::SetInputPosition msg)  const {
+    constexpr hal::ClassicCanFrame set_input_position(
+        const req_msgs::SetInputPosition & msg
+    )  const {
         return ser_msg(msg);
     }
 
