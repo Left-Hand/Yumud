@@ -5,10 +5,11 @@
 #include "core/string/owned/heapless_string.hpp"
 #include "core/string/utils/split_iter.hpp"
 #include "core/utils/Result.hpp"
+#include "core/polymorphism/reflect.hpp"
 
 namespace ymd::drivers::sr2631z3{
 
-enum class DeMsgError:uint8_t{
+enum class [[nodiscard]] DeMsgErrorKind:uint8_t{
     EmptyString,
     StringTooLong,
     InvalidHexChar,
@@ -22,22 +23,23 @@ enum class DeMsgError:uint8_t{
     CrcMismatch,
     InvalidMsgKind,
     InvalidChar,
-    MissingParaments,
-    TooMuchParaments,
+    MissingField,
+    TooMuchFields,
+    NonnullObject
 };
 
 
-static constexpr Result<uint8_t, DeMsgError> 
+static constexpr Result<uint8_t, DeMsgErrorKind> 
 parse_dec_nibble(const char c){
     switch(c){
         case '0' ... '9':
             return Ok(c - '0');
         default:
-            return Err(DeMsgError::InvalidDecChar);
+            return Err(DeMsgErrorKind::InvalidDecChar);
     }
 }
 
-static constexpr Result<uint8_t, DeMsgError> 
+static constexpr Result<uint8_t, DeMsgErrorKind> 
 parse_hex_nibble(const char c){
     switch(c){
         case '0' ... '9':
@@ -47,14 +49,14 @@ parse_hex_nibble(const char c){
         case 'A' ... 'F':
             return Ok((c - 'A') + 10);
         default:
-            return Err(DeMsgError::InvalidHexChar);
+            return Err(DeMsgErrorKind::InvalidHexChar);
     }
 }
 
-static constexpr Result<uint8_t, DeMsgError> 
+static constexpr Result<uint8_t, DeMsgErrorKind> 
 parse_hex_str(const StringView str){
-    if(str.length() == 0) return Err(DeMsgError::EmptyString);
-    if(str.length() > 2) return Err(DeMsgError::StringTooLong);
+    if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
+    if(str.length() > 2) return Err(DeMsgErrorKind::StringTooLong);
 
     uint8_t sum = 0;
     for(size_t i = 0; i < 2; i++){
@@ -70,9 +72,9 @@ parse_hex_str(const StringView str){
     return Ok(sum);
 }
 
-static constexpr Result<uint32_t, DeMsgError> 
+static constexpr Result<uint32_t, DeMsgErrorKind> 
 parse_dec_str(const StringView str){
-    if(str.length() == 0) return Err(DeMsgError::EmptyString);
+    if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
 
     uint32_t sum = 0;
     for(size_t i = 0; i < str.length(); i++){
@@ -88,9 +90,9 @@ parse_dec_str(const StringView str){
     return Ok(sum);
 }
 
-static constexpr Result<std::tuple<uint32_t, uint32_t>, DeMsgError> 
+static constexpr Result<std::tuple<uint32_t, uint32_t>, DeMsgErrorKind> 
 parse_floating_num(const StringView str){
-    if(str.length() == 0) return Err(DeMsgError::EmptyString);
+    if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
 
     uint32_t dot_pos = UINT32_MAX;
     for(size_t i = 0; i < str.length(); i++){
@@ -100,9 +102,9 @@ parse_floating_num(const StringView str){
         }
     }
 
-    if(dot_pos == UINT32_MAX) return Err(DeMsgError::NoDot);
-    if(dot_pos == 0) return Err(DeMsgError::NoDigit);
-    if(dot_pos == str.length() - 1) return Err(DeMsgError::NoFrac);
+    if(dot_pos == UINT32_MAX) return Err(DeMsgErrorKind::NoDot);
+    if(dot_pos == 0) return Err(DeMsgErrorKind::NoDigit);
+    if(dot_pos == str.length() - 1) return Err(DeMsgErrorKind::NoFrac);
 
     const uint32_t arg1 = ({
         const auto res = parse_dec_str(StringView(str.begin(), dot_pos));
@@ -125,9 +127,9 @@ static_assert(parse_hex_str("5b").unwrap() == 0x5b);
 static_assert(parse_dec_str("023656").unwrap() == 23656);
 static_assert(std::get<0>(parse_floating_num("2240.61563").unwrap()) == 2240);
 static_assert(std::get<1>(parse_floating_num("2240.61563").unwrap()) == 61563);
-static_assert(parse_floating_num("2240.").unwrap_err() == DeMsgError::NoFrac);
-static_assert(parse_floating_num(".2240").unwrap_err() == DeMsgError::NoDigit);
-static_assert(parse_floating_num("22").unwrap_err() == DeMsgError::NoDot);
+static_assert(parse_floating_num("2240.").unwrap_err() == DeMsgErrorKind::NoFrac);
+static_assert(parse_floating_num(".2240").unwrap_err() == DeMsgErrorKind::NoDigit);
+static_assert(parse_floating_num("22").unwrap_err() == DeMsgErrorKind::NoDot);
 
 struct [[nodiscard]] SysIdentifier{
     using Self = SysIdentifier;
@@ -144,7 +146,7 @@ struct [[nodiscard]] UtcTime{
     uint32_t digit;
     uint32_t frac;
 
-    static constexpr Result<Self, DeMsgError> try_from_str(const StringView str){
+    static constexpr Result<Self, DeMsgErrorKind> try_from_str(const StringView str){
         const auto [digit, frac] = ({
             const auto res = parse_floating_num(str);
             if(res.is_err()) return Err(res.unwrap_err());
@@ -164,7 +166,7 @@ struct [[nodiscard]] Lat{
     uint32_t digit;
     uint32_t frac;
 
-    static constexpr Result<Self, DeMsgError> try_from_str(const StringView str){
+    static constexpr Result<Self, DeMsgErrorKind> try_from_str(const StringView str){
         const auto [digit, frac] = ({
             const auto res = parse_floating_num(str);
             if(res.is_err()) return Err(res.unwrap_err());
@@ -184,14 +186,14 @@ struct [[nodiscard]] uLat{
 
     bool is_north;
 
-    static constexpr Result<Self, DeMsgError> try_from_str(const StringView str){
-        if(str.length() == 0) return Err(DeMsgError::EmptyString);
+    static constexpr Result<Self, DeMsgErrorKind> try_from_str(const StringView str){
+        if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
         switch(str[0]){
             case 'N': return Ok(Self{.is_north = true});
             case 'S': return Ok(Self{.is_north = false});
         }
 
-        return Err(DeMsgError::InvalidChar);
+        return Err(DeMsgErrorKind::InvalidChar);
     }
 };
 
@@ -201,7 +203,7 @@ struct [[nodiscard]] Lon{
     uint32_t digit;
     uint32_t frac;
 
-    static constexpr Result<Self, DeMsgError> try_from_str(const StringView str){
+    static constexpr Result<Self, DeMsgErrorKind> try_from_str(const StringView str){
         const auto [digit, frac] = ({
             const auto res = parse_floating_num(str);
             if(res.is_err()) return Err(res.unwrap_err());
@@ -220,14 +222,14 @@ struct [[nodiscard]] uLon{
 
     bool is_eastern;
 
-    static constexpr Result<Self, DeMsgError> try_from_str(const StringView str){
-        if(str.length() == 0) return Err(DeMsgError::EmptyString);
+    static constexpr Result<Self, DeMsgErrorKind> try_from_str(const StringView str){
+        if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
         switch(str[0]){
             case 'E': return Ok(Self{.is_eastern = true});
             case 'W': return Ok(Self{.is_eastern = false});
         }
 
-        return Err(DeMsgError::InvalidChar);
+        return Err(DeMsgErrorKind::InvalidChar);
     }
 };
 
@@ -253,31 +255,13 @@ struct [[nodiscard]] MsgKind{
 
     static constexpr Self from_str(const StringView str){
         return Self{.str = str};
-    } 
-    // static constexpr Result<void, DeMsgError> validate(const StringView str){
-
-    // };
+    }
 };
 
 struct [[nodiscard]] LineParts {
-    // struct InvalidCrcError{
-    //     uint8_t actual;
-    //     uint8_t expected;
-    // };
-
-    // struct Error{
-    //     enum class Kind{
-    //         NoHeader
-    //     };
-
-    //     Kind kind;
-    //     union{
-    //         InvalidCrcError invalid_crc;
-    //     };
-    // };
 
     using Self = LineParts;
-    using Error = DeMsgError;
+    using Error = DeMsgErrorKind;
 
     SysIdentifier sys_id;
     MsgKind msg_kind;
@@ -339,12 +323,103 @@ private:
 
 
 
+template<typename T>
+struct FieldsTraiter{
+    static constexpr size_t NUM_FIELDS = reflect::size<T>();
+    template<size_t I>
+    static constexpr auto & get_element(T & self){
+        return reflect::get<I>(self);
+    }
+};
+
+
+template<typename T>
+struct [[nodiscard]] FieldExacter{
+    using Error = DeMsgErrorKind;
+
+    static constexpr Result<void, Error> exact_field(T & field, const StringView str){
+        if(str.length() == 0) return Err(Error::NonnullObject);
+
+        field = ({
+            const auto res = T::try_from_str(str);
+            if(res.is_err()) return Err(res.unwrap_err());
+            (res.unwrap());
+        });
+        return Ok();
+    }
+};
+
+template<typename T>
+struct [[nodiscard]] FieldExacter<Option<T>>{
+    using Error = DeMsgErrorKind;
+
+    static constexpr Result<void, Error> exact_field(Option<T> & field, const StringView str){
+        if(str.length() == 0){
+            field = None;
+            return Ok();
+        }
+
+        field = ({
+            const auto res = T::try_from_str(str);
+            if(res.is_err()) return Err(res.unwrap_err());
+            Some(res.unwrap());
+        });
+        return Ok();
+    }
+};
+
+
+
+template<typename T>
+struct ConvertHelper {
+    template <size_t I, size_t... Js>
+    static constexpr Result<void, DeMsgErrorKind>
+    parse_remeaning(T & self, StringSplitIter splitter, std::index_sequence<I, Js...>) {
+        if(splitter.has_next() == false) return Err(DeMsgErrorKind::MissingField); 
+        const auto str = splitter.next();
+        auto & field = FieldsTraiter<T>::template get_element<I>(self);
+        using ElementType = std::decay_t<decltype(field)>;
+        if(const auto res = FieldExacter<ElementType>::exact_field(field, str);
+            res.is_err()) return Err(res.unwrap_err());
+        return parse_remeaning(self, std::move(splitter), std::index_sequence<Js...>{});
+    }
+
+    template <typename... Args>
+    static constexpr Result<void, DeMsgErrorKind>
+    parse_remeaning(
+        [[maybe_unused]] T & self, 
+        StringSplitIter splitter, 
+        [[maybe_unused]] std::index_sequence<>
+    ) {
+        if(splitter.has_next()) return Err(DeMsgErrorKind::TooMuchFields);
+        return Ok();
+    }
+
+private:
+    //空时返回nullptr
+    [[nodiscard]] const char * search_comma(const StringView str){
+        const auto it = std::find(str.begin(), str.end(), ',');
+        if(it == str.end()) return nullptr;
+        return static_cast<const char *>(it);
+    }
+};
+
+
+template<typename T>
+static constexpr Result<T, DeMsgErrorKind> try_deser_msg(const StringView context_str){
+    static constexpr size_t NUM_FIELDS = FieldsTraiter<T>::NUM_FIELDS;
+    T self = T::from_uninitialized();
+    const auto res = ConvertHelper<T>::parse_remeaning(
+        self, StringSplitIter(context_str, ','), std::make_index_sequence<NUM_FIELDS>{});
+    if(res.is_err()) return Err(res.unwrap_err());
+    return Ok(self);
+}
+
+
 namespace msgs{
 struct GGA{
     using Self = GGA;
-    using Error = DeMsgError;
-
-    static constexpr size_t NUM_PARAMENTS = 5;
+    using Error = DeMsgErrorKind;
 
 
     Option<UtcTime> utc_time;
@@ -352,6 +427,7 @@ struct GGA{
     Option<uLat> ulat;
     Option<Lon> lon;
     Option<uLon> ulon;
+
 
     static constexpr Self from_uninitialized(){
         return Self{
@@ -361,97 +437,12 @@ struct GGA{
             .lon = None,
             .ulon = None
         };
-
-        // return Self{};
     }
 
-    static constexpr Result<Self, Error> try_from_str(const StringView context_str){
-        Self self = Self::from_uninitialized();
-        StringSplitIter splitter(context_str, ',');
-
-        size_t arg_rank = 0;
-
-        while(arg_rank < NUM_PARAMENTS){
-            if(not splitter.has_next()) return Err(Error::MissingParaments);
-            const auto str = splitter.next();
-            switch(arg_rank){
-                case 0:{
-
-                    if(str.length() == 0){
-                        self.utc_time = None; 
-                        break;
-                    }
-
-                    self.utc_time = ({
-                        const auto res = UtcTime::try_from_str(str);
-                        if(res.is_err()) return Err(res.unwrap_err());
-                        Some(res.unwrap());
-                    });
-                }
-                    break;
-                case 1:{
-                    if(str.length() == 0){
-                        self.lat = None; 
-                        break;
-                    }
-
-                    self.lat = ({
-                        const auto res = Lat::try_from_str(str);
-                        if(res.is_err()) return Err(res.unwrap_err());
-                        Some(res.unwrap());
-                    });
-                }
-                    break;
-                case 2:{
-                    if(str.length() == 0){
-                        self.ulat = None; 
-                        break;
-                    }
-
-                    self.ulat = ({
-                        const auto res = uLat::try_from_str(str);
-                        if(res.is_err()) return Err(res.unwrap_err());
-                        Some(res.unwrap());
-                    });
-                }
-                    break;
-                case 3:{
-                    if(str.length() == 0){
-                        self.lon = None; 
-                        break;
-                    }
-
-                    self.lon = ({
-                        const auto res = Lon::try_from_str(str);
-                        if(res.is_err()) return Err(res.unwrap_err());
-                        Some(res.unwrap());
-                    });
-                }
-                    break;
-                case 4:{
-                    if(str.length() == 0){
-                        self.ulon = None; 
-                        break;
-                    }
-
-                    self.ulon = ({
-                        const auto res = uLon::try_from_str(str);
-                        if(res.is_err()) return Err(res.unwrap_err());
-                        Some(res.unwrap());
-                    });
-                }
-                    break;
-
-            }
-
-            arg_rank ++;
-        }
-
-        if(splitter.has_next()) return Err(Error::TooMuchParaments);
-
-        return Ok(self);
-    } 
 };
+
+
+}
 
 
 [[maybe_unused]] static void test_gga(){
@@ -464,7 +455,8 @@ struct GGA{
 
     // constexpr auto err = GGA::try_from_str(line).unwrap_err();
     // static_assert(int(err) == 0);
-    constexpr auto msg = GGA::try_from_str(line).unwrap();
+    // constexpr auto msg = GGA::try_from_str(line).unwrap();
+    constexpr auto msg = try_deser_msg<msgs::GGA>(line).unwrap();
 
     static_assert(msg.utc_time.is_some());
     static_assert(msg.utc_time.unwrap().digit == 23656);
@@ -476,8 +468,6 @@ struct GGA{
     static_assert(msg.lon.unwrap().frac == 86512);
 
     static_assert(msg.ulon.unwrap().is_eastern == true);
-
-}
 
 }
 }
