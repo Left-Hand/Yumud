@@ -391,8 +391,8 @@ void polar_robot_main(){
 
         static GcodeParseState state_;
 
-        auto parse_g_command = [&](const gcode::GcodeArg & arg){
-            const uint16_t major = static_cast<uint16_t>(arg.value);
+        auto parse_g_command = [&](const gcode::GcodeWord & arg){
+            const uint16_t major = static_cast<uint16_t>(arg.value.unsigned_digit());
             switch(major){
             case 0://rapid move
                 curve_gen_.set_move_speed(state_.max_speed);
@@ -414,16 +414,16 @@ void polar_robot_main(){
             }
         };
 
-        auto parse_arg = [&](const gcode::GcodeArg & arg){
+        auto parse_arg = [&](const gcode::GcodeWord & arg){
             switch(arg.letter){
             case 'X': 
-                state_.x = unit::MilliMeter<iq16>(arg.value);
+                state_.x = unit::MilliMeter<iq16>(arg.value.to_numeric<iq16>());
                 break;
             case 'Y':
-                state_.y = unit::MilliMeter<iq16>(arg.value);
+                state_.y = unit::MilliMeter<iq16>(arg.value.to_numeric<iq16>());
                 break;
             case 'F':
-                state_.set_x2_limit(arg.value);
+                state_.set_x2_limit(arg.value.to_numeric<iq16>());
                 break;
             case 'G':
                 parse_g_command(arg);
@@ -433,7 +433,7 @@ void polar_robot_main(){
 
 
         {
-            auto iter = gcode::GcodeArgsIter(str);
+            auto iter = gcode::GcodeWordsIter(str);
             while(iter.has_next()){
                 const auto arg = iter.next().examine();
                 // DEBUG_PRINTLN(arg);

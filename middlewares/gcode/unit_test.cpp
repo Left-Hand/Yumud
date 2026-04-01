@@ -9,11 +9,16 @@ static inline void static_test(){
     static_assert(GcodeLine("G28").query_mnemonic().unwrap() == Mnemonic::General);
     static_assert(GcodeLine("M106").query_mnemonic().unwrap() == Mnemonic::Miscellaneous);
     static_assert(GcodeLine("M106").query_major(Mnemonic::Miscellaneous).unwrap() == 106);
-    static_assert(not GcodeLine("X10").query_mnemonic().is_ok()); // 假设X不是合法助记符
+    static_assert(GcodeLine("X10").query_mnemonic().is_err()); // 假设X不是合法助记符
 
     // 测试主/次编号
     static_assert(GcodeLine("G28").query_major(Mnemonic::General).unwrap() == 28);
     static_assert(GcodeLine("G28.3").query_minor(Mnemonic::General).unwrap() == 3);
+
+
+    static_assert(GcodeWord::try_from_str("G0.3").unwrap().value.unsigned_digit() == 0);
+    static_assert(GcodeWord::try_from_str("G.333333").unwrap().value.unsigned_digit() == 0);
+
 
     {
         static constexpr auto value = (double)GcodeLine("G28.3").query_arg_value('G').unwrap();
@@ -21,8 +26,8 @@ static inline void static_test(){
     }
     static_assert(GcodeLine("G1").query_minor(Mnemonic::General).is_err()); // 无次编号
 
-    // static_assert(GcodeLine("G1 F1000").query_major(Mnemonic::General).is_ok());
-
+    static_assert(GcodeScriptLine("G1;;;;").comment().is_some());
+    static_assert(GcodeScriptLine("  ;;;;").code().is_none());
 }
 
 

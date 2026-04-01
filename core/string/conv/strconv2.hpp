@@ -369,6 +369,54 @@ struct [[nodiscard]] IntDeformatter<bool>{
 	}
 };
 
+
+template<size_t NUM_Q, typename D>
+struct [[nodiscard]] FixedPointSynthesizer{
+
+	using T = math::fixed<NUM_Q, D>;
+
+	static constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
+	static constexpr uint32_t DIGIT_MAX = uint32_t(
+		std::numeric_limits<math::fixed<NUM_Q, D>>::max());	
+
+	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
+		std::array<uint64_t, TABLE_LEN> ret;
+		for(size_t i = 0; i < TABLE_LEN; i++){
+			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
+		}
+		return ret;
+	}();
+
+	static constexpr DestringResult<T> synthesize(
+		const D digit_part, 
+		const uint32_t frac_part, 
+		const size_t num_frac_digits
+	){
+		auto conv_ret = [&](const T unsigned_ret) -> T{
+			if constexpr(std::is_unsigned_v<T>){
+				return unsigned_ret;
+			}else{
+				if(digit_part < 0) return -unsigned_ret;
+				return unsigned_ret;
+			}
+		};
+		
+		if (num_frac_digits == 0){
+			return Ok(static_cast<T>(conv_ret(digit_part)));
+		}else{
+			if(num_frac_digits >= TABLE_LEN){
+				return Err(DestringError::FracTooLong);
+			}
+
+			const T frac = T::from_bits(
+				static_cast<D>((uint64_t(frac_part) * TABLE[num_frac_digits]) >> 32)
+			);
+
+			return Ok(conv_ret(frac + static_cast<T>(digit_part)));
+		}
+	}
+};
+
 template<size_t NUM_Q, typename D>
 struct [[nodiscard]] FixedPointDeformatter{
 	using T = math::fixed<NUM_Q, D>;
@@ -395,6 +443,8 @@ struct [[nodiscard]] FixedPointDeformatter{
 			res.unwrap();
 		});
 
+		D digit_part;
+
 		//进行防溢出检查
 		if constexpr(std::is_unsigned_v<D>){
 			if(dump.is_negative) return Err(DestringError::NegForUnsigned);
@@ -404,35 +454,16 @@ struct [[nodiscard]] FixedPointDeformatter{
 				if(dump.digit_part > static_cast<uint32_t>(DIGIT_MAX + 1u)){
 					return Err(DestringError::Underflow);
 				}
+				digit_part = -dump.digit_part;
 			}else{
 				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+				digit_part = dump.digit_part;
 			}
 		}
 
-		auto conv_ret = [&](const T unsigned_ret) -> T{
-			if constexpr(std::is_unsigned_v<T>){
-				return unsigned_ret;
-			}else{
-				if(dump.is_negative) return -unsigned_ret;
-				return unsigned_ret;
-			}
-		};
-		
-		if (dump.num_frac_digits == 0){
-			return Ok(static_cast<T>(conv_ret(dump.digit_part)));
-		}else{
-			if(dump.num_frac_digits >= TABLE_LEN){
-				return Err(DestringError::FracTooLong);
-			}
-
-			const T frac_part = [&] -> T{
-				return T::from_bits(
-					static_cast<D>((uint64_t(dump.frac_part) * TABLE[dump.num_frac_digits]) >> 32)
-				);
-			}();
-
-			return Ok(conv_ret(frac_part + static_cast<T>(dump.digit_part)));
-		}
+		return FixedPointSynthesizer<NUM_Q, D>::synthesize(
+			digit_part, dump.frac_part, static_cast<size_t>(dump.num_frac_digits)
+		);
 
 	}
 };
@@ -608,6 +639,8 @@ private:
 
 };
 
+#if 0
+
 struct Iq16Formatter{
 	//TODO eps为5时计算会溢出 暂时限制eps=5的情况
 	//TODO 支持除了Q16格式外其他格式转换到字符串的函数 
@@ -622,11 +655,11 @@ struct Iq16Formatter{
 		if(str.length() == 0) return Err(SerStringError::OutOfMemory);
 
 
-		const auto value_i32 = value.to_bits();
-		const auto eps_count = MIN(eps.count(), 4);
+		const int32_t value_i32 = value.to_bits();
+		const size_t eps_count = std::min(static_cast<size_t>(eps.count()), 4u);
 
 		const bool is_negative = value_i32 < 0;
-		const uint32_t abs_value = ABS(value_i32);
+		const uint32_t abs_value = (value_i32 < 0) ? -value_i32 : value_i32;
 
 
 		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
@@ -672,7 +705,7 @@ struct Iq16Formatter{
 	}
 };
 
-
+#endif
 
 template<typename T>
 struct DefmtStrDispatcher;
@@ -725,10 +758,10 @@ static constexpr SerStringResult<size_t> fmt_to_str(
 	return IntFormatter<T>::fmt_to_str(str, value, radix);
 }
 
-template<size_t Q>
-static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed<Q, int32_t> value, const Eps eps = Eps(3)){
-	return Iq16Formatter::fmt_to_str(str, value, eps);
-}
+// template<size_t Q>
+// static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed<Q, int32_t> value, const Eps eps = Eps(3)){
+// 	return Iq16Formatter::fmt_to_str(str, value, eps);
+// }
 
 
 }

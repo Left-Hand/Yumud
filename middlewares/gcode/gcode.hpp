@@ -7,7 +7,7 @@
 namespace ymd::gcode{
 
 
-enum class GcodeParseError:uint8_t{
+enum class [[nodiscard]] GcodeParseError:uint8_t{
     NoLetterFounded,
     NoStringSegmentFounded,
     NoMajorNumber,
@@ -16,6 +16,7 @@ enum class GcodeParseError:uint8_t{
     MinorNumberOverflow,
     UnknownHeadLetter,
     NoMnemonicFounded,
+    EmptyArg,
     InvalidMnemonic,
     InvalidArgumentLetter
 };
@@ -29,10 +30,10 @@ using IResult = Result<T, Error>;
 
 struct [[nodiscard]] Mnemonic final{
     enum class [[nodiscard]] Kind:uint8_t {
-        General = 0,
-        Miscellaneous = 1,
-        ProgramNumber = 2,
-        ToolChange = 3,
+        General,
+        Miscellaneous,
+        ProgramNumber,
+        ToolChange,
     };
 
     DEF_FRIEND_DERIVE_DEBUG(Kind);
@@ -126,9 +127,234 @@ struct [[nodiscard]] TextSourceLocation final{
 };
 
 
-struct [[nodiscard]] GcodeArg final{
+struct GcodeValue{
+    using Self = GcodeValue;
+
+    static constexpr uint16_t DIGIT_MAX = std::numeric_limits<uint16_t>::max();
+
+    struct [[nodiscard]] Specifiers final{
+        uint8_t has_dot:1;
+        uint8_t has_digit_part:1;
+        uint8_t has_frac_part:1;
+        uint8_t is_negative:1;
+        uint8_t num_frac_digits:4;
+        char existing_sign;
+
+        static constexpr Specifiers from_default(){
+            return std::bit_cast<Specifiers>(uint16_t(0));
+        }
+    };
+
+
+
+    uint16_t digit_part_;
+    Specifiers specifiers_;
+    uint32_t frac_part_;
+
+    constexpr uint32_t unsigned_digit() const {
+        return static_cast<uint32_t>(digit_part_);
+    }
+
+    constexpr uint32_t signed_digit() const {
+        auto temp = static_cast<int32_t>(digit_part_);
+        if(specifiers_.existing_sign == '-') return -temp;
+        return temp;
+    }
+
+    constexpr Option<uint32_t> frac() const {
+        if(not specifiers_.has_frac_part) return None;
+        return Some(static_cast<uint32_t>(digit_part_));
+    }
+
+
+    template<std::floating_point T>
+    constexpr T to_floating() const {
+        T temp = static_cast<T>(frac_part_);
+        for(size_t i = 0; i < static_cast<size_t>(specifiers_.num_frac_digits); i++){
+            temp *= static_cast<T>(0.1);
+        }
+
+        temp += static_cast<T>(digit_part_);
+        if(specifiers_.is_negative) temp = -temp;
+        return temp;
+    }
+
+
+    constexpr float to_f32() const {
+        return to_floating<float>();
+    }
+
+    constexpr double to_f64() const {
+        return to_floating<double>();
+    }
+
+
+    template<size_t NUM_Q, typename D>
+    constexpr math::fixed<NUM_Q, D> to_fixed() const {
+        constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
+
+        constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
+            std::array<uint64_t, TABLE_LEN> ret;
+            for(size_t i = 0; i < TABLE_LEN; i++){
+                ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
+            }
+            return ret;
+        }();
+
+        using T = math::fixed<NUM_Q, D>;
+        const int32_t digit_part = static_cast<int32_t>(signed_digit());
+        const size_t num_frac_digits = static_cast<size_t>(specifiers_.num_frac_digits);
+		auto conv_ret = [&](const T unsigned_ret) -> T{
+			if constexpr(std::is_unsigned_v<T>){
+				return unsigned_ret;
+			}else{
+				if(digit_part < 0) return -unsigned_ret;
+				return unsigned_ret;
+			}
+		};
+		
+		if (num_frac_digits == 0){
+			return static_cast<T>(conv_ret(digit_part));
+		}else{
+
+			const T frac = [&] -> T{
+				return T::from_bits(
+					static_cast<D>((uint64_t(frac_part_) * TABLE[num_frac_digits]) >> 32)
+				);
+			}();
+
+			return conv_ret(frac + static_cast<T>(digit_part));
+		}
+    };
+
+    template<typename T>
+    constexpr T to_numeric() const {
+        if constexpr(std::is_floating_point_v<T>){
+            return to_floating<T>();
+        }else if constexpr(tmp::is_fixed_point_v<T>){
+            static constexpr size_t Q_NUM = tmp::fixed_point_qnum_v<T>;
+            return to_fixed<
+                Q_NUM, 
+                tmp::fixed_point_underlying_type_t<T>
+            >();
+        }
+        __builtin_unreachable();
+    }
+
+    static constexpr Result<GcodeValue, Error> try_from_str(const StringView str){
+        using namespace strconv2;
+
+		if (str.length() == 0) {	
+			return Err(DestringError::EmptyString);
+		}
+
+		uint64_t digit_part = 0;
+		uint64_t frac_part = 0;
+		uint8_t num_frac_digits = 0;
+
+		Specifiers specifiers = Specifiers::from_default();
+		
+		for(size_t ind = 0; ind < str.length(); ind++) {
+			const char chr = str[ind];
+			
+			switch (chr) {
+				case '\0':
+					return Err(DestringError::NullTerminatorNotAllowed);
+				case '0' ... '9':{
+
+					const uint8_t digit = chr - '0';
+					
+					constexpr uint64_t MAX_INT_NUM = static_cast<uint64_t>(std::numeric_limits<uint32_t>::max());
+					if(specifiers.existing_sign == '\0'){
+						//如果还未找到符号就已经找到数字 那么已经隐含说明带有正号了
+						specifiers.existing_sign = '+';
+					}
+
+					if (specifiers.has_dot == false) {
+						specifiers.has_digit_part = true;
+						digit_part = digit_part * 10u + digit;
+						// Check integer part overflow
+						if (digit_part > MAX_INT_NUM) {
+							return Err(DestringError::DigitOverflow);
+						}
+					} else {
+						specifiers.has_frac_part = true;
+						frac_part = frac_part * 10u + digit;
+						// Check fractional part overflow
+						if (frac_part > MAX_INT_NUM) {
+							return Err(DestringError::FracOverflow);
+						}
+
+						if(num_frac_digits < std::size(str::POW10_TABLE)){
+							num_frac_digits++;
+						}else{
+							return Err(DestringError::FracTooLong);
+						}
+					}
+					break;
+				}
+
+				case '+':
+				case '-':{
+					if(specifiers.existing_sign != '\0'){
+						if(chr == '-') return Err(DestringError::MultiplyNegative);
+						else return Err(DestringError::MultiplyPositive);
+					}
+					specifiers.existing_sign = chr;
+					break;
+				}
+				case '.':  // Handle decimal dot
+					if (specifiers.has_dot) [[unlikely]]
+						return Err(DestringError::MultipleDot);  // Multiple decimal dots
+					specifiers.has_dot = true;
+					break;
+				case 'a' ... 'z':
+					return Err(DestringError::UnexpectedAlpha);
+				case 'A' ... 'Z':
+					return Err(DestringError::UnexpectedAlpha);
+				case ' ':
+					return Err(DestringError::UnexpectedSpace);
+				default:  // Invalid characters
+					return Err(DestringError::UnexpectedChar);
+			}
+
+		}
+
+		if(specifiers.has_dot){
+			//有小数点的情况不能没有小数部分
+			if((specifiers.has_frac_part == false)) [[unlikely]]
+				return Err(DestringError::NoFracPart);
+		}else{
+			if (specifiers.has_digit_part == false) [[unlikely]]
+				return Err(DestringError::NoDigitPart);  // 符号位和小数点之间没有有效数字
+		}
+
+
+        specifiers.num_frac_digits = num_frac_digits;
+
+
+		return Ok(Self{
+			.digit_part_ = static_cast<uint16_t>(digit_part),
+			.specifiers_ = specifiers,
+			.frac_part_ = static_cast<uint32_t>(frac_part),
+		});
+
+    };
+
+    friend OutputStream & operator << (OutputStream & os, const Self & self){
+        os << self.signed_digit();
+        if(self.specifiers_.has_frac_part){
+            os << '.' << self.frac_part_;
+        }
+        return os;
+    }
+};
+
+struct [[nodiscard]] GcodeWord final{
+    using Self = GcodeWord;
+
     char letter;
-    iq16 value;
+    GcodeValue value;
 
     [[nodiscard]] static constexpr bool is_letter_valid(const char letter){
         switch(letter){
@@ -148,7 +374,32 @@ struct [[nodiscard]] GcodeArg final{
         }
     }
 
-    friend OutputStream & operator << (OutputStream & os, const GcodeArg & self){
+    static constexpr Result<GcodeWord, Error> try_from_str(const StringView str){
+    
+        const char letter = str[0];
+        // if (Mnemonic::is_letter_valid(letter))
+        //     continue;
+        if (!GcodeWord::is_letter_valid(letter)) {
+            // Invalid letter (e.g., "@100") -> return Error
+            return Err(GcodeParseError::InvalidArgumentLetter);
+        }
+
+        // Parse value (skip letter)
+        const auto value_str = StringView(std::next(str.begin()), str.end());
+
+
+        return Ok(Self{
+            .letter = letter,
+            .value = ({
+                const auto res = GcodeValue::try_from_str(value_str);
+                if(res.is_err()) return Err(res.unwrap_err());
+                res.unwrap();
+            })
+        });
+
+    } 
+
+    friend OutputStream & operator << (OutputStream & os, const GcodeWord & self){
         return os << os.brackets<'('>() 
             << self.letter << os.splitter()
             << self.value << os.brackets<')'>();
@@ -156,8 +407,8 @@ struct [[nodiscard]] GcodeArg final{
 };
 
 
-struct [[nodiscard]] GcodeArgsIter final{
-    constexpr explicit GcodeArgsIter(StringView line)
+struct [[nodiscard]] GcodeWordsIter final{
+    constexpr explicit GcodeWordsIter(StringView line)
         : arg_str_iter_(line, ' ') {}
 
     [[nodiscard]] constexpr bool has_next() const {
@@ -165,35 +416,16 @@ struct [[nodiscard]] GcodeArgsIter final{
         return arg_str_iter_.has_next();
     }
 
-    constexpr IResult<GcodeArg> next() {
-        while (arg_str_iter_.has_next()) {
-            const auto token_str = arg_str_iter_.next();
-            if (token_str.length() == 0) continue; // Skip empty tokens (e.g., multiple spaces)
-
-            const char letter = token_str[0];
-            // if (Mnemonic::is_letter_valid(letter))
-            //     continue;
-            if (!GcodeArg::is_letter_valid(letter)) {
-                // Invalid letter (e.g., "@100") -> return Error
-                return Err(GcodeParseError::InvalidArgumentLetter);
-            }
-
-            // Parse value (skip letter)
-            const auto value_str = token_str.substr(1).unwrap();
-            const auto res = strconv2::defmt_from_str<iq16>(value_str);
-            if (res.is_err()) {
-                // Value parsing failed (e.g., "X1.2.3") -> return Error
-                return Err(res.unwrap_err());
-            }
-
-            // Valid argument -> return Ok(GcodeArg)
-            return Ok(GcodeArg{
-                .letter = letter,
-                .value = res.unwrap()
-            });
+    constexpr IResult<GcodeWord> next() {
+        if(not (arg_str_iter_.has_next())){
+            __builtin_trap();
         }
 
-        __builtin_unreachable();
+        const auto token_str = arg_str_iter_.next();
+        if (token_str.length() == 0) return Err(GcodeParseError::EmptyArg); // Skip empty tokens (e.g., multiple spaces)
+
+        return GcodeWord::try_from_str(token_str);
+
     }
 
 private:
@@ -274,6 +506,28 @@ struct [[nodiscard]] GcodeLine final{
     }
 };
 
+struct [[nodiscard]] GcodeScriptLine final{
+    StringView str;
+    static constexpr char SPLIT_CHAR = ';';
 
+    [[nodiscard]] constexpr Option<StringView> comment() const {
+        const auto comment_begin_it = std::find(str.begin(), str.end(), SPLIT_CHAR);
+        if(comment_begin_it == str.end()) return None;
+        return Some(StringView(comment_begin_it, str.end()));
+    }
+
+
+    [[nodiscard]] constexpr Option<StringView> code() const {
+        if(str.begin() == str.end()) return None;
+        const auto comment_begin_it = std::find(str.begin(), str.end(), SPLIT_CHAR);
+        if(comment_begin_it == str.end()) return None;
+        if(comment_begin_it == str.begin()) return None;
+        auto code_str = StringView(str.begin(), comment_begin_it);
+        code_str = code_str.trim();
+        if(code_str.length() == 0) return None;
+        return Some(code_str);
+    }
+
+};
 
 }

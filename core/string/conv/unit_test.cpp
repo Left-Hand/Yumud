@@ -3,6 +3,13 @@
 using namespace ymd;
 using namespace ymd::strconv2;
 
+template<typename D>
+static constexpr D err_bits(const D a, const D b){
+    if(b > a) return static_cast<D>(b - a);
+    else return static_cast<D>(a - b);
+}
+
+
 namespace {
 
 [[maybe_unused]] static void test_radix(){
@@ -110,5 +117,16 @@ namespace {
     static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("11111111").is_ok());
     static_assert(IntDeformatter<uint16_t>::parse_bin_no_show_base("1111111111111111").is_ok());
     static_assert(IntDeformatter<uint32_t>::parse_bin_no_show_base("11111111111111111111111111111111").is_ok());
+}
+
+
+[[maybe_unused]] static void test_fixed(){
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("1.50000").unwrap().to_bits(), (1.5_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("1.5").unwrap().to_bits(), (1.5_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("11111.5").unwrap().to_bits(), (11111.5_iq16).to_bits()) < 2);
+    static_assert(FixedPointDeformatter<16, int32_t>::parse("41111.5").unwrap_err() == DestringError::Overflow);
+    static_assert(FixedPointDeformatter<16, uint32_t>::parse("-41111.5").unwrap_err() == DestringError::NegForUnsigned);
+    static_assert(FixedPointDeformatter<16, int32_t>::DIGIT_MAX == 32767);
+
 }
 }

@@ -24,7 +24,7 @@
 
 
 namespace ymd::math{
-template<size_t Q, std::integral D>
+template<size_t Q, typename D>
 struct fixed;
 }
 
@@ -48,24 +48,39 @@ constexpr bool is_fixed_point_v = false;
 template<size_t Q, typename D>
 constexpr bool is_fixed_point_v<math::fixed<Q, D>> = true;
 
+
+template<typename T>
+static constexpr size_t fixed_point_qnum_v = 0;
+
+
+template<size_t Q, typename D>
+static constexpr size_t fixed_point_qnum_v<math::fixed<Q, D>> = Q;
+
+template<typename T>
+struct fixed_point_underlying_type{
+    using type = void;
+};
+
+template<size_t Q, typename D>
+struct fixed_point_underlying_type<math::fixed<Q, D>>{
+    using type = D;
+};
+
+template<typename T>
+using fixed_point_underlying_type_t = typename fixed_point_underlying_type<T>::type;
 }
 
 namespace ymd::math{
 
 
-template<size_t Q, std::integral D>
+template<size_t Q, typename D>
 struct [[nodiscard]] fixed final{
 private:
     static_assert(std::is_same_v<D, bool> == false);
+    static_assert(std::is_integral_v<D> == true);
 
-    #if 0
-    static constexpr size_t MAX_Q = std::is_unsigned_v<D> ? 
-        size_t(sizeof(D) * 8) : 
-        size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
-    #else
     //允许iq0.32的存在 它的值域为[-0.5, 0.5)
     static constexpr size_t MAX_Q = size_t(sizeof(D) * 8);
-    #endif
     
     static_assert(Q <= MAX_Q);
 
@@ -89,7 +104,8 @@ public:
         }
     }
 
-    static constexpr size_t q_num = Q;
+    static constexpr size_t NUM_Q = Q;
+    using underlying_type = D;
 
     __attribute__((always_inline)) constexpr fixed(){;}
 
@@ -195,7 +211,7 @@ public:
         return fixed::from_bits(-(to_bits()));
     }
 
-    template<std::integral D2>
+    template<typename D2>
     __attribute__((always_inline)) constexpr 
     fixed<Q, D2> cast_inner() const {
         return fixed<Q, D2>::from_bits(static_cast<D2>(to_bits()));
@@ -271,7 +287,7 @@ public:
 };
 
 template<size_t Q, size_t P, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::sum_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -298,7 +314,7 @@ fixed<Q, D> operator +(const fixed<Q, D> lhs, const std::integral auto rhs) {
 }
 
 template<size_t Q, size_t P, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::sum_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -326,7 +342,7 @@ fixed<Q, D> operator -(const fixed<Q, D> lhs, const std::integral auto rhs) {
 
 
 template<size_t Q1, size_t Q2, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::mul_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -338,7 +354,7 @@ fixed<Q1, D> operator *(const fixed<Q1, D1> lhs, const fixed<Q2, D2> rhs) {
 }
 
 template<size_t Q, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::mul_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -349,7 +365,7 @@ fixed<Q, D> operator *(const D2 lhs, const fixed<Q, D1> rhs) {
 }
 
 template<size_t Q, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::mul_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -359,13 +375,13 @@ fixed<Q, D> operator *(const fixed<Q, D1> lhs, const D2 rhs) {
     );
 }
 
-template<size_t Q, std::integral D>
+template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed<Q, D> operator *(const bool lhs, const fixed<Q, D> rhs) {
     return lhs ? rhs : fixed<Q, D>::from_bits(0);
 }
 
-template<size_t Q, std::integral D>
+template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed<Q, D> operator *(const fixed<Q, D> lhs, const bool rhs) {
     return rhs ? lhs : fixed<Q, D>::from_bits(0);
@@ -373,7 +389,7 @@ fixed<Q, D> operator *(const fixed<Q, D> lhs, const bool rhs) {
 
 template<
     size_t Q, size_t P, 
-    std::integral D1, std::integral D2,
+    typename D1, typename D2,
     typename D = tmp::mul_underlying_t<D1, D2>
 >
 __attribute__((always_inline)) constexpr 
@@ -421,7 +437,7 @@ fixed<Q, D> operator /(const fixed<Q, D> lhs, const std::integral auto rhs) {
 
 
 
-template<size_t Q1, size_t Q2, std::integral D1, std::integral D2>
+template<size_t Q1, size_t Q2, typename D1, typename D2>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed<Q1, D1> & self, const fixed<Q2, D2> & other) {
     if constexpr(std::is_same_v<D1, D2>){
@@ -438,41 +454,41 @@ std::strong_ordering operator <=> (const fixed<Q1, D1> & self, const fixed<Q2, D
 }
 
 
-template<size_t Q, std::integral D, std::floating_point T>
+template<size_t Q, typename D, std::floating_point T>
 [[nodiscard]] __attribute__((always_inline)) consteval 
 std::strong_ordering operator <=> (const fixed<Q, D> & self, const T & other) {
     return (std::bit_cast<D>(self.to_bits()) <=> fixed<Q, D>(other));
 }
 
 
-template<size_t Q, std::integral D, std::integral T>
+template<size_t Q, typename D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed<Q, D> & self, const T & other) {
     return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
 
 
-template<size_t Q, std::integral D, std::integral T>
+template<size_t Q, typename D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const T & other, const fixed<Q,D> & self){
     return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
 
 // 统一的等于运算符模板，直接复用 <=>
-template<size_t Q, std::integral D, std::integral T>
+template<size_t Q, typename D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 bool operator == (const fixed<Q, D> & self, const T & other) {
     return (self <=> other) == 0;
 }
 
-template<size_t Q, std::integral D, std::integral T>
+template<size_t Q, typename D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 bool operator == (const T & other, const fixed<Q, D> & self) {
     return (self <=> other) == 0;  // 注意这里复用 self <=> other
 }
 
 
-template<size_t Q1, size_t Q2, std::integral D1, std::integral D2>
+template<size_t Q1, size_t Q2, typename D1, typename D2>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 bool operator == (const fixed<Q1, D1> & self, const fixed<Q2, D2> & other) {
     return (self <=> other) == 0;  // 注意这里复用 self <=> other
@@ -480,7 +496,7 @@ bool operator == (const fixed<Q1, D1> & self, const fixed<Q2, D2> & other) {
 
 
 template<size_t Q1, size_t Q2, 
-    std::integral D1, std::integral D2, 
+    typename D1, typename D2, 
     typename D = tmp::extended_mul_underlying_t<D1, D2>
     >
 static constexpr auto extended_mul(const fixed<Q1, D1> a, const fixed<Q2, D2> b) 
