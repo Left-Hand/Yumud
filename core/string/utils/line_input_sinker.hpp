@@ -7,7 +7,7 @@
 namespace ymd{
 
 
-struct LineInputSinker{
+struct [[nodiscard]] LineInputSinker final{
 
     constexpr explicit LineInputSinker(const std::span<char> buf){
         buf_ = buf;
@@ -17,13 +17,16 @@ struct LineInputSinker{
     std::span<char> buf_;
     size_t ind_;
 
-    struct [[nodiscard]] PollResult{
+    struct [[nodiscard]] PollResult final{
         using Self = PollResult;
         bool is_end_of_line;
         bool is_full;
 
         static constexpr Self from_default(){
-            return Self{false, false};
+            return Self{
+                .is_end_of_line = false, 
+                .is_full = false
+            };
         }
     };
 
@@ -44,7 +47,7 @@ struct LineInputSinker{
         return res;
     }
 
-    constexpr size_t capacity() const{
+    [[nodiscard]] constexpr size_t capacity() const{
         return buf_.size();
     }
 
@@ -56,7 +59,7 @@ struct LineInputSinker{
         ind_ = 0;
     }
 
-    constexpr auto get_and_reset(){
+    constexpr StringView get_and_reset(){
         auto & self = *this;
         auto guard = make_scope_guard([&]{
             self.reset();

@@ -24,7 +24,7 @@ struct [[nodiscard]] WrapAddAccumulator final{
         return self;
     }
 
-    constexpr uint8_t finalize() const {
+    [[nodiscard]] constexpr uint8_t finalize() const {
         return val;
     }
 };

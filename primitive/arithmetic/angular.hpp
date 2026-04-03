@@ -58,6 +58,14 @@ struct [[nodiscard]] Angular{
 		return _make_angular_from_turns(static_cast<T>(math::atan2pu(y, x)));
 	}
 
+	static constexpr Angular from_asin(const T x) noexcept{
+		return _make_angular_from_turns(static_cast<T>(math::asinpu(x)));
+	}
+
+	static constexpr Angular from_acos(const T x) noexcept{
+		return _make_angular_from_turns(static_cast<T>(math::acospu(x)));
+	}
+
 	[[nodiscard]] constexpr T to_degrees() const noexcept{
 		return turns_ * 360;
 	}

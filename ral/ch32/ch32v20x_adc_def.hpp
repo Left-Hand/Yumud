@@ -2,12 +2,7 @@
 
 #include <cstdint>
 #include "core/constants/enums.hpp"
-
-
-#ifndef ASSERT_REG_IS_32BIT
-#define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 32bit"); 
-#endif
-
+#include "core/io/regs.hpp"
 
 namespace ymd::ral::ch32::ch32v20x_adc{
 
@@ -44,7 +39,7 @@ struct [[nodiscard]] R32_ADC_CTLR1{
     uint32_t BUFEN:1;
     uint32_t PGA:2;
     uint32_t __RESV2__:3;
-};ASSERT_REG_IS_32BIT(R32_ADC_CTLR1)
+};VALIDATE_R32(R32_ADC_CTLR1)
 
 
 struct [[nodiscard]] R32_ADC_CTLR2{
@@ -68,7 +63,7 @@ struct [[nodiscard]] R32_ADC_CTLR2{
     uint32_t TSVREFE:1;
 
     uint32_t __RESV4__:8;
-};ASSERT_REG_IS_32BIT(R32_ADC_CTLR2)
+};VALIDATE_R32(R32_ADC_CTLR2)
 
 struct [[nodiscard]] R32_ADC_SAMPTR1{
     uint32_t SMP10:3;
@@ -79,13 +74,14 @@ struct [[nodiscard]] R32_ADC_SAMPTR1{
     uint32_t SMP15:3;
     uint32_t SMP16:3;
     uint32_t SMP17:3;
-    uint32_t :8;
-};ASSERT_REG_IS_32BIT(R32_ADC_SAMPTR1)
+    uint32_t __resv__:8;
+};VALIDATE_R32(R32_ADC_SAMPTR1)
 
 struct [[nodiscard]] R32_ADC_SAMPTR2{
     uint32_t SMP0:3;
     uint32_t SMP1:3;
     uint32_t SMP2:3;
+
     uint32_t SMP3:3;
     uint32_t SMP4:3;
     uint32_t SMP5:3;
@@ -93,21 +89,23 @@ struct [[nodiscard]] R32_ADC_SAMPTR2{
     uint32_t SMP7:3;
     uint32_t SMP8:3;
     uint32_t SMP9:3;
-};ASSERT_REG_IS_32BIT(R32_ADC_SAMPTR2)
+
+    uint32_t __resv__:2;
+};VALIDATE_R32(R32_ADC_SAMPTR2)
 
 struct [[nodiscard]] R32_ADC_IOFR{
     uint32_t OFFSET:12;
-    uint32_t :20;
+    uint32_t __resv__:20;
 };
 
 struct [[nodiscard]] R32_ADC_WDHTR{
     uint32_t HT:12;
-    uint32_t :20;
+    uint32_t __resv__:20;
 };
 
 struct [[nodiscard]] R32_ADC_WDLTR{
     uint32_t LT:12;
-    uint32_t :20;
+    uint32_t __resv__:20;
 };
 
 struct [[nodiscard]] R32_ADC_RSQR1{
@@ -116,8 +114,8 @@ struct [[nodiscard]] R32_ADC_RSQR1{
     uint32_t SQ15:5;
     uint32_t SQ16:5;
     uint32_t L:4;
-    uint32_t :8;
-};ASSERT_REG_IS_32BIT(R32_ADC_RSQR1)
+    uint32_t __resv__:8;
+};VALIDATE_R32(R32_ADC_RSQR1)
 
 struct [[nodiscard]] R32_ADC_RSQR2{
     uint32_t SQ7:5;
@@ -126,8 +124,8 @@ struct [[nodiscard]] R32_ADC_RSQR2{
     uint32_t SQ10:5;
     uint32_t SQ11:5;
     uint32_t SQ12:5;
-    uint32_t :2;
-};ASSERT_REG_IS_32BIT(R32_ADC_RSQR2)
+    uint32_t __resv__:2;
+};VALIDATE_R32(R32_ADC_RSQR2)
 
 struct [[nodiscard]] R32_ADC_RSQR3{
     uint32_t SQ1:5;
@@ -136,8 +134,8 @@ struct [[nodiscard]] R32_ADC_RSQR3{
     uint32_t SQ4:5;
     uint32_t SQ5:5;
     uint32_t SQ6:5;
-    uint32_t :2;
-};ASSERT_REG_IS_32BIT(R32_ADC_RSQR3)
+    uint32_t __resv__:2;
+};VALIDATE_R32(R32_ADC_RSQR3)
 
 struct [[nodiscard]] R32_ADC_ISQR{
     uint32_t JSQ1:5;
@@ -145,17 +143,17 @@ struct [[nodiscard]] R32_ADC_ISQR{
     uint32_t JSQ3:5;
     uint32_t JSQ4:5;
     uint32_t JL:2;
-    uint32_t :10;
-};ASSERT_REG_IS_32BIT(R32_ADC_ISQR)
+    uint32_t __resv__:10;
+};VALIDATE_R32(R32_ADC_ISQR)
 
 struct [[nodiscard]] R32_ADC_IDATAR{
     uint16_t DATA;
-    uint16_t :16;
+    uint16_t __resv__:16;
 };
 
 struct [[nodiscard]] R32_ADC_RDATAR{
     uint16_t DATA;
-    uint16_t :16;
+    uint16_t __resv__:16;
 };
 
 
@@ -170,7 +168,7 @@ struct [[nodiscard]] R32_TKEY_CHARGE2{
     uint32_t TKCG7:3;
     uint32_t TKCG8:3;
     uint32_t TKCG9:3;
-    uint32_t :2;
+    uint32_t __resv__:2;
 
 };
 
@@ -194,12 +192,12 @@ struct [[nodiscard]] R32_TKEY_CHGOFFSET{
 
 struct [[nodiscard]] R32_TKEY_ACT_DCG{
     uint32_t TKACT_DCG:8;
-    uint32_t :124;
+    uint32_t :24;
 };
 
 struct [[nodiscard]] R32_TKEY_DR{
     uint32_t DATA:16;
-    uint32_t :116;
+    uint32_t :16;
 };
 
 struct [[nodiscard]] ADC_Def{
@@ -238,76 +236,76 @@ struct [[nodiscard]] ADC_Def{
         return STATR.STRT;
     }
 
-    constexpr void set_analog_watchdog_threshold(const uint16_t low,const uint16_t high){
+    void set_analog_watchdog_threshold(const uint16_t low,const uint16_t high){
         WDLTR.LT = low;
         WDHTR.HT = high;
     }
 
-    constexpr void set_analog_watchdog_channel(const uint8_t channel){
+    void set_analog_watchdog_channel(const uint8_t channel){
         CTLR1.AWDCH = channel;
     }
 
-    constexpr void enable_eoc_it(const Enable en){
+    void enable_eoc_it(const Enable en){
         CTLR1.EOCIE = (en == EN);
     }
 
-    constexpr void enable_awd_it(const Enable en){
+    void enable_awd_it(const Enable en){
         CTLR1.AWDIE = (en == EN);
     }
 
-    constexpr void enable_jeoc_it(const Enable en){
+    void enable_jeoc_it(const Enable en){
         CTLR1.JEOCIE = (en == EN);
     }
 
-    constexpr void enable_scan_mode(const Enable en){
+    void enable_scan_mode(const Enable en){
         CTLR1.SCAN = (en == EN);
     }
 
-    constexpr void enable_single_channel_watchdog_when_scan(const Enable en){
+    void enable_single_channel_watchdog_when_scan(const Enable en){
         CTLR1.AWDSGL = (en == EN);
     }
 
-    constexpr void enable_auto_inject(const Enable en){
+    void enable_auto_inject(const Enable en){
         CTLR1.JAUTO = (en == EN);
     }
 
-    constexpr void enable_regular_disc_mode(const Enable en){
+    void enable_regular_disc_mode(const Enable en){
         CTLR1.DISCEN = (en == EN);
     }
 
-    constexpr void enable_injected_disc_mode(const Enable en){
+    void enable_injected_disc_mode(const Enable en){
         CTLR1.JDISCEN = (en == EN);
     }
 
-    constexpr void set_regular_disc_num(const uint8_t num){
+    void set_regular_disc_num(const uint8_t num){
         CTLR1.DISCNUM = num;
     }
 
-    constexpr void set_dual_mode(const uint8_t mode){
+    void set_dual_mode(const uint8_t mode){
         CTLR1.DUALMOD = mode;
     }
 
-    constexpr void enable_injected_watchdog(const Enable en){
+    void enable_injected_watchdog(const Enable en){
         CTLR1.JAWDEN = (en == EN);
     }
 
-    constexpr void enable_regular_watchdog(const Enable en){
+    void enable_regular_watchdog(const Enable en){
         CTLR1.AWDEN = (en == EN);
     }
 
-    constexpr void enable_touchkey(const Enable en){
+    void enable_touchkey(const Enable en){
         CTLR1.TKENABLE = (en == EN);
     }
 
-    constexpr void enable_touchkey_low_charge(const Enable en){
+    void enable_touchkey_low_charge(const Enable en){
         CTLR1.TKITUNE = (en == EN);
     }
 
-    constexpr void enable_buffer(const Enable en){
+    void enable_buffer(const Enable en){
         CTLR1.BUFEN = (en == EN);
     }
 
-    constexpr void set_gain(const uint8_t gain){
+    void set_gain(const uint8_t gain){
         CTLR1.PGA = [&]{
             switch(gain){
                 default:
@@ -319,27 +317,27 @@ struct [[nodiscard]] ADC_Def{
         }();
     }
 
-    constexpr void enable(const Enable en){
+    void enable(const Enable en){
         CTLR2.ADON = (en == EN);
     }
 
-    constexpr void enable_cont_mode(const Enable en){
+    void enable_cont_mode(const Enable en){
         CTLR2.CONT = (en == EN);
     }
 
-    constexpr void enable_calibrate(const Enable en){
+    void enable_calibrate(const Enable en){
         CTLR2.CAL = (en == EN);
     }
 
-    constexpr void reset_calibrate(const Enable en){
+    void reset_calibrate(const Enable en){
         CTLR2.RSTCAL = (en == EN);
     }
 
-    constexpr void enable_dma(const Enable en){
+    void enable_dma(const Enable en){
         CTLR2.DMA = (en == EN);
     }
 
-    constexpr void enable_left_align(const Enable en){
+    void enable_left_align(const Enable en){
         CTLR2.ALIGN = (en == EN);
     }
 
@@ -351,35 +349,35 @@ struct [[nodiscard]] ADC_Def{
     // 101：定时器 4 的 TRGO 事件；
     // 110：EXTI 线 15/定时器 8 的 CC4 事件；
     // 111：JSWSTART 软件触发。
-    constexpr void select_injected_trigger(const uint8_t trigger){
+    void select_injected_trigger(const uint8_t trigger){
         CTLR2.JEXTSEL = trigger;
     }
 
-    constexpr void enable_injected_trigger(const Enable en){
+    void enable_injected_trigger(const Enable en){
         CTLR2.JEXTTRIG = (en == EN);
     }
 
-    constexpr void select_regular_trigger(const uint8_t trigger){
+    void select_regular_trigger(const uint8_t trigger){
         CTLR2.EXTSEL = trigger;
     }
 
-    constexpr void enable_regular_trigger(const Enable en){
+    void enable_regular_trigger(const Enable en){
         CTLR2.EXTTRIG = (en == EN);
     }
 
-    constexpr void soft_start_injected(){
+    void soft_start_injected(){
         CTLR2.JSWSTART = 1;
     }
 
-    constexpr void soft_start_regular(){
+    void soft_start_regular(){
         CTLR2.SWSTART = 1;
     }
 
-    constexpr void enable_temp_and_vref(const Enable en){
+    void enable_temp_and_vref(const Enable en){
         CTLR2.TSVREFE = (en == EN);
     }
 
-    constexpr void set_sample_cycles(const uint8_t channel,const uint8_t cycles){
+    void set_sample_cycles(const uint8_t channel,const uint8_t cycles){
         switch(channel){
             case 0: SAMPTR2.SMP0 = cycles; return;
             case 1: SAMPTR2.SMP1 = cycles; return;
@@ -403,11 +401,11 @@ struct [[nodiscard]] ADC_Def{
         }
     }
 
-    constexpr void set_injected_offset(const uint8_t rank,const uint16_t offset){
+    void set_injected_offset(const uint8_t rank,const uint16_t offset){
         IOFR[rank & 0b11].OFFSET = offset;
     }
 
-    constexpr void set_regular_mapping(const uint8_t rank, const uint8_t channel){
+    void set_regular_mapping(const uint8_t rank, const uint8_t channel){
         switch (rank) {
             case 1: RSQR3.SQ1 = channel; return;
             case 2: RSQR3.SQ2 = channel; return;
@@ -428,11 +426,11 @@ struct [[nodiscard]] ADC_Def{
         }
     }
 
-    constexpr void set_regular_length(const uint8_t len){
+    void set_regular_length(const uint8_t len){
         RSQR1.L = len;
     }
 
-    constexpr void set_injected_mapping(const uint8_t rank, const uint8_t channel){
+    void set_injected_mapping(const uint8_t rank, const uint8_t channel){
         switch (rank) {
             case 1: ISQR.JSQ1 = channel; return;
             case 2: ISQR.JSQ2 = channel; return;
@@ -441,7 +439,7 @@ struct [[nodiscard]] ADC_Def{
         }
     }
 
-    constexpr void set_injected_length(const uint8_t len){
+    void set_injected_length(const uint8_t len){
         ISQR.JL = len;
     }
 
@@ -504,6 +502,6 @@ struct [[nodiscard]] TKEY_De1f{
     }
 };
 
-static inline ADC_Def * ADC1_Inst = (ADC_Def *)(0x40012400);
-static inline ADC_Def * ADC2_Inst = (ADC_Def *)(0x40012400);
+[[maybe_unused]] static inline ADC_Def * ADC1_Inst = reinterpret_cast<ADC_Def *>(0x40012400);
+[[maybe_unused]] static inline ADC_Def * ADC2_Inst = reinterpret_cast<ADC_Def *>(0x40012400);
 }

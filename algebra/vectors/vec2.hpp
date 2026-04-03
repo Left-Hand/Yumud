@@ -60,11 +60,10 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     static constexpr Vec2<T> LEFT = Vec2<T>(-1, 0);
     static constexpr Vec2<T> RIGHT = Vec2<T>(1, 0);
 
-    static constexpr Vec2<T> X = Vec2<T>(1, 0);
-    static constexpr Vec2<T> Y = Vec2<T>(0, 1);
-    static constexpr Vec2<T> NEG_X = Vec2<T>(-1, 0);
-    static constexpr Vec2<T> NEG_Y = Vec2<T>(0, -1);
-    static constexpr Vec2<T> AXES = Vec2<T>(0, 1);
+    static constexpr Vec2<T> X_AXIS = Vec2<T>(1, 0);
+    static constexpr Vec2<T> Y_AXIS = Vec2<T>(0, 1);
+    static constexpr Vec2<T> NEG_X_AXIS = Vec2<T>(-1, 0);
+    static constexpr Vec2<T> NEG_Y_AXIS = Vec2<T>(0, -1);
 
     static constexpr Vec2<T> UP = Vec2<T>(0, 1);
     static constexpr Vec2<T> DOWN = Vec2<T>(0, -1);
@@ -74,11 +73,10 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     static constexpr Vec2<T> LEFT_DOWN = Vec2<T>(-1, -1);
     static constexpr Vec2<T> RIGHT_DOWN = Vec2<T>(1, -1);
 
-
     T x;
     T y;
     
-
+    constexpr Vec2() = default;
 
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
@@ -439,7 +437,7 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         else if constexpr (I == 1) return y;
     }
 private:
-    constexpr Vec2(){;}
+
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self){
         return os    
