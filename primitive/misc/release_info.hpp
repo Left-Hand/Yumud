@@ -31,11 +31,6 @@ OutputStream & operator <<(OutputStream & os, const ReleaseVersion & self){
         ;
 }
 
-template<HashAlgo S>
-constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const ReleaseVersion & self){
-    return hs << self.major << self.minor;
-}
-
 template<>
 struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseVersion>{
     static constexpr auto from(const ReleaseVersion & version){
@@ -47,8 +42,8 @@ struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Release
 struct [[nodiscard]] ReleaseInfo final{
     Author author;
     ReleaseVersion version;
-    Date date = Date::from_compiler();
-    Time time = Time::from_compiler();
+    Date date = Date::from_comptime();
+    Time time = Time::from_comptime();
 
 };
 
@@ -60,12 +55,6 @@ OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
     );
     return os;
 }
-
-template<HashAlgo S>
-constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const ReleaseInfo & self){
-    return hs << self.author << self.version << self.date << self.time;
-}
-
 
 template<>
 struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseInfo>{

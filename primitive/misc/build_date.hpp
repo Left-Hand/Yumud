@@ -53,11 +53,6 @@ struct [[nodiscard]] Month final{
     }
 
 
-    template<HashAlgo S>
-    constexpr friend HashBuilder<S> & operator << (HashBuilder<S> & hs, const Month & self){
-        return hs << uint8_t(self.kind);
-    }
-
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
         const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
         return os << StringView(str,3);
@@ -97,7 +92,7 @@ struct [[nodiscard]] Date final{
     Month month;
     Day day;
 
-    static consteval Date from_compiler(){
+    static consteval Date from_comptime(){
         return from_str(StringView(__DATE__)).unwrap();
     }
 
@@ -144,7 +139,7 @@ struct [[nodiscard]] Date final{
     }
 
     constexpr bool is_latest() const {
-        return *this == Date::from_compiler();
+        return *this == Date::from_comptime();
     }
 
 };
@@ -158,10 +153,6 @@ OutputStream & operator <<(OutputStream & os, const Date & self){
         ;
 }
 
-template<HashAlgo S>
-constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const Date & self){
-    return hs << self.year << self.month << self.day;
-}
 
 template<>
 struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Date>{
@@ -177,7 +168,7 @@ struct [[nodiscard]] Time final{
     Seconds seconds;
 
     // Compile-time time initialization from __TIME__ macro
-    static consteval Time from_compiler() {
+    static consteval Time from_comptime() {
         constexpr const char* time_str = __TIME__;
         return {
             static_cast<Hour>((time_str[0]-'0')*10 + (time_str[1]-'0')),
@@ -218,12 +209,6 @@ struct [[nodiscard]] Time final{
                 << os.brackets<'}'>()
             ;
     }
-
-    template<HashAlgo S>
-    constexpr friend HashBuilder<S> & operator << (HashBuilder<S> & hs, const Time & self){
-        return hs << self.hour << self.minute << self.seconds;
-    }
-
 };
 
 

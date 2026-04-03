@@ -8,8 +8,8 @@
 
 namespace ymd::crsf{
 
-static constexpr uint8_t calc_crc(std::span<const uint8_t> bytes, uint8_t last = 0){
-    uint8_t crc = last;
+static constexpr uint8_t calc_crc(std::span<const uint8_t> bytes, uint8_t prev_crc = 0){
+    uint8_t crc = prev_crc;
     #pragma GCC unroll 8
     for(size_t i = 0; i < bytes.size(); i++){
         crc = CRC8_TABLE[crc ^ bytes[i]];
@@ -17,8 +17,8 @@ static constexpr uint8_t calc_crc(std::span<const uint8_t> bytes, uint8_t last =
     return crc;
 }
 
-static constexpr uint8_t calc_command_crc(std::span<const uint8_t> bytes, uint8_t last = 0){
-    uint8_t crc = last;
+static constexpr uint8_t calc_command_crc(std::span<const uint8_t> bytes, uint8_t prev_crc = 0){
+    uint8_t crc = prev_crc;
     #pragma GCC unroll 8
     for(size_t i = 0; i < bytes.size(); i++){
         crc = COMMAND_CRC8_TABLE[crc ^ bytes[i]];

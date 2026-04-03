@@ -155,18 +155,19 @@ __attribute__((always_inline)) constexpr
 math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     static_assert(Q <= 32);
     uint32_t input_bits = std::bit_cast<uint32_t>(x.to_bits());
-    const bool is_neg  = input_bits & (1u << 31);
-    if(is_neg) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
+    const bool is_negative  = input_bits & (1u << 31);
+    if(is_negative) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
 
+    constexpr uint32_t MAX_BITS = (uint32_t(1) << Q);
     if constexpr(Q < 32)
-        if(input_bits > (uint32_t(1) << Q)) [[unlikely]]{
-            input_bits = uint32_t(1) << Q;
+        if(input_bits > MAX_BITS) [[unlikely]]{
+            input_bits = MAX_BITS;
         }
 
     #if 1
     const uint32_t uiq31_input = [&] -> uint32_t{
         if constexpr(Q < 32) return uint32_t(input_bits << (31 - Q));
-        else return uint32_t(input_bits >> 1);
+        else return uint32_t(input_bits >> (Q - 31));
     }();
 
     auto iq29_result = fxmath::details::asin31(uiq31_input);
@@ -179,7 +180,7 @@ math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     auto iq29_result = __IQNasin32(uiq32_input);
     #endif
 
-    if(is_neg) iq29_result = -iq29_result;
+    if(is_negative) iq29_result = -iq29_result;
 
     return iq29_result;
 }

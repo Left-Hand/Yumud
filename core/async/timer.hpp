@@ -15,14 +15,14 @@ struct [[nodiscard]] RepeatTimer final {
         const auto now = clock::millis();
         if (now >= next_trigger_) {
             std::forward<Fn>(fn)();
-            last_invoke_ = now;
+            prev_invoke_ = now;
             // 计算下一个触发点，考虑可能已经错过多个周期的情况
             next_trigger_ = now + duration_;
         }
     }
 
     [[nodiscard]] Milliseconds since_last_invoke() const {
-        return clock::millis() - last_invoke_;
+        return clock::millis() - prev_invoke_;
     }
 
     void reset() {
@@ -31,7 +31,7 @@ struct [[nodiscard]] RepeatTimer final {
 
 private:
     Milliseconds duration_;
-    Milliseconds last_invoke_ = 0ms;
+    Milliseconds prev_invoke_ = 0ms;
     Milliseconds next_trigger_ = 0ms;
 
     explicit RepeatTimer(Milliseconds duration):
@@ -40,7 +40,7 @@ private:
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self){
         return os << os.field("duration")(self.duration_) << os.splitter()
-            << os.field("last_invoke")(self.last_invoke_) << os.splitter()
+            << os.field("last_invoke")(self.prev_invoke_) << os.splitter()
             << os.field("next_trigger")(self.next_trigger_);
     }
 };
@@ -58,12 +58,12 @@ struct [[nodiscard]] OnceTimer final {
     }
 
     [[nodiscard]] bool has_been_expired() const {
-        if(last_invoke_.is_none()) return false;
-        return (clock::millis() - last_invoke_.unwrap()) >= timeout_;
+        if(prev_invoke_.is_none()) return false;
+        return (clock::millis() - prev_invoke_.unwrap()) >= timeout_;
     }
 
     void reset(Milliseconds timeout = 0ms) {
-        last_invoke_ = Some(clock::millis());
+        prev_invoke_ = Some(clock::millis());
         if (timeout != 0ms) {
             timeout_ = timeout;
         }
@@ -71,7 +71,7 @@ struct [[nodiscard]] OnceTimer final {
 
 private:
     Milliseconds timeout_;
-    Option<Milliseconds> last_invoke_ = None;
+    Option<Milliseconds> prev_invoke_ = None;
 
     explicit constexpr OnceTimer(Milliseconds delay) :
         timeout_(delay){}

@@ -95,9 +95,9 @@ struct [[nodiscard]] AltitudeCode final{
         );
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u16<std::endian::big>(bits);
     }
 };
 
@@ -136,19 +136,19 @@ struct [[nodiscard]] VerticalSpeedCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i8<std::endian::big>(bits);
     }
 };
 
 struct [[nodiscard]] VoltageCode final{
     using Self = VoltageCode;
     
-    static constexpr double RATIO = 1E-3;
+    static constexpr float RATIO = 1E-3;
     
     int16_t bits;  // LSB = 10 µV
-    static constexpr double MAX_VOLT = std::numeric_limits<int16_t>::max() * RATIO;
+    static constexpr float MAX_VOLT = std::numeric_limits<int16_t>::max() * RATIO;
 
     [[nodiscard]] constexpr float to_volts() const {
         return static_cast<float>(bits) * 0.00001f;  // Convert from 10µV units to volts
@@ -170,9 +170,9 @@ struct [[nodiscard]] VoltageCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i16<std::endian::big>(bits);
     }
 };
 
@@ -199,9 +199,9 @@ struct [[nodiscard]] CurrentCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i16<std::endian::big>(bits);
     }
 };
 
@@ -219,9 +219,9 @@ struct [[nodiscard]] RpmCode final{
         return Self{.bits = int24_t(bits)};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i24<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i24<std::endian::big>(bits);
     }
 };
 
@@ -239,9 +239,9 @@ struct [[nodiscard]] TemperatureCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i16<std::endian::big>(bits);
     }
 };
 
@@ -266,7 +266,7 @@ struct [[nodiscard]] GpsCoordinateCode final{
             return static_cast<T>(bits) / 10000000.0;
         }else if constexpr(std::is_same_v<T, iq16>){ 
             static constexpr uint64_t FACTOR = 
-                static_cast<long double>(1ull << (16 + 32)) / (1E7 * 360);
+                static_cast<float>(1ull << (16 + 32)) / (1E7 * 360);
             const auto ret_bits = 
                 static_cast<int32_t>((static_cast<int64_t>(bits) * FACTOR) >> 32);
             return iq16::from_bits(ret_bits);
@@ -300,9 +300,9 @@ struct [[nodiscard]] GpsCoordinateCode final{
         __builtin_unreachable();
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i32<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i32<std::endian::big>(bits);
     }
 };
 
@@ -320,9 +320,9 @@ struct [[nodiscard]] GpsHeadingCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u16<std::endian::big>(bits);
     }
 };
 
@@ -341,9 +341,9 @@ struct [[nodiscard]] GpsGroundSpeedCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u16<std::endian::big>(bits);
     }
 };
 
@@ -363,9 +363,9 @@ struct [[nodiscard]] AirspeedCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u16<std::endian::big>(bits);
     }
 };
 
@@ -393,9 +393,9 @@ struct [[nodiscard]] AttitudeAngleCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i16<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i16<std::endian::big>(bits);
     }
 };
 
@@ -420,9 +420,9 @@ struct [[nodiscard]] RssiCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -445,9 +445,9 @@ struct [[nodiscard]] LinkQualityCode final{
         return Some(Self{static_cast<uint8_t>(b)});
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -465,9 +465,9 @@ struct [[nodiscard]] SnrCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i8<std::endian::big>(bits);
     }
 };
 
@@ -485,9 +485,9 @@ struct [[nodiscard]] RfPowerDbmCode final{
         return Self{bits};
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -500,9 +500,9 @@ struct [[nodiscard]] RfFps final{
 
     uint8_t bits;
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -523,9 +523,9 @@ struct [[nodiscard]] RfPower final{
 
     uint8_t bits;
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -546,9 +546,9 @@ struct [[nodiscard]] FpsCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u8<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u8<std::endian::big>(bits);
     }
 };
 
@@ -567,9 +567,9 @@ struct [[nodiscard]] PressureCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u32<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u32<std::endian::big>(bits);
     }
 };
 
@@ -588,9 +588,9 @@ struct [[nodiscard]] TemperatureCentidegreeCode final{
     }
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_i32<std::endian::big>(bits);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_i32<std::endian::big>(bits);
     }
 };
 
@@ -599,10 +599,10 @@ struct [[nodiscard]] PassthroughTelemetryPacket final{
     uint32_t data;
 
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.template push_u16<std::endian::big>(appid);
-        receiver.template push_u32<std::endian::big>(data);
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        return serializer.template push_u16<std::endian::big>(appid);
+        return serializer.template push_u32<std::endian::big>(data);
     }
 };
 
