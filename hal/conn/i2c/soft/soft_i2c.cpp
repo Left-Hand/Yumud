@@ -101,7 +101,7 @@ HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
 
 
     return header_err_transform(
-        write((addr << 1)| static_cast<uint16_t>(is_read))
+        write_byte((addr << 1)| static_cast<uint16_t>(is_read))
     );
 }
 
@@ -118,7 +118,7 @@ void SoftI2c::trail(){
 
 
 
-HalResult SoftI2c::write(const uint32_t data){
+HalResult SoftI2c::write_byte(const uint32_t data){
     sda_pin().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -132,7 +132,7 @@ HalResult SoftI2c::write(const uint32_t data){
     return wait_ack();
 }
 
-HalResult SoftI2c::read(uint8_t & data, const Ack ack){
+HalResult SoftI2c::read_byte(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda_pin().set_high();

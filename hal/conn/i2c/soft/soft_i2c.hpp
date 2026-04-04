@@ -23,8 +23,8 @@ public:
 
     HalResult borrow(const I2cSlaveAddrWithRw req);
     HalResult reset();
-    HalResult write(const uint32_t data) final;
-    HalResult read(uint8_t & data, const Ack ack) final;
+    HalResult write_byte(const uint32_t data) final;
+    HalResult read_byte(uint8_t & data, const Ack ack) final;
 
     HalResult set_baudrate(const I2cBuadrate baudrate);
     void set_timeout(const Timeout timeout){timeout_ = timeout;}

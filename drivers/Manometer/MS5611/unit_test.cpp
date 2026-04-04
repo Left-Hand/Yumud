@@ -24,7 +24,7 @@ using namespace ymd::drivers;
     // 2420281617LL, 1315097036LL, 100009L
     static_assert(product.off == 2420281617);
     static_assert(product.sens == 1315097036);
-    static_assert(product.p == 100009);
+    static_assert(product.pressure == 100009);
 }
 
 }

@@ -1,5 +1,6 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
+#include "core/utils/scope_guard.hpp"
 
 
 // #define ADS1115_DEBUG
@@ -32,19 +33,25 @@ IResult<> ADS1115::validate(){
 }
 
 IResult<> ADS1115::start_conv(){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
+
+    auto guard = make_scope_guard([&]{
+        reg.busy = false;
+        reg.apply();
+    });
+
+
     reg.busy = true;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
-    reg.busy = false;
-    reg.apply();
+
     return Ok();
 }
 
 
 IResult<> ADS1115::set_threshold(int16_t low, int16_t high){
-    auto low_thresh_reg_copy = RegCopy(low_thresh_reg);
-    auto high_thresh_reg_copy = RegCopy(high_thresh_reg);
+    auto low_thresh_reg_copy = RegCopy(regs_.low_thresh_reg);
+    auto high_thresh_reg_copy = RegCopy(regs_.high_thresh_reg);
     low_thresh_reg_copy.bits = low;
     high_thresh_reg_copy.bits = high;
 
@@ -56,7 +63,7 @@ IResult<> ADS1115::set_threshold(int16_t low, int16_t high){
 }
 
 IResult<> ADS1115::enable_cont_mode(Enable en){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.oneshot_en = (en == DISEN);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -65,7 +72,7 @@ IResult<> ADS1115::enable_cont_mode(Enable en){
 }
 
 IResult<> ADS1115::set_pga(const PGA pga){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.pga = uint16_t(pga);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -74,7 +81,7 @@ IResult<> ADS1115::set_pga(const PGA pga){
 }
 
 IResult<> ADS1115::set_mux(const MUX mux){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.mux = uint16_t(mux);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -83,7 +90,7 @@ IResult<> ADS1115::set_mux(const MUX mux){
 }
 
 IResult<> ADS1115::set_datarate(const DataRate datarate){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.datarate = uint16_t(datarate);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -92,18 +99,17 @@ IResult<> ADS1115::set_datarate(const DataRate datarate){
 }
 
 IResult<bool> ADS1115::is_busy(){
-    auto & reg = config_reg;
+    auto & reg = regs_.config_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.busy));
 }
 
 
-Option<iq16> ADS1115::get_voltage(){
-    auto & reg = conversion_reg;
+Option<int16_t> ADS1115::get_conversion_result(){
+    auto & reg = regs_.conversion_reg;
     if(read_reg(reg.REG_ADDR, reg.as_bits_mut()).is_err()) return None;
-    return Some(iq16::from_bits(~std::bit_cast<int16_t>(reg.bits)) * 3.3_iq16);
-    // return None;
+    return Some(reg.bits);
 }
 
 
