@@ -28,28 +28,33 @@ static constexpr std::array<uint8_t, 256> CRC8_TABLE= {
 };
 
 
-class [[nodiscard]] Crc8Calculator {
+class [[nodiscard]] Crc8Builder {
 private:
     uint8_t crc_;
 
 public:
-    constexpr explicit Crc8Calculator(uint8_t initial_crc = 0) : crc_(initial_crc) {}
+    constexpr explicit Crc8Builder(uint8_t initial_crc = 0) : crc_(initial_crc) {}
+
+    static constexpr Crc8Builder from_default(){
+        return Crc8Builder(0);
+    }
+
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr Crc8Calculator push_byte(uint8_t byte) const {
+    [[nodiscard]] constexpr Crc8Builder push_byte(uint8_t byte) const {
         uint8_t crc = crc_;
         crc = CRC8_TABLE[(crc ^ byte) & 0xff];
-        return Crc8Calculator{crc};
+        return Crc8Builder{crc};
     }
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr Crc8Calculator push_bytes(std::span<const uint8_t> bytes) const {
+    [[nodiscard]] constexpr Crc8Builder push_bytes(std::span<const uint8_t> bytes) const {
         uint8_t crc = crc_;
         #pragma GCC unroll 8
         for (size_t i = 0; i < bytes.size(); i++) {
             crc = CRC8_TABLE[(crc ^ bytes[i]) & 0xff];
         }
-        return Crc8Calculator{crc};
+        return Crc8Builder{crc};
     }
 
     [[nodiscard]] constexpr uint8_t finalize() const {
@@ -304,7 +309,7 @@ struct [[nodiscard]] LidarSectorPacket final{
             PAYLOAD_LEN
         );
 
-        return Crc8Calculator()
+        return Crc8Builder()
             .push_bytes(payload_bytes)
             .finalize();
     }

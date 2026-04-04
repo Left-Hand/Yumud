@@ -27,18 +27,18 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> NRF24L01::write_command(const NRF24L01::Command cmd){
-    if(const auto res = p_spi_drv_->write_single<uint8_t>(uint8_t(cmd));
+    if(const auto res = p_spi_drv_->write_single<uint8_t>(cmd.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 #if 0
-IResult<> NRF24L01::write_reg(const uint8_t addr, const uint8_t data){
+IResult<> NRF24L01::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
     TODO();
     return Ok();
 }
 
-IResult<> NRF24L01::read_reg(const uint8_t addr, uint8_t & data){
+IResult<> NRF24L01::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
     TODO();
     return Ok();
 }

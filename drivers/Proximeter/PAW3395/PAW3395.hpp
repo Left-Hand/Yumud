@@ -6,7 +6,7 @@
 //PAW3395 是原相科技的一款游戏级顶配鼠标光流传感器
 
 
-#include "details/PAW3395_Prelude.hpp"
+#include "paw3395_prelude.hpp"
 
 namespace ymd::drivers::paw3395{
 

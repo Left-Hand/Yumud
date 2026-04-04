@@ -8,7 +8,6 @@
 
 
 
-#include "details/CH9431_phy.hpp"
 
 namespace ymd::drivers{
 

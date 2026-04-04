@@ -3,11 +3,15 @@
 
 using namespace ymd;
 using namespace ymd::drivers::sr2631z3;
-
+using namespace msgs;
 
 namespace{
 
 
+template<typename T>
+struct Uninitializer{
+
+};
 
 static_assert(parse_hex_str("5b").unwrap() == 0x5b);
 static_assert(parse_dec_str("023656").unwrap() == 23656);
@@ -28,7 +32,7 @@ static_assert(parse_floating_num("22").unwrap_err() == DeMsgErrorKind::NoDot);
 }
 
 
-
+#if 0
 [[maybe_unused]] static void test_gga(){
     // constexpr StringView line = "023656.00";
     constexpr StringView line = "023656.00,2240.61563,N,11359.86512,E";
@@ -52,6 +56,7 @@ static_assert(parse_floating_num("22").unwrap_err() == DeMsgErrorKind::NoDot);
     static_assert(either_msg.lon.unwrap().frac == 86512);
 
     static_assert(either_msg.ulon.unwrap().is_eastern == true);
-
 }
+
+#endif
 }

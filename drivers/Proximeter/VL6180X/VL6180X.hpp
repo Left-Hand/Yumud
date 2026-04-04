@@ -75,7 +75,3 @@ private:
 };
 
 }
-
-namespace ymd{
-DEF_DERIVE_DEBUG(drivers::VL6180X::Error_Kind );
-}

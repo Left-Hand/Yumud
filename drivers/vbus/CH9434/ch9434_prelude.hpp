@@ -5,7 +5,7 @@
 
 
 
-namespace ymd::drivers::ch9434::details{
+namespace ymd::drivers::ch9434{
 
 enum class [[nodiscard]] RegAddr:uint8_t{
     RHR = 0x00,

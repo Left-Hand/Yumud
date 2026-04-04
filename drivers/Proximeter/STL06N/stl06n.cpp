@@ -91,7 +91,7 @@ void STL06N_ParseReceiver::flush(const Command command){
 
     //尾元素本身指向crc8校验 并不构成越界
     const uint8_t actual_crc = context_bytes[num_context_bytes];
-    const uint8_t expected_crc = Crc8Calculator()
+    const uint8_t expected_crc = Crc8Builder()
         .push_byte(HEADER_TOKEN)
         .push_byte(command.to_u8())
         .push_bytes(context_bytes)

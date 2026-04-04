@@ -14,7 +14,7 @@ namespace {
     };
 
     constexpr auto actual_crc = [&]() -> uint8_t{
-        Crc8Calculator calc = Crc8Calculator();
+        Crc8Builder calc = Crc8Builder();
         return calc.push_bytes(std::span(bytes)).finalize();
     }();
     static_assert(actual_crc == 0x50);
@@ -29,7 +29,7 @@ namespace {
     };
 
     constexpr auto actual_crc = [&]() -> uint8_t{
-        Crc8Calculator calc = Crc8Calculator();
+        Crc8Builder calc = Crc8Builder();
         return calc.push_bytes(std::span(bytes)).finalize();
     }();
     static_assert(actual_crc == 0xBC);

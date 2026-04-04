@@ -5,8 +5,7 @@
 
 namespace ymd::drivers{
 
-class U13T{
-public:
+struct U13T_Prelude{
     struct [[nodiscard]] Command final{
     public:
         enum Kind:uint8_t{
@@ -47,7 +46,10 @@ public:
             NoCard = 0xff,
         };
     };
+};
 
+class U13T:public U13T_Prelude{
+public:
 // private:
 // private:
 
@@ -68,6 +70,11 @@ public:
     void write(std::span<const uint8_t> pbuf){
         uart_.try_write_bytes(pbuf);
     }
+
+};
+
+
+struct U13T_MsgFactory:public U13T_Prelude{
 
     static constexpr std::array<uint8_t, 7> make_baudrate_payload(const uint32_t baudrate){
         return {
@@ -120,14 +127,6 @@ public:
 
     void set_baudrate(const uint32_t baudrate){
         (void)(baudrate);
-            // DEBUG_PRINTLN(std::hex, drivers::U13T::make_baudrate_message(9600));
-    // const auto msg  =drivers::U13T::make_baudrate_message(115200);
-    // const auto msg  =drivers::U13T::make_read_card_num_message();
-    // u13t.write(std::span(msg));
     }
 };
-
-// static constexpr auto msg = U13T::make_baudrate_message(9600);
-
-
 }

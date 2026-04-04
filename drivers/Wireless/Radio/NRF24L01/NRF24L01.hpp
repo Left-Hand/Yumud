@@ -151,36 +151,33 @@ protected:
     using Regs = _NRF24L01_Regs;
     Regs regs_;
     
-    class Command{
-    public:
-        enum Type:uint8_t{
-            R_REGISTER = 0x00,
-            W_REGISTER = 0x20,
-            R_RX_PAYLOAD = 0x61,
-            FLUSH_TX = 0xE1,
-            FLUSH_RX = 0xE2,
-            REUSE_TX_PL = 0xE3,
-            NOP = 0xFF
-        };
 
-        static constexpr Command READ(const uint8_t addr){
+    struct Command{
+        uint8_t bits;
+
+        constexpr uint8_t to_u8() const {
+            return bits;
+        }
+    };
+
+    struct CommandFactory{
+        static constexpr Command R_RX_PAYLOAD = Command(0x61);
+        static constexpr Command FLUSH_TX = Command(0xE1);
+        static constexpr Command FLUSH_RX = Command(0xE2);
+        static constexpr Command REUSE_TX_PL = Command(0xE3);
+        static constexpr Command NOP = Command(0xFF);
+
+        static constexpr Command read(const uint8_t addr){
             return Command(0x00 | (addr & 0b11111));
         }
 
-        static constexpr Command WRITE(const uint8_t addr){
+        static constexpr Command write(const uint8_t addr){
             return Command(0x20 | (addr & 0b11111));
         }
 
-        static constexpr Command WRITE_ACK_PAYLOAD(const uint8_t ppp){
+        static constexpr Command write_ack_payload(const uint8_t ppp){
             return Command(0xA8 | (ppp & 0b111));
         }
-
-        explicit operator uint8_t() const{return cmd_;}
-    protected:
-        constexpr Command(const uint8_t cmd): cmd_(cmd){;}
-        constexpr Command(const Type cmd): cmd_(static_cast<uint8_t>(cmd)){;}
-
-        uint8_t cmd_;
     };
 
     IResult<> write_command(const Command cmd);
