@@ -37,7 +37,7 @@ struct SGP30_Prelude{
     * @param temperature [°C]
     * @param humidity [%RH]
     */
-    uint32_t getAbsoluteHumidity(float temperature, float humidity) {
+    static constexpr uint32_t calc_absolute_humidity(float temperature, float humidity) {
         // approximation formula from Sensirion SGP30 Driver Integration chapter 3.15
         const float absolute_humidity = 216.7f * ((humidity / 100.0f) * 6.112f * std::exp(
             (17.62f * temperature) / (243.12f + temperature)) / (273.15f + temperature)); // [g/m^3]
