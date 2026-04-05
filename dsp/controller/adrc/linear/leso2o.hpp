@@ -44,12 +44,13 @@ public:
         g2_ = cfg.w * cfg.w;
     }
 
-    constexpr State iterate(const State state,  const iq16 y, const iq16 u) const {
+    constexpr void iterate(State & state,  const iq16 y, const iq16 u) const {
         auto & self = *this;
-        return {
-            state[0] + (state[1] + self.b0_ * u + self.g1_ * (y - state[0])) * self.dt_,
-            state[1] + self.g2_ * (y - state[0]) * self.dt_
-        };
+        const auto delta_x1 = (state[1] + self.b0_ * u + self.g1_ * (y - state[0])) * self.dt_;
+        const auto delta_x2 = self.g2_ * (y - state[0]) * self.dt_;
+
+        state[0] += delta_x1;
+        state[1] += delta_x2;
     }
 private:
 

@@ -19,9 +19,6 @@
 
 using namespace ymd;
 
-using Particle = dsp::Particle<iq16, iq16>;
-
-
 void dtmf_main(){
     static constexpr uint FS = 8000;
     using DTMF = dsp::DoubleToneMultiFrequencySiggen;

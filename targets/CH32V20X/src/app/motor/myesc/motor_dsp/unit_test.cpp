@@ -4,6 +4,15 @@
 using namespace ymd;
 using namespace ymd::dsp;
 
+
+template<typename Fn1, typename Fn2, typename ... Args>
+static consteval bool is_result_nearly_equal(Fn1 && fn1, Fn2 && fn2, const long double eps, Args && ... args){
+    const auto res1 = fn1(std::forward<Args>(args)...);
+    const auto res2 = fn2(std::forward<Args>(args)...);
+    return std::abs(static_cast<long double>(res1.unwrap()) - static_cast<long double>(res2.unwrap())) < eps;
+}
+
+
 namespace {
 // static_assert(calc_lpf_alpha_uq32(16000, 10).unwrap())
 static_assert(is_result_nearly_equal(

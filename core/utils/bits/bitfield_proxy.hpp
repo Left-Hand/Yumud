@@ -40,10 +40,6 @@ public:
         return std::bit_cast<T>(static_cast<tmp::size_to_uint_t<sizeof(T)>>((p_bits_ & mask) >> (BEGIN_OFFSET)));
     }
 
-    [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T operator *() const{
-        return get();
-    }
 
     [[nodiscard]] __attribute__((always_inline)) consteval
     size_t width() const{

@@ -6,6 +6,11 @@ using namespace ymd::robots::unitree;
 
 namespace {
 
+static_assert(sizeof(KdCode) == 2);
+static_assert(std::is_trivially_copyable_v<KdCode>);
+static_assert(KdCode::try_from(iq15(0.1)).unwrap().bits == 128);
+
+
 static_assert(sizeof(X2Code) == 2);
 static_assert(std::is_trivially_copyable_v<X2Code>);
 static_assert(X2Code::try_from_speed(Angular<iq16>::from_radians(iq16(M_PI))).unwrap().bits == 128);

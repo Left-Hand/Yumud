@@ -9,12 +9,8 @@
 // https://blog.51cto.com/u_14344/14422008
 // https://zhuanlan.zhihu.com/p/1941084187869282361
 namespace ymd::dsp{
-template<typename Fn1, typename Fn2, typename ... Args>
-static consteval bool is_result_nearly_equal(Fn1 && fn1, Fn2 && fn2, const long double eps, Args && ... args){
-    const auto res1 = fn1(std::forward<Args>(args)...);
-    const auto res2 = fn2(std::forward<Args>(args)...);
-    return std::abs(static_cast<long double>(res1.unwrap()) - static_cast<long double>(res2.unwrap())) < eps;
-}
+
+
 static consteval int64_t pow2_to_i64(const long double x, size_t n){
     const uint64_t i = uint64_t(1) << n;
     return x * i;
@@ -74,33 +70,47 @@ static constexpr Angular<uq32> calc_lpf_phaseshift_uq32(iq16 fc, iq16 f) {
     return Angular<uq32>::from_turns(math::pu_to_uq32(turns));
 }
 
-struct LpfCoeffs{
+
+//y[n] = alpha * x[n] + beta * y[n-1]
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_1o(
+    const math::fixed<Q, int32_t> x_state, 
+    const math::fixed<Q, int32_t> x_new, 
+    const uq32 alpha
+){
+    const uq32 beta = uq32::from_bits(~alpha.to_bits());
+    using acc_t = std::conditional_t<std::is_signed_v<int32_t>, int64_t, uint64_t>;
+    return math::fixed<Q, int32_t>::from_bits(
+        int32_t((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
+        + int32_t((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
+    );
+}
+
+struct Lpf1o{
     struct Config{
         uint32_t fs;
         uint32_t fc;
 
-        // constexpr Result<LpfCoeffs, StringView> try_into_coeffs() const {
-        //     const static_cast<uint64_t>((fs) << 16) / (fs + T(TAU) * fc));
-        //     return LpfCoeffs{
-        //         .alpha = math::fixed<32, uint32_t>::from_bits(static_cast<uint32_t>(alpha * (1u << 32)))
-        //     };
-        // }
+        constexpr Result<Lpf1o, StringView> try_into_precomputed() const {
+            // const ((fs) << (9 + 32u)) / ((fs << 9) + static_cast<uint32_t>(TAU * (1u << 9)) * fc);
+            const uq16 num = static_cast<uq16>(fs);
+            const uq16 den = static_cast<uq16>(fs) + static_cast<uq16>(TAU) * static_cast<uq16>(fc);
+            return Ok(Lpf1o{
+                .alpha = static_cast<uq32>(num / den)
+            });
+        }
     };
 
     math::fixed<32, uint32_t> alpha;
+
+    template<size_t Q>
+    void iterate(const math::fixed<Q, int32_t> state, const math::fixed<Q, int32_t> input){
+        lpf_1o(state, input, alpha);
+    }
 };
 
 
 
-//y[n] = alpha * x[n] + beta * y[n-1]
-template<size_t Q, typename D>
-static constexpr math::fixed<Q, D> lpf_with_given_alpha(math::fixed<Q, D> x_state, const math::fixed<Q, D> x_new, const uq32 alpha){
-    const uq32 beta = uq32::from_bits(~alpha.to_bits());
-    using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
-    return math::fixed<Q, D>::from_bits(
-        D((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
-        + D((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
-    );
-}
+
 
 }

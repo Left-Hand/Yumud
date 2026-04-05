@@ -11,7 +11,7 @@ namespace ymd::dsp::motor_ctl{
 
 class NonlinearFluxObserver final{
 public:
-    struct [[nodiscard]] Coeffs final{
+    struct [[nodiscard]] Precomputed final{
         iq16 phase_resistance;
         iq20 temp1;
         iq12 pm_flux_sqr_mf_2;
@@ -25,14 +25,14 @@ public:
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
 
-        constexpr Result<Coeffs, StringView> try_into_coeffs() const {
+        constexpr Result<Precomputed, StringView> try_into_precomputed() const {
             auto & cfg = *this;
             const iq12 pm_flux_sqr_mf_2 = math::square(iq12(cfg.pm_flux_linkage * cfg.fs));
             const iq20 temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
             const iq16 phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
             
             
-            Coeffs coeffs{
+            Precomputed coeffs{
                 .phase_resistance = phase_resistance,
                 .temp1 = temp1,
                 .pm_flux_sqr_mf_2 = pm_flux_sqr_mf_2,
@@ -49,14 +49,14 @@ public:
         float observer_gain; // [rad/s]
         float pm_flux_linkage; // [V / (rad/s)]
 
-        consteval Result<Coeffs, StringView> try_into_coeffs() const {
+        constexpr Result<Precomputed, StringView> try_into_precomputed() const {
             auto & cfg = *this;
             const float pm_flux_sqr_mf_2 = math::square((cfg.pm_flux_linkage * cfg.fs));
             const float temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
             const float phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
             
             
-            Coeffs coeffs;
+            Precomputed coeffs;
             coeffs.phase_resistance = coeffs.phase_resistance.from(phase_resistance);
             coeffs.temp1 = coeffs.temp1.from(temp1);
             coeffs.pm_flux_sqr_mf_2 = coeffs.pm_flux_sqr_mf_2.from(pm_flux_sqr_mf_2);
@@ -85,8 +85,8 @@ public:
     };
 
 public:
-    constexpr explicit NonlinearFluxObserver(const Coeffs & coeffs){
-        this->coeffs_ = coeffs;
+    constexpr explicit NonlinearFluxObserver(const Precomputed & coeffs){
+        this->precomputed_ = coeffs;
         reset();
     }
 
@@ -126,18 +126,18 @@ public:
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
             // flux dynamics (prediction)
-            iq16 x_dot = -coeffs_.phase_resistance * I_alphabeta[i] + state_.v_alphabeta_last[i];
+            iq16 x_dot = -precomputed_.phase_resistance * I_alphabeta[i] + state_.v_alphabeta_last[i];
             // integrate prediction to current timestep
             state_.flux_state_mf[i] += x_dot;
 
             // eta is the estimated permanent magnet flux (see paper eqn 6)
-            eta_mf[i] = state_.flux_state_mf[i] - coeffs_.phase_inductance_mf * I_alphabeta[i];
+            eta_mf[i] = state_.flux_state_mf[i] - precomputed_.phase_inductance_mf * I_alphabeta[i];
         }
 
         // Non-linear observer (see paper eqn 8):
 
         iq12 est_pm_flux_sqr_mf_2 = math::square(static_cast<iq12>(eta_mf[0])) + math::square(static_cast<iq12>(eta_mf[1]));
-        const auto eta_factor = fixed_mul<16>(coeffs_.temp1, ((coeffs_.pm_flux_sqr_mf_2 - est_pm_flux_sqr_mf_2) >> 1));
+        const auto eta_factor = fixed_mul<16>(precomputed_.temp1, ((precomputed_.pm_flux_sqr_mf_2 - est_pm_flux_sqr_mf_2) >> 1));
 
 
 
@@ -149,7 +149,7 @@ public:
             // convert action to discrete-time
             state_.flux_state_mf[i] += x_dot;
             // update new eta
-            eta_mf[i] = state_.flux_state_mf[i] - coeffs_.phase_inductance_mf * I_alphabeta[i];
+            eta_mf[i] = state_.flux_state_mf[i] - precomputed_.phase_inductance_mf * I_alphabeta[i];
         }
 
         // Flux state estimation done, store V_alphabeta for next timestep
@@ -168,12 +168,12 @@ public:
         return state_;
     }
 
-    constexpr const Coeffs & coeffs() const {
-        return coeffs_;
+    constexpr const Precomputed & coeffs() const {
+        return precomputed_;
     }
 // private:
 public:
-    Coeffs coeffs_;
+    Precomputed precomputed_;
     State state_;
 };
 

@@ -13,7 +13,6 @@
 
 namespace ymd::robots::unitree{
 
-
 struct [[nodiscard]] MotorId final{
     uint8_t bits;
 
@@ -162,7 +161,7 @@ struct [[nodiscard]] KdCode final{
     using Self = KdCode;
     uint16_t bits;
 
-    static constexpr Result<Self, std::strong_ordering> try_from(const uq16 val){
+    static constexpr Result<KdCode, std::strong_ordering> try_from(const uq16 val){
         const auto ret = val * 1280u;
         if(val > uq16(25.6)) 
             return Err(std::strong_ordering::greater);
@@ -175,9 +174,6 @@ struct [[nodiscard]] KdCode final{
     }
 };
 
-static_assert(sizeof(KdCode) == 2);
-static_assert(std::is_trivially_copyable_v<KdCode>);
-static_assert(KdCode::try_from(iq15(0.1)).unwrap().bits == 128);
 
 struct [[nodiscard]] TxHeader final{
     static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {

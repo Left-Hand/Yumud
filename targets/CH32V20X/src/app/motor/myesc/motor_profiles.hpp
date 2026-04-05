@@ -1,14 +1,11 @@
 #pragma once
 
-#include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
 #include "drivers/encoder/MagEnc/MT6825/mt6825.hpp"
 #include "drivers/encoder/MagEnc/VCE2755/vce2755.hpp"
 #include "motor_leso.hpp"
 
 //常见电机参数：
 // https://item.taobao.com/item.htm?id=643573104607
-
-
 
 namespace ymd::myesc{
 
@@ -30,6 +27,15 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 static constexpr size_t HFI_FREQ = 1000;
+
+static constexpr auto SHUNT_RESISTANCE = 0.006f;
+static constexpr auto OPA_GAIN = 20;
+static constexpr auto CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE);
+// static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_FULLSCALE_AMPS / (1 << 12));
+static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
+// const auto scaler_u = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
+// const auto scaler_v = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
+// const auto scaler_w = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
 
 using Leso = ymd::dsp::adrc::MotorLeso;
 
@@ -109,13 +115,6 @@ struct MotorProfile_36BLDB{
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
-    static constexpr auto LESO_COEFFS = Leso::Config{
-        .fs = FOC_FREQ,
-        // .fc = 2000,
-        .fc = 50,
-        // .b0 = 1000
-        .b0 = 30
-    }.try_into_coeffs().unwrap();
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
     static constexpr iq16 MACHINE_KD = 0.045_iq16;
@@ -136,13 +135,6 @@ struct MotorProfile_NiuLiu{
     // const iq16 MACHINE_KD = 0.16_iq16;
     static constexpr iq16 MACHINE_KD = 0.045_iq16;
 
-    static constexpr auto LESO_COEFFS = Leso::Config{
-        .fs = FOC_FREQ,
-        // .fc = 2000,
-        .fc = 50,
-        // .b0 = 1000
-        .b0 = 30
-    }.try_into_coeffs().unwrap();
 
     using MagEncoder = drivers::VCE2755;
 };

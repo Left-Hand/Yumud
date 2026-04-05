@@ -13,7 +13,6 @@
 #include "hal/conn/can/can.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
-
 #include "hal/dma/dma.hpp"
 
 #include "dsp/fft/fft32.hpp"
@@ -39,10 +38,11 @@
 #include "core/sdk.hpp"
 
 
-#include "dsp_lpf.hpp"
-#include "dsp_vec.hpp"
+#include "motor_dsp/dsp_lpf.hpp"
+#include "motor_dsp/dsp_vec.hpp"
 
 
+#include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
 
 
 using namespace ymd;
@@ -86,7 +86,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq20 phase_resistance;        // 相电阻 (Ω)
     iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_coeffs() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -133,7 +133,7 @@ static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
     const math::fixed<Q, int32_t> x_new
 ){
     constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
-    return lpf_with_given_alpha(x_state, x_new, ALPHA);
+    return lpf_1o(x_state, x_new, ALPHA);
 }
 
 
@@ -146,17 +146,23 @@ static constexpr math::fixed<Q, int32_t> lpf_10hz(
 }
 
 template<size_t Q>
-static constexpr math::fixed<Q, int32_t> lpf_100hz(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_100hz(
+    math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
+){
     return lpf_specified_fc<100>(x_state, x_new);
 }
 
 template<size_t Q>
-static constexpr math::fixed<Q, int32_t> lpf_1000hz(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_1000hz(
+    math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
+){
     return lpf_specified_fc<1000>(x_state, x_new);
 }
 
 template<size_t Q>
-static constexpr math::fixed<Q, int32_t> lpf_allpass(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_allpass(
+    math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
+){
     return x_new;
 }
 
@@ -169,7 +175,7 @@ static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
     .voltage_limit = MotorProfile::MODU_VOLT_LIMIT,
 };
 
-static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_coeffs().unwrap();
+static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_precomputed().unwrap();
 
 static constexpr size_t HFI_N = 32;
 static_assert(std::has_single_bit(HFI_N));
@@ -315,14 +321,7 @@ void myesc_main(){
     // #endregion 初始化定时器
 
     // #region 初始化ADC
-    static constexpr auto SHUNT_RES = 0.006f;
-    static constexpr auto OPA_GAIN = 20;
-    static constexpr auto AMPS_FULLSCALE = 3.3 / (OPA_GAIN * SHUNT_RES);
-    // static constexpr auto AMPS_PER_ADC_LSB = uq32(AMPS_FULLSCALE / (1 << 12));
-    static constexpr auto AMPS_PER_ADC_LSB = iq20(AMPS_FULLSCALE / (1 << 12));
-    // const auto scaler_u = Rescaler<iq16>::from_scale(AMPS_PER_ADC_LSB);
-    // const auto scaler_v = Rescaler<iq16>::from_scale(AMPS_PER_ADC_LSB);
-    // const auto scaler_w = Rescaler<iq16>::from_scale(AMPS_PER_ADC_LSB);
+
 
     init_adc();
 
@@ -487,7 +486,7 @@ void myesc_main(){
         .observer_gain = 0.1023_iq20, // [rad/s]
         .pm_flux_linkage = 0.00877_iq20, // [V / (rad/s)]
         #endif
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
     #else
     constexpr auto FLUX_SENSORLESS_OB_COEFFS = dsp::motor_ctl::NonlinearFluxObserver::ConfigF32{
         .fs = FOC_FREQ,
@@ -498,7 +497,7 @@ void myesc_main(){
         .observer_gain = 0.1023, // [rad/s]
         .pm_flux_linkage = 0.00877, // [V / (rad/s)]
         // .pm_flux_linkage = 0.01277, // [V / (rad/s)]
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
     #endif
 
     [[maybe_unused]] auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
@@ -542,14 +541,14 @@ void myesc_main(){
         .r = 202.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 240
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
     #else
     static constexpr auto command_shaper_coeffs = Nltd2o::Config{
         .fs = FOC_FREQ,
         .r = 587.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 40
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
 
     #endif
 
@@ -563,7 +562,7 @@ void myesc_main(){
     using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
     static constexpr auto rotor_rotation_ltd_coeffs = Ltd2o::Config{
         .fs = FOC_FREQ, .r = 500
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
 
     // PANIC{rotor_rotation_ltd_coeffs};
 
@@ -581,8 +580,8 @@ void myesc_main(){
     iq20 hfi_response_imag_bin2_ = Zero;
     Microseconds last_exe_us_ = 0us;
     Microseconds exe_duration_ = 0us;
-    std::tuple<uint32_t, uint32_t, uint32_t> uvw_current_bits_offset_acc_ = {0, 0, 0};
-    std::tuple<uint16_t, uint16_t, uint16_t> uvw_current_bits_offset_ = {0, 0, 0};
+    std::array<uint32_t, 3> uvw_current_bits_offset_acc_ = {0, 0, 0};
+    std::array<uint16_t, 3> uvw_current_bits_offset_ = {0, 0, 0};
 
     static constexpr size_t DC_CAL_TIMES = 32 * 128;
     volatile bool dc_cal_done_ = false;
@@ -674,18 +673,18 @@ void myesc_main(){
     [[maybe_unused]] auto ctrl_isr = [&]{
         const auto uvw_current_u12x3 = get_uvw_current_u12x3();
         if(dc_cal_done_ == false) [[unlikely]]{
-            uvw_current_bits_offset_acc_ = std::make_tuple<uint32_t, uint32_t, uint32_t>(
+            uvw_current_bits_offset_acc_ = {
                 std::get<0>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<0>(uvw_current_u12x3)),
                 std::get<1>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<1>(uvw_current_u12x3)),
                 std::get<2>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<2>(uvw_current_u12x3))
-            );
+            };
             dc_cal_cnt_++;
             if(dc_cal_cnt_ >= DC_CAL_TIMES){
-                uvw_current_bits_offset_ = std::make_tuple<uint16_t, uint16_t, uint16_t>(
-                    static_cast<uint16_t>(std::get<0>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES)),
-                    static_cast<uint16_t>(std::get<1>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES)),
-                    static_cast<uint16_t>(std::get<2>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES))
-                );
+                uvw_current_bits_offset_ = {
+                    static_cast<uint16_t>(std::get<0>(uvw_current_bits_offset_acc_) / int32_t(DC_CAL_TIMES)),
+                    static_cast<uint16_t>(std::get<1>(uvw_current_bits_offset_acc_) / int32_t(DC_CAL_TIMES)),
+                    static_cast<uint16_t>(std::get<2>(uvw_current_bits_offset_acc_) / int32_t(DC_CAL_TIMES))
+                };
                 dc_cal_done_ = true;
             }
 
@@ -707,19 +706,19 @@ void myesc_main(){
 
 
         const auto uvw_curr = UvwCoord<iq20>{
-            .u = static_cast<int32_t>(std::get<0>(uvw_current_u12x3) - static_cast<int32_t>(std::get<0>(uvw_current_bits_offset_)))
-                 * AMPS_PER_ADC_LSB,
-            .v = static_cast<int32_t>(std::get<1>(uvw_current_u12x3) - static_cast<int32_t>(std::get<1>(uvw_current_bits_offset_)))
-                 * AMPS_PER_ADC_LSB,
-            .w = static_cast<int32_t>(std::get<2>(uvw_current_u12x3) - static_cast<int32_t>(std::get<2>(uvw_current_bits_offset_)))
-                 * AMPS_PER_ADC_LSB,
+            .u = static_cast<int32_t>((uvw_current_u12x3[0]) - static_cast<int32_t>((uvw_current_bits_offset_[0])))
+                 * CURRENT_AMPS_PER_ADC_LSB,
+            .v = static_cast<int32_t>((uvw_current_u12x3[1]) - static_cast<int32_t>((uvw_current_bits_offset_[1])))
+                 * CURRENT_AMPS_PER_ADC_LSB,
+            .w = static_cast<int32_t>((uvw_current_u12x3[2]) - static_cast<int32_t>((uvw_current_bits_offset_[2])))
+                 * CURRENT_AMPS_PER_ADC_LSB,
         };
 
         const auto alphabeta_current_unfilted = AlphaBetaCoord<iq20>::from_uvw(uvw_current_);
         const auto alphabeta_curr = alphabeta_current_unfilted;
         // const auto alphabeta_curr = AlphaBetaCoord{
-        //     lpf_with_given_alpha(alphabeta_current_.alpha, alphabeta_current_unfilted.alpha),
-        //     lpf_with_given_alpha(alphabeta_current_.beta, alphabeta_current_unfilted.beta),
+        //     lpf_1o(alphabeta_current_.alpha, alphabeta_current_unfilted.alpha),
+        //     lpf_1o(alphabeta_current_.beta, alphabeta_current_unfilted.beta),
         // };
         //#endregion
 
@@ -745,7 +744,7 @@ void myesc_main(){
 
                 encoder_lap_angle_ = Angular<uq32>::from_turns(next_encoder_lapturns);
                 encoder_multilap_angle_ = Angular<iiq32>::from_turns(encoder_multilap_angle_.to_turns() + encoder_diff_angle);
-                rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(
+                rotor_rotation_ltd_.iterate(
                     rotor_rotation_state_var_,
                     {fixed_downcast<16>(encoder_multilap_angle_.to_turns()), 0}
                 );
@@ -762,8 +761,7 @@ void myesc_main(){
 
                 hfi_lap_angle_ = next_hfi_lap_angle;
                 hfi_multilap_angle_ = hfi_multilap_angle_ + hfi_diff_angle;
-                rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(
-                    rotor_rotation_state_var_, {hfi_multilap_angle_.to_turns(), 0});
+                rotor_rotation_ltd_.iterate(rotor_rotation_state_var_, {hfi_multilap_angle_.to_turns(), 0});
 
 
                 hfi_elec_angle = make_angular_from_turns(uq32((hfi_multilap_angle_).unsigned_normalized().to_turns()));
