@@ -58,14 +58,14 @@ static constexpr Result<void, typename Receiver::Error> serialize_rtu_request(
 
     {
         //crc字段为小端序
-        const uint16_t crc =  Crc16ModbusAccumulator{}
+        const uint16_t crc_val =  Crc16ModbusAccumulator{}
             .push_bytes(receiver.collected_bytes())
             .finalize()
         ;
 
         const std::array<uint8_t, 2> buffer = {
-            static_cast<uint8_t>(crc & 0xff),
-            static_cast<uint8_t>(crc >> 8)
+            static_cast<uint8_t>(crc_val & 0xff),
+            static_cast<uint8_t>(crc_val >> 8)
         };
 
         if(const auto res = receiver.push_bytes(buffer); 
@@ -89,7 +89,7 @@ static constexpr Result<void, typename Receiver::Error> serialize_tcp_request(
     // 长度字段不能超过 Modbus-TCP 限制（理论最大 253）
 
     if (pdu_total_len > 253) {
-        return Err(Receiver::Error::kLengthExceed);
+        return Err(Receiver::Error::LengthExceed);
         // return Err(typename Receiver::Error{});
     }
 

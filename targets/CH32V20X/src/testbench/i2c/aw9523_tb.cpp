@@ -1,12 +1,12 @@
+#include "src/testbench/tb.h"
+
 #include "core/debug/debug.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "src/testbench/tb.h"
-
-#include "drivers/VirtualIO/AW9523/aw9523.hpp"
+#include "drivers/vio/AW9523/aw9523.hpp"
 
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"

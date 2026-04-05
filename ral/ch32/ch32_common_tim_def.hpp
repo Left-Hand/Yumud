@@ -22,14 +22,14 @@ struct [[nodiscard]] R16_TIM_CTLR1{
     uint16_t :2;
     uint16_t BKSEL:1;
 
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t TMR_CAP_OV_EN:1;
     uint16_t TMR_CAP_LVL_EN:1;
 };
 
 struct [[nodiscard]] R16_TIM_CTLR2{
     uint16_t CCPC:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t CCUS:1;
     uint16_t CCDS:1;
     uint16_t MMS:1;
@@ -41,12 +41,12 @@ struct [[nodiscard]] R16_TIM_CTLR2{
     uint16_t OIS3:2;
     uint16_t OIS3N:2;
     uint16_t OIS4:2;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R16_TIM_SMCFGR{
     uint16_t SMS:3;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t TS:3;
     uint16_t MSM:1;
     uint16_t ETF:4;
@@ -74,7 +74,7 @@ uint16_t CC3DE:1;\
 uint16_t CC4DE:1;\
 uint16_t COMDE:1;\
 uint16_t TDE:1;\
-uint16_t :1;\
+uint16_t __resv__:1;\
 
 struct [[nodiscard]] R16_TIM_DMAINTENR{
     uint16_t UIE:1;
@@ -92,7 +92,7 @@ struct [[nodiscard]] R16_TIM_DMAINTENR{
     uint16_t CC4DE:1;
     uint16_t COMDE:1;
     uint16_t TDE:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R16_TIM_INTFR{
@@ -104,7 +104,7 @@ struct [[nodiscard]] R16_TIM_INTFR{
     uint16_t COMIF:1;
     uint16_t TIF:1;
     uint16_t BIF:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t CC1OF:1;
     uint16_t CC2OF:1;
     uint16_t CC3OF:1;
@@ -432,11 +432,6 @@ struct [[nodiscard]] TIM_Def{
     struct [[nodiscard]] Events{
         DEF_TIM_EVENT_FLAGS_FIELDS
     };
-
-    constexpr void set_dma_interrupts_en(const Events events){
-        const_cast<R16_TIM_DMAINTENR &>(DMAINTENR) = 
-            BIT_CAST(R16_TIM_DMAINTENR, events);
-    }
 
     constexpr void add_dma_interrupts_en(const Events events){
         (uint16_t &)(DMAINTENR) |= BIT_CAST(uint16_t, events);

@@ -40,8 +40,50 @@ using namespace ymd::drivers::bmi160;
 
 static constexpr size_t MAX_PMU_SETUP_RETRY_TIMES = 60;
 
+#if 0
+[[nodiscard]] static constexpr
+Option<GyrOdr> from_gyr_odr(const iq16 odr){
+    constexpr std::array odr_map = {
+        25, 50, 100, 200, 400, 800, 1600, 3200
+    };
+
+    auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+
+    if (it != odr_map.end()) {
+        return Some(GyrOdr( std::distance(odr_map.begin(), it)));
+    }
+    return None;
+
+}
+
+[[nodiscard]] static constexpr
+Option<AccOdr> from_acc_odr(const iq16 odr){
+    constexpr std::array odr_map = {
+        iq16(25.0/32),
+        iq16(25.0/16),
+        iq16(25.0/8),
+        iq16(25.0/4),
+        iq16(25.0/2),
+        iq16(25), 
+        iq16(50), 
+        iq16(100), 
+        iq16(200), 
+        iq16(400), 
+        iq16(800),
+        iq16(1600)
+    };
+
+    auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+
+    if (it != odr_map.end()) {
+        return Some(AccOdr(std::distance(odr_map.begin(), it)));
+    }
+    return None;
+}
+#endif
 
 IResult<> BMI160::init(const Config & cfg){
+
     if(const auto res = reset();
         res.is_err()) return res;
 
@@ -61,7 +103,7 @@ IResult<> BMI160::init(const Config & cfg){
             if(const auto _res = (get_pmu_mode(PmuType::ACC));
                 _res.is_err()) return Err(_res.unwrap_err());
             else if (_res.unwrap() != PmuMode::NORMAL){
-                return Err(Error::AccCantSetup);
+                return Err(Error::AccSetupFailed);
             }
             return Ok();
         }, []{clock::delay(1ms);});
@@ -89,7 +131,7 @@ IResult<> BMI160::init(const Config & cfg){
             if(const auto _res = (get_pmu_mode(PmuType::GYR));
                 (_res.is_err())) return Err(_res.unwrap_err());
             else if (_res.unwrap() != PmuMode::NORMAL){
-                return Err(Error::GyrCantSetup);
+                return Err(Error::GyrSetupFailed);
             }
             return Ok();
         }, []{clock::delay(1ms);}); 
@@ -120,7 +162,7 @@ IResult<> BMI160::init(const Config & cfg){
 IResult<> BMI160::self_test_acc(){
     // page44 2.8.1 
     {
-        auto reg = RegCopy(regs_.acc_conf);
+        auto reg = RegCopy(regs_.acc_conf_reg);
         reg.acc_odr = AccOdr::_1600Hz;
         reg.acc_bwp= 2;
         reg.acc_us = 0;
@@ -129,7 +171,7 @@ IResult<> BMI160::self_test_acc(){
     }
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.acc_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -143,7 +185,7 @@ IResult<> BMI160::self_test_acc(){
     TODO();
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.acc_self_test_en = 0;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -160,28 +202,43 @@ IResult<> BMI160::self_test_acc(){
 IResult<> BMI160::self_test_gyr(){
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
 
+    #if 1
     if(const auto res = 
         retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
-            auto & reg = regs_.status;
+            auto & reg = regs_.status_reg;
             if(const auto _res = (read_reg(reg));
                 (_res.is_err())) return Err(_res.unwrap_err());
 
             if (reg.gyr_self_test_ok != 1){
-                return Err(Error::GyrCantSetup);
+                return Err(Error::GyrSetupFailed);
             }
             return Ok();
         }, []{clock::delay(1ms);}); 
         
         res.is_err()) return Err(res.unwrap_err());
+    #else
+
 
     {
-        auto reg = RegCopy(regs_.self_test);
+        auto & reg = regs_.status_reg;
+        if(const auto res = (read_reg(reg));
+            (res.is_err())) return Err(res.unwrap_err());
+    
+        if (reg.gyr_self_test_ok != 1){
+            return Err(Error::GyrSetupFailed);
+        }
+    }
+
+    #endif
+
+    {
+        auto reg = RegCopy(regs_.self_test_reg);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
@@ -208,7 +265,7 @@ IResult<> BMI160::validate(){
     if(const auto res = read_reg(0x7f, dummy);
         res.is_err()) return Err(res.unwrap_err());
 
-    auto & reg = regs_.chip_id;
+    auto reg = Regset::R8_ChipId{};
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
@@ -220,6 +277,8 @@ IResult<> BMI160::validate(){
 }
 
 IResult<> BMI160::reset(){
+    if(const auto res = transport_.validate();
+        res.is_err()) return Err(res.unwrap_err());
     return write_command(std::bit_cast<uint8_t>(Command::SOFT_RESET));
 }
 
@@ -265,7 +324,7 @@ IResult<> BMI160::set_pmu_mode(const PmuType pmu, const PmuMode mode){
 }
 
 IResult<PmuMode> BMI160::get_pmu_mode(const PmuType type){
-    auto & reg = regs_.pmu_status;
+    auto & reg = regs_.pmu_status_reg;
 
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -280,14 +339,14 @@ IResult<PmuMode> BMI160::get_pmu_mode(const PmuType type){
 }
 
 IResult<> BMI160::set_acc_odr(const AccOdr odr){
-    auto reg = RegCopy(regs_.acc_conf);
+    auto reg = RegCopy(regs_.acc_conf_reg);
     reg.acc_odr = odr;
     reg.acc_bwp = 0b010;
     return write_reg(reg);
 }
 
 IResult<> BMI160::set_acc_fs(const AccFs fs){
-    auto reg = RegCopy(regs_.acc_fs);
+    auto reg = RegCopy(regs_.acc_fs_reg);
     reg.acc_fs = fs;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -296,14 +355,14 @@ IResult<> BMI160::set_acc_fs(const AccFs fs){
 }
 
 IResult<> BMI160::set_gyr_odr(const GyrOdr odr){
-    auto reg = RegCopy(regs_.gyr_conf);
+    auto reg = RegCopy(regs_.gyr_conf_reg);
     reg.gyr_odr = odr;
     reg.gyr_bwp = 0b010;
     return write_reg(reg);
 
 }
 IResult<> BMI160::set_gyr_fs(const GyrFs fs){
-    auto reg = RegCopy(regs_.gyr_fs);
+    auto reg = RegCopy(regs_.gyr_fs_reg);
     reg.gyr_fs = fs;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;

@@ -22,8 +22,8 @@
 using namespace ymd;
 
 [[nodiscard]] static constexpr uint32_t set_or_reset_bit(
-    const bool cond, 
     const uint32_t origin, 
+    const bool cond, 
     const uint32_t mask
 ){ 
     return cond ? (origin | mask) : (origin & ~mask);
@@ -60,7 +60,7 @@ void can_configure_filter(
     const uint32_t filter_pos_mask = 1u << filter_nth;
     auto guard = FinitGuard();
 
-    p_inst->FWR.BITS = set_or_reset_bit(false, p_inst->FWR.BITS, filter_pos_mask);
+    p_inst->FWR.BITS = set_or_reset_bit(p_inst->FWR.BITS, false, filter_pos_mask);
 
     uint32_t FR1;
     uint32_t FR2;
@@ -83,8 +83,8 @@ void can_configure_filter(
     p_inst->FILTER_PAIR[filter_nth].FR2.BITS = FR2;
 
     p_inst->FSCFGR.BITS = set_or_reset_bit(
-        filter_cfg.is_32bit(),
         p_inst->FSCFGR.BITS,
+        filter_cfg.is_32bit(),
         filter_pos_mask
     );
 
@@ -94,21 +94,21 @@ void can_configure_filter(
 
     
     p_inst->FMCFGR.BITS = set_or_reset_bit(
-        filter_cfg.is_list_mode(),
         p_inst->FMCFGR.BITS,
+        filter_cfg.is_list_mode(),
         filter_pos_mask
     );
 
     p_inst->FAFIFOR.BITS = set_or_reset_bit(
-        fifo_idx == hal::CanFifoIndex::_1,
         p_inst->FAFIFOR.BITS,
+        fifo_idx == hal::CanFifoIndex::_1,
         filter_pos_mask
     );
 
     p_inst->FWR.BITS = set_or_reset_bit(
         // filter_en == EN,
-        true,
         p_inst->FWR.BITS,
+        true,
         filter_pos_mask
     );
 }
@@ -149,16 +149,16 @@ void can_reset(void * p_inst){
 
 void can_request_initialization(void * p_inst, const Enable en){
     SPL_INST(p_inst)->CTLR = set_or_reset_bit(
-        en == EN,
         SPL_INST(p_inst)->CTLR,
+        en == EN,
         1u << 0
     );
 }
 
 void can_request_sleep(void * p_inst, const Enable en){
     SPL_INST(p_inst)->CTLR = set_or_reset_bit(
-        en == EN,
         SPL_INST(p_inst)->CTLR,
+        en == EN,
         1u << 1
     );
 }
@@ -396,7 +396,7 @@ Nth can_to_nth(const uintptr_t inst_base){
 }
 
 
-Result<void, void> my_barecan_init(void * p_inst, const void * _CAN_InitStruct)
+Result<void, void> can_initialze(void * p_inst, const void * _CAN_InitStruct)
 {
     CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(p_inst);
     const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);
@@ -427,12 +427,12 @@ Result<void, void> my_barecan_init(void * p_inst, const void * _CAN_InitStruct)
 
     {
         uint32_t tempreg_u32 = intrinsics::load_volatile_to_u32(&RAL_INST(p_inst)->CTLR);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg_u32, CAN_CTLR_TTCM);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg_u32, CAN_CTLR_ABOM);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg_u32, CAN_CTLR_AWUM);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg_u32, CAN_CTLR_NART);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg_u32, CAN_CTLR_RFLM);
-        tempreg_u32 = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg_u32, CAN_CTLR_TXFP);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_TTCM == ENABLE, CAN_CTLR_TTCM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_ABOM == ENABLE, CAN_CTLR_ABOM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_AWUM == ENABLE, CAN_CTLR_AWUM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_NART == ENABLE, CAN_CTLR_NART);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_RFLM == ENABLE, CAN_CTLR_RFLM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_TXFP == ENABLE, CAN_CTLR_TXFP);
         intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->CTLR, tempreg_u32);
     }
 
@@ -660,141 +660,30 @@ Result<void, void> CANFD_Init(CAN_TypeDef* CANx, CANFD_InitTypeDef* CANFD_InitSt
     }
 
 
-
-    #if 0
-    if (CANFD_InitStruct->CANFD_TTCM == ENABLE)
     {
-        CANx->CTLR |= CAN_CTLR_TTCM;
-    }
-    else
-    {
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
-    }
-
-    if (CANFD_InitStruct->CANFD_ABOM == ENABLE)
-    {
-        CANx->CTLR |= CAN_CTLR_ABOM;
-    }
-    else
-    {
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
-    }
-
-    if (CANFD_InitStruct->CANFD_AWUM == ENABLE)
-    {
-        CANx->CTLR |= CAN_CTLR_AWUM;
-    }
-    else
-    {
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
-    }
-
-    if (CANFD_InitStruct->CANFD_NART == ENABLE)
-    {
-        CANx->CTLR |= CAN_CTLR_NART;
-    }
-    else
-    {
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
-    }
-
-    if (CANFD_InitStruct->CANFD_TXFP == ENABLE)
-    {
-        CANx->CTLR |= CAN_CTLR_TXFP;
-    }
-    else
-    {
-        CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
-    }
-
-    if (CANFD_InitStruct->CANFD_RES_Error == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<7);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<7);
-    }
-
-    if (CANFD_InitStruct->CANFD_BRS_TXM0 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<1);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<1);
-    }
-
-    if (CANFD_InitStruct->CANFD_BRS_TXM1 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<2);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<2);
-    }
-
-    if (CANFD_InitStruct->CANFD_BRS_TXM2 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<3);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<3);
-    }
-
-    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM0 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<4);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<4);
-    }
-
-    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM1 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<5);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<5);
-    }
-
-    if (CANFD_InitStruct->CANFD_ESI_Auto_TXM2 == ENABLE)
-    {
-        CANx->CANFD_CR |= (1<<6);
-    }
-    else
-    {
-        CANx->CANFD_CR &= ~(1<<6);
-    }
-    #else
-    {
-        uint32_t tempreg = SPL_INST(_CANx)->CTLR;
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TTCM == ENABLE, tempreg, CAN_CTLR_TTCM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ABOM == ENABLE, tempreg, CAN_CTLR_ABOM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_AWUM == ENABLE, tempreg, CAN_CTLR_AWUM);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_NART == ENABLE, tempreg, CAN_CTLR_NART);
+        uint32_t tempreg_u32 = SPL_INST(_CANx)->CTLR;
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_TTCM == ENABLE, CAN_CTLR_TTCM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_ABOM == ENABLE, CAN_CTLR_ABOM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_AWUM == ENABLE, CAN_CTLR_AWUM);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_NART == ENABLE, CAN_CTLR_NART);
         #if 0
-        // tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RFLM == ENABLE, tempreg, CAN_CTLR_RFLM);
+        // tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_RFLM == ENABLE, CAN_CTLR_RFLM);
         #endif
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_TXFP == ENABLE, tempreg, CAN_CTLR_TXFP);
-        SPL_INST(_CANx)->CTLR = tempreg;
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_TXFP == ENABLE, CAN_CTLR_TXFP);
+        SPL_INST(_CANx)->CTLR = tempreg_u32;
     }
 
     {
-        uint32_t tempreg = SPL_INST(_CANx)->CANFD_CR;
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM0 == ENABLE, tempreg, 1 << 1);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM1 == ENABLE, tempreg, 1 << 2);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_BRS_TXM2 == ENABLE, tempreg, 1 << 3);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM0 == ENABLE, tempreg, 1 << 4);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM1 == ENABLE, tempreg, 1 << 5);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_ESI_Auto_TXM2 == ENABLE, tempreg, 1 << 6);
-        tempreg = set_or_reset_bit(CAN_InitStruct->CAN_RES_Error == ENABLE, tempreg, 1 << 7);
-        SPL_INST(_CANx)->CANFD_CR = tempreg;
+        uint32_t tempreg_u32 = SPL_INST(_CANx)->CANFD_CR;
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_BRS_TXM0 == ENABLE, 1 << 1);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_BRS_TXM1 == ENABLE, 1 << 2);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_BRS_TXM2 == ENABLE, 1 << 3);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_ESI_Auto_TXM0 == ENABLE, 1 << 4);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_ESI_Auto_TXM1 == ENABLE, 1 << 5);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_ESI_Auto_TXM2 == ENABLE, 1 << 6);
+        tempreg_u32 = set_or_reset_bit(tempreg_u32, CAN_InitStruct->CAN_RES_Error == ENABLE, 1 << 7);
+        SPL_INST(_CANx)->CANFD_CR = tempreg_u32;
     }
-    #endif
 
     CANx->CANFD_BTR &= ~(0x009F1FFF);
     CANx->CANFD_TDCT &= ~(0x00003F3F);
@@ -1029,8 +918,8 @@ static void store_volatile_reg(volatile T * p_reg, const uint32_t x){
     const uint8_t bs1_bits
 ){
     // volatile uint32_t & reg = *reinterpret_cast<volatile uint32_t *>(&RAL_INST(p_inst)->BTIMR);
-    auto tempreg = intrinsics::load_volatile(&RAL_INST(p_inst)->BTIMR);
-    uint32_t tempreg_u32 = std::bit_cast<uint32_t>(tempreg) & (~0xff00);
+    auto tempreg_u32 = intrinsics::load_volatile(&RAL_INST(p_inst)->BTIMR);
+    uint32_t tempreg_u32 = std::bit_cast<uint32_t>(tempreg_u32) & (~0xff00);
     if(is_6bit){
         RAL_INST(p_inst)->CANFD_CR.CLAS_LONG_TS1 = 1;
         tempreg_u32 |= static_cast<uint32_t>(bs1_bits << 16);

@@ -3,7 +3,7 @@
 #include <cstdint>
 
 struct [[nodiscard]] R16_AWU_CSR{
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t AWUEN:1;
     uint16_t :14;
 };

@@ -1,67 +1,125 @@
 #pragma once
 
-#include <utility>       // std::forward, std::move
-#include <type_traits>   // std::aligned_storage, std::is_invocable_r
-#include <functional>    // std::invoke
+#include <utility>
+#include <type_traits>
+#include <functional>
+#include <memory>
 
 namespace ymd::heapless{
-static constexpr size_t STATIC_FUNCRION_MAX_BUFFER_SIZE = 16;
-template <typename Signature, size_t BufferSize = STATIC_FUNCRION_MAX_BUFFER_SIZE>
+
+static constexpr size_t STATIC_FUNCTION_MAX_BUFFER_SIZE = 16;
+
+template <typename Signature, size_t BufferSize = STATIC_FUNCTION_MAX_BUFFER_SIZE>
 class Function;
 
+// BufferSize > 0: 通用实现
 template <typename Ret, typename... Args, size_t BufferSize>
+requires (BufferSize > 0)
 class Function<Ret(Args...), BufferSize> {
-    // 存储可调用对象的缓冲区（对齐）
-    using Storage = std::aligned_storage_t<BufferSize>;
-    Storage storage_;
+    alignas(std::max_align_t) std::byte storage_[BufferSize];
 
-    // 类型擦除的分发函数指针
-    using InvokeFn = Ret(*)(const Storage&, Args&&...);
+    using InvokeFn = Ret(*)(const std::byte*, Args...);
+    using DestroyFn = void(*)(std::byte*);
+
     InvokeFn invoke_ = nullptr;
+    DestroyFn destroy_ = nullptr;
 public:
-    // 默认构造（空函数）
-    constexpr Function() noexcept 
-        : invoke_(nullptr) {}
+    constexpr Function() noexcept = default;
 
-    // 从可调用对象构造（lambda、函数指针等）
+    constexpr ~Function() {
+        if (destroy_) destroy_(storage_);
+    }
+
     template <typename F>
     requires (
         std::is_invocable_r_v<Ret, F, Args...> &&
-        (sizeof(F) <= BufferSize) &&
-        std::is_nothrow_move_constructible_v<F>
+        sizeof(F) <= BufferSize &&
+        alignof(F) <= alignof(std::max_align_t)
     )
-    constexpr Function(F&& f) noexcept {
-        // 编译期检查缓冲区大小
-        static_assert(sizeof(F) <= BufferSize, 
-            "Callable too large for Function buffer!");
+    constexpr Function(F&& f) noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
+        using DecayF = std::decay_t<F>;
+        std::construct_at(reinterpret_cast<DecayF*>(storage_), std::forward<F>(f));
 
-        // 存储可调用对象
-        new (&storage_) F(std::forward<F>(f));
+        invoke_ = [](const std::byte* storage, Args... args) -> Ret {
+            return std::invoke(*std::launder(reinterpret_cast<const DecayF*>(storage)), std::forward<Args>(args)...);
+        };
 
-        // 设置分发函数
-        invoke_ = [](const Storage& storage, Args&&... args) -> Ret {
-            return std::invoke(
-                *reinterpret_cast<const F*>(&storage),
-                std::forward<Args>(args)...
-            );
+        destroy_ = [](std::byte* storage) {
+            std::destroy_at(std::launder(reinterpret_cast<DecayF*>(storage)));
         };
     }
 
-    // 调用运算符
+    Function(const Function&) = delete;
+    Function& operator=(const Function&) = delete;
+
+    constexpr Function(Function&& other) noexcept {
+        invoke_ = other.invoke_;
+        destroy_ = other.destroy_;
+        if (invoke_) {
+            std::memcpy(storage_, other.storage_, BufferSize);
+            other.invoke_ = nullptr;
+            other.destroy_ = nullptr;
+        }
+    }
+
+    constexpr Function& operator=(Function&& other) noexcept {
+        if (this != &other) {
+            if (destroy_) destroy_(storage_);
+            invoke_ = other.invoke_;
+            destroy_ = other.destroy_;
+            if (invoke_) {
+                std::memcpy(storage_, other.storage_, BufferSize);
+                other.invoke_ = nullptr;
+                other.destroy_ = nullptr;
+            }
+        }
+        return *this;
+    }
+
     constexpr Ret operator()(Args... args) const {
         return invoke_(storage_, std::forward<Args>(args)...);
     }
 
-    // 检查是否非空
     constexpr explicit operator bool() const noexcept {
         return invoke_ != nullptr;
+    }
+
+    constexpr bool is_empty() const noexcept{
+        return bool(*this);
+    }
+};
+
+// BufferSize = 0: 退化为函数指针
+template <typename Ret, typename... Args>
+class Function<Ret(Args...), 0> {
+    using FnPtr = Ret(*)(Args...);
+    FnPtr fn_ = nullptr;
+
+public:
+    constexpr Function() noexcept = default;
+
+    constexpr Function(FnPtr fn) noexcept : fn_(fn) {}
+
+    template <typename F>
+    requires (std::is_convertible_v<F, FnPtr>)
+    constexpr Function(F&& f) noexcept : fn_(std::forward<F>(f)) {}
+
+    constexpr Ret operator()(Args... args) const {
+        return fn_(std::forward<Args>(args)...);
+    }
+
+    constexpr explicit operator bool() const noexcept {
+        return fn_ != nullptr;
+    }
+
+    constexpr bool is_empty() const noexcept{
+        return bool(*this);
     }
 };
 
 }
 
 namespace ymd{
-
-// template <typename Ret, typename... Args, size_t BufferSize>
-// using HeaplessFunction = heapless::Function<Ret(Args...), BufferSize>;
+template <typename Signature, size_t BufferSize = heapless::STATIC_FUNCTION_MAX_BUFFER_SIZE>
+using HeaplessFunction = heapless::Function<Signature, BufferSize>;
 }

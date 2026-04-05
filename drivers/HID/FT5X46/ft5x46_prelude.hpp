@@ -73,7 +73,7 @@ struct [[nodiscard]] FT5X46_Regs : public FT5X46_Prelude {
 
         
         uint8_t x_high : 4;
-        uint8_t : 2;
+        uint8_t __resv1__: 2;
         EventFlag event_flag : 2;
     } DEF_R8(pxh)
 
@@ -102,7 +102,7 @@ struct [[nodiscard]] FT5X46_Regs : public FT5X46_Prelude {
     struct [[nodiscard]] R8_PMisc : public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
         
-        uint8_t : 4;
+        uint8_t __resv1__: 4;
         uint8_t touch_area : 4;  // Touch area value
     } DEF_R8(pmisc)
 };
@@ -117,9 +117,9 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
             Test = 0x4
         };
         
-        uint8_t : 4;
+        uint8_t __resv1__: 4;
         DeviceMode device_mode : 3;
-        uint8_t : 1;
+        uint8_t __resv2__: 1;
     } DEF_R8(modeswitch)
 
     struct [[nodiscard]] R8_Guesture : public Reg8<> {
@@ -132,7 +132,7 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         
         uint8_t td_status : 4;
-        uint8_t : 4;
+        uint8_t __resv1__: 4;
     } DEF_R8(status)
 };
 

@@ -11,7 +11,7 @@ namespace ymd::drivers::cdctl01a{
 
 struct CDCTL01A_Prelude{
 
-enum class RegAddr:uint8_t{
+enum class [[nodiscard]] RegAddr:uint8_t{
     HwVersion = 0x00,              // RD 0x10 硬件版本号
     ClkCtrl = 0x01,              // RD/WR 0x00 时钟控制
     Setting = 0x02,              // RD/WR 0x10 配置

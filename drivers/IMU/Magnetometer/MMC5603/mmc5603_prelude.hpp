@@ -54,13 +54,13 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         static constexpr RegAddr REG_ADDR_y = 0x07;
         static constexpr RegAddr REG_ADDR_z = 0x08;
 
-        uint8_t :4;
+        uint8_t __resv__:4;
         uint8_t data:4;
     };
 
     struct R8_Temp:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
-        uint8_t :8;
+        uint8_t bits;
         operator int() const {
             return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
         }
@@ -69,7 +69,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
     struct R8_Status1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
-        uint8_t:4;
+        uint8_t __resv__:4;
 
         uint8_t otp_read_done:1;
         uint8_t selftest_sig:1;
@@ -89,7 +89,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
 
         uint8_t do_mag_measure:1;
         uint8_t do_temp_measure:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t do_set:1;
 
         uint8_t do_reset:1;
@@ -123,33 +123,46 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t prd_set:3;
         uint8_t en_prd_set:1;
         uint8_t cont_en:1;
-        uint8_t :2;
+        uint8_t __resv__:2;
         uint8_t high_pwr:1;
     };
 
     struct R8_AxisSelfTestX:public Reg8<>{
-
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
-        uint8_t :8;
+        uint8_t bits;
     };
 
     struct R8_AxisSelfTestY:public Reg8<>{
-
         static constexpr RegAddr REG_ADDR = RegAddr{0x1f};
-        uint8_t :8;
+        uint8_t bits;
     };
 
     struct R8_AxisSelfTestZ:public Reg8<>{
-
         static constexpr RegAddr REG_ADDR = RegAddr{0x20};
-        uint8_t :8;
+        uint8_t bits;
     };
+
+
     struct R8_ProductId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x39};
         static constexpr uint8_t correct_id = 0b00010000;
         
         uint8_t id;
     };
+
+
+    VALIDATE_R16(R16_Axis)
+    VALIDATE_R8(R8_ExtAxis)
+    VALIDATE_R8(R8_Temp)
+    VALIDATE_R8(R8_Status1)
+    VALIDATE_R8(R8_Odr)
+    VALIDATE_R8(R8_Ctrl0)
+    VALIDATE_R8(R8_Ctrl1)
+    VALIDATE_R8(R8_Ctrl2)
+    VALIDATE_R8(R8_AxisSelfTestX)
+    VALIDATE_R8(R8_AxisSelfTestY)
+    VALIDATE_R8(R8_AxisSelfTestZ)
+    VALIDATE_R8(R8_ProductId)
 
     R16_Axis x_reg;
     R16_Axis y_reg;

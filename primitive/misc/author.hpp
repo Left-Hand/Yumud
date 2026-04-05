@@ -33,11 +33,6 @@ OutputStream & operator<<(OutputStream & os, const Author & self){
     return os << os.field("name")(self.name());
 }
 
-template<HashAlgo S>
-constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const Author & self){
-    return hs << self.name();
-}
-
 template<>
 struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Author>{
     static constexpr auto from(const Author & author){

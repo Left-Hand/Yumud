@@ -156,7 +156,7 @@ void winter_mc_tutorial_main(){
 
     using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
     using state2o = dsp::SecondOrderState<iq16>;
-    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = MC_FREQ, .r = 80}.try_into_coeffs().unwrap()};
+    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = MC_FREQ, .r = 80}.try_into_precomputed().unwrap()};
 
     state2o meas_rotor_state_var = {0, 0};
     iq16 meas_rotor_x1 = 0;
@@ -240,7 +240,7 @@ void winter_mc_tutorial_main(){
         // x2 speed 速度
         const auto meas_rotor_x1_unfilted = rotor_cnt_to_position(meas_rotor_cnt);
 
-        meas_rotor_state_var = rotor_ltd.iterate(meas_rotor_state_var, {meas_rotor_x1_unfilted, 0});
+        rotor_ltd.iterate(meas_rotor_state_var, {meas_rotor_x1_unfilted, 0});
         meas_rotor_x1 = math::fixed_downcast<16>(meas_rotor_state_var.x1);
         meas_rotor_x2 = meas_rotor_state_var.x2;
 

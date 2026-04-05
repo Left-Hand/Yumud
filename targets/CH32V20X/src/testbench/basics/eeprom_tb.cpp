@@ -333,7 +333,7 @@ void eeprom_main(){
 
 
     at24.init().examine();
-    const auto pbuf = std::span("Hello Woenejroktrvnknkebifdjknbuijekdnh3nuicedjkrld!");
+    [[maybe_unused]] const auto pbuf = std::span("Hello Woenejroktrvnknkebifdjknbuijekdnh3nuicedjkrld!");
     auto pbuf2 = std::array<uint8_t, 30>{};
     
     // const auto pbuf = std::span("Hello");

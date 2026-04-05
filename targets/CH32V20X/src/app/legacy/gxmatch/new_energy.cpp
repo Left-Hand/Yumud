@@ -16,10 +16,10 @@
 #include "hal/analog/adc/hw_singleton.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
-#include "drivers/GateDriver/AT8222/at8222.hpp"
+#include "drivers/gatedrv/AT8222/at8222.hpp"
 #include "drivers/Audio/JQ8900/JQ8900.hpp"
 #include "drivers/Recognition/U13T/U13T.hpp"
-#include "drivers/Encoder/ABEncoder.hpp"
+#include "drivers/encoder/ABEncoder.hpp"
 
 #include "core/utils/hash_func.hpp"
 #include "core/utils/Option.hpp"

@@ -27,7 +27,7 @@ public:
         uint32_t fc;
         uq8 b0;
 
-        constexpr Result<Coeffs, const char *> try_into_coeffs() const{
+        constexpr Result<Coeffs, const char *> try_into_precomputed() const{
             auto & self = *this;
             const auto dt = uq32::from_rcp(self.fs);
             if(self.fs >= 65536) 

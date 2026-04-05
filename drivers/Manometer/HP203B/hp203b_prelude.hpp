@@ -49,14 +49,33 @@ enum class [[nodiscard]] Osr:uint8_t{
     Default = _256
 };
 
-enum class [[nodiscard]] Command:uint8_t{
-    SoftReset  =0x06,
-    ReadPressureAndTemperature  = 0x10,
-    ReadAltitudeAndTemperature = 0x11,
-    ReadPressure = 0x30,
-    ReadAltitude = 0x31,
-    ReadTemperature = 0x32,
-    CalibrateAnalog = 0x28
+
+using Command = uint8_t;
+
+struct CommandFactory{
+    static constexpr Command SOFT_RESET  = Command(0x06);
+    static constexpr Command READ_PRESSURE_AND_TEMPERATURE  = Command(0x10);
+    static constexpr Command READ_ALTITUDE_AND_TEMPERATURE = Command(0x11);
+    static constexpr Command READ_PRESSURE = Command(0x30);
+    static constexpr Command READ_ALTITUDE = Command(0x31);
+    static constexpr Command READ_TEMPERATURE = Command(0x32);
+    static constexpr Command CALIBRATE_ANALOG = Command(0x28);
+
+
+    static constexpr Command read_reg(const uint8_t reg_addr){
+        return 0x80 | (reg_addr & 0b111111);
+    }
+
+    static constexpr Command write_reg(const uint8_t reg_addr){
+        return 0xc0 | (reg_addr & 0b111111);
+    }
+
+    static constexpr Command adc_convert(const ChannelSelection ch_sel, const Osr osr){
+        uint8_t command = 0x40; 
+        command |= ((0b11 & static_cast<uint8_t>(ch_sel)) << 0); 
+        command |= ((0b111 & static_cast<uint8_t>(osr)) << 2); 
+        return command;
+    }
 };
 
 struct [[nodiscard]] AdcConvertCommand final{
@@ -82,20 +101,23 @@ struct [[nodiscard]] AdcConvertCommand final{
 // 存储。最高 4 位的数据是无用，而最低有效 20 位代表高度的值。用户应当把这 20 位以 2 的补码的二进制值转换
 // 成一个整数，然后整数除以 100 获得最终结果。
 
-struct [[nodiscard]] Data20{
+struct [[nodiscard]] Data20 final{
     static constexpr Data20 from_raw_bytes(
         const uint8_t msb, const uint8_t csb, const uint8_t lsb
     ){
-        const auto bits = (msb << 16) | (csb << 8) | lsb;
-        return Data20{
-            bits
-        };
+        uint32_t bits = 0;
+
+        bits |= static_cast<uint32_t>(msb << 16) ;
+        bits |= (csb << 8) ;
+        bits |= lsb;
+
+
+        return Data20{bits};
     }
     [[nodiscard]] iq16 count() const {
         return iq24(bits) / 100;
     }
-private:
-    constexpr Data20(uint32_t bits):bits(bits){}
+
     uint32_t bits;
 };
 

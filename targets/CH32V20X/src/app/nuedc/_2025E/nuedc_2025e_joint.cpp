@@ -18,9 +18,9 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 
 
-#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
-#include "drivers/GateDriver/MP6540/mp6540.hpp"
+#include "drivers/gatedrv/MP6540/mp6540.hpp"
 
 #include "algebra/vectors/quat.hpp"
 
@@ -289,7 +289,7 @@ void nuedc_2025e_joint_main(){
 
     using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
     using state2o = dsp::SecondOrderState<iq16>;
-    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = FOC_FREQ, .r = 105}.try_into_coeffs().unwrap()};
+    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = FOC_FREQ, .r = 105}.try_into_precomputed().unwrap()};
 
     state2o meas_rotor_state_var = {0, 0};
 
@@ -355,7 +355,7 @@ void nuedc_2025e_joint_main(){
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        meas_rotor_state_var = rotor_ltd.iterate(meas_rotor_state_var, {iq16(meas_lap_angle.to_turns()), 0});
+        rotor_ltd.iterate(meas_rotor_state_var, {iq16(meas_lap_angle.to_turns()), 0});
     };
 
 
@@ -464,10 +464,12 @@ void nuedc_2025e_joint_main(){
         if(not msg_queue_.length())
             return None;
 
-        hal::ClassicCanFrame frame = hal::ClassicCanFrame::from_uninitialized();
-        if(msg_queue_.try_pop(frame) == 0)
-            return None;
-        return Some(frame);
+        Option<hal::ClassicCanFrame> may_frame = None;
+
+        if(const auto quantity = msg_queue_.consume_one([&](const hal::ClassicCanFrame & frame){
+            may_frame = Some(frame);
+        }); quantity == 0) return None;
+        return may_frame;
     };
 
     [[maybe_unused]] auto delta_target_position_by_command = 

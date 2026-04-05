@@ -5,7 +5,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/Encoder/MagEnc/KTH7823/KTH7823.hpp"
+#include "drivers/encoder/MagEnc/KTH7823/KTH7823.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;

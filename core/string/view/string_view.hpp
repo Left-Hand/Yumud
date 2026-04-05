@@ -3,6 +3,7 @@
 #include "core/utils/hash_func.hpp"
 #include "core/utils/option.hpp"
 #include <cstring>
+#include "core/string/utils/c_style/strnlen.hpp"
 
 namespace ymd{
 
@@ -25,6 +26,9 @@ public:
     constexpr StringView(const char * p_chars, size_t size) noexcept: 
         p_str_(p_chars), length_(size) {}
 
+    constexpr StringView(const char * p_begin, const char * p_end) noexcept: 
+        p_str_(p_begin), length_(p_end - p_begin) {}
+
     static constexpr StringView from_cstr(
         const char * p_chars, 
         size_t max_size = std::dynamic_extent
@@ -36,15 +40,17 @@ public:
         const char * p_chars, 
         size_t max_size = std::dynamic_extent
     ) noexcept{
-        const size_t size = (p_chars != nullptr) ? strnlen(p_chars, max_size) : 0;
+        const size_t size = (p_chars != nullptr) ? str::strnlen_from_left(p_chars, max_size) : 0;
         return StringView(p_chars, size);
     }
 
     template<size_t N>
     constexpr StringView(const char (&str)[N]) noexcept:
         p_str_(str), length_(strnlen(str, N)){}
+
     constexpr StringView(const StringView & other) noexcept: 
         p_str_(other.p_str_), length_(other.length_){;}
+
     constexpr StringView(StringView && other) noexcept: 
         p_str_(other.p_str_), length_(other.length_){;}
 
@@ -148,11 +154,6 @@ public:
     [[nodiscard]] constexpr StringView trim_withfn(Fn && fn) const noexcept{
         auto & self = *this;
 
-        // Handle null data case
-        if (self.p_str_ == nullptr || self.length_ == 0) {
-            return StringView(nullptr, 0);
-        }
-
         // Find first non-whitespace character
         size_t start = 0;
         while (start < self.length_ && std::forward<Fn>(fn)(self[start])) {
@@ -160,7 +161,7 @@ public:
             
             // Prevent infinite loop in case all characters match predicate
             if (start >= self.length_) {
-                return StringView(self.p_str_ + start, 0);
+                return StringView(self.p_str_ + start, 0u);
             }
         }
 
@@ -172,7 +173,7 @@ public:
 
         // Ensure start and stop are within bounds
         if (stop <= start || start >= self.length_ || stop > self.length_) {
-            return StringView(self.p_str_ + start, 0);
+            return StringView(self.p_str_ + start, 0u);
         }
 
         return StringView(self.p_str_ + start, stop - start);

@@ -52,6 +52,53 @@ struct ADS111X_Prelude{
         _6_144V = 0, _4_096V, _2_048V, _1_024V, _0_512V, _0_256V
     };
 
+    
+
+    struct [[nodiscard]] ConfigBuilder{
+
+        static constexpr Option<MUX> single_end(const size_t N){
+            switch(N){
+                case 0: return Some(MUX::P0NG);
+                case 1: return Some(MUX::P1NG);
+                case 2: return Some(MUX::P2NG);
+                case 3: return Some(MUX::P3NG);
+            }
+            return None;
+        }
+
+        static constexpr Option<MUX> differential(const size_t P, const size_t N){
+
+            constexpr std::array mappings{
+                std::tuple{0UL,1UL,MUX::P0N1},
+                std::tuple{0UL,3UL,MUX::P0N3},
+                std::tuple{1UL,3UL,MUX::P1N3},
+                std::tuple{2UL,3UL,MUX::P2N3}
+            };
+        
+            // 使用范围遍历+模式匹配
+            for (const auto& [valid_P, valid_N, mux_val] : mappings) {
+                if (P == valid_P && N == valid_N) {
+                    return Some(mux_val);
+                }
+            }
+            return None;
+        }
+
+        static constexpr Option<DataRate> datarate(const size_t dr){
+            switch(dr){
+                case 8: return Some(DataRate::_8);
+                case 16: return Some(DataRate::_16);
+                case 32: return Some(DataRate::_32);
+                case 64: return Some(DataRate::_64);
+                case 128: return Some(DataRate::_128);
+                case 250: return Some(DataRate::_250);
+                case 475: return Some(DataRate::_475);
+                case 860: return Some(DataRate::_860);
+            }
+            return None;
+        }
+    };
+
 };
 
 struct ADS111X_Regs:public ADS111X_Prelude{ 
@@ -63,6 +110,8 @@ struct ADS111X_Regs:public ADS111X_Prelude{
 
     struct R16_Config:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0b01; 
+
+
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
         uint16_t comp_pol:1;

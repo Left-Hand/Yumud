@@ -654,7 +654,7 @@ struct [[nodiscard]] GetPowers final{
 
 template<typename T>
 static constexpr hal::ClassicCanFrame serialize_msg_to_can_frame(
-    const primitive::AxisId & axis_id, 
+    const primitive::AxisId axis_id, 
     const T & msg
 ){
     constexpr auto COMMAND = T::COMMAND;

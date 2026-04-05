@@ -142,7 +142,7 @@ IResult<> MP2980::set_buck_boost_fsw(const BuckBoostFsw fsw){
     return write_reg(reg);
 }
 
-IResult<> MP2980::set_curr_limit_threshold(const CurrLimitThreshold threshold){
+IResult<> MP2980::set_current_limit_threshold(const CurrLimitThreshold threshold){
     auto reg = RegCopy(regs_.ilim_reg);
     reg.ilim = uint8_t(threshold);
     return write_reg(reg);
@@ -181,7 +181,7 @@ IResult<> MP2980::init(){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = set_vref_slew_rate(VrefSlewRate::_50_V_S);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = set_curr_limit_threshold(CurrLimitThreshold::_51_2_mV);
+    if(const auto res = set_current_limit_threshold(CurrLimitThreshold::_51_2_mV);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();

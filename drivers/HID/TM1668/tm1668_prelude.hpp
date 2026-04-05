@@ -140,12 +140,12 @@ private:
     IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
-        auto res = i2c_
-            .borrow(hal::I2cSlaveAddrWithRw::from_8bits(payload1))
-            .then([&](){return i2c_.write(payload2);})
-        ;
+        if(const auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(payload1));
+            res.is_err()) return Err(res.unwrap_err());
 
-        if(res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = i2c_.write_byte(payload2);
+            res.is_err()) return Err(res.unwrap_err());
+
         return Ok();
     }
 };

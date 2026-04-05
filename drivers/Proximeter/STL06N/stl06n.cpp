@@ -8,8 +8,8 @@ using Self = STL06N_ParseReceiver;
 
 
 #define ASSUME(expr) ({\
-    const bool is_right = bool(expr);\
-    if(!is_right) __builtin_trap();\
+    const bool is_correct = bool(expr);\
+    if(!is_correct) __builtin_trap();\
 })\
 
 
@@ -18,6 +18,7 @@ void STL06N_ParseReceiver::push_byte(const uint8_t byte){
         PANIC{"racing condition is happening!!!"};
         return;
     }
+
     auto set_fsm_state = [this](const FsmState new_state){ fsm_state_ = new_state; };
 
     switch(fsm_state_){
@@ -86,17 +87,16 @@ void STL06N_ParseReceiver::flush(const Command command){
 
     const size_t num_context_bytes = command.payload_length();
 
-    const auto context = std::span(bytes_.data(), num_context_bytes);
+    const std::span<const uint8_t> context_bytes = std::span(bytes_.data(), num_context_bytes);
 
     //尾元素本身指向crc8校验 并不构成越界
-    const uint8_t actual_crc = context[num_context_bytes];
-    const uint8_t expected_crc = [&] -> uint8_t{
-        return Crc8Calculator()
-            .push_byte(HEADER_TOKEN)
-            .push_byte(command.to_u8())
-            .push_bytes(context)
-            .get();
-    }();
+    const uint8_t actual_crc = context_bytes[num_context_bytes];
+    const uint8_t expected_crc = Crc8Builder()
+        .push_byte(HEADER_TOKEN)
+        .push_byte(command.to_u8())
+        .push_bytes(context_bytes)
+        .finalize();
+
 
     if(expected_crc != actual_crc) [[unlikely]]{
         const auto event = Event(Event::InvalidCrc{
@@ -110,7 +110,7 @@ void STL06N_ParseReceiver::flush(const Command command){
 
     switch(command.kind()){
         case Command::Sector:{
-            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(context.data());
+            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(context_bytes.data());
             const auto event = Event(Event::DataReady{.sector = sector});
             callback_(event);
         }
@@ -125,9 +125,9 @@ void STL06N_ParseReceiver::flush(const Command command){
             callback_(Event(Event::SetSpeed{}));
         return;
         case Command::GetSpeed:{
-            //context[0] 为数据长度字段 固定为4
+            //context_bytes[0] 为数据长度字段 固定为4
             const auto speed = LidarSpinSpeedCode::from_bytes(
-                context[1], context[2]
+                context_bytes[1], context_bytes[2]
             );
             callback_(Event(Event::GetSpeed{.speed = speed}));
             return;

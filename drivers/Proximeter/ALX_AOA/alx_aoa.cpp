@@ -154,19 +154,19 @@ static Result<Location, Error> parse_location(std::span<const uint8_t, 25> bytes
         res.unwrap();
     });
 
-    const auto distance = ({
+    const auto distance_code = ({
         const auto res = parse_distance(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    const auto azimuth = ({
+    const auto azimuth_code = ({
         const auto res = parse_angle(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    const auto elevation = ({
+    const auto elevation_code = ({
         const auto res = parse_angle(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
@@ -188,9 +188,9 @@ static Result<Location, Error> parse_location(std::span<const uint8_t, 25> bytes
     const Location msg = {
         .anchor_id = anchor_id,
         .target_id = target_id,
-        .distance = distance,
-        .azimuth = azimuth,
-        .elevation = elevation
+        .distance_code = distance_code,
+        .azimuth_code = azimuth_code,
+        .elevation_code = elevation_code
     };
 
     return Ok(msg);
@@ -252,14 +252,14 @@ void Self::push_byte(const uint8_t byte){
             }();
             
             if(not is_valid_len) {reset(); return;}
-            leader_info_.len = len;
+            header_info_.len = len;
             set_fsm_state(FsmState::Remaining);
             break;
         }
         case FsmState::Remaining:
             payload_bytes_.push_back(byte);
 
-            if(payload_bytes_.size() + LEADER_SIZE >= leader_info_.len){
+            if(payload_bytes_.size() + HEADER_SIZE >= header_info_.len){
                 flush();
                 reset();
             }
@@ -303,7 +303,7 @@ struct [[nodiscard]] CrcAccumulator{
 
 Result<Event, Error> Self::parse(){
     const size_t size = payload_bytes_.size();
-    if(size < 10) ALXAOA_PANIC("size too small", size, leader_info_.len);
+    if(size < 10) ALXAOA_PANIC("size too small", size, header_info_.len);
 
 
     const auto context_bytes = std::span(payload_bytes_.data(), size);
@@ -335,7 +335,7 @@ Result<Event, Error> Self::parse(){
         case RequestCommand::Location:{
 
             const auto actual_xor = CrcAccumulator{}
-                .push_byte(static_cast<uint8_t>(leader_info_.len))
+                .push_byte(static_cast<uint8_t>(header_info_.len))
                 .push_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())))
                 .finalize();
 

@@ -181,13 +181,13 @@ struct [[nodiscard]] PositionCode_i32 final{
 
 
 struct [[nodiscard]] FaultStatus final{
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t stall:1;
     uint16_t under_voltage:1;
     uint16_t over_voltage:1;
 
     uint16_t phase_over_current:1;
-    uint16_t :1;
+    uint16_t __resv2__:1;
     uint16_t overdrive:1;
     uint16_t param_write:1;
 
@@ -198,7 +198,7 @@ struct [[nodiscard]] FaultStatus final{
     uint16_t motor_overheat:1;
     uint16_t encoder_calibrate_failed:1;
     uint16_t encoder_data_incorrect:1;
-    uint16_t :1;
+    uint16_t __resv3__:1;
 
     [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);

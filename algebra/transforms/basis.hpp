@@ -34,6 +34,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/vectors/quat.hpp"
 
+#if 1
 namespace ymd::math{
 
 template <arithmetic T>
@@ -84,7 +85,9 @@ public:
 	// The main use of Basis<T> is as Transform.Basis<T>, which is used a the transformation matrix
 	// of 3D object. Rotate here refers to rotation of the object (which is R * ((*this))),
 	// not the matrix itself (which is R * ((*this)) * R.transposed()).
-	Basis<T> rotated(const math::Vec3<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
+
+	template<typename U>
+	Basis<T> rotated(const math::Vec3<U> &p_axis, U p_phi) const {
 		return Basis<T>(static_cast<math::Vec3<T>>(p_axis), static_cast<T>(p_phi)) * ((*this));
 	}
 
@@ -249,39 +252,48 @@ public:
 
 	operator Quat<T>() const { return get_quat(); }
 
-	Basis(const Quat<auto> &p_quat) { set_quat(p_quat); };
-	Basis(const Quat<auto> &p_quat, const math::Vec3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	Basis(const math::Vec3<auto>&p_euler) { 
+	template <typename U>
+	Basis(const Quat<U> &p_quat) { set_quat(p_quat); };
+
+	template <typename U>
+	Basis(const Quat<U> &p_quat, const math::Vec3<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+
+	template <typename U>
+	Basis(const math::Vec3<U>&p_euler) { 
 		set_euler(static_cast<T>(p_euler)); }
-	Basis(const math::Vec3<auto>&p_euler, const math::Vec3<T>&p_scale){ 
+
+	template <typename U>
+	Basis(const math::Vec3<U>&p_euler, const math::Vec3<T>&p_scale){ 
 		set_euler_scale(static_cast<T>(p_euler), static_cast<T>(p_scale)); }
 
-	Basis(const math::Vec3<auto>&p_axis, arithmetic auto p_phi) { 
+	template <typename U>
+	Basis(const math::Vec3<U> & p_axis, U p_phi) { 
 		set_axis_angle(static_cast<math::Vec3<T>>(p_axis), static_cast<T>(p_phi)); }
 
-	Basis(const math::Vec3<auto>&p_axis, arithmetic auto p_phi, const math::Vec3<auto>&p_scale) { 
+	template <typename U>
+	Basis(const math::Vec3<U> & p_axis, U p_phi, const math::Vec3<U>&p_scale) { 
 		set_axis_angle_scale(static_cast<math::Vec3<T>>(p_axis), static_cast<T>(p_phi), static_cast<T>(p_scale));}
 
-	__fast_inline constexpr Basis<T>():
+	__fast_inline constexpr Basis():
 		x(math::Vec3<T>(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0))),
 		y(math::Vec3<T>(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0))),
 		z(math::Vec3<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)))
 	{}
 
-	template<arithmetic U = T>
-	__fast_inline constexpr Basis<T>(const U xx, const U xy,const U xz,const U yx,const U yy,const U yz,const U zx,const U zy,const U zz):
-		x(math::Vec3<T>(static_cast<T>(xx), static_cast<T>(xy), static_cast<T>(xz))),
-		y(math::Vec3<T>(static_cast<T>(yx), static_cast<T>(yy), static_cast<T>(yz))),
-		z(math::Vec3<T>(static_cast<T>(zx), static_cast<T>(zy), static_cast<T>(zz)))
-	{}
+	// template<arithmetic U>
+	// __fast_inline constexpr Basis<T>(const U xx, const U xy,const U xz,const U yx,const U yy,const U yz,const U zx,const U zy,const U zz):
+	// 	x(math::Vec3<T>(static_cast<T>(xx), static_cast<T>(xy), static_cast<T>(xz))),
+	// 	y(math::Vec3<T>(static_cast<T>(yx), static_cast<T>(yy), static_cast<T>(yz))),
+	// 	z(math::Vec3<T>(static_cast<T>(zx), static_cast<T>(zy), static_cast<T>(zz)))
+	// {}
 
-	template<arithmetic U = T>
-	__fast_inline constexpr  Basis<T>(const math::Vec3<U>&row0, const math::Vec3<U>&row1, const math::Vec3<U>&row2):
-		x(row0),
-		y(row1),
-		z(row2)
-	{}
+	// template<arithmetic U>
+	// __fast_inline constexpr  Basis<T>(const math::Vec3<U>&row0, const math::Vec3<U>&row1, const math::Vec3<U>&row2):
+	// 	x(row0),
+	// 	y(row1),
+	// 	z(row2)
+	// {}
 };
 
 template<arithmetic T>
@@ -1341,6 +1353,7 @@ Basis<T> Basis<T>::slerp(const Basis<T> &p_to, const T p_weight) const {
 
 }
 
-
 #undef SQRT12
 #undef cofac
+
+#endif

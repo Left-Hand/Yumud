@@ -2,7 +2,7 @@
 
 #include "hal/conn/spi/spidrv.hpp"
 
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 #include "core/io/regs.hpp"
 
 //AS5048是一款18年的14位磁编码器 已经不推荐用于新设计
@@ -95,7 +95,7 @@ struct AS5048B_Regs{
         uint8_t burn:1;
         uint8_t :2;
         uint8_t verify:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     };
 
     struct [[nodiscard]] R8_I2cSlaveAddress:public Reg8<>{

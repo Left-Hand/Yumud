@@ -35,13 +35,13 @@ constexpr T powfi(const T base, const size_t exponent) {
 
 template<std::floating_point T>
 constexpr T sinpu(const T val){
-    constexpr T tau = static_cast<T>(M_TWOPI);
+    constexpr T tau = static_cast<T>(M_PI * 2);
     return std::sin(static_cast<T>(val * tau));
 }
 
 template<std::floating_point T>
 constexpr T cospu(const T val){
-    constexpr T tau = static_cast<T>(M_TWOPI);
+    constexpr T tau = static_cast<T>(M_PI * 2);
     return std::cos(static_cast<T>(val * tau));
 }
 

@@ -78,7 +78,7 @@ typedef void (*tlsf_walker)(void* ptr, size_t size, int used, void* user);
 void tlsf_walk_pool(pool_t pool, tlsf_walker walker, void* user);
 /* Returns nonzero if any internal consistency check fails. */
 int tlsf_check(tlsf_t tlsf);
-int tlsf_check_pool(pool_t pool);
+// int tlsf_check_pool(pool_t pool);
 
 }
 

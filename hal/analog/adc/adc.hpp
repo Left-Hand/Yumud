@@ -85,7 +85,7 @@ struct [[nodiscard]] AdcChannelConfig{
     using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
 
-    ChannelSelection sel;
+    ChannelSelection ch_sel;
     SampleCycles cycles;
 };
 

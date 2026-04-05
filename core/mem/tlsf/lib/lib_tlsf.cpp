@@ -343,79 +343,79 @@ typedef ptrdiff_t tlsfptr_t;
 ** block_header_t member functions.
 */
 
-static size_t block_size(const block_header_t* block)
+[[maybe_unused]] static size_t block_size(const block_header_t* block)
 {
 	return block->size & ~(block_header_free_bit | block_header_prev_free_bit);
 }
 
-static void block_set_size(block_header_t* block, size_t size)
+[[maybe_unused]] static void block_set_size(block_header_t* block, size_t size)
 {
 	const size_t oldsize = block->size;
 	block->size = size | (oldsize & (block_header_free_bit | block_header_prev_free_bit));
 }
 
-static int block_is_last(const block_header_t* block)
+[[maybe_unused]] static int block_is_last(const block_header_t* block)
 {
 	return block_size(block) == 0;
 }
 
-static int block_is_free(const block_header_t* block)
+[[maybe_unused]] static int block_is_free(const block_header_t* block)
 {
 	return tlsf_cast(int, block->size & block_header_free_bit);
 }
 
-static void block_set_free(block_header_t* block)
+[[maybe_unused]] static void block_set_free(block_header_t* block)
 {
 	block->size |= block_header_free_bit;
 }
 
-static void block_set_used(block_header_t* block)
+[[maybe_unused]] static void block_set_used(block_header_t* block)
 {
 	block->size &= ~block_header_free_bit;
 }
 
-static int block_is_prev_free(const block_header_t* block)
+[[maybe_unused]] static int block_is_prev_free(const block_header_t* block)
 {
 	return tlsf_cast(int, block->size & block_header_prev_free_bit);
 }
 
-static void block_set_prev_free(block_header_t* block)
+[[maybe_unused]] static void block_set_prev_free(block_header_t* block)
 {
 	block->size |= block_header_prev_free_bit;
 }
 
-static void block_set_prev_used(block_header_t* block)
+[[maybe_unused]] static void block_set_prev_used(block_header_t* block)
 {
 	block->size &= ~block_header_prev_free_bit;
 }
 
-static block_header_t* block_from_ptr(void* ptr)
+[[maybe_unused]] static block_header_t* block_from_ptr(void* ptr)
 {
 	return tlsf_cast(block_header_t*,
 		tlsf_cast(unsigned char*, ptr) - block_start_offset);
 }
 
-static void* block_to_ptr(block_header_t* block)
+[[maybe_unused]] static void* block_to_ptr(block_header_t* block)
 {
 	return tlsf_cast(void*,
 		tlsf_cast(unsigned char*, block) + block_start_offset);
 }
 
 /* Return location of next block after block of given size. */
-static block_header_t* offset_to_block(const void* ptr, size_t size)
+[[maybe_unused]] static block_header_t* offset_to_block(const void* ptr, size_t size)
 {
 	return tlsf_cast(block_header_t*, tlsf_cast(tlsfptr_t, ptr) + size);
 }
 
 /* Return location of previous block. */
-static block_header_t* block_prev(block_header_t* block)
+[[maybe_unused]] static block_header_t* block_prev(block_header_t* block)
 {
 	tlsf_assert(block_is_prev_free(block) && "previous block must be free");
 	return block->prev_phys_block;
 }
 
 /* Return location of next existing block. */
-static block_header_t* block_next(block_header_t* block)
+[[maybe_unused]] static block_header_t* block_next(block_header_t* block)
 {
 	block_header_t* next = offset_to_block(block_to_ptr(block),
 		block_size(block) - block_header_overhead);
@@ -424,14 +424,14 @@ static block_header_t* block_next(block_header_t* block)
 }
 
 /* Link a new block with its physical neighbor, return the neighbor. */
-static block_header_t* block_link_next(block_header_t* block)
+[[maybe_unused]] static block_header_t* block_link_next(block_header_t* block)
 {
 	block_header_t* next = block_next(block);
 	next->prev_phys_block = block;
 	return next;
 }
 
-static void block_mark_as_free(block_header_t* block)
+[[maybe_unused]] static void block_mark_as_free(block_header_t* block)
 {
 	/* Link the block to the next block, first. */
 	block_header_t* next = block_link_next(block);
@@ -439,26 +439,26 @@ static void block_mark_as_free(block_header_t* block)
 	block_set_free(block);
 }
 
-static void block_mark_as_used(block_header_t* block)
+[[maybe_unused]] static void block_mark_as_used(block_header_t* block)
 {
 	block_header_t* next = block_next(block);
 	block_set_prev_used(next);
 	block_set_used(block);
 }
 
-static size_t align_up(size_t x, size_t align)
+[[maybe_unused]] static size_t align_up(size_t x, size_t align)
 {
 	tlsf_assert(0 == (align & (align - 1)) && "must align to a power of two");
 	return (x + (align - 1)) & ~(align - 1);
 }
 
-static size_t align_down(size_t x, size_t align)
+[[maybe_unused]] static size_t align_down(size_t x, size_t align)
 {
 	tlsf_assert(0 == (align & (align - 1)) && "must align to a power of two");
 	return x - (x & (align - 1));
 }
 
-static void* align_ptr(const void* ptr, size_t align)
+[[maybe_unused]] static void* align_ptr(const void* ptr, size_t align)
 {
 	const tlsfptr_t aligned =
 		(tlsf_cast(tlsfptr_t, ptr) + (align - 1)) & ~(align - 1);
@@ -470,7 +470,7 @@ static void* align_ptr(const void* ptr, size_t align)
 ** Adjust an allocation size to be aligned to word size, and no smaller
 ** than internal minimum.
 */
-static size_t adjust_request_size(size_t size, size_t align)
+[[maybe_unused]] static size_t adjust_request_size(size_t size, size_t align)
 {
 	size_t adjust = 0;
 	if (size)
@@ -491,7 +491,7 @@ static size_t adjust_request_size(size_t size, size_t align)
 ** the documentation found in the white paper.
 */
 
-static void mapping_insert(size_t size, int* fli, int* sli)
+[[maybe_unused]] static void mapping_insert(size_t size, int* fli, int* sli)
 {
 	int fl, sl;
 	if (size < SMALL_BLOCK_SIZE)
@@ -511,7 +511,7 @@ static void mapping_insert(size_t size, int* fli, int* sli)
 }
 
 /* This version rounds up to the next block size (for allocations) */
-static void mapping_search(size_t size, int* fli, int* sli)
+[[maybe_unused]] static void mapping_search(size_t size, int* fli, int* sli)
 {
 	if (size >= SMALL_BLOCK_SIZE)
 	{
@@ -521,7 +521,7 @@ static void mapping_search(size_t size, int* fli, int* sli)
 	mapping_insert(size, fli, sli);
 }
 
-static block_header_t* search_suitable_block(control_t* control, int* fli, int* sli)
+[[maybe_unused]] static block_header_t* search_suitable_block(control_t* control, int* fli, int* sli)
 {
 	int fl = *fli;
 	int sl = *sli;
@@ -554,7 +554,7 @@ static block_header_t* search_suitable_block(control_t* control, int* fli, int* 
 }
 
 /* Remove a free block from the free list.*/
-static void remove_free_block(control_t* control, block_header_t* block, int fl, int sl)
+[[maybe_unused]] static void remove_free_block(control_t* control, block_header_t* block, int fl, int sl)
 {
 	block_header_t* prev = block->prev_free;
 	block_header_t* next = block->next_free;
@@ -583,7 +583,7 @@ static void remove_free_block(control_t* control, block_header_t* block, int fl,
 }
 
 /* Insert a free block into the free block list. */
-static void insert_free_block(control_t* control, block_header_t* block, int fl, int sl)
+[[maybe_unused]] static void insert_free_block(control_t* control, block_header_t* block, int fl, int sl)
 {
 	block_header_t* current = control->blocks[fl][sl];
 	tlsf_assert(current && "free list cannot have a null entry");
@@ -604,7 +604,7 @@ static void insert_free_block(control_t* control, block_header_t* block, int fl,
 }
 
 /* Remove a given block from the free list. */
-static void block_remove(control_t* control, block_header_t* block)
+[[maybe_unused]] static void block_remove(control_t* control, block_header_t* block)
 {
 	int fl, sl;
 	mapping_insert(block_size(block), &fl, &sl);
@@ -612,20 +612,20 @@ static void block_remove(control_t* control, block_header_t* block)
 }
 
 /* Insert a given block into the free list. */
-static void block_insert(control_t* control, block_header_t* block)
+[[maybe_unused]] static void block_insert(control_t* control, block_header_t* block)
 {
 	int fl, sl;
 	mapping_insert(block_size(block), &fl, &sl);
 	insert_free_block(control, block, fl, sl);
 }
 
-static int block_can_split(block_header_t* block, size_t size)
+[[maybe_unused]] static int block_can_split(block_header_t* block, size_t size)
 {
 	return block_size(block) >= sizeof(block_header_t) + size;
 }
 
 /* Split a block into two, the second of which is free. */
-static block_header_t* block_split(block_header_t* block, size_t size)
+[[maybe_unused]] static block_header_t* block_split(block_header_t* block, size_t size)
 {
 	/* Calculate the amount of space left in the remaining block. */
 	block_header_t* remaining =
@@ -647,7 +647,7 @@ static block_header_t* block_split(block_header_t* block, size_t size)
 }
 
 /* Absorb a free block's storage into an adjacent previous free block. */
-static block_header_t* block_absorb(block_header_t* prev, block_header_t* block)
+[[maybe_unused]] static block_header_t* block_absorb(block_header_t* prev, block_header_t* block)
 {
 	tlsf_assert(!block_is_last(prev) && "previous block can't be last");
 	/* Note: Leaves flags untouched. */
@@ -657,7 +657,7 @@ static block_header_t* block_absorb(block_header_t* prev, block_header_t* block)
 }
 
 /* Merge a just-freed block with an adjacent previous free block. */
-static block_header_t* block_merge_prev(control_t* control, block_header_t* block)
+[[maybe_unused]] static block_header_t* block_merge_prev(control_t* control, block_header_t* block)
 {
 	if (block_is_prev_free(block))
 	{
@@ -672,7 +672,7 @@ static block_header_t* block_merge_prev(control_t* control, block_header_t* bloc
 }
 
 /* Merge a just-freed block with an adjacent free block. */
-static block_header_t* block_merge_next(control_t* control, block_header_t* block)
+[[maybe_unused]] static block_header_t* block_merge_next(control_t* control, block_header_t* block)
 {
 	block_header_t* next = block_next(block);
 	tlsf_assert(next && "next physical block can't be null");
@@ -688,7 +688,7 @@ static block_header_t* block_merge_next(control_t* control, block_header_t* bloc
 }
 
 /* Trim any trailing block space off the end of a block, return to pool. */
-static void block_trim_free(control_t* control, block_header_t* block, size_t size)
+[[maybe_unused]] static void block_trim_free(control_t* control, block_header_t* block, size_t size)
 {
 	tlsf_assert(block_is_free(block) && "block must be free");
 	if (block_can_split(block, size))
@@ -701,7 +701,7 @@ static void block_trim_free(control_t* control, block_header_t* block, size_t si
 }
 
 /* Trim any trailing block space off the end of a used block, return to pool. */
-static void block_trim_used(control_t* control, block_header_t* block, size_t size)
+[[maybe_unused]] static void block_trim_used(control_t* control, block_header_t* block, size_t size)
 {
 	tlsf_assert(!block_is_free(block) && "block must be used");
 	if (block_can_split(block, size))
@@ -715,7 +715,7 @@ static void block_trim_used(control_t* control, block_header_t* block, size_t si
 	}
 }
 
-static block_header_t* block_trim_free_leading(control_t* control, block_header_t* block, size_t size)
+[[maybe_unused]] static block_header_t* block_trim_free_leading(control_t* control, block_header_t* block, size_t size)
 {
 	block_header_t* remaining_block = block;
 	if (block_can_split(block, size))
@@ -731,7 +731,7 @@ static block_header_t* block_trim_free_leading(control_t* control, block_header_
 	return remaining_block;
 }
 
-static block_header_t* block_locate_free(control_t* control, size_t size)
+[[maybe_unused]] static block_header_t* block_locate_free(control_t* control, size_t size)
 {
 	int fl = 0, sl = 0;
 	block_header_t* block = 0;
@@ -761,7 +761,7 @@ static block_header_t* block_locate_free(control_t* control, size_t size)
 	return block;
 }
 
-static void* block_prepare_used(control_t* control, block_header_t* block, size_t size)
+[[maybe_unused]] static void* block_prepare_used(control_t* control, block_header_t* block, size_t size)
 {
 	void* p = 0;
 	if (block)
@@ -775,7 +775,7 @@ static void* block_prepare_used(control_t* control, block_header_t* block, size_
 }
 
 /* Clear structure and point all empty lists at the null block. */
-static void control_construct(control_t* control)
+[[maybe_unused]] static void control_construct(control_t* control)
 {
 	size_t i, j;
 
@@ -805,7 +805,7 @@ typedef struct integrity_t
 
 #define tlsf_insist(x) { tlsf_assert(x); if (!(x)) { status--; } }
 
-static void integrity_walker(void* ptr, size_t size, int used, void* user)
+[[maybe_unused]] static void integrity_walker(void* ptr, size_t size, int used, void* user)
 {
 	block_header_t* block = block_from_ptr(ptr);
 	integrity_t* integ = tlsf_cast(integrity_t*, user);
@@ -875,10 +875,12 @@ int tlsf_check(tlsf_t tlsf)
 
 #undef tlsf_insist
 
+#if 0
 static void default_walker(void* ptr, size_t size, int used, void* user)
 {
+	(ptr);
 	(void)user;
-	printf("\t%p %s size: %x (%p)\n", ptr, used ? "used" : "free", (unsigned int)size, block_from_ptr(ptr));
+	tlsf_printf("\t%p %s size: %x (%p)\n", ptr, used ? "used" : "free", (unsigned int)size, block_from_ptr(ptr));
 }
 
 void tlsf_walk_pool(pool_t pool, tlsf_walker walker, void* user)
@@ -897,6 +899,7 @@ void tlsf_walk_pool(pool_t pool, tlsf_walker walker, void* user)
 		block = block_next(block);
 	}
 }
+#endif
 
 size_t tlsf_block_size(void* ptr)
 {
@@ -909,6 +912,7 @@ size_t tlsf_block_size(void* ptr)
 	return size;
 }
 
+#if 0
 int tlsf_check_pool(pool_t pool)
 {
 	/* Check that the blocks are physically correct. */
@@ -917,6 +921,7 @@ int tlsf_check_pool(pool_t pool)
 
 	return integ.status;
 }
+#endif
 
 /*
 ** Size of the TLSF structures in a given memory block passed to
@@ -967,7 +972,7 @@ pool_t tlsf_add_pool(tlsf_t tlsf, void* mem, size_t bytes)
 
 	if (((ptrdiff_t)mem % ALIGN_SIZE) != 0)
 	{
-		printf("tlsf_add_pool: Memory must be aligned by %u bytes.\n",
+		tlsf_printf("tlsf_add_pool: Memory must be aligned by %u bytes.\n",
 			(unsigned int)ALIGN_SIZE);
 		return 0;
 	}
@@ -975,11 +980,11 @@ pool_t tlsf_add_pool(tlsf_t tlsf, void* mem, size_t bytes)
 	if (pool_bytes < block_size_min || pool_bytes > block_size_max)
 	{
 #if defined (TLSF_64BIT)
-		printf("tlsf_add_pool: Memory size must be between 0x%x and 0x%x00 bytes.\n", 
+		tlsf_printf("tlsf_add_pool: Memory size must be between 0x%x and 0x%x00 bytes.\n", 
 			(unsigned int)(pool_overhead + block_size_min),
 			(unsigned int)((pool_overhead + block_size_max) / 256));
 #else
-		printf("tlsf_add_pool: Memory size must be between %u and %u bytes.\n", 
+		tlsf_printf("tlsf_add_pool: Memory size must be between %u and %u bytes.\n", 
 			(unsigned int)(pool_overhead + block_size_min),
 			(unsigned int)(pool_overhead + block_size_max));
 #endif
@@ -1047,7 +1052,7 @@ int test_ffs_fls()
 
 	if (rv)
 	{
-		printf("test_ffs_fls: %x ffs/fls tests failed.\n", rv);
+		tlsf_printf("test_ffs_fls: %x ffs/fls tests failed.\n", rv);
 	}
 	return rv;
 }
@@ -1064,7 +1069,7 @@ tlsf_t tlsf_create(void* mem)
 
 	if (((tlsfptr_t)mem % ALIGN_SIZE) != 0)
 	{
-		printf("tlsf_create: Memory must be aligned to %u bytes.\n",
+		tlsf_printf("tlsf_create: Memory must be aligned to %u bytes.\n",
 			(unsigned int)ALIGN_SIZE);
 		return 0;
 	}

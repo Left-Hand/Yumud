@@ -8,8 +8,8 @@
 namespace ymd{
 
 template<size_t N>
-requires (N <= 32 and N > 0)
 struct [[nodiscard]] BitsSet final{
+    static_assert((N <= 32 and N > 0));
     using Self = BitsSet<N>;
     using D = tmp::width_to_least_uint_t<N>;
 

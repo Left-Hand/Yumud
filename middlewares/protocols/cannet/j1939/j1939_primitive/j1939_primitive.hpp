@@ -74,7 +74,6 @@ static_assert(sizeof(Pgn) == 4);
 
 
 struct alignas(4) [[nodiscard]] Pdn final{
-    using Self = Pdn;
 
     uint32_t bits;
 
@@ -91,12 +90,12 @@ struct alignas(4) [[nodiscard]] Pdn final{
     // // 当分配新的PGN或总线上流量改变时，允许提高或者降低优先级。
     // Priority p:3;
 
-    static constexpr Self from_bits(const uint32_t bits) {
+    static constexpr Pdn from_bits(const uint32_t bits) {
         return std::bit_cast<Pdn>(bits);
     }
     
-    static constexpr Self from_can_id(const hal::CanExtId id) {
-        return Self::from_bits(id.to_bits());
+    static constexpr Pdn from_can_id(const hal::CanExtId id) {
+        return Pdn::from_bits(id.to_bits());
     }
 
     [[nodiscard]] constexpr uint32_t to_bits() const {
@@ -107,24 +106,30 @@ struct alignas(4) [[nodiscard]] Pdn final{
         return hal::CanExtId::from_bits(to_bits());
     }
 
-    [[nodiscard]] constexpr auto sa() const {
-        return make_bitfield_proxy<0, 8, SourceAddr>(bits);
+    template <typename Self>
+    [[nodiscard]] constexpr auto sa(this Self && self){
+        return make_bitfield_proxy<0, 8, SourceAddr>(self.bits);
     }
 
-    [[nodiscard]] constexpr auto ps() const {
-        return make_bitfield_proxy<8, 16, PsField>(bits);
+    template <typename Self>
+    [[nodiscard]] constexpr auto ps(this Self && self){
+        return make_bitfield_proxy<8, 16, PsField>(self.bits);
     }
 
-    [[nodiscard]] constexpr auto pf() const {
-        return make_bitfield_proxy<16, 24, PduFormat>(bits);
+    template <typename Self>
+    [[nodiscard]] constexpr auto pf(this Self && self){
+        return make_bitfield_proxy<16, 24, PduFormat>(self.bits);
     }
 
-    [[nodiscard]] constexpr auto dp() const {
-        return make_bitfield_proxy<24, 26, DataPage>(bits);
+    template <typename Self>
+    [[nodiscard]] constexpr auto dp(this Self && self){
+        return make_bitfield_proxy<24, 26, DataPage>(self.bits);
     }
 
-    [[nodiscard]] constexpr auto priority() const {
-        return make_bitfield_proxy<26, 29, Priority>(bits);
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto priority(this Self && self){
+        return make_bitfield_proxy<26, 29, Priority>(self.bits);
     }
 };
 

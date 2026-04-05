@@ -14,6 +14,8 @@ using IResult = Result<T, Error>;
 IResult<> Self::init(const Config & cfg){
     if(const auto res = validate();
         res.is_err()) return Err(res.unwrap_err());
+
+    (void)(cfg);
     return Ok();
 }
 
@@ -25,8 +27,9 @@ IResult<> Self::validate(){
     auto & reg = regs_.chipid_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(reg.chipid != reg.KEY);
-    return Err(Error::UnknownDevice);
+    if(reg.chipid != reg.KEY)
+        return Err(Error::UnknownDevice);
+    return Ok();
 }
 
 IResult<> Self::reset(){

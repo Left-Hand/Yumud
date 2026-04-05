@@ -22,9 +22,9 @@ enum class ImuError_Kind:uint8_t{
     CompanyIdMisMatch,
     PmuModeMisMatch,
 
-    AccCantSetup,
-    GyrCantSetup,
-    MagCantSetup,
+    AccSetupFailed,
+    GyrSetupFailed,
+    MagSetupFailed,
 
     AccSelftestFailed,
     GyrSelftestFailed,
@@ -42,14 +42,7 @@ enum class ImuError_Kind:uint8_t{
     AxisYOverflow,
     AxisZOverflow,
 
-    InvalidTemperature,
-
-    NoAvailablePhy,
-    I2cPhyIsNotImplementedYet,
-    I3cPhyIsNotImplementedYet,
-    SpiPhyIsNotImplementedYet,
-
-    Unreachable
+    InvalidTemperature
 };
 }
 DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)

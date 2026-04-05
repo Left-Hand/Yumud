@@ -10,8 +10,8 @@ namespace details{
 template<typename T, size_t R, size_t C>
 struct JacobiSVD {
 private:
-    static constexpr size_t K = MIN(R, C);  // 奇异值数量
-    static constexpr T epsilon = static_cast<T>(1e-6);
+    static constexpr size_t K = std::min(R, C);  // 奇异值数量
+    static constexpr T EPSILON = static_cast<T>(1e-6);
 public:
     struct Solution{
         math::Matrix<T, R, R> U;
@@ -30,8 +30,6 @@ public:
     constexpr void compute(const math::Matrix<T, R, C>& matrix, size_t max_iterations) {
         // 初始化U为单位矩阵，V为单位矩阵，B为输入矩阵
         math::Matrix<T, R, C> B = matrix;
-        
-        // T epsilon = std::sqrt(std::numeric_limits<T>::epsilon());
 
         bool converged = false;
         
@@ -47,11 +45,11 @@ public:
                     const T app = B(p, p), apq = B(p, q);
                     const T aqp = B(q, p), aqq = B(q, q);
                     
-                    const T off_diag = std::sqrt(apq * apq + aqp * aqp);
+                    const T off_diag = math::sqrt(apq * apq + aqp * aqp);
                     max_off_diag = std::max(max_off_diag, off_diag);
                     
                     // 如果非对角元素足够小，跳过
-                    if (off_diag < epsilon * (std::abs(app) + std::abs(aqq))) {
+                    if (off_diag < EPSILON * (math::abs(app) + math::abs(aqq))) {
                         continue;
                     }
                     
@@ -67,14 +65,14 @@ public:
             }
             
             // 检查收敛条件
-            if (max_off_diag < epsilon) {
+            if (max_off_diag < EPSILON) {
                 break;
             }
         }
         
         // 提取奇异值（B矩阵的对角线元素绝对值）
         for (size_t i = 0; i < K; i++) {
-            sigma_.at(i, 0) = std::abs(B(i, i));
+            sigma_.at(i, 0) = math::abs(B(i, i));
         }
         
         // 确保奇异值为非负，并调整符号
@@ -98,17 +96,20 @@ private:
      * 计算2x2矩阵的SVD旋转参数
      * 返回: (左旋转余弦, 左旋转正弦, 右旋转余弦, 右旋转正弦)
      */
-    static constexpr std::tuple<T, T, T, T> compute2x2_svd_rotation(
-        const math::Matrix<T, R, C>& B, size_t p, size_t q) {
+    static constexpr std::array<T, 4> compute2x2_svd_rotation(
+        const math::Matrix<T, R, C> & B, 
+        size_t p, 
+        size_t q
+    ) {
         
         // 提取2x2子矩阵元素
         T a00 = B(p, p), a01 = B(p, q);
         T a10 = B(q, p), a11 = B(q, q);
         
-        // T epsilon = std::numeric_limits<T>::epsilon();
+        // T EPSILON = std::numeric_limits<T>::EPSILON();
         
         // 处理接近对角的情况
-        if (std::abs(a01) < epsilon && std::abs(a10) < epsilon) {
+        if (math::abs(a01) < EPSILON && math::abs(a10) < EPSILON) {
             return {1, 0, 1, 0};
         }
         
@@ -121,12 +122,12 @@ private:
         T m_tau = (m11 - m00) / (2 * m01);
         T t;
         if (m_tau >= 0) {
-            t = static_cast<T>(1.0) / (m_tau + std::sqrt(1 + m_tau * m_tau));
+            t = static_cast<T>(1.0) / (m_tau + math::sqrt(1 + m_tau * m_tau));
         } else {
-            t = static_cast<T>(-1.0) / (-m_tau + std::sqrt(1 + m_tau * m_tau));
+            t = static_cast<T>(-1.0) / (-m_tau + math::sqrt(1 + m_tau * m_tau));
         }
         
-        T c_right = static_cast<T>(1.0) / std::sqrt(1 + t * t);
+        T c_right = static_cast<T>(1.0) / math::sqrt(1 + t * t);
         T s_right = t * c_right;
         
         // 计算左旋转（用于对角化A A^T）
@@ -134,10 +135,12 @@ private:
         T y00 = a00 * c_right - a01 * s_right;
         T y10 = a10 * c_right - a11 * s_right;
         
-        T norm = std::sqrt(y00 * y00 + y10 * y10);
+        T norm = math::sqrt(y00 * y00 + y10 * y10);
         T c_left = static_cast<T>(1.0);
         T s_left = static_cast<T>(0.0);
-        if (norm > epsilon) {
+
+
+        if (norm > EPSILON) {
             c_left = y00 / norm;
             s_left = y10 / norm;
         }

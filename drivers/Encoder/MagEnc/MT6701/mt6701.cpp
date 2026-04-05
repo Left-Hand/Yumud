@@ -27,6 +27,21 @@ static constexpr uint16_t perunit_angle_to_u12(const Angular<uq32> angle){
     return static_cast<uint16_t>(static_cast<uint32_t>(angle.to_turns().to_bits()) >> (32 - 12) & 0xfff);
 }
 
+
+IResult<> MT6701_SpiTransport::write_reg(const RegAddr reg_addr, const void * p_reg_data, const size_t data_size){
+    (void)(reg_addr);
+    (void)(p_reg_data);
+    (void)(data_size);
+    MT6701_PANIC("spi not supported yet");
+}
+
+IResult<> MT6701_SpiTransport::read_reg(const RegAddr reg_addr, void * p_reg_data, const size_t data_size){
+    (void)(reg_addr);
+    (void)(p_reg_data);
+    (void)(data_size);
+    MT6701_PANIC("spi not supported yet");
+}
+
 IResult<> MT6701::init(){
     if(const auto res = enable_pwm(EN);
         res.is_err()) return res;

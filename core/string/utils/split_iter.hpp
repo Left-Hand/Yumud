@@ -19,7 +19,7 @@ struct StringSplitIter {
     }
 
     [[nodiscard]] constexpr bool has_next() const {
-        return pos_ < str_.size();
+        return pos_ < str_.length();
     }
 
     constexpr StringView next() {
@@ -33,19 +33,19 @@ struct StringSplitIter {
 private:
     constexpr void seek_next() {
         // Skip consecutive delimiters
-        while (pos_ < str_.size() && str_[pos_] == delimiter_) {
+        while (pos_ < str_.length() && str_[pos_] == delimiter_) {
             ++pos_;
         }
         
-        if (pos_ >= str_.size()) {
+        if (pos_ >= str_.length()) {
             // If we've reached the end after skipping delimiters
-            end_ = str_.size();
+            end_ = str_.length();
             return;
         }
         
         // Find the next delimiter
         end_ = pos_;
-        while (end_ < str_.size() && str_[end_] != delimiter_) {
+        while (end_ < str_.length() && str_[end_] != delimiter_) {
             ++end_;
         }
     }
@@ -53,6 +53,6 @@ private:
     const StringView str_;
     const char delimiter_;
     size_t pos_ = 0;  // Start of current token
-    size_t end_ = 0;  // End of current token (points to delimiter or str_.size())
+    size_t end_ = 0;  // End of current token (points to delimiter or str_.length())
 };
 }

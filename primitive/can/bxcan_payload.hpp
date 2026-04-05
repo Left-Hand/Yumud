@@ -83,6 +83,10 @@ public:
         return Self(std::move(array), ClassicCanDlc::full());
     }
 
+    __attribute__((always_inline)) static constexpr Self from_empty(){
+        return Self(ZERO_U8X8, ClassicCanDlc::zero());
+    }
+
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
     template<typename Iter>
     requires (is_next_based_iter_v<Iter>)

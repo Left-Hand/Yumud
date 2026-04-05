@@ -13,8 +13,9 @@
 
 #include <stdint.h>
 #include "sdk/ch32v307/Core/core_riscv.h"
-#include "sdk/ch32v307/system_ch32v30x.h"
 #include "sdk/ch32v307/ch32v30x_irqn.h"
+
+#include "system_ch32v30x.h"
 
 #ifdef __cplusplus
  extern "C" {

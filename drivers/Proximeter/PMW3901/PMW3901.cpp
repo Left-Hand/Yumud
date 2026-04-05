@@ -25,7 +25,7 @@ using Error = PMW3901::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-enum class RegAddr:uint8_t{
+enum class [[nodiscard]] RegAddr:uint8_t{
     Product_ID              = 0x00,
     Revision_ID             = 0x01,
     Motion                  = 0x02,

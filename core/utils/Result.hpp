@@ -261,7 +261,7 @@ private:
         if ((is_ok())) [[likely]] {
             return storage_.get_ok();
         } else {
-            abort_unwrap_nonexist_err();
+            abort_unwrap_err();
         }
     }
     friend class _Loc;
@@ -495,7 +495,7 @@ public:
         if ((is_ok())) [[likely]] {
             return storage_.get_ok();
         } else {
-            abort_unwrap_nonexist_err();
+            abort_unwrap_err();
         }
     }
 
@@ -503,9 +503,9 @@ public:
     T examine(const std::source_location & loca = std::source_location::current()) const {
         if ((!is_ok())) [[unlikely]]{
             if constexpr (not std::is_same_v<E, void>)
-                abort_unwrap_nonexist_err(loca);
+                abort_unwrap_err(loca);
             else
-                abort_unwrap_nonexist_err(loca);
+                abort_unwrap_err(loca);
         }else{
             return storage_.get_ok();
         }
@@ -572,6 +572,23 @@ private:
     static void abort_unwrap_nonexist_err(const std::source_location loca){
         sys::abort(AbortInfo::with_location(
             "unwrap nonexist err", 
+            AbortInfo::Arguments::from_result<T, E>(),
+            loca)
+        );
+    }
+
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_err(){
+        sys::abort(AbortInfo::from_reason(
+            "unwrap err",
+            AbortInfo::Arguments::from_result<T, E>()
+        ));
+    }
+
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_err(const std::source_location loca){
+        sys::abort(AbortInfo::with_location(
+            "unwrap err", 
             AbortInfo::Arguments::from_result<T, E>(),
             loca)
         );

@@ -112,6 +112,7 @@ public:
     //总线是否已经离线
     [[nodiscard]] bool is_busoff();
 
+    //设置回调函数（禁止在初始化后修改）
     template<typename Fn>
     void set_event_callback(Fn && cb){
         event_callback_ = std::forward<Fn>(cb);
@@ -129,7 +130,7 @@ public:
         const Nth filter_offset 
     );
 
-    size_t queue_full_count = 0;
+    std::atomic<size_t> queue_ovf_count = 0;
 private:
     void * p_inst_;
     Nth inst_nth_;

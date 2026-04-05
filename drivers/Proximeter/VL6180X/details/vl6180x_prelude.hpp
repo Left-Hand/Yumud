@@ -15,8 +15,23 @@ namespace ymd::drivers{
 
 struct VL6180X_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0101001);
+
+
+    enum class Error_Kind:uint8_t{
+        InvalidChipId,
+        InvalidScaling,
+        RangeDataNotReady,
+        AmbientDataNotReady
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind);
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
     // using RegAddr = uint8_t;
-    enum class RegAddr:uint16_t{
+    enum class [[nodiscard]] RegAddr:uint16_t{
         IDENTIFICATION__MODEL_ID              = 0x000,
         IDENTIFICATION__MODEL_REV_MAJOR       = 0x001,
         IDENTIFICATION__MODEL_REV_MINOR       = 0x002,
@@ -89,19 +104,6 @@ struct VL6180X_Prelude{
         INTERLEAVED_MODE__ENABLE              = 0x2A3,
 
     };
-
-    enum class Error_Kind:uint8_t{
-        InvalidChipId,
-        InvalidScaling,
-        RangeDataNotReady,
-        AmbientDataNotReady
-    };
-
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
 };
 
 static_assert(sizeof(VL6180X_Prelude) == 1);
@@ -113,16 +115,19 @@ public:
     explicit VL6180X_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
+
+
     template<typename T>
-    IResult<> write_reg(const uint16_t command, const T data){
-        const auto res = i2c_drv_.write_reg(command, data, std::endian::big);
+    IResult<> write_reg(const uint16_t command, const T reg_val){
+        const auto res = i2c_drv_.write_reg(command, reg_val, std::endian::big);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
     
+
     template<typename T>
-    IResult<> read_reg(const uint16_t command, T & data){
-        const auto res = i2c_drv_.read_reg(command, data, std::endian::big);
+    IResult<> read_reg(const uint16_t command, T & reg_val){
+        const auto res = i2c_drv_.read_reg(command, reg_val, std::endian::big);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

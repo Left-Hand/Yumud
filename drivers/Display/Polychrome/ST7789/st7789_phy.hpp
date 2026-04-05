@@ -77,9 +77,9 @@ private:
     hal::Gpio & dc_pin_;
     Option<hal::GpioIntf &>nrst_pin_;
 
-    template <hal::valid_spi_data T>
+    template <hal::valid_spi_data T, typename U>
     IResult<> spi_fast_write_burst(
-        const std::span<const auto> pbuf, 
+        const std::span<const U> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_
             .borrow(rank_); res.is_err()) 

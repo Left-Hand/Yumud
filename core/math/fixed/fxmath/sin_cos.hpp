@@ -159,105 +159,119 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
 
 namespace sincos_exact_laws{
-    //将这些latex公式复制到desmos中打开
-    //拖动x0 观察有效位数
+static constexpr uint32_t TWO_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (2.0/3)) + 1;
+static constexpr uint32_t ONE_BY_3_UQ32 = static_cast<uint32_t>((1ull << 32) * (1.0/3)) + 1;
+static_assert(TWO_BY_3_UQ31 == ONE_BY_3_UQ32);
 
-    // s\ =\sin\left(x_{0}\right)
-    // c\ =\cos\left(x_{0}\right)
+static constexpr uint32_t ONE_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (1.0/3)) + 1;
+static constexpr uint32_t ONE_BY_64_UQ32 = static_cast<uint32_t>(1u << (32 - 6));
 
-    // h_{1}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s-\frac{1}{3}cx\right)\right)
-    // h_{2}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s\right)\right)
+// uq32_offset ∈ [0, 1/64] 远远小于1/2 无论是mul32hsu还是mul32hss都能胜任 
+// 考虑到对arm的兼容性：arm架构不支持原生的mul32hsu 内部使用mul32hss实现
+static constexpr uint32_t _mul32hsu(const int32_t a, const uint32_t b){
+    if(b >= ONE_BY_64_UQ32) __builtin_unreachable();
+    return intrinsics::mul32hss(a, b);
+}
 
-    // w_{1}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{1}\left(x\right)-\sin\left(x+a\right)\right)\right)}{\ln\left(2\right)}
-    // w_{2}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{2}\left(x\right)-\sin\left(x+x_{0}\right)\right)\right)}{\ln\left(2\right)}
+//将这些latex公式复制到desmos中打开
+//拖动x0 观察有效位数
 
-    // res1: w_{1}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
-    // res2: w_{2}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
+// s\ =\sin\left(x_{0}\right)
+// c\ =\cos\left(x_{0}\right)
 
-    //二阶泰勒公式在x0处近似为二次方程
-    //三阶泰勒公式在x0处近似为三次方程
+// h_{1}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s-\frac{1}{3}cx\right)\right)
+// h_{2}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s\right)\right)
 
-    //通过分析发现 二阶泰勒公式能提供最低约20.73位的精度
-    //通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
-    __attribute__((always_inline,  optimize( "-Ofast" )))
-    static constexpr int32_t 
-    taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-        int32_t res_iq31_bits = 0;
+// w_{1}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{1}\left(x\right)-\sin\left(x+a\right)\right)\right)}{\ln\left(2\right)}
+// w_{2}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{2}\left(x\right)-\sin\left(x+x_{0}\right)\right)\right)}{\ln\left(2\right)}
 
-        /* -S(k) */
-        res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
+// res1: w_{1}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
+// res2: w_{2}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
 
-        /* 0.5*x*(-S(k)) */
-        res_iq31_bits = res_iq31_bits >> 1;
-        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
+//二阶泰勒公式在x0处近似为二次方程
+//三阶泰勒公式在x0处近似为三次方程
 
-        /* C(k) + 0.5*x*(-S(k)) */
-        res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
+//通过分析发现 二阶泰勒公式能提供最低约20.73位的精度
+//通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
+__attribute__((always_inline,  optimize( "-Ofast" )))
+static constexpr int32_t 
+taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
+    int32_t res_iq31_bits = 0;
 
-        /* x*(C(k) + 0.5*x*(-S(k))) */
-        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits,  uq32_x_offset);
+    /* -S(k) */
+    res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
-        /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
-        res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
+    /* 0.5*x*(-S(k)) */
+    res_iq31_bits = res_iq31_bits >> 1;
 
-        return res_iq31_bits;
-    }
+    if(uq32_x_offset >= ONE_BY_64_UQ32) __builtin_unreachable();
+    res_iq31_bits = _mul32hsu(res_iq31_bits, uq32_x_offset);
 
-    static constexpr uint32_t TWO_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (2.0/3)) + 1;
-    static constexpr uint32_t ONE_BY_3_UQ32 = static_cast<uint32_t>((1ull << 32) * (1.0/3)) + 1;
-    static_assert(TWO_BY_3_UQ31 == ONE_BY_3_UQ32);
+    /* C(k) + 0.5*x*(-S(k)) */
+    res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
 
-    static constexpr uint32_t ONE_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (1.0/3)) + 1;
+    /* x*(C(k) + 0.5*x*(-S(k))) */
+    if(uq32_x_offset >= ONE_BY_64_UQ32) __builtin_unreachable();
+    res_iq31_bits = _mul32hsu(res_iq31_bits,  uq32_x_offset);
 
-    __attribute__((always_inline,  optimize( "-Ofast" )))
-    static constexpr int32_t 
-    taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-        int32_t res_iq31_bits;
+    /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
+    res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
 
-        res_iq31_bits = static_cast<int32_t>(intrinsics::mul32hu(TWO_BY_3_UQ31, uq32_x_offset));
-        res_iq31_bits = intrinsics::mul32hss(res_iq31_bits, iq31_cos_coeff);
+    return res_iq31_bits;
+}
 
-        /* -S(k) - 0.333*x*C(k) */
-        res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
-        /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-        res_iq31_bits = res_iq31_bits >> 1;
-        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
+__attribute__((always_inline,  optimize( "-Ofast" )))
+static constexpr int32_t 
+taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
+    int32_t res_iq31_bits;
 
-        /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-        res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
+    res_iq31_bits = static_cast<int32_t>(intrinsics::mul32hu(TWO_BY_3_UQ31, uq32_x_offset));
 
-        /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-        res_iq31_bits = intrinsics::mul32hsu(res_iq31_bits, uq32_x_offset);
+    res_iq31_bits = intrinsics::mul32hss(res_iq31_bits, iq31_cos_coeff);
 
-        /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-        res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
+    /* -S(k) - 0.333*x*C(k) */
+    res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
-        return res_iq31_bits;
-    }
+    /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
+    res_iq31_bits = res_iq31_bits >> 1;
+    if(uq32_x_offset >= ONE_BY_64_UQ32) __builtin_unreachable();
+    res_iq31_bits = _mul32hsu(res_iq31_bits, uq32_x_offset);
+
+    /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
+    res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
+
+    /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+    if(uq32_x_offset >= ONE_BY_64_UQ32) __builtin_unreachable();
+    res_iq31_bits = _mul32hsu(res_iq31_bits, uq32_x_offset);
+
+    /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+    res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
+
+    return res_iq31_bits;
+}
+
+
 
 };
 
 __attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bits){
-    constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
+    constexpr uint32_t UQ32_QUAT_PI_BITS = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
-    //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
+    //将一个周期拆分为八个区块 每个区块长度pi/4 一个象限对应两个区块
+    //获取区块索引
     const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
     
-    //将x由锯齿波变为三角波
-    #if 0
-    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
-    #else
-    const uint32_t inverse_mask = static_cast<uint32_t>(-(int32_t(bool(sect_num & 0b1))));
+    //将x由锯齿波变为三角波 即单位圆左侧时进行镜像反转
+    const uint32_t inverse_mask = intrinsics::bmask32(sect_num & 0b1);
     uq32_x_pu_bits = (uq32_x_pu_bits ^ inverse_mask);
-    #endif
 
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
+    const uint32_t uq32_eeq_x = intrinsics::mul32hu(uq32_x_pu_bits << 3, UQ32_QUAT_PI_BITS);
 
     //获取每个扇区的偏移值
-    const uint32_t uq32_x_offset = (uq32_eeq_x)& 0x03ffffff;
+    const uint32_t uq32_x_offset = (uq32_eeq_x) & 0x03ffffff;
 
     const uint32_t lut_index = uint32_t(uq32_eeq_x >> 26);
     //计算查找表索引

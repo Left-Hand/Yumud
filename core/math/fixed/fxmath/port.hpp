@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/intrinsics/mul.hpp"
+#include "core/intrinsics/mask.hpp"
 
 namespace ymd::fxmath{
 

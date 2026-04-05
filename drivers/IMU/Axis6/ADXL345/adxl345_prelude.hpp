@@ -13,7 +13,7 @@ struct ADXL345_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
     static constexpr uint8_t VALID_DEVICE_ID = 0xE5;
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         DeviceID = 0x00,
         TapThreshold = 0x1D,
         OffsetX = 0x1E,
@@ -229,7 +229,7 @@ struct ADXL345_Prelude{
 
 struct ADXL345_Regset final :public ADXL345_Prelude{
     struct R8_DeviceID:public Reg8<>{
-        static constexpr auto address = RegAddr::DeviceID;
+        static constexpr RegAddr REG_ADDR = RegAddr::DeviceID;
         uint8_t id;
     }DEF_R8(deviceid_reg)
 
@@ -250,7 +250,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     // 时间，在此期间，能检测出可能的第二次敲击事件。比例
     // 因子为1.25 ms/LSB。值为0时，禁用双击功能。
     struct R8_TapLatency:public Reg8<>{
-        static constexpr auto address = RegAddr::TapLatency;
+        static constexpr RegAddr REG_ADDR = RegAddr::TapLatency;
         uint8_t data;
 
         void set_double_click_latency_ms(const iq16 ms){
@@ -431,7 +431,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     };
 
     struct R8_InterruptSource:_R8_InterruptMask{
-        static constexpr auto address = RegAddr::InterruptSource;
+        static constexpr RegAddr REG_ADDR = RegAddr::InterruptSource;
         // 寄存器位设置为1表示各自功能触发事件，值为0则表示没
         // 有相应的事件发生。不管INT_ENABLE寄存器设置如何，
         // 如果有相应的事件发生，总是设置DATA_READY位、水
@@ -442,7 +442,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     };
 
     struct R8_DataFormat:public Reg8<>{
-        static constexpr auto address = RegAddr::DataFormat;
+        static constexpr RegAddr REG_ADDR = RegAddr::DataFormat;
         AccFs acc_fs :2;
 
         // 对齐位设置为1，选择左对齐(MSB)模式，设置为0，选择
@@ -469,7 +469,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
 
 
     struct R8_FifoCtrl:public Reg8<>{
-        static constexpr auto address = RegAddr::FifoCtrl;
+        static constexpr RegAddr REG_ADDR = RegAddr::FifoCtrl;
         // 样本位功能
         // 旁路 无。
         // FIFO 指定触发水印中断需要的FIFO条目数。

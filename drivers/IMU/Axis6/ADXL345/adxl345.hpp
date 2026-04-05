@@ -44,14 +44,17 @@ private:
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = transport_.write_reg(std::bit_cast<uint8_t>(reg.address), reg.to_bits());
-            res.is_err()) return res;
+        if(const auto res = transport_.write_reg(
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
+            reg.to_bits()); res.is_err()
+        ) return res;
         reg.apply();
         return Ok();
     }
 
-    IResult<> read_reg(auto & reg){
-        return transport_.read_reg(std::bit_cast<uint8_t>(reg.address), reg.as_bits_mut());
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        return transport_.read_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.as_bits_mut());
     };
 
     IResult<> write_reg(const RegAddr reg_address, const uint8_t reg_data);

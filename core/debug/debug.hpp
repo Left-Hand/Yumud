@@ -82,7 +82,8 @@ DEBUG_SRC(Args &&...) -> DEBUG_SRC<Args ...>;
 template <typename... Args>
 struct PANIC
 {    
-	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+	__attribute__((noreturn)) 
+    PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
         DEBUG_PRINTLN(std::forward<Args>(args)...);
         sys::abort(AbortInfo::without_arguments(
             "panicked", loc)
@@ -110,7 +111,7 @@ struct ASSERT{
 private:
 	bool is_ok_;
 public:
-	constexpr ASSERT(Texpr && expr, Args &&... args, const std::source_location& loc = std::source_location::current()):
+    ASSERT(Texpr && expr, Args &&... args, const std::source_location& loc = std::source_location::current()):
 		is_ok_(bool(expr)){
 		if(!is_ok_){
             PANIC<Args ...>(std::forward<Args>(args)..., loc);
@@ -126,7 +127,7 @@ ASSERT(Texpr&&, Args &&...) -> ASSERT<Texpr, Args...>;
 #ifdef NDEBUG
 #define DEBUG_ASSERT(...) ((void)0)
 #else
-#define DEBUG_ASSERT(...) ASSERT{__VA_ARGS__}
+#define DEBUG_ASSERT(cond, ...) ASSERT{(cond), ##__VA_ARGS__}
 #endif
 
 

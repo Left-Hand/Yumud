@@ -167,10 +167,10 @@ struct R16_Err:public Reg16<>{
     // Fatal Error, chip is not in operational state (Boot-, power-system).
     // This flag will be reset only by power-on-reset or softreset.
     uint16_t fatal_err:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     // Overload of the feature engine detected. 
     uint16_t feat_eng_ovreld:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t feat_eng_wd:1;
     uint16_t acc_conf_err:1;
     uint16_t gyr_conf_err:1;
@@ -183,7 +183,7 @@ struct R16_Err:public Reg16<>{
 //0x02
 struct R16_Status:public Reg16<>{
     uint16_t por_detected:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t drdy_temp:1;
     uint16_t drdy_gyr:1;
     uint16_t drdy_acc:1;

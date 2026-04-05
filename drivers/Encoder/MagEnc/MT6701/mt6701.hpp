@@ -6,14 +6,8 @@ namespace ymd::drivers{
 
 class MT6701 final:public MT6701_Prelude{
 public:
-    explicit MT6701(
-        Some<hal::I2cBase *> i2c, 
-        hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
-    ):
-        transport_(MT6701_Transport(i2c, addr)){;}
-
-    explicit MT6701(MT6701_Transport && phy):
-        transport_(std::move(phy)){;}
+    explicit MT6701(MT6701_TransportIntf & transport):
+        transport_(transport){;}
 
     ~MT6701(){};
 
@@ -54,21 +48,26 @@ public:
     IResult<> set_stop_angle(const Angular<uq32> stop);
 private:
     MT6701_Regs regs_ = {};
-    MT6701_Transport transport_;
-    Packet packet_ = {0, 0};
+    MT6701_TransportIntf & transport_;
+    Packet packet_ = Packet::zero();
     uq32 lap_position_ = 0;
     bool fast_mode_ = true;
 
 
     template<typename T>
     IResult<> read_reg(T & reg){
-        return transport_.read_reg(reg);
+        return transport_.read_reg(T::REG_ADDR, &reg.as_bits_mut(), sizeof(T));
     }
 
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        return transport_.write_reg(reg);
+        const auto bits = reg.to_bits();
+        if(const auto res = transport_.write_reg(T::REG_ADDR, &bits, sizeof(T));
+            res.is_err()) return Err(res.unwrap_err());
+
+        reg.apply();
+        return Ok();
     }
 };
 

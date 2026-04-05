@@ -63,7 +63,7 @@ struct [[nodiscard]] R32_DATAR final{
 struct [[nodiscard]] R32_BRR final{
     uint32_t FRAC:4;
     uint32_t MANT:12;
-    uint32_t :16;
+    uint32_t __RESV__:16;
 };
 
 VALIDATE_R32(R32_BRR)
@@ -87,15 +87,15 @@ struct [[nodiscard]] R32_CTLR1 final{
 
     uint32_t M:1;
     uint32_t UE:1;
-    uint32_t :18;
+    uint32_t __RESV__:18;
 };
 
 struct [[nodiscard]] R32_CTLR2 final{
     uint32_t ADD:4;
-    uint32_t :1;
+    uint32_t __RESV__:1;
     uint32_t LBDL:1;
     uint32_t LBDIE:1;
-    uint32_t :1;
+    uint32_t __RESV2__:1;
 
     uint32_t LBCL:1;
     uint32_t CPHA:1;
@@ -104,7 +104,7 @@ struct [[nodiscard]] R32_CTLR2 final{
     uint32_t STOP:2;
     uint32_t LINEN:1;
 
-    uint32_t :17;
+    uint32_t __RESV3__:17;
 };
 
 struct [[nodiscard]] R32_CTLR3 final{
@@ -121,13 +121,13 @@ struct [[nodiscard]] R32_CTLR3 final{
     uint32_t RTSE:1;
     uint32_t CTSE:1;
     uint32_t CTSIE:1;
-    uint32_t :21;
+    uint32_t __RESV__:21;
 };
 
 struct [[nodiscard]] R32_GPR final{
     uint32_t PSC:8;
     uint32_t GT:8;
-    uint32_t :16;
+    uint32_t __RESV__:16;
 };
 
 VALIDATE_R32(R32_CTLR1)

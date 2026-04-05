@@ -53,18 +53,18 @@ static constexpr uint32_t _calc_transfer_complete_mask(const Nth dma_nth, const 
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:{
-            constexpr size_t EVERY_SHIFT = (__builtin_ctz(DMA1_IT_TC2) - __builtin_ctz(DMA1_IT_TC1));
-            return (DMA1_IT_TC1 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
+            constexpr size_t EVERY_SHIFT = 4u;
+            return (0b10 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
         }
         #endif
         #ifdef DMA2_PRESENT
         case 2:
             if(ch_sel_nth.count() <= 7){ 
-                constexpr size_t EVERY_SHIFT = (__builtin_ctz(DMA2_IT_TC2) - __builtin_ctz(DMA2_IT_TC1));
-                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << (EVERY_SHIFT * (ch_sel_nth.count() - 1))) | (uint32_t)(0x10000000);
+                constexpr size_t EVERY_SHIFT = 4u;
+                return (0b10 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
             }else{
-                constexpr size_t EVERY_SHIFT = (__builtin_ctz(DMA2_IT_TC9) - __builtin_ctz(DMA2_IT_TC8));
-                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << (EVERY_SHIFT * (ch_sel_nth.count() - 8))) | (uint32_t)(0x20000000);
+                constexpr size_t EVERY_SHIFT = 4u;
+                return (0b10 << (EVERY_SHIFT * (ch_sel_nth.count() - 8)));
             }
         #endif
         default:
@@ -73,22 +73,23 @@ static constexpr uint32_t _calc_transfer_complete_mask(const Nth dma_nth, const 
     __builtin_trap();
 }
 
+
 static constexpr uint32_t _calc_transfer_onhalf_mask(const Nth dma_nth, const Nth ch_sel_nth){
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:{
-            constexpr size_t EVERY_SHIFT = (__builtin_ctz(DMA1_IT_HT2) - __builtin_ctz(DMA1_IT_HT1));
-            return (DMA1_IT_HT1 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
+            constexpr size_t EVERY_SHIFT = 4u;
+            return (0b100 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
         }
         #endif
         #ifdef DMA2_PRESENT
         case 2:
             if(ch_sel_nth.count() <= 7){ 
-                constexpr size_t EVERY_SHIFT = ((__builtin_ctz(DMA2_IT_HT2) - __builtin_ctz(DMA2_IT_HT1)));
-                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << (EVERY_SHIFT * (ch_sel_nth.count() - 1))) | (uint32_t)(0x10000000);
+                constexpr size_t EVERY_SHIFT = 4u;
+                return (0b100 << (EVERY_SHIFT * (ch_sel_nth.count() - 1)));
             }else{
-                constexpr size_t EVERY_SHIFT = ((__builtin_ctz(DMA2_IT_HT9) - __builtin_ctz(DMA2_IT_HT8)));
-                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << (EVERY_SHIFT * (ch_sel_nth.count() - 8))) | (uint32_t)(0x20000000);
+                constexpr size_t EVERY_SHIFT = 4u;
+                return (0b100 << (EVERY_SHIFT * (ch_sel_nth.count() - 8)));
             }
         #endif
         default:
@@ -183,12 +184,44 @@ static constexpr IRQn dma_to_irqn(const Nth dma_nth, const Nth ch_sel_nth){
 }
 
 
+static volatile uint32_t & get_flag_clear_reg(
+    [[maybe_unused]] const Nth dma_nth, 
+    [[maybe_unused]] const Nth ch_sel_nth
+){
+    #if not defined(DMA2_PRESENT)
+    return DMA1->INTFCR;
+    #else
+    if(dma_nth.count() == 2){
+        if(ch_sel_nth.count() > 7) return DMA2_EXTEN->INTFCR;
+        else return DMA2->INTFCR;
+    }else{
+        return DMA1->INTFCR;
+    }
+    #endif
+}
 
+static volatile uint32_t & get_flag_state_reg(
+    [[maybe_unused]] const Nth dma_nth, 
+    [[maybe_unused]] const Nth ch_sel_nth
+){
+    #if not defined(DMA2_PRESENT)
+    return DMA1->INTFR;
+    #else
+    if(dma_nth.count() == 2){
+        if(ch_sel_nth.count() > 7) return DMA2_EXTEN->INTFR;
+        else return DMA2->INTFR;
+    }else{
+        return DMA1->INTFR;
+    }
+    #endif
+}
 
 DmaChannel::DmaChannel(void * inst):
     inst_(inst), 
     dma_nth_(_dma_calc_nth(reinterpret_cast<uint32_t>(inst))),
     ch_sel_nth_(_dma_ch_sel_nth(reinterpret_cast<uint32_t>(inst))),
+    flag_clear_reg_(get_flag_clear_reg(dma_nth_, ch_sel_nth_)),
+    flag_state_reg_(get_flag_state_reg(dma_nth_, ch_sel_nth_)),
     transfer_complete_mask_(_calc_transfer_complete_mask(dma_nth_, ch_sel_nth_)),
     transfer_onhalf_mask_(_calc_transfer_onhalf_mask(dma_nth_, ch_sel_nth_))
     {;}
@@ -275,69 +308,37 @@ void DmaChannel::register_nvic(const NvicPriorityCode priority, const Enable en)
 
 
 [[nodiscard]] bool DmaChannel::is_transfer_complete(){
-    return DMA_GetFlagStatus(transfer_complete_mask_);
+    uint32_t tempreg = static_cast<uint32_t>(flag_state_reg_);
+    return tempreg & transfer_complete_mask_;
+}
+
+[[nodiscard]] bool DmaChannel::is_transfer_onhalf(){
+    uint32_t tempreg = static_cast<uint32_t>(flag_state_reg_);
+    return tempreg & transfer_onhalf_mask_;
 }
 
 
 
 void DmaChannel::clear_pending_flag_and_restart(){
-    DMA_ClearFlag(transfer_complete_mask_ | transfer_onhalf_mask_);
+    flag_clear_reg_ = (transfer_complete_mask_ | transfer_onhalf_mask_);
 
-    DMA_Cmd(SPL_INST(inst_), ENABLE);
+    RAL_INST(inst_)->CFGR.EN = 1;
 }
 
 size_t DmaChannel::pending_count(){
-    return RAL_INST(inst_) -> CNTR.BITS;
+    return static_cast<size_t>(RAL_INST(inst_) -> CNTR.BITS);
 }
-
-
-#ifdef DMA2
-
-static void my_DMA_ClearITPendingBit(uint32_t DMAy_IT)
-{
-    if((DMAy_IT & 0x10000000) == 0x10000000)
-    {
-        DMA2->INTFCR = DMAy_IT;
-    }
-    else if((DMAy_IT & 0x20000000) == 0x20000000)
-    {
-        DMA2_EXTEN->INTFCR = DMAy_IT;
-    }
-    else
-    {
-        DMA1->INTFCR = DMAy_IT;
-    }
-}
-
-#else
-
-static void my_DMA_ClearITPendingBit(uint32_t DMAy_IT)
-{
-    DMA1->INTFCR = DMAy_IT;
-}
-
-#endif
-
-static void my_DMA_ITConfig(DMA_Channel_TypeDef *DMAy_Channelx, uint32_t DMA_IT, FunctionalState NewState)
-{
-    if(NewState != DISABLE)
-    {
-        DMAy_Channelx->CFGR |= DMA_IT;
-    }
-    else
-    {
-        DMAy_Channelx->CFGR &= ~DMA_IT;
-    }
-}
-
 
 void DmaChannel::enable_transfer_complete_interrupt(const Enable en){
-    my_DMA_ClearITPendingBit(transfer_complete_mask_);
-    my_DMA_ITConfig(SPL_INST(inst_), DMA_IT_TC, (en == EN));
+
+    //write 1 clear
+    flag_clear_reg_ = (transfer_complete_mask_);
+    RAL_INST(inst_)->CFGR.TCIE = en == EN;
 }
 
 void DmaChannel::enable_transfer_onhalf_interrupt(const Enable en){
-    my_DMA_ClearITPendingBit(transfer_onhalf_mask_);
-    my_DMA_ITConfig(SPL_INST(inst_), DMA_IT_HT, (en == EN));
+    //write 1 clear
+    flag_clear_reg_ = (transfer_onhalf_mask_);
+    RAL_INST(inst_)->CFGR.HTIE = en == EN;
 }
 

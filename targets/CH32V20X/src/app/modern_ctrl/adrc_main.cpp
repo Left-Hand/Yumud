@@ -49,11 +49,11 @@ void adrc_main(){
         .r = 556.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 200
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
 
     static constexpr auto track_coeffs = typename LinearTrackingDifferentiator<iq16, 2>::Config{
         .fs = ISR_FREQ , .r = 1400
-    }.try_into_coeffs().unwrap();
+    }.try_into_precomputed().unwrap();
 
     static constexpr NonlinearTrackingDifferentiator<iq16, 2> command_shaper_{
         coeffs
@@ -72,11 +72,11 @@ void adrc_main(){
     auto command_shaper_poller = [&](){
         const auto now_secs = clock::seconds();
         const auto t0 = clock::micros();
-        shaped_track_state_var_ = command_shaper_.iterate(shaped_track_state_var_, {u, 0});
+        command_shaper_.iterate(shaped_track_state_var_, {u, 0});
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, iq16::from_bits(shaped_track_state_var_.x1.to_bits() >> 16));
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, sin(now_secs * 140));
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, {math::frac(now_secs), 1});
-        feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, {math::floor(now_secs), 0});
+        feedback_differ_.iterate(feedback_track_state_var_, {math::floor(now_secs), 0});
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, u);
         const auto t1 = clock::micros();
         elapsed_micros = t1 - t0;

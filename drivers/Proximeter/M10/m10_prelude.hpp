@@ -89,10 +89,11 @@ struct [[nodiscard]] LidarSector final{
     LidarSpinSpeedCode spin_speed;
     std::array<LidarDistanceCode, POINTS_PER_SECTOR> distances;
 
-    struct [[nodiscard]] Iterator{
+    struct [[nodiscard]] Iterator final{
+
         static constexpr uq24 DELTA_TURNS = uq24(15.0 / 360 / POINTS_PER_SECTOR);
-        constexpr Iterator(const LidarSector & sector):sector_(sector){
-            current_turns_ = sector_.start_angle.to_turns();
+        constexpr explicit Iterator(const LidarSector & sector):sector_(sector){
+            now_turns_ = sector_.start_angle.to_turns();
         }
 
         [[nodiscard]] constexpr bool has_next() const{
@@ -102,17 +103,17 @@ struct [[nodiscard]] LidarSector final{
         constexpr math::Polar<uq24> next(){
             const auto ret = math::Polar<uq24>{
                 .amplitude = sector_.distances[index_].to_meters(),
-                .phase = Angular<uq24>::from_turns(current_turns_)
+                .phase = Angular<uq24>::from_turns(now_turns_)
             };
             index_ += 1;
-            current_turns_ += DELTA_TURNS;
+            now_turns_ += DELTA_TURNS;
             return ret;
         };
     private:
 
         const LidarSector & sector_;
         size_t index_ = 0;
-        uq24 current_turns_ = 0;
+        uq24 now_turns_ = 0;
     };
 
     constexpr auto iter() const{

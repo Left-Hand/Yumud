@@ -44,9 +44,8 @@ IResult<> PAJ7620::select_bank(Bank bank){
 			return write_reg(PAJ7620_REGITER_BANK_SEL, 0);
 		case Bank::_1:
 			return write_reg(PAJ7620_REGITER_BANK_SEL, 1);
-		default:
-			__builtin_unreachable();
 	}
+	__builtin_unreachable();
 }
 
 // IResult<> PAJ7620::wakeup(){

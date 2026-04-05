@@ -46,8 +46,10 @@ private:
     uint8_t now_char_ = '\0';
     uint8_t fetch_next(){
         uint8_t ret;
-        if(const auto len = tx_queue_.try_pop(ret);
-            len == 0) __builtin_trap();
+        if(const auto quantity = tx_queue_.consume_one([&](uint8_t element){
+            ret = element;
+        });
+            quantity == 0) __builtin_trap();
         return  ret;
     }
 };

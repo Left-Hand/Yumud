@@ -9,9 +9,10 @@ struct [[nodiscard]] Rescaler {
     D scale;
     D offset;
 
+    template<typename U>
     [[nodiscard]] static constexpr Rescaler from_input_and_output(
-        const math::Range2<auto> & input, 
-        const math::Range2<auto> & output
+        const math::Range2<U> & input, 
+        const math::Range2<U> & output
     ) {
         const auto [input_start, input_stop] = input;
         const auto [output_start, output_stop] = output;

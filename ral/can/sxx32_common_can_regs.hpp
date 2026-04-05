@@ -63,7 +63,7 @@ struct [[nodiscard]] R32_CAN_CTLR{
     // 时间触发模式主要是配合 TTCAN 协议使用。
     uint32_t TTCM:1;
 
-    uint32_t :7;
+    uint32_t __RESV1__:7;
 
     // CAN 控制器软件复位请求，该位写 0 无效
     // 1：对 CAN 控制器进行复位，复位后控制器进
@@ -76,7 +76,7 @@ struct [[nodiscard]] R32_CAN_CTLR{
     // 的控制和读写操作一切正常；
     // 0：调试时，CAN 控制器正常工作。
     uint32_t DBF:1;
-    uint32_t :15;
+    uint32_t __RESV2__:15;
 };
 
 struct [[nodiscard]] R32_CAN_STATR{
@@ -107,7 +107,7 @@ struct [[nodiscard]] R32_CAN_STATR{
     // 1：进入睡眠模式时，中断产生，硬件置 1；
     // 0：退出睡眠模式时，硬件清 0 也可软件清 0。
     uint32_t SLAKI:1;
-    uint32_t :3;
+    uint32_t __RESV1__:3;
 
     // 发送模式查询位
     // 1：当前 CAN 控制器为发送模式；
@@ -125,7 +125,7 @@ struct [[nodiscard]] R32_CAN_STATR{
     // CAN 控制器接收引脚 RX 当前实际电平。
     uint32_t RX:1;
 
-    uint32_t :20;
+    uint32_t __RESV2__:20;
 
 };
 
@@ -135,7 +135,7 @@ struct [[nodiscard]] R32_CAN_TSTATR{
     uint32_t ALST0:1;
     uint32_t TERR0:1;
 
-    uint32_t :3;
+    uint32_t __RESV1__:3;
     uint32_t ABRQ0:1;
 
 
@@ -144,7 +144,7 @@ struct [[nodiscard]] R32_CAN_TSTATR{
     uint32_t ALST1:1;
     uint32_t TERR1:1;
 
-    uint32_t :3;
+    uint32_t __RESV2__:3;
     uint32_t ABRQ1:1;
 
 
@@ -153,7 +153,7 @@ struct [[nodiscard]] R32_CAN_TSTATR{
     uint32_t ALST2:1;
     uint32_t TERR2:1;
 
-    uint32_t :3;
+    uint32_t __RESV3__:3;
     uint32_t ABRQ2:1;
 
 
@@ -169,11 +169,11 @@ struct [[nodiscard]] R32_CAN_TSTATR{
 
 struct [[nodiscard]] R32_CAN_RFIFO{
     uint32_t FMP:2;
-    uint32_t :1;
+    uint32_t __RESV1__:1;
     uint32_t FULL:1;
     uint32_t FOVR:1;
     uint32_t RFOM:1;
-    uint32_t :26;
+    uint32_t __RESV2__:26;
 };
 
 struct [[nodiscard]] R32_CAN_INTEN{
@@ -185,20 +185,20 @@ struct [[nodiscard]] R32_CAN_INTEN{
     uint32_t FMPIE1:1;
     uint32_t FFIE1:1;
     uint32_t FOVIE1:1;
-    uint32_t :1;
+    uint32_t __RESV1__:1;
 
     uint32_t EWGIE:1;
     uint32_t EPVIE:1;
     uint32_t BOFIE:1;
     uint32_t LECIE:1;
 
-    uint32_t :3;
+    uint32_t __RESV2__:3;
     uint32_t ERRIE:1;
 
     uint32_t WKUIE:1;
     uint32_t SLKIE:1;
 
-    uint32_t :14;
+    uint32_t __RESV3__:14;
 };
 
 
@@ -217,7 +217,7 @@ struct [[nodiscard]] R32_CAN_ERRSR{
     // 当 CAN 控制器进入离线状态时，硬件自动置
     // 1；退出离线状态时，硬件自动清 0。
     uint32_t BOFF:1;
-    uint32_t :1;
+    uint32_t __RESV1__:1;
 
     // 上次错误代号。
     // 检测到 CAN 总线上发送错误时，控制器根据
@@ -233,7 +233,7 @@ struct [[nodiscard]] R32_CAN_ERRSR{
     // 通常应用软件读取到错误时，把代号设置为
     // 111b，可以检测到代号更新。
     uint32_t LEC:3;
-    uint32_t :9;
+    uint32_t __RESV2__:9;
 
     // 发送错误计数器。
     // 当 CAN 发送出错时，根据出错条件，该计数
@@ -256,7 +256,7 @@ struct [[nodiscard]] R32_CAN_BTIMR{
     // 最小时间单元长度设置值
     // Tq = (BRP[9:0]+1) × t_pcs
     uint32_t BRP:10;
-    uint32_t :2;
+    uint32_t __RESV1__:2;
 
     // 对于传统 CAN，CLAS_LONG_TS1=0，则 TS1 为
     // TS[3:0](4bit)；CLAS_LONG_TS1=1，则 TS1
@@ -272,7 +272,7 @@ struct [[nodiscard]] R32_CAN_BTIMR{
     // 定义了时间段 2 占用了多少个最小时间单
     // 元，实际值为（TS2[1:0]+1）。
     uint32_t TS2:3;
-    uint32_t :1;
+    uint32_t __RESV2__:1;
 
     // 定义了重新同步跳转宽度设置值。
     // 实现重新同步时，位中可以延长和缩小的最
@@ -280,7 +280,7 @@ struct [[nodiscard]] R32_CAN_BTIMR{
     // （SJW[1:0]+1），范围可设置为 1 到 4 个最
     // 小时间单元。
     uint32_t SJW:2;
-    uint32_t :4;
+    uint32_t __RESV3__:4;
 
     // 环回模式设置位。
     uint32_t LBKM:1;
@@ -301,13 +301,13 @@ struct [[nodiscard]] R32_CAN_TTCTLR{
     // 1：增强模式；
     // 0：默认模式。
     uint32_t MODE:1;
-    uint32_t :14;
+    uint32_t __RESV1__:14;
 };
 
 struct [[nodiscard]] R32_CAN_TTCNT{
     // 时间触发计数
     uint32_t TIMCNT:16;
-    uint32_t :16;
+    uint32_t __RESV1__:16;
 };
 
 
@@ -324,10 +324,10 @@ struct [[nodiscard]] R32_CAN_TXMDTR{
     uint32_t FDCAN_BRS:1;
     uint32_t FDCAN_ESI:1;
     uint32_t FDCAN_RES:1;
-    uint32_t :1;
+    uint32_t __RESV1__:1;
 
     uint32_t TGT:1;
-    uint32_t :7;
+    uint32_t __RESV2__:7;
     uint32_t TIME:16;
 };
 
@@ -337,7 +337,7 @@ using R32_CAN_TXMDLR = uint32_t;
 using R32_CAN_TXMDHR = uint32_t;
 
 struct [[nodiscard]] R32_CAN_RXMIR{
-    uint32_t :1;
+    uint32_t __RESV1__:1;
     uint32_t RTR:1;
     uint32_t IDE:1;
 
@@ -346,7 +346,7 @@ struct [[nodiscard]] R32_CAN_RXMIR{
 
 struct [[nodiscard]] R32_CAN_RXMDTR{
     uint32_t DLC:4;
-    uint32_t :4;
+    uint32_t __RESV1__:4;
     uint32_t FMI:8;
     uint32_t TIME:16;
 };
@@ -359,20 +359,20 @@ struct [[nodiscard]] R32_CAN_FCTLR{
     // 1：过滤器组为初始化模式；
     // 0：过滤器组为正常模式。
     uint32_t FINIT:1;
-    uint32_t :7;
+    uint32_t __RESV1__:7;
 
     //CAN2 过滤器开始组（取值范围 1-27）
     uint32_t CAN2SB:6;
-    uint32_t :2;
+    uint32_t __RESV2__:2;
     
     #ifdef CAN3_PRESENT
     // 仅h417
     //CAN3 过滤器开始组（取值范围 CAN2SB-42）
     uint32_t CAN3SB:6;
-    uint32_t :2;
-    uint32_t :8;
+    uint32_t __RESV3__:2;
+    uint32_t __RESV4__:8;
     #else
-    uint32_t :16;
+    uint32_t __RESV5__:16;
     #endif
 };
 

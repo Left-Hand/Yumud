@@ -91,7 +91,7 @@ public:
         #endif
 
         TODO();
-        const auto res = i2c_.write(uint8_t(cmd&0xFF));
+        const auto res = i2c_.write_byte(uint8_t(cmd&0xFF));
         i2c_.lend();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -105,7 +105,7 @@ public:
         #endif
         TODO();
         uint8_t ret;
-        const auto res = i2c_.read(ret, NACK);
+        const auto res = i2c_.read_byte(ret, NACK);
         i2c_.lend();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok(uint8_t(ret));

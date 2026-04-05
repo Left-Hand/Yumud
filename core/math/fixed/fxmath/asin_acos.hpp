@@ -100,8 +100,8 @@ constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
     
     /* Calculate the index using the left 6 most bits of the input. */
     /* Set the coefficient pointer. */
-    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t(uiq32_input >> 27)];
-    int32_t iq29Result;
+    const int32_t * piq29_coeffs = IQ29ASIN_COEFFS[size_t(uiq32_input >> 27)];
+    int32_t iq29_result;
 
     /*
      * Calculate asin(x) using the following Taylor series:
@@ -110,43 +110,43 @@ constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
      */
 
     /* c4*x */
-    iq29Result = int32_t(((int64_t(uiq32_input) * (piq29Coeffs[0])) >> 32));
+    iq29_result = intrinsics::mul32hsu((piq29_coeffs[0]), uiq32_input);
 
     /* c4*x + c3 */
-    iq29Result += piq29Coeffs[1];
+    iq29_result += piq29_coeffs[1];
 
     /* (c4*x + c3)*x */
-    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
+    iq29_result = intrinsics::mul32hsu(iq29_result, uiq32_input);
 
     /* (c4*x + c3)*x + c2 */
-    iq29Result += piq29Coeffs[2];
+    iq29_result += piq29_coeffs[2];
 
     /* ((c4*x + c3)*x + c2)*x */
-    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
+    iq29_result = intrinsics::mul32hsu(iq29_result, uiq32_input);
 
     /* ((c4*x + c3)*x + c2)*x + c1 */
-    iq29Result += piq29Coeffs[3];
+    iq29_result += piq29_coeffs[3];
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x */
-    iq29Result = int32_t(((int64_t(uiq32_input) * iq29Result) >> 32));
+    iq29_result = intrinsics::mul32hsu(iq29_result, uiq32_input);
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x + c0 */
-    iq29Result += piq29Coeffs[4];
+    iq29_result += piq29_coeffs[4];
 
     /* check if we switched to acos */
     if (is_acos) {
-        /* asin(x) = pi/2 - 2*iq29Result */
+        /* asin(x) = pi/2 - 2*iq29_result */
 
         // acos(x) = -(2 * asin(sqrt(1-x)/2)-pi/2)
         // 2\arcsin\left(\sqrt{\frac{\left(1-x\right)}{2}}\right)-\frac{\pi}{2}
 
         constexpr int32_t _iq29_halfPi = 0x3243f6a8;
-        iq29Result = iq29Result << 1;
-        iq29Result -= _iq29_halfPi;      // this is equivalent to the above
-        iq29Result = -iq29Result;       // but avoids using temporary registers
+        iq29_result = iq29_result << 1;
+        iq29_result -= _iq29_halfPi;      // this is equivalent to the above
+        iq29_result = -iq29_result;       // but avoids using temporary registers
     }
 
-    return math::fixed<29, int32_t>::from_bits(iq29Result);
+    return math::fixed<29, int32_t>::from_bits(iq29_result);
 
 }
 
@@ -155,18 +155,19 @@ __attribute__((always_inline)) constexpr
 math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     static_assert(Q <= 32);
     uint32_t input_bits = std::bit_cast<uint32_t>(x.to_bits());
-    const bool is_neg  = input_bits & (1u << 31);
-    if(is_neg) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
+    const bool is_negative  = input_bits & (1u << 31);
+    if(is_negative) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
 
+    constexpr uint32_t MAX_BITS = (uint32_t(1) << Q);
     if constexpr(Q < 32)
-        if(input_bits > (uint32_t(1) << Q)) [[unlikely]]{
-            input_bits = uint32_t(1) << Q;
+        if(input_bits > MAX_BITS) [[unlikely]]{
+            input_bits = MAX_BITS;
         }
 
     #if 1
     const uint32_t uiq31_input = [&] -> uint32_t{
         if constexpr(Q < 32) return uint32_t(input_bits << (31 - Q));
-        else return uint32_t(input_bits >> 1);
+        else return uint32_t(input_bits >> (Q - 31));
     }();
 
     auto iq29_result = fxmath::details::asin31(uiq31_input);
@@ -179,7 +180,7 @@ math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     auto iq29_result = __IQNasin32(uiq32_input);
     #endif
 
-    if(is_neg) iq29_result = -iq29_result;
+    if(is_negative) iq29_result = -iq29_result;
 
     return iq29_result;
 }

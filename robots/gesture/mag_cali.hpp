@@ -105,6 +105,8 @@ struct EllipseCalibrator_Prelude{
                 return math::Vec3<iq24>{1, 1, 1};
             }
 
+            const auto inv_det = 1 / det;
+
             // 计算各变量的行列式
             const auto det_x = b[0]*(A[3]*A[5] - A[4]*A[4]) 
                                 - A[1]*(b[1]*A[5] - A[4]*b[2]) 
@@ -119,9 +121,9 @@ struct EllipseCalibrator_Prelude{
                                 + b[0]*(A[1]*A[4] - A[3]*A[2]);
 
             return math::Vec3<iq24>{
-                det_x / det,
-                det_y / det,
-                det_z / det
+                det_x * inv_det,
+                det_y * inv_det,
+                det_z * inv_det
             };
         };
 
@@ -148,8 +150,8 @@ struct EllipseCalibrator_Prelude{
 class EllipseCalibrator:public EllipseCalibrator_Prelude{
 public:
     static constexpr size_t N = 48;
-    // using Data = std::array<math::Vec3<iq24>, N>;
-    using Data = HeaplessVector<math::Vec3<iq24>, N>;
+    using Data = std::array<math::Vec3<iq24>, N>;
+    // using Data = HeaplessVector<math::Vec3<iq24>, N>;
 
     // struct Flag{
         // Empty,
@@ -160,6 +162,7 @@ public:
     using Flags = std::array<Flag, N>;
 
     constexpr EllipseCalibrator(){
+        samples_.fill(math::Vec3<iq24>::ZERO);
         flags_.fill(0);
     }
 
@@ -190,15 +193,15 @@ public:
                 case 0b011: return 3;
                 case 0b001: return 4;
                 case 0b000: return 5;
-                default: __builtin_unreachable();
             }
+            __builtin_unreachable();
         }();
 
         const size_t idx = idx8 * 6 + idx6;
         // if(idx >= N) PANIC(N);
         if(idx < N and is_index_empty(idx)){
-            // samples_[idx] = v3;
-            samples_.push_back(v3);
+            samples_[idx] = v3;
+            // samples_.push_back(v3);
             flags_[idx] = 1;
         }
     }

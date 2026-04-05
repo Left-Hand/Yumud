@@ -155,7 +155,7 @@ struct Regset{
         static constexpr Bank bank = Bank::_0;
         uint8_t spi_slew_rate:3;
         uint8_t i2c_slew_rate:3;
-        uint8_t :2;
+        uint8_t __resv__:2;
     }DEF_R8(drive_config_reg)
 
     struct [[nodiscard]] R8_INT_CONFIG:public Reg8<>{
@@ -166,12 +166,12 @@ struct Regset{
         uint8_t int2_polatity:1;
         uint8_t int2_drive_circuit:1;
         uint8_t int2_mode:1;
-        uint8_t :2;
+        uint8_t __resv__:2;
     }DEF_R8(int_config_reg)
 
     struct [[nodiscard]] R8_FIFO_CONFIG:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x16};
-        uint8_t :6;
+        uint8_t __resv__:6;
         uint8_t fifo_mode:2;
     }DEF_R8(fifo_config_reg)
 
@@ -198,7 +198,7 @@ struct Regset{
         uint8_t reset_done_int:1;
         uint8_t pll_rdy_int:1;
         uint8_t ui_fsync_int:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
     }DEF_R8(int_status1_reg)
 
     struct [[nodiscard]] R16_FIFO_COUNT:public Reg16<>{
@@ -226,7 +226,7 @@ struct Regset{
         static constexpr RegAddr REG_ADDR = RegAddr{0x34};
         uint8_t activity_class:2;
         uint8_t dmp_idle:1;
-        uint8_t :5;
+        uint8_t __resv__:5;
     }DEF_R8(apex_data3_reg)
 
     struct [[nodiscard]] R8_APEX_DATA4:public Reg8<>{
@@ -234,13 +234,13 @@ struct Regset{
         uint8_t tap_dir:1;
         uint8_t tap_axis:2;
         uint8_t tap_num:2;
-        uint8_t :3;
+        uint8_t __resv__:3;
     }DEF_R8(apex_data4_reg)
 
     struct [[nodiscard]] R8_APEX_DATA5:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x36};
         uint8_t double_tap_timing:6;
-        uint8_t :2;
+        uint8_t __resv__:2;
     }DEF_R8(apex_data5_reg)
 
     struct [[nodiscard]] R8_INT_STATUS2:public Reg8<>{
@@ -249,7 +249,7 @@ struct Regset{
         uint8_t wom_y_int:1;
         uint8_t wom_z_int:1;
         uint8_t smd_int:1;
-        uint8_t :4;
+        uint8_t __resv__:4;
     }DEF_R8(int_status2_reg)
 
     struct [[nodiscard]] R8_INT_STATUS3:public Reg8<>{
@@ -260,7 +260,7 @@ struct Regset{
         uint8_t tilt_det_int:1;
         uint8_t step_cnt_ovf_int:1;
         uint8_t step_det_int:1;
-        uint8_t :2;
+        uint8_t __resv__:2;
     }DEF_R8(int_status3_reg)
 
     struct [[nodiscard]] R8_GYRO_CONFIG0:public Reg8<>{ 

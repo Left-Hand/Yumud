@@ -158,7 +158,7 @@ public:
     template<size_t Extents>
     requires (Extents <= 8)
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    std::span<const uint8_t, Extents> payload_bytes_fixed() const noexcept{
+    std::span<const uint8_t, Extents> payload_bytes_sized() const noexcept{
         if(Extents != length()) [[unlikely]]
             __builtin_trap();
         return std::span<const uint8_t, Extents>(payload_.data(), Extents);

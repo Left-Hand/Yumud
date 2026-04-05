@@ -154,7 +154,7 @@ struct MT9V034_Prelude{
 
 
 
-    enum class RegAddr : uint8_t {
+    enum class [[nodiscard]] RegAddr : uint8_t {
         ChipId = 0,
         RowStart,
         ColumnStart,

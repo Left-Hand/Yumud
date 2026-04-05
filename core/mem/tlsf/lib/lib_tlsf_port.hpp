@@ -14,7 +14,7 @@ namespace lib_tlsf {
 #define tlsf_assert(x) ((void)0)
 #endif
 
-#define printf(...) ((void)0)
+#define tlsf_printf(...) ((void)0)
 
 /*
 ** Cast and min/max macros.

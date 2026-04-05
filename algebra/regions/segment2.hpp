@@ -18,7 +18,8 @@ public:
     [[nodiscard]] constexpr explicit Segment2(const Segment2<U> & segment):
         start(Vec2<T>(segment.start)), stop(Vec2<T>(segment.stop)){;}
 
-    [[nodiscard]] constexpr Segment2(const Vec2<auto> & _start, const Vec2<auto> & _stop): 
+    template<typename U>
+    [[nodiscard]] constexpr Segment2(const Vec2<U> & _start, const Vec2<U> & _stop): 
             start(static_cast<Vec2<T>>(_start)), stop(static_cast<Vec2<T>>(_stop)){;}
 
     template<arithmetic U = T>
@@ -88,6 +89,7 @@ public:
         return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
+    #if 0
     [[nodiscard]] __fast_inline constexpr 
     std::optional<Vec2<T>> intersection(const Segment2<T> & other) const{
         if(this->is_parallel_with(other)) return std::nullopt;
@@ -104,6 +106,7 @@ public:
 
         return {this->d - other.d};
     }
+    #endif
 
     [[nodiscard]] __fast_inline constexpr 
     Vec2<T> diff() const{
@@ -197,7 +200,8 @@ using Segment2d = Segment2<double>;
 using Segment2i = Segment2<int>;
 using Segment2u = Segment2<uint>;
 
-__inline OutputStream & operator <<(OutputStream & os, const Segment2<auto> & seg){
+template<typename T>
+__inline OutputStream & operator <<(OutputStream & os, const Segment2<T> & seg){
     return os << os.brackets<'('>() << 
         seg.start << os.splitter() << 
         seg.stop << os.brackets<')'>();

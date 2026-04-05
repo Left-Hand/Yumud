@@ -18,7 +18,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     int32_t i16_exponent;
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_u32(uint32_t iq_n_input_x) {
         if(iq_n_input_x == 0) [[unlikely]]
             return {0, 0};
@@ -70,7 +70,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_u64(uint64_t uiiq_n_input_x) {
         if (uiiq_n_input_x == 0) [[unlikely]]
             return {0, 0};
@@ -137,7 +137,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_sqsum(uint64_t ui64Sum) {
 
         if (ui64Sum == 0) [[unlikely]]
@@ -189,7 +189,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((optimize( "-Ofast" )))
     [[nodiscard]] constexpr uint32_t compute() && {
         if(uiq32_input == 0) [[unlikely]]
             return 0;

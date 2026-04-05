@@ -131,7 +131,7 @@ struct [[nodiscard]] alignas(8) U64Bitset final{
     }
 };
 
-struct [[nodiscard]] alignas(8) TS5700N8501Status final{
+struct [[nodiscard]] alignas(4) TS5700N8501Status final{
     uint8_t sf;
     uint8_t abs0;
     uint8_t abs1;

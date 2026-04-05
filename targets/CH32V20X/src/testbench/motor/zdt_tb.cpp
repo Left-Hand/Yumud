@@ -49,9 +49,8 @@ void zdt_main(){
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
-    zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
-    zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
-
+    zdtmotor::ZdtFrameFactory factory1 = zdtmotor::ZdtFrameFactory::with_node_id(1);
+    zdtmotor::ZdtFrameFactory factory2 = zdtmotor::ZdtFrameFactory::with_node_id(2);
     auto write_packet = [&](const zdtmotor::FlatPacket & packet){
         auto && iter = packet.to_canframe_iter();
         while(iter.has_next()){

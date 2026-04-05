@@ -36,23 +36,30 @@
 
 namespace ymd{
 
-template<arithmetic T>
+template<typename T>
 struct Plane {
 	math::Vec3<T> normal;
 	T d = 0;
 
-
-	__fast_inline constexpr Plane(const math::Vec3<auto> & p_normal, const arithmetic auto p_d) :
+	template<typename U>
+	__fast_inline constexpr Plane(const math::Vec3<U> & p_normal, const U p_d) :
 			normal(p_normal),
 			d(p_d) {
 	}
 
-	__fast_inline constexpr Plane(const math::Vec3<auto> & p_normal, const math::Vec3<auto> & p_point) :
+	template<typename U>
+	__fast_inline constexpr Plane(const math::Vec3<U> & p_normal, const math::Vec3<U> & p_point) :
 			normal(p_normal),
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane(const math::Vec3<auto> &p_point1, const math::Vec3<auto> &p_point2, const math::Vec3<auto> &p_point3,const RotateDirection p_dir = CW) {
+	template<typename U>
+	__fast_inline constexpr Plane(
+		const math::Vec3<U> &p_point1, 
+		const math::Vec3<U> &p_point2, 
+		const math::Vec3<U> &p_point3,
+		const RotateDirection p_dir = CW
+	) {
 		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {
@@ -62,8 +69,10 @@ struct Plane {
 		normal.normalize();
 		d = normal.dot(p_point1);
 	}
-	
-	void set_normal(const math::Vec3<auto> &p_normal);
+
+
+	template<typename U>
+	void set_normal(const math::Vec3<U> &p_normal);
 	__fast_inline math::Vec3<T> get_normal() const { return normal; };
 
 	void normalize();
@@ -110,17 +119,17 @@ struct Plane {
 
 };
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::is_point_over(const math::Vec3<T> &p_point) const {
 	return (normal.dot(p_point) > d);
 }
 
-template<arithmetic T>
+template<typename T>
 T Plane<T>::distance_to(const math::Vec3<T> &p_point) const {
 	return (normal.dot(p_point) - d);
 }
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::has_point(const math::Vec3<T> &p_point, const T p_tolerance) const {
 	T dist = normal.normalized().dot(p_point) - d;
 	dist = ABS(dist);
@@ -129,18 +138,18 @@ bool Plane<T>::has_point(const math::Vec3<T> &p_point, const T p_tolerance) cons
 
 
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::operator==(const Plane<T> &p_plane) const {
 	return normal == p_plane.normal && d == p_plane.d;
 }
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::operator!=(const Plane<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
 
-template<arithmetic T>
+template<typename T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & value){
     return os << os.brackets<'('>() << 
 		value.normal << os.splitter() << 
@@ -153,13 +162,8 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & valu
 
 namespace ymd{
 
-template<arithmetic T>
-void Plane<T>::set_normal(const math::Vec3<auto> &p_normal) {
-	normal = p_normal;
-}
 
-
-template<arithmetic T>
+template<typename T>
 void Plane<T>::normalize() {
 	T l = normal.length();
 	if (l == 0) {
@@ -171,7 +175,7 @@ void Plane<T>::normalize() {
 }
 
 
-template<arithmetic T>
+template<typename T>
 Plane<T> Plane<T>::normalized() const {
 	Plane<T> p = *this;
 	p.normalize();
@@ -179,7 +183,7 @@ Plane<T> Plane<T>::normalized() const {
 }
 
 
-template<arithmetic T>
+template<typename T>
 math::Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
 	static constexpr auto p1 = math::Vec3<T>(1, 0, 0);
 	static constexpr auto p2 = math::Vec3<T>(0, 1, 0);
@@ -199,7 +203,7 @@ math::Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
 
 /* intersections */
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, math::Vec3<T> & r_result) const {
 	const Plane<T> &p_plane0 = *this;
 	math::Vec3<T> normal0 = p_plane0.normal;
@@ -221,7 +225,7 @@ bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, m
 
 
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir, math::Vec3<T> & p_intersection) const {
 	math::Vec3<T> segment = p_dir;
 	T den = normal.dot(segment);
@@ -244,7 +248,7 @@ bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &
 }
 
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end, math::Vec3<T> & p_intersection) const {
 	math::Vec3<T> segment = p_begin - p_end;
 	T den = normal.dot(segment);
@@ -264,7 +268,7 @@ bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3
 }
 
 
-template<arithmetic T>
+template<typename T>
 std::optional<math::Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const {
 	math::Vec3<T> inters;
 	if (intersect_3(p_plane1, p_plane2, inters)) {
@@ -275,7 +279,7 @@ std::optional<math::Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, con
 }
 
 
-template<arithmetic T>
+template<typename T>
 std::optional<math::Vec3<T>> Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir) const {
 	math::Vec3<T> inters;
 	if (intersects_ray(p_from, p_dir, inters)) {
@@ -286,7 +290,7 @@ std::optional<math::Vec3<T>> Plane<T>::intersects_ray(const math::Vec3<T> &p_fro
 }
 
 
-template<arithmetic T>
+template<typename T>
 std::optional<math::Vec3<T>> Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end) const {
 	math::Vec3<T> inters;
 	if (intersects_segment(p_begin, p_end, inters)) {
@@ -298,22 +302,23 @@ std::optional<math::Vec3<T>> Plane<T>::intersects_segment(const math::Vec3<T> &p
 
 /* misc */
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::is_equal_approx_any_side(const Plane<T> &p_plane) const {
 	return (normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d)) || (normal.is_equal_approx(-p_plane.normal) && is_equal_approx(d, -p_plane.d));
 }
 
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::is_equal_approx(const Plane<T> &p_plane) const {
 	return normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d);
 }
 
 
-template<arithmetic T>
+template<typename T>
 bool Plane<T>::is_finite() const {
 	return normal.is_finite() && is_finite(d);
 }
+
 
 
 }

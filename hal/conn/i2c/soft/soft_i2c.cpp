@@ -1,14 +1,18 @@
 #include "soft_i2c.hpp"
-#include "core/clock/monotic_clock.hpp"
+#include "core/clock/monotonic_clock.hpp"
 #include "core/debug/debug.hpp"
 #include "hal/gpio/gpio.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
-#define SoftI2c_SCL_USE_PP_THAN_OD
-// #define SoftI2c_DISCARD_ACK
-// #define SoftI2c_TEST_TIMEOUT (1000)
+// 对于部分i2c驱动能力弱的外设芯片(LT8960) 使用推挽输出的scl能避免由于人体触摸等问题导致的通信死锁问题
+// 但对于另一部分芯片(如BMI160) 这可能会导致通信误码
+// #define SOFT_I2C_SCL_USE_PP_THAN_OD
+
+
+// #define SOFT_I2C_DISCARD_ACK
+// #define SOFT_I2C_TEST_TIMEOUT (1000)
 
 
 void SoftI2c::delay_dur(){
@@ -27,12 +31,12 @@ HalResult SoftI2c::wait_ack(){
 
     bool ovt = false;
 
-    #ifndef SoftI2c_DISCARD_ACK
+    #ifndef SOFT_I2C_DISCARD_ACK
     const auto m = clock::micros();
     while(sda_pin().read() == HIGH){
         if(clock::micros() - m >= 
-        #if SoftI2c_TEST_TIMEOUT
-            SoftI2c_TEST_TIMEOUT
+        #if SOFT_I2C_TEST_TIMEOUT
+            SOFT_I2C_TEST_TIMEOUT
         #else
             timeout_
         #endif
@@ -72,7 +76,7 @@ HalResult SoftI2c::borrow(const I2cSlaveAddrWithRw req){
 
 
 HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
-    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
+    #ifdef SOFT_I2C_SCL_USE_PP_THAN_OD
     scl_pin().outpp();
     #else
     scl_pin().outod();
@@ -97,7 +101,7 @@ HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
 
 
     return header_err_transform(
-        write((addr << 1)| static_cast<uint16_t>(is_read))
+        write_byte((addr << 1)| static_cast<uint16_t>(is_read))
     );
 }
 
@@ -114,7 +118,7 @@ void SoftI2c::trail(){
 
 
 
-HalResult SoftI2c::write(const uint32_t data){
+HalResult SoftI2c::write_byte(const uint32_t data){
     sda_pin().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -128,7 +132,7 @@ HalResult SoftI2c::write(const uint32_t data){
     return wait_ack();
 }
 
-HalResult SoftI2c::read(uint8_t & data, const Ack ack){
+HalResult SoftI2c::read_byte(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda_pin().set_high();
@@ -161,7 +165,7 @@ void SoftI2c::init(const Config & cfg){
     sda_pin().outod();
     scl_pin().set_high();
 
-    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
+    #ifdef SOFT_I2C_SCL_USE_PP_THAN_OD
     scl_pin().outpp();
     #else
     scl_pin().outod();

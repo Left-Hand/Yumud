@@ -111,7 +111,8 @@ public:
             this->size());
     }
 
-    [[nodiscard]] constexpr bool is_shared_with(const Image<auto> & other) const {
+    template<typename U>
+    [[nodiscard]] constexpr bool is_shared_with(const Image<U> & other) const {
         return resource_ == other.resource_;
     }
 

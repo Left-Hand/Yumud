@@ -23,7 +23,7 @@ IResult<> retry(const size_t times, Fn && fn){
 }
 
 
-static constexpr auto MAX_RETRY_TIMES = 3u;
+static constexpr size_t MAX_RETRY_TIMES = 3u;
 
 static constexpr uint8_t GYR_CHIP_ID = 0;
 

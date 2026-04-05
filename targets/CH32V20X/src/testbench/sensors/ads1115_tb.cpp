@@ -14,57 +14,7 @@ using namespace ymd;
 #define SCL_PIN hal::PA<12>();
 #define SDA_PIN hal::PA<15>();
 
-struct ConfigBuilder:public drivers::ADS111X_Prelude{
 
-    [[nodiscard]]
-    static constexpr Option<MUX> singleend(const size_t N){
-        switch(N){
-            case 0: return Some(MUX::P0NG);
-            case 1: return Some(MUX::P1NG);
-            case 2: return Some(MUX::P2NG);
-            case 3: return Some(MUX::P3NG);
-        }
-        return None;
-    }
-
-    [[nodiscard]] 
-    static constexpr Option<MUX> differential(const size_t P, const size_t N){
-
-        constexpr std::array mappings{
-            std::tuple{0UL,1UL,MUX::P0N1},
-            std::tuple{0UL,3UL,MUX::P0N3},
-            std::tuple{1UL,3UL,MUX::P1N3},
-            std::tuple{2UL,3UL,MUX::P2N3}
-        };
-    
-        // 使用范围遍历+模式匹配
-        for (const auto& [valid_P, valid_N, mux_val] : mappings) {
-            if (P == valid_P && N == valid_N) {
-                return Some(mux_val);
-            }
-        }
-        return None;
-    }
-
-    [[nodiscard]] 
-    static constexpr Option<DataRate> datarate(const size_t dr){
-        switch(dr){
-            case 8: return Some(DataRate::_8);
-            case 16: return Some(DataRate::_16);
-            case 32: return Some(DataRate::_32);
-            case 64: return Some(DataRate::_64);
-            case 128: return Some(DataRate::_128);
-            case 250: return Some(DataRate::_250);
-            case 475: return Some(DataRate::_475);
-            case 860: return Some(DataRate::_860);
-        }
-        return None;
-    }
-
-    Result<void, void> apply(){
-        return Ok{};
-    }
-};
 
 void ads1115_main()
 {
@@ -80,14 +30,17 @@ void ads1115_main()
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     auto i2c = hal::SoftI2c(scl_pin_, sda_pin_);
+
+
     i2c.init({
         .baudrate = hal::NearestFreq(400_KHz)
     });
 
     drivers::ADS1115 ads{&i2c};
 
-    static constexpr auto datarate = ConfigBuilder().datarate(860).unwrap();
-    static constexpr auto mux = ConfigBuilder().differential(2,3).unwrap();
+    static constexpr auto builder = drivers::ADS1115::ConfigBuilder();
+    static constexpr auto datarate = builder.datarate(860).unwrap();
+    static constexpr auto mux = builder.differential(2,3).unwrap();
     ads.set_datarate(datarate).examine();
     ads.set_mux(mux).examine();
     // ads.setMux(ads.builder().singleend(0).unwarp());
@@ -97,7 +50,7 @@ void ads1115_main()
 
     while(true){
         // if(ads.ready()){
-            DEBUG_PRINTLN(clock::millis(), ads.get_voltage().unwrap());
+            DEBUG_PRINTLN(clock::millis(), ads.get_conversion_result().unwrap());
         // }
 
         // ads.

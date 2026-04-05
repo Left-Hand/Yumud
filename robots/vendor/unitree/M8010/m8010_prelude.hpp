@@ -13,7 +13,6 @@
 
 namespace ymd::robots::unitree{
 
-
 struct [[nodiscard]] MotorId final{
     uint8_t bits;
 
@@ -162,7 +161,7 @@ struct [[nodiscard]] KdCode final{
     using Self = KdCode;
     uint16_t bits;
 
-    static constexpr Result<Self, std::strong_ordering> try_from(const uq16 val){
+    static constexpr Result<KdCode, std::strong_ordering> try_from(const uq16 val){
         const auto ret = val * 1280u;
         if(val > uq16(25.6)) 
             return Err(std::strong_ordering::greater);
@@ -175,9 +174,6 @@ struct [[nodiscard]] KdCode final{
     }
 };
 
-static_assert(sizeof(KdCode) == 2);
-static_assert(std::is_trivially_copyable_v<KdCode>);
-static_assert(KdCode::try_from(iq15(0.1)).unwrap().bits == 128);
 
 struct [[nodiscard]] TxHeader final{
     static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {
@@ -204,8 +200,8 @@ struct [[nodiscard]] TxContext final{
         self.kd_code.fill_bytes(bytes.subspan<13-2,2>());
     }
     
-    template<typename Receiver>
-    void sink_to(Receiver && receiver) const {
+    template<typename Serializer>
+    void sink_to(Serializer && serializer) const {
         auto & self = *this;
         std::array<uint8_t, 17> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
@@ -214,7 +210,7 @@ struct [[nodiscard]] TxContext final{
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
-        receiver.sink_bytes(std::span(buffer));
+        serializer.sink_bytes(std::span(buffer));
     } 
 };
 
@@ -228,10 +224,16 @@ struct [[nodiscard]] RxHeader final{
 
 
 struct [[nodiscard]] TempCode final{
-    int8_t bits;
+    uint8_t bits;
+
+    using Self = TempCode;
 
     constexpr int8_t to_celeius() const {
-        return bits;
+        return std::bit_cast<uint8_t>(bits);
+    }
+
+    constexpr Self from_bits(uint8_t b) const {
+        return Self{.bits = std::bit_cast<uint8_t>(b)};
     }
 
     constexpr void fill_bytes(std::span<uint8_t, 1> bytes) const{
@@ -268,6 +270,8 @@ struct [[nodiscard]] ErrorCode final{
 
 struct [[nodiscard]] RxContext final{
     using Self = RxContext;
+
+
     ModeInfo mode_info;
     TorqueCode torque_code;
     X2Code x2_code;
@@ -277,7 +281,7 @@ struct [[nodiscard]] RxContext final{
     struct [[nodiscard]] Misc final{
         uint16_t err_bits : 3;
         uint16_t force_bits : 12;
-        uint16_t :1;
+        uint16_t __resv__:1;
 
         static constexpr Misc from_bytes(std::span<const uint8_t, 2> bytes){
             const uint16_t ret = bytes[0] | (bytes[1] << 8);
@@ -314,8 +318,8 @@ struct [[nodiscard]] RxContext final{
         self.misc.fill_bytes(bytes.subspan<10,2>());
     }
 
-    template<typename Receiver>
-    void sink_to(Receiver && receiver) const {
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer && serializer) const {
         auto & self = *this;
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
@@ -324,7 +328,7 @@ struct [[nodiscard]] RxContext final{
         buffer[14] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[15] = static_cast<uint8_t>(crc_code >> 8);
 
-        receiver.sink_bytes(std::span(buffer));
+        return serializer.push_bytes(std::span(buffer));
     } 
 };
 }

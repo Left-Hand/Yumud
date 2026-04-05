@@ -151,30 +151,31 @@ public:
 
     [[nodiscard]] __fast_inline static constexpr 
     Rect2 from_minimal_bounding_box(
-        const std::initializer_list<Vec2<T>> & points){
-            return from_minimal_bounding_box(std::span(points.begin(), points.end()));
-        }
+        const std::initializer_list<Vec2<T>> & points
+    ){
+        return from_minimal_bounding_box(std::span(points.begin(), points.end()));
+    }
 
     // Add direct component accessors
     [[nodiscard]] __fast_inline constexpr 
     T & x() { return top_left.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & x() const { return top_left.x; }
+    const T x() const { return top_left.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & y() { return top_left.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & y() const { return top_left.y; }
+    const T y() const { return top_left.y; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & w() { return size.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & w() const { return size.x; }
+    const T w() const { return size.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & h() { return size.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T & h() const { return size.y; }
+    const T h() const { return size.y; }
 
     [[nodiscard]] __fast_inline constexpr 
     bool contains_x(const T p_x) const{
@@ -359,7 +360,7 @@ public:
 
     [[nodiscard]] constexpr Rect2<T> scale_around_center(const auto & amount)const {
         return Rect2<T>::from_center_and_size(
-            this->get_center(), this->size * amount);
+            this->center(), this->size * amount);
     }
 
     [[nodiscard]] constexpr Range2<T> x_range() const{
@@ -423,7 +424,7 @@ private:
 
 using Rect2i = Rect2<int>;
 using Rect2f = Rect2<float>;
-using Rect2u = Rect2<uint>;
+using Rect2u = Rect2<size_t>;
 
 using Rect2u8 = Rect2<uint8_t>;
 using Rect2u16 = Rect2<uint16_t>;

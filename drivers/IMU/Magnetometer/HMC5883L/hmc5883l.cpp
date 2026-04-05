@@ -118,7 +118,7 @@ IResult<> HMC5883L::init(){
 
 IResult<> HMC5883L::enable_high_speed(const Enable en){
     auto reg = RegCopy(regs_.mode_reg);
-    reg.hs = true;
+    reg.hs = (en == EN);
     return write_reg(reg);
 }
 

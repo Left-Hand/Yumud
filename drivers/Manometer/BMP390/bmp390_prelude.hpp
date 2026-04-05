@@ -80,7 +80,7 @@ struct R8_Status:public Reg8<>{
     uint8_t cmd_rdy:1;
     uint8_t drdy_press:1;
     uint8_t drdy_temp:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
 };
 
 
@@ -95,7 +95,7 @@ struct R8_Event:public Reg8<>{
 struct R8_IntStatus:public Reg8<>{
     uint8_t fwm_int:1;
     uint8_t ffull_int:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
     uint8_t drdy:1;
     uint8_t :4;
 };
@@ -126,7 +126,7 @@ struct R8_IntCtrl:public Reg8<>{
     uint8_t ffull_en:1;
     uint8_t int_ds:1;
     uint8_t drdy_en:1;
-    uint8_t :1;
+    uint8_t __resv__:1;
 };
 
 //0x1A

@@ -28,36 +28,28 @@ struct E104BT10_Prelude{
         uint16_t addr;
     };
 
-    struct Msg{
-        DeviceAddr targ;
+    struct [[nodiscard]] Packet final{
+        DeviceAddr dst_addr;
         std::array<uint8_t, 8> payload;
         uint8_t len;
-
-        // constexpr Msg(DeviceAddr targ, std::span<const uint8_t> pbuf):
-        //     targ(targ), 
-        //     len(pbuf.size()){
-        //         std::copy(pbuf.begin(), pbuf.end(), payload.begin());
-        //     }
-
-        static constexpr Msg from_targ_and_pbuf(DeviceAddr targ, std::span<uint8_t> pbuf){
+        static constexpr Packet from_targ_and_pbuf(DeviceAddr dst_addr, std::span<uint8_t> pbuf){
             std::array<uint8_t, 8> buf;
             std::copy(pbuf.begin(), pbuf.end(), buf.begin());
-            return Msg{
-                targ,
+            return Packet{
+                dst_addr,
                 buf,
-                pbuf.size()
+                static_cast<uint8_t>(pbuf.size())
             };
         }
 
-        static constexpr std::span<const uint8_t> as_bytes() const {
+        constexpr std::span<const uint8_t> as_bytes() const {
             return std::span<const uint8_t>(payload.data(), len);
         }
 
-
-        constexpr size()const{
+        constexpr size_t size()const{
             return len;
         }
-    }
+    };
 };
 
 class E104BT10_Transport final:public E104BT10_Prelude{
@@ -72,14 +64,14 @@ public:
 
 
     IResult<> write_msg(
-        // const DeviceAddr targ, 
+        // const DeviceAddr dst_addr, 
         // const std::span<const uint8_t> pbuf
-        const Msg & msg
+        const Packet & msg
     ){
         if(msg.size() > 8)
             return Err(Error::PayloadExceed8Bytes);
-        // return write_args(Command::Transmit, targ.addr, pbuf);
-        return write_args(Command::Transmit, msg.targ.addr, msg.as_bytes());
+        // return write_args(Command::Transmit, dst_addr.addr, pbuf);
+        return write_args(Command::Transmit, msg.dst_addr.addr, msg.as_bytes());
     }
 };
 
@@ -93,5 +85,6 @@ private:
     void refactory(){
         transport_.write_args(0x02, 0xc0, 0x15);
     }
-}
+};
+
 }

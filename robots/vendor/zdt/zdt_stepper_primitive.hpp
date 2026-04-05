@@ -124,29 +124,29 @@ private:
 struct [[nodiscard]] FlatPacket final{
     NodeId node_id;
     FuncCode func_code;
-    uint8_t context[MAX_CONTEXT_BYTES];
+    std::array<uint8_t, MAX_CONTEXT_BYTES> context;
     uint8_t payload_len;
 
-    constexpr std::span<const uint8_t> payload_bytes() const {
-        return std::span<const uint8_t>(context, payload_len);
-    }
+    template<typename Receiver>
+    Result<void, typename Receiver::Error> serialize(Receiver & receiver) const {
+        auto & self = *this;
+        {
+            const uint8_t buf[] = {
+                static_cast<uint8_t>(node_id.count),
+                static_cast<uint8_t>(func_code)
+            };
 
-    constexpr std::span<const uint8_t> tailed_context_bytes() const {
-        //with crc
-        return std::span<const uint8_t>(context, payload_len + 1);
-    }
+            if(const auto res = receiver.push_bytes(std::span(buf));
+                res.is_err()) return Err(res.unwrap_err());
+        }
 
-    constexpr void set_tailed_context_bytes(std::span<const uint8_t> bytes) {
-        if(bytes.size() < 1) __builtin_trap();
-        payload_len = bytes.size() - 1;
-        std::copy(bytes.begin(), bytes.end(), context);
-    }
+        {
+            const auto bytes = std::span<const uint8_t>(self.context.data(), self.payload_len);
+            if(const auto res = receiver.push_bytes(bytes);
+                res.is_err()) return Err(res.unwrap_err());
+        }
 
-    constexpr std::span<const uint8_t> bytes() const {
-        return std::span<const uint8_t>(
-            (&node_id.count)
-            , payload_len
-        );
+        return Ok();
     }
 
     constexpr Bytes2CanFrameIterator to_canframe_iter() const {
@@ -154,12 +154,12 @@ struct [[nodiscard]] FlatPacket final{
         return Bytes2CanFrameIterator(
             self.node_id,
             self.func_code,
-            self.payload_bytes()
+            std::span<const uint8_t>(self.context.data(), self.payload_len)
         );
     }
 };
 
-static_assert(__builtin_offsetof(FlatPacket, FlatPacket::context[0]) == 2, "packet not nested");
+static_assert(__builtin_offsetof(FlatPacket, FlatPacket::context) == 2, "packet not nested");
 
 enum class Error:uint8_t{
     SubDivideOverflow,
@@ -180,8 +180,6 @@ DEF_DERIVE_DEBUG(Error)
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-
-using Buf = HeaplessVector<uint8_t, MAX_PACKET_BYTES>;
 
 enum class [[nodiscard]] VerifyMethod:uint8_t{
     X6B      = 0x00,

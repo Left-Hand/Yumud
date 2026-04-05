@@ -70,7 +70,7 @@ private:
     HalResult write_payload(const std::span<const T> pbuf,const std::endian endian){
         return iterate_bytes(
             pbuf, endian, 
-            [&](const uint8_t byte, [[maybe_unused]] const bool is_end) -> HalResult{ return i2c_.write(uint32_t(byte)); },
+            [&](const uint8_t byte, [[maybe_unused]] const bool is_end) -> HalResult{ return i2c_.write_byte(uint32_t(byte)); },
             [](const HalResult res) -> bool {return res.is_err();},
             []() -> HalResult {return HalResult::Ok();}
         );
@@ -94,7 +94,7 @@ private:
     HalResult write_homo_payload(const valid_i2c_data auto data, const size_t len, const std::endian endian){
         return iterate_bytes(
             data, len, endian, 
-            [&](const uint8_t byte, [[maybe_unused]] const bool is_end) -> HalResult{ return i2c_.write(uint32_t(byte)); },
+            [&](const uint8_t byte, [[maybe_unused]] const bool is_end) -> HalResult{ return i2c_.write_byte(uint32_t(byte)); },
             [](const HalResult res) -> bool {return res.is_err();},
             []() -> HalResult {return HalResult::Ok();}
         );
@@ -107,7 +107,7 @@ private:
         return iterate_bytes(
             pbuf, endian, 
             [&](uint8_t & byte, const bool is_end) -> HalResult{
-                auto res = i2c_.read(byte, is_end ? NACK : ACK); return res;},
+                auto res = i2c_.read_byte(byte, is_end ? NACK : ACK); return res;},
             [](const HalResult res) -> bool {return res.is_err();},
             []() -> HalResult {return HalResult::Ok();}
         );

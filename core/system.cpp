@@ -125,7 +125,7 @@ uint64_t sys::chip::get_chip_id(){
 }
 
 uint32_t sys::chip::get_flash_size(){
-    const uint32_t chip_flash_size = operator"" _KB(*(volatile uint16_t *)0x1FFFF7E0);
+    const uint32_t chip_flash_size = operator""_KB(*(volatile uint16_t *)0x1FFFF7E0);
     return chip_flash_size;
 }
 
@@ -405,8 +405,8 @@ void sys::abort(const AbortInfo & info){
     sys::trip();
 
 
-    DISABLE_INT;
-    DISABLE_INT;
+    __disable_irq();
+    __disable_irq();
 
     DEBUGGER.set_splitter('\0');
     DEBUG_PRINTLN("\r\nsystem aborted");

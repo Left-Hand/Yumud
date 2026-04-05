@@ -64,7 +64,9 @@ struct [[nodiscard]] Atan2Intermediate{
     // */
     __attribute__((always_inline,  optimize( "-Ofast" )))
     [[nodiscard]] static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
-        // return 0;
+        // uq32_input ∈ [0, 1)
+
+
         const auto & piq32_coeffs = fxmath::details::IQ32ATAN_COEFFS[(uq32_input >> 27)];
         // __builtin_prefetch(&piq32_coeffs[0], );
         /*
@@ -80,13 +82,13 @@ struct [[nodiscard]] Atan2Intermediate{
         uq32_result_pu = uq32_result_pu + piq32_coeffs[1];
 
         /* (c3*x + c2)*x */
-        uq32_result_pu = intrinsics::mul32hsu(uq32_result_pu, uq32_input);
+        uq32_result_pu = intrinsics::mul32hsu(static_cast<int32_t>(uq32_result_pu), uq32_input);
 
         /* (c3*x + c2)*x + c1 */
         uq32_result_pu = uq32_result_pu + piq32_coeffs[2];
 
         /* ((c3*x + c2)*x + c1)*x */
-        uq32_result_pu = intrinsics::mul32hsu(uq32_result_pu, uq32_input);
+        uq32_result_pu = intrinsics::mul32hsu(static_cast<int32_t>(uq32_result_pu), uq32_input);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
         uq32_result_pu = uq32_result_pu + piq32_coeffs[3];
@@ -124,7 +126,7 @@ constexpr ymd::math::fixed<32, uint32_t> atan2pu32(
     } else{
         // 1/8 lap
         // 1/8 * 2^32
-        return flag.apply_to_uq32(((1u << (29))));
+        return flag.apply_to_uq32(((1u << (32 - 3))));
     }
     const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
     return flag.apply_to_uq32(uq32_result_pu);

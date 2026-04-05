@@ -215,8 +215,8 @@ private:
 #define DEF_META_TEMPLATE(name, policy, ratio, prefix)\
 template<typename T>\
 using name = Quantity<policy, T, ratio>;\
-consteval name<float> operator"" _##prefix(long double x) { return name<float>(x); }\
-consteval name<float> operator"" _##prefix(uint64_t x) { return name<float>(float(x)); }\
+consteval name<float> operator""_##prefix(long double x) { return name<float>(x); }\
+consteval name<float> operator""_##prefix(uint64_t x) { return name<float>(float(x)); }\
 template<typename T>\
 ::ymd::OutputStream & operator <<(::ymd::OutputStream & os, const Quantity<policy, T, ratio> & value){\
     return os <<value.get() << #prefix ;\

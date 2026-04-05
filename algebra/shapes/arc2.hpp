@@ -62,10 +62,13 @@ public:
 	}
 };
 
-
-__inline OutputStream & operator <<(OutputStream & os, const Arc2<auto> & arc){
+template<arithmetic T>
+__inline OutputStream & operator <<(OutputStream & os, const Arc2<T> & arc){
 	const auto splt = os.splitter();
-    return os << '(' << arc.center << splt << arc.radius << splt << arc.angle_range << ')';
+    return os << os.brackets<'('>() << 
+        arc.center << splt << 
+        arc.radius << splt << 
+        arc.angle_range << os.brackets<')'>();
 }
 
 

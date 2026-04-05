@@ -1,6 +1,7 @@
 #include "adc.hpp"
 #include "core/debug/debug.hpp"
 #include "core/sdk.hpp"
+#include "ral/adc.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -11,7 +12,7 @@ using namespace ymd::hal;
     std::remove_const_t<b *>>\
 
 #define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, ADC_TypeDef)>(x))
-#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::ADC_Def)>(x))
 
 
 void AdcPrimary::set_regular_channels(
@@ -23,11 +24,11 @@ void AdcPrimary::set_regular_channels(
         i++;
         ADC_RegularChannelConfig(
             SPL_INST(inst_),
-            static_cast<uint8_t>(regular_cfg.sel),
+            static_cast<uint8_t>(regular_cfg.ch_sel),
             i,
             static_cast<uint8_t>(regular_cfg.cycles)
         );
-        adc::details::install_pin(regular_cfg.sel);
+        adc::details::install_pin(regular_cfg.ch_sel);
 
         if(i > 16) break;
     }
@@ -45,7 +46,7 @@ void AdcPrimary::set_injected_channels(
 
             ADC_InjectedChannelConfig(
                 SPL_INST(inst_),
-                static_cast<uint8_t>(injected_cfg.sel),
+                static_cast<uint8_t>(injected_cfg.ch_sel),
                 i,
                 static_cast<uint8_t>(injected_cfg.cycles));
 
@@ -56,7 +57,7 @@ void AdcPrimary::set_injected_channels(
                 // offset can`t be negative
                 static_cast<uint16_t>(std::max<int>(cali_data_, 0))
             ); 
-            adc::details::install_pin(injected_cfg.sel);
+            adc::details::install_pin(injected_cfg.ch_sel);
 
             if(i > 4) break;
         }
@@ -87,16 +88,16 @@ void AdcPrimary::init(
     ADC_Init(SPL_INST(inst_), &ADC_InitStructure);
 
     bool temp_verf_activation = [&]{
-        auto channel_is_temp_or_vref = [](const ChannelSelection sel){
-            return sel == ChannelSelection::TEMP or
-                    sel == ChannelSelection::VREF;
+        auto channel_is_temp_or_vref = [](const ChannelSelection ch_sel){
+            return ch_sel == ChannelSelection::TEMP or
+                    ch_sel == ChannelSelection::VREF;
         };
         for(const auto injected_cfg : injected_list){
-            if(channel_is_temp_or_vref(injected_cfg.sel))
+            if(channel_is_temp_or_vref(injected_cfg.ch_sel))
                 return true;
         }
         for(const auto regular_cfg : regular_list){
-            if(channel_is_temp_or_vref(regular_cfg.sel))
+            if(channel_is_temp_or_vref(regular_cfg.ch_sel))
                 return true;
         }
         return false;
@@ -213,7 +214,8 @@ void AdcPrimary::sw_start_injected(const bool force){
 }
 
 void AdcPrimary::enable_dma(const Enable en){
-    ADC_DMACmd(SPL_INST(inst_), (en == EN));
+    // ADC_DMACmd(SPL_INST(inst_), (en == EN));
+    RAL_INST(inst_)->CTLR2.DMA = (en == EN);
 }
 
 uint16_t AdcPrimary::get_conv_result(){
@@ -233,22 +235,18 @@ void AdcPrimary::set_injected_count(const uint8_t cnt){
     num_injected_ = cnt;
 }
 
-void AdcPrimary::set_regular_sample_cycles(const ChannelSelection sel,  const SampleCycles sample_cycles){
-    uint8_t ch = std::bit_cast<uint8_t>(sel);
-    uint8_t offset = ch % 10;
-    offset *= 3;
+void AdcPrimary::set_regular_sample_cycles(const ChannelSelection ch_sel,  const SampleCycles sample_cycles){
+    uint8_t ch = std::bit_cast<uint8_t>(ch_sel);
+    uint8_t offset = ((ch > 10) ? ch - 10 : ch) * 3;
+    volatile uint32_t & reg = ((ch > 10) ? SPL_INST(inst_)->SAMPTR2 : SPL_INST(inst_)->SAMPTR1);
 
-    if(ch < 10){
-        uint32_t tempreg = SPL_INST(inst_)->SAMPTR1;
-        tempreg &= ~(0xb111 << offset);
-        tempreg |= std::bit_cast<uint8_t>(sample_cycles) << offset;
-        SPL_INST(inst_)->SAMPTR1 = tempreg;
-    }else{
-        uint32_t tempreg = SPL_INST(inst_)->SAMPTR2;
-        tempreg &= ~(0xb111 << offset);
-        tempreg |= std::bit_cast<uint8_t>(sample_cycles) << offset;
-        SPL_INST(inst_)->SAMPTR2 = tempreg;
-    }
+    auto convert_mask = [&](uint32_t tempreg) -> uint32_t {
+        tempreg &= ~(uint32_t(0b111 << offset));
+        tempreg |= (std::bit_cast<uint8_t>(sample_cycles) << offset);
+        return tempreg;
+    };
+
+    reg = convert_mask(static_cast<uint32_t>(reg));
 }
 
 void AdcPrimary::enable_singleshot(const Enable en){

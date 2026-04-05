@@ -62,6 +62,7 @@ IResult<> VCE2755::update(){
 }
 
 IResult<> VCE2755::init(const VCE2755::Config & cfg){
+    (void)(cfg);
     return Ok();
 }
 

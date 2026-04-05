@@ -107,12 +107,16 @@ public:
     }
 
     [[nodiscard]] bool is_transfer_complete();
+    [[nodiscard]] bool is_transfer_onhalf();
 
 public:
     void * inst_;
     
     const Nth dma_nth_;
     const Nth ch_sel_nth_;
+
+    volatile uint32_t & flag_clear_reg_;
+    volatile uint32_t & flag_state_reg_;
 
     const uint32_t transfer_complete_mask_;
     const uint32_t transfer_onhalf_mask_;

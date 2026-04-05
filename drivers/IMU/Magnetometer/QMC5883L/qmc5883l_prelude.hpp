@@ -38,7 +38,7 @@ struct QMC5883L_Prelude{
         _8G
     };
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         MagX = 0x00,
         MagY = 0x02,
         MagZ = 0x04,

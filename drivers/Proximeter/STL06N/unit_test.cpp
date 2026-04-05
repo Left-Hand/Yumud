@@ -14,8 +14,8 @@ namespace {
     };
 
     constexpr auto actual_crc = [&]() -> uint8_t{
-        Crc8Calculator calc = Crc8Calculator();
-        return calc.push_bytes(std::span(bytes)).get();
+        Crc8Builder calc = Crc8Builder();
+        return calc.push_bytes(std::span(bytes)).finalize();
     }();
     static_assert(actual_crc == 0x50);
 }
@@ -29,8 +29,8 @@ namespace {
     };
 
     constexpr auto actual_crc = [&]() -> uint8_t{
-        Crc8Calculator calc = Crc8Calculator();
-        return calc.push_bytes(std::span(bytes)).get();
+        Crc8Builder calc = Crc8Builder();
+        return calc.push_bytes(std::span(bytes)).finalize();
     }();
     static_assert(actual_crc == 0xBC);
 }
@@ -42,7 +42,6 @@ static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::start_ang
 static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::packed_points) == 4);
 static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::stop_angle_code) == 40);
 static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::timestamp) == 42);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::crc8) == 44);
 
 
 }

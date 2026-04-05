@@ -20,17 +20,17 @@ namespace ymd::encrypt::sha256{
 namespace details{
 
 static constexpr void STORE32H(uint32_t x, std::span<uint8_t, 4> y){
-    y[0] = (uint8_t)(((x)>>24) & 0xff);
-    y[1] = (uint8_t)(((x)>>16) & 0xff);
-    y[2] = (uint8_t)(((x)>>8) & 0xff);
-    y[3] = (uint8_t)((x) & 0xff);
+    y[0] = static_cast<uint8_t>(((x)>>24) & 0xff);
+    y[1] = static_cast<uint8_t>(((x)>>16) & 0xff);
+    y[2] = static_cast<uint8_t>(((x)>>8) & 0xff);
+    y[3] = static_cast<uint8_t>((x) & 0xff);
 }
 
 static constexpr uint32_t LOAD32H(std::span<const uint8_t, 4> y){
-    return (((uint32_t)((y)[0] & 0xff)<<24) |
-            ((uint32_t)((y)[1] & 0xff)<<16) |
-            ((uint32_t)((y)[2] & 0xff)<<8)  |
-            ((uint32_t)((y)[3] & 0xff)));
+    return ((static_cast<uint32_t>((y)[0] & 0xff)<<24) |
+            (static_cast<uint32_t>((y)[1] & 0xff)<<16) |
+            (static_cast<uint32_t>((y)[2] & 0xff)<<8)  |
+            (static_cast<uint32_t>((y)[3] & 0xff)));
 
 }
 
@@ -65,19 +65,28 @@ static constexpr uint32_t ror(uint32_t x) {
 }
 
 // Various logical functions
-static constexpr uint32_t Ch(uint32_t x,uint32_t y,uint32_t z ){return (z ^ (x & (y ^ z)));}
-static constexpr uint32_t Maj(uint32_t x,uint32_t y,uint32_t z ){return (((x | y) & z) | (x & y));}
+[[nodiscard]] static constexpr uint32_t Ch(uint32_t x,uint32_t y,uint32_t z ){
+    return (z ^ (x & (y ^ z)));}
+[[nodiscard]] static constexpr uint32_t Maj(uint32_t x,uint32_t y,uint32_t z ){
+    return (((x | y) & z) | (x & y));}
 
 template<size_t n>  
-static constexpr uint32_t S(uint32_t x){return ror<n>(x);}
+[[nodiscard]] static constexpr uint32_t S(uint32_t x){
+    return ror<n>(x);}
+
 template<size_t n>  
-static constexpr uint32_t R(uint32_t x){return (((x)&0xFFFFFFFF)>>(n));}
+[[nodiscard]] static constexpr uint32_t R(uint32_t x){
+    return (((x)&0xFFFFFFFF)>>(n));}
 
-static constexpr uint32_t Sigma0(uint32_t x ){return (S<2>(x) ^ S<13>(x) ^ S<22>(x));}
-static constexpr uint32_t Sigma1(uint32_t x ){return (S<6>(x) ^ S<11>(x) ^ S<25>(x));}
+[[nodiscard]] static constexpr uint32_t Sigma0(uint32_t x ){
+    return (S<2>(x) ^ S<13>(x) ^ S<22>(x));}
+[[nodiscard]] static constexpr uint32_t Sigma1(uint32_t x ){
+    return (S<6>(x) ^ S<11>(x) ^ S<25>(x));}
 
-static constexpr uint32_t Gamma0(uint32_t x ){return (S<7>(x) ^ S<18>(x) ^ R<3>(x));}
-static constexpr uint32_t Gamma1(uint32_t x ){return (S<17>(x) ^ S<19>(x) ^ R<10>(x));}
+[[nodiscard]] static constexpr uint32_t Gamma0(uint32_t x ){
+    return (S<7>(x) ^ S<18>(x) ^ R<3>(x));}
+[[nodiscard]] static constexpr uint32_t Gamma1(uint32_t x ){
+    return (S<17>(x) ^ S<19>(x) ^ R<10>(x));}
 
 
 }
@@ -96,23 +105,23 @@ struct Sha256Context{
 
         if( curlen > BLOCK_SIZE ) return;
 
-        auto Buffer = pbuf.data();
-        auto BufferSize = static_cast<int32_t>(pbuf.size());
+        auto buffer = pbuf.data();
+        auto buffer_size = static_cast<int32_t>(pbuf.size());
 
-        while( BufferSize > 0 ){
-            if((curlen == 0) and (static_cast<size_t>(BufferSize) >= BLOCK_SIZE)){
-                transform(std::span<const uint8_t, BLOCK_SIZE>(Buffer, BLOCK_SIZE));
+        while( buffer_size > 0 ){
+            if((curlen == 0) and (static_cast<size_t>(buffer_size) >= BLOCK_SIZE)){
+                transform(std::span<const uint8_t, BLOCK_SIZE>(buffer, BLOCK_SIZE));
                 length += BLOCK_SIZE * 8;
-                Buffer = Buffer + BLOCK_SIZE;
-                BufferSize -= BLOCK_SIZE;
+                buffer = buffer + BLOCK_SIZE;
+                buffer_size -= BLOCK_SIZE;
             }else{
-                n = std::min<int32_t>( BufferSize, (BLOCK_SIZE - curlen) );
-                // memcpy( buf + curlen, (void *)Buffer, (int)n );
-                std::copy( Buffer, Buffer + n, buf.data() + curlen );
+                n = std::min<int32_t>( buffer_size, (BLOCK_SIZE - curlen) );
+                // memcpy( buf + curlen, (void *)buffer, (int)n );
+                std::copy( buffer, buffer + n, buf.data() + curlen );
 
                 curlen += n;
-                Buffer = Buffer + n;
-                BufferSize -= n;
+                buffer = buffer + n;
+                buffer_size -= n;
                 if( curlen == BLOCK_SIZE )
                 {
                     transform(std::span(buf));

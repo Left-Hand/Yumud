@@ -9,7 +9,7 @@
 #include "hal/conn/spi/spidrv.hpp"
 
 
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 
 
 namespace ymd::drivers{
@@ -204,7 +204,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         IoDriveStrength io_strength:1;
         Mux mux:2;
         AbzPowerOnWaveform abz_power_on_waveform:2;
-        uint8_t :2;
+        uint8_t __resv__:2;
     };
 
     VALIDATE_R8(R8_IO)
@@ -213,9 +213,9 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     struct [[nodiscard]] R8_AbzInvert:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
         uint8_t abz_inv:1;
-        uint8_t :5;
+        uint8_t __resv__:5;
         PwmFreq pwm_freq:1;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     };
 
     VALIDATE_R8(R8_AbzInvert)
@@ -223,9 +223,9 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x42
     struct [[nodiscard]] R8_Direction:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x42};
-        uint8_t :5;
+        uint8_t __resv__:5;
         uint8_t is_ccw:1;
-        uint8_t :2;
+        uint8_t __resv2__:2;
     };
 
     VALIDATE_R8(R8_Direction)
@@ -235,7 +235,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     struct [[nodiscard]] R16_AbzResolution:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x43};
         uint8_t abz_res_9_8:2;
-        uint8_t :6;
+        uint8_t __resv__:6;
         uint8_t abz_res_7_0:8;
 
         void set_resolution(const uint16_t resolution) {
@@ -254,7 +254,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     struct [[nodiscard]] R16_ZeroPosition:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x46};
         uint8_t zero_pos_11_8:4;
-        uint8_t :4;
+        uint8_t __resv__:4;
         uint8_t zero_pos_7_0:8;
 
         void set_angle(const Angular<uq32> angle) {
@@ -269,7 +269,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x48
     struct [[nodiscard]] R8_Hysteresis:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x48};
-        uint8_t :5;
+        uint8_t __resv__:5;
         Hysteresis hysteresis:3;
     };
 
@@ -278,7 +278,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x4a
     struct [[nodiscard]] R8_ZWidth:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4a};
-        uint8_t :5;
+        uint8_t __resv__:5;
         uint8_t z_width:3;
     };
 
@@ -288,7 +288,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     struct [[nodiscard]] R8_UvwResolution:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4c};
         uint8_t abz_resolution:3;
-        uint8_t :5;
+        uint8_t __resv__:5;
     };
 
     VALIDATE_R8(R8_UvwResolution)

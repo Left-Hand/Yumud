@@ -87,18 +87,6 @@ public:
             return true;
     }
 
-    // 链式处理
-    template<typename Fn>
-    HalResult then(Fn && fn){
-        if (is_ok()) return std::forward<Fn>(fn)();
-        return *this;
-    }
-
-    HalResult operator | (const HalResult rhs) const{
-        if(is_err()) return *this;
-        else return rhs;
-    }
-
     constexpr HalError unwrap_err() const {return err_.value();}
 
 private:

@@ -36,7 +36,7 @@ namespace {
 
     static_assert([&]()  {
         // Test multi-line string
-        StringView multi = "line1\nline2\nline3";
+        StringView multi = "line1\nline2\n\nline3";
         StringSplitIter multi_iter(multi, '\n');
         
         if (!multi_iter.has_next()) return false;
@@ -44,6 +44,7 @@ namespace {
         
         if (!multi_iter.has_next()) return false;
         if (!test_string_view_equal(multi_iter.next(), "line2")) return false;
+        
         
         if (!multi_iter.has_next()) return false;
         if (!test_string_view_equal(multi_iter.next(), "line3")) return false;

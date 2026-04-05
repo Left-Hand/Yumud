@@ -1,14 +1,13 @@
 #pragma once
 
 #include "ads1115_prelude.hpp"
-#include "core/math/real.hpp"
-#include "core/utils/Option.hpp"
+
 
 namespace ymd::drivers{
 
 
 class ADS111X final:
-    public ADS111X_Regs{
+    public ADS111X_Prelude{
 public:
     explicit ADS111X(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -34,11 +33,13 @@ public:
 
     IResult<bool> is_busy();
 
-    [[nodiscard]] Option<iq16> get_voltage();
+    [[nodiscard]] Option<int16_t> get_conversion_result();
 
     IResult<> validate();
 
 private:
+    using Regset = ADS111X_Regs;
+    Regset regs_;
     hal::I2cDrv i2c_drv_;
 
     IResult<> read_reg(const uint8_t reg_addr, uint16_t & reg_val);
@@ -56,8 +57,6 @@ private:
     IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
-
-
 };
 
 using ADS1113 = ADS111X;

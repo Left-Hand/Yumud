@@ -21,12 +21,12 @@ struct [[nodiscard]] SphericalCoordinates{
     }
 
     [[nodiscard]] math::Vec3<T> constexpr to_vec3() const {
-        const auto [azimuth_s, azimuth_c] = azimuth.sincos();
-        const auto [elevation_s, elevation_c] = elevation.sincos();
+        const auto [azimuth_sine, azimuth_cosine] = azimuth.sincos();
+        const auto [elevation_sine, elevation_cosine] = elevation.sincos();
         return math::Vec3<T>{
-            distance * azimuth_c * elevation_c,
-            distance * azimuth_s * elevation_c,
-            distance * elevation_s
+            distance * static_cast<T>(azimuth_cosine) * static_cast<T>(elevation_cosine),
+            distance * static_cast<T>(azimuth_sine) * static_cast<T>(elevation_cosine),
+            distance * static_cast<T>(elevation_sine)
         };
     }
 
@@ -52,13 +52,16 @@ struct [[nodiscard]] SphericalCoordinates{
     }
 
     // [[nodiscard]] Polar<T> constexpr to_polar() const{
-    //     const auto elevation_c = elevation.cos();
-    //     return Polar<T>(distance * elevation_c, azimuth);
+    //     const auto elevation_cosine = elevation.cos();
+    //     return Polar<T>(distance * elevation_cosine, azimuth);
     // }
 
     [[nodiscard]] std::tuple<Polar<T>, T> constexpr to_polar_and_height() const{
-        const auto [elevation_s, elevation_c] = elevation.sincos();
-        return std::make_tuple(Polar<T>(distance * elevation_c, azimuth), distance * elevation_s);
+        const auto [elevation_sine, elevation_cosine] = elevation.sincos();
+        return std::make_tuple(
+            Polar<T>(distance * elevation_cosine, azimuth), 
+            distance * elevation_sine
+        );
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self){

@@ -33,18 +33,6 @@ public:
         std::copy(elements.begin(), elements.end(), buf_);
     }
 
-    template<typename ... Ts>
-    requires (sizeof...(Ts) == N)
-    constexpr Vector(Ts&& ... args) noexcept : 
-        size_(sizeof...(Ts))
-    {
-        // Use an index sequence to properly forward each argument to the corresponding element
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
-            ((buf_[Is] =  T(std::forward<Ts>(args))), ...);
-        }(std::make_index_sequence<N>{});
-    }
-
-
     constexpr Vector from_array(const std::array<T, N> & arr) noexcept{
         return Vector<T, N>(std::span<const T, N>(arr));
     }
@@ -130,16 +118,21 @@ public:
     }
 
     [[nodiscard]] constexpr T * data() noexcept{
-        return buf_;
+        return std::launder(reinterpret_cast<T*>(&buf_));
     }
     [[nodiscard]] constexpr const T * data() const noexcept{
-        return buf_;
+        return std::launder(reinterpret_cast<const T*>(&buf_));
     }
 
     constexpr void reserve(const size_t len){
         if(len > capacity()) __builtin_trap();
         static_assert(std::is_default_constructible_v<T>);
-        for(size_t i = 0; i < len; i++){
+
+        if(len < size_) {
+            std::destroy(buf_ + len, buf_ + size_);
+        }
+
+        for(size_t i = size_; i < len; i++){
             std::construct_at(&buf_[i]);
         }
         size_ = len;
@@ -185,21 +178,21 @@ public:
 
     constexpr void append_unchecked(const T data){
         // ASSERT(size_ + 1 <= N);
-        buf_[size_] = data;
+        std::construct_at(&buf_[size_], data);
         size_ = size_ + 1;
     }
 
     constexpr void append_unchecked(const std::span<const T> pbuf){
         // ASSERT(size_ + pbuf.size() <= N);
         for(size_t i = 0; i < pbuf.size(); i++){
-            buf_[size_ + i] = pbuf[i];
+            std::construct_at(&buf_[size_ + i], pbuf[i]);
         }
         size_ += pbuf.size();
     }
 
     [[nodiscard]] constexpr Result<void, void> append(const T data){
         if(size_ + 1 > N) return Err();
-        buf_[size_] = data;
+        std::construct_at(&buf_[size_], data);
         size_ = size_ + 1;
         return Ok();
     }
@@ -207,7 +200,7 @@ public:
     [[nodiscard]] constexpr Result<void, void> append(const std::span<const T> pbuf){
         if(size_ + pbuf.size() > N) return Err();
         for(size_t i = 0; i < pbuf.size(); i++){
-            buf_[size_ + i] = pbuf[i];
+            std::construct_at(&buf_[size_ + i], pbuf[i]);
         }
         size_ += pbuf.size();
         return Ok();
@@ -256,17 +249,17 @@ public:
     }
 
     [[nodiscard]] constexpr Option<const T &> at(size_t idx) const noexcept {
-        if(idx > size_) return None;
+        if(idx >= size_) return None;
         return Some(&buf_[idx]);
     }
 
     [[nodiscard]] constexpr T at_or(size_t idx, const T & other) const noexcept {
-        if(idx > size_) return other;
+        if(idx >= size_) return other;
         return buf_[idx];
     }
 
     [[nodiscard]] constexpr Option<T &> at(size_t idx) noexcept {
-        if(idx > size_) return None;
+        if(idx >= size_) return None;
         return Some(&buf_[idx]);
     }
 

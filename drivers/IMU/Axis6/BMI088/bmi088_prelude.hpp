@@ -182,9 +182,9 @@ struct BMI088_GyrRegs:public BMI088_Prelude{
         uint8_t trig_bist:1;
         uint8_t bist_rdy:1;
         uint8_t bist_fail:1;
-        uint8_t :1;
+        uint8_t __resv__:1;
         uint8_t rate_ok:1;
-        uint8_t :3;
+        uint8_t __resv2__:3;
     }DEF_R8(gyro_selftest_reg)
 };
 

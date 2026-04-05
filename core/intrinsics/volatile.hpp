@@ -11,17 +11,6 @@ static uint32_t load_volatile_to_u32(volatile T * p_reg){
     return *reinterpret_cast<volatile uint32_t *>(p_reg);
 }
 
-// template<typename T>
-// static T load_volatile(volatile T * p_reg){
-//     const && T = *const_cast<volatile T *>(p_reg);
-//     return std::move(T);
-// }
-
-// template<typename T>
-// static void store_volatile(volatile T * p_reg, const T x){
-//     *const_cast<T *>(p_reg) = x;
-// }
-
 template<typename T>
 static void store_volatile_with_u32(volatile T * p_reg, const uint32_t x){
     static_assert(sizeof(T) == 4);

@@ -15,8 +15,7 @@ class Option;
 struct _None_t{
 };
 
-[[maybe_unused]] static inline _None_t None = {};
-// [[maybe_unused]] static inline _None_t _ = {};
+[[maybe_unused]] static constexpr inline _None_t None = {};
 
 template<typename T>
 struct [[nodiscard]] Some{
@@ -32,7 +31,7 @@ public:
         return val_;
     }
 private:
-    using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
+    // using data_t = typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
 
     T val_;
 };

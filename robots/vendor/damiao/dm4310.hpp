@@ -41,12 +41,7 @@ struct [[nodiscard]] PosVelParam final{
 
         const auto vel_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.dq);
 
-        return hal::ClassicCanPayload::from_list({
-            vel_bytes[0],
-            vel_bytes[1],
-            vel_bytes[2],
-            vel_bytes[3],
-        });
+        return hal::ClassicCanPayload::from_bytes(vel_bytes);
     }
 };  
 

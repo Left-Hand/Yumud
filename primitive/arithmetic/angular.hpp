@@ -16,49 +16,7 @@ struct [[nodiscard]] Angular{
 	using ST = std::make_signed<T>;
 	using UT = std::make_unsigned<T>;
 
-    static constexpr Angular<T> ZERO =
-		Angular<T>::from_turns(static_cast<T>(0));
 
-    static constexpr Angular<T> ONE =
-		Angular<T>::from_turns(static_cast<T>(1));
-
-    static constexpr Angular<T> NEG_ONE =
-		Angular<T>::from_turns(static_cast<T>(-1));
-
-    static constexpr Angular<T> HALF =
-		Angular<T>::from_turns(static_cast<T>(0.5));
-
-    static constexpr Angular<T> NEG_HALF =
-		Angular<T>::from_turns(static_cast<T>(-0.5));
-
-
-	static constexpr Angular<T> TRIS =
-		Angular<T>::from_turns(static_cast<T>(1.0 / 3));
-
-	static constexpr Angular<T> NEG_TRIS =
-		Angular<T>::from_turns(static_cast<T>(-1.0 / 3));
-
-    static constexpr Angular<T> QUARTER =
-		Angular<T>::from_turns(static_cast<T>(0.25));
-
-
-    static constexpr Angular<T> NEG_QUARTER =
-		Angular<T>::from_turns(static_cast<T>(-0.25));
-
-    static constexpr Angular<T> THREE_QUARTERS =
-		Angular<T>::from_turns(static_cast<T>(0.75));
-
-    static constexpr Angular<T> NEG_THREE_QUARTERS =
-		Angular<T>::from_turns(static_cast<T>(-0.75));
-
-
-	static constexpr Angular<T> DEG_0 	= Angular<T>::from_degrees(static_cast<T>(0));
-	static constexpr Angular<T> DEG_30 	= Angular<T>::from_degrees(static_cast<T>(30));
-	static constexpr Angular<T> DEG_60 	= Angular<T>::from_degrees(static_cast<T>(60));
-	static constexpr Angular<T> DEG_90 	= Angular<T>::from_degrees(static_cast<T>(90));
-	static constexpr Angular<T> DEG_120 = Angular<T>::from_degrees(static_cast<T>(120));
-	static constexpr Angular<T> DEG_180 = Angular<T>::from_degrees(static_cast<T>(180));
-	static constexpr Angular<T> DEG_270 = Angular<T>::from_degrees(static_cast<T>(270));
 
 	template<typename U>
 	requires std::is_floating_point_v<U>
@@ -98,6 +56,14 @@ struct [[nodiscard]] Angular{
 
 	static constexpr Angular from_atan2(const T y, const T x) noexcept{
 		return _make_angular_from_turns(static_cast<T>(math::atan2pu(y, x)));
+	}
+
+	static constexpr Angular from_asin(const T x) noexcept{
+		return _make_angular_from_turns(static_cast<T>(math::asinpu(x)));
+	}
+
+	static constexpr Angular from_acos(const T x) noexcept{
+		return _make_angular_from_turns(static_cast<T>(math::acospu(x)));
 	}
 
 	[[nodiscard]] constexpr T to_degrees() const noexcept{
@@ -319,6 +285,50 @@ struct [[nodiscard]] Angular{
 		else
 			return os << self.to_turns() * 360 << '\'';
 	}
+
+    static constexpr Angular<T> ZERO =
+		Angular<T>::from_turns(static_cast<T>(0));
+
+    static constexpr Angular<T> ONE =
+		Angular<T>::from_turns(static_cast<T>(1));
+
+    static constexpr Angular<T> NEG_ONE =
+		Angular<T>::from_turns(static_cast<T>(-1));
+
+    static constexpr Angular<T> HALF =
+		Angular<T>::from_turns(static_cast<T>(0.5));
+
+    static constexpr Angular<T> NEG_HALF =
+		Angular<T>::from_turns(static_cast<T>(-0.5));
+
+
+	static constexpr Angular<T> TRIS =
+		Angular<T>::from_turns(static_cast<T>(1.0 / 3));
+
+	static constexpr Angular<T> NEG_TRIS =
+		Angular<T>::from_turns(static_cast<T>(-1.0 / 3));
+
+    static constexpr Angular<T> QUARTER =
+		Angular<T>::from_turns(static_cast<T>(0.25));
+
+
+    static constexpr Angular<T> NEG_QUARTER =
+		Angular<T>::from_turns(static_cast<T>(-0.25));
+
+    static constexpr Angular<T> THREE_QUARTERS =
+		Angular<T>::from_turns(static_cast<T>(0.75));
+
+    static constexpr Angular<T> NEG_THREE_QUARTERS =
+		Angular<T>::from_turns(static_cast<T>(-0.75));
+
+
+	static constexpr Angular<T> DEG_0 	= Angular<T>::from_degrees(static_cast<T>(0));
+	static constexpr Angular<T> DEG_30 	= Angular<T>::from_degrees(static_cast<T>(30));
+	static constexpr Angular<T> DEG_60 	= Angular<T>::from_degrees(static_cast<T>(60));
+	static constexpr Angular<T> DEG_90 	= Angular<T>::from_degrees(static_cast<T>(90));
+	static constexpr Angular<T> DEG_120 = Angular<T>::from_degrees(static_cast<T>(120));
+	static constexpr Angular<T> DEG_180 = Angular<T>::from_degrees(static_cast<T>(180));
+	static constexpr Angular<T> DEG_270 = Angular<T>::from_degrees(static_cast<T>(270));
 public:
 	T turns_;
 
@@ -338,32 +348,37 @@ static constexpr Angular<T> make_angular_from_turns(T turns) noexcept{
 }
 
 template<typename T>
+static constexpr Angular<T> make_angular_from_radians(T radians) noexcept{
+	return Angular<T>::from_radians(radians);
+}
+
+template<typename T>
 static constexpr bool is_equal_approx(const Angular<T> a, const Angular<T> b) noexcept{
 	return a.is_equal_approx(b);
 }
 
-consteval Angular<iq16> operator"" _deg(long double x) noexcept{
+consteval Angular<iq16> operator""_deg(long double x) noexcept{
     return Angular<iq16>::from_degrees(x);
 }
 
 //字面量只能被uint64_t覆写 内部转换到uint32_t
-consteval Angular<iq16> operator"" _deg(uint64_t x) noexcept{
+consteval Angular<iq16> operator""_deg(uint64_t x) noexcept{
     return Angular<iq16>::from_degrees(static_cast<uint32_t>(x));
 }
 
-consteval Angular<iq16> operator"" _rad(long double x) noexcept{
+consteval Angular<iq16> operator""_rad(long double x) noexcept{
     return Angular<iq16>::from_radians(static_cast<iq16>(x));
 }
 
-consteval Angular<iq16> operator"" _rad(uint64_t x) noexcept{
+consteval Angular<iq16> operator""_rad(uint64_t x) noexcept{
     return Angular<iq16>::from_radians(static_cast<iq16>(x));
 }
 
-consteval Angular<iq16> operator"" _turn(long double x) noexcept{
+consteval Angular<iq16> operator""_turn(long double x) noexcept{
     return Angular<iq16>::from_turns(static_cast<iq16>(x));
 }
 
-consteval Angular<iq16> operator"" _turn(uint64_t x) noexcept{
+consteval Angular<iq16> operator""_turn(uint64_t x) noexcept{
     return Angular<iq16>::from_turns(static_cast<iq16>(x));
 }
 

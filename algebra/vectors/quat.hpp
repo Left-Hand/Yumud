@@ -15,7 +15,7 @@ static constexpr void mat3x3_to_quat(Dst & dst, const Matrix<T, 3, 3>& R){
     std::array<T, 4> buf;
 
     if (trace >= 0.0) {
-        T t = sqrt(trace + T(1.0));
+        T t = math::sqrt(trace + T(1.0));
         buf[0] = T(0.5) * t;
         t = T(0.5) / t;
         buf[1] = (R(2, 1) - R(1, 2)) * t;
@@ -34,7 +34,7 @@ static constexpr void mat3x3_to_quat(Dst & dst, const Matrix<T, 3, 3>& R){
 
         const size_t j = (i + 1) % 3;
         const size_t k = (j + 1) % 3;
-        T t = sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
+        T t = math::sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
         buf[i + 1] = T(0.5) * t;
         t = T(0.5) / t;
         buf[0] = (R(k, j) - R(j, k)) * t;
@@ -61,26 +61,18 @@ static constexpr Matrix3x3<T> quat_to_mat3x3(const auto q){
 
 }
 
-template <arithmetic T>
-
+template <typename T>
 struct [[nodiscard]] Quat{
     static_assert(std::is_integral_v<T> == false, "Quat can't be integral");
+    static_assert(std::is_signed_v<T> == true);
+
+
     using Self = Quat;
 
     T x;
     T y;
     T z;
     T w;
-
-    static_assert(not std::is_integral_v<T>);
-
-    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(
-        static_cast<T>(0),
-        static_cast<T>(0),
-        static_cast<T>(0),
-        static_cast<T>(1)
-    );
-
 
 
     [[nodiscard]]
@@ -139,12 +131,12 @@ struct [[nodiscard]] Quat{
 
         T d = v0.dot(v1);
 
-        if (std::abs(d) > T(1) - T(CMP_EPSILON)) {
+        if (math::abs(d) > T(1) - T(CMP_EPSILON)) {
             const auto axis = n0.get_any_perpendicular();
             return from_xyzw(axis.x, axis.y, axis.z, T(0));
         } else {
             math::Vec3<T> c = n0.cross(n1);
-            const T s = std::sqrt((T(1) + d) * T(2));
+            const T s = math::sqrt((T(1) + d) * T(2));
             const T inv_s = T(1) / s;
             return from_xyzw(c.x * inv_s, c.y * inv_s, c.z * inv_s, s / 2);
         }
@@ -162,7 +154,7 @@ struct [[nodiscard]] Quat{
         T dot_product = default_dir.dot(normalized_dir);
         
         // If the vectors are nearly parallel, return the identity quaternion
-        if (std::abs(dot_product) > T(1) - T(CMP_EPSILON)) {
+        if (math::abs(dot_product) > T(1) - T(CMP_EPSILON)) {
             return IDENTITY;
         }
         
@@ -170,7 +162,7 @@ struct [[nodiscard]] Quat{
         math::Vec3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
-        const auto angle = Angular<T>::from_radians(std::acos(dot_product));
+        const auto angle = Angular<T>::from_radians(math::acos(dot_product));
         
         // Create and return the quaternion representing the rotation
         return from_axis_angle(axis, angle);
@@ -187,12 +179,12 @@ struct [[nodiscard]] Quat{
 
     [[nodiscard]] 
     constexpr bool is_pure_real() const {
-        return w == 1 && x == 0 && y == 0 && z == 0;
+        return w == 1 and x == 0 and y == 0 and z == 0;
     }
 
     [[nodiscard]]
     constexpr bool is_pure_imaginary() const {
-        return w == 0 && x != 0 && y != 0 && z != 0;
+        return w == 0 and x != 0 and y != 0 and z != 0;
     }
 
     [[nodiscard]]
@@ -218,8 +210,8 @@ struct [[nodiscard]] Quat{
 
     [[nodiscard]]
     constexpr Angular<T> angle_to(const Quat<T> &p_to) const {
-        T d = std::abs(dot(p_to));
-        return Angular<T>::from_radians(2 * std::acos(CLAMP(d, -1, 1)));
+        T d = math::abs(dot(p_to));
+        return Angular<T>::from_radians(2 * math::acos(CLAMP(d, -1, 1)));
     }
 
     [[nodiscard]]
@@ -266,7 +258,10 @@ struct [[nodiscard]] Quat{
 
     [[nodiscard]]
     constexpr bool is_equal_approx(const Quat<T> & other) const {
-        return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
+        return is_equal_approx(x, other.x) 
+            and is_equal_approx(y, other.y) 
+            and is_equal_approx(z, other.z) 
+            and is_equal_approx(w, other.w);
     }
 
     [[nodiscard]]
@@ -323,11 +318,11 @@ struct [[nodiscard]] Quat{
 
         if ((T(1) - cosom) > T(CMP_EPSILON)) {
             // standard case (slerp)
-            omega = std::acos(cosom);
-            sinom = std::sin(omega);
+            omega = math::acos(cosom);
+            sinom = math::sin(omega);
             const auto inv_sinom = 1 / sinom;
-            scale0 = std::sin((1 - p_weight) * omega) * inv_sinom;
-            scale1 = std::sin(p_weight * omega) * inv_sinom;
+            scale0 = math::sin((1 - p_weight) * omega) * inv_sinom;
+            scale1 = math::sin(p_weight * omega) * inv_sinom;
         } else {
             // "from" and "to" Quat<T>s are very close
             //  ... so we can do a linear interpolation
@@ -336,10 +331,11 @@ struct [[nodiscard]] Quat{
         }
         // calculate final values
         return from_xyzw(
-                scale0 * x + scale1 * to1.x,
-                scale0 * y + scale1 * to1.y,
-                scale0 * z + scale1 * to1.z,
-                scale0 * w + scale1 * to1.w);
+            scale0 * x + scale1 * to1.x,
+            scale0 * y + scale1 * to1.y,
+            scale0 * z + scale1 * to1.z,
+            scale0 * w + scale1 * to1.w
+        );
     }
 
     [[nodiscard]]
@@ -353,9 +349,9 @@ struct [[nodiscard]] Quat{
         }
 
         T theta = acos(dot),
-                sinT = 1 / std::sin(theta),
-                newFactor = std::sin(p_weight * theta) * sinT,
-                invFactor = std::sin((1 - p_weight) * theta) * sinT;
+                sinT = 1 / math::sin(theta),
+                newFactor = math::sin(p_weight * theta) * sinT,
+                invFactor = math::sin((1 - p_weight) * theta) * sinT;
 
         return Quat<T>(invFactor * from.x + newFactor * p_to.x,
                 invFactor * from.y + newFactor * p_to.y,
@@ -442,22 +438,23 @@ struct [[nodiscard]] Quat{
 
         const auto qx_squ = square(q.x);
         const auto qy_squ = square(q.y);
+        const auto qz_squ = square(q.z);
         T sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
         T cosr_cosp = 1 - 2 * (qx_squ + qy_squ);
 
-        angles.x = std::atan2(sinr_cosp, cosr_cosp);
+        angles.x = Angular<T>::from_atan2(sinr_cosp, cosr_cosp);
     
         // pitch (y-axis rotation)
         T sinp = 2 * (q.w * q.y - q.z * q.x);
-        if (std::abs(sinp) >= 1)
-            angles.y = sinp > 0 ? T(M_PI / 2) : T(-M_PI / 2); // use 90 degrees if out of range
-        else
-            angles.y = std::asin(sinp);
+        sinp = sinp > 1 ? 1 : sinp;
+        sinp = sinp < -1 ? -1 : sinp;
+
+        angles.y = Angular<T>::from_asin(sinp);
     
         // yaw (z-axis rotation)
         T siny_cosp = 2 * (q.w * q.z + q.x * q.y);
-        T cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
-        angles.z = std::atan2(siny_cosp, cosy_cosp);
+        T cosy_cosp = 1 - 2 * (qy_squ + qz_squ);
+        angles.z = Angular<T>::from_atan2(siny_cosp, cosy_cosp);
     
         return angles;
     }
@@ -473,6 +470,18 @@ struct [[nodiscard]] Quat{
     [[nodiscard]] Matrix3x3<T> to_mat3x3() const {
         return details::quat_to_mat3x3(*this);
     }
+
+
+    static_assert(not std::is_integral_v<T>);
+
+    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(1)
+    );
+
+
 
 private:
     constexpr void set(T _x, T _y, T _z, T _w){
@@ -539,15 +548,7 @@ private:
 };
 
 
-[[nodiscard]] __fast_inline constexpr auto lerp(
-    const Quat<arithmetic auto> & a, 
-    const Quat<arithmetic auto> & b, 
-    const arithmetic auto t
-){
-    return a.slerp(b, t);
-}
 
-
-template<arithmetic T>
+template<typename T>
 Quat() -> Quat<T>;
 }

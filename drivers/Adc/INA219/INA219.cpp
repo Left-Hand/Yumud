@@ -72,6 +72,8 @@ IResult<> INA219::read_burst(
     const RegAddr reg_addr, 
     const std::span<uint16_t> pbuf
 ){
+    (void)(reg_addr);
+    (void)(pbuf);
     // return i2c_drv_.read_burst(uint8_t(reg_addr), pbuf, std::endian::little);
     TODO();
     return Ok();

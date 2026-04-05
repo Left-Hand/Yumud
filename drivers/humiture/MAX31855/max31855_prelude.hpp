@@ -1,0 +1,55 @@
+#pragma once
+
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+
+#include "hal/conn/spi/spidrv.hpp"
+#include "core/math/real.hpp"
+
+namespace ymd::drivers{
+
+struct MAX31855_Prelude{
+    static constexpr iq16 JUNC_TEMP_LSB = iq16(0.0625);
+    static constexpr iq16 THER_TEMP_LSB = iq16(0.25);
+
+    struct [[nodiscard]] MAX31855_Packet final{
+        // D0 OC Fault This bit is a 1 when the thermocouple is open (no connections). Default value is 0.
+        uint32_t oc_fault:1;
+
+        // D1 SCG Fault This bit is a 1 when the thermocouple is short-circuited to GND. Default value is 0.
+        uint32_t scg_fault:1;
+
+        // D2 SCV Fault This bit is a 1 when the thermocouple is short-circuited to VCC. Default value is 0.
+        uint32_t scv_fault:1;
+
+        uint32_t __resv__:1;
+        uint32_t junc_temp:12;
+        uint32_t any_fault:1;
+        uint32_t __resv2__:1;
+        uint32_t ther_temp:14;
+
+        iq16 ther_temperature() const{
+            const iq16 uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
+            const bool is_negative = (ther_temp & (1 << 13)) != 0;
+            return is_negative ? (-uns_ther_temp) : uns_ther_temp;
+        }
+
+        iq16 junc_temperature() const{
+            const iq16 uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
+            const bool is_negative = (junc_temp & (1 << 11)) != 0;
+            return is_negative ? (-uns_junc_temp) : uns_junc_temp;
+        }
+
+        std::span<uint16_t, 2> to_u16_slice(){
+            static_assert(sizeof(MAX31855_Packet) == 4);
+            return std::span<uint16_t, 2>(reinterpret_cast<uint16_t *>(this), 2);
+        }
+    };
+
+    static_assert(sizeof(MAX31855_Packet) == 4);
+
+    using IResult = Result<MAX31855_Packet, hal::HalError>;
+};
+
+
+}

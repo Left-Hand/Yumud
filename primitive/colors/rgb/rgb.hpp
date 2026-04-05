@@ -275,10 +275,12 @@ struct [[nodiscard]] Binary final{
         return Binary(static_cast<uint8_t>(WHITE));
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Binary& rhs){
+    [[nodiscard]] constexpr bool operator ==(const Binary& rhs) const {
         return bits == rhs.bits;
     }
-    [[nodiscard]] constexpr bool operator !=(const Binary& rhs){
+
+
+    [[nodiscard]] constexpr bool operator !=(const Binary& rhs) const {
         return bits != rhs.bits;
     }
 
@@ -355,7 +357,7 @@ struct [[nodiscard]] Gray final{
 
     [[nodiscard]] constexpr Binary to_binary(const Gray threshold) const 
         {return Binary::from_bool(bits > threshold.to_u8());}
-private:
+
     uint8_t bits;
     [[nodiscard]] constexpr explicit Gray(const uint8_t cu8) : bits(cu8){;}
 };

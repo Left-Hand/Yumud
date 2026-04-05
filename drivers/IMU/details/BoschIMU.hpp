@@ -25,7 +25,7 @@ public:
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
@@ -35,7 +35,7 @@ public:
 
 
     template<typename T>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> read_reg(T & reg){
         if(const auto res = read_reg(T::REG_ADDR, reg.as_bits_mut());
             res.is_err()) return res;
@@ -49,27 +49,32 @@ public:
     Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf);
 
     
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> write_command(const uint8_t cmd){
         return write_reg(0x7e, cmd);
     }
 
     template<typename ... Ts>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> write_regs(Ts const & ... reg) {
         return (write_reg(reg.REG_ADDR, reg.to_bits()) | ...);
     }
 
     template<typename ... Ts>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> read_regs(Ts & ... reg) {
         return (read_reg(reg.REG_ADDR, reg.as_bits_mut()) | ...);
     }
 
-    [[nodiscard]] __fast_inline
+    [[nodiscard]] 
     Result<void, Error> validate() {
+        if(const auto res = release(); 
+            res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
+
+    [[nodiscard]]
+    Result<void, Error> release();
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;

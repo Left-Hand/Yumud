@@ -154,7 +154,8 @@ public:
     struct LineIterator{
         using Point = math::Vec2<uint16_t>;
 
-        constexpr LineIterator(const math::Vec2<auto> p1, const math::Vec2<auto> p2):
+        template<typename U>
+        constexpr LineIterator(const math::Vec2<U> p1, const math::Vec2<U> p2):
             x_step_((p1.y == p2.y) ? 0 : iq16(p2.x - p1.x) / (p2.y - p1.y)),
             current_x_(p1.x){;}
 

@@ -58,32 +58,5 @@
 #define FUNCTION_STR __FUNCTION__
 #endif
 
-#define CONCAT(a, b) a ## b
-#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
-
-
-#define TYPE_CMP(a,b) __builtin_types_compatible_p(type_a, type_b);
-#define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
 #define BREAKPOINT __nopn(1);
-
-#if defined(__riscv)
-#define DISABLE_INT   __asm volatile ("csrw 0x800, %0" : : "r" (0x6000) );
-#define ENABLE_INT    __asm volatile ("csrw 0x800, %0" : : "r" (0x6088) );
-#elif defined(__arm__)
-#define DISABLE_INT
-#define ENABLE_INT
-#else
-#error "Not supported architecture"
-#endif
-
-
-#ifdef __cplusplus
-
-#define DECLTYPE(...) decltype(__VA_ARGS__)
-
-#define DELETE_COPY_AND_MOVE(type)\
-type(const type & other) = delete;\
-type(type && other) = delete;\
-
-#endif

@@ -78,8 +78,14 @@ private:
     TouchPoints points_ = TouchPoints::from_none();
 
     IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        return write_reg(static_cast<uint8_t>(reg_addr), reg_val);
+    }
     
     IResult<uint8_t> read_reg(const uint8_t reg_addr);
+    IResult<uint8_t> read_reg(const RegAddr reg_addr){
+        return read_reg(static_cast<uint8_t>(reg_addr));
+    }
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

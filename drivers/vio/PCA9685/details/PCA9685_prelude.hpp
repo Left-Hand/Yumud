@@ -1,0 +1,95 @@
+#pragma once
+
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/errno.hpp"
+
+#include "primitive/pwm_channel.hpp"
+
+#include "hal/gpio/vport.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+
+
+namespace ymd::drivers{
+struct PCA9685_Prelude{
+public:
+    static constexpr uint8_t VALID_CHIP_ID = 0x23;
+
+    enum class [[nodiscard]] RegAddr:uint8_t{
+        Mode1,
+        Mode2,
+        LED0_ON_L = 0x06,
+        LED0_ON_H,
+        LED0_OFF_L,
+        LED0_OFF_H,
+        SubAddr = 0x02,
+        Prescale = 0xfe
+    };
+
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1000000);
+    static constexpr auto CHANNELS_COUNT = 16;
+
+    enum class Error_Kind{
+        IndexOutOfRange
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    struct Config{
+        uint freq; 
+        iq16 trim = iq16(1);
+    };
+};
+
+struct PCA9685_Regset :public PCA9685_Prelude{
+
+    struct R8_Mode1:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Mode1;
+        
+        uint8_t allcall:1;
+        uint8_t sub:3;
+        uint8_t sleep:1;
+        uint8_t auto_inc:1;
+        uint8_t extclk:1;
+        uint8_t restart:1;
+    }DEF_R8(mode1_reg)
+
+    struct R8_Mode2:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Mode2;
+
+        uint8_t outne:2;
+        uint8_t outdrv:1;
+        uint8_t och:1;
+        uint8_t invrt:1;
+        uint8_t __resv__:3;
+    }DEF_R8(mode2_reg)
+
+    struct R16_LedDuty:public Reg16<>{
+
+        uint16_t cvr:12;
+        uint16_t full:1;
+        const uint16_t __resv__:3;
+    };
+
+    struct LedRegs{
+        R16_LedDuty  on;
+        R16_LedDuty off;
+    };
+
+    struct R8_Prescale:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Prescale;
+
+        uint8_t prescale:8;
+    }DEF_R8(prescale_reg)
+
+
+    std::array<uint8_t,3> sub_addr_regs = {};
+    uint8_t all_addr_reg = {};
+    std::array<LedRegs, CHANNELS_COUNT> sub_channels = {};
+    LedRegs all_channel = {};
+};
+
+}

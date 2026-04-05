@@ -27,7 +27,7 @@ constexpr void _FFT(std::span<T> c){
 
     j = 0;
     const size_t N = c.size();
-    const size_t n2 = N / 2;
+    size_t n2 = N / 2;
     for(size_t k = 0; k < N; ++k ){
         if( k < j ){
             i0 = k << 1;

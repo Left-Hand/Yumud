@@ -39,15 +39,15 @@ private:
     static const int dummy_reg_count = 6;
     regAddr translated_regs[dummy_reg_count + 1]; // index 0 not used
 
-    IResult<> test_reg(const uint8_t reg, const uint8_t val){return Ok();}
+    IResult<> test_reg(const uint8_t reg_addr, const uint8_t reg_val);
     
-    IResult<> write_acc_reg(uint8_t reg, uint8_t value);
-    // uint8_t readAccReg(uint8_t reg);
-    IResult<> write_mag_reg(uint8_t reg, uint8_t value);
-    // uint8_t readMagReg(int reg);
+    IResult<> write_acc_reg(uint8_t reg_addr, uint8_t reg_val);
+    // uint8_t readAccReg(uint8_t reg_addr);
+    IResult<> write_mag_reg(uint8_t reg_addr, uint8_t reg_val);
+    // uint8_t readMagReg(int reg_addr);
 
-    IResult<> write_reg(uint8_t reg, uint8_t value);
-    IResult<> read_reg(int reg, uint8_t & data);
+    IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val);
+    IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val);
 };
 
 }

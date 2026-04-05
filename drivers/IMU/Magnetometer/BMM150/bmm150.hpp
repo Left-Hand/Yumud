@@ -35,7 +35,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = transport_.write_reg(
-            std::bit_cast<uint8_t>(T::ADDRESS), 
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.to_bits()
         );
         if(res.is_err()) return Err(res.unwrap_err());
@@ -46,7 +46,7 @@ private:
     template<typename T>
     IResult<> read_reg(T & reg){
         return transport_.read_reg(
-            std::bit_cast<uint8_t>(T::ADDRESS), 
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.as_bits_mut()
         );
     }

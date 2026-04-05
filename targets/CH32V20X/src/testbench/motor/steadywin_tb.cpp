@@ -15,11 +15,10 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/conn/can/hw_singleton.hpp"
 
-#include "drivers/CommonIO/Key/Key.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_factory.hpp"
 
-#include "core/container/heapless_binaryheap.hpp"
+#include "drivers/common_io/Key/Key.hpp"
 
 using namespace ymd;
 using namespace robots::steadywin;
@@ -39,11 +38,14 @@ struct EncoderFeedback{
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
-        return os << os.field("multilap_angle")(self.multilap_angle.to_turns()) << os.splitter()
+        return os 
+            << os.field("multilap_angle")(self.multilap_angle.to_turns()) << os.splitter()
             << os.field("lap_angle")(self.lap_angle.to_turns());
     }
 };
 
+static constexpr uint8_t LEFT_MOTOR_AXIS_ID = 0x01;
+static constexpr uint8_t RIGHT_MOTOR_AXIS_ID = 0x02;
 
 void steadywin_main(){
     auto & DBG_UART = hal::usart2;
@@ -77,76 +79,45 @@ void steadywin_main(){
             hal::CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY,
             hal::CanStdIdMaskPair::reject_all()
         )
-        // hal::CanFilterConfig::accept_all()
-        // FILTER_CONFIG
     ).unwrap();
 
-    can.enable_hw_retransmit(EN);
-    std::array<EncoderFeedback, 2> encoder_feedbacks = {Zero, Zero};
+    std::array<EncoderFeedback, 2> encoder_feedbacks_ = {Zero, Zero};
 
     auto axis_id_to_idx = [](const AxisId axis_id) -> size_t {
         switch(axis_id.to_bits()){
-            case 1: return 0;
-            case 2: return 1;
+            case LEFT_MOTOR_AXIS_ID: return 0;
+            case RIGHT_MOTOR_AXIS_ID: return 1;
         }
         PANIC{};
     };
     auto store_encoder_feedback = [&](const size_t idx, const resp_msgs::GetEncoderCount & msg){
-        encoder_feedbacks.at(idx) = EncoderFeedback{
+        encoder_feedbacks_.at(idx) = EncoderFeedback{
             .multilap_angle = msg.multilap_angle,
             .lap_angle = msg.lap_angle
         };
     };
-    auto accept_either_msg = [&]<typename T>(const AxisId axis_id, const Result<T, DeMsgError> & either_msg){
-        // DEBUG_PRINTLN(axis_id, either_msg);
-        if constexpr (std::is_same_v<T, resp_msgs::GetEncoderEstimates>){
-            // DEBUGGER.no_fieldname(EN);
-            if(not either_msg.is_ok()) return;
-            const resp_msgs::GetEncoderEstimates msg = either_msg.unwrap();
-            // DEBUG_PRINTLN(msg.position, msg.velocity);
-        }
 
-        if constexpr (std::is_same_v<T, resp_msgs::HeartbeatV513>){
-            // DEBUGGER.no_fieldname(EN);
-            if(not either_msg.is_ok()) return;
-            const resp_msgs::HeartbeatV513 msg = either_msg.unwrap();
-            // DEBUG_PRINTLN(msg);
-        }
-
-        if constexpr (std::is_same_v<T, resp_msgs::GetEncoderCount>){
-            // DEBUGGER.no_fieldname(EN);
-            if(not either_msg.is_ok()) return;
-            const resp_msgs::GetEncoderCount msg = either_msg.unwrap();
-            // DEBUG_PRINTLN(msg.lap_angle.to_turns(), msg.multilap_angle.to_turns());
-            store_encoder_feedback(axis_id_to_idx(axis_id), msg);
-        }
-    };
-
-    [[maybe_unused]] auto parse_can_frame = [&](const hal::ClassicCanFrame & frame){
-        if(frame.is_extended()) PANIC{};
-        if(frame.length() != 8) PANIC{frame.length()};
+    [[maybe_unused]] auto handle_can_frame = [&](const hal::ClassicCanFrame & frame){
+        if(frame.is_extended()) PANIC{"std can frame received!!"};
+        if(frame.length() != 8) PANIC{"can frame length is not 8", frame.length()};
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
+
         const auto axis_id = frame_id.axis_id;
         const auto command = frame_id.command;
-        // const auto payload_bytes = std::span(frame.payload().u8x8());
-        
-        // const auto payload_bytes = frame.payload_bytes_fixed<8>();
-        const auto payload_bytes = std::span(frame.payload().u8x8);
+
+        const auto u8x8 = std::span(frame.payload().u8x8);
         switch(command.kind()){
             case Command::Nop:{
                 //nothing
             }break;
             case Command::Heartbeat:{
-                const auto either_msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
-                // return accept_either_msg(axis_id, de_msg(payload_bytes));
+                //not used
             }break;
             case Command::Estop:{
                 //req only
             }break;
             case Command::GetError:{
-                const auto either_msg = resp_msgs::GetError::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                //do not handle currently
             }break;
             case Command::RxSdo:{
                 //do not handle currently
@@ -164,12 +135,21 @@ void steadywin_main(){
                 //do not handle currently
             }break;
             case Command::GetEncoderEstimates:{
-                const auto either_msg = resp_msgs::GetEncoderEstimates::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                const auto either_msg = resp_msgs::GetEncoderEstimates::try_from_bytes(u8x8);
+                if(not either_msg.is_ok()) return;
+                const resp_msgs::GetEncoderEstimates msg = either_msg.unwrap();
+                (void)(msg.position);
+                (void)(msg.velocity);
+                // DEBUG_PRINTLN(msg.position, msg.velocity);
             }break;
             case Command::GetEncoderCount:{
-                const auto either_msg = resp_msgs::GetEncoderCount::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                const auto either_msg = resp_msgs::GetEncoderCount::try_from_bytes(u8x8);
+                if(not either_msg.is_ok()) return;
+                const resp_msgs::GetEncoderCount msg = either_msg.unwrap();
+                (void)(msg.lap_angle);
+                (void)(msg.multilap_angle);
+                // DEBUG_PRINTLN(msg.lap_angle.to_turns(), msg.multilap_angle.to_turns());
+                store_encoder_feedback(axis_id_to_idx(axis_id), msg);
             }break;
             case Command::SetControllerMode:{
                 //req only
@@ -199,15 +179,13 @@ void steadywin_main(){
                 //req only
             }break;
             case Command::GetIq:{
-                const auto either_msg = resp_msgs::GetIq::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                //not used
             }break;
             case Command::Reboot:{
                 //req only
             }break;
             case Command::GetBusVoltageCurrent:{
-                const auto either_msg = resp_msgs::GetBusVoltageCurrent::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                //not used
             }break;
             case Command::ClearErrors:{
                 //req only
@@ -222,12 +200,10 @@ void steadywin_main(){
                 //req only
             }break;
             case Command::GetTorques:{
-                const auto either_msg = resp_msgs::GetTorques::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                //not used
             }break;
             case Command::GetPowers:{
-                const auto either_msg = resp_msgs::GetPowers::try_from_bytes(payload_bytes);
-                return accept_either_msg(axis_id, either_msg);
+                //not used
             }break;
             case Command::DisableCan:{
                 //req only
@@ -243,15 +219,11 @@ void steadywin_main(){
         if(delay_ms != 0ms) clock::delay(delay_ms);
     };
 
-    FrameFactory left_factory{AxisId::from_bits(0x01)};
-    FrameFactory right_factory{AxisId::from_bits(0x02)};
+    static constexpr FrameFactory left_factory{AxisId::from_bits(LEFT_MOTOR_AXIS_ID)};
+    static constexpr FrameFactory right_factory{AxisId::from_bits(RIGHT_MOTOR_AXIS_ID)};
 
     clock::delay(100ms);
 
-
-
-
-    #if 1
     [[maybe_unused]] auto & timer = hal::timer2;
     //配置定时器
     timer.init({
@@ -263,27 +235,38 @@ void steadywin_main(){
     ;
 
 
+    iq16 left_torque_ff_ = 0;
+    iq16 right_torque_ff_ = 0;
+
 
     //设置定时器事件回调
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            const auto now_secs = clock::seconds();
+
+
 
             {
-                const auto num_rx_frames = can.available();
-                for(size_t i = 0; i < num_rx_frames; ++i){
-                    parse_can_frame(can.try_read().unwrap());
-                    // (void)(can.try_read().unwrap());
-                }
+                const auto can_frame = ({
+                    if(can.available() == 0){
+                        //cant read more can frame;
+                        break;
+                    }
+
+                    const auto may_frame = can.try_read();
+                    if(may_frame.is_none()){
+                        //cant read more can frame;
+                        break;
+                    }
+                    may_frame.unwrap();
+                });
+                handle_can_frame(can_frame);
             }
 
-            const auto left_torque_ff = iq16(math::sin(now_secs)) / 10;
-            const auto right_torque_ff = iq16(math::cos(now_secs)) / 10;
 
             {
                 const auto frame = left_factory.set_input_torque({
-                    .torque_ff = float(left_torque_ff)
+                    .torque_ff = static_cast<float>(left_torque_ff_)
                 });
                 write_can_frame(frame);
             }
@@ -292,7 +275,7 @@ void steadywin_main(){
 
             {
                 const auto frame = right_factory.set_input_torque({
-                    .torque_ff = float(right_torque_ff)
+                    .torque_ff = static_cast<float>(right_torque_ff_)
                 });
                 write_can_frame(frame);
             }
@@ -334,46 +317,18 @@ void steadywin_main(){
 
     setup_motors(left_factory);
     setup_motors(right_factory);
-    #endif
+
+
     while(true){
-        
+        const auto now_secs = clock::seconds();
 
-        // static constexpr auto frame = serialize_msg_to_can_frame(
-        //     AxisId::from_bits(0), 
-        //     req_msgs::SetInputPosition{
-        //         .input_position = 2.2,
-        //         .vel_ff = 0,
-        //         .torque_ff = 0,
-        //     }
-        // );
+        //modify to your own controller
 
+        left_torque_ff_ = iq16(math::sin(now_secs)) / 10;
+        right_torque_ff_ = iq16(math::cos(now_secs)) / 10;
 
-        // while(can.available()){
-        //     parse_can_frame(can.try_read().unwrap());
-        //     // (void)(can.try_read().unwrap());
-        // }
+        DEBUG_PRINTLN_IDLE(encoder_feedbacks_[0], encoder_feedbacks_[1]);
 
-        DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
-        // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
-
-        // const auto frame = hal::ClassicCanFrame::from_parts(
-        //     hal::CanStdId::from_u11(0x111),
-        //     hal::ClassicCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
-        // );
-
-
-        // DEBUG_PRINTLN_IDLE(
-        //     can.available(), 
-        //     hal::PA<12>().read().to_bool(),
-        //     hal::PA<11>().read().to_bool(),
-        //     can.last_error(),
-        //     clock::millis().count(),
-        //     can.get_tx_errcnt(),
-        //     can.get_rx_errcnt(),
-        //     // frame
-        // );
-
-        // clock::delay(10ms);
     }
 }
 

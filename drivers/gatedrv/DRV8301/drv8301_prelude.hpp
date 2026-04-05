@@ -1,0 +1,166 @@
+#pragma once
+
+
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
+#include "hal/conn/spi/spidrv.hpp"
+
+#include "algebra/regions/range2.hpp"
+#include "core/io/regs.hpp"
+
+
+namespace ymd::drivers{
+
+
+struct DRV8301_Prelude{
+    enum class Error_Kind:uint8_t{
+
+    };
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    using RegAddr = uint8_t;
+
+    enum class PeakCurrent:uint16_t{
+        _1_7A = 0,
+        _0_7A = 1,
+        _0_25A = 2,
+    };
+
+    enum class OcpMode:uint16_t{
+        CurrentLimit = 0,
+        OClatchShutdown = 1,
+        ReportOnly = 2,
+        OCdisabled = 3
+    };
+
+    enum class OctwMode:uint16_t{
+        OTandOC = 0,
+        OTonly = 1,
+        OConly = 2,
+    };
+
+    enum class Gain:uint16_t{
+        X10 = 0,
+        X20 = 1,
+        X40 = 2,
+        X80 = 3
+    };
+
+    enum class OcAdTable:uint16_t{
+        _060mA = 0,
+        _068mA,
+        _076mA,
+        _086mA,
+        _097mA,
+        _109mA,
+        _123mA,
+        _138mA,
+
+        _155mA = 8,
+        _175mA,
+        _197mA,
+        _222mA,
+        _250mA,
+        _282mA,
+        _317mA,
+        _358mA,
+
+        _403mA = 16,
+        _454mA,
+        _511mA,
+        _576mA,
+        _648mA,
+        _730mA,
+        _822mA,
+        _926mA,
+
+        _1043mA = 24,
+        _1175mA,
+        _1324mA,
+        _1491mA,
+        _1679mA,
+        _1892mA,
+        _2131mA,
+        _2400mA,
+    };
+};
+
+struct DRV8301_Regset:public DRV8301_Prelude{
+    struct [[nodiscard]] R16_Status1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        uint16_t fetlc_oc:1;
+        uint16_t fethc_oc:1;
+        uint16_t fetlb_oc:1;
+        uint16_t fettb_oc:1;
+
+        uint16_t fetla_oc:1;
+        uint16_t fetha_oc:1;
+        uint16_t otw:1;
+        uint16_t otsd:1;
+
+        uint16_t pvdd_uv:1;
+        uint16_t gvdd_uv:1;
+        uint16_t fault:1;
+
+        uint16_t __resv__:5;
+    };
+
+    VALIDATE_R16(R16_Status1)
+
+    struct [[nodiscard]] R16_Status2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        uint16_t device_id:4;
+        uint16_t __resv__:3;
+        uint16_t gvdd_ov:1;
+        uint16_t __resv2__:8;
+    };
+
+
+    VALIDATE_R16(R16_Status2)
+
+    struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        PeakCurrent gate_current:2;
+        uint16_t gate_reset:1;
+        uint16_t pwm3_en:1;
+        OcpMode ocp_mode:2;
+        OcAdTable oc_adj_set:5;
+        uint16_t __resv__:5;
+    };
+
+    VALIDATE_R16(R16_Ctrl1)
+
+    struct [[nodiscard]] R16_Ctrl2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
+
+        OctwMode octw_mode:2;
+        Gain gain:2;
+        uint16_t dc_cal_ch1:1;
+        uint16_t dc_cal_ch2:1;
+
+        uint16_t oc_toff:1;
+        uint16_t __resv__:9;
+    };
+
+    VALIDATE_R16(R16_Ctrl2)
+
+    R16_Status1 status1_reg = {};
+    R16_Status2 status2_reg = {};
+    R16_Ctrl1 ctrl1_reg = {};
+    R16_Ctrl2 ctrl2_reg = {}; 
+};
+
+
+};

@@ -4,6 +4,40 @@
 #include "AsahiKaseiIMU.hpp"
 #include "AnalogDeviceIMU.hpp"
 
+#define TRANSPORT_DEBUG_EN 0
+
+#if TRANSPORT_DEBUG_EN == 1
+#define TRANSPORT_TODO(...) TODO()
+#define TRANSPORT_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define TRANSPORT_PANIC(...) PANIC{__VA_ARGS__}
+#define TRANSPORT_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    ASSERT{false, #x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
+#else
+#define TRANSPORT_DEBUG(...)
+#define TRANSPORT_TODO(...) PANIC_NSRC()
+#define TRANSPORT_PANIC(...)  PANIC_NSRC()
+#define TRANSPORT_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
+#endif
+
+
+
 namespace ymd::drivers{
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
@@ -24,7 +58,7 @@ BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         return Ok();
     }
 
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
@@ -43,7 +77,7 @@ BoschImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
     }
 
 
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
@@ -61,8 +95,23 @@ BoschImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
         return Ok();
     }
 
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
+
+[[nodiscard]] Result<void, BoschImu_Transport::Error> 
+BoschImu_Transport::release(){
+    // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, reg_val);
+    if(i2c_drv_){
+        if(const auto res = i2c_drv_->release();
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }else if(spi_drv_){
+
+        return Ok();
+    }
+    TRANSPORT_PANIC("no available phy");
+}
+
 
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
@@ -79,8 +128,9 @@ InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val
             return Err(res.unwrap_err());
         return Ok();
     }
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
+
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
 InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val) {
@@ -96,7 +146,7 @@ InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val) {
             return Err(res.unwrap_err());
         return Ok();
     }
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
@@ -113,7 +163,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::write_reg(
@@ -132,7 +182,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_reg(
@@ -150,7 +200,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_burst(
@@ -168,7 +218,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::validate(){
@@ -184,7 +234,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     }
 
 
-    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 
@@ -203,7 +253,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_reg(
@@ -221,7 +271,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
@@ -239,15 +289,18 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
     const uint8_t reg_addr, const std::span<uint8_t> pbuf
 ){
+    (void)(reg_addr);
+    (void)(pbuf);
     TODO();
     return Ok();
 }
+
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::validate(){
     TODO();
@@ -262,9 +315,9 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     } else if (spi_drv_) {
-        return Err(Error::SpiPhyIsNotImplementedYet);
+        TRANSPORT_PANIC("spi not supported yet");
     }
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_reg(
@@ -275,9 +328,9 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
-        return Err(Error::SpiPhyIsNotImplementedYet);
+        TRANSPORT_PANIC("spi not supported yet");
     }
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 
 [[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_burst(
@@ -295,6 +348,6 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
         return Ok();
     }
 
-    return Err(ImuError::NoAvailablePhy);
+    TRANSPORT_PANIC("no available phy");
 }
 }    

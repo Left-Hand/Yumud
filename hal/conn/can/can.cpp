@@ -3,6 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/utils/scope_guard.hpp"
 #include "core/sdk.hpp"
+#include "core/intrinsics/volatile.hpp"
 
 #include "can.hpp"
 #include "can_layout.hpp"
@@ -76,7 +77,7 @@ if(self.event_callback_ != nullptr) {\
 }else{/* do nothing */}
 
 #define TRY_EMIT_EVENT_OR_ABORT(self, x, str) TRY_EMIT_EVENT(self, x);
-#define ABORT(str) {;};
+#define ABORT_WITH_REASON(str) {;};
 
 
 #else
@@ -100,7 +101,7 @@ if(self.event_callback_ != nullptr) {\
         sys::abort(AbortInfo::from_reason(str));\
     }\
 
-    #define ABORT(str)\
+    #define ABORT_WITH_REASON(str)\
     sys::abort(AbortInfo::from_reason(str));\
 
 #else
@@ -112,7 +113,7 @@ if(self.event_callback_ != nullptr) {\
         sys::abort(AbortInfo::from_default());\
     }\
 
-    #define ABORT(str)\
+    #define ABORT_WITH_REASON(str)\
     sys::abort(AbortInfo::from_default());\
 
 
@@ -121,6 +122,12 @@ if(self.event_callback_ != nullptr) {\
 
 
 namespace {
+
+
+static constexpr uint32_t CAN_RFIFO_FMP_MASK = 0b00'0011;
+static constexpr uint32_t CAN_RFIFO_FOM_MASK = 0b10'0000;
+static constexpr uint32_t CAN_RFIFO_FFULL_MASK =  0b00'1000;
+static constexpr uint32_t CAN_RFIFO_FOV_MASK =  0b01'0000;
 
 
 template<CanRemap REMAP>
@@ -191,24 +198,30 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * p_inst){
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_1) 
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_2));
 
-    const uint32_t temp_tstar = SPL_INST(p_inst)->TSTATR;
+    const uint32_t temp_tstar = intrinsics::load_volatile_to_u32(&RAL_INST(p_inst)->TSTATR);
     const bool is_any_mailbox_idle = (temp_tstar & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
     const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
     return Some(std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits));
 };
 
-template<CanFifoIndex fifo_idx>
-[[nodiscard]] static volatile uint32_t & can_get_rfifo_reg(void * p_inst){
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return SPL_INST(p_inst)->RFIFO0;
-        case CanFifoIndex::_1: return SPL_INST(p_inst)->RFIFO1;
-    }
-    __builtin_unreachable();
-}
-
-
 static void can_setup_interrupts(void * p_inst){
+
+
+    //clear all interrupts
+    {
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->TSTATR,
+            CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2);  
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->RFIFO[0],
+            CAN_RFIFO_FFULL_MASK | CAN_RFIFO_FOV_MASK); 
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->RFIFO[1],
+            CAN_RFIFO_FFULL_MASK | CAN_RFIFO_FOV_MASK); 
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->ERRSR,
+            0); 
+        intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR,
+            CAN_STATR_WKUI | CAN_STATR_SLAKI | CAN_STATR_ERRI | CAN_STATR_ERRI | CAN_STATR_ERRI); 
+    }
+
     const uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
@@ -225,7 +238,6 @@ static void can_setup_interrupts(void * p_inst){
         #endif
     ;
 
-    CAN_ClearITPendingBit(SPL_INST(p_inst), it_mask);
     CAN_ITConfig(SPL_INST(p_inst), it_mask, ENABLE);
 
     const auto inst_nth = lld::can_to_nth(reinterpret_cast<uintptr_t>(p_inst));
@@ -300,11 +312,6 @@ static void can_setup_interrupts(void * p_inst){
 
 
 
-static constexpr uint32_t CAN_RFIFO_FMP_MASK = 0b00'0011;
-static constexpr uint32_t CAN_RFIFO_FOM_MASK = 0b10'0000;
-static constexpr uint32_t CAN_RFIFO_FFULL_MASK =  0b00'1000;
-static constexpr uint32_t CAN_RFIFO_FOV_MASK =  0b01'0000;
-
 }
 
 Can::Can(void * p_inst):
@@ -335,7 +342,7 @@ void Can::init(const Config & cfg){
             const auto coeffs = ({
                 const auto may_coeffs = (bit_timming.unwrap_as<CanBaudrate>())
                     .try_into_coeffs(get_aligned_bus_clk_freq());
-                if(may_coeffs.is_none()) ABORT("can't parse baudrate");
+                if(may_coeffs.is_none()) ABORT_WITH_REASON("can't parse baudrate");
                 may_coeffs.unwrap();
             });
 
@@ -365,7 +372,7 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    if(const auto res = lld::my_barecan_init(p_inst_, &CAN_InitConf);
+    if(const auto res = lld::can_initialze(p_inst_, &CAN_InitConf);
         res.is_err()){
         //初始化失败
         DEBUG_TRAP();
@@ -442,23 +449,32 @@ void Can::abort_all_transmits(){
         | lld::can_statr_abrq_mask(CanMailboxIndex::_1)  
         | lld::can_statr_abrq_mask(CanMailboxIndex::_2)
     ;
-    SPL_INST(p_inst_)->TSTATR = MASK;
+
+    intrinsics::store_volatile_with_u32(
+        &RAL_INST(p_inst_)->TSTATR,
+        MASK
+    );
 }
 
 void Can::abort_transmit(const CanMailboxIndex mbox_idx){
-    SPL_INST(p_inst_)->TSTATR = lld::can_statr_abrq_mask(mbox_idx);
+
+    intrinsics::store_volatile_with_u32(
+        &RAL_INST(p_inst_)->TSTATR,
+        lld::can_statr_abrq_mask(mbox_idx)
+    );
+
 }
 
 uint8_t Can::get_rx_errcnt(){
-    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 24);
+    return static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.REC);
 }
 
 uint8_t Can::get_tx_errcnt(){
-    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 16);
+    return static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.TEC);
 }
 
 Option<Can::Error> Can::last_error(){
-    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.LEC & 0xff);
+    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.LEC);
     if(bits == 0) return None;
     return Some(std::bit_cast<Can::Error>(bits));
 }
@@ -470,7 +486,7 @@ Result<void, Infallible> Can::configure_filter(
     const hal::CanFifoIndex route_fifo_idx,
     const hal::CanFilterConfig & filter_cfg
 ){ 
-    if(filter_nth.count() >= lld::NUM_CAN_FILTERS) ABORT("filter_nth out of range");
+    if(filter_nth.count() >= lld::NUM_CAN_FILTERS) ABORT_WITH_REASON("filter_nth out of range");
     lld::can_configure_filter(filter_nth.count(), route_fifo_idx, filter_cfg);
     return Ok();
 }
@@ -482,7 +498,7 @@ Result<void, Infallible> Can::set_filter_origin(
 ){
     if(inst_nth_.count() == 1) {
         if(filter_offset.count() != 0){
-            ABORT("can1 filter origin is always 0");
+            ABORT_WITH_REASON("can1 filter origin is always 0");
         }
     }
     
@@ -491,7 +507,7 @@ Result<void, Infallible> Can::set_filter_origin(
 }
 
 uint32_t can_get_aligned_bus_clk_freq(){
-    #if defined(CH32V203) || defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
+    #if defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
     //所有的CAN外设都使用APB1时钟
     return sys::clock::get_apb1_clk_freq();
     #elif defined(CH32H417)
@@ -517,7 +533,7 @@ Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
     // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
 
-    const uint32_t temp_tstar = SPL_INST(p_inst_)->TSTATR;
+    const uint32_t temp_tstar = intrinsics::load_volatile_to_u32(&(RAL_INST(p_inst_)->TSTATR));
 
     static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = 
         (lld::can_tstatr_tme_mask(CanMailboxIndex::_0) 
@@ -528,7 +544,11 @@ Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     const bool is_any_mailbox_idle = (temp_tstar & ANY_MAILBOX_IDLE_BITMASK) != 0;
 
     if(is_any_mailbox_idle){
+
+        //根据数据手册 这里不可能为3
         const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
+        if(idle_mbox_idx_bits > 2) __builtin_unreachable();
+
         const auto idle_mbox_idx = std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits);
         lld::can_transmit_nott(p_inst_, idle_mbox_idx, frame);
         return Ok();
@@ -554,7 +574,6 @@ Option<ClassicCanFrame> Can::try_read(){
 
 
 void CanIrqHandler::isr_tx(Can & self){
-    volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
     const bool callback_present = self.event_callback_ != nullptr;
     
     // 阶段1：处理中断事件（找RQCP置1的邮箱）
@@ -564,7 +583,7 @@ void CanIrqHandler::isr_tx(Can & self){
         | lld::can_statr_rqcp_mask(hal::CanMailboxIndex::_2);
 
 
-    uint32_t temp_tstatr = tstatr_reg;
+    uint32_t temp_tstatr = intrinsics::load_volatile_to_u32(&RAL_INST(self.p_inst_)->TSTATR);
 
     if(temp_tstatr & ANY_TSTATR_RQCP_MASK) [[likely]] {
         // 需要清除的标志位（RQCP/TXOK/ALST/TERR）
@@ -572,7 +591,7 @@ void CanIrqHandler::isr_tx(Can & self){
 
         for(size_t i = 0; i < 3; i++){
             
-            auto guard = make_scope_guard([&]{
+            [[maybe_unused]] auto guard = make_scope_guard([&]{
                 temp_tstatr >>= 8;
                 clear_mask <<= 8;
             });
@@ -594,7 +613,7 @@ void CanIrqHandler::isr_tx(Can & self){
             }
 
             //写1清除RQCP/TXOK/ALST/TERR(写0无效)
-            tstatr_reg = clear_mask;
+            intrinsics::store_volatile_with_u32(&RAL_INST(self.p_inst_)->TSTATR, clear_mask);
         }
     }
 
@@ -606,17 +625,18 @@ void CanIrqHandler::isr_tx(Can & self){
     static constexpr size_t TME_BASE_SHIFT = __builtin_ctz(ANY_TME_MASK);
 
     //重新读取tstatr的值 因为调用回调函数可能会操作外设
-    uint32_t temp_tme = tstatr_reg & ANY_TME_MASK;
+    uint32_t temp_tme = 
+        intrinsics::load_volatile_to_u32(&RAL_INST(self.p_inst_)->TSTATR) 
+        & ANY_TME_MASK;
 
     if(temp_tme == 0) return; // 无空闲邮箱，直接退出
     temp_tme >>= TME_BASE_SHIFT;
 
     size_t desired_dequeue_quantity = self.tx_queue_.length();
-    uint32_t tme_is_set_mask = 1;
 
     for(size_t i = 0; i < 3; i++){
-        auto guard = make_scope_guard([&]{
-            tme_is_set_mask <<= 1;
+        [[maybe_unused]] auto guard = make_scope_guard([&]{
+            temp_tme >>= 1;
         });
 
         // 不是空的
@@ -642,20 +662,14 @@ void CanIrqHandler::isr_rx(
     Can & self, 
     const CanFifoIndex fifo_idx
 ){
-    volatile uint32_t & rfifo_reg = [&] -> volatile uint32_t &{
-        switch(fifo_idx){
-            case CanFifoIndex::_0: return can_get_rfifo_reg<CanFifoIndex::_0>(self.p_inst_);
-            case CanFifoIndex::_1: return can_get_rfifo_reg<CanFifoIndex::_1>(self.p_inst_);
-        }
-        __builtin_unreachable();
-    }();
+    volatile auto & rfifo_reg = RAL_INST(self.p_inst_)->RFIFO[static_cast<size_t>(fifo_idx)];
 
-    const uint32_t temp_rfifo_reg = rfifo_reg;
+    const uint32_t temp_rfifo_reg = intrinsics::load_volatile_to_u32(&rfifo_reg);
 
    // 1. 处理 FIFO 满
     if(temp_rfifo_reg & CAN_RFIFO_FFULL_MASK){
-        auto isr_flag_clear_guard = make_scope_guard([&](){
-            rfifo_reg = CAN_RFIFO_FFULL_MASK;
+        [[maybe_unused]] auto isr_flag_clear_guard = make_scope_guard([&](){
+            intrinsics::store_volatile_with_u32(&rfifo_reg, CAN_RFIFO_FFULL_MASK);
         });
 
         //rfifo满
@@ -670,8 +684,8 @@ void CanIrqHandler::isr_rx(
     
     // 2. 处理 FIFO 溢出
     if(temp_rfifo_reg & CAN_RFIFO_FOV_MASK){
-        auto isr_flag_clear_guard = make_scope_guard([&](){
-            rfifo_reg = CAN_RFIFO_FOV_MASK;
+        [[maybe_unused]] auto isr_flag_clear_guard = make_scope_guard([&](){
+            intrinsics::store_volatile_with_u32(&rfifo_reg, CAN_RFIFO_FOV_MASK);
         });
 
         ///rfifo溢出
@@ -687,14 +701,14 @@ void CanIrqHandler::isr_rx(
     // 3. FIFO中的报文入队
     {
 
-        // 每次都访问寄存器以确保在中断发生过程中有新数据也能被处理
+        // 每次都访问寄存器以确保在中断发生过程中有新报文被收到 也能被处理
         auto get_latest_rfifo_pending_quantity = [&] -> size_t {
-            const uint32_t readed_rfifo_reg = rfifo_reg;
-            return static_cast<size_t>((readed_rfifo_reg & CAN_RFIFO_FMP_MASK) >> 0);
+            const auto readed_rfifo_reg = intrinsics::load_volatile32(&rfifo_reg);
+            return static_cast<size_t>((readed_rfifo_reg.FMP));
         };
 
         auto notify_frame_readed = [&](){
-            rfifo_reg = CAN_RFIFO_FOM_MASK;
+            intrinsics::store_volatile_with_u32(&rfifo_reg, CAN_RFIFO_FOM_MASK);
         };
 
         size_t rfifo_pending_quantity = get_latest_rfifo_pending_quantity();
@@ -717,9 +731,9 @@ void CanIrqHandler::isr_rx(
                     .kind = CanReceiveEvent::Kind::FrameEnqueued,
                 });
                 TRY_EMIT_EVENT(self, ev)
-                rfifo_pending_quantity--;
+                rfifo_pending_quantity -= enqueued_quantity;
             }else{
-                self.queue_full_count++;
+                self.queue_ovf_count.fetch_add(1u, std::memory_order_relaxed);
                 const auto ev = CanEvent::from(hal::CanReceiveEvent{
                     .fifo_idx = fifo_idx,
                     .kind = CanReceiveEvent::Kind::FrameEnqueueFailed,
@@ -728,7 +742,8 @@ void CanIrqHandler::isr_rx(
                 break;
             }
 
-            //临别之前确保中断过程中收到的报文也被消费 避免再次进入中断
+            //临别之前确保中断过程中收到的报文也被消费 避免频繁进入中断
+            //理论上如果频繁被置位会导致死循环 但实际由于can报文最短接收间隔也有数十微秒 不会造成这样的问题
             if(rfifo_pending_quantity == 0)
                 rfifo_pending_quantity = get_latest_rfifo_pending_quantity();
         }
@@ -741,9 +756,9 @@ void CanIrqHandler::isr_sce(Can & self) {
 
     void* p_inst = self.p_inst_;
 
-    const uint32_t temp_inten = SPL_INST(p_inst)->INTENR;
-    const uint32_t temp_statr = SPL_INST(p_inst)->STATR;
-    const uint32_t temp_errsr = SPL_INST(p_inst)->ERRSR;
+    const uint32_t temp_inten = std::bit_cast<uint32_t>(RAL_INST(p_inst)->INTENR);
+    const uint32_t temp_statr = std::bit_cast<uint32_t>(RAL_INST(p_inst)->STATR);
+    const uint32_t temp_errsr = std::bit_cast<uint32_t>(RAL_INST(p_inst)->ERRSR);
 
     auto flag_bits = hal::CanStatusFlag::zero();
 
@@ -751,20 +766,20 @@ void CanIrqHandler::isr_sce(Can & self) {
         // Wake-up interrupt (WKU)
         if ((temp_inten & CAN_IT_WKU) && (temp_statr & CAN_STATR_WKUI)) {
             flag_bits.wakeup = 1;
-            SPL_INST(p_inst)->STATR = CAN_STATR_WKUI;  // W1C
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_WKUI);  // W1C
         }
     
         // Sleep acknowledge interrupt (SLK)
         if ((temp_inten & CAN_IT_SLK) && (temp_statr & CAN_STATR_SLAKI)) {
             flag_bits.sleep_acknowledge = 1;
-            SPL_INST(p_inst)->STATR = CAN_STATR_SLAKI;  // W1C
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_SLAKI);  // W1C
         }
     
         // General error interrupt (ERR)
         if ((temp_inten & CAN_IT_ERR) && (temp_statr & CAN_STATR_ERRI)) {
             flag_bits.error = 1;
-            SPL_INST(p_inst)->ERRSR = RESET;
-            SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;  // W1C
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->ERRSR ,RESET);
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_ERRI);  // W1C
         }
     }
 
@@ -772,26 +787,26 @@ void CanIrqHandler::isr_sce(Can & self) {
         // Error warning (EWG)
         if ((temp_inten & CAN_IT_EWG) && (temp_errsr & CAN_ERRSR_EWGF)) {
             flag_bits.error_warning = 1;
-            SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;  // W1C (shared ERR flag)
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_ERRI);  // W1C (shared ERR flag)
         }
 
         // Error passive (EPV)
         if ((temp_inten & CAN_IT_EPV) && (temp_errsr & CAN_ERRSR_EPVF)) {
             flag_bits.error_passive = 1;
-            SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;  // W1C
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_ERRI);  // W1C
         }
 
         // Bus-off (BOF)
         if ((temp_inten & CAN_IT_BOF) && (temp_errsr & CAN_ERRSR_BOFF)) {
             flag_bits.bus_off = 1;
-            SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;  // W1C
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_ERRI);  // W1C
         }
 
         // Last error code (LEC)
         if ((temp_inten & CAN_IT_LEC) && (temp_errsr & CAN_ERRSR_LEC)) {
             flag_bits.last_error_code = 1;
-            SPL_INST(p_inst)->ERRSR = RESET;
-            SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->ERRSR ,RESET);
+            intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->STATR ,CAN_STATR_ERRI);
         }
     }
 

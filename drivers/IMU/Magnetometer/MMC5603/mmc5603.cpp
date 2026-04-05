@@ -121,6 +121,9 @@ IResult<> MMC5603::set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z){
     auto y_st_reg_copy = RegCopy(regs_.y_st_reg);
     auto z_st_reg_copy = RegCopy(regs_.z_st_reg);
 
+    x_st_reg_copy.bits = x;
+    y_st_reg_copy.bits = y;
+    z_st_reg_copy.bits = z;
     if(const auto res = write_reg(x_st_reg_copy);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = write_reg(y_st_reg_copy);

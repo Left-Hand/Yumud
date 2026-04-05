@@ -305,10 +305,9 @@ struct [[nodiscard]] DataErase final{
                 static_cast<uint8_t>(COMMAND_KIND),
                 0x05, 0x00,
                 0x00, 0x00, 0x00, 0x00,
-                0x00
+                static_cast<uint8_t>(self.sectors & 0xFF)
             };
             // Write sectors at position 7 (as single byte per Rust reference)
-            buffer[7] = static_cast<uint8_t>(self.sectors & 0xFF);
 
             if(const auto res = Receiver::push_bytes(std::span(buffer)); 
                 res.is_err()) return Err(res.unwrap_err());

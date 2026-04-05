@@ -20,11 +20,16 @@
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "details/gcode_file.hpp"
+
+
+
 
 #ifdef USART1_PRESENT
 using namespace ymd;
 
+constexpr unsigned char NANJING_GCODE_FILE[] = {
+    #embed "nanjing.gcode"
+};
 using namespace ymd::robots;
 
 #define DBG_UART hal::usart2
@@ -215,7 +220,7 @@ private:
 };
 
 
-struct [[nodiscard]] GcodeStateHolder final{
+struct [[nodiscard]] GcodeParseState final{
     static constexpr auto X_LIMIT = 0.2_r;
     static constexpr auto Y_LIMIT = 0.2_r;
 
@@ -318,8 +323,8 @@ void polar_robot_main(){
         hal::CanFilterConfig::accept_all()
     ).unwrap();
 
-    zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
-    zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
+    zdtmotor::ZdtFrameFactory factory1 = zdtmotor::ZdtFrameFactory::with_node_id(1);
+    zdtmotor::ZdtFrameFactory factory2 = zdtmotor::ZdtFrameFactory::with_node_id(2);
 
     #endif
 
@@ -362,7 +367,12 @@ void polar_robot_main(){
 
     PolarRobotCurveGenerator curve_gen_{CURVE_GEN_CONFIG};
 
-    [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
+    const auto GCODE_LINES_NANJING = StringView{
+        reinterpret_cast<const char *>(std::begin(NANJING_GCODE_FILE)),
+        std::size(NANJING_GCODE_FILE)
+    };
+
+    [[maybe_unused]] auto fetch_next_gcode_line = [&] -> Option<StringView>{
         static StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
             const auto next_line = line_iter.next();
@@ -379,10 +389,10 @@ void polar_robot_main(){
         ASSERT(line.query_mnemonic().examine().to_letter() == 'G', 
             "only G gcode is supported");
 
-        static GcodeStateHolder state_;
+        static GcodeParseState state_;
 
-        auto parse_g_command = [&](const gcode::GcodeArg & arg){
-            const uint16_t major = static_cast<uint16_t>(arg.value);
+        auto parse_g_command = [&](const gcode::GcodeWord & arg){
+            const uint16_t major = static_cast<uint16_t>(arg.value.unsigned_digit());
             switch(major){
             case 0://rapid move
                 curve_gen_.set_move_speed(state_.max_speed);
@@ -404,16 +414,16 @@ void polar_robot_main(){
             }
         };
 
-        auto parse_arg = [&](const gcode::GcodeArg & arg){
+        auto parse_arg = [&](const gcode::GcodeWord & arg){
             switch(arg.letter){
             case 'X': 
-                state_.x = unit::MilliMeter<iq16>(arg.value);
+                state_.x = unit::MilliMeter<iq16>(arg.value.to_numeric<iq16>());
                 break;
             case 'Y':
-                state_.y = unit::MilliMeter<iq16>(arg.value);
+                state_.y = unit::MilliMeter<iq16>(arg.value.to_numeric<iq16>());
                 break;
             case 'F':
-                state_.set_x2_limit(arg.value);
+                state_.set_x2_limit(arg.value.to_numeric<iq16>());
                 break;
             case 'G':
                 parse_g_command(arg);
@@ -423,7 +433,7 @@ void polar_robot_main(){
 
 
         {
-            auto iter = gcode::GcodeArgsIter(str);
+            auto iter = gcode::GcodeWordsIter(str);
             while(iter.has_next()){
                 const auto arg = iter.next().examine();
                 // DEBUG_PRINTLN(arg);

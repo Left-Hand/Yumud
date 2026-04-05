@@ -90,7 +90,7 @@ IResult<> AK8975::validate(){
         }
     }
 
-    if(readed == false) return Err(Error::MagCantSetup); 
+    if(readed == false) return Err(Error::MagSetupFailed); 
 
     //5
     if(const auto res = update();

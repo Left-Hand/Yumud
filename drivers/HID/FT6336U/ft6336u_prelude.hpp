@@ -31,7 +31,52 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddr = uint8_t;
+    enum class RegAddr:uint8_t{
+        DEVICE_MODE  =	0x00,
+
+        GESTURE_ID     = 0x01,
+        TD_STATUS 	 =	0x02,
+
+        TOUCH1_EVENT  =	0x03,
+        TOUCH1_ID 	 =	0x05,
+        TOUCH1_X 	 =	0x03,
+        TOUCH1_Y 	 =	0x05,
+        TOUCH1_WEIGHT  = 0x07,
+        TOUCH1_MISC    = 0x08,
+
+        TOUCH2_EVENT  =	0x09,
+        TOUCH2_ID 	 =	0x0B,
+        TOUCH2_X 	 =	0x09,
+        TOUCH2_Y 	 =	0x0B,
+        TOUCH2_WEIGHT  = 0x0D,
+        TOUCH2_MISC    = 0x0E,
+
+        THRESHOLD          = 0x80,
+        FILTER_COE         = 0x85,
+        CTRL               = 0x86,
+
+        TIME_ENTER_MONITOR = 0x87,
+        ACTIVE_MODE_RATE   = 0x88,
+        MONITOR_MODE_RATE  = 0x89,
+
+        RADIAN_VALUE           = 0x91,
+        OFFSET_LEFT_RIGHT      = 0x92,
+        OFFSET_UP_DOWN         = 0x93,
+        DISTANCE_LEFT_RIGHT    = 0x94,
+        DISTANCE_UP_DOWN       = 0x95,
+        DISTANCE_ZOOM          = 0x96,
+
+        LIBRARY_VERSION_H  = 0xA1,
+        LIBRARY_VERSION_L  = 0xA2,
+        CHIP_ID            = 0xA3,
+        G_MODE             = 0xA4,
+
+        POWER_MODE         = 0xA5,
+        FIRMARE_ID         = 0xA6,
+        FOCALTECH_ID       = 0xA8,
+        RELEASE_CODE_ID    = 0xAF,
+        STATE              = 0xBC,
+    };
 
 
     enum class [[nodiscard]] DeviceMode:uint8_t{
@@ -229,130 +274,153 @@ struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
 
     struct [[nodiscard]] R8_DevMode:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
-        uint8_t :4;
+
+        uint8_t __resv1__:4;
         DeviceMode device_mode:3;
-        uint8_t :1;
+        uint8_t __resv2__:1;
     }DEF_R8(devmode)
 
     struct [[nodiscard]] R8_GestId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+
         uint8_t gesture_id;
     }DEF_R8(gestid)
 
     struct [[nodiscard]] R8_TdStatus:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
         uint8_t touch_cnt:4;
-        uint8_t :4;
-    }DEF_R8(td_status)
+        uint8_t __resv1__:4;
+    }DEF_R8(td_status_reg)
 
     struct [[nodiscard]] R8_P1xh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+
         uint8_t p1xh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p1ev:2;
     }DEF_R8(p1xh)
 
     struct [[nodiscard]] R8_P1xl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
         uint8_t p1xl;
     }DEF_R8(p1xl)
 
     struct [[nodiscard]] R8_P1yh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
+
         uint8_t p1yh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p1id:2;
     }DEF_R8(p1yh)
 
     struct [[nodiscard]] R8_P1yl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+
         uint8_t p1yl;
     }DEF_R8(p1yl)
 
     struct [[nodiscard]] R8_P1Weight:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+
         uint8_t p1weight;
     }DEF_R8(p1weight)
 
     struct [[nodiscard]] R8_P1Misc:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+
         uint8_t touch_area:4;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(p1misc)
 
     struct [[nodiscard]] R8_P2xh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
         uint8_t p2xh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p2ev:2;
     }DEF_R8(p2xh)
 
     struct [[nodiscard]] R8_P2xl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0a};
+
         uint8_t p2xl;
     }DEF_R8(p2xl)
 
     struct [[nodiscard]] R8_P2yh:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
+
         uint8_t p2yh:4;
-        uint8_t :2;
+        uint8_t __resv1__:2;
         uint8_t p2id:2;
     }DEF_R8(p2yh)
 
     struct [[nodiscard]] R8_P2yl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0c};
+
         uint8_t p2yl;
     }DEF_R8(p2yl)
 
     struct [[nodiscard]] R8_P2Weight:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0d};
+
         uint8_t p2weight;
     }DEF_R8(p2weight)
 
     struct [[nodiscard]] R8_P2Misc:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0e};
+
         uint8_t touch_area:4;
-        uint8_t :4;
+        uint8_t __resv1__:4;
     }DEF_R8(p2misc)
 
     struct [[nodiscard]] R8_ThGroup:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x80};
+
         uint8_t touch_threshold;
     }DEF_R8(th_group)
 
     struct [[nodiscard]] R8_ThDiff:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x85};
+
         uint8_t touch_threshold;
     }DEF_R8(th_diff)
 
     struct [[nodiscard]] R8_Ctrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x86};
+
         uint8_t enable_touch_detect:1;
-        uint8_t :7;
+        uint8_t __resv1__:7;
     }DEF_R8(ctrl)
 
     struct [[nodiscard]] R8_TimeEnterMonnitor:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x87};
+
         uint8_t time_enter_monitor;
     }DEF_R8(time_enter)
 
     struct [[nodiscard]] R8_PeriodActive:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x88};
+
         uint8_t report_rate_when_active;
     }DEF_R8(period_active)
 
     struct [[nodiscard]] R8_PeriodMonitor:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x89};
+
         uint8_t report_rate_when_monitor;
     }DEF_R8(period_monitor)
 
     struct [[nodiscard]] R8_RadianValue:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x91};
+
         uint8_t minimal_allowed_angle;
     }DEF_R8(radian_value)
 
     struct [[nodiscard]] R8_OffsetLeftReight:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x92};
+
         uint8_t maxmimul_offset;
     }DEF_R8(offset_left)
 };

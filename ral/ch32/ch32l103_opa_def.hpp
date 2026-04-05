@@ -2,31 +2,31 @@
 
 #include <cstdint>
 
-namespace CH32L103{
+namespace ymd::ral::ch32l103{
 
 struct [[nodiscard]] R16_OPA_CFGR1{
     uint16_t POLL_EN:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t BKIN_EN:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t RST_EN:1;
     uint16_t :2;
     uint16_t OPCM_LOCK:1;
     uint16_t IE_OUT:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t IE_CNT:1;
     uint16_t NMI_EN:1;
     uint16_t IF_OUT:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
     uint16_t IF_CNT:1;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R16_OPA_CFGR2{
     uint16_t POLL_VLU:8;
     uint16_t POLL1_NUM:3;
     uint16_t POLL1_CNT:3;
-    uint16_t :1;
+    uint16_t __resv__:1;
 };
 
 struct [[nodiscard]] R32_OPA_CTLR1{

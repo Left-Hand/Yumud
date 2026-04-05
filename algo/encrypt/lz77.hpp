@@ -14,11 +14,13 @@ static constexpr size_t MAX_MATCH_LENGTH = 258; // Maximum match length
 // Using a simple encoding method:
 // Literal: 0x00 + 1 byte data (2 bytes)
 // Match:   0x01 + length(1 byte) + distance(2 bytes) (4 bytes)
-struct Token {
-    enum Type : uint8_t {
+struct [[nodiscard]] Token final{
+    enum class [[nodiscard]] Type : uint8_t {
         Literal = 0x00,
         Match = 0x01
     };
+
+    using enum Type;
     
     Type type;
     union {
@@ -88,7 +90,7 @@ enum class Error:uint8_t{
             }
             
             // Write match token
-            dst[dst_pos++] = Token::Match;
+            dst[dst_pos++] = static_cast<uint8_t>(Token::Match);
             dst[dst_pos++] = static_cast<uint8_t>(best_length - MIN_MATCH_LENGTH);
             dst[dst_pos++] = static_cast<uint8_t>(best_distance & 0xFF);
             dst[dst_pos++] = static_cast<uint8_t>((best_distance >> 8) & 0xFF);
@@ -101,7 +103,7 @@ enum class Error:uint8_t{
             }
             
             // Write literal token
-            dst[dst_pos++] = Token::Literal;
+            dst[dst_pos++] = static_cast<uint8_t>(Token::Literal);
             dst[dst_pos++] = src[src_pos];
             src_pos++;
         }
@@ -125,7 +127,7 @@ enum class Error:uint8_t{
         const uint8_t token_type = src[src_pos++];
         
         switch (token_type) {
-            case Token::Literal: {
+            case static_cast<uint8_t>(Token::Literal): {
                 if (src_pos >= src.size() || dst_pos >= dst.size()) {
                     return Err(Error::InvalidData); // Incomplete data or insufficient space
                 }
@@ -134,7 +136,7 @@ enum class Error:uint8_t{
                 break;
             }
             
-            case Token::Match: {
+            case static_cast<uint8_t>(Token::Match): {
                 if (src_pos + 2 >= src.size()) {
                     return Err(Error::InvalidData); // Incomplete data
                 }

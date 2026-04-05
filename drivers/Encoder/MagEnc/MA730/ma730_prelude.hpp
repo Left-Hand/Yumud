@@ -5,7 +5,7 @@
 #include "primitive/arithmetic/angular.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"
-#include "drivers/Encoder/encoder.hpp"
+#include "drivers/encoder/encoder.hpp"
 
 
 namespace ymd::drivers{
@@ -28,7 +28,7 @@ struct MA730_Prelude{
         _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
     };
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         ZeroDataLow,
         ZeroDataHigh,
         Trim,
@@ -45,29 +45,29 @@ struct MA730_Prelude{
 struct MA730_Regset:public MA730_Prelude{
 
     struct R8_ZeroLow:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
+        static constexpr RegAddr REG_ADDR = RegAddr::ZeroDataLow;
         uint8_t bits;
     };
 
     struct R8_ZeroHigh:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZeroDataHigh;
+        static constexpr RegAddr REG_ADDR = RegAddr::ZeroDataHigh;
         uint8_t bits;
     };
 
     struct R8_Trim:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Trim;
+        static constexpr RegAddr REG_ADDR = RegAddr::Trim;
         uint8_t trim;
     };
 
     struct R8_TrimConfig:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::TrimConfig;
+        static constexpr RegAddr REG_ADDR = RegAddr::TrimConfig;
         uint8_t enable_x:1;
         uint8_t enable_y:1;
         uint8_t :6;
     };
 
     struct R8_ZParameters:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZParameters;
+        static constexpr RegAddr REG_ADDR = RegAddr::ZParameters;
         uint8_t :2;
         ZeroPulsePhase z_phase :2;
         ZeroPulseWidth z_width :2;
@@ -75,25 +75,25 @@ struct MA730_Regset:public MA730_Prelude{
     };
 
     struct R8_PulsePerTurn:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::PulsePerTurn;
+        static constexpr RegAddr REG_ADDR = RegAddr::PulsePerTurn;
         uint8_t bits;
     };
 
     struct R8_Threshold:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Threshold;
+        static constexpr RegAddr REG_ADDR = RegAddr::Threshold;
         uint8_t :2;
         MagThreshold high :3;
         MagThreshold low :3;
     };
 
     struct R8_Direction:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Direction;
+        static constexpr RegAddr REG_ADDR = RegAddr::Direction;
         uint8_t :7;
         uint8_t direction_is_ccw :1;
     };
 
     struct R8_Magnitude:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Magnitude;
+        static constexpr RegAddr REG_ADDR = RegAddr::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;

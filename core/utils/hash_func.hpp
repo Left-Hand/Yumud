@@ -11,104 +11,89 @@ namespace ymd{
 template<std::ranges::range Range, typename T>
 static constexpr bool is_range_value_convertible_v = 
     (std::is_convertible_v<std::ranges::range_value_t<Range>, T>);
+
+
 using HashCode = uint32_t;
 
 static constexpr HashCode HASHDJB_SEED = 5381;
-
-enum class HashAlgo:uint8_t{
-    Djb
-};
-
 namespace hashfunc{
-
-    __inline static constexpr uint32_t hash_uiml32(char const*data, size_t length){
-        uint32_t h = 0;  
-        uint16_t strLength = length, alignedLen = strLength / sizeof(uint32_t);
-        for(size_t i = 0; i < alignedLen; ++i)  
-            h = (h << 5) - h + (reinterpret_cast<const uint32_t*>(data)[i]); 
-        for(size_t i = alignedLen << 2; i < strLength; ++i)
-            h = (h << 5) - h + uint8_t(data[i]); 
+    template <std::ranges::range Range>
+    requires (is_range_value_convertible_v<Range, uint8_t> || is_range_value_convertible_v<Range, char>)
+    __inline static constexpr uint32_t hash_uiml32(Range && range, uint32_t h = 0){
+        const size_t str_length = std::size(range);
+        size_t aligned_len = str_length / sizeof(uint32_t);
+        for(size_t i = 0; i < aligned_len; ++i)  
+            h = (h << 5) - h + (reinterpret_cast<const uint32_t*>(range)[i]); 
+        for(size_t i = aligned_len << 2; i < str_length; ++i)
+            h = (h << 5) - h + uint8_t(range[i]); 
         return h; 
     }
 
-
-    __inline static constexpr uint32_t hash_fnv1a(char const*data, size_t length){
-        uint32_t prime = 16777619U;
-        uint32_t ret = 2166136261U;
-        for (size_t i = 0; i < length; i++) {
-            ret ^= uint32_t(data[i]);
-            ret *= prime;
-        }
-        return ret;
-    }
-
-    /**
-     * @brief DJB2 哈希算法
-     * @tparam Range 输入范围（必须满足 std::ranges::range 且元素可转 uint8_t）
-     * @param range 输入数据范围
-     * @param last 上一次的哈希值（默认 5381，DJB2 初始种子）
-     * @return 计算后的新哈希值
-     */
     template <std::ranges::range Range>
     requires (is_range_value_convertible_v<Range, uint8_t> || is_range_value_convertible_v<Range, char>)
-    __inline static constexpr HashCode hash_djb(Range && range, HashCode last = HASHDJB_SEED) {
+    __inline static constexpr uint32_t hash_fnv1a(Range && range, uint32_t prev = 2166136261U){
+        static constexpr uint32_t PRIME = 16777619U;
+        const size_t len = std::size(range);
+        for (size_t i = 0; i < len; i++) {
+            prev ^= static_cast<uint32_t>(range[i]);
+            prev *= PRIME;
+        }
+        return prev;
+    }
+
+    template <std::ranges::range Range>
+    requires (is_range_value_convertible_v<Range, uint8_t> || is_range_value_convertible_v<Range, char>)
+    __inline static constexpr HashCode hash_djb(Range && range, HashCode prev = HASHDJB_SEED) {
         for (const auto& byte : range) {
-            last = (last * 33) ^ static_cast<uint8_t>(byte);
+            prev = (prev * 33) ^ static_cast<uint8_t>(byte);
         }
-        return last;
+        return prev;
     }
 
-    template<typename Iter>
-    requires (is_next_based_iter_v<Iter>)
-    __inline static constexpr HashCode hash_djb(Iter iter, HashCode last = HASHDJB_SEED){
-        while(iter.has_next()){
-            last = (last * 33) ^ std::bit_cast<uint8_t>(iter.next());
-        }
-        return last;
-    }
 };
 
 
 
 
-template<HashAlgo S>
-struct HashBuilder{
-
-};
-
-template<>
-struct HashBuilder<HashAlgo::Djb>{
+struct HashDjbBuilder final{
 public:
-    explicit constexpr HashBuilder(const HashCode seed = HASHDJB_SEED):
-        seed_(seed){;}
+    HashCode val_;
+    explicit constexpr HashDjbBuilder(const HashCode val = HASHDJB_SEED):
+        val_(val){;}
 
-    constexpr HashCode get() const{return seed_;} 
+    static constexpr HashDjbBuilder from_default(){
+        return HashDjbBuilder(HASHDJB_SEED);
+    }
+
+    constexpr HashCode finalize() const{return val_;} 
 
     template <typename T>
-    constexpr HashBuilder & operator << (T && obj){
-        seed_ =  hashfunc::hash_djb(obj, seed_);
+    constexpr HashDjbBuilder & operator << (T && obj){
+        val_ =  hashfunc::hash_djb(obj, val_);
         return *this;
     }
 
 
     template<std::integral T>
-    constexpr HashBuilder & operator << (const T i){
+    constexpr HashDjbBuilder & operator << (const T i){
         constexpr size_t N = sizeof(T);
         *this << std::bit_cast<std::array<uint8_t, N>>(i);  
         return *this;
     }
-private:
-    HashCode seed_;
+
+
 };
 
-template <HashAlgo S = HashAlgo::Djb, typename ... Args>
+using DefaultHashBuilder = HashDjbBuilder;
+
+template <typename HashBuilder = DefaultHashBuilder, typename ... Args>
 __inline static constexpr HashCode hash(Args &&... args) {
-    auto hasher = HashBuilder<S>{};
-    return (hasher << ... << std::forward<Args>(args)).get();
+    auto hasher = HashBuilder::from_default();
+    return (hasher << ... << std::forward<Args>(args)).finalize();
 }
 
-__inline constexpr uint32_t operator "" _ha(char const* p, const size_t size)  {
-    return hash(std::span<const char>{p, size});
+__inline constexpr uint32_t operator ""_ha(char const* p, const size_t lenth)  {
+    return hash<DefaultHashBuilder>(std::span<const char>{p, lenth});
 }
 
 }

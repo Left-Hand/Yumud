@@ -18,17 +18,20 @@ private:
 
 public:
 
-    [[nodiscard]] constexpr Line2(const Segment2<auto> & seg):
+    template<typename U>
+    [[nodiscard]] constexpr Line2(const Segment2<U> & seg):
         d(((seg.start).cross(seg.stop)) * (seg.stop - seg.start).inv_length()), 
         orientation(seg.angle()){;}
 
-    [[nodiscard]] constexpr Line2(const math::Vec2<auto> & _from, const math::Vec2<auto> & _to): 
+    template<typename U>
+    [[nodiscard]] constexpr Line2(const math::Vec2<U> & _from, const math::Vec2<U> & _to): 
             Line2(Segment2<T>(_from, _to)){;}
             
 
-    // d = p.x * sin(angle) - p.y * cos(angle) 
+    template<typename U>
     [[nodiscard]] static constexpr Line2 from_point_and_angle(
-        const math::Vec2<auto> & p, 
+        // d = p.x * sin(angle) - p.y * cos(angle) 
+        const math::Vec2<U> & p, 
         const Angular<T> angle
     ){
         const auto [s,c] = angle.sincos();
@@ -112,7 +115,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Option<T> distance_with(const Line2<T> & other) const{
-        if(not this->parallel_with(other)) return std::nullopt;
+        if(not this->is_parallel_with(other)) return std::nullopt;
         return Some<T>({this->d - other.d});
     }
 
@@ -296,7 +299,8 @@ public:
 };
 
 
-__fast_inline OutputStream & operator <<(OutputStream & os, const Line2<auto> & line){
+template<typename T>
+__fast_inline OutputStream & operator <<(OutputStream & os, const Line2<T> & line){
     return os << '(' << line.d << os.splitter() << line.orientation << ')';
 }
 

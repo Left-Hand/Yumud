@@ -23,7 +23,7 @@ public:
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
 
     explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
@@ -51,32 +51,6 @@ private:
 
 
     IResult<> verify_chip_id();
-
-    #if 0
-    // class InterruptChannel{
-    // protected:
-    //     using Error = BMI088_Acc::Error;
-    // public:
-    //     InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
-    //         bmi_(bmi), ctrl_(ctrl), address_(address){;}
-
-    //     IResult<> enable_output(const Enable en){
-    //         auto reg = RegCopy(ctrl_);
-    //         reg.int_out = (en == EN);
-    //         return bmi_.transport_.write_reg(reg);
-    //     }
-    // protected:
-    //     BMI088_Acc & bmi_;
-    //     _R8_IoCtrl & ctrl_;
-    //     uint8_t address_;
-    // };
-
-    // friend InterruptChannel;
-    // std::array<InterruptChannel, 2> interrupts = {
-    //     InterruptChannel{*this, int1_ctrl_reg, int1_ctrl_reg.address},
-    //     InterruptChannel{*this, int2_ctrl_reg, int2_ctrl_reg.address},
-    // };
-    #endif
 
     [[nodiscard]] static constexpr iq20
     calculate_acc_scale(const AccFs acc_fs){
@@ -114,7 +88,7 @@ public:
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
 
     explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
@@ -145,15 +119,15 @@ private:
     calculate_gyr_scale(const GyrFs gyr_fs){
         switch(gyr_fs){
             case GyrFs::_125deg:
-                return iq24(DEG2RAD_RATIO) * (2 * 125);
+                return iq24(DEG2RAD_RATIO * 2 * 125);
             case GyrFs::_250deg:
-                return iq24(DEG2RAD_RATIO) * (2 * 250);
+                return iq24(DEG2RAD_RATIO * 2 * 250);
             case GyrFs::_500deg:
-                return iq24(DEG2RAD_RATIO) * (2 * 500);
+                return iq24(DEG2RAD_RATIO * 2 * 500);
             case GyrFs::_1000deg:
-                return iq24(DEG2RAD_RATIO) * (2 * 1000);
+                return iq24(DEG2RAD_RATIO * 2 * 1000);
             case GyrFs::_2000deg:
-                return iq24(DEG2RAD_RATIO) * (2 * 2000);
+                return iq24(DEG2RAD_RATIO * 2 * 2000);
         }
 
         __builtin_unreachable();

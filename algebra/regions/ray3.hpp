@@ -87,7 +87,8 @@ private:
 template<typename T>
 Ray3() -> Ray3<T>;
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const Ray3<auto> & value){
+template<typename T>    
+__fast_inline OutputStream & operator<<(OutputStream & os, const Ray3<T> & value){
     return os << os.brackets<'('>() << 
         value.base << os.splitter() << 
         value.direction << os.brackets<')'>();
