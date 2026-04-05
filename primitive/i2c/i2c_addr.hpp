@@ -83,6 +83,7 @@ template<I2cRole R>
 struct [[nodiscard]] I2cAddr<7, R>{
 public:
     static constexpr I2cAddr<7, R> from_u7(const uint16_t i2c_addr){
+        if(i2c_addr & 0x80) __builtin_unreachable();
         return I2cAddr<7, R>{uint16_t(i2c_addr)};
     }
 

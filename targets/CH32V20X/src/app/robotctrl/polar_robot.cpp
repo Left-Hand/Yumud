@@ -323,8 +323,8 @@ void polar_robot_main(){
         hal::CanFilterConfig::accept_all()
     ).unwrap();
 
-    zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
-    zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
+    zdtmotor::ZdtFrameFactory factory1 = zdtmotor::ZdtFrameFactory::with_node_id(1);
+    zdtmotor::ZdtFrameFactory factory2 = zdtmotor::ZdtFrameFactory::with_node_id(2);
 
     #endif
 

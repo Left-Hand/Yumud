@@ -77,7 +77,7 @@ if(self.event_callback_ != nullptr) {\
 }else{/* do nothing */}
 
 #define TRY_EMIT_EVENT_OR_ABORT(self, x, str) TRY_EMIT_EVENT(self, x);
-#define ABORT(str) {;};
+#define ABORT_WITH_REASON(str) {;};
 
 
 #else
@@ -101,7 +101,7 @@ if(self.event_callback_ != nullptr) {\
         sys::abort(AbortInfo::from_reason(str));\
     }\
 
-    #define ABORT(str)\
+    #define ABORT_WITH_REASON(str)\
     sys::abort(AbortInfo::from_reason(str));\
 
 #else
@@ -113,7 +113,7 @@ if(self.event_callback_ != nullptr) {\
         sys::abort(AbortInfo::from_default());\
     }\
 
-    #define ABORT(str)\
+    #define ABORT_WITH_REASON(str)\
     sys::abort(AbortInfo::from_default());\
 
 
@@ -342,7 +342,7 @@ void Can::init(const Config & cfg){
             const auto coeffs = ({
                 const auto may_coeffs = (bit_timming.unwrap_as<CanBaudrate>())
                     .try_into_coeffs(get_aligned_bus_clk_freq());
-                if(may_coeffs.is_none()) ABORT("can't parse baudrate");
+                if(may_coeffs.is_none()) ABORT_WITH_REASON("can't parse baudrate");
                 may_coeffs.unwrap();
             });
 
@@ -486,7 +486,7 @@ Result<void, Infallible> Can::configure_filter(
     const hal::CanFifoIndex route_fifo_idx,
     const hal::CanFilterConfig & filter_cfg
 ){ 
-    if(filter_nth.count() >= lld::NUM_CAN_FILTERS) ABORT("filter_nth out of range");
+    if(filter_nth.count() >= lld::NUM_CAN_FILTERS) ABORT_WITH_REASON("filter_nth out of range");
     lld::can_configure_filter(filter_nth.count(), route_fifo_idx, filter_cfg);
     return Ok();
 }
@@ -498,7 +498,7 @@ Result<void, Infallible> Can::set_filter_origin(
 ){
     if(inst_nth_.count() == 1) {
         if(filter_offset.count() != 0){
-            ABORT("can1 filter origin is always 0");
+            ABORT_WITH_REASON("can1 filter origin is always 0");
         }
     }
     

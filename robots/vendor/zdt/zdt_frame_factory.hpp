@@ -7,12 +7,30 @@
 namespace ymd::robots::zdtmotor{
 
 
-class ZdtFrameFactory final{
-public:
+struct [[nodiscard]] ZdtFrameFactory final{
+    using Self = ZdtFrameFactory;
+
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
+
     NodeId node_id;
-    VerifyMethod verify_method = VerifyMethod::Default;
-    bool is_multi_axis_sync = false;
+    VerifyMethod verify_method;
+    bool is_multi_axis_sync;
+
+    static constexpr Self from_default() {
+        return Self{
+            .node_id = DEFAULT_NODE_ID,
+            .verify_method = VerifyMethod::Default,
+            .is_multi_axis_sync = false
+        };
+    }
+
+    static constexpr Self with_node_id(const uint8_t node_id) {
+        return Self{
+            .node_id = NodeId::from_u8(node_id),
+            .verify_method = VerifyMethod::Default,
+            .is_multi_axis_sync = false
+        };
+    }
 
 
     constexpr FlatPacket set_angle(const Angular<iq16> angle, iq16 speed) const {

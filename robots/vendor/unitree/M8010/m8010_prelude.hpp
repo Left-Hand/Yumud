@@ -200,8 +200,8 @@ struct [[nodiscard]] TxContext final{
         self.kd_code.fill_bytes(bytes.subspan<13-2,2>());
     }
     
-    template<typename Receiver>
-    void sink_to(Receiver && receiver) const {
+    template<typename Serializer>
+    void sink_to(Serializer && serializer) const {
         auto & self = *this;
         std::array<uint8_t, 17> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
@@ -210,7 +210,7 @@ struct [[nodiscard]] TxContext final{
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
-        receiver.sink_bytes(std::span(buffer));
+        serializer.sink_bytes(std::span(buffer));
     } 
 };
 
@@ -224,10 +224,16 @@ struct [[nodiscard]] RxHeader final{
 
 
 struct [[nodiscard]] TempCode final{
-    int8_t bits;
+    uint8_t bits;
+
+    using Self = TempCode;
 
     constexpr int8_t to_celeius() const {
-        return bits;
+        return std::bit_cast<uint8_t>(bits);
+    }
+
+    constexpr Self from_bits(uint8_t b) const {
+        return Self{.bits = std::bit_cast<uint8_t>(b)};
     }
 
     constexpr void fill_bytes(std::span<uint8_t, 1> bytes) const{
@@ -264,6 +270,8 @@ struct [[nodiscard]] ErrorCode final{
 
 struct [[nodiscard]] RxContext final{
     using Self = RxContext;
+
+
     ModeInfo mode_info;
     TorqueCode torque_code;
     X2Code x2_code;
@@ -310,8 +318,8 @@ struct [[nodiscard]] RxContext final{
         self.misc.fill_bytes(bytes.subspan<10,2>());
     }
 
-    template<typename Receiver>
-    void sink_to(Receiver && receiver) const {
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer && serializer) const {
         auto & self = *this;
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
@@ -320,7 +328,7 @@ struct [[nodiscard]] RxContext final{
         buffer[14] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[15] = static_cast<uint8_t>(crc_code >> 8);
 
-        receiver.sink_bytes(std::span(buffer));
+        return serializer.push_bytes(std::span(buffer));
     } 
 };
 }
