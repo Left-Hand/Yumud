@@ -86,7 +86,7 @@ IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
 
 IResult<> QMC5883L::update(){
     std::array<int16_t, 3> buf;
-    if(const auto res = read_burst(RegAddr::MagX, std::span(buf));
+    if(const auto res = read_bulk(RegAddr::MagX, std::span(buf));
         res.is_err()) return res;
 
     regs_.xyz.x = buf[0];

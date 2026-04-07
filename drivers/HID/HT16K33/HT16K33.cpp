@@ -59,7 +59,7 @@ IResult<> HT16K33::setup_system(const Enable en){
 IResult<HT16K33::KeyData> HT16K33::get_key_data(){
 
     KeyData ret;
-    if(const auto res = transport_.read_burst(KEY0_REGADDR, ret.as_bytes_mut());
+    if(const auto res = transport_.read_bulk(KEY0_REGADDR, ret.as_bytes_mut());
         res.is_err()) return Err(res.unwrap_err());
     return Ok(ret);
 }
@@ -77,7 +77,7 @@ IResult<BoolLevel> HT16K33::get_intreg_status(){
     switch(ret){
         case 0: return Ok(LOW);
         case 0xff: return Ok(HIGH);
-        default: return Err(Error::UnknownInterruptCode);
+        default: return Err(Error::InvalidInterruptCode);
     }
 }
 
@@ -119,7 +119,7 @@ IResult<> HT16K33::update_displayer(
     if(stop_addr > DISPLAYER_ADDR_BASE + NUM_GC_RAM_BYTES)
         return Err(Error::DisplayPayloadOversize);
 
-    return transport_.write_burst(start_addr, pbuf);
+    return transport_.write_bulk(start_addr, pbuf);
 }
 
 IResult<> HT16K33::clear_displayer(){

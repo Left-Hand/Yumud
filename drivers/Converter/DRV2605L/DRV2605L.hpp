@@ -46,7 +46,7 @@ private:
     }
 
     IResult<> req_burst(const RegAddr reg_addr, std::span<uint8_t> bytes){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), bytes);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(reg_addr), bytes);
             res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }

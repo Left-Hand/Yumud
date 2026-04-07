@@ -361,8 +361,8 @@ private:
     constexpr bool is_small_chip(){
         return capacity_ <= AddressDiff(256);
     }
-    IResult<> write_burst(const Address loc, const std::span<const uint8_t> pbuf);
-    IResult<> read_burst(const Address loc, const std::span<uint8_t> pbuf);
+    IResult<> write_bulk(const Address loc, const std::span<const uint8_t> pbuf);
+    IResult<> read_bulk(const Address loc, const std::span<uint8_t> pbuf);
 
     IResult<> store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf);
     IResult<> load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf);

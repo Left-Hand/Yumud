@@ -334,9 +334,9 @@ private:
 
     IResult<> write_byte(const uint16_t addr, uint8_t data);
 
-    IResult<> read_burst(const uint16_t addr, uint8_t *data, uint16_t size);
+    IResult<> read_bulk(const uint16_t addr, uint8_t *data, uint16_t size);
 
-    IResult<> write_burst(const uint16_t addr, const uint8_t *data, uint16_t size);
+    IResult<> write_bulk(const uint16_t addr, const uint8_t *data, uint16_t size);
 
     IResult<> poll_for_answer(
 		uint8_t					size,

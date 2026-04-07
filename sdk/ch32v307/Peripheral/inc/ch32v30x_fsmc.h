@@ -107,7 +107,7 @@ typedef struct
                                         This parameter can be a value of @ref FSMC_Extended_Mode */
 
   uint32_t FSMC_WriteBurst;          /* Enables or disables the write burst operation.
-                                        This parameter can be a value of @ref FSMC_Write_Burst */
+                                        This parameter can be a value of @ref FSMC_write_bulk */
 
   FSMC_NORSRAMTimingInitTypeDef* FSMC_ReadWriteTimingStruct; /* Timing Parameters for write and read access if the  ExtendedMode is not used*/
 
@@ -226,7 +226,7 @@ typedef struct
 #define FSMC_ExtendedMode_Disable                       ((uint32_t)0x00000000)
 #define FSMC_ExtendedMode_Enable                        ((uint32_t)0x00004000)
 
-/* FSMC_Write_Burst */
+/* FSMC_write_bulk */
 #define FSMC_WriteBurst_Disable                         ((uint32_t)0x00000000)
 #define FSMC_WriteBurst_Enable                          ((uint32_t)0x00080000) 
 

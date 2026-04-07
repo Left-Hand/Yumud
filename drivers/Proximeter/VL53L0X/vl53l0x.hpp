@@ -86,7 +86,7 @@ private:
 
     IResult<> read_byte_data(const uint8_t reg_addr, uint8_t & data);
 
-    IResult<> read_burst(const uint8_t reg_addr, const std::span<uint16_t> pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, const std::span<uint16_t> pbuf);
 
     IResult<> write_byte_data(const uint8_t reg_addr, const uint8_t byte);
 

@@ -46,7 +46,7 @@ public:
     Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
 
     [[nodiscard]] 
-    Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf);
+    Result<void, Error> read_bulk(const uint8_t addr, std::span<int16_t> pbuf);
 
     
     [[nodiscard]] 

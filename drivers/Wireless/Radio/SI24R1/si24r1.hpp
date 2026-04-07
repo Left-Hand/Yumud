@@ -24,7 +24,7 @@ private:
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
         spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), (addr), CONT);
-        return spi_drv_.write_burst(&(value), sizeof(value));
+        return spi_drv_.write_bulk(&(value), sizeof(value));
     }
 
     IResult<> read_reg(RegAddr addr, auto & value){
@@ -33,7 +33,7 @@ private:
         if(const auto res = spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), uint8_t(addr), CONT);
             res.is_err()) return Err(res.unwrap_err());
         
-        if(const auto res = spi_drv_.read_burst(&(value), sizeof(value));
+        if(const auto res = spi_drv_.read_bulk(&(value), sizeof(value));
             res.is_err()) return Err(res.unwrap_err()); 
 
         return Ok();
@@ -47,7 +47,7 @@ private:
             uint8_t(Command::R_RX_PAYLOAD), CONT
         ); res.is_err()) return Err(res.unwrap_err());
         
-        if(const auto res = spi_drv_.read_burst<uint8_t>(std::span(pbuf.data(), size));
+        if(const auto res = spi_drv_.read_bulk<uint8_t>(std::span(pbuf.data(), size));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -62,7 +62,7 @@ private:
             uint8_t(Command::W_TX_PAYLOAD), CONT
         ); res.is_err()) return Err(res.unwrap_err());
 
-        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(pbuf.data(), size));
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(pbuf.data(), size));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -75,7 +75,7 @@ private:
         if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_bits_mut(), 
             uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT); res.is_err()) return Err(res.unwrap_err());
     
-        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(pbuf.data(), size));
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(pbuf.data(), size));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();

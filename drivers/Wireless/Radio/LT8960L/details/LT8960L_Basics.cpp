@@ -401,7 +401,7 @@ IResult<> LT8960L_Transport::_read_reg(
 
 
 IResult<size_t> LT8960L::read_fifo(std::span<uint8_t> buf){
-    return transport_.read_burst(Regs::R16_Fifo::REG_ADDR, buf)
+    return transport_.read_bulk(Regs::R16_Fifo::REG_ADDR, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
 }
@@ -518,7 +518,7 @@ IResult<> LT8960L_Transport::init(){
     return Ok();
 }
 
-IResult<size_t> LT8960L_Transport::read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
+IResult<size_t> LT8960L_Transport::read_bulk(uint8_t reg_addr, std::span<uint8_t> pbuf){
 
 
     auto guard = i2c_.create_guard();
@@ -549,7 +549,7 @@ IResult<size_t> LT8960L_Transport::read_burst(uint8_t reg_addr, std::span<uint8_
 }
 
 
-IResult<size_t> LT8960L_Transport::write_burst(uint8_t reg_addr, std::span<const uint8_t> pbuf){
+IResult<size_t> LT8960L_Transport::write_bulk(uint8_t reg_addr, std::span<const uint8_t> pbuf){
     
     auto guard = i2c_.create_guard();
     

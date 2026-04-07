@@ -75,8 +75,8 @@ private:
         return transport_.read_reg(reg_addr, reg_val);
     }
 
-    IResult<> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
-        return transport_.read_burst(reg_addr, pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf){
+        return transport_.read_bulk(reg_addr, pbuf);
     }
 
     template<typename T>

@@ -48,7 +48,7 @@ struct [[nodiscard]] HT16K33_Prelude{
         DisplayYOutOfRange,
         KeyColumnOutOfRange,
         KeyRowOutOfRange,
-        UnknownInterruptCode
+        InvalidInterruptCode
     };
 
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
@@ -322,14 +322,14 @@ public:
         return Ok();
     }
 
-    IResult<> write_burst(
+    IResult<> write_bulk(
         const RegAddr addr, 
         const std::span<const uint8_t> pbuf
     ){
         // page 23
         // After reaching the display memory location 0X0FH the pointer will reset to 0X00H (display	
         // memory).
-        if(const auto res = i2c_drv_.write_burst(addr, pbuf);
+        if(const auto res = i2c_drv_.write_bulk(addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -340,11 +340,11 @@ public:
         return Ok();
     }
 
-    IResult<> read_burst(
+    IResult<> read_bulk(
         const RegAddr addr, 
         const std::span<uint8_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf);
+        if(const auto res = i2c_drv_.read_bulk(addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -36,13 +36,13 @@ private:
 
     IResult<uint8_t> read_reg8(uint8_t reg){
         std::array<uint8_t, 2>buf = {0, 1};
-        if(const auto res = i2c_drv_.read_burst<uint8_t>(reg, buf);
+        if(const auto res = i2c_drv_.read_bulk<uint8_t>(reg, buf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok(buf[0]);
     }
 
-    IResult<> read_burst(uint8_t reg, std::span<uint8_t> buf){ 
-        if(const auto res = i2c_drv_.read_burst<uint8_t>(reg, buf);
+    IResult<> read_bulk(uint8_t reg, std::span<uint8_t> buf){ 
+        if(const auto res = i2c_drv_.read_bulk<uint8_t>(reg, buf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -38,13 +38,13 @@ private:
             return write_template(addr, endian, [&]() -> HalResult{return this->write_homo_payload(data, len, endian);});
         }
 
-    HalResult write_burst_impl(
+    HalResult write_bulk_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<const valid_i2c_data auto> pbuf, 
         const std::endian endian){
             return write_template(addr, endian, [&]() -> HalResult{return this->write_payload(pbuf, endian);});}
 
-    HalResult read_burst_impl(
+    HalResult read_bulk_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<valid_i2c_data auto> pbuf,
         const std::endian endian){
@@ -144,46 +144,46 @@ public:
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    HalResult write_burst(
+    HalResult write_bulk(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pbuf,
         const std::endian endian = std::endian::little
     ){
-        return write_burst_impl(addr, pbuf, endian);
+        return write_bulk_impl(addr, pbuf, endian);
     }
         
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    HalResult write_burst(
+    HalResult write_bulk(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pbuf,
         const std::endian endian
     ){
-        return write_burst_impl(addr, pbuf, endian);
+        return write_bulk_impl(addr, pbuf, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
     [[nodiscard]] __fast_inline
-    HalResult read_burst(
+    HalResult read_bulk(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pbuf,
         const std::endian endian = std::endian::little
     ){
-        return this->read_burst_impl(addr, pbuf, endian);
+        return this->read_bulk_impl(addr, pbuf, endian);
 
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
     [[nodiscard]] __fast_inline
-    HalResult read_burst(
+    HalResult read_bulk(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pbuf,
         const std::endian endian
     ){
-        return this->read_burst_impl(addr, pbuf, endian);
+        return this->read_bulk_impl(addr, pbuf, endian);
     }
 
     template<typename ... Ts>
@@ -258,7 +258,7 @@ public:
         const T data, 
         const std::endian endian
     ){
-        return this->write_burst_impl(addr, std::span(&data, 1), endian);
+        return this->write_bulk_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
@@ -269,7 +269,7 @@ public:
         const T & data,
         const std::endian endian = std::endian::little
     ){
-        return this->write_burst_impl(addr, std::span(&data, 1), endian);
+        return this->write_bulk_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
@@ -280,7 +280,7 @@ public:
         T & data, 
         std::endian endian
     ){
-        return this->read_burst_impl(addr, std::span(&data, 1), endian);
+        return this->read_bulk_impl(addr, std::span(&data, 1), endian);
     }
 
     template<typename T>
@@ -291,7 +291,7 @@ public:
         T & data,
         const std::endian endian = std::endian::little
     ){
-        return this->read_burst_impl(addr, std::span(&data, 1), endian);
+        return this->read_bulk_impl(addr, std::span(&data, 1), endian);
     }
 
     [[nodiscard]]

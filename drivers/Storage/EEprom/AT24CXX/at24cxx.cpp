@@ -21,29 +21,29 @@ using Error = AT24CXX::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> AT24CXX::write_burst(const Address addr, const std::span<const uint8_t> pbuf){
+IResult<> AT24CXX::write_bulk(const Address addr, const std::span<const uint8_t> pbuf){
     // DEBUG_PRINTLN(addr, pbuf);
     // return Ok();
     if (is_small_chip()){
-        if(const auto res = i2c_drv_.write_burst(uint8_t(addr.to_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_bulk(uint8_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else{
-        if(const auto res = i2c_drv_.write_burst(uint16_t(addr.to_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_bulk(uint16_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 }
 
-IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf){
+IResult<> AT24CXX::read_bulk(const Address addr, const std::span<uint8_t> pbuf){
     // DEBUG_PRINTLN(addr, pbuf);
     // return Ok();
     if (is_small_chip()){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr.to_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else{
-        if(const auto res = i2c_drv_.read_burst(uint16_t(addr.to_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_bulk(uint16_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -96,11 +96,11 @@ namespace static_test{
 
 
 IResult<> AT24CXX::store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf){
-    return write_burst(loc, pbuf);
+    return write_bulk(loc, pbuf);
 }
 
 IResult<> AT24CXX::load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf){
-    return read_burst(loc, pbuf);
+    return read_bulk(loc, pbuf);
 }
 
 IResult<> AT24CXX::init(){

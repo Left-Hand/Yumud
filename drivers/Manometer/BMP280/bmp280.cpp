@@ -112,7 +112,7 @@ IResult<> Self::init(const Config & cfg){
     if(const auto res = enable_3wire_spi(DISEN);
         res.is_err()) return res;
 
-    if(const auto res = read_burst(DIGT1_REG_ADDR, 
+    if(const auto res = read_bulk(DIGT1_REG_ADDR, 
         std::span(reinterpret_cast<int16_t *>(&coeffs_.digT1), 12));
         res.is_err()) return res;
     return Ok();

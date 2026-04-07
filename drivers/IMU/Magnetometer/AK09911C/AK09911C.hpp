@@ -75,8 +75,8 @@ private:
     }
 
     
-    IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_bulk(const RegAddr addr, std::span<int16_t> pbuf){
+        return transport_.read_bulk(addr, pbuf);
     }
 
     IResult<math::Vec3<int8_t>> get_coeff();

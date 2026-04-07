@@ -103,7 +103,7 @@ struct ST7789V3_Transport final:
     }
 
     template<typename T>
-    IResult<> write_burst_pixels(std::span<const T> pbuf){
+    IResult<> write_bulk_pixels(std::span<const T> pbuf){
         return IResult<>(write_by_iter<uint16_t>(U18BurstPixelDataIter(BurstIter<T>(pbuf))));
     }
 

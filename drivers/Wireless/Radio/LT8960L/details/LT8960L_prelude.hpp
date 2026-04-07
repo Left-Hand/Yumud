@@ -150,9 +150,9 @@ struct LT8960L_Transport final:public details::LT8960L_Prelude{
 
     IResult<> read_reg(uint8_t address, uint16_t & data);
 
-    IResult<size_t> read_burst(uint8_t address, std::span<uint8_t> pbuf);
+    IResult<size_t> read_bulk(uint8_t address, std::span<uint8_t> pbuf);
 
-    IResult<size_t> write_burst(uint8_t address, std::span<const uint8_t> pbuf);
+    IResult<size_t> write_bulk(uint8_t address, std::span<const uint8_t> pbuf);
 
     IResult<> start_hw_listen_pkt();
 

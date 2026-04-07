@@ -158,7 +158,7 @@ private:
 
 
     IResult<size_t> write_fifo(std::span<const uint8_t> buf){
-        return transport_.write_burst(Regs::R16_Fifo::REG_ADDR, buf);
+        return transport_.write_bulk(Regs::R16_Fifo::REG_ADDR, buf);
     }
 
     IResult<size_t> read_fifo(std::span<uint8_t> buf);

@@ -111,8 +111,8 @@ struct RM3100_Transport:public RM3100_Prelude{
         return Ok();
     }
 
-    IResult<> read_burst(RegAddr addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst<uint8_t>(addr, pbuf);
+    IResult<> read_bulk(RegAddr addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_bulk<uint8_t>(addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -138,7 +138,7 @@ struct RM3100:public RM3100_Prelude{
     IResult<math::Vec3<int32_t>> get_mag_i32(){
         uint8_t buf[9];
 
-        if(const auto res = transport_.read_burst(0x24, std::span(buf));
+        if(const auto res = transport_.read_bulk(0x24, std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
 
         auto [x2,x1,x0,y2,y1,y0,z2,z1,z0] = buf;

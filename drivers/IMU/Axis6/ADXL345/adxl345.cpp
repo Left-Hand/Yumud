@@ -49,7 +49,7 @@ IResult<> ADXL345::self_test(){
 
 IResult<math::Vec3<iq24>> ADXL345::read_acc(){
     std::array<int16_t, 3> buf;
-    if(const auto res = transport_.read_burst(std::bit_cast<uint8_t>(RegAddr::DeviceID), buf);
+    if(const auto res = transport_.read_bulk(std::bit_cast<uint8_t>(RegAddr::DeviceID), buf);
         res.is_err()) return Err(res.unwrap_err());
 
     

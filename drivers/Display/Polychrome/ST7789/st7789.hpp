@@ -48,7 +48,7 @@ public:
     }
 
     IResult<> put_next_texture(const math::Rect2<uint16_t> rect, const is_color auto * pcolor){
-        return transport_.write_burst_pixels(std::span(pcolor, rect.area()));
+        return transport_.write_bulk_pixels(std::span(pcolor, rect.area()));
     }
 
     IResult<> set_display_offset(const math::Vec2<uint16_t> _offset){

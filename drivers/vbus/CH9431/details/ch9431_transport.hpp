@@ -90,7 +90,7 @@ public:
             data,
         };
 
-        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -107,7 +107,7 @@ public:
     IResult<> write_byte(const uint8_t cmd, const uint8_t data){
         const auto buf = std::array{cmd, data};
         
-        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -128,7 +128,7 @@ public:
     IResult<> reset_device(){
         static constexpr auto buf = std::to_array<uint8_t>({0xc0});
         
-        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -124,7 +124,7 @@ IResult<> MPU6050::init(const Config & cfg){
 IResult<> MPU6050::update(){
     std::array<int16_t, 7> buf;
 
-    const auto res = read_burst(regs_.acc_x_reg.REG_ADDR, std::span(buf));
+    const auto res = read_bulk(regs_.acc_x_reg.REG_ADDR, std::span(buf));
     if(res.is_err()){
         is_data_valid_ = false;
         return Err(res.unwrap_err());

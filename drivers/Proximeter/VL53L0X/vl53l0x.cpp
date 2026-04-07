@@ -98,7 +98,7 @@ IResult<bool> VL53L0X::is_busy(){
 }
 
 IResult<> VL53L0X::flush(){
-	return read_burst(
+	return read_bulk(
 		VL53L0X_REG_RESULT_RANGE_STATUS + 6, std::span(&result.ambient_count, 3));
 }
 
@@ -169,8 +169,8 @@ IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
 	return Ok();
 }
 
-IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
-	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
+IResult<> VL53L0X::read_bulk(const uint8_t reg, const std::span<uint16_t> pbuf){
+	const auto res = i2c_drv_.read_bulk(reg, pbuf, std::endian::big);
 	if(res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }

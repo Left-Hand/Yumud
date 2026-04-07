@@ -39,7 +39,7 @@ struct [[nodiscard]] MP6570_SpiTransport final{
             .data = data,
         });
 
-        return spi_drv_.write_burst<uint8_t>(
+        return spi_drv_.write_bulk<uint8_t>(
             std::span(packet.payload_bytes),
             DISC);
     }
@@ -51,13 +51,13 @@ struct [[nodiscard]] MP6570_SpiTransport final{
             .pen = true,
         });
 
-        if(const auto res = spi_drv_.write_burst<uint8_t>(
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(
             std::span(packet.payload_bytes),
             CONT); res.is_err()) return res;
 
         std::array<uint8_t, 3> rx_bytes;
 
-        if(const auto res = spi_drv_.read_burst<uint8_t>(
+        if(const auto res = spi_drv_.read_bulk<uint8_t>(
             std::span(rx_bytes),
             DISC); res.is_err()) return res;
 

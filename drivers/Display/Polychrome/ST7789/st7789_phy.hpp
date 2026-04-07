@@ -61,9 +61,9 @@ public:
     }
 
     template<typename T>
-    IResult<> write_burst_pixels(std::span<const T> pbuf){
+    IResult<> write_bulk_pixels(std::span<const T> pbuf){
         dc_pin_.set_high();
-        return spi_fast_write_burst<uint16_t>(pbuf);
+        return spi_fast_write_bulk<uint16_t>(pbuf);
     }
 
     IResult<> write_repeat_pixels(const auto & data, size_t len){
@@ -78,7 +78,7 @@ private:
     Option<hal::GpioIntf &>nrst_pin_;
 
     template <hal::valid_spi_data T, typename U>
-    IResult<> spi_fast_write_burst(
+    IResult<> spi_fast_write_bulk(
         const std::span<const U> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_

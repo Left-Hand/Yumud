@@ -71,7 +71,7 @@ IResult<uint8_t> Self::get_touch_count() {
 
 IResult<Self::TouchPoints> Self::get_touch_points(){
     std::array<uint8_t, 9> buf;
-    if(const auto res = read_burst(
+    if(const auto res = read_bulk(
         static_cast<uint8_t>(regs_.td_status_reg.REG_ADDR), 
         std::span(buf)
     );

@@ -112,11 +112,11 @@ private:
     }
 
     
-    IResult<> read_burst(
+    IResult<> read_bulk(
         const RegAddr reg_addr, 
         const std::span<uint8_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), pbuf);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(reg_addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

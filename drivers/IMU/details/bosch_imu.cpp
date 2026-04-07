@@ -53,7 +53,7 @@ BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         // if(const auto res = spi_drv_->write_single<uint8_t>(reg_val);
         //     res.is_err()) return Err(res.unwrap_err());
         const std::array<uint8_t, 2> bytes = {reg_addr, reg_val};
-        if(const auto res = spi_drv_->write_burst<uint8_t>(std::span(bytes));
+        if(const auto res = spi_drv_->write_bulk<uint8_t>(std::span(bytes));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -81,15 +81,15 @@ BoschImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
 }
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
-BoschImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+BoschImu_Transport::read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf){
     if(i2c_drv_){
-        if(const auto res = (i2c_drv_->read_burst<int16_t>(reg_addr, pbuf, std::endian::little));
+        if(const auto res = (i2c_drv_->read_bulk<int16_t>(reg_addr, pbuf, std::endian::little));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<uint8_t>(
+        if(const auto res = spi_drv_->read_bulk<uint8_t>(
             std::span(reinterpret_cast<uint8_t *>(pbuf.data()), pbuf.size() * sizeof(int16_t)));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -150,15 +150,15 @@ InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val) {
 }
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
-InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+InvensenseImu_Transport::read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_burst<int16_t>(reg_addr, pbuf, std::endian::big);
+        if(const auto res = i2c_drv_->read_bulk<int16_t>(reg_addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<int16_t>(pbuf);
+        if(const auto res = spi_drv_->read_bulk<int16_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -203,17 +203,17 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     TRANSPORT_PANIC("no available phy");
 }
 
-[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_burst(
+[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_bulk(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
+        if(const auto res = i2c_drv_->read_bulk<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(reg_addr) | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<int16_t>(pbuf);
+        if(const auto res = spi_drv_->read_bulk<int16_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -274,17 +274,17 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     TRANSPORT_PANIC("no available phy");
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_bulk(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
+        if(const auto res = i2c_drv_->read_bulk<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(reg_addr) | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<int16_t>(pbuf);
+        if(const auto res = spi_drv_->read_bulk<int16_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err()); 
         return Ok();
     }
@@ -292,7 +292,7 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     TRANSPORT_PANIC("no available phy");
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_bulk(
     const uint8_t reg_addr, const std::span<uint8_t> pbuf
 ){
     (void)(reg_addr);
@@ -333,17 +333,17 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
     TRANSPORT_PANIC("no available phy");
 }
 
-[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_burst(
+[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_bulk(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
+        if(const auto res = i2c_drv_->read_bulk<int16_t>(uint8_t(reg_addr), pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(reg_addr) | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_burst<int16_t>(pbuf);
+        if(const auto res = spi_drv_->read_bulk<int16_t>(pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

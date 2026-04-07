@@ -556,9 +556,9 @@ public:
         return Ok();
     }
 
-    IResult<> read_burst(
+    IResult<> read_bulk(
         const RegAddr addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

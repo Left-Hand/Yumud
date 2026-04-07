@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] Result<void, ImuError> read_reg(const uint8_t reg_addr, uint8_t & data);
 
-    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf);
+    [[nodiscard]] Result<void, ImuError> read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf);
 
     [[nodiscard]] Result<void, ImuError> validate();
 private:

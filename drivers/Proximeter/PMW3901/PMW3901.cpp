@@ -151,10 +151,10 @@ IResult<> PMW3901::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
     return Ok();
 }
 
-IResult<> PMW3901::read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+IResult<> PMW3901::read_bulk(const uint8_t reg_addr, std::span<uint8_t> pbuf){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(reg_addr & 0x7f), CONT);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = spi_drv_.read_burst<uint8_t>(pbuf);
+    if(const auto res = spi_drv_.read_bulk<uint8_t>(pbuf);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -232,7 +232,7 @@ IResult<> PMW3901::read_data_slow(){
 }
 
 IResult<> PMW3901::read_data_burst(){
-    return read_burst(0x16, std::span(&packet_.motion.as_bits_mut(), 6));
+    return read_bulk(0x16, std::span(&packet_.motion.as_bits_mut(), 6));
 }
 
 

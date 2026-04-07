@@ -44,7 +44,7 @@ public:
 
     [[nodiscard]] Result<void, Error> read_reg(const uint8_t reg_addr, uint8_t & data);
 
-    [[nodiscard]] Result<void, Error> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf);
+    [[nodiscard]] Result<void, Error> read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf);
     [[nodiscard]] Result<void, Error> write_command(const uint8_t command){
         if(const auto res = this->write_reg(0x7e, command);
             res.is_err()) return Err(res.unwrap_err());

@@ -161,7 +161,7 @@ public:
     IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
 
     IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
-    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, std::span<uint8_t> pbuf);
 
 
     IResult<> release(){
