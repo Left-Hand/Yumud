@@ -1,8 +1,8 @@
 #include "j1939_primitive.hpp"
 
 using namespace ymd;
-using namespace ymd::j1939;
-using namespace ymd::j1939::primitive;
+using namespace ymd::isobus;
+using namespace ymd::isobus::primitive;
 
 namespace{
 [[maybe_unused]] void test_pdn(){

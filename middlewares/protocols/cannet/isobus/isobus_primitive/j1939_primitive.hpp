@@ -5,7 +5,7 @@
 #include "core/utils/bits/bitfield_proxy.hpp"
 
 // https://blog.csdn.net/geek_liyang/article/details/148498704
-namespace ymd::j1939{
+namespace ymd::isobus{
 
 namespace primitive{
 
@@ -52,21 +52,24 @@ enum class [[nodiscard]] Priority:uint8_t{
 struct alignas(4) [[nodiscard]] Pgn final{
     uint32_t bits;
 
-    constexpr auto pdu_specific() const {
-        return make_bitfield_proxy<0, 8, PsField>(bits);
+    template <typename Self>
+    constexpr auto pdu_specific(this Self && self) {
+        return make_bitfield_proxy<0, 8, PsField>(self.bits);
     }
 
-    constexpr auto pdu_format() const {
-        return make_bitfield_proxy<8, 16, PduFormat>(bits);
+    template <typename Self>
+    constexpr auto pdu_format(this Self && self) {
+        return make_bitfield_proxy<8, 16, PduFormat>(self.bits);
     }
 
-    constexpr auto data_page() const {
-        return make_bitfield_proxy<16, 17, bool>(bits);
+    template <typename Self>
+    constexpr auto data_page(this Self && self) {
+        return make_bitfield_proxy<16, 17, bool>(self.bits);
     }
 
-
-    constexpr auto extended_data_page() const {
-        return make_bitfield_proxy<17, 18, bool>(bits);
+    template <typename Self>
+    constexpr auto extended_data_page(this Self && self) {
+        return make_bitfield_proxy<17, 18, bool>(self.bits);
     }
 };
 
@@ -108,28 +111,28 @@ struct alignas(4) [[nodiscard]] Pdn final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto sa(this Self && self){
-        return make_bitfield_proxy<0, 8, SourceAddr>(self.bits);
+        return make_bitfield_proxy<0, 8, SourceAddr>(&self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto ps(this Self && self){
-        return make_bitfield_proxy<8, 16, PsField>(self.bits);
+        return make_bitfield_proxy<8, 16, PsField>(&self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto pf(this Self && self){
-        return make_bitfield_proxy<16, 24, PduFormat>(self.bits);
+        return make_bitfield_proxy<16, 24, PduFormat>(&self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto dp(this Self && self){
-        return make_bitfield_proxy<24, 26, DataPage>(self.bits);
+        return make_bitfield_proxy<24, 26, DataPage>(&self.bits);
     }
 
 
     template <typename Self>
     [[nodiscard]] constexpr auto priority(this Self && self){
-        return make_bitfield_proxy<26, 29, Priority>(self.bits);
+        return make_bitfield_proxy<26, 29, Priority>(&self.bits);
     }
 };
 

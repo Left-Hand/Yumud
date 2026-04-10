@@ -39,23 +39,36 @@ struct [[nodiscard]] PushSciFrameHeader final{
     uint8_t frame_ttl;
     EscId esc_id;
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
-        receiver.push_u8(frame_ttl);
-        receiver.push_u8(static_cast<uint8_t>(esc_id));
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Erorr> serialize(Serializer & serializer){
+        if(const auto res = serializer.push_u8(frame_ttl);
+            res.is_err()) return res;
+        if(const auto res = serializer.push_u8(static_cast<uint8_t>(esc_id));
+            res.is_err()) return res;
+        return Ok();
     }
 };
 
-template<typename Receiver, typename Payload>
-constexpr void serialize_pushsci_frame(Receiver & receiver, const PushSciFrameHeader header, Payload & payload){
-    receiver.push_u8(0xec);
-    receiver.push_u8(0x96);
-    receiver.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
-    header.sink_to(receiver);
-    receiver.push_u8(payload.frame_length());
-    payload.sink_to(receiver);
-    const auto verify_byte = calc_sum(0, receiver.received_bytes());
-    receiver.push_u8(verify_byte);
+template<typename Serializer, typename Payload>
+constexpr Result<void, typename Serializer::Erorr> serialize_pushsci_frame(
+    Serializer & serializer, 
+    const PushSciFrameHeader header, 
+    const Payload & payload
+){
+    serializer.push_u8(0xec);
+    serializer.push_u8(0x96);
+    serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+
+    if(const auto res = header.serialize(serializer);
+        res.is_err()) return res;
+
+    serializer.push_u8(payload.frame_length());
+    
+    if(const auto res = payload.serialize(serializer);
+        res.is_err()) return res;
+
+    const auto verify_byte = calc_sum(0, serializer.received_bytes());
+    serializer.push_u8(verify_byte);
 }
 
 struct [[nodiscard]] SetZero final{
@@ -65,8 +78,8 @@ struct [[nodiscard]] SetZero final{
         return 7;
     }
 
-    template<typename Receiver>
-    constexpr void sink_to(Receiver & receiver){
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Erorr> serialize(Serializer & serializer){
         //nothing to do
     }
 };
@@ -107,8 +120,8 @@ struct [[nodiscard]]  SetFocParaments final{
         return 0x1f;
     }
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
     }
 };
@@ -120,9 +133,10 @@ struct [[nodiscard]] GetFocParaments final{
         return 7;
     }
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
     }
 };
 
@@ -143,11 +157,15 @@ struct [[nodiscard]] ControlFrame final{
     }
 
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
-        receiver.push_u8(static_cast<uint8_t>(control_mode));
-        receiver.push_u16(value);
-        receiver.push_u16(__resv__);
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        if(const auto res = serializer.push_u8(static_cast<uint8_t>(control_mode));
+            res.is_err()) return res;
+        if(const auto res = serializer.push_u16(value);
+            res.is_err()) return res;
+        if(const auto res = serializer.push_u16(__resv__);
+            res.is_err()) return res;
+        return Ok();
     }
 };
 
@@ -167,23 +185,24 @@ struct [[nodiscard]] PushCanFrameHeader final{
     uint8_t frame_ttl;
     EscId esc_id;
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
-        receiver.push_u8(frame_ttl);
-        receiver.push_u8(static_cast<uint8_t>(esc_id));
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
+        serializer.push_u8(frame_ttl);
+        serializer.push_u8(static_cast<uint8_t>(esc_id));
+        return Ok();
     }
 };
 
-template<typename Receiver, typename Payload>
-void serialize_pushcan_frame(Receiver & receiver, const PushCanFrameHeader header, Payload & payload){
-    receiver.push_u8(0x7b);
-    receiver.push_u8(0x8c);
-    receiver.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
-    header.sink_to(receiver);
-    receiver.push_u8(payload.frame_length());
-    payload.sink_to(receiver);
-    const auto verify_byte = calc_sum(0, receiver.received_bytes());
-    receiver.push_u8(verify_byte);
+template<typename Serializer, typename Payload>
+Result<void, typename Serializer::Error> serialize_pushcan_frame(Serializer & serializer, const PushCanFrameHeader header, Payload & payload){
+    serializer.push_u8(0x7b);
+    serializer.push_u8(0x8c);
+    serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+    header.serialize(serializer);
+    serializer.push_u8(payload.frame_length());
+    payload.serialize(serializer);
+    const auto verify_byte = calc_sum(0, serializer.received_bytes());
+    serializer.push_u8(verify_byte);
 }
 
 
@@ -220,8 +239,8 @@ struct [[nodiscard]] PowerUnitState final{
     }
 
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
     }
 };
@@ -259,8 +278,8 @@ struct [[nodiscard]] FocParamentResponse final {
     }
 
 
-    template<typename Receiver>
-    void sink_to(Receiver & receiver){
+    template<typename Serializer>
+    Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
     }
 

@@ -7,6 +7,7 @@ dji:大疆
 dynamixel: dynamixel
 gjw_dynamics:高精稳动力
 hightorque:高擎
+jvci:郑州俱瓷电子科技
 lobot:乐动
 mit:mit机器狗
 mks:makerbase（广州谦辉信息科技）

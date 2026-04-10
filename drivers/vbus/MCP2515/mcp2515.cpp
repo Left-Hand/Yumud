@@ -4,8 +4,18 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-#if 0
+
 namespace {
+
+static constexpr uint8_t EFLG_RX1OVR = (1<<7);
+static constexpr uint8_t EFLG_RX0OVR = (1<<6);
+static constexpr uint8_t EFLG_TXBO   = (1<<5);
+static constexpr uint8_t EFLG_TXEP   = (1<<4);
+static constexpr uint8_t EFLG_RXEP   = (1<<3);
+static constexpr uint8_t EFLG_TXWAR  = (1<<2);
+static constexpr uint8_t EFLG_RXWAR  = (1<<1);
+static constexpr uint8_t EFLG_EWARN  = (1<<0);
+
 
 static constexpr uint8_t CANSTAT_OPMOD = 0xE0;
 static constexpr uint8_t CANSTAT_ICOD = 0x0E;
@@ -253,90 +263,69 @@ enum CAN_SPEED {
 }
 
 
-
-uint8_t MCP2515::getStatus(void)
-{
-
-}
-
-MCP2515::ERROR MCP2515::setConfigMode()
-{
-    return setMode(CANCTRL_REQOP_CONFIG);
-}
-
-MCP2515::ERROR MCP2515::setListenOnlyMode()
-{
-    return setMode(CANCTRL_REQOP_LISTENONLY);
-}
-
-MCP2515::ERROR MCP2515::setSleepMode()
-{
-    return setMode(CANCTRL_REQOP_SLEEP);
-}
-
-MCP2515::ERROR MCP2515::setLoopbackMode()
-{
-    return setMode(CANCTRL_REQOP_LOOPBACK);
-}
-
-MCP2515::ERROR MCP2515::setNormalMode()
-{
-    return setMode(CANCTRL_REQOP_NORMAL);
-}
-
-MCP2515::ERROR MCP2515::setNormalOneShotMode()
-{
-    return setMode(CANCTRL_REQOP_OSM);
-}
-
-
 #if 0
-MCP2515::ERROR MCP2515::setMode(const CANCTRL_REQOP_MODE mode)
-{
-    modify_reg(RegAddr::CANCTRL, CANCTRL_REQOP | CANCTRL_OSM, mode);
+//sidh sidl eid0 eid8
+struct [[nodiscard]] IdentifierLayout final{
+    std::array<uint8_t, 4> bytes;
 
-    unsigned long endTime = clock::millis().count() + 10;
-    bool modeMatch = false;
-    while (clock::millis().count() < endTime) {
-        uint8_t newmode = read_reg(RegAddr::CANSTAT);
-        newmode &= CANSTAT_OPMOD;
+    static constexpr IdentifierLayout from_stdid(const hal::CanStdId stdid){
+        using Self = IdentifierLayout;
+        const uint32_t id_u32 = static_cast<uint32_t>(stdid.to_u11());
+        Self self;
+        self.sidl() = static_cast<uint8_t>((id_u32 << 5) | 0);
+        self.sidh() = static_cast<uint8_t>((id_u32 >> 3) | 0);
+        self.eid0() = 0;
+        self.eid8() = 0;
+        return self;
+    };
 
-        modeMatch = newmode == mode;
+    static constexpr IdentifierLayout from_extid(const hal::CanExtId extid){
+        using Self = IdentifierLayout;
+        const uint32_t id_u32 = static_cast<uint32_t>(extid.to_u29());
+        Self self;
+        self.eid0() = static_cast<uint8_t>(id_u32 >> 0);
+        self.eid8() = static_cast<uint8_t>(id_u32 >> 8);
 
-        if (modeMatch) {
-            break;
-        }
+        uint8_t temp_sidl = 0;
+        temp_sidl |= static_cast<uint8_t>((id_u32 >> 16) & 0x03);
+        temp_sidl |= static_cast<uint8_t>((id_u32 >> 16) & 0x1c << 3);
+        temp_sidl |= TXB_EXIDE_MASK;
+
+        self.sidl() = temp_sidl;
+        self.sidh() = static_cast<uint8_t>((id_u32 >> (16 + 5)));
+        return self;
+    };
+
+    template<typename Self>
+    constexpr auto & sidh(this Self && self){
+        return self.bytes[0];
     }
 
-    return modeMatch ? ERROR_OK : ERROR_FAIL;
+    template<typename Self>
+    constexpr auto & sidl(this Self && self){
+        return self.bytes[1];
+    }
 
-}
+    template<typename Self>
+    constexpr auto & eid0(this Self && self){
+        return self.bytes[2];
+    }
+
+
+    template<typename Self>
+    constexpr auto & eid8(this Self && self){
+        return self.bytes[3];
+    }
+};
 #endif
 
 
-MCP2515::ERROR MCP2515::setClkOut(const CAN_CLKOUT divisor)
-{
-    if (divisor == CLKOUT_DISABLE) {
-	/* Turn off CLKEN */
-	modify_reg(RegAddr::CANCTRL, CANCTRL_CLKEN, 0x00);
+template<typename T = void>
+using IResult = MCP2515::IResult<T>;
 
-	/* Turn on CLKOUT for SOF */
-	modify_reg(RegAddr::CNF3, CNF3_SOF, CNF3_SOF);
-        return ERROR_OK;
-    }
 
-    /* Set the prescaler (CLKPRE) */
-    modify_reg(RegAddr::CANCTRL, CANCTRL_CLKPRE, divisor);
 
-    /* Turn on CLKEN */
-    modify_reg(RegAddr::CANCTRL, CANCTRL_CLKEN, CANCTRL_CLKEN);
-
-    /* Turn off CLKOUT for SOF */
-    modify_reg(RegAddr::CNF3, CNF3_SOF, 0x00);
-    return ERROR_OK;
-}
-
-void MCP2515::prepareId(uint8_t *buffer, const bool ext, const uint32_t id)
+static constexpr void exact_id(uint8_t *buffer, const bool ext, const uint32_t id)
 {
     uint16_t canid = (uint16_t)(id & 0x0FFFF);
 
@@ -356,57 +345,152 @@ void MCP2515::prepareId(uint8_t *buffer, const bool ext, const uint32_t id)
     }
 }
 
-MCP2515::ERROR MCP2515::setFilterMask(const MASK mask, const bool ext, const uint32_t ulData)
+
+IResult<> MCP2515::set_filter_mask(const MASK mask, const bool ext, const uint32_t ulData)
 {
-    ERROR res = setConfigMode();
-    if (res != ERROR_OK) {
-        return res;
-    }
+    if(const auto res = set_mode(ReqOp::Configure);
+        res.is_err()) return Err(res.unwrap_err());
     
-    uint8_t tbufdata[4];
-    prepareId(tbufdata, ext, ulData);
+    uint8_t buf[4];
+    exact_id(buf, ext, ulData);
 
-    RegAddr reg;
+    RegAddr reg_addr;
     switch (mask) {
-        case MASK0: reg = RegAddr::RXM0SIDH; break;
-        case MASK1: reg = RegAddr::RXM1SIDH; break;
-        default:
-            return ERROR_FAIL;
+        case MASK0: reg_addr = RegAddr::RXM0SIDH; break;
+        case MASK1: reg_addr = RegAddr::RXM1SIDH; break;
     }
 
-    write_bulk(reg, tbufdata, 4);
-    
-    return ERROR_OK;
+    return write_bulk(reg_addr, buf, 4);
 }
 
-MCP2515::ERROR MCP2515::setFilter(const RXF num, const bool ext, const uint32_t ulData)
-{
-    ERROR res = setConfigMode();
-    if (res != ERROR_OK) {
-        return res;
-    }
 
-    RegAddr reg;
+
+IResult<> MCP2515::set_filter(const RXF num, const bool ext, const uint32_t ulData)
+{
+    if(const auto res = set_mode(ReqOp::Configure);
+        res.is_err()) return Err(res.unwrap_err());
+
+    RegAddr reg_addr;
 
     switch (num) {
-        case RXF0: reg = RegAddr::RXF0SIDH; break;
-        case RXF1: reg = RegAddr::RXF1SIDH; break;
-        case RXF2: reg = RegAddr::RXF2SIDH; break;
-        case RXF3: reg = RegAddr::RXF3SIDH; break;
-        case RXF4: reg = RegAddr::RXF4SIDH; break;
-        case RXF5: reg = RegAddr::RXF5SIDH; break;
-        default:
-            return ERROR_FAIL;
+        case RXF0: reg_addr = RegAddr::RXF0SIDH; break;
+        case RXF1: reg_addr = RegAddr::RXF1SIDH; break;
+        case RXF2: reg_addr = RegAddr::RXF2SIDH; break;
+        case RXF3: reg_addr = RegAddr::RXF3SIDH; break;
+        case RXF4: reg_addr = RegAddr::RXF4SIDH; break;
+        case RXF5: reg_addr = RegAddr::RXF5SIDH; break;
     }
 
-    uint8_t tbufdata[4];
-    prepareId(tbufdata, ext, ulData);
-    write_bulk(reg, tbufdata, 4);
-
-    return ERROR_OK;
+    uint8_t buf[4];
+    exact_id(buf, ext, ulData);
+    
+    return write_bulk(reg_addr, buf, 4);
 }
 
-MCP2515::ERROR MCP2515::transmit_frame(const TXBn txbn, const hal::ClassicCanFrame & can_frame){
+
+
+
+#if 0
+
+
+IResult<> MCP2515::setClkOut(const ClkDiv divisor)
+{
+    if (divisor == CLKOUT_DISABLE) {
+        /* Turn off CLKEN */
+        if(const auto res = modify_reg(RegAddr::CANCTRL, CANCTRL_CLKEN, 0x00);
+            res.is_err()) return Err(res.unwrap_err());
+
+        /* Turn on CLKOUT for SOF */
+        if(const auto res = modify_reg(RegAddr::CNF3, CNF3_SOF, CNF3_SOF);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    /* Set the prescaler (CLKPRE) */
+    if(const auto res = modify_reg(RegAddr::CANCTRL, CANCTRL_CLKPRE, divisor);
+        res.is_err()) return Err(res.unwrap_err());
+
+    /* Turn on CLKEN */
+    if(const auto res = modify_reg(RegAddr::CANCTRL, CANCTRL_CLKEN, CANCTRL_CLKEN);
+        res.is_err()) return Err(res.unwrap_err());
+
+    /* Turn off CLKOUT for SOF */
+    if(const auto res = modify_reg(RegAddr::CNF3, CNF3_SOF, 0x00);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
+
+
+IResult<> MCP2515::set_mode(const CANCTRL_REQOP_MODE mode)
+{
+    if(const auto res = modify_reg(RegAddr::CANCTRL, CANCTRL_REQOP | CANCTRL_OSM, mode);
+        res.is_err()) return res;
+
+    const auto endTime = clock::millis().count() + 10;
+    bool modeMatch = false;
+
+
+    while (clock::millis().count() < endTime) {
+        CANCTRL_REQOP_MODE newmode;
+        if(const auto res = read_reg(RegAddr::CANSTAT, newmode);
+            res.is_err()) return Err(res.unwrap_err());
+
+
+        newmode &= CANSTAT_OPMOD;
+
+        modeMatch = (newmode == mode);
+
+        if (modeMatch) {
+            break;
+        }
+    }
+
+    return modeMatch ? ERROR_OK : ERROR_FAIL;
+
+}
+
+uint8_t MCP2515::getStatus(void)
+{
+
+}
+
+IResult<> MCP2515::set_mode()
+{
+    return set_mode(CANCTRL_REQOP_CONFIG);
+}
+
+IResult<> MCP2515::setListenOnlyMode()
+{
+    return set_mode(CANCTRL_REQOP_LISTENONLY);
+}
+
+IResult<> MCP2515::setSleepMode()
+{
+    return set_mode(CANCTRL_REQOP_SLEEP);
+}
+
+IResult<> MCP2515::setLoopbackMode()
+{
+    return set_mode(CANCTRL_REQOP_LOOPBACK);
+}
+
+IResult<> MCP2515::setNormalMode()
+{
+    return set_mode(CANCTRL_REQOP_NORMAL);
+}
+
+IResult<> MCP2515::setNormalOneShotMode()
+{
+    return set_mode(CANCTRL_REQOP_OSM);
+}
+
+
+#if 0
+
+#endif
+
+
+IResult<> MCP2515::transmit_frame(const TXBn txbn, const hal::ClassicCanFrame & can_frame){
     const TXBn_REGS *txbuf = &TXB[txbn];
 
     uint8_t buf[13];
@@ -415,7 +499,7 @@ MCP2515::ERROR MCP2515::transmit_frame(const TXBn txbn, const hal::ClassicCanFra
     bool rtr = (can_frame.is_remote());
     uint32_t id = (can_frame.id_u32() & (ext ? CAN_EFF_MASK : CAN_SFF_MASK));
 
-    prepareId(buf, ext, id);
+    exact_id(buf, ext, id);
 
     buf[MCP_DLC] = rtr ? (can_frame.can_dlc | RTR_MASK) : can_frame.can_dlc;
 
@@ -429,10 +513,10 @@ MCP2515::ERROR MCP2515::transmit_frame(const TXBn txbn, const hal::ClassicCanFra
     if ((ctrl & (TXB_ABTF | TXB_MLOA | TXB_TXERR)) != 0) {
         return ERROR_FAILTX;
     }
-    return ERROR_OK;
+    return Ok();
 }
 
-MCP2515::ERROR MCP2515::transmit_frame(const hal::ClassicCanFrame & can_frame){
+IResult<> MCP2515::transmit_frame(const hal::ClassicCanFrame & can_frame){
     TXBn txBuffers[N_TXBUFFERS] = {TXB0, TXB1, TXB2};
 
     for (int i=0; i<N_TXBUFFERS; i++) {
@@ -446,23 +530,23 @@ MCP2515::ERROR MCP2515::transmit_frame(const hal::ClassicCanFrame & can_frame){
     return ERROR_ALLTXBUSY;
 }
 
-MCP2515::ERROR MCP2515::receive_frame(const RXBn rxbn, hal::ClassicCanFrame & can_frame){
+IResult<> MCP2515::receive_frame(const RXBn rxbn, hal::ClassicCanFrame & can_frame){
     const RXBn_REGS *rxb = &RXB[rxbn];
 
-    uint8_t tbufdata[5];
+    uint8_t buf[5];
 
-    read_regs(rxb->SIDH, tbufdata, 5);
+    read_regs(rxb->SIDH, buf, 5);
 
-    uint32_t id = (tbufdata[MCP_SIDH]<<3) + (tbufdata[MCP_SIDL]>>5);
+    uint32_t id = (buf[MCP_SIDH]<<3) + (buf[MCP_SIDL]>>5);
 
-    if ( (tbufdata[MCP_SIDL] & TXB_EXIDE_MASK) ==  TXB_EXIDE_MASK ) {
-        id = (id<<2) + (tbufdata[MCP_SIDL] & 0x03);
-        id = (id<<8) + tbufdata[MCP_EID8];
-        id = (id<<8) + tbufdata[MCP_EID0];
+    if ( (buf[MCP_SIDL] & TXB_EXIDE_MASK) ==  TXB_EXIDE_MASK ) {
+        id = (id<<2) + (buf[MCP_SIDL] & 0x03);
+        id = (id<<8) + buf[MCP_EID8];
+        id = (id<<8) + buf[MCP_EID0];
         id |= CAN_EFF_FLAG;
     }
 
-    uint8_t dlc = (tbufdata[MCP_DLC] & DLC_MASK);
+    uint8_t dlc = (buf[MCP_DLC] & DLC_MASK);
     uint8_t ctrl = read_reg(rxb->CTRL);
     if (ctrl & RXBnCTRL_RTR) {
         id |= CAN_RTR_FLAG;
@@ -475,10 +559,10 @@ MCP2515::ERROR MCP2515::receive_frame(const RXBn rxbn, hal::ClassicCanFrame & ca
 
     modify_reg(RegAddr::CANINTF, rxb->CANINTF_RXnIF, 0);
 
-    return ERROR_OK;
+    return Ok();
 }
 
-MCP2515::ERROR MCP2515::receive_frame(hal::ClassicCanFrame & can_frame)
+IResult<> MCP2515::receive_frame(hal::ClassicCanFrame & can_frame)
 {
     ERROR rc;
     uint8_t stat = getStatus();
@@ -575,18 +659,18 @@ void MCP2515::clearERRIF()
     modify_reg(RegAddr::CANINTF, CANINTF_ERRIF, 0);
 }
 
-uint8_t MCP2515::errorCountRX(void)                             
+uint8_t IResult<>CountRX(void)                             
 {
     return read_reg(RegAddr::REC);
 }
 
-uint8_t MCP2515::errorCountTX(void)                             
+uint8_t IResult<>CountTX(void)                             
 {
     return read_reg(RegAddr::TEC);
 }
 
 
-MCP2515::ERROR MCP2515::reset(void){
+IResult<> MCP2515::reset(void){
     clock::delay(10ms);
 
     uint8_t zeros[14];
@@ -615,7 +699,7 @@ MCP2515::ERROR MCP2515::reset(void){
     RXF filters[] = {RXF0, RXF1, RXF2, RXF3, RXF4, RXF5};
     for (int i=0; i<6; i++) {
         bool ext = (i == 1);
-        ERROR result = setFilter(filters[i], ext, 0);
+        ERROR result = set_filter(filters[i], ext, 0);
         if (result != ERROR_OK) {
             return result;
         }
@@ -623,36 +707,36 @@ MCP2515::ERROR MCP2515::reset(void){
 
     MASK masks[] = {MASK0, MASK1};
     for (int i=0; i<2; i++) {
-        ERROR result = setFilterMask(masks[i], true, 0);
+        ERROR result = set_filter_mask(masks[i], true, 0);
         if (result != ERROR_OK) {
             return result;
         }
     }
 
-    return ERROR_OK;
+    return Ok();
 }
 
-uint8_t MCP2515::read_reg(const RegAddr reg)
+uint8_t MCP2515::read_reg(const RegAddr reg_addr)
 {
     return 0;
 }
 
-void MCP2515::read_regs(const RegAddr reg, uint8_t * values, const uint8_t n)
+void MCP2515::read_regs(const RegAddr reg_addr, uint8_t * values, const uint8_t n)
 {
 
 }
 
-void MCP2515::write_reg(const RegAddr reg, const uint8_t value)
+void MCP2515::write_reg(const RegAddr reg_addr, const uint8_t value)
 {
 
 }
 
-void MCP2515::write_bulk(const RegAddr reg, const uint8_t * values, const uint8_t n)
+void MCP2515::write_bulk(const RegAddr reg_addr, const uint8_t * values, const uint8_t n)
 {
 
 }
 
-void MCP2515::modify_reg(const RegAddr reg, const uint8_t mask, const uint8_t buf)
+void MCP2515::modify_reg(const RegAddr reg_addr, const uint8_t mask, const uint8_t buf)
 {
 }
 

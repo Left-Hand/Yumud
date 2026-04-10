@@ -43,14 +43,14 @@ struct [[nodiscard]] XL2400P_Regset:public XL2400P_Prelude {
 
     struct R8_AutoAcknowledge:public Reg8<>{
         uint8_t bits;
-        auto p(){return make_bfarray_proxy<0, 6, 6>(bits);}
+        auto p(){return make_bfarray_proxy<0, 6, 6>(&bits);}
     };
 
     struct [[nodiscard]] R8_EnableRxAddress:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t bits;
-        auto p(){return make_bfarray_proxy<0, 6, 6>(bits);}
+        auto p(){return make_bfarray_proxy<0, 6, 6>(&bits);}
     };
 
     struct [[nodiscard]] R8_AddressWidth:public Reg8<>{

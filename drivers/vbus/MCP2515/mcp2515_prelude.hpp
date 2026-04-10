@@ -12,13 +12,6 @@ namespace ymd::drivers{
 
 struct MCP2515_Prelude{
 
-enum CAN_CLKOUT {
-    CLKOUT_DISABLE = -1,
-    CLKOUT_DIV1 = 0x0,
-    CLKOUT_DIV2 = 0x1,
-    CLKOUT_DIV4 = 0x2,
-    CLKOUT_DIV8 = 0x3,
-};
 
 
 enum class [[nodiscard]] Instruction : uint8_t {
@@ -119,14 +112,16 @@ enum class [[nodiscard]] RegAddr : uint8_t {
     RXB1DATA = 0x76
 };
 
-enum ERROR {
-    ERROR_OK        = 0,
-    ERROR_FAIL      = 1,
-    ERROR_ALLTXBUSY = 2,
-    ERROR_FAILINIT  = 3,
-    ERROR_FAILTX    = 4,
-    ERROR_NOMSG     = 5
+enum class Error {
+    AllTxBusy,
+    FailInit,
+    FailTx,
+    NoMsg
 };
+
+
+template<typename T = void>
+using IResult = Result<T, Error>;
 
 enum MASK {
     MASK0,
@@ -173,48 +168,43 @@ struct R8_Intf{
     uint8_t MERRF:1;
 };
 
-
-static constexpr uint8_t EFLG_RX1OVR = (1<<7);
-static constexpr uint8_t EFLG_RX0OVR = (1<<6);
-static constexpr uint8_t EFLG_TXBO   = (1<<5);
-static constexpr uint8_t EFLG_TXEP   = (1<<4);
-static constexpr uint8_t EFLG_RXEP   = (1<<3);
-static constexpr uint8_t EFLG_TXWAR  = (1<<2);
-static constexpr uint8_t EFLG_RXWAR  = (1<<1);
-static constexpr uint8_t EFLG_EWARN  = (1<<0);
-
-
-static constexpr uint8_t CANCTRL_REQOP = 0xE0;
-static constexpr uint8_t CANCTRL_ABAT = 0x10;
-static constexpr uint8_t CANCTRL_OSM = 0x08;
-static constexpr uint8_t CANCTRL_CLKEN = 0x04;
-static constexpr uint8_t CANCTRL_CLKPRE = 0x03;
-
-enum class CANCTRL_REQOP_MODE : uint8_t {
-    CANCTRL_REQOP_NORMAL     = 0x00,
-    CANCTRL_REQOP_OSM        = 0x08,
-    CANCTRL_REQOP_SLEEP      = 0x20,
-    CANCTRL_REQOP_LOOPBACK   = 0x40,
-    CANCTRL_REQOP_LISTENONLY = 0x60,
-    CANCTRL_REQOP_CONFIG     = 0x80,
-    CANCTRL_REQOP_POWERUP    = 0xE0
+enum class ReqOp:uint8_t{
+    Normal = 0b000,
+    Sleep = 0b001,
+    Ringback = 0b010,
+    Slient = 0b011,
+    Configure = 0b100
 };
 
-using enum CANCTRL_REQOP_MODE;
-
-
-struct TXBn_REGS {
-    RegAddr CTRL;
-    RegAddr SIDH;
-    RegAddr DATA;
+enum class ClkDiv:uint8_t {
+    _1 = 0x0,
+    _2 = 0x1,
+    _4 = 0x2,
+    _8 = 0x3,
 };
 
-struct RXBn_REGS {
-    RegAddr CTRL;
-    RegAddr SIDH;
-    RegAddr DATA;
-    R8_Intf  CANINTF_RXnIF;
+
+struct R8_CanCtrl{
+    ClkDiv clk_div:2;
+    uint8_t clken:1;
+    uint8_t osm:1;
+    uint8_t abat:1;
+    ReqOp reqop:3;
 };
+
+
+// struct TXBn_REGS {
+//     RegAddr CTRL;
+//     RegAddr SIDH;
+//     RegAddr DATA;
+// };
+
+// struct RXBn_REGS {
+//     RegAddr CTRL;
+//     RegAddr SIDH;
+//     RegAddr DATA;
+//     R8_Intf  CANINTF_RXnIF;
+// };
 
 
 static constexpr size_t N_TXBUFFERS = 3;

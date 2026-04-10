@@ -35,27 +35,27 @@ struct alignas(4) [[nodiscard]] CgId final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto cmd(this Self && self) {
-        return make_bitfield_proxy<24, 29, cybergear::Command>(self.bits);}
+        return make_bitfield_proxy<24, 29, cybergear::Command>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto high(this Self && self) {
-        return make_bitfield_proxy<8, 24, uint16_t>(self.bits);}
+        return make_bitfield_proxy<8, 24, uint16_t>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto fault(this Self && self) {
-        return make_bitfield_proxy<8, 24, uint16_t>(self.bits);}
+        return make_bitfield_proxy<8, 24, uint16_t>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto low(this Self && self) {
-        return make_bitfield_proxy<0, 8, uint8_t>(self.bits);}
+        return make_bitfield_proxy<0, 8, uint8_t>(&self.bits);}
 
     [[nodiscard]] static constexpr 
     CgId from_parts(const cybergear::Command cmd, const uint16_t high, const uint8_t low) {
         CgId self;
 
-        self.cmd() = cmd;
-        self.high() = high;
-        self.low() = low;
+        self.cmd().set(cmd);
+        self.high().set(high);
+        self.low().set(low);
 
         return self;
     }
@@ -77,19 +77,19 @@ struct alignas(4)  [[nodiscard]] TxContext final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto cmd_rad(this Self && self) {
-        return make_bitfield_proxy<0, 16, RadCode>(self.bits);}
+        return make_bitfield_proxy<0, 16, RadCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto cmd_omega(this Self && self) {
-        return make_bitfield_proxy<16, 32, OmegaCode>(self.bits);}
+        return make_bitfield_proxy<16, 32, OmegaCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto cmd_kp(this Self && self) {
-        return make_bitfield_proxy<32, 48, KpCode>(self.bits);}
+        return make_bitfield_proxy<32, 48, KpCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto cmd_kd(this Self && self) {
-        return make_bitfield_proxy<48, 64, KdCode>(self.bits);}
+        return make_bitfield_proxy<48, 64, KdCode>(&self.bits);}
 
     constexpr hal::ClassicCanPayload to_can_payload() const {return hal::ClassicCanPayload::from_u64(bits);}
 };
@@ -101,19 +101,19 @@ struct alignas(4)  [[nodiscard]] RxContext final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto radians(this Self && self) {            
-        return make_bitfield_proxy<0, 16, RadCode>(self.bits);}
+        return make_bitfield_proxy<0, 16, RadCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto omega(this Self && self) {          
-        return make_bitfield_proxy<16, 32, OmegaCode>(self.bits);}
+        return make_bitfield_proxy<16, 32, OmegaCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto torque(this Self && self) {         
-        return make_bitfield_proxy<32, 48, TorqueCode>(self.bits);}
+        return make_bitfield_proxy<32, 48, TorqueCode>(&self.bits);}
 
     template <typename Self>
     [[nodiscard]] constexpr auto temperature(this Self && self) {    
-        return make_bitfield_proxy<48, 64, TemperatureCode>(self.bits);}
+        return make_bitfield_proxy<48, 64, TemperatureCode>(&self.bits);}
 };
 
 static_assert(sizeof(RxContext) == 8);
