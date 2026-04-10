@@ -3,7 +3,9 @@
 #include "core/math/float/fp32.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/math/real.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 #include "primitive/can/bxcan_frame.hpp"
+
 
 namespace ymd::robots::jvci{
 
@@ -23,9 +25,16 @@ struct [[nodiscard]] BooleanOk final{
     }
 };
 
-//1-127
-struct NodeId{
+//1-127 驱动器节点ID，范围1-127（用于生成CAN标准帧ID）
+struct [[nodiscard]] NodeId final{
     uint8_t bits;
+
+    static constexpr Option<NodeId> try_from_u8(const uint8_t b){
+        if(b == 0) return None;
+        if(b > 127) return None;
+        return Some(NodeId{.bits = static_cast<uint8_t>(b)});
+    }
+
 
     constexpr uint8_t to_u8() const {
         return bits;
@@ -34,29 +43,40 @@ struct NodeId{
 
 
 
-static constexpr hal::CanStdId REQUEST_ID_BASE = hal::CanStdId::from_u11(0x600);
-static constexpr hal::CanStdId RESPONSE_ID_BASE = hal::CanStdId::from_u11(0x580);
+/// CAN 标准ID 基址定义
+static constexpr hal::CanStdId REQUEST_ID_BASE = hal::CanStdId::from_u11(0x600);   ///< 请求帧基础ID (0x600)
+static constexpr hal::CanStdId RESPONSE_ID_BASE = hal::CanStdId::from_u11(0x580); ///< 响应帧基础ID (0x580)
 
+/// 生成请求帧的 CAN ID
+/// @param node_id 节点ID (范围1-127)，最终CAN ID = 0x600 + node_id
+/// @return 计算后的请求帧 CAN ID
 static constexpr hal::CanStdId make_request_canid(const NodeId node_id){
     return hal::CanStdId::from_u11(REQUEST_ID_BASE.to_u11() + node_id.to_u8());
 }
 
+/// 生成响应帧的 CAN ID
+/// @param node_id 节点ID (范围1-127)，最终CAN ID = 0x580 + node_id
+/// @return 计算后的响应帧 CAN ID
 static constexpr hal::CanStdId make_response_canid(const NodeId node_id){
     return hal::CanStdId::from_u11(RESPONSE_ID_BASE.to_u11() + node_id.to_u8());
 }
 
 
-template<typename T> 
+/// 带界限的编码函数：将浮点值编码为整数，自动裁剪到目标整数类型的范围
+/// 公式: bits = (raw * inv_scale) + offset，然后 clamp 到 [T_min, T_max]
+template<typename T>
 static constexpr T bounded_encode_to(const float raw, const float inv_scale, const T offset){
     using ExtendedIntegral = int32_t;
     const ExtendedIntegral bits = static_cast<ExtendedIntegral>(raw * inv_scale) + static_cast<ExtendedIntegral>(offset);
     return static_cast<T>(std::clamp(
-        bits, 
+        bits,
         static_cast<ExtendedIntegral>(std::numeric_limits<T>::min()),
         static_cast<ExtendedIntegral>(std::numeric_limits<T>::max())
     ));
 }
 
+/// 解码函数：将整数码字解码为浮点值
+/// 公式: result = (bits - offset) * scale
 template<typename T>
 static constexpr float decode_from(const T bits, const float scale, const T offset){
     return (static_cast<float>(bits) - static_cast<float>(offset)) * scale;
@@ -71,6 +91,15 @@ enum class [[nodiscard]] Command : uint8_t {
     CmdPV         = 0x24, // PV指令操作：位置-速度指令
     CmdPVT        = 0x25, // PVT指令操作：位置-速度-力矩指令
     Response      = 0x2A  // 驱动器回复指令：响应上位机的反馈标识
+};
+
+enum class [[nodiscard]] ControlMode:uint8_t{
+    Torque = 0,
+    Speed = 1,
+    TrapezoidPosition = 2,
+    FilteredPosition = 3,
+    DirectPosition = 4,
+    LowSpeed = 5
 };
 
 // 寄存器地址
@@ -107,84 +136,86 @@ enum class [[nodiscard]] RegAddr : uint16_t {
 };
 
 
-// 故障指示器位字段（扩展至文档所有故障位，32bit拆分为高低16位）
-struct [[nodiscard]] FaultIndicatorL { // 低16位故障标识 [0,16)
+/// 故障指示器低16位（bit[0,16)）
+/// 对应32位错误信息的低16位，包含13个故障位（bit13和bit14未定义）
+struct [[nodiscard]] FaultIndicatorL final{
     uint16_t bits;
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_overload(this Self&& self) {
-        return ymd::make_bitfield_proxy<0, 1, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<0, 1, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto phase_resistor_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<1, 2, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<1, 2, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto motor_phase_loss(this Self&& self) {
-        return ymd::make_bitfield_proxy<2, 3, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<2, 3, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_fluctuate(this Self&& self) {
-        return ymd::make_bitfield_proxy<3, 4, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<3, 4, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_inductance_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<4, 5, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<4, 5, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_bandwidth_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<5, 6, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<5, 6, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_spi_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<6, 7, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<6, 7, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_type_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<7, 8, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<7, 8, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_uncalibrated(this Self&& self) {
-        return ymd::make_bitfield_proxy<8, 9, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<8, 9, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_data_unread(this Self&& self) {
-        return ymd::make_bitfield_proxy<9, 10, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<9, 10, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_cpr_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<10, 11, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<10, 11, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto need_calibrate_before_loop(this Self&& self) {
-        return ymd::make_bitfield_proxy<11, 12, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<11, 12, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto run_state_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<12, 13, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<12, 13, BooleanOk>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_signal_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<15, 16, ymd::BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<15, 16, BooleanOk>(self.bits);
     }
 };
 
-struct [[nodiscard]] FaultIndicatorH { // 高16位故障标识 [16,32)
+/// 故障指示器高16位（bit[16,32)）
+/// 对应32位错误信息的高16位，包含7个故障/报警位（bit16、bit18未定义）
+struct [[nodiscard]] FaultIndicatorH final{
     uint16_t bits;
-
 
     template <typename Self>
     [[nodiscard]] constexpr auto second_encoder_error(this Self&& self) {
@@ -224,37 +255,207 @@ struct [[nodiscard]] FaultIndicatorH { // 高16位故障标识 [16,32)
 };
 
 
+/// 电源电压编码
+/// 寄存器地址：0x0004，倍数×10，范围：0-100V
+/// 编码示例：12.3V → 0x007B (123)
 struct [[nodiscard]] BusbarVoltageCode final {
     using Self = BusbarVoltageCode;
 
-    uint16_t bits; 
-    
-    static constexpr float SCALE = 0.01;
-    static constexpr float INV_SCALE = 1.0 / SCALE;
+    uint16_t bits;
+
+    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = volt
+    static constexpr float INV_SCALE = 1.0 / SCALE; 
     static constexpr uint16_t OFFSET = 0;
 
+    /// 从电压值（单位：V）编码为电源电压码
+    /// @param volt 电压值，范围 0-100V
+    /// @return 编码后的电源电压码
     static constexpr BusbarVoltageCode from_volt(const float volt){
         const auto bits = bounded_encode_to<uint16_t>(volt, INV_SCALE, OFFSET);
         return BusbarVoltageCode{.bits = bits};
     }
 
+    /// 将电源电压码解码为电压值（单位：V）
     [[nodiscard]] constexpr float to_volt() const {
         return decode_from(bits, SCALE, OFFSET);
     }
 };
 
+/// 速度编码（实时速度或设定速度）
+/// 寄存器地址：0x0006(实时速度H), 0x0021(设定速度H), 0x0022(设定速度)
+/// 倍数×100，范围：±10000rpm
+/// 编码示例：500rpm → 0x0000C350 (50000)，-500.23rpm → 0xFFFF3C99 (-50023)
 struct [[nodiscard]] SpeedCode final {
     using Self = SpeedCode;
 
-    int32_t bits; 
-    
-    static constexpr float SCALE = 0.01;
+    int32_t bits;
+
+    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = rpm
     static constexpr float INV_SCALE = 1.0 / SCALE;
     static constexpr int32_t OFFSET = 0;
 
+    /// 从转速值（单位：rpm）编码为速度码
+    /// @param rpm 转速值，范围 ±10000rpm
+    /// @return 编码后的速度码
     static constexpr SpeedCode from_rpm(const float rpm){
         const auto bits = bounded_encode_to<int32_t>(rpm, INV_SCALE, OFFSET);
         return SpeedCode{.bits = bits};
+    }
+
+    /// 将速度码解码为转速值（单位：rpm）
+    [[nodiscard]] constexpr float to_rpm() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+/// 位置编码（实时位置或设定位置）
+/// 寄存器地址：0x0007/0x0008(实时位置H/L), 0x0023/0x0024(设定绝对位置H/L), 0x0025/0x0026(设定相对位置H/L)
+/// 倍数×100，范围：-11796120°~11796480°
+/// 编码示例：360° → 0x00008CA0 (36000)，-180.45° → 0xFFFFB983 (-18045)
+struct [[nodiscard]] PositionCode final {
+    using Self = PositionCode;
+
+    int32_t bits;
+
+    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = degrees
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr int32_t OFFSET = 0;
+
+    /// 从角度值（单位：°）编码为位置码
+    /// @param degrees 角度值，范围 -11796120°~11796480°
+    /// @return 编码后的位置码
+    static constexpr PositionCode from_degrees(const float degrees){
+        const auto bits = bounded_encode_to<int32_t>(degrees, INV_SCALE, OFFSET);
+        return PositionCode{.bits = bits};
+    }
+
+    /// 将位置码解码为角度值（单位：°）
+    [[nodiscard]] constexpr float to_degrees() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+/// 母线电流编码
+/// 寄存器地址：0x0005
+/// 倍数×100，范围：±20A
+/// 编码示例：1A → 0x0064 (100)
+struct [[nodiscard]] BusCurrentCode final {
+    using Self = BusCurrentCode;
+
+    int16_t bits;
+
+    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = ampere
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr int16_t OFFSET = 0;
+
+    /// 从电流值（单位：A）编码为母线电流码
+    /// @param ampere 电流值，范围 ±20A
+    /// @return 编码后的母线电流码
+    static constexpr BusCurrentCode from_ampere(const float ampere){
+        const auto bits = bounded_encode_to<int16_t>(ampere, INV_SCALE, OFFSET);
+        return BusCurrentCode{.bits = bits};
+    }
+
+    /// 将母线电流码解码为电流值（单位：A）
+    [[nodiscard]] constexpr float to_ampere() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+/// 驱动器温度编码
+/// 寄存器地址：0x000A
+/// 倍数×10，范围：0-150°C
+/// 编码示例：34.5°C → 0x0159 (345)
+struct [[nodiscard]] DriverTemperatureCode final {
+    using Self = DriverTemperatureCode;
+
+    uint16_t bits;
+
+    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = celsius
+    static constexpr float INV_SCALE = 1.0 / SCALE; 
+    static constexpr uint16_t OFFSET = 0;
+
+    /// 从温度值（单位：°C）编码为驱动器温度码
+    /// @param celsius 温度值，范围 0-150°C
+    /// @return 编码后的驱动器温度码
+    static constexpr DriverTemperatureCode from_celsius(const float celsius){
+        const auto bits = bounded_encode_to<uint16_t>(celsius, INV_SCALE, OFFSET);
+        return DriverTemperatureCode{.bits = bits};
+    }
+
+    /// 将驱动器温度码解码为温度值（单位：°C）
+    [[nodiscard]] constexpr float to_celsius() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+/// 电机温度编码
+/// 寄存器地址：0x000B
+/// 倍数×10，范围：0-150°C
+/// 编码示例：67.8°C → 0x0237 (567)
+struct [[nodiscard]] MotorTemperatureCode final {
+    using Self = MotorTemperatureCode;
+
+    uint16_t bits;
+
+    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = celsius
+    static constexpr float INV_SCALE = 1.0 / SCALE; 
+    static constexpr uint16_t OFFSET = 0;
+
+    /// 从温度值（单位：°C）编码为电机温度码
+    /// @param celsius 温度值，范围 0-150°C
+    /// @return 编码后的电机温度码
+    static constexpr MotorTemperatureCode from_celsius(const float celsius){
+        const auto bits = bounded_encode_to<uint16_t>(celsius, INV_SCALE, OFFSET);
+        return MotorTemperatureCode{.bits = bits};
+    }
+
+    /// 将电机温度码解码为温度值（单位：°C）
+    [[nodiscard]] constexpr float to_celsius() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+/// 力矩编码
+/// 寄存器地址：0x0020
+/// 倍数×100，范围：±100Nm
+/// 编码示例：0.2Nm → 0x0014 (20)
+struct [[nodiscard]] TorqueCode final {
+    using Self = TorqueCode;
+
+    int16_t bits;
+
+    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = newton_meter
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr int16_t OFFSET = 0;
+
+    /// 从力矩值（单位：Nm）编码为力矩码
+    /// @param newton_meter 力矩值，范围 ±100Nm
+    /// @return 编码后的力矩码
+    static constexpr TorqueCode from_newton_meter(const float newton_meter){
+        const auto bits = bounded_encode_to<int16_t>(newton_meter, INV_SCALE, OFFSET);
+        return TorqueCode{.bits = bits};
+    }
+
+    /// 将力矩码解码为力矩值（单位：Nm）
+    [[nodiscard]] constexpr float to_newton_meter() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+
+struct [[nodiscard]] PvSpeedCode final {
+    using Self = PvSpeedCode;
+
+    int16_t bits;
+
+    static constexpr float SCALE = 1.0f;     ///< 反编码倍数：bits * 0.01 = rpm
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr int16_t OFFSET = 0;
+
+    static constexpr PvSpeedCode from_rpm(const float rpm){
+        const auto bits = bounded_encode_to<int16_t>(rpm, INV_SCALE, OFFSET);
+        return PvSpeedCode{.bits = bits};
     }
 
     [[nodiscard]] constexpr float to_rpm() const {
@@ -262,19 +463,310 @@ struct [[nodiscard]] SpeedCode final {
     }
 };
 
-struct [[nodiscard]] PositionCode final {
-    using Self = PositionCode;
+struct [[nodiscard]] PvTorqueCode final {
+    using Self = PvTorqueCode;
 
-    int32_t bits; 
-    
+    uint8_t bits;
 
-    static constexpr PositionCode from_degrees(const float degrees){
-        const auto bits = bounded_encode_to<int32_t>(degrees, INV_SCALE, OFFSET);
-        return PositionCode{.bits = bits};
+    static constexpr float SCALE = 1.0f;     ///< 反编码倍数：bits * 0.01 = rpm
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr uint8_t OFFSET = 0;
+
+    static constexpr PvTorqueCode from_percents(const float rpm){
+        const auto bits = bounded_encode_to<uint8_t>(rpm, INV_SCALE, OFFSET);
+        return PvTorqueCode{.bits = bits};
     }
 
-    [[nodiscard]] constexpr float to_degrees() const {
+    [[nodiscard]] constexpr float to_percents() const {
         return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+
+/// 低速编码
+/// 寄存器地址：0x0027
+/// 倍数×100，范围：±300rpm
+/// 编码示例：1rpm → 0x0064 (100)
+struct [[nodiscard]] LowSpeedCode final {
+    using Self = LowSpeedCode;
+
+    int16_t bits;
+
+    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = rpm
+    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr int16_t OFFSET = 0;
+
+    /// 从低速值（单位：rpm）编码为低速码
+    /// @param rpm 低速值，范围 ±300rpm
+    /// @return 编码后的低速码
+    static constexpr LowSpeedCode from_rpm(const float rpm){
+        const auto bits = bounded_encode_to<int16_t>(rpm, INV_SCALE, OFFSET);
+        return LowSpeedCode{.bits = bits};
+    }
+
+    /// 将低速码解码为低速值（单位：rpm）
+    [[nodiscard]] constexpr float to_rpm() const {
+        return decode_from(bits, SCALE, OFFSET);
+    }
+};
+
+
+struct [[nodiscard]] CanFrameRquestFactory final{
+public:
+    NodeId node_id;
+
+    /// ========== 读取方法 ==========
+
+    /// 读取电源电压（寄存器0x0004，倍数×10，范围0-100V）
+    constexpr hal::ClassicCanFrame read_power_voltage() const {
+        return make_frame(make_read_context(Command::ReadReg16, RegAddr::PowerVoltage));
+    }
+
+    /// 读取母线电流（寄存器0x0005，倍数×100，范围±20A）
+    constexpr hal::ClassicCanFrame read_bus_current() const {
+        return make_frame(make_read_context(Command::ReadReg16, RegAddr::BusCurrent));
+    }
+
+    /// 读取实时速度（寄存器0x0006，倍数×100，范围±10000rpm）
+    constexpr hal::ClassicCanFrame read_real_speed() const {
+        return make_frame(make_read_context(Command::ReadReg32, RegAddr::RealSpeedH));
+    }
+
+    /// 读取实时位置（寄存器0x0008，倍数×100，范围-11796120°~11796480°）
+    constexpr hal::ClassicCanFrame read_real_position() const {
+        return make_frame(make_read_context(Command::ReadReg32, RegAddr::RealPositionL));
+    }
+
+    /// 读取驱动器温度（寄存器0x000A，倍数×10，范围0-150°C）
+    constexpr hal::ClassicCanFrame read_driver_temperature() const {
+        return make_frame(make_read_context(Command::ReadReg16, RegAddr::DriverTemperature));
+    }
+
+    /// 读取电机温度（寄存器0x000B，倍数×10，范围0-150°C）
+    constexpr hal::ClassicCanFrame read_motor_temperature() const {
+        return make_frame(make_read_context(Command::ReadReg16, RegAddr::MotorTemperature));
+    }
+
+    /// 读取错误信息（寄存器0x000C，32bit）
+    constexpr hal::ClassicCanFrame read_error_info() const {
+        return make_frame(make_read_context(Command::ReadReg32, RegAddr::ErrorInfoH));
+    }
+
+    /// ========== 写入方法 ==========
+
+    /// 设置力矩（寄存器0x0020，倍数×100，范围±100Nm）
+    constexpr hal::ClassicCanFrame set_torque(const TorqueCode code) const {
+        return make_frame(make_write16_context(RegAddr::SetTorque, code));
+    }
+
+    /// 设置速度（寄存器0x0022，倍数×100，范围±10000rpm）
+    constexpr hal::ClassicCanFrame set_speed(const SpeedCode code) const {
+        return make_frame(make_write32_context(RegAddr::SetSpeedH, code));
+    }
+
+    /// 设置绝对位置（寄存器0x0023，倍数×100，范围-11796120°~11796480°）
+    constexpr hal::ClassicCanFrame set_absolute_position(const PositionCode code) const {
+        return make_frame(make_write32_context(RegAddr::SetAbsPositionH, code));
+    }
+
+    /// 设置相对位置（寄存器0x0025，倍数×100，范围-11796120°~11796480°）
+    constexpr hal::ClassicCanFrame set_relative_position(const PositionCode code) const {
+        return make_frame(make_write32_context(RegAddr::SetRelPositionH, code));
+    }
+
+    /// 设置低速（寄存器0x0027，倍数×100，范围±300rpm）
+    constexpr hal::ClassicCanFrame set_low_speed(const LowSpeedCode code) const {
+        return make_frame(make_write16_context(RegAddr::SetLowSpeed, code));
+    }
+
+    /// ========== 控制模式与状态 ==========
+
+    /// 切换控制模式（寄存器0x0060，范围0-5）
+    constexpr hal::ClassicCanFrame set_control_mode(const ControlMode mode) const {
+        return make_frame(make_write16_context(RegAddr::ControlMode, mode));
+    }
+
+    /// 进入空闲状态（寄存器0x00A0，写入1执行）
+    constexpr hal::ClassicCanFrame idle_state() const {
+        return make_frame(make_write16_context(RegAddr::IdleState, static_cast<uint16_t>(1)));
+    }
+
+    /// ========== 校准与初始化 ==========
+
+    /// 校准电机（寄存器0x00A1，写入1执行）
+    constexpr hal::ClassicCanFrame calibrate_motor() const {
+        return make_frame(make_write16_context(RegAddr::CalibrateMotor, static_cast<uint16_t>(1)));
+    }
+
+    /// 进入闭环（寄存器0x00A2，写入1执行）
+    constexpr hal::ClassicCanFrame enter_close_loop() const {
+        return make_frame(make_write16_context(RegAddr::EnterCloseLoop, static_cast<uint16_t>(1)));
+    }
+
+    /// ========== 参数管理 ==========
+
+    /// 擦除参数（寄存器0x00A3，写入1执行）
+    constexpr hal::ClassicCanFrame erase_param() const {
+        return make_frame(make_write16_context(RegAddr::EraseParam, static_cast<uint16_t>(1)));
+    }
+
+    /// 保存参数（寄存器0x00A4，写入1执行）
+    constexpr hal::ClassicCanFrame save_param() const {
+        return make_frame(make_write16_context(RegAddr::SaveParam, static_cast<uint16_t>(1)));
+    }
+
+    /// 重启驱动器（寄存器0x00A5，写入1执行，重启约1.5秒）
+    constexpr hal::ClassicCanFrame restart_driver() const {
+        return make_frame(make_write16_context(RegAddr::RestartDriver, static_cast<uint16_t>(1)));
+    }
+
+    /// ========== 原点设置 ==========
+
+    /// 设置原点（寄存器0x00A6，写入1执行，保存偏置角并重启）
+    constexpr hal::ClassicCanFrame set_origin() const {
+        return make_frame(make_write16_context(RegAddr::SetOrigin, static_cast<uint16_t>(1)));
+    }
+
+    /// 设置临时原点（寄存器0x00A7，写入1执行，立即执行不保存）
+    constexpr hal::ClassicCanFrame set_temp_origin() const {
+        return make_frame(make_write16_context(RegAddr::SetTempOrigin, static_cast<uint16_t>(1)));
+    }
+
+    /// ========== 特殊指令 ==========
+
+    /// PV指令（位置-速度）：以指定速度转到目标位置
+    /// @param p 目标位置
+    /// @param s PV指令专用速度码
+    constexpr hal::ClassicCanFrame pv_command(const PositionCode p, const PvSpeedCode s) const {
+        return make_frame(make_triple_context(
+            Command::CmdPV,
+            std::bit_cast<uint32_t>(p.bits),
+            std::bit_cast<uint16_t>(s.bits),
+            static_cast<uint8_t>(0)
+        ));
+    }
+
+    /// PVT指令（位置-速度-力矩）：位置梯形轨迹模式下执行
+    /// @param p 目标位置
+    /// @param s PVT指令专用速度码
+    /// @param t 力矩百分比码（0-100%）
+    constexpr hal::ClassicCanFrame pvt_command(const PositionCode p, const PvSpeedCode s, const PvTorqueCode t) const {
+        return make_frame(make_triple_context(
+            Command::CmdPVT,
+            std::bit_cast<uint32_t>(p.bits),
+            std::bit_cast<uint16_t>(s.bits),
+            std::bit_cast<uint8_t>(t.bits)
+        ));
+    }
+private:
+    /// 将缓冲区打包为 CAN 标准帧 直接传值
+    constexpr hal::ClassicCanFrame make_frame(const std::array<uint8_t, 8> buf) const {
+        return hal::ClassicCanFrame::from_parts(
+            make_request_canid(node_id),
+            hal::ClassicCanPayload::from_u8x8(buf)
+        );
+    }
+
+    /// 生成三参数指令帧（PV/PVT指令）
+    /// @param command 命令字（CmdPV=0x24 或 CmdPVT=0x25）
+    /// @param arg1 位置参数（32bit）
+    /// @param arg2 速度参数（16bit）
+    /// @param arg3 力矩/填充参数（8bit）
+    static constexpr std::array<uint8_t, 8> make_triple_context(
+        const Command command,
+        const uint32_t arg1,
+        const uint16_t arg2,
+        const uint8_t arg3
+    ){
+        std::array<uint8_t, 8> buf = {
+            static_cast<uint8_t>(command),
+            static_cast<uint8_t>((arg1) >> 24),
+            static_cast<uint8_t>((arg1) >> 16),
+            static_cast<uint8_t>((arg1) >> 8),
+            static_cast<uint8_t>((arg1)),
+
+            static_cast<uint8_t>((arg2) >> 8),
+            static_cast<uint8_t>((arg2)),
+
+            static_cast<uint8_t>((arg3)),
+        };
+
+        return buf;
+    }
+
+    /// 生成无参数指令帧的基础模板
+    /// @param command 命令字
+    /// @param reg_addr 寄存器地址
+    /// @return 填充好头部的帧缓冲区
+    static constexpr std::array<uint8_t, 8> make_noarg_context(const Command command, const RegAddr reg_addr){
+        std::array<uint8_t, 8> buf = {
+            static_cast<uint8_t>(command),
+            static_cast<uint8_t>(static_cast<uint16_t>(reg_addr) >> 8),
+            static_cast<uint8_t>(static_cast<uint16_t>(reg_addr)),
+            0x00,  // 对齐填充
+            0x00, 0x00, 0x00, 0x00
+        };
+
+        return buf;
+    }
+
+    /// 生成读取指令帧
+    /// @param command 读取命令（ReadReg16=0x4B 或 ReadReg32=0x43）
+    /// @param reg_addr 寄存器地址
+    static constexpr std::array<uint8_t, 8> make_read_context(const Command command, const RegAddr reg_addr){
+        return make_noarg_context(command, reg_addr);
+    }
+
+    /// 生成写入指令帧
+    /// @param command 写入命令（WriteReg16=0x2B 或 WriteReg32=0x23）
+    /// @param reg_addr 寄存器地址
+    /// @param arg 参数值（会根据命令类型自动分解为高低字节）
+    static constexpr std::array<uint8_t, 8> make_write_context(
+        const Command command,
+        const RegAddr reg_addr,
+        const uint32_t arg
+    ){
+        auto buf = make_noarg_context(command, reg_addr);
+
+        switch(command){
+            case Command::WriteReg16:
+                buf[4] = static_cast<uint8_t>(arg >> 8);
+                buf[5] = static_cast<uint8_t>(arg);
+                break;
+            case Command::WriteReg32:
+                buf[4] = static_cast<uint8_t>(arg >> 24);
+                buf[5] = static_cast<uint8_t>(arg >> 16);
+                buf[6] = static_cast<uint8_t>(arg >> 8);
+                buf[7] = static_cast<uint8_t>(arg);
+                break;
+            default:
+                __builtin_unreachable();
+        }
+        return buf;
+    }
+
+    /// 生成16位写入指令帧
+    /// 自动处理1字节和2字节类型的转换
+    template<typename T>
+    requires (sizeof(T) <= 2)
+    static constexpr std::array<uint8_t, 8> make_write16_context(
+        const RegAddr reg_addr, const T code
+    ){
+        if constexpr(sizeof(T) == 1){
+            return make_write_context(Command::WriteReg16, reg_addr, static_cast<uint16_t>(code));
+        }else{
+            return make_write_context(Command::WriteReg16, reg_addr, std::bit_cast<uint16_t>(code));
+        }
+    }
+
+    /// 生成32位写入指令帧
+    /// 自动处理4字节强类型码的位转换
+    template<typename T>
+    requires (sizeof(T) == 4)
+    static constexpr std::array<uint8_t, 8> make_write32_context(
+        const RegAddr reg_addr, const T code
+    ){
+        return make_write_context(Command::WriteReg32, reg_addr, std::bit_cast<uint32_t>(code));
     }
 };
 

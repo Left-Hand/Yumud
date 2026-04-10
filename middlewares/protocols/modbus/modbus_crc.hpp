@@ -72,6 +72,13 @@ struct [[nodiscard]] Crc16ModbusAccumulator final{
 
     uint8_t crc_low = 0xFF;
     uint8_t crc_high = 0xFF;
+
+    static constexpr Self from_default(){
+        return Self{
+            .crc_low = 0xff,
+            .crc_high = 0xff
+        };
+    }
     
     constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
         Self self = *this;
