@@ -359,9 +359,9 @@ void Can::init(const Config & cfg){
     const CAN_InitTypeDef CAN_InitConf = {
         .CAN_Prescaler = bit_timming_coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.wiring_mode),
-        .CAN_SJW = bit_timming_coeffs.swj.tq.to_bits(),
-        .CAN_BS1 = bit_timming_coeffs.bs1.tq.to_bits(),
-        .CAN_BS2 = bit_timming_coeffs.bs2.tq.to_bits(),
+        .CAN_SJW = bit_timming_coeffs.swj.to_bits(),
+        .CAN_BS1 = bit_timming_coeffs.bs1.to_bits(),
+        .CAN_BS2 = bit_timming_coeffs.bs2.to_bits(),
 
 
         .CAN_TTCM = DISABLE,

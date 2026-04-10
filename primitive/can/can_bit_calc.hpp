@@ -72,9 +72,9 @@ struct BitTimmingCalculateIterator {
         Output res{
             .coeffs = Some(NominalBitTimmingCoeffs{
                 .prescale = state.prescale,
-                .swj = hal::CanSwj{hal::CanTq::from_num(state.current_sjw)},
-                .bs1 = hal::CanBs1{hal::CanTq::from_num(state.bs1_tq)},
-                .bs2 = hal::CanBs2{hal::CanTq::from_num(state.bs2_tq)}
+                .swj = hal::CanTq::from_num(state.current_sjw),
+                .bs1 = hal::CanTq::from_num(state.bs1_tq),
+                .bs2 = hal::CanTq::from_num(state.bs2_tq)
             }),
             .percents = percents
         };

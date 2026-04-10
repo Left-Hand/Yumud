@@ -80,7 +80,10 @@ enum class PacketId:uint16_t{
 
 
 static constexpr hal::CanExtId encode_can_id(const PacketId packet_id, const uint8_t controller_id){
-    const uint32_t id_u29 = static_cast<uint32_t>(packet_id) << 8 | controller_id;
+    const uint32_t id_u29 = static_cast<uint32_t>(
+		static_cast<uint32_t>(packet_id) << 8 
+		| controller_id
+	);
     return hal::CanExtId::from_u29(id_u29);
 }
 
