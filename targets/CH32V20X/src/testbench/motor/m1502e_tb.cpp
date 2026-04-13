@@ -416,7 +416,7 @@ void m1502e_main(){
         // right_torque.set(0.2_iq16);
 
         if(can.available()){
-            const auto frame = can.try_read().unwrap();
+            const auto frame = can.try_read().unwrap().clone();
             handle_received_frame(frame);
         }
         static auto report_timer = async::RepeatTimer::from_duration(2ms);

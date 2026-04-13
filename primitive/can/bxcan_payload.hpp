@@ -279,6 +279,10 @@ public:
         }
     }
 
+    constexpr ClassicCanPayload clone() const {
+        return ClassicCanPayload(*this);
+    }
+
 private:
     __attribute__((always_inline)) constexpr explicit
     ClassicCanPayload(const U8X8 _u8x8, const ClassicCanDlc _dlc):

@@ -275,7 +275,7 @@ uint32_t _chr_to_baud_unchecked(char chr){
 }
 
 auto _msg_to_operation = [](const hal::ClassicCanFrame & frame) { 
-    return Operation(SendCanFrame{frame}); };
+    return Operation(SendCanFrame{frame.clone()}); };
 
 
 IResult<Operation> SlcanParser::process_line(const StringView input_line) const {

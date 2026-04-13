@@ -171,11 +171,10 @@ static_assert([]{
 
 // Test span-based payload access
 static_assert([]{
-    constexpr auto may_frame = hal::ClassicCanFrame::from_parts(
+    constexpr auto frame = hal::ClassicCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
         hal::ClassicCanPayload::from_list({1, 2, 3})
     );
-    constexpr auto frame = may_frame;
     constexpr auto payload_bits = frame.payload_u64();
     static_assert(frame.dlc().length() == 3);   
     static_assert(payload_bits == 0x0000000000030201ULL);

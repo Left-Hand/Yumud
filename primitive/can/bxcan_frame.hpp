@@ -25,7 +25,7 @@ public:
     using Self = ClassicCanFrame;
 
 
-    constexpr ClassicCanFrame(const ClassicCanFrame & other):
+    constexpr explicit ClassicCanFrame(const ClassicCanFrame & other):
         identifier_(other.identifier_), 
         payload_(other.payload_){}
 
@@ -37,9 +37,11 @@ public:
 
     /// \brief 从创建一个未初始化的帧
 
-    __attribute__((always_inline)) static Self from_uninitialized() noexcept{
+    __attribute__((always_inline)) static constexpr Self from_uninitialized() noexcept{
         return Self{};
     }
+
+
     /// \brief 从给定的id创建一个远程帧
     __attribute__((always_inline)) static constexpr Self from_remote(
         details::is_canid auto id
@@ -93,7 +95,7 @@ public:
     payload() const noexcept{return payload_;}
 
     [[nodiscard]] constexpr Self clone() const noexcept{
-        return *this;
+        return Self(*this);
     }
 
     /// \brief 直接获取载荷的数据而不检查
@@ -232,6 +234,7 @@ public:
     auto identifier() const noexcept{
         return identifier_;
     }
+
 private:
 
     alignas(4) CanIdentifier identifier_;

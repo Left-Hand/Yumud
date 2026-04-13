@@ -77,7 +77,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             // }
 
             while(can.available()){
-                hal::ClassicCanFrame frame_r = can.try_read().unwrap();
+                hal::ClassicCanFrame frame_r = can.try_read().unwrap().clone();
                 logger.println("rx", frame_r);
             }
 
@@ -87,7 +87,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         }else{
             logger.println("ava", can.available());
             while(can.available()){
-                const hal::ClassicCanFrame frame_r = can.try_read().unwrap();
+                const hal::ClassicCanFrame frame_r = can.try_read().unwrap().clone();
                 logger.println("rx", frame_r);
             }
 

@@ -80,7 +80,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
         offset_ += frame_len;
         piece_cnt_++;
 
-        return frame;
+        return frame.clone();
     }
 private:
     static constexpr hal::ClassicCanFrame make_can_frame(

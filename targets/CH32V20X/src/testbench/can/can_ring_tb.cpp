@@ -79,7 +79,7 @@ void can_ring_main(){
         if(can.available()){
             DEBUG_PRINTLN(can.available());
             while(can.available()){
-                auto rx_frame = can.try_read().unwrap();
+                auto rx_frame = can.try_read().unwrap().clone();
                 DEBUG_PRINTLN("rx", rx_frame);
             }
         }else{

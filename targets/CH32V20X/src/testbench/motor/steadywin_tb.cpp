@@ -98,7 +98,7 @@ void steadywin_main(){
     };
 
     [[maybe_unused]] auto handle_can_frame = [&](const hal::ClassicCanFrame & frame){
-        if(frame.is_extended()) PANIC{"std can frame received!!"};
+        if(frame.is_extended()) PANIC{"ext can frame received!!"};
         if(frame.length() != 8) PANIC{"can frame length is not 8", frame.length()};
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
 

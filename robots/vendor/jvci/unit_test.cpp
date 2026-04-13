@@ -1,4 +1,5 @@
 #include "jvci_primitive.hpp"
+#include "jvci_framefactory.hpp"
 
 using namespace ymd::robots::jvci;
 
