@@ -55,6 +55,27 @@ void can_configure_filter(
     const hal::CanFifoIndex fifo_idx,
     const hal::CanFilterConfig & filter_cfg
 ){
+    #if 0
+    CAN_FilterInitTypeDef CAN_FilterInitStructure;
+
+    CAN_FilterInitStructure.CAN_FilterNumber = 0;     // 过滤器组0
+    CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;    // 掩码模式
+    CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;   // 32位位宽
+
+    // 标识符寄存器（任意值均可，因为掩码为0）
+    CAN_FilterInitStructure.CAN_FilterIdHigh = 0;
+    CAN_FilterInitStructure.CAN_FilterIdLow = 0;
+
+    // 屏蔽寄存器设置为0 - 表示不关心任何位，接收所有ID
+    CAN_FilterInitStructure.CAN_FilterMaskIdHigh = 0;
+    CAN_FilterInitStructure.CAN_FilterMaskIdLow = 0;
+
+    CAN_FilterInitStructure.CAN_FilterFIFOAssignment = CAN_FIFO0;
+    CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
+    CAN_FilterInit(&CAN_FilterInitStructure);
+    return;
+    #endif
+
     auto * p_inst = ral::CAN_Filt;
     
     const uint32_t filter_pos_mask = 1u << filter_nth;
@@ -66,11 +87,9 @@ void can_configure_filter(
     uint32_t FR2;
 
     if (filter_cfg.is_32bit()) {
-        FR1 = (static_cast<uint32_t>(filter_cfg.id16[1]) << 16) |
-            static_cast<uint32_t>(filter_cfg.id16[0]);
+        FR1 = (static_cast<uint32_t>(filter_cfg.id32));
         
-        FR2 = (static_cast<uint32_t>(filter_cfg.mask16[1]) << 16) |
-            static_cast<uint32_t>(filter_cfg.mask16[0]);
+        FR2 = (static_cast<uint32_t>(filter_cfg.mask32));
     } else {
         FR1 = (static_cast<uint32_t>(filter_cfg.mask16[0]) << 16) |
             static_cast<uint32_t>(filter_cfg.id16[0]);

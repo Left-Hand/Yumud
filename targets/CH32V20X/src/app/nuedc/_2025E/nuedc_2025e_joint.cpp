@@ -182,7 +182,7 @@ void nuedc_2025e_joint_main(){
     can.configure_filter(
         0_nth, 
         hal::CanFifoIndex::_0,
-        hal::CanFilterConfig::from_pair(
+        hal::CanFilterConfig::from_std_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
                 hal::CanStdId::from_bits(0b1111'000'0000), 

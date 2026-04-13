@@ -81,6 +81,7 @@ struct [[nodiscard]] SetZero final{
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Erorr> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
     }
 };
 
@@ -123,6 +124,7 @@ struct [[nodiscard]]  SetFocParaments final{
     template<typename Serializer>
     Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
     }
 };
 
@@ -136,6 +138,7 @@ struct [[nodiscard]] GetFocParaments final{
     template<typename Serializer>
     Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
         return Ok();
     }
 };
@@ -195,14 +198,19 @@ struct [[nodiscard]] PushCanFrameHeader final{
 
 template<typename Serializer, typename Payload>
 Result<void, typename Serializer::Error> serialize_pushcan_frame(Serializer & serializer, const PushCanFrameHeader header, Payload & payload){
-    serializer.push_u8(0x7b);
-    serializer.push_u8(0x8c);
-    serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+    if(const auto res = serializer.push_u8(0x7b);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = serializer.push_u8(0x8c);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+        res.is_err()) return Err(res.unwrap_err());
     header.serialize(serializer);
-    serializer.push_u8(payload.frame_length());
+    if(const auto res = serializer.push_u8(payload.frame_length());
+        res.is_err()) return Err(res.unwrap_err());
     payload.serialize(serializer);
     const auto verify_byte = calc_sum(0, serializer.received_bytes());
-    serializer.push_u8(verify_byte);
+    if(const auto res = serializer.push_u8(verify_byte);
+        res.is_err()) return Err(res.unwrap_err());
 }
 
 
@@ -242,6 +250,7 @@ struct [[nodiscard]] PowerUnitState final{
     template<typename Serializer>
     Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
     }
 };
 
@@ -281,6 +290,7 @@ struct [[nodiscard]] FocParamentResponse final {
     template<typename Serializer>
     Result<void, typename Serializer::Error> serialize(Serializer & serializer){
         //nothing to do
+        return Ok();
     }
 
 };

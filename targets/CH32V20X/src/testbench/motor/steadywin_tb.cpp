@@ -75,7 +75,7 @@ void steadywin_main(){
     can.configure_filter(
         0_nth, 
         hal::CanFifoIndex::_0,
-        hal::CanFilterConfig::from_pairs(
+        hal::CanFilterConfig::from_std_pairs(
             hal::CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY,
             hal::CanStdIdMaskPair::reject_all()
         )

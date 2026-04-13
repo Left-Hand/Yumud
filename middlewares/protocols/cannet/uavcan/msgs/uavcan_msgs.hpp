@@ -7,7 +7,7 @@
 // https://www.ckesc.com/wp-content/uploads/2025/03/CKESC-UAVCAN2.1-min.pdf
 
 namespace ymd::uavcan::msgs{
-struct StatusFlag{
+struct [[nodiscard]] StatusFlag final{
     enum class [[nodiscard]] Mode:uint8_t{
         Off = 0b000,
         Idle = 0b001,
@@ -22,21 +22,35 @@ struct StatusFlag{
     using Self = StatusFlag;
     uint32_t bits;
 
-    constexpr auto is_over_voltage() const {return make_bitfield_proxy<0, 1, bool>(bits);}
-    constexpr auto is_under_voltage() const {return make_bitfield_proxy<1, 2, bool>(bits);}
-    constexpr auto is_over_current() const {return make_bitfield_proxy<2, 3, bool>(bits);}
-    constexpr auto is_throttle_lost() const {return make_bitfield_proxy<3, 4, bool>(bits);}
+    constexpr auto is_over_voltage() const {
+        return make_bitfield_proxy<0, 1, bool>(&bits);}
+    constexpr auto is_under_voltage() const {
+        return make_bitfield_proxy<1, 2, bool>(&bits);}
+    constexpr auto is_over_current() const {
+        return make_bitfield_proxy<2, 3, bool>(&bits);}
+    constexpr auto is_throttle_lost() const {
+        return make_bitfield_proxy<3, 4, bool>(&bits);}
 
-    constexpr auto is_throttle_abnormal() const {return make_bitfield_proxy<4, 5, bool>(bits);}
-    constexpr auto is_mos_over_temperature() const {return make_bitfield_proxy<5, 6, bool>(bits);}
-    constexpr auto is_capacitor_over_temperature() const {return make_bitfield_proxy<6, 7, bool>(bits);}
-    constexpr auto is_stall() const {return make_bitfield_proxy<7, 8, bool>(bits);}
-    constexpr auto is_opa_abnormal() const {return make_bitfield_proxy<8, 9, bool>(bits);}
-    constexpr auto is_upper_bridge_abnormal() const {return make_bitfield_proxy<9, 10, bool>(bits);}
-    constexpr auto is_lower_bridge_abnormal() const {return make_bitfield_proxy<10, 11, bool>(bits);}
-    constexpr auto is_encoder_abnormal() const {return make_bitfield_proxy<11, 12, bool>(bits);}
-    constexpr auto mode() const {return make_bitfield_proxy<12, 15, Mode>(bits);}
-    constexpr auto encoder_bits() const {return make_bitfield_proxy<16, 31, uint16_t>(bits);}
+    constexpr auto is_throttle_abnormal() const {
+        return make_bitfield_proxy<4, 5, bool>(&bits);}
+    constexpr auto is_mos_over_temperature() const {
+        return make_bitfield_proxy<5, 6, bool>(&bits);}
+    constexpr auto is_capacitor_over_temperature() const {
+        return make_bitfield_proxy<6, 7, bool>(&bits);}
+    constexpr auto is_stall() const {
+        return make_bitfield_proxy<7, 8, bool>(&bits);}
+    constexpr auto is_opa_abnormal() const {
+        return make_bitfield_proxy<8, 9, bool>(&bits);}
+    constexpr auto is_upper_bridge_abnormal() const {
+        return make_bitfield_proxy<9, 10, bool>(&bits);}
+    constexpr auto is_lower_bridge_abnormal() const {
+        return make_bitfield_proxy<10, 11, bool>(&bits);}
+    constexpr auto is_encoder_abnormal() const {
+        return make_bitfield_proxy<11, 12, bool>(&bits);}
+    constexpr auto mode() const {
+        return make_bitfield_proxy<12, 15, Mode>(&bits);}
+    constexpr auto encoder_bits() const {
+        return make_bitfield_proxy<16, 31, uint16_t>(&bits);}
 
 };
 

@@ -8,17 +8,9 @@ namespace ymd::hal{
 namespace details{
 
 //这个类与平台有关 相关标准在SXX32的can文档中定义
-
-// 寄存器布局
-    // const uint32_t __resv__:1 = 1; //硬连线到1
-    // uint32_t is_remote:1;    //是否为远程帧
-    // uint32_t is_extended:1;    //是否为扩展帧
-    // uint32_t full_id:29; //完整id
-
-
-struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
+struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
     using Self = SXX32_CanIdentifier;
-    struct BitFields{
+    struct [[nodiscard]] BitFields final{
         //此位置1 启动发送请求
         uint32_t txrq:1;
         
@@ -27,14 +19,21 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         
         //是否为扩展帧
         uint32_t is_extended:1;
+
+        //完整的id
         uint32_t full_id:29;
 
-        [[nodiscard]] constexpr uint32_t extid() const {
+        [[nodiscard]] constexpr uint32_t full29() const {
             return full_id;
         }
 
-        [[nodiscard]] constexpr uint32_t stdid() const {
+        [[nodiscard]] constexpr uint32_t high11() const {
             return full_id >> (29 - 11);
+        }
+
+        [[nodiscard]] constexpr uint32_t low18() const {
+            constexpr uint32_t MASK = (1u << (29 - 11)) - 1;
+            return full_id & MASK;
         }
     };
 
@@ -94,9 +93,20 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr uint32_t id_u32() const {
         if(std::bit_cast<BitFields>(bits).is_extended)
-            return std::bit_cast<BitFields>(bits).extid();
+            return std::bit_cast<BitFields>(bits).full29();
         else
-            return std::bit_cast<BitFields>(bits).stdid();
+            return std::bit_cast<BitFields>(bits).high11();
+    }
+
+
+    [[nodiscard]] __attribute__((always_inline)) 
+    constexpr uint32_t full29() const {
+        return std::bit_cast<BitFields>(bits).full29();
+    }
+
+    [[nodiscard]] __attribute__((always_inline)) 
+    constexpr uint32_t high11() const {
+        return std::bit_cast<BitFields>(bits).high11();
     }
 
     /// @brief 尝试将帧ID转为标准帧ID
@@ -105,7 +115,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             return None;
-        return Some(CanStdId::from_bits(fields.stdid()));
+        return Some(CanStdId::from_bits(fields.high11()));
     }
 
     /// @brief 尝试将帧ID转为 帧ID
@@ -114,7 +124,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             return None;
-        return Some(CanExtId::from_bits(fields.extid()));
+        return Some(CanExtId::from_bits(fields.full29()));
     }
 
     /// @brief 不顾帧格式，直接获取标准帧
@@ -123,7 +133,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             __builtin_trap();
-        return CanStdId::from_bits((fields.stdid()));
+        return CanStdId::from_bits((fields.high11()));
     }
 
     /// @brief 不顾帧格式，直接获取拓展帧
@@ -132,7 +142,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             __builtin_trap();
-        return CanExtId::from_bits((fields.extid()));
+        return CanExtId::from_bits((fields.full29()));
     }
 
 
@@ -142,33 +152,31 @@ private:
     __attribute__((always_inline)) 
     static constexpr Self from_std_id(
         const CanStdId id, 
-        const CanRtr rtr
+        const CanRtr can_rtr
     ){
         const BitFields fields = {
             .txrq = 1,
-            .is_remote = (rtr == CanRtr::Remote), 
+            .is_remote = (can_rtr == CanRtr::Remote), 
             .is_extended = false, 
             .full_id = static_cast<uint32_t>(id.to_u11()) << 18
         };
 
-        const uint32_t bits = std::bit_cast<uint32_t>(fields);
-        return Self{bits};
+        return Self{std::bit_cast<uint32_t>(fields)};
     }
 
     __attribute__((always_inline)) 
     static constexpr Self from_ext_id(
         const CanExtId id, 
-        const CanRtr rtr
+        const CanRtr can_rtr
     ){
         const BitFields fields = {
             .txrq = 1,
-            .is_remote = (rtr == CanRtr::Remote), 
+            .is_remote = (can_rtr == CanRtr::Remote), 
             .is_extended = true, 
             .full_id = id.to_u29()
         };
 
-        const uint32_t bits = std::bit_cast<uint32_t>(fields);
-        return Self{bits};
+        return Self{std::bit_cast<uint32_t>(fields)};
     }
 };
 static_assert(sizeof(SXX32_CanIdentifier) == 4);

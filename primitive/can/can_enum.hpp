@@ -350,7 +350,7 @@ struct [[nodiscard]] NominalBitTimming:
 };
 
 // https://docs.rs/embassy-stm32/latest/embassy_stm32/can/config/enum.TxBufferMode.html
-enum struct TxBufferMode:uint8_t {
+enum struct [[nodiscard]] TxBufferMode:uint8_t {
     // TX FIFO operation - In this mode CAN frames are trasmitted strictly in write order.
     Fifo,
     // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.

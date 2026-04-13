@@ -88,6 +88,8 @@ struct [[nodiscard]] CanIdMaskPair final{
                 id_type::from_u29(mask),
                 spec
             ));
+        }else{
+            __builtin_unreachable();
         }
     }
 

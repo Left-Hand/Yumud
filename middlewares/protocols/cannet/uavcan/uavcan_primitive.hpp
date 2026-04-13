@@ -13,7 +13,7 @@ namespace ymd::uavcan{
 
 using namespace ymd::literals;
 
-struct [[nodiscard]] Signature{
+struct [[nodiscard]] Signature final{
     uint64_t bits;
 };
 
