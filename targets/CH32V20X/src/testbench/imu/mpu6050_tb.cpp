@@ -169,7 +169,13 @@ void mpu6050_main(){
         .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     hal::SoftI2c i2c{scl_pin_, sda_pin_};

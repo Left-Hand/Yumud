@@ -66,9 +66,9 @@ OutputStream & OutputStream::operator<<(const wchar_t chr){
 
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
-        if (func == &std::oct) {set_radix(8);break;}
-        else if (func == &std::dec) {set_radix(10);break;}
-        else if (func == &std::hex) {set_radix(16);break;}
+        if (func == &std::oct) {config_.radix = (8);break;}
+        else if (func == &std::dec) {config_.radix = (10);break;}
+        else if (func == &std::hex) {config_.radix = (16);break;}
         else if (func == &std::fixed) {
             //TODO
             break;
@@ -214,8 +214,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     const auto guard = this->create_guard();
     this->println();
 
-    this->set_splitter('\0');
-    this->set_indent(this->indent());
+    this->config_.set_splitter('\0');
 
     this->println(loc.function_name());
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');

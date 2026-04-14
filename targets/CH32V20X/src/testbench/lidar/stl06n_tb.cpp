@@ -68,11 +68,13 @@ void stl06n_main(){
 
 
     DEBUGGER.retarget(&DEBUG_UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(9);
-    DEBUGGER.force_sync(EN);
-    // DEBUGGER.no_fieldname(EN);
-    DEBUGGER.no_fieldname(DISEN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
 
     auto watch_pin_ = hal::PA<11>();

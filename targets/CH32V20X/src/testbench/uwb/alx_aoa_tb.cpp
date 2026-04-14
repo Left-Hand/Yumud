@@ -120,8 +120,13 @@ void alx_aoa_main(){
 
 
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.no_brackets(DISEN);
-    DEBUGGER.no_fieldname(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(DISEN)
+        .no_fieldname(DISEN)
+        .force_sync(EN)
+        .finalize();
 
     // while(true){
     //     clock::delay(5ms);

@@ -558,8 +558,13 @@ void lazy_main() {
     });
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     // auto & led = hal::PD<0>();
     auto led = hal::PB<8>();

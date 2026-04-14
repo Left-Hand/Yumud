@@ -186,7 +186,6 @@ inline OutputStream & operator<<(OutputStream & os, const StrokeAlignment self){
 
 inline OutputStream & operator<<(OutputStream & os, const PrimitiveStyle & self){
     const auto _ = os.create_guard();
-    os.no_brackets(DISEN);
 
     return os << os.field("fill_color")(self.fill_color) 
         << os.splitter() << os.field("stroke_color")(self.stroke_color) 

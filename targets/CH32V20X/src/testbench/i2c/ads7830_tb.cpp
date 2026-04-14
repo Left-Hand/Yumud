@@ -26,9 +26,13 @@ void ads7830_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.no_brackets(EN);
-
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     auto scl_pin = SCL_PIN;
     auto sda_pin = SDA_PIN;
     hal::SoftI2c i2c = hal::SoftI2c{scl_pin, sda_pin};

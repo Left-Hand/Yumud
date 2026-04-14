@@ -408,7 +408,11 @@ void sys::abort(const AbortInfo & info){
     __disable_irq();
     __disable_irq();
 
-    DEBUGGER.set_splitter('\0');
+    DEBUGGER
+        .build_config()
+        .set_splitter('\0')
+        .finalize();
+
     DEBUG_PRINTLN("\r\nsystem aborted");
     DEBUG_PRINTLN("-----------");
 

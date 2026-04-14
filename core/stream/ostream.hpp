@@ -103,7 +103,6 @@ class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
     struct alignas(16) [[nodiscard]] Config{
 
-        using Self = Config;
 
         struct Specifier{
             uint16_t boolalpha:1;
@@ -132,8 +131,8 @@ public:
             Specifier specifier;
         };
 
-        static constexpr Self from_default(){
-            return Self{
+        static constexpr Config from_default(){
+            return Config{
                 .splitter_chars = {',', ' ', '\0', '\0'},
                 .splitter_len = 2,
                 .radix = 10,
@@ -144,6 +143,56 @@ public:
                 .specifier_bits = 0
             };
         }
+
+
+        void set_splitter(const char * splitter){
+            std::fill_n(this->splitter_chars, 4, 0);
+
+            size_t i = 0;
+            for(;i < 4 && splitter[i] != '\0'; ++i) {
+                this->splitter_chars[i] = splitter[i];
+            }
+            this->splitter_len = static_cast<uint8_t>(i);
+        }
+
+        void set_splitter(const char splitter){
+            std::fill_n(this->splitter_chars, 4, 0);
+            this->splitter_chars[0] = splitter;
+            this->splitter_len = (splitter == '\0');
+        }
+
+        void set_radix(const uint8_t radix_){
+            this->radix = radix_;
+        }
+
+        void set_indent(const uint8_t indent_){
+            this->indent = indent_;
+        }
+
+        void set_eps(const uint8_t eps_){
+            this->eps = eps_;
+        }
+
+        void no_brackets(const Enable en){
+            this->specifier.no_brackets = bool(en == EN);
+        }
+
+        void no_scoped(const Enable en){
+            this->specifier.no_scoped = bool(en == EN);
+        }
+
+        void no_fieldname(const Enable en){
+            this->specifier.no_fieldname = bool(en == EN);
+        }
+
+        void force_sync(const Enable en){
+            this->specifier.force_sync = bool(en == EN);
+        }
+
+        void no_space(const Enable en){
+            this->specifier.no_space = bool(en == EN);
+        }
+
     };
 private:
 
@@ -166,67 +215,9 @@ public:
 
     void write_bytes(std::span<const uint8_t> bytes);
 
-    OutputStream & set_splitter(const char * splitter){
-        std::fill_n(config_.splitter_chars, 4, 0);
-
-        size_t i = 0;
-        for(;i < 4 && splitter[i] != '\0'; ++i) {
-            config_.splitter_chars[i] = splitter[i];
-        }
-        config_.splitter_len = static_cast<uint8_t>(i);
-        return *this;
-    }
-
-    OutputStream & set_splitter(const char splitter){
-        std::fill_n(config_.splitter_chars, 4, 0);
-        config_.splitter_chars[0] = splitter;
-        config_.splitter_len = (splitter == '\0');
-        return *this;
-    }
-
-    OutputStream & set_radix(const uint8_t radix){
-        config_.radix = radix;
-        return *this;
-    }
-
-    OutputStream & set_indent(const uint8_t indent){
-        config_.indent = indent;
-        return *this;
-    }
-
     [[nodiscard]] uint8_t indent() const{
         return config_.indent;
     }
-
-    OutputStream & set_eps(const uint8_t eps){
-        config_.eps = eps;
-        return *this;
-    }
-
-    OutputStream & no_brackets(const Enable en){
-        config_.specifier.no_brackets = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_scoped(const Enable en){
-        config_.specifier.no_scoped = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_fieldname(const Enable en){
-        config_.specifier.no_fieldname = bool(en == EN);
-        return *this;
-    }
-    OutputStream & force_sync(const Enable en){
-        config_.specifier.force_sync = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_space(const Enable en){
-        config_.specifier.no_space = bool(en == EN);
-        return *this;
-    }
-
 
     OutputStream & operator<<(const bool val);
     OutputStream & operator<<(const uint8_t val);
@@ -684,14 +675,11 @@ public:
 
     OutputStream & flush();
 
-
-    
-    inline OutputStream & reconf(Config && config){
+    inline OutputStream & reconf(const Config & config){
         config_ = config;
         return *this;
     }
 
-    
     inline const Config & config() const {return config_;}
 
     class [[nodiscard]] ConfigGuard{
@@ -708,9 +696,81 @@ public:
         }
     };
 
-    
+    struct [[nodiscard]] ConfigBuilder final{
+        OutputStream & self;
+        Config config;
+
+        inline ConfigBuilder(OutputStream & os) : self(os), config(os.config()){}
+
+        ConfigBuilder & set_splitter(const char * splitter){
+            std::fill_n(config.splitter_chars, 4, 0);
+
+            size_t i = 0;
+            for(;i < 4 && splitter[i] != '\0'; ++i) {
+                config.splitter_chars[i] = splitter[i];
+            }
+            config.splitter_len = static_cast<uint8_t>(i);
+            return *this;
+        }
+
+        ConfigBuilder & set_splitter(const char splitter){
+            std::fill_n(config.splitter_chars, 4, 0);
+            config.splitter_chars[0] = splitter;
+            config.splitter_len = (splitter == '\0');
+            return *this;
+        }
+
+        ConfigBuilder & set_radix(const uint8_t radix){
+            config.radix = radix;
+            return *this;
+        }
+
+        ConfigBuilder & set_indent(const uint8_t indent){
+            config.indent = indent;
+            return *this;
+        }
+
+        ConfigBuilder & set_eps(const uint8_t eps){
+            config.eps = eps;
+            return *this;
+        }
+
+        ConfigBuilder & no_brackets(const Enable en){
+            config.specifier.no_brackets = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_scoped(const Enable en){
+            config.specifier.no_scoped = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_fieldname(const Enable en){
+            config.specifier.no_fieldname = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & force_sync(const Enable en){
+            config.specifier.force_sync = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_space(const Enable en){
+            config.specifier.no_space = bool(en == EN);
+            return *this;
+        }
+
+        void finalize(){
+            self.reconf(config);
+        }
+    };
+
     [[nodiscard]] inline ConfigGuard create_guard(){
         return ConfigGuard(*this);
+    }
+
+    [[nodiscard]] inline ConfigBuilder build_config(){
+        return ConfigBuilder(*this);
     }
 
 private:

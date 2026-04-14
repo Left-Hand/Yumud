@@ -80,8 +80,10 @@ private:
     void send_var(StringView name, Args && ... args){
         std::array<uint8_t, MAX_BUF_SIZE> buf;
         auto bs = BufStream(std::span(buf));
-        bs.set_splitter(',');
-        bs.set_eps(2);
+        bs.build_config()
+            .set_eps(2)
+            .set_splitter(",")
+            .finalize();
 
         bs << '$' << name;
 

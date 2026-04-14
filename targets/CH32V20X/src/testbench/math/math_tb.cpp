@@ -61,10 +61,13 @@ void math_main(){
         .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets(EN);
-
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     // using math::Vec3 = math::Vec3<iq16>;
     // using Plane = Plane<iq16>;
     // using Basis = Basis<iq16>;

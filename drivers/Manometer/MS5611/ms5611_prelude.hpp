@@ -160,7 +160,7 @@ struct [[nodiscard]] CrcBuilder final{
     constexpr Self push_byte(const uint8_t byte) const {
         Self self = *this;
         for (int32_t n_bit = 8; n_bit > 0; n_bit--){
-            const uint16_t rhs = ((n_rem & 0x8000U) != 0)
+            const uint16_t rhs = ((byte & 0x8000U) != 0)
                 ? 0x3000 : 0x0000;
 
             self.n_rem = (self.n_rem << 1) ^ rhs;

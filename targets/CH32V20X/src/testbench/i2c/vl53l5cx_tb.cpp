@@ -25,9 +25,15 @@ void vl53l5cx_main(){
         hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
-    DEBUGGER.set_eps(4);
+
     // DEBUGGER.no_brackets();
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;

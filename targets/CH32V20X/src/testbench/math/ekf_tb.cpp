@@ -15,7 +15,13 @@ void ekf_main(){
         .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     
     clock::delay(200ms);
 

@@ -156,10 +156,13 @@ void lz77_main() {
         });
 
         DEBUGGER.retarget(&DEBUG_UART);
-        DEBUGGER.no_brackets(EN);
-        DEBUGGER.set_eps(3);
-        DEBUGGER.force_sync(EN);
-        DEBUGGER.no_fieldname(DISEN);
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(DISEN)
+            .force_sync(EN)
+            .finalize();
     };
 
     bsp_init_debug();

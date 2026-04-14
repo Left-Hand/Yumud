@@ -65,7 +65,10 @@ public:
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
         if(echo_en_){
-            os_.force_sync(EN);
+            os_.build_config()
+                .force_sync(EN)
+                .finalize();
+
             os_ << StringView("<<= ") << strs;
         }
 

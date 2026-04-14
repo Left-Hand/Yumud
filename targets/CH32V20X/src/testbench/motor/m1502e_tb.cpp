@@ -172,10 +172,13 @@ void m1502e_main(){
     });
 
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets(EN);
-
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     auto led = hal::PC<14>();
     led.outpp(HIGH);
 

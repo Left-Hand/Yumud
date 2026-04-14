@@ -129,7 +129,11 @@ void i2c_scanner_main(){
             DEBUG_PRINTLN("---------");
             {
                 const auto guard = DEBUGGER.create_guard();
-                DEBUGGER.set_indent(1);
+                DEBUGGER.build_config()
+                    .set_indent(1)
+                    .finalize();
+
+
                 for(auto & [read_addr, baud] : founded_devices){
                     DEBUG_PRINTS(
                         std::bitset<8>(read_addr), '\t',

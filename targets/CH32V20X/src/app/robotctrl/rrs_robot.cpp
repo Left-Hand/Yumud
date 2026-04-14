@@ -80,8 +80,14 @@ public:
         });
 
         DEBUGGER.retarget(&DBG_UART);
-        // DEBUGGER.no_brackets();
-        DEBUGGER.force_sync(EN);
+
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(EN)
+            .force_sync(EN)
+            .finalize();
 
 
         i2c.init({

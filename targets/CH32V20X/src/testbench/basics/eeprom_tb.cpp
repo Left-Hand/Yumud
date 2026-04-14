@@ -312,9 +312,13 @@ void eeprom_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.set_eps(2);
-    DEBUGGER.set_radix(10);
-    DEBUGGER.set_splitter("\t");
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto scl_pin = hal::PB<13>();
     auto sda_pin = hal::PB<12>();

@@ -128,8 +128,14 @@ void digipw_main(){
         .baudrate = hal::NearestFreq(6_MHz)
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
+    
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     /*-----------------------*/
 
