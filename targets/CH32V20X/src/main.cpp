@@ -175,7 +175,8 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
-    sincos_main();
+    // sincos_main();
+    jvci_main();
     // winter_mc_tutorial_main();
     // stl06n_main();
     // render_main();

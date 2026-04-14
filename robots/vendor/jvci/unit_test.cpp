@@ -1,11 +1,56 @@
 #include "jvci_primitive.hpp"
 #include "jvci_framefactory.hpp"
+#include "core/math/realmath.hpp"
 
+using namespace ymd;
 using namespace ymd::robots::jvci;
 
 
 namespace {
+[[maybe_unused]] void test_degrees(){
+    using namespace utils;
+    {
+        static constexpr auto f_1 = (degree001_to_turns(360 * 100));
+        static constexpr auto f_1000 = (degree001_to_turns(1000 * 360 * 100));
 
+        static constexpr auto f_30000 = (degree001_to_turns(30000 * 360 * 100));
+        static constexpr auto f_n30000 = (degree001_to_turns(-30000 * 360 * 100));
+
+        static constexpr auto f_32700 = (degree001_to_turns(32700 * 360 * 100));
+        static constexpr auto f_n32700 = (degree001_to_turns(-32700 * 360 * 100));
+
+        static_assert((float)math::abs(f_1 - 1.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_1000 - 1000.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_30000 - 30000.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_n30000 - -30000.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_32700 - 32700.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_n32700 - -32700.0_iq16) < 1.2E-4);
+    }
+
+    {
+        auto abs_i32 = [](int32_t a){
+            // return (a > b) ? (a - b) : (b - a);
+            if(a > 0) return a;
+            return -a;
+        };
+
+        // Test reverse conversion: turns -> degree001
+        static constexpr auto b_1 = turns_to_degree001(1.0_iq16);
+        static constexpr auto b_1000 = turns_to_degree001(1000.0_iq16);
+        static constexpr auto b_30000 = turns_to_degree001(30000.0_iq16);
+        static constexpr auto b_n30000 = turns_to_degree001(-30000.0_iq16);
+        static constexpr auto b_32700 = turns_to_degree001(32700.0_iq16);
+        static constexpr auto b_n32700 = turns_to_degree001(-32700.0_iq16);
+
+        static_assert(abs_i32(b_1 - 360 * 100) < 2);
+        static_assert(abs_i32(b_1000 - 1000 * 360 * 100) < 2);
+        static_assert(abs_i32(b_30000 - 30000 * 360 * 100) < 6);
+        static_assert(abs_i32(b_n30000 - (-30000 * 360 * 100)) < 6);
+        static_assert(abs_i32(b_32700 - 32700 * 360 * 100) < 6);
+        static_assert(abs_i32(b_n32700 - (-32700 * 360 * 100)) < 5);
+    }
+
+}
 
 // 测试强类型转换
 [[maybe_unused]] static void test_strong_types() {
@@ -42,13 +87,16 @@ namespace {
 }
 
 [[maybe_unused]] static void test_example_msgs() {
-    static constexpr auto factory = CanFrameRquestFactory{.node_id = NodeId::try_from_u8(0x01).unwrap()};
+    static constexpr auto factory = CanRequestFrameFactory{.node_id = NodeId::try_from_u8(0x01).unwrap()};
 
     // 1. 读取电源电压（寄存器0x0004，倍数×10，范围0-100V）
     // 请求帧ID:0x601，数据:`4B 00 04 00 00 00 00 00`；回复:`4B 00 04 00 00 78 00 00`（12.0V）
     {
         static constexpr auto frame = factory.read_power_voltage();
         static constexpr auto bytes = frame.payload_bytes();
+
+        static_assert(frame.length() == 8);
+        static_assert(frame.dlc().to_bits() == 0b1000);
 
         static_assert(bytes[0] == 0x4b);  // ReadReg16
         static_assert(bytes[1] == 0x00);  // 寄存器地址高字节

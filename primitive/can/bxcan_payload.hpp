@@ -207,7 +207,11 @@ public:
     const uint8_t * begin() const noexcept {return u8x8.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t size() const noexcept {return dlc.to_bits();}
+    uint8_t size() const noexcept {return length();}
+
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t length() const noexcept {return dlc.length();}
+
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint8_t operator[](uint8_t i) const noexcept {return u8x8[i];}
 
@@ -312,4 +316,9 @@ private:
 static_assert(sizeof(ClassicCanPayload) == 8 + 1);
 
 
+}
+
+namespace ymd{
+    class OutputStream;
+    OutputStream & operator<<(OutputStream & os, const hal::ClassicCanPayload & payload);
 }

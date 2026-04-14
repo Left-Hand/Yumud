@@ -13,7 +13,6 @@ using namespace ymd;
 __attribute__((always_inline))
 static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
     switch(radix){
-        default:
         case 10:
             return p_str;
         case 2:
@@ -28,6 +27,7 @@ static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
             p_str[1] = 'x';
             return p_str + 2;
     }
+    return p_str;
 }
 
 void OutputStream::write_byte(const uint8_t byte){
@@ -235,7 +235,8 @@ static constexpr bool is_positive(T val){
     char * p_str = buf.data();\
 
 #define PRINT_NUMERIC_END(convfunc, ...)\
-    size_t len = convfunc(p_str, val, ##__VA_ARGS__) - p_str;\
+    p_str = convfunc(p_str, val, ##__VA_ARGS__);\
+    size_t len = p_str - buf.data();\
     this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
 
 
@@ -247,13 +248,17 @@ static constexpr bool is_positive(T val){
         p_str++;}\
     PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
 
+
 #define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
     PRINT_NUMERIC_BEGIN(cap)\
-    if((config_.specifier.showbase)) [[unlikely]]{\
-        p_str = put_basealpha_lower(p_str, config_.radix);}\
-    else {if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
-        p_str[0] = ('+');\
-        p_str++;}}\
+    {\
+        if((config_.specifier.showbase)) [[unlikely]]{\
+            p_str = put_basealpha_lower(p_str, config_.radix);}\
+        else if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
+            p_str[0] = ('+');\
+            p_str++;\
+        }\
+    }\
     PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
 
 

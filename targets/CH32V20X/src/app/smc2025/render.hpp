@@ -361,8 +361,7 @@ public:
         }, objects_);
 
         if(!dirty) std::fill_n(pbuf.get(), CAMERA_SIZE.x * CAMERA_SIZE.y, 0);
-        return Image<Gray>(std::move(
-            std::reinterpret_pointer_cast<Gray[]>(pbuf)), CAMERA_SIZE);
+        return Image<Gray>(std::reinterpret_pointer_cast<Gray[]>(pbuf), CAMERA_SIZE);
     }
 
     Image<Gray> render2(const ViewPoint & view_point) const {

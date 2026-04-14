@@ -30,9 +30,9 @@ requires(sizeof(D) <= 4)
 	using size_aligned_t = std::conditional_t<std::is_signed_v<D>, int32_t, uint32_t>;
 	static_assert(sizeof(size_aligned_t) == sizeof(D));
 	if constexpr(std::is_signed_v<D>)
-		return _fmtnum_signed_fixed(str, int32_t(bits), precsion, Q);
+		return _fmtnum_signed_fixed(str, std::bit_cast<uint32_t>(static_cast<int32_t>(bits)), precsion, Q);
 	else
-		return _fmtnum_unsigned_fixed(str, uint32_t(bits), precsion, Q);
+		return _fmtnum_unsigned_fixed(str, static_cast<uint32_t>(bits), precsion, Q);
 }
 
 

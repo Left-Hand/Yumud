@@ -9,6 +9,24 @@
 
 namespace ymd::robots::jvci{
 
+namespace utils{
+static constexpr iq16 degree001_to_turns(const int32_t bits){
+    constexpr uint32_t S = 26;
+    constexpr int64_t M = static_cast<int64_t>(((1ULL << (16 + S)) + 36000 - 1) / 36000);
+    
+    const int64_t product = static_cast<int64_t>(bits) * M;
+    const int32_t turns_bits = static_cast<int32_t>(product >> S);
+    
+    return iq16::from_bits(turns_bits);
+}
+
+static constexpr int32_t turns_to_degree001(const iq16 turns){
+    const int32_t turns_bits = turns.to_bits();
+    const int32_t degree001 = static_cast<int32_t>((static_cast<int64_t>(turns_bits) * 36000LL) >> 16);
+    return degree001;
+}
+}
+
 
 struct [[nodiscard]] BooleanOk final{
     bool bit;
@@ -341,6 +359,15 @@ struct [[nodiscard]] PositionCode final {
     /// 将位置码解码为角度值（单位：°）
     [[nodiscard]] constexpr float to_degrees() const {
         return decode_from(bits, DEG_SCALE, OFFSET);
+    }
+
+    static constexpr PositionCode from_turns(const iq16 turns){
+        const auto bits = utils::turns_to_degree001(turns);
+        return PositionCode{.bits = bits};
+    }
+
+    [[nodiscard]] constexpr iq16 to_turns() const {
+        return utils::degree001_to_turns(bits);
     }
 };
 

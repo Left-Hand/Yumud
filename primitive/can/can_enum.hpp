@@ -38,6 +38,10 @@ struct [[nodiscard]] Tq final{
     [[nodiscard]] constexpr uint8_t to_num() const {return bits + 1;}
 
     [[nodiscard]] constexpr uint8_t to_bits() const {return bits;}
+
+    friend OutputStream & operator <<(OutputStream & os, const Tq & self){
+        return os << self.to_num() << "tq";
+    }
 private:
     uint8_t bits;
 };
@@ -145,6 +149,13 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
 
         // 未找到可行配置
         return None;
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const NominalBitTimmingCoeffs & self){
+        return os << os.field("prescale")(self.prescale) << os.splitter()
+            << os.field("swj")(self.swj) << os.splitter()
+            << os.field("bs1")(self.bs1) << os.splitter()
+            << os.field("bs1")(self.bs2);
     }
 };
 

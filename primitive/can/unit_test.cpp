@@ -271,6 +271,19 @@ static_assert(sizeof(hal::CanEvent) == 8);
 
 [[maybe_unused]] inline void test_bit_timming_calc(){
     {
+        static constexpr auto coeffs = hal::CanNominalBitTimmingCoeffs{
+            .prescale = 9,
+            .swj = hal::CanTq::from_num(2),
+            .bs1 = hal::CanTq::from_num(12),
+            .bs2 = hal::CanTq::from_num(3)
+        };
+
+        // 验证波特率计算正确
+        static_assert(coeffs.calc_baudrate_hz(144'000'000) == 1'000'000);
+        static_assert(coeffs.calc_sample_point().percents() == 81);
+    }
+
+    {
         static constexpr auto coeffs = hal::CanNominalBitTimmingCoeffs::try_from(
             144'000'000,
             1'000'000,

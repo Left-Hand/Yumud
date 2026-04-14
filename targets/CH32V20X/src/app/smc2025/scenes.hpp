@@ -59,7 +59,7 @@ public:
     }
     [[nodiscard]] constexpr ElementWithPlacement<AnnularSector<iq16, iq16>> spawn_annular_sector(
         const iq16 radius, const Angular<iq16> angle){
-        ASSERT(radius > 0);
+        // ASSERT(radius > 0);
         const auto v_angle = viewpoint_.rotation.to_angle();
         const Angular<iq16> start_angle = (((angle > 0_deg) ? 
                 (v_angle - 90_deg)
@@ -92,7 +92,7 @@ public:
     }
 
     [[nodiscard]] constexpr auto spawn_stright(const iq16 length){
-        ASSERT(length > 0);
+        // ASSERT(length > 0);
         const auto v_angle = viewpoint_.rotation.to_angle();
         const auto ret = RotatedRect<iq16>{
             .width = road_width_,
@@ -108,7 +108,7 @@ public:
     }
 
     [[nodiscard]] constexpr auto spawn_zebra_stright(const iq16 length){
-        ASSERT(length > 0);
+        // ASSERT(length > 0);
         const auto v_angle = viewpoint_.rotation.to_angle();
         const auto ret = RotatedZebraRect{
             .width = road_width_,

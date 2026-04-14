@@ -334,6 +334,7 @@ void Can::init(const Config & cfg){
     //原因待后续查明
     lld::can_reset(p_inst_);
     #endif
+
     lld::can_enable_rcc(inst_nth_, EN);
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
@@ -345,6 +346,8 @@ void Can::init(const Config & cfg){
                 if(may_coeffs.is_none()) ABORT_WITH_REASON("can't parse baudrate");
                 may_coeffs.unwrap();
             });
+
+            PANIC{coeffs};
 
             return coeffs;
         }else if(bit_timming.is<CanNominalBitTimmingCoeffs>()){
@@ -507,7 +510,7 @@ Result<void, Infallible> Can::set_filter_origin(
 }
 
 uint32_t can_get_aligned_bus_clk_freq(){
-    #if defined(CH32V203) || defined(CH32V303) || defined(CH32L103)
+    #if defined(CH32V203) || defined(CH32V303) || defined(CH32V307) || defined(CH32L103)
     //所有的CAN外设都使用APB1时钟
     return sys::clock::get_apb1_clk_freq();
     #elif defined(CH32H417)

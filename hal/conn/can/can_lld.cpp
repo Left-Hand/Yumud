@@ -312,7 +312,7 @@ void can_transmit_nott(
     mailbox.TXMDTR = [&]{
         uint32_t temp_txmdtr = 0;
 
-        #if 0
+        #if 1
         temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
         #else
         //dlc 为4位以上被视为ub 不需要进行掩码操作
@@ -356,7 +356,7 @@ void can_transmit_ttcan(
         temp_txmdtr_ |= static_cast<uint32_t>(tick) << 16;
         temp_txmdtr_ |= static_cast<uint32_t>(1u) << 8;
 
-        #if 0
+        #if 1
         temp_txmdtr_ |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
         #else
         //dlc 为4位以上被视为ub 不需要进行掩码操作

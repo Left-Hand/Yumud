@@ -4,7 +4,7 @@
 
 
 namespace ymd::robots::jvci{
-struct [[nodiscard]] CanFrameRquestFactory final{
+struct [[nodiscard]] CanRequestFrameFactory final{
 public:
     NodeId node_id;
 
