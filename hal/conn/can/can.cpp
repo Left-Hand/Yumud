@@ -347,8 +347,6 @@ void Can::init(const Config & cfg){
                 may_coeffs.unwrap();
             });
 
-            PANIC{coeffs};
-
             return coeffs;
         }else if(bit_timming.is<CanNominalBitTimmingCoeffs>()){
             return bit_timming.unwrap_as<CanNominalBitTimmingCoeffs>();

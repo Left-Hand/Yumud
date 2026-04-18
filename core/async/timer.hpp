@@ -21,6 +21,18 @@ struct [[nodiscard]] RepeatTimer final {
         }
     }
 
+    bool try_if(){
+        bool ret = false;
+        const auto now = clock::millis();
+        if (now >= next_trigger_) {
+            ret = true;
+            prev_invoke_ = now;
+            // 计算下一个触发点，考虑可能已经错过多个周期的情况
+            next_trigger_ = now + duration_;
+        }
+        return ret;
+    }
+
     [[nodiscard]] Milliseconds since_last_invoke() const {
         return clock::millis() - prev_invoke_;
     }

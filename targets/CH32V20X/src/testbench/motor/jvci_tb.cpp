@@ -27,9 +27,6 @@ static constexpr uint8_t LEFT_MOTOR_AXIS_ID = 0x01;
 static constexpr uint8_t RIGHT_MOTOR_AXIS_ID = 0x02;
 
 
-
-
-
 void jvci_main(){
     auto & DBG_UART = hal::usart2;
 
@@ -44,7 +41,7 @@ void jvci_main(){
     DEBUGGER.build_config()
         .set_eps(5)
         .set_splitter(",")
-        .no_brackets(EN)
+        .no_brackets(EN) 
         .no_fieldname(EN)
         .force_sync(EN)
         .finalize();
@@ -148,7 +145,7 @@ void jvci_main(){
         //     DEBUG_PRINTLN(can.try_read().unwrap());
         // }
         DEBUG_PRINTLN(turns, position_code.bits);
-        // clock::delay(20ms);
+        clock::delay(20ms);
     }
 }
 

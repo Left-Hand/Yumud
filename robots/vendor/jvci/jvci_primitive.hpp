@@ -28,17 +28,17 @@ static constexpr int32_t turns_to_degree001(const iq16 turns){
 }
 
 
-struct [[nodiscard]] BooleanOk final{
+struct [[nodiscard]] BooleanError final{
     bool bit;
 
     [[nodiscard]] constexpr bool is_ok() const {return bit == 0;}
     [[nodiscard]] constexpr bool is_err() const {return bit == 1;}
 
-    static constexpr BooleanOk ok(){
+    static constexpr BooleanError ok(){
         return {false};
     }
 
-    static constexpr BooleanOk err(){
+    static constexpr BooleanError err(){
         return {true};
     }
 };
@@ -170,72 +170,72 @@ struct [[nodiscard]] FaultIndicatorL final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_overload(this Self&& self) {
-        return ymd::make_bitfield_proxy<0, 1, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<0, 1, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto phase_resistor_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<1, 2, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<1, 2, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto motor_phase_loss(this Self&& self) {
-        return ymd::make_bitfield_proxy<2, 3, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<2, 3, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_fluctuate(this Self&& self) {
-        return ymd::make_bitfield_proxy<3, 4, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<3, 4, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_inductance_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<4, 5, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<4, 5, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_bandwidth_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<5, 6, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<5, 6, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_spi_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<6, 7, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<6, 7, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_type_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<7, 8, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<7, 8, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_uncalibrated(this Self&& self) {
-        return ymd::make_bitfield_proxy<8, 9, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<8, 9, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_data_unread(this Self&& self) {
-        return ymd::make_bitfield_proxy<9, 10, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<9, 10, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_cpr_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<10, 11, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<10, 11, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto need_calibrate_before_loop(this Self&& self) {
-        return ymd::make_bitfield_proxy<11, 12, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<11, 12, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto run_state_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<12, 13, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<12, 13, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_signal_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<15, 16, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<15, 16, BooleanError>(self.bits);
     }
 };
 
@@ -246,37 +246,37 @@ struct [[nodiscard]] FaultIndicatorH final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto second_encoder_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<1, 2, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<1, 2, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto jc2804_driver_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<3, 4, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<3, 4, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto mos_overtemp_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<4, 5, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<4, 5, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto motor_overtemp_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<5, 6, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<5, 6, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto under_voltage_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<6, 7, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<6, 7, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto over_voltage_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<7, 8, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<7, 8, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto over_current_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<8, 9, BooleanOk>(self.bits);
+        return ymd::make_bitfield_proxy<8, 9, BooleanError>(self.bits);
     }
 
 };

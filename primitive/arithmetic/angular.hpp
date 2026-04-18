@@ -71,7 +71,8 @@ struct [[nodiscard]] Angular{
 	}
 
 	[[nodiscard]] constexpr T to_radians() const noexcept{
-		return turns_ * static_cast<T>(TAU);
+		static constexpr T TAU_T = static_cast<T>(TAU);
+		return turns_ * TAU_T;
 	}
 
 	[[nodiscard]] constexpr T to_turns() const noexcept{
