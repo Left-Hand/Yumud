@@ -46,7 +46,7 @@ struct [[nodiscard]] Angular{
 	}
 
 	static constexpr Angular from_radians(const T radians) noexcept{
-		constexpr T INV_TAU = static_cast<T>(1.0 / (2.0 * 3.1415926535897932384626433832795));
+		constexpr T INV_TAU = static_cast<T>(1.0 / (2.0 * M_PI));
 		return _make_angular_from_turns(radians * INV_TAU);
 	}
 

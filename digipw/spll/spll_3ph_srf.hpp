@@ -15,6 +15,8 @@
 //#############################################################################
 #pragma once
 
+#include "core/math/realmath.hpp"
+
 // https://dev.ti.com/tirex/explore/node?node=A__ALGTB-WevzhwhtRaHy71Iw__digital_power_c2000ware_sdk_software_package__5C6SEVO__LATEST
 
 namespace ymd::digipw{

@@ -203,11 +203,11 @@ typedef struct{
         fo=fn+ylf[0];
 
         theta=theta + (fo*delta_t)*
-                        (float)(2.0*3.1415926f);
+                        (float)(2.0*M_PI);
 
-        if(theta>(float)(2.0*3.1415926f))
+        if(theta>(float)(2.0*M_PI))
         {
-            theta=theta-(float)(2.0*3.1415926f);
+            theta=theta-(float)(2.0*M_PI);
         }
 
         sine=(float)sinf(theta);
@@ -228,7 +228,7 @@ typedef struct{
 
         w_dash = wc + x3[0];
 
-        fn = w_dash / (2.0*3.1415926f);
+        fn = w_dash / (2.0*M_PI);
 
         osgx = (float)(2.0f*k*w_dash*delta_t);
         osgy = (float)(w_dash * delta_t * w_dash *

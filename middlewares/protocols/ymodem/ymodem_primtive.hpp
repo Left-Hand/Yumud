@@ -5,6 +5,7 @@
 
 //参考:
 // https://cloud.tencent.com/developer/article/1940927
+
 namespace ymd::ymodem{
 
 enum class [[nodiscard]] Command:uint8_t{

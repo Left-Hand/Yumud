@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include "core/math/float/fp32.hpp"
 
 namespace ymd::mavlink::msgs{
     
-struct Heartbeat final {
+struct [[nodiscard]] Heartbeat final {
     uint8_t type;
     uint8_t autopilot;
     uint8_t base_mode;
@@ -13,7 +14,7 @@ struct Heartbeat final {
     uint8_t mavlink_version;
 };
 
-struct SysTime final {
+struct [[nodiscard]] SysTime final {
     uint64_t time_unix_usec;
     uint32_t time_boot_ms;
     uint16_t time_offset;
@@ -26,38 +27,38 @@ struct SysTime final {
 };
 
 
-struct SetPositionTargetLocalNed final {
+struct [[nodiscard]] SetPositionTargetLocalNed final {
     uint32_t time_boot_ms;
     uint32_t target_system;
     uint32_t target_component;
     uint32_t coordinate_frame;
     uint16_t type_mask;
-    fp32 x;
-    fp32 y;
-    fp32 z;
-    fp32 vx;
-    fp32 vy;
-    fp32 vz;
-    fp32 afx;
-    fp32 afy;
-    fp32 afz;
-    fp32 yaw;
-    fp32 yaw_rate;
+    math::fp32 x;
+    math::fp32 y;
+    math::fp32 z;
+    math::fp32 vx;
+    math::fp32 vy;
+    math::fp32 vz;
+    math::fp32 afx;
+    math::fp32 afy;
+    math::fp32 afz;
+    math::fp32 yaw;
+    math::fp32 yaw_rate;
 };
 
-struct SetAttitudeTarget final {
+struct [[nodiscard]] SetAttitudeTarget final {
     uint32_t time_boot_ms;
     uint8_t target_system;
     uint8_t target_component;
     uint8_t type_mask;
-    fp32 q[4]; // Quaternion
-    fp32 body_roll_rate;
-    fp32 body_pitch_rate;
-    fp32 body_yaw_rate;
-    fp32 thrust;
+    math::fp32 q[4]; // Quaternion
+    math::fp32 body_roll_rate;
+    math::fp32 body_pitch_rate;
+    math::fp32 body_yaw_rate;
+    math::fp32 thrust;
 };
 
-struct RcChannelsOverride final {
+struct [[nodiscard]] RcChannelsOverride final {
     uint8_t target_system;
     uint8_t target_component;
     uint16_t chan1_raw;
@@ -70,17 +71,17 @@ struct RcChannelsOverride final {
     uint16_t chan8_raw;
 };
 
-struct LocalPositionNed final {
+struct [[nodiscard]] LocalPositionNed final {
     uint32_t time_boot_ms;
-    fp32 x;
-    fp32 y;
-    fp32 z;
-    fp32 vx;
-    fp32 vy;
-    fp32 vz;
+    math::fp32 x;
+    math::fp32 y;
+    math::fp32 z;
+    math::fp32 vx;
+    math::fp32 vy;
+    math::fp32 vz;
 };
 
-struct GlobalPositionInt final {
+struct [[nodiscard]] GlobalPositionInt final {
     uint32_t time_boot_ms;
     int32_t lat; // Latitude in degrees * 1E7
     int32_t lon; // Longitude in degrees * 1E7
@@ -92,17 +93,17 @@ struct GlobalPositionInt final {
     uint16_t hdg; // Compass heading in degrees * 100
 };
 
-struct Attitude final {
+struct [[nodiscard]] Attitude final {
     uint32_t time_boot_ms;
-    fp32 roll;
-    fp32 pitch;
-    fp32 yaw;
-    fp32 rollspeed;
-    fp32 pitchspeed;
-    fp32 yawspeed;
+    math::fp32 roll;
+    math::fp32 pitch;
+    math::fp32 yaw;
+    math::fp32 rollspeed;
+    math::fp32 pitchspeed;
+    math::fp32 yawspeed;
 };
 
-struct RawImu final {
+struct [[nodiscard]] RawImu final {
     uint64_t time_usec;
     int16_t xacc;
     int16_t yacc;
@@ -115,7 +116,7 @@ struct RawImu final {
     int16_t zmag;
 };
 
-struct GpsRawInt final {
+struct [[nodiscard]] GpsRawInt final {
     uint64_t time_usec;
     uint8_t fix_type;
     int32_t lat;
@@ -128,7 +129,7 @@ struct GpsRawInt final {
     uint8_t satellites_visible;
 };
 
-struct BatteryStatus final {
+struct [[nodiscard]] BatteryStatus final {
     uint32_t time_boot_ms;
     uint16_t voltage;
     int16_t current;
@@ -136,21 +137,21 @@ struct BatteryStatus final {
     int16_t battery_remaining;
 };
 
-struct CommandLong final {
+struct [[nodiscard]] CommandLong final {
     uint8_t target_system;
     uint8_t target_component;
     uint16_t command;
     uint8_t confirmation;
-    fp32 param1;
-    fp32 param2;
-    fp32 param3;
-    fp32 param4;
-    fp32 param5;
-    fp32 param6;
-    fp32 param7;
+    math::fp32 param1;
+    math::fp32 param2;
+    math::fp32 param3;
+    math::fp32 param4;
+    math::fp32 param5;
+    math::fp32 param6;
+    math::fp32 param7;
 };
 
-struct CommandAck final {
+struct [[nodiscard]] CommandAck final {
     uint16_t command;
     uint8_t result;
 };

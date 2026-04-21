@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::foc{
 class SogiF{

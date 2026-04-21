@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "core/math/realmath.hpp"
+
 // https://dev.ti.com/tirex/explore/node?node=A__AK0MJHI91C6lJRUq2gW.QQ__digital_power_c2000ware_sdk_software_package__5C6SEVO__LATEST
 
 namespace ymd::digipw{
@@ -210,12 +212,12 @@ typedef struct{
 
         theta[0] = theta[1] +
                 ((fo * delta_t)
-                * (float)(2.0f * 3.1415926f));
+                * (float)(2.0f * M_PI));
 
-        if(theta[0] > (float)(2.0f * 3.1415926f))
+        if(theta[0] > (float)(2.0f * M_PI))
         {
             theta[0] = theta[0] -
-                    (float)(2.0f * 3.1415926f);
+                    (float)(2.0f * M_PI);
         }
 
 

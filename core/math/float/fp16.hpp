@@ -29,7 +29,7 @@ struct alignas(2) [[nodiscard]] fp16 final{
     }
 
     constexpr fp16(int int_val){
-        *this = int_to_fp16(int_val);
+        *this = int32_to_fp16(int_val);
     }
     constexpr fp16(const double val):fp16(static_cast<float>(val)){};
 
@@ -99,69 +99,59 @@ struct alignas(2) [[nodiscard]] fp16 final{
 
 private:
 
-    static constexpr fp16 int_to_fp16(int int_val){
+    static constexpr fp16 int32_to_fp16(int32_t int_val){
         fp16 ret = fp16();
-        // 确保值在可表示的范围内
         if (int_val == 0) {
-            ret.exp = 0;
-            ret.frac = 0;
-            ret.sign = 0;
-        } else if (int_val < 0) {
+            return ret;
+        }
+
+        if (int_val < 0) {
             ret.sign = 1;
             int_val = -int_val;
-        } else {
-            ret.sign = 0;
         }
 
-        // fp16的指数范围是-14 ~ 15, 对于int值，我们假设它在[-32768, 32767]范围内
-        // 这意味着我们最多有15位有效数字，这可以通过右移来适应fp16的10位小数部分
-
-        // 计算指数
-        int shift = 0;
-        while (int_val >= (1 << 10)) {
-            int_val >>= 1;
-            shift++;
+        // 找到最高有效位的位置
+        int exp = 0;
+        uint32_t abs_val = int_val;
+        while (abs_val > 0x7FF) { // 超过10位尾数 + 隐含整数位
+            abs_val >>= 1;
+            exp++;
         }
 
-        // 确保指数在fp16的范围内
-        if (shift > 15) {
-            ret.exp = 0x1F; // 溢出
-            ret.frac = 0;
-        } else if (shift < -14) {
-            ret.exp = 0; // 下溢
+        if (exp > 15) { // 溢出
+            ret.exp = 0x1F;
             ret.frac = 0;
         } else {
-            ret.exp = shift + 15;
-            ret.frac = int_val;
+            ret.exp = exp + 15;
+            ret.frac = abs_val & 0x3FF;
         }
 
         return ret;
     }
 
     static constexpr fp16 f32_to_fp16(const float f_val){
-        fp16 ret;
+        fp16 ret = fp16();
         uint32_t bits = std::bit_cast<uint32_t>(f_val);
 
         // 提取符号位
+        
         ret.sign = (bits >> 31) & 0x1;
-
-        // 提取指数和尾数
+// 提取指数和尾数
         int exponent = ((bits >> 23) & 0xFF) - 127;
         uint32_t mantissa = bits & 0x007FFFFF;
 
         // 转换到fp16格式
-        if (exponent > 30) { // 溢出处理
+        if (exponent > 15) { // 溢出处理
             ret.exp = 0x1F;
             ret.frac = 0;
-        } else if (exponent <= -24) { // 下溢处理
+        } else if (exponent < -14) { // 下溢处理
             ret.exp = 0;
             ret.frac = 0;
         } else {
-            // 移动指数和尾数
-            exponent += 15;
-            mantissa >>= (23 - (exponent - 15));
-            ret.exp = exponent;
-            ret.frac = mantissa;
+            // 调整指数：fp32的-127偏移改为fp16的15偏移
+            ret.exp = exponent + 15;
+            // 从23位尾数截断到10位尾数
+            ret.frac = mantissa >> 13;
         }
 
         return ret;
