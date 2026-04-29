@@ -112,7 +112,7 @@ struct [[nodiscard]] IntDeformatter{
 			case 16: return parse_hex_no_show_base(str);
 		}
 
-		__builtin_unreachable();
+		return Err(DeformatError::InvalidRadix);
 	}
 
 	static constexpr DestringResult<Radix> parse_radix(const StringView str){
@@ -125,31 +125,31 @@ struct [[nodiscard]] IntDeformatter{
 		switch(str[1]){
 			case 'x':
 			case 'X':
-				if(str_length <= 2) return Err(DestringError::HexBaseOnly);
+				if(str_length <= 2) return Err(DeformatError::HexBaseOnly);
 				return Ok(Radix(Radix::Kind::Hex));
 				break;
 			case 'b': 
 			case 'B':
-				if(str_length <= 2) return Err(DestringError::BinBaseOnly);
+				if(str_length <= 2) return Err(DeformatError::BinBaseOnly);
 				return Ok(Radix(Radix::Kind::Bin));
 				break;
 			case 'o': 
 			case 'O':
-				if(str_length <= 2) return Err(DestringError::OctBaseOnly);
+				if(str_length <= 2) return Err(DeformatError::OctBaseOnly);
 				return Ok(Radix(Radix::Kind::Oct));
 				break;
 			case '0' ... '9':
 				return Ok(Radix(Radix::Kind::Dec));
 				break;
 			default:
-				return Err(DestringError::InvalidChar);
+				return Err(DeformatError::InvalidChar);
 		}
 	}
 
 	static constexpr DestringResult<T> parse_dec(const StringView str) {
 
 		const auto length = str.length();
-		if(length == 0) return Err(DestringError::EmptyString);
+		if(length == 0) return Err(DeformatError::EmptyString);
 
 		U unsigned_temp = 0;
 		char existing_sign = '\0';
@@ -171,14 +171,14 @@ struct [[nodiscard]] IntDeformatter{
 					return Ok(compute_final());
 				case '-':
 					if constexpr(std::is_unsigned_v<T>)
-						return Err(DestringError::NegForUnsigned);
+						return Err(DeformatError::NegForUnsigned);
 					if(existing_sign != 0) 
-						return Err(DestringError::MultiplyNegative);
+						return Err(DeformatError::MultiplyNegative);
 					existing_sign = '-';
 					break;
 				case '+':
 					if(existing_sign != 0) 
-						return Err(DestringError::MultiplyPositive);
+						return Err(DeformatError::MultiplyPositive);
 					existing_sign = '+';
 					break;
 				case '0' ... '9':{
@@ -192,21 +192,21 @@ struct [[nodiscard]] IntDeformatter{
 						constexpr U MAX_INT_NUM = static_cast<U>(std::numeric_limits<T>::max());
 						if constexpr(std::is_signed_v<T>){
 							if((existing_sign == '-') and (unsigned_temp > MAX_INT_NUM + 1)) [[unlikely]]
-								return Err(DestringError::Underflow);
+								return Err(DeformatError::Underflow);
 						}
 						if((unsigned_temp > MAX_INT_NUM)) [[unlikely]]
-							return Err(DestringError::Overflow);
+							return Err(DeformatError::Overflow);
 					}
 
 					break;
 				}
 				case '.':
-					return Err(DestringError::UnexpectedDotInInteger);
+					return Err(DeformatError::UnexpectedDotInInteger);
 				case 'a' ... 'z':
 				case 'A' ... 'Z':
-					return Err(DestringError::UnexpectedAlpha);
+					return Err(DeformatError::UnexpectedAlpha);
 				default:
-					return Err(DestringError::InvalidChar);
+					return Err(DeformatError::InvalidChar);
 			}
 		}
 		return Ok(compute_final());
@@ -216,12 +216,12 @@ struct [[nodiscard]] IntDeformatter{
 		static_assert(std::is_unsigned_v<U>, "hex must be unsigned");
 
 		const auto str_length = str.length();
-		if(str_length == 0) return Err(DestringError::EmptyString);
+		if(str_length == 0) return Err(DeformatError::EmptyString);
 
 		U temp = 0;
 
 		//nibble calc
-		if(str_length > sizeof(T) * 2) return Err(DestringError::StrTooLong);
+		if(str_length > sizeof(T) * 2) return Err(DeformatError::StrTooLong);
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i ++){
@@ -230,7 +230,7 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t nibble = 0;
 			switch(chr){
 				case '\0':
-					return Err(DestringError::InvalidNullTerminator);
+					return Err(DeformatError::InvalidNullTerminator);
 				case '0' ... '9':
 					nibble = chr - '0';
 					break;
@@ -242,7 +242,7 @@ struct [[nodiscard]] IntDeformatter{
 					nibble = chr - 'A' + 10;
 					break;
 				default:
-					return Err(DestringError::InvalidChar);
+					return Err(DeformatError::InvalidChar);
 			}
 
 			temp = (temp << 4) | nibble;
@@ -255,14 +255,14 @@ struct [[nodiscard]] IntDeformatter{
 		static_assert(std::is_unsigned_v<U>, "oct must be unsigned");
 
 		const auto str_length = str.length();
-		if(str_length == 0) return Err(DestringError::EmptyString);
+		if(str_length == 0) return Err(DeformatError::EmptyString);
 
 		U temp = 0;
 
 		// 八进制：每个字符3位，但需要处理前导零
 		// 最大长度 = ceil(sizeof(T) * 8 / 3)
 		constexpr size_t MAX_OCT_DIGITS = (sizeof(T) * 8 + 2) / 3; // 向上取整
-		if(str_length > MAX_OCT_DIGITS) return Err(DestringError::StrTooLong);
+		if(str_length > MAX_OCT_DIGITS) return Err(DeformatError::StrTooLong);
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i++) {
@@ -271,14 +271,14 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t digit = 0;
 			switch(chr) {
 				case '\0':
-					return Err(DestringError::InvalidNullTerminator);
+					return Err(DeformatError::InvalidNullTerminator);
 				case '0' ... '7':
 					digit = chr - '0';
 					break;
 				case '8' ... '9':
-					return Err(DestringError::DigitExceedsOct);
+					return Err(DeformatError::DigitExceedsOct);
 				default:
-					return Err(DestringError::InvalidChar);
+					return Err(DeformatError::InvalidChar);
 			}
 
 			// 检查移位是否会导致溢出（对于U可能小于T的情况）
@@ -286,7 +286,7 @@ struct [[nodiscard]] IntDeformatter{
 				// 如果U不比T大，需要检查移位溢出
 				constexpr U max_shift_safe = std::numeric_limits<U>::max() >> 3;
 				if (temp > max_shift_safe) {
-					return Err(DestringError::Overflow);
+					return Err(DeformatError::Overflow);
 				}
 			}
 			
@@ -295,7 +295,7 @@ struct [[nodiscard]] IntDeformatter{
 
 		// 最终检查是否适合T
 		if (temp > std::numeric_limits<T>::max()) {
-			return Err(DestringError::Overflow);
+			return Err(DeformatError::Overflow);
 		}
 
 		return Ok(static_cast<T>(temp));
@@ -305,12 +305,12 @@ struct [[nodiscard]] IntDeformatter{
 		static_assert(std::is_unsigned_v<U>, "bin must be unsigned");
 
 		const auto str_length = str.length();
-		if(str_length == 0) return Err(DestringError::EmptyString);
+		if(str_length == 0) return Err(DeformatError::EmptyString);
 
 		U temp = 0;
 
 		// 二进制：每个字符1位
-		if(str_length > sizeof(T) * 8) return Err(DestringError::StrTooLong);
+		if(str_length > sizeof(T) * 8) return Err(DeformatError::StrTooLong);
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i++) {
@@ -319,14 +319,14 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t bit = 0;
 			switch(chr) {
 				case '\0':
-					return Err(DestringError::InvalidNullTerminator);
+					return Err(DeformatError::InvalidNullTerminator);
 				case '0' ... '1':
 					bit = chr - '0';
 					break;
 				case '2' ... '9':
-					return Err(DestringError::DigitExceedsBin);
+					return Err(DeformatError::DigitExceedsBin);
 				default:
-					return Err(DestringError::InvalidChar);
+					return Err(DeformatError::InvalidChar);
 			}
 			
 			temp = (temp << 1) | bit;
@@ -350,22 +350,22 @@ struct [[nodiscard]] IntDeformatter<bool>{
 					case '1':
 						return Ok(true);
 					case '-':
-						return Err(DestringError::NegativeBoolean);
+						return Err(DeformatError::NegativeBoolean);
 					case '+':
-						return Err(DestringError::PositiveBoolean);
+						return Err(DeformatError::PositiveBoolean);
 					default:	
-						return Err(DestringError::InvalidBooleanChar);
+						return Err(DeformatError::InvalidBooleanChar);
 				}
 			case 4:
 				if(str != TRUE_STR)
-					return Err(DestringError::InvalidBooleanAlpha);
+					return Err(DeformatError::InvalidBooleanAlpha);
 				return Ok(true);
 			case 5:
 				if(str != FALSE_STR)
-					return Err(DestringError::InvalidBooleanAlpha);
+					return Err(DeformatError::InvalidBooleanAlpha);
 				return Ok(false);
 		}
-		return Err(DestringError::InvalidBooleanLength);
+		return Err(DeformatError::InvalidBooleanLength);
 	}
 };
 
@@ -403,7 +403,7 @@ struct [[nodiscard]] FixedPointSynthesizer{
 			return Ok(apply_sign(static_cast<T>(dump.digit_part)));
 		}else{
 			if(dump.num_frac_digits >= TABLE_LEN){
-				return Err(DestringError::FracTooLong);
+				return Err(DeformatError::FracTooLong);
 			}
 
 			const T res = T::from_bits(
@@ -434,15 +434,15 @@ struct [[nodiscard]] FixedPointDeformatter{
 
 		//进行防溢出检查
 		if constexpr(std::is_unsigned_v<D>){
-			if(dump.is_negative) return Err(DestringError::NegForUnsigned);
-			if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+			if(dump.is_negative) return Err(DeformatError::NegForUnsigned);
+			if(dump.digit_part > DIGIT_MAX) return Err(DeformatError::Overflow);
 		}else{
 			if(dump.is_negative){
 				if(dump.digit_part > static_cast<uint32_t>(DIGIT_MAX + 1u)){
-					return Err(DestringError::Underflow);
+					return Err(DeformatError::Underflow);
 				}
 			}else{
-				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+				if(dump.digit_part > DIGIT_MAX) return Err(DeformatError::Overflow);
 			}
 		}
 

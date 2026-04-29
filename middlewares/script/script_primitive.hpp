@@ -31,7 +31,7 @@ enum class [[nodiscard]] EntryInteractError: uint8_t{
 
 DEF_DERIVE_DEBUG(EntryInteractError)
 
-DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DestringError)
+DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DeformatError)
 
 template<typename T = void>
 using IResult = Result<T, Error>;

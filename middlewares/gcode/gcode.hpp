@@ -23,7 +23,7 @@ enum class [[nodiscard]] GcodeParseError:uint8_t{
 
 DEF_DERIVE_DEBUG(GcodeParseError)
 
-DEF_ERROR_WITH_KINDS(Error, GcodeParseError, strconv2::DestringError)
+DEF_ERROR_WITH_KINDS(Error, GcodeParseError, strconv2::DeformatError)
 
 template<typename T = void>
 using IResult = Result<T, Error>;   
@@ -245,7 +245,7 @@ struct GcodeValue{
         using namespace strconv2;
 
 		if (str.length() == 0) {	
-			return Err(DestringError::EmptyString);
+			return Err(DeformatError::EmptyString);
 		}
 
 		uint64_t digit_part = 0;
@@ -259,7 +259,7 @@ struct GcodeValue{
 			
 			switch (chr) {
 				case '\0':
-					return Err(DestringError::InvalidNullTerminator);
+					return Err(DeformatError::InvalidNullTerminator);
 				case '0' ... '9':{
 
 					const uint8_t digit = chr - '0';
@@ -275,20 +275,20 @@ struct GcodeValue{
 						digit_part = digit_part * 10u + digit;
 						// Check integer part overflow
 						if (digit_part > MAX_INT_NUM) {
-							return Err(DestringError::DigitOverflow);
+							return Err(DeformatError::DigitOverflow);
 						}
 					} else {
 						specifiers.has_frac_part = true;
 						frac_part = frac_part * 10u + digit;
 						// Check fractional part overflow
 						if (frac_part > MAX_INT_NUM) {
-							return Err(DestringError::FracOverflow);
+							return Err(DeformatError::FracOverflow);
 						}
 
 						if(num_frac_digits < std::size(str::POW10_TABLE)){
 							num_frac_digits++;
 						}else{
-							return Err(DestringError::FracTooLong);
+							return Err(DeformatError::FracTooLong);
 						}
 					}
 					break;
@@ -297,25 +297,25 @@ struct GcodeValue{
 				case '+':
 				case '-':{
 					if(specifiers.existing_sign != '\0'){
-						if(chr == '-') return Err(DestringError::MultiplyNegative);
-						else return Err(DestringError::MultiplyPositive);
+						if(chr == '-') return Err(DeformatError::MultiplyNegative);
+						else return Err(DeformatError::MultiplyPositive);
 					}
 					specifiers.existing_sign = chr;
 					break;
 				}
 				case '.':  // Handle decimal dot
 					if (specifiers.has_dot) [[unlikely]]
-						return Err(DestringError::MultipleDot);  // Multiple decimal dots
+						return Err(DeformatError::MultipleDot);  // Multiple decimal dots
 					specifiers.has_dot = true;
 					break;
 				case 'a' ... 'z':
-					return Err(DestringError::UnexpectedAlpha);
+					return Err(DeformatError::UnexpectedAlpha);
 				case 'A' ... 'Z':
-					return Err(DestringError::UnexpectedAlpha);
+					return Err(DeformatError::UnexpectedAlpha);
 				case ' ':
-					return Err(DestringError::UnexpectedSpace);
+					return Err(DeformatError::UnexpectedSpace);
 				default:  // Invalid characters
-					return Err(DestringError::UnexpectedChar);
+					return Err(DeformatError::UnexpectedChar);
 			}
 
 		}
@@ -323,10 +323,10 @@ struct GcodeValue{
 		if(specifiers.has_dot){
 			//有小数点的情况不能没有小数部分
 			if((specifiers.has_frac_part == false)) [[unlikely]]
-				return Err(DestringError::NoFracPart);
+				return Err(DeformatError::NoFracPart);
 		}else{
 			if (specifiers.has_digit_part == false) [[unlikely]]
-				return Err(DestringError::NoDigitPart);  // 符号位和小数点之间没有有效数字
+				return Err(DeformatError::NoDigitPart);  // 符号位和小数点之间没有有效数字
 		}
 
 

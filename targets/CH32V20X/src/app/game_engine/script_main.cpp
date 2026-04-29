@@ -68,13 +68,13 @@ struct StringEntitySeeker{
     ){
         const size_t left = ({
             const auto may_left = beginner.find_intro(str);
-            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            if(may_left.is_none()) return Err(DeformatError::BeginnerNotFounded);
             may_left.unwrap();
         });
 
         const size_t right = ({
             const auto may_right = terminator.find_intro(str);
-            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            if(may_right.is_none()) return Err(DeformatError::TerminatorNotFounded);
             may_right.unwrap();
         });
 
@@ -92,13 +92,13 @@ struct StringEntitySeeker<StringView>{
     ){
         const size_t left = ({
             const auto may_left = beginner.find_intro(str);
-            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            if(may_left.is_none()) return Err(DeformatError::BeginnerNotFounded);
             may_left.unwrap();
         });
 
         const size_t right = ({
             const auto may_right = terminator.find_intro(str);
-            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            if(may_right.is_none()) return Err(DeformatError::TerminatorNotFounded);
             may_right.unwrap();
         });
 

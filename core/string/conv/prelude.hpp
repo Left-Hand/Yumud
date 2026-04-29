@@ -5,7 +5,7 @@
 
 namespace ymd::strconv2{
 
-enum class DestringError:uint8_t{
+enum class DeformatError:uint8_t{
     InvalidNumber,
     InvalidBooleanNum,         // 布尔值只能为0或1
     InvalidBooleanAlpha,       // 布尔值只能为true或false
@@ -43,6 +43,7 @@ enum class DestringError:uint8_t{
 	HexBaseOnly,
 	BinBaseOnly,
 	OctBaseOnly,
+	InvalidRadix,
 
 	InvalidNullTerminator,//字符串中不能出现空结束符 这是c的糟粕
 	StrTooLong,
@@ -50,7 +51,7 @@ enum class DestringError:uint8_t{
 	DigitExceedsOct,
 };
 
-DEF_DERIVE_DEBUG(DestringError)
+DEF_DERIVE_DEBUG(DeformatError)
 
 enum class SerStringError:uint8_t{
 	OutOfMemory
@@ -59,7 +60,7 @@ enum class SerStringError:uint8_t{
 DEF_DERIVE_DEBUG(SerStringError)
 
 template<typename T = void>
-using DestringResult = Result<T,DestringError>;
+using DestringResult = Result<T,DeformatError>;
 
 template<typename T = void>
 using SerStringResult = Result<T,SerStringError>;

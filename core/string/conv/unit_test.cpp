@@ -13,13 +13,13 @@ static constexpr D err_bits(const D a, const D b){
 namespace {
 
 [[maybe_unused]] static void test_radix(){
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0x").unwrap_err() == DestringError::HexBaseOnly);
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0b").unwrap_err() == DestringError::BinBaseOnly);
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0o").unwrap_err() == DestringError::OctBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0x").unwrap_err() == DeformatError::HexBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0b").unwrap_err() == DeformatError::BinBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0o").unwrap_err() == DeformatError::OctBaseOnly);
 
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0X").unwrap_err() == DestringError::HexBaseOnly);
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0B").unwrap_err() == DestringError::BinBaseOnly);
-    static_assert(IntDeformatter<uint32_t>::parse_radix("0O").unwrap_err() == DestringError::OctBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0X").unwrap_err() == DeformatError::HexBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0B").unwrap_err() == DeformatError::BinBaseOnly);
+    static_assert(IntDeformatter<uint32_t>::parse_radix("0O").unwrap_err() == DeformatError::OctBaseOnly);
 
     static_assert(IntDeformatter<uint32_t>::parse_radix("0B101").unwrap() == Radix(Radix::Kind::Bin));
     static_assert(IntDeformatter<uint32_t>::parse_radix("0x123").unwrap() == Radix(Radix::Kind::Hex));
@@ -43,7 +43,7 @@ namespace {
     static_assert(IntDeformatter<uint8_t>::parse_hex_no_show_base("00").unwrap() == 0x00);
     static_assert(IntDeformatter<uint8_t>::parse_hex_no_show_base("f0").unwrap() == 0xf0);
     static_assert(IntDeformatter<uint8_t>::parse_hex_no_show_base("ff").unwrap() == 0xff);
-    static_assert(IntDeformatter<uint8_t>::parse_hex_no_show_base("fff").unwrap_err() == DestringError::StrTooLong);
+    static_assert(IntDeformatter<uint8_t>::parse_hex_no_show_base("fff").unwrap_err() == DeformatError::StrTooLong);
 }
 
 [[maybe_unused]] static void test_oct(){
@@ -57,16 +57,16 @@ namespace {
     // 8位类型测试
     static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("000").unwrap() == 0x00);
     static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("377").unwrap() == 0xff);  // 377 octal = 255 decimal
-    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("400").unwrap_err() == DestringError::Overflow);  // 400 > 377
+    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("400").unwrap_err() == DeformatError::Overflow);  // 400 > 377
 
     // 边界和错误测试
-    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("").unwrap_err() == DestringError::EmptyString);
-    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("1234").unwrap_err() == DestringError::StrTooLong);  // 4 > max_digits(3)
-    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("8").unwrap_err() == DestringError::DigitExceedsOct);  // 无效八进制字符
-    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("9").unwrap_err() == DestringError::DigitExceedsOct);
+    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("").unwrap_err() == DeformatError::EmptyString);
+    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("1234").unwrap_err() == DeformatError::StrTooLong);  // 4 > max_digits(3)
+    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("8").unwrap_err() == DeformatError::DigitExceedsOct);  // 无效八进制字符
+    static_assert(IntDeformatter<uint8_t>::parse_oct_no_show_base("9").unwrap_err() == DeformatError::DigitExceedsOct);
 
     // 前导零测试
-    static_assert(IntDeformatter<uint16_t>::parse_oct_no_show_base("0017777").unwrap_err() == DestringError::StrTooLong);  // 前导零
+    static_assert(IntDeformatter<uint16_t>::parse_oct_no_show_base("0017777").unwrap_err() == DeformatError::StrTooLong);  // 前导零
     static_assert(IntDeformatter<uint16_t>::parse_oct_no_show_base("17777").unwrap() == 017777);    // 无前导零
 
     // 各种值测试
@@ -76,7 +76,7 @@ namespace {
 
     // 最大长度测试
     static_assert(IntDeformatter<uint32_t>::parse_oct_no_show_base("77777777777").unwrap_err() 
-        == DestringError::Overflow);  // 超过32位
+        == DeformatError::Overflow);  // 超过32位
 }
 
 [[maybe_unused]] static void test_bin(){
@@ -91,13 +91,13 @@ namespace {
     static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("00000000").unwrap() == 0x00);
     static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("11110000").unwrap() == 0xf0);
     static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("11111111").unwrap() == 0xff);
-    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("111111111").unwrap_err() == DestringError::StrTooLong);  // 9 > 8
+    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("111111111").unwrap_err() == DeformatError::StrTooLong);  // 9 > 8
 
     // 边界和错误测试
-    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("").unwrap_err() == DestringError::EmptyString);
-    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("2").unwrap_err() == DestringError::DigitExceedsBin);  // 无效二进制字符
-    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("a").unwrap_err() == DestringError::InvalidChar);
-    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("10101012").unwrap_err() == DestringError::DigitExceedsBin);
+    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("").unwrap_err() == DeformatError::EmptyString);
+    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("2").unwrap_err() == DeformatError::DigitExceedsBin);  // 无效二进制字符
+    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("a").unwrap_err() == DeformatError::InvalidChar);
+    static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("10101012").unwrap_err() == DeformatError::DigitExceedsBin);
 
     // 各种模式测试
     static_assert(IntDeformatter<uint8_t>::parse_bin_no_show_base("10101010").unwrap() == 0xaa);
@@ -133,9 +133,9 @@ namespace {
         .unwrap().to_bits(), (-1.7_iq16).to_bits()) < 2);
     static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("11111.7")
         .unwrap().to_bits(), (11111.7_iq16).to_bits()) < 2);
-    static_assert(FixedPointDeformatter<16, int32_t>::parse("41111.5").unwrap_err() == DestringError::Overflow);
-    static_assert(FixedPointDeformatter<16, int32_t>::parse("-41111.5").unwrap_err() == DestringError::Underflow);
-    static_assert(FixedPointDeformatter<16, uint32_t>::parse("-41111.5").unwrap_err() == DestringError::NegForUnsigned);
+    static_assert(FixedPointDeformatter<16, int32_t>::parse("41111.5").unwrap_err() == DeformatError::Overflow);
+    static_assert(FixedPointDeformatter<16, int32_t>::parse("-41111.5").unwrap_err() == DeformatError::Underflow);
+    static_assert(FixedPointDeformatter<16, uint32_t>::parse("-41111.5").unwrap_err() == DeformatError::NegForUnsigned);
     static_assert(FixedPointDeformatter<16, int32_t>::DIGIT_MAX == 32767);
 
 }
