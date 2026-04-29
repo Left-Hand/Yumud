@@ -70,9 +70,9 @@ public:
                 .finalize();
 
             os_ << StringView("<<= ") << strs;
+            os_ << StringView("\r\n----\r\n");
         }
 
-        os_ << StringView("\r\n----\r\n");
 
         return [&]{
             if(!this->echo_en_){

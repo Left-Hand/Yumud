@@ -259,7 +259,7 @@ struct GcodeValue{
 			
 			switch (chr) {
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DestringError::InvalidNullTerminator);
 				case '0' ... '9':{
 
 					const uint8_t digit = chr - '0';

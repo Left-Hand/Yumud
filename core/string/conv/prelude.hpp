@@ -44,7 +44,7 @@ enum class DestringError:uint8_t{
 	BinBaseOnly,
 	OctBaseOnly,
 
-	NullTerminatorNotAllowed,//字符串中不能出现空结束符 这是c的糟粕
+	InvalidNullTerminator,//字符串中不能出现空结束符 这是c的糟粕
 	StrTooLong,
 	DigitExceedsBin,
 	DigitExceedsOct,

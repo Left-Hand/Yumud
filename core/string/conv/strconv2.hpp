@@ -230,7 +230,7 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t nibble = 0;
 			switch(chr){
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DestringError::InvalidNullTerminator);
 				case '0' ... '9':
 					nibble = chr - '0';
 					break;
@@ -271,7 +271,7 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t digit = 0;
 			switch(chr) {
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DestringError::InvalidNullTerminator);
 				case '0' ... '7':
 					digit = chr - '0';
 					break;
@@ -319,7 +319,7 @@ struct [[nodiscard]] IntDeformatter{
 			uint8_t bit = 0;
 			switch(chr) {
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DestringError::InvalidNullTerminator);
 				case '0' ... '1':
 					bit = chr - '0';
 					break;
@@ -379,7 +379,7 @@ struct [[nodiscard]] FixedPointSynthesizer{
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
 		std::numeric_limits<math::fixed<NUM_Q, D>>::max());	
 
-	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
+	static constexpr std::array<uint64_t, TABLE_LEN> INV_POW10_TABLE = []{
 		std::array<uint64_t, TABLE_LEN> ret;
 		for(size_t i = 0; i < TABLE_LEN; i++){
 			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
@@ -388,31 +388,29 @@ struct [[nodiscard]] FixedPointSynthesizer{
 	}();
 
 	static constexpr DestringResult<T> synthesize(
-		const D digit_part, 
-		const uint32_t frac_part, 
-		const size_t num_frac_digits
+		const FstrDump & dump
 	){
-		auto conv_ret = [&](const T unsigned_ret) -> T{
+		auto apply_sign = [&](const T x) -> T{
 			if constexpr(std::is_unsigned_v<T>){
-				return unsigned_ret;
+				return x;
 			}else{
-				if(digit_part < 0) return -unsigned_ret;
-				return unsigned_ret;
+				if(dump.is_negative) return -x;
+				return x;
 			}
 		};
 		
-		if (num_frac_digits == 0){
-			return Ok(static_cast<T>(conv_ret(digit_part)));
+		if (dump.num_frac_digits == 0){
+			return Ok(apply_sign(static_cast<T>(dump.digit_part)));
 		}else{
-			if(num_frac_digits >= TABLE_LEN){
+			if(dump.num_frac_digits >= TABLE_LEN){
 				return Err(DestringError::FracTooLong);
 			}
 
-			const T frac = T::from_bits(
-				static_cast<D>((uint64_t(frac_part) * TABLE[num_frac_digits]) >> 32)
-			);
+			const T res = T::from_bits(
+				static_cast<D>((uint64_t(dump.frac_part) * INV_POW10_TABLE[dump.num_frac_digits]) >> 32)
+			) + static_cast<T>(dump.digit_part);
 
-			return Ok(conv_ret(frac + static_cast<T>(digit_part)));
+			return Ok(apply_sign(res));
 		}
 	}
 };
@@ -421,18 +419,8 @@ template<size_t NUM_Q, typename D>
 struct [[nodiscard]] FixedPointDeformatter{
 	using T = math::fixed<NUM_Q, D>;
 
-	static constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
 		std::numeric_limits<math::fixed<NUM_Q, D>>::max());	
-
-	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
-		std::array<uint64_t, TABLE_LEN> ret;
-		for(size_t i = 0; i < TABLE_LEN; i++){
-			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
-		}
-		return ret;
-	}();
-
 	static constexpr DestringResult<T> parse(const StringView str){
 		static_assert(sizeof(D) <= 4, "64bit is not supported yet");
 
@@ -443,7 +431,6 @@ struct [[nodiscard]] FixedPointDeformatter{
 			res.unwrap();
 		});
 
-		D digit_part;
 
 		//进行防溢出检查
 		if constexpr(std::is_unsigned_v<D>){
@@ -454,15 +441,13 @@ struct [[nodiscard]] FixedPointDeformatter{
 				if(dump.digit_part > static_cast<uint32_t>(DIGIT_MAX + 1u)){
 					return Err(DestringError::Underflow);
 				}
-				digit_part = -dump.digit_part;
 			}else{
 				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
-				digit_part = dump.digit_part;
 			}
 		}
 
 		return FixedPointSynthesizer<NUM_Q, D>::synthesize(
-			digit_part, dump.frac_part, static_cast<size_t>(dump.num_frac_digits)
+			dump
 		);
 
 	}
@@ -638,74 +623,6 @@ struct ZeroPaddedU32Formatter{
 private:
 
 };
-
-#if 0
-
-struct Iq16Formatter{
-	//TODO eps为5时计算会溢出 暂时限制eps=5的情况
-	//TODO 支持除了Q16格式外其他格式转换到字符串的函数 
-		
-	static constexpr size_t Q = 16;
-	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
-	static constexpr SerStringResult<size_t> fmt_to_str(
-		MutStringView str,
-		const math::fixed<16, int32_t> value, 
-		const Eps eps
-	){
-		if(str.length() == 0) return Err(SerStringError::OutOfMemory);
-
-
-		const int32_t value_i32 = value.to_bits();
-		const size_t eps_count = std::min(static_cast<size_t>(eps.count()), 4u);
-
-		const bool is_negative = value_i32 < 0;
-		const uint32_t abs_value = (value_i32 < 0) ? -value_i32 : value_i32;
-
-
-		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
-
-		const uint32_t scale = str::POW10_TABLE[eps_count];
-
-		const uint32_t fs = frac_part * scale;
-		
-		const bool upper_round = (fs & lower_mask) >= (lower_mask >> 1);
-
-		const uint32_t frac_int = (fs >> Q) + upper_round;
-		const uint32_t digit_part = (uint32_t(abs_value) >> Q) + bool(frac_int >= scale);
-
-		size_t pos = 0;
-
-		if(is_negative){
-			str[0] = '-';
-			pos += 1;
-		}
-
-		const auto digit_len = ({
-			const auto res = IntFormatter<int>::fmt_to_str(
-				str.substr_unchecked(pos), digit_part, Radix::Dec);
-			if(res.is_err()) return Err(res.unwrap_err());
-			res.unwrap();
-		});
-
-		pos += digit_len;
-
-		//对小数点及后续的小数位格式化
-		if(str.length() < size_t(pos + 1 + eps_count))
-			return Err(SerStringError::OutOfMemory);
-
-		str[pos] = '.';
-		pos += 1;
-
-		//忽略返回的长度 因为它就是eps
-		if(const auto res = ZeroPaddedU32Formatter::fmt_to_str( 
-			MutStringView(str.data() + pos, eps_count), frac_int, Radix::Dec
-		); res.is_err()) return Err(res.unwrap_err());
-		
-		return Ok(size_t(pos + eps_count));
-	}
-};
-
-#endif
 
 template<typename T>
 struct DefmtStrDispatcher;

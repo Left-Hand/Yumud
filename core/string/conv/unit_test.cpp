@@ -121,10 +121,20 @@ namespace {
 
 
 [[maybe_unused]] static void test_fixed(){
-    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("1.50000").unwrap().to_bits(), (1.5_iq16).to_bits()) < 2);
-    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("1.5").unwrap().to_bits(), (1.5_iq16).to_bits()) < 2);
-    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("11111.5").unwrap().to_bits(), (11111.5_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("1.70000")
+        .unwrap().to_bits(), (1.7_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("0.90000")
+        .unwrap().to_bits(), (0.9_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("-0.30000")
+        .unwrap().to_bits(), (-0.3_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("-0.0005")
+        .unwrap().to_bits(), (-0.0005_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("-1.7")
+        .unwrap().to_bits(), (-1.7_iq16).to_bits()) < 2);
+    static_assert(err_bits(FixedPointDeformatter<16, int32_t>::parse("11111.7")
+        .unwrap().to_bits(), (11111.7_iq16).to_bits()) < 2);
     static_assert(FixedPointDeformatter<16, int32_t>::parse("41111.5").unwrap_err() == DestringError::Overflow);
+    static_assert(FixedPointDeformatter<16, int32_t>::parse("-41111.5").unwrap_err() == DestringError::Underflow);
     static_assert(FixedPointDeformatter<16, uint32_t>::parse("-41111.5").unwrap_err() == DestringError::NegForUnsigned);
     static_assert(FixedPointDeformatter<16, int32_t>::DIGIT_MAX == 32767);
 

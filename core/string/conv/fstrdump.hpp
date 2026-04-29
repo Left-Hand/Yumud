@@ -18,36 +18,25 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 	//小数部分的数值 eg: "12.34" => 34
 	uint32_t frac_part;
 	
+	//小数部分的位数 eg: "12.34" => 2
+	uint8_t num_frac_digits;
+
 	//是否为负数
 	bool is_negative;
 
-	//小数部分的位数 eg: "12.34" => 2
-	uint8_t num_frac_digits;
 
 
 	struct alignas(4) ParsingStatus{
 		using Self = ParsingStatus;
 
-		#if 0
-		uint8_t has_dot:1;
-		uint8_t has_digit_part:1;
-		uint8_t has_frac_part:1;
-		uint8_t is_negative:1;
-
-		static constexpr Self from_default(){
-			return std::bit_cast<Self>(uint8_t(0));
-		}
-		#else
+		char existing_sign;
 		bool has_dot;
 		bool has_digit_part;
 		bool has_frac_part;
-		char existing_sign;
 
 		static constexpr Self from_default(){
 			return std::bit_cast<Self>(uint32_t(0));
 		}
-		#endif
-
 
 	};
 
@@ -68,7 +57,7 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 			
 			switch (chr) {
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DestringError::InvalidNullTerminator);
 				case '0' ... '9':{
 
 					const uint8_t digit = chr - '0';
@@ -142,8 +131,8 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 		return Ok(FstrDump{
 			.digit_part = static_cast<uint32_t>(digit_part),
 			.frac_part = static_cast<uint32_t>(frac_part),
-			.is_negative = bool(status.existing_sign == '-'),
-			.num_frac_digits = num_frac_digits
+			.num_frac_digits = num_frac_digits,
+			.is_negative = bool(status.existing_sign == '-')
 		});
 	}
 
