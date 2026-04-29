@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common.hpp"
-#include "unsigned_fixed.hpp"
+#include "decimal.hpp"
+#include "fixedpoint.hpp"
 
 namespace ymd::str{
 
@@ -17,8 +17,7 @@ namespace ymd::str{
     // 提取IEEE 754浮点组件
     uint32_t bits = std::bit_cast<uint32_t>(value);
     bool is_negative = (bits >> 31) != 0;
-    int32_t exponent = ((bits >> 23) & 0xFF) - 127;
-    uint32_t mantissa = bits & 0x7FFFFF;
+
     bits &= 0x7FFFFFFF;
     
     // 检查NaN
@@ -38,13 +37,16 @@ namespace ymd::str{
         return p_str + 3;
     }
 
+    int32_t exponent = ((bits >> 23) & 0xFF) - 127;
+    uint32_t mantissa = bits & 0x7FFFFF;
+    
     // 处理零
     if (exponent == -127 && mantissa == 0) [[unlikely]] {
         p_str[0] = '0';
         return p_str + 1;
     }
 
-    
+
     // 构建完整尾数（包含隐含的1）
     uint32_t full_mantissa = (mantissa | (1U << 23));
     
@@ -143,7 +145,7 @@ namespace ymd::str{
     }
     
     // 转换整数部分
-    p_str = _fmtnum_u32_r10(p_str, digit_part);
+    p_str = _fmtnum_u32_r10_fittest(p_str, digit_part);
     
     // 转换小数部分
     if (precision > 0) {

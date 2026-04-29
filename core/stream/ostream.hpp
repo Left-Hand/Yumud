@@ -19,7 +19,7 @@
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/fixed/fixed.hpp"
-
+#include "core/string/conv/fmtnum/prelude.hpp"
 
 namespace std{
 
@@ -101,10 +101,8 @@ public:
 
 class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
-    struct alignas(16) [[nodiscard]] Config{
-
-
-        struct Specifier{
+    struct alignas(4) [[nodiscard]] Config final{
+        struct [[nodiscard]] Specifier final{
             uint16_t boolalpha:1;
             uint16_t showpos:1;
             uint16_t showbase:1;
@@ -141,6 +139,13 @@ public:
                 .pandding = ' ',
                 .pandding_len = 0,
                 .specifier_bits = 0
+            };
+        }
+
+        [[nodiscard]] std::span<const uint8_t> splitter_byte() const {
+            return {
+                reinterpret_cast<const uint8_t *>(this->splitter_chars), 
+                this->splitter_len
             };
         }
 
@@ -215,12 +220,14 @@ public:
 
     void write_bytes(std::span<const uint8_t> bytes);
 
+    //write null-terminated chars
+    void write_nt_chars(const char * p_str);
+
     [[nodiscard]] uint8_t indent() const{
         return config_.indent;
     }
 
     OutputStream & operator<<(const bool val);
-    OutputStream & operator<<(const uint8_t val);
 
     __inline OutputStream & operator<<(const char chr){
         write_byte(chr); return *this;}
@@ -342,11 +349,8 @@ public:
 
     //#region print integer
 private:
-    void print_u32(const uint32_t i_val);
-    void print_i32(const int32_t i_val);
-    void print_u64(const uint64_t i_val);
-    void print_i64(const int64_t i_val);
-
+    void print_int32(const uint32_t int_val, const str::IntTypeErased type);
+    void print_int64(const uint64_t int_val, const str::IntTypeErased type);
 
 
     void print_iq32(const int32_t bits, const uint32_t Q);
@@ -366,21 +370,14 @@ public:
         return *this;
     }
 
+
     template<typename T>
     requires (std::is_integral_v<T> and (sizeof(T) <= 8))
-    OutputStream & operator<<(const T val){
+    OutputStream & operator<<(const T int_val){
         if constexpr(sizeof(T) <= 4){
-            if constexpr (std::is_signed_v<T>){
-                print_i32(int32_t(val));
-            }else{
-                print_u32(uint32_t(val));
-            }
+            print_int32(static_cast<uint32_t>(int_val), str::IntTypeErased::from<T>());
         }else if constexpr(sizeof(T) <= 8){
-            if constexpr (std::is_signed_v<T>){
-                print_i64(int64_t(val));
-            }else{
-                print_u64(uint64_t(val));
-            }
+            print_int64(static_cast<uint64_t>(int_val), str::IntTypeErased::from<T>());
         }
         return *this;
     }
@@ -777,7 +774,7 @@ private:
     Config config_;
 
     __fast_inline void print_splt(){
-        write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter_chars), config_.splitter_len));
+        write_bytes(config_.splitter_byte());
     }
 
     template<typename T>
@@ -798,9 +795,6 @@ private:
 
     __fast_inline void print_end(){
         flush();
-        // if((config_.specifier.force_sync)) [[unlikely]] {
-        //     block_util_least_free_capacity(1u);
-        // }
     }
 
     __fast_inline void print_indent(){
@@ -829,6 +823,9 @@ private:
     #ifndef OSTREAM_BUF_SIZE
     static constexpr size_t OSTREAM_BUF_SIZE = 60;
     #endif
+
+
+    #if 0
 
     struct Buf{
         std::array<uint8_t, OSTREAM_BUF_SIZE> buf;
@@ -875,6 +872,7 @@ private:
     };
 
     // Buf buf_;
+    #endif
 };
 
 

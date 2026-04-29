@@ -1,10 +1,22 @@
 #pragma once
 
-#include "common.hpp"
+#include "decimal.hpp"
 
 namespace ymd::str{
 
-static constexpr auto _dump_from_unsigned_fixed(
+// Q = 0 is not granted
+__attribute__((always_inline))
+static constexpr uint32_t _calc_low_mask(const uint8_t Q){
+    if (Q == 32) [[unlikely]] return 0xFFFFFFFFU;
+    return (1U << Q) - 1;
+}
+
+static_assert(_calc_low_mask(31) == 0x7fffffffu);
+static_assert(_calc_low_mask(32) == 0xffffffffu);
+static_assert(_calc_low_mask(16) == 0x0000ffffu);
+
+
+static constexpr auto _depart_abs_fixedpoint(
     uint32_t abs_value_bits, 
     const uint32_t precsion,
     const uint8_t Q
@@ -53,7 +65,7 @@ static constexpr auto _dump_from_unsigned_fixed(
 
 
 
-static constexpr char * _fmtnum_unsigned_fixed_impl(
+static constexpr char * _fmtnum_abs_fixedpoint(
     char * p_str, 
     uint32_t abs_value_bits, 
     uint8_t precsion, 
@@ -63,11 +75,11 @@ static constexpr char * _fmtnum_unsigned_fixed_impl(
     constexpr size_t MAX_PRECSION = POW10_TABLE.size() - 1;
     if(precsion > MAX_PRECSION) precsion = MAX_PRECSION;
 
-    const auto res = _dump_from_unsigned_fixed(abs_value_bits, precsion, Q);
+    const auto res = _depart_abs_fixedpoint(abs_value_bits, precsion, Q);
 
     const auto digit_part = res.digit_part;
     const auto frac_part = res.frac_part;
-    p_str = _fmtnum_u32_r10(p_str, digit_part);
+    p_str = _fmtnum_u32_r10_fittest(p_str, digit_part);
 
     if(precsion){
         p_str[0] = '.';

@@ -85,7 +85,7 @@ bool is_digit_ascii(const StringView str){
 #endif
 
 template<integral T>
-struct [[nodiscard]] IntDeformatter{
+struct [[nodiscard]] IntDeformatter final{
 	using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
 	static constexpr DestringResult<T> parse(StringView str){
 		if constexpr(std::is_signed_v<T>){
@@ -337,7 +337,7 @@ struct [[nodiscard]] IntDeformatter{
 };
 
 template<>
-struct [[nodiscard]] IntDeformatter<bool>{
+struct [[nodiscard]] IntDeformatter<bool> final{
 	static constexpr StringView TRUE_STR = StringView("true");
 	static constexpr StringView FALSE_STR = StringView("false");
 	static constexpr DestringResult<bool> parse(const StringView str) {
@@ -371,7 +371,7 @@ struct [[nodiscard]] IntDeformatter<bool>{
 
 
 template<size_t NUM_Q, typename D>
-struct [[nodiscard]] FixedPointSynthesizer{
+struct [[nodiscard]] FixedPointSynthesizer final{
 
 	using T = math::fixed<NUM_Q, D>;
 
@@ -416,7 +416,7 @@ struct [[nodiscard]] FixedPointSynthesizer{
 };
 
 template<size_t NUM_Q, typename D>
-struct [[nodiscard]] FixedPointDeformatter{
+struct [[nodiscard]] FixedPointDeformatter final{
 	using T = math::fixed<NUM_Q, D>;
 
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
@@ -453,7 +453,7 @@ struct [[nodiscard]] FixedPointDeformatter{
 	}
 };
 
-struct [[nodiscard]] FloatDeformatter{
+struct [[nodiscard]] FloatDeformatter final{
 	using T = float;
 
 	static constexpr size_t TABLE_LEN = 12;
@@ -488,6 +488,9 @@ struct [[nodiscard]] FloatDeformatter{
 		}
 	}
 };
+
+
+#if 0
 
 
 template<size_t N>
@@ -624,6 +627,8 @@ private:
 
 };
 
+#endif
+
 template<typename T>
 struct DefmtStrDispatcher;
 
@@ -666,14 +671,14 @@ static constexpr DestringResult<T> defmt_from_str(StringView str){
 }
 
 
-template<integral T>
-static constexpr SerStringResult<size_t> fmt_to_str(
-	MutStringView str, 
-	T value, 
-	Radix radix = Radix(Radix::Kind::Dec)
-){
-	return IntFormatter<T>::fmt_to_str(str, value, radix);
-}
+// template<integral T>
+// static constexpr SerStringResult<size_t> fmt_to_str(
+// 	MutStringView str, 
+// 	T value, 
+// 	Radix radix = Radix(Radix::Kind::Dec)
+// ){
+// 	return IntFormatter<T>::fmt_to_str(str, value, radix);
+// }
 
 // template<size_t Q>
 // static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed<Q, int32_t> value, const Eps eps = Eps(3)){

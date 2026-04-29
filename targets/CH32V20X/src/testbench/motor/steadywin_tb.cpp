@@ -474,7 +474,7 @@ void steadywin_main(){
     };
     
     while(true){
-        led_pin.write(BoolLevel::from((clock::millis().count() % 200 -100) > 0));
+        led_pin.write(BoolLevel::from((static_cast<uint32_t>(clock::millis().count()) % 200 -100) > 0));
         //modify to your own controller
         poll_repl_activity();
         // DEBUG_PRINTLN_IDLE(encoder_feedbacks_[0], encoder_feedbacks_[1]);

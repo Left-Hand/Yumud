@@ -5,7 +5,7 @@
 
 namespace ymd::strconv2{
 
-enum class DeformatError:uint8_t{
+enum class [[nodiscard]] DeformatError:uint8_t{
     InvalidNumber,
     InvalidBooleanNum,         // 布尔值只能为0或1
     InvalidBooleanAlpha,       // 布尔值只能为true或false

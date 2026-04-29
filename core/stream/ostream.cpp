@@ -27,7 +27,16 @@ static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
             p_str[1] = 'x';
             return p_str + 2;
     }
+
+    //should unreachable
     return p_str;
+}
+
+void OutputStream::write_nt_chars(const char * p_str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(p_str),
+        strlen(p_str))
+    );
 }
 
 void OutputStream::write_byte(const uint8_t byte){
@@ -57,65 +66,12 @@ void OutputStream::write_bytes(std::span<const uint8_t> bytes){
 }
 
 OutputStream & OutputStream::flush(){
-    // buf_.flush([this](const std::span<const uint8_t> pbuf){this->sendout(pbuf);});
     return *this;
 }
 
 OutputStream & OutputStream::operator<<(const wchar_t chr){
     write_byte(chr); return *this;}
 
-OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
-    do{
-        if (func == &std::oct) {config_.radix = (8);break;}
-        else if (func == &std::dec) {config_.radix = (10);break;}
-        else if (func == &std::hex) {config_.radix = (16);break;}
-        else if (func == &std::fixed) {
-            //TODO
-            break;
-        }
-
-
-        else if (func == &std::scientific) {
-            //TODO
-            break;
-        }
-
-        else if (func == &std::boolalpha){
-            config_.specifier.boolalpha = true;
-            break;
-        }
-
-        else if (func == &std::noboolalpha){
-            config_.specifier.boolalpha = false;
-            break;
-        }
-
-        else if (func == &std::showpos){
-            config_.specifier.showpos = true;
-            break;
-        }
-
-        else if (func == &std::noshowpos){
-            config_.specifier.showpos = false;
-            break;
-        }
-
-        else if (func == &std::showbase){
-            config_.specifier.showbase = true;
-            break;
-        }
-
-        else if (func == &std::noshowbase){
-            config_.specifier.showbase = false;
-            break;
-        }
-        //TODO 支持std::flush
-
-
-    }while(false);
-
-    return *this;
-}
 
 
 OutputStream & OutputStream::operator<<(const std::string & str){
@@ -177,7 +133,7 @@ OutputStream & OutputStream::operator<<(const bool val){
         write_byte('0' + val);
         return *this;
     }else{
-        return *this << ((val) ? StringView("true") : StringView("false"));
+        return *this << ((val) ? "true" : "false");
     }
 }
 
@@ -263,7 +219,7 @@ static constexpr bool is_positive(T val){
 
 
 OutputStream & OutputStream::operator<<(const float val){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_f32, this->config_.eps)
+    PRINT_NUMERIC_TEMPLATE(val, 64, str::fmtnum_f32, this->config_.eps)
     return *this;
 }
 
@@ -279,41 +235,79 @@ OutputStream & OutputStream::operator<<(const double val){
     return (*this) << static_cast<float>(val);
 }
 
-void OutputStream::print_u32(const uint32_t val){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_u32, this->config_.radix);
+
+void OutputStream::print_int32(const uint32_t val, const str::IntTypeErased type){
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum32_erased, this->config_.radix, type);
 }
 
-void OutputStream::print_i32(const int32_t val){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_i32, this->config_.radix);
+void OutputStream::print_int64(const uint64_t val, const str::IntTypeErased type){
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum64_erased, this->config_.radix, type);
 }
 
-void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_u64, this->config_.radix);
-}
 
-void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_i64, this->config_.radix);
-}
 
-OutputStream & OutputStream::operator<<(const uint8_t val){
-    PRINT_INT_TEMPLATE(val, (32), str::fmtnum_u8, this->config_.radix);
+OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
+    do{
+        if (func == &std::oct) {config_.set_radix(8);break;}
+        else if (func == &std::dec) {config_.set_radix(10);break;}
+        else if (func == &std::hex) {config_.set_radix(16);break;}
+        else if (func == &std::fixed) {
+            //TODO
+            break;
+        }
+
+
+        else if (func == &std::scientific) {
+            //TODO
+            break;
+        }
+
+        else if (func == &std::boolalpha){
+            config_.specifier.boolalpha = true;
+            break;
+        }
+
+        else if (func == &std::noboolalpha){
+            config_.specifier.boolalpha = false;
+            break;
+        }
+
+        else if (func == &std::showpos){
+            config_.specifier.showpos = true;
+            break;
+        }
+
+        else if (func == &std::noshowpos){
+            config_.specifier.showpos = false;
+            break;
+        }
+
+        else if (func == &std::showbase){
+            config_.specifier.showbase = true;
+            break;
+        }
+
+        else if (func == &std::noshowbase){
+            config_.specifier.showbase = false;
+            break;
+        }
+        //TODO 支持std::flush
+
+
+    }while(false);
+
     return *this;
 }
 
+
 // !warning, take care of your stupid null-terminated c-style string
 OutputStream & OutputStream::operator<<(char * str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str),
-        strlen(str))
-    );
+    write_nt_chars(str);
     return *this;
 }
 
 // !warning, take care of your stupid null-terminated c-style string
 OutputStream & OutputStream::operator<<(const char* str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str),
-        strlen(str))
-    );
+    write_nt_chars(str);
     return *this;
 }

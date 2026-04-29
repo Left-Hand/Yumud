@@ -33,6 +33,7 @@ constexpr uint32_t num_int2str_chars(uint64_t int_val, const uint8_t radix){
     return i > 0 ? i : 1;
 }
 
+#if 0
 template<typename T>
 requires(std::is_unsigned_v<T>)
 constexpr uint32_t uint_to_len_chars(T value, const uint8_t radix_count) {
@@ -55,6 +56,7 @@ constexpr uint32_t uint_to_len_chars(T value, const uint8_t radix_count) {
     }
     return length;
 }
+#endif
 
 
 }
