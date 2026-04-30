@@ -11,7 +11,7 @@
 #include "core/container/atomic_bitset.hpp"
 #include "geometry.hpp"
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
-#include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
+#include "drivers/Proximeter/ALX_AOA/alx_aoa.hpp"
 
 #include "algebra/regions/ray2.hpp"
 

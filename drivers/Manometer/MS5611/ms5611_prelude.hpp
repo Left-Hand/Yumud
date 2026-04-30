@@ -12,6 +12,9 @@
 
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/ms5611-pressure-sensor.html
 
+// MIT license
+// https://github.com/libdriver/ms5611/blob/main/src/driver_ms5611.c
+
 namespace ymd::drivers{
 
 struct MS5611_Prelude{
@@ -41,22 +44,18 @@ struct [[nodiscard]] Coeffs final{
         int64_t off2;
         int64_t sens2;
 
-        if (temp < 2000)                                                                                     /* check temp */
-        {
-            t2 = (3 * ((int64_t)dt * (int64_t)dt)) >> 33;                                                    /* set t2 */
-            off2 = 61 * ((int64_t)temp - 2000) * ((int64_t)temp - 2000) / 16;                                /* set off2 */
-            sens2 = 29 * ((int64_t)temp - 2000) * ((int64_t)temp - 2000) / 16;                               /* set sens2 */
-            if (temp < -1500)                                                                                /* if < -1500 */
-            {
-                off2 += 17 * ((int64_t)temp + 1500) * ((int64_t)temp + 1500);                                /* set off2 */
-                sens2 += 9 * ((int64_t)temp + 1500) * ((int64_t)temp + 1500);                                /* set sens2 */
+        if (temp < 2000){                                                                                
+            t2 = (3 * ((int64_t)dt * (int64_t)dt)) >> 33;                                               
+            off2 = 61 * ((int64_t)temp - 2000) * ((int64_t)temp - 2000) / 16;                             
+            sens2 = 29 * ((int64_t)temp - 2000) * ((int64_t)temp - 2000) / 16;                      
+            if (temp < -1500){
+                off2 += 17 * ((int64_t)temp + 1500) * ((int64_t)temp + 1500);                          
+                sens2 += 9 * ((int64_t)temp + 1500) * ((int64_t)temp + 1500);                   
             }
-        }
-        else
-        {
-            t2 = (5 * ((int64_t)dt * (int64_t)dt)) >> 38;                                                    /* set t2 */
-            off2 = 0;                                                                                        /* init off2 0 */
-            sens2 = 0;                                                                                       /* init sens2 0 */
+        }else{
+            t2 = (5 * ((int64_t)dt * (int64_t)dt)) >> 38;                                      
+            off2 = 0;                                                                          
+            sens2 = 0;                                                                          
         }
 
         return Intermediate{
@@ -100,10 +99,6 @@ struct [[nodiscard]] Coeffs final{
         };
     }
 };
-
-// struct Command{
-//     uint8_t bits;
-// };
 
 struct Osr{
     uint8_t bits;

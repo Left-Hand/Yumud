@@ -69,7 +69,7 @@ struct MP2980_Prelude{
         _68_7_mV,
     };
 
-    struct Interrupts final{
+    struct [[nodiscard]] Interrupts final{
         uint8_t png:1;
         uint8_t ocp:1;
         uint8_t ovp:1;
@@ -78,29 +78,37 @@ struct MP2980_Prelude{
         uint8_t :3;
     };
 
-};
 
-struct MP2980_Regs:public MP2980_Prelude{
+    struct [[nodiscard]] VoltageCode final{
+        std::array<uint8_t, 2> bytes;
+
+        static constexpr VoltageCode from_mv(const uint16_t mv){
+            return VoltageCode{
+                .bytes = {
+                    uint8_t(mv & 0b111),
+                    uint8_t(mv >> 3)
+                }
+            };
+        }
+
+        [[nodiscard]] constexpr uint16_t to_mv() const {
+            auto & self = *this;
+            return (uint8_t(self.bytes[1]) << 3) 
+                | uint8_t(self.bytes[0]);
+        }
+    };
 
     struct RefReg:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
-        uint16_t data;
-
-        RefReg & set(const uint16_t _data){
-            auto & self = *this;
-            self.as_bytes_mut()[0] = uint8_t(_data & 0b111);
-            self.as_bytes_mut()[1] = uint8_t(_data >> 3);
-
-            return *this;
-        }
-
-        uint16_t get() const {
-            auto & self = *this;
-            return (uint8_t(self.as_bytes()[1]) << 3) 
-                | uint8_t(self.as_bytes()[0]);
-        }
+        VoltageCode code;
     };
+
+};
+
+struct MP2980_Regs:public MP2980_Prelude{
+
+
 
     struct Ctrl1Reg:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};

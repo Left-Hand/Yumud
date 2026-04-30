@@ -1,5 +1,4 @@
-#include "alx_aoa_prelude.hpp"
-#include "core/tmp/reflect/enum.hpp"
+#include "alx_aoa.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -41,7 +40,7 @@ using Self = AlxAoa_ParseReceiver;
 #endif
 
 
-struct [[nodiscard]] BytesSpawner{
+struct [[nodiscard]] BytesSpawner final{
     explicit constexpr BytesSpawner(std::span<const uint8_t> bytes) : 
         bytes_(bytes) {}
 
@@ -204,8 +203,8 @@ static Result<Location, Error> parse_location(std::span<const uint8_t, 25> bytes
     };
 
     constexpr auto msg = [&]{
-        auto spawner = BytesSpawner(std::span(bytes));
-        return parse_location(spawner);
+        // auto spawner = BytesSpawner(std::span(bytes));
+        return parse_location(std::span(bytes));
     }();
 
     static_assert(msg.is_ok());
@@ -279,9 +278,13 @@ void Self::push_byte(const uint8_t byte){
 }
 
 
-struct [[nodiscard]] CrcAccumulator{
+struct [[nodiscard]] CrcAccumulator final{
     using Self = CrcAccumulator;
-    uint8_t crc = 0;
+    uint8_t crc;
+
+    static constexpr CrcAccumulator from_default(){
+        return {.crc = 0};
+    }
 
     constexpr Self push_byte(const uint8_t byte) const { 
         auto self = *this;
@@ -334,7 +337,7 @@ Result<Event, Error> Self::parse(){
 
         case RequestCommand::Location:{
 
-            const auto actual_xor = CrcAccumulator{}
+            const auto actual_xor = CrcAccumulator::from_default()
                 .push_byte(static_cast<uint8_t>(header_info_.len))
                 .push_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())))
                 .finalize();

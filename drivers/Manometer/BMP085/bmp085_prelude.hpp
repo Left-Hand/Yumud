@@ -46,7 +46,6 @@ enum class [[nodiscard]] RegAddr:uint8_t{
     TEMPDATA = 0xF6,        // Temperature data register
     PRESSUREDATA_HIGH = 0xF6,    // Pressure data register
     PRESSUREDATA_LOW = 0xF8,    // Pressure data register
-
 };
 
 
@@ -59,7 +58,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-struct [[nodiscard]] CalibrateCoeffs final{
+struct [[nodiscard]] alignas(4) CalibrateCoeffs final{
     using Self = CalibrateCoeffs;
     int16_t ac1, ac2, ac3, b1, b2, mb, mc, md;
     uint16_t ac4, ac5, ac6;
@@ -103,7 +102,7 @@ struct [[nodiscard]] CalibrateCoeffs final{
     constexpr float requalify_temperature(const int32_t raw_temperature) const{
         float temp;
 
-        const auto b5 = compute_b5(raw_temperature);
+        const int32_t b5 = compute_b5(raw_temperature);
         temp = (b5 + 8) >> 4;
         temp /= 10;
 

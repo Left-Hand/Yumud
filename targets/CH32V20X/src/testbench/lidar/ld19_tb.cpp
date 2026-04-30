@@ -6,7 +6,7 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
-#include "drivers/Proximeter/LD19/LD19.hpp"
+#include "drivers/Proximeter/ld19/ld19_lidar.hpp"
 #include "core/async/timer.hpp"
 
 using namespace ymd;
