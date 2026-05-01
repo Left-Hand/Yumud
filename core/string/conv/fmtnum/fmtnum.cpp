@@ -70,6 +70,6 @@ char * str::fmtnum_f32(
     float float_val, 
     uint8_t precision
 ){
-    return _fmtnum_f32_impl(p_str, float_val, precision);
+    return _fmtnum_f32(p_str, float_val, precision);
 }
 

@@ -65,19 +65,27 @@ static constexpr void _fmtnum_u32_dec_inner(MutStrSpan s, uint32_t unsigned_val)
     char * pchr = s.end - 1;  // 当前填充位置
 
     auto fast_div10 = [](const uint32_t x) -> uint32_t{
-        return str::div_10(x);
+        return str::div_10_maylossy(x);
     };
 
+    {
+        uint32_t quotient = str::div_10(unsigned_val);
+        uint8_t digit = unsigned_val - quotient * 10;  // 获取余数（即当前位数字）
+    
+        *pchr = digit + '0';                   // 转换为字符并填入字符串
+        pchr--;
+        if(pchr < s.begin) return;
+        unsigned_val = quotient;                      // 处理下一位
+    }
+
     // 从右到左逐位填充数字
-
-
     while (unsigned_val) {  // 当还有数字要处理且未越界时
         uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // 获取余数（即当前位数字）
 
         *pchr = digit + '0';                   // 转换为字符并填入字符串
         pchr--;
-        if(pchr < s.begin) break;
+        if(pchr < s.begin) return;
         unsigned_val = quotient;                      // 处理下一位
     }
 }

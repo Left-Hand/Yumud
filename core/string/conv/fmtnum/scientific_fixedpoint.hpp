@@ -11,15 +11,13 @@ struct ScientificParts{
     int32_t exponent;
 };
 
-static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
+static constexpr ScientificParts depart_abs_fixedpoint_scientific(
     uint32_t abs_value_bits, 
     const uint8_t precsion,
     const uint8_t Q
 ){
-
-
     if(Q == 32) [[unlikely]] {
-        return _depart_abs_fixedpoint_scientific(abs_value_bits >> 1, precsion, 31);
+        return depart_abs_fixedpoint_scientific(abs_value_bits >> 1, precsion, 31);
     }
 
     const uint32_t digit_part = static_cast<uint32_t>(abs_value_bits >> Q);
@@ -34,7 +32,7 @@ static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
         exponent = -exp10_times;
 
         {
-            const auto res = _depart_abs_fixedpoint(abs_value_bits * scaler, precsion, Q);
+            const auto res = depart_abs_fixedpoint(abs_value_bits * scaler, precsion, Q);
             frac_part = res.frac_part;
             digit_minor_number = res.digit_part;
         }
@@ -56,7 +54,7 @@ static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
     }else{
         // x >= 1 and x < 10
         {
-            const auto res = _depart_abs_fixedpoint(abs_value_bits, precsion, Q);
+            const auto res = depart_abs_fixedpoint(abs_value_bits, precsion, Q);
             frac_part = res.frac_part;
             digit_minor_number = res.digit_part;
         }
@@ -78,7 +76,7 @@ static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
 
 
 
-char * _fmtnum_unsigned_fixed_scientific_impl(
+static constexpr char * _fmtnum_abs_fixedpoint_scientific(
     char * p_str, 
     uint32_t abs_value_bits, 
     uint8_t precsion, 
@@ -88,7 +86,7 @@ char * _fmtnum_unsigned_fixed_scientific_impl(
     constexpr size_t MAX_PRECSION = std::size(POW10_TABLE) - 1;
     if(precsion > MAX_PRECSION) precsion = MAX_PRECSION;
 
-    const auto res = _depart_abs_fixedpoint_scientific(abs_value_bits, precsion, Q);
+    const auto res = depart_abs_fixedpoint_scientific(abs_value_bits, precsion, Q);
 
     const auto digit_minor_number = res.digit_minor_number;
     const auto frac_part = res.frac_part;

@@ -26,7 +26,7 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 
 
 
-	struct alignas(4) ParsingStatus{
+	struct [[nodiscard]] alignas(4) ParsingStatus final{
 		using Self = ParsingStatus;
 
 		char existing_sign;

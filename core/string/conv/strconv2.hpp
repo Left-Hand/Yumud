@@ -32,7 +32,7 @@ bool is_alpha_ascii(const char chr) {
 //数字转ascii字符
 [[nodiscard]] __always_inline static constexpr 
 char digit2char(uint8_t digit) noexcept {
-	if (digit > 9) [[unlikely]]
+	if (digit > 9)
 		return digit + ('A' - 10);
 	else 
 		return digit + '0';
@@ -84,37 +84,8 @@ bool is_digit_ascii(const StringView str){
 }
 #endif
 
-template<integral T>
-struct [[nodiscard]] IntDeformatter final{
-	using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
-	static constexpr DestringResult<T> parse(StringView str){
-		if constexpr(std::is_signed_v<T>){
-			return parse_dec(str);
-		}
 
-		//只有无符号数才可能检测为hex/oct/bin
-
-		const Radix radix = ({
-			const auto may_radix = parse_radix(str);
-			if(may_radix.is_err()) return Err(may_radix.unwrap_err());
-			may_radix.unwrap();
-		});
-
-		if((radix.count() != 10) and (str.length() > 2)){
-			//移除前缀
-			str = StringView{str.data() + 2, str.size() - 2};
-		}
-
-		switch(radix.count()){
-			case 2: return parse_bin_no_show_base(str);
-			case 8: return parse_oct_no_show_base(str);
-			case 10: return parse_dec(str);
-			case 16: return parse_hex_no_show_base(str);
-		}
-
-		return Err(DeformatError::InvalidRadix);
-	}
-
+struct [[nodiscard]] IntDeformatterGeneric{
 	static constexpr DestringResult<Radix> parse_radix(const StringView str){
 		const auto str_length = str.length();
 		if(str_length < 2) return Ok(Radix(Radix::Kind::Dec));
@@ -146,8 +117,10 @@ struct [[nodiscard]] IntDeformatter final{
 		}
 	}
 
-	static constexpr DestringResult<T> parse_dec(const StringView str) {
 
+	template<typename T>
+	static constexpr DestringResult<T> parse_dec(const StringView str) {
+		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
 		const auto length = str.length();
 		if(length == 0) return Err(DeformatError::EmptyString);
 
@@ -212,8 +185,10 @@ struct [[nodiscard]] IntDeformatter final{
 		return Ok(compute_final());
 	}
 
-	static constexpr DestringResult<T> parse_hex_no_show_base(const StringView str) {
-		static_assert(std::is_unsigned_v<U>, "hex must be unsigned");
+	template<typename T>
+	static constexpr DestringResult<T> parse_bare_hex(const StringView str) {
+		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
+		static_assert(std::is_unsigned_v<T>, "hex must be unsigned");
 
 		const auto str_length = str.length();
 		if(str_length == 0) return Err(DeformatError::EmptyString);
@@ -251,8 +226,10 @@ struct [[nodiscard]] IntDeformatter final{
 		return Ok(static_cast<T>(temp));
 	}
 
-	static constexpr DestringResult<T> parse_oct_no_show_base(const StringView str) {
-		static_assert(std::is_unsigned_v<U>, "oct must be unsigned");
+	template<typename T>
+	static constexpr DestringResult<T> parse_bare_oct(const StringView str) {
+		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
+		static_assert(std::is_unsigned_v<T>, "oct must be unsigned");
 
 		const auto str_length = str.length();
 		if(str_length == 0) return Err(DeformatError::EmptyString);
@@ -301,7 +278,9 @@ struct [[nodiscard]] IntDeformatter final{
 		return Ok(static_cast<T>(temp));
 	}
 
-	static constexpr DestringResult<T> parse_bin_no_show_base(const StringView str) {
+	template<typename T>
+	static constexpr DestringResult<T> parse_bare_bin(const StringView str) {
+		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
 		static_assert(std::is_unsigned_v<U>, "bin must be unsigned");
 
 		const auto str_length = str.length();
@@ -333,6 +312,39 @@ struct [[nodiscard]] IntDeformatter final{
 		}
 
 		return Ok(static_cast<T>(temp));
+	}
+};
+
+template<integral T>
+struct [[nodiscard]] IntDeformatter final:public IntDeformatterGeneric{
+	using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
+	static constexpr DestringResult<T> parse(StringView str){
+		if constexpr(std::is_signed_v<T>){
+			return parse_dec<T>(str);
+		}else{
+			//只有无符号数才可能检测为hex/oct/bin
+
+			const Radix radix = ({
+				const auto may_radix = parse_radix(str);
+				if(may_radix.is_err()) return Err(may_radix.unwrap_err());
+				may_radix.unwrap();
+			});
+
+			if((radix.count() != 10) and (str.length() > 2)){
+				//移除前缀
+				str = StringView{str.data() + 2, str.size() - 2};
+			}
+
+			switch(radix.count()){
+				case 2: return parse_bare_bin<T>(str);
+				case 8: return parse_bare_oct<T>(str);
+				case 10: return parse_dec<T>(str);
+				case 16: return parse_bare_hex<T>(str);
+			}
+
+			return Err(DeformatError::InvalidRadix);
+		}
+
 	}
 };
 
