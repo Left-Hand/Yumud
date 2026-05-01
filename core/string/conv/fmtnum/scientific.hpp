@@ -29,7 +29,7 @@ static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
     uint32_t digit_minor_number;
     if((digit_part) == 0){// x < 1
         const uint32_t one_bits = 1u << Q;
-        const uint32_t exp10_times = _least_u32_num_digits_r10(one_bits / abs_value_bits);
+        const uint32_t exp10_times = _least_u32_num_digits_dec(one_bits / abs_value_bits);
         const auto scaler = POW10_TABLE[exp10_times];
         exponent = -exp10_times;
 
@@ -40,7 +40,7 @@ static constexpr ScientificParts _depart_abs_fixedpoint_scientific(
         }
     }else if((digit_part) >= 10){ // x >= 10
 
-        uint32_t exp10_times = _least_u32_num_digits_r10(digit_part) - 1;
+        uint32_t exp10_times = _least_u32_num_digits_dec(digit_part) - 1;
         const uint32_t scale_int = POW10_TABLE[exp10_times];
 
         digit_minor_number = abs_value_bits / (scale_int << Q);
@@ -98,7 +98,7 @@ char * _fmtnum_unsigned_fixed_scientific_impl(
     p_str[1] = '.';
     p_str+=2;
 
-    _fmtnum_u32_r10_padded(p_str, frac_part, precsion);
+    _fmtnum_u32_dec_padded({p_str, p_str + precsion}, frac_part);
     p_str += precsion;
 
     p_str[0] = 'e';
@@ -113,7 +113,7 @@ char * _fmtnum_unsigned_fixed_scientific_impl(
         unsigned_exponent = exponent;
     }
 
-    p_str = _fmtnum_u32_r10_fittest(p_str, unsigned_exponent);
+    p_str = _fmtnum_u32_dec_fittest(p_str, unsigned_exponent);
     return p_str;
 }
 

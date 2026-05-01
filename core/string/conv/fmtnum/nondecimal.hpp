@@ -1,9 +1,13 @@
 #pragma once
 
 #include "decimal.hpp"
-
+#include <span>
 
 namespace ymd::str{
+
+
+
+
 static constexpr size_t _least_u32_num_digits_r16(uint32_t val) {
     if (val == 0) return 1;
     
@@ -13,13 +17,12 @@ static constexpr size_t _least_u32_num_digits_r16(uint32_t val) {
 }
 
 static constexpr void _fmtnum_u32_r16(
-    char* p_str, 
-    uint32_t unsigned_val,
-    const size_t num_digits
+    MutStrSpan s, 
+    uint32_t unsigned_val
 ) {
-    for(size_t offset = num_digits - 1; offset != static_cast<size_t>(-1); --offset){
+    for(char * pchr = s.end - 1; pchr >= s.begin; --pchr){
         const uint8_t digit = unsigned_val & 0b1111;  // Get lowest 4 bits (hex digit)
-        p_str[offset] = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
+        *pchr = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
         unsigned_val >>= 4;                     // Move to next hex digit
     }
 }
@@ -53,13 +56,12 @@ static constexpr size_t total_num_digits_r8(){
 }
 
 static constexpr void _fmtnum_u32_r8(
-    char* p_str, 
-    uint32_t unsigned_val,
-    const size_t num_digits
+    MutStrSpan s, 
+    uint32_t unsigned_val
 ) {
-    for(int32_t i = num_digits - 1; i >= 0; i--){
+    for(char * pchr = s.end - 1; pchr >= s.begin; --pchr){
         uint8_t digit = unsigned_val & 0b111;  // Get lowest 3 bits (octal digit)
-        p_str[i] = digit + '0';                // 八进制数字只能是0-7
+        *pchr = digit + '0';                // 八进制数字只能是0-7
         unsigned_val >>= 3;                    // Move to next octal digit
     }
 
@@ -68,17 +70,16 @@ static constexpr void _fmtnum_u32_r8(
 
 
 static constexpr void _fmtnum_u32_r2(
-    char* p_str, 
-    uint32_t unsigned_val,
-    const size_t num_digits
+    MutStrSpan s, 
+    uint32_t unsigned_val
 ) {
-    if(num_digits < 32){
-        unsigned_val = unsigned_val << (32 - num_digits);
+    if(s.length() < 32){
+        unsigned_val = unsigned_val << (32 - s.length());
     }
 
     #pragma GCC unroll 4
-    for(size_t i = 0; i < num_digits; i++){
-        p_str[i] = (unsigned_val & 0x80000000) ? '1' : '0';
+    for(char * pchr = s.begin; pchr < s.end; ++pchr){
+        *pchr = (unsigned_val & 0x80000000) ? '1' : '0';
         unsigned_val <<= 1;
     }
 }

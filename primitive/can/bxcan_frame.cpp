@@ -4,8 +4,21 @@
 #include "core/string/view/string_view.hpp"
 #include "core/string/conv/fmtnum/fmtnum.hpp"
 
-namespace ymd{
+namespace {
+static constexpr void fmthex(
+    char * p_str, 
+    std::size_t len,
+    uint32_t unsigned_val
+) {
+    for(size_t offset = len - 1; offset != static_cast<size_t>(-1); --offset){
+        const uint8_t digit = unsigned_val & 0b1111;  // Get lowest 4 bits (hex digit)
+        p_str[offset] = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
+        unsigned_val >>= 4;                     // Move to next hex digit
+    }
+}
 
+}
+namespace ymd{
 
 struct [[nodiscard]] PrettyIdConverter final{
     hal::CanIdentifier id;
@@ -21,7 +34,7 @@ struct [[nodiscard]] PrettyIdConverter final{
         pbuf += 2;
 
         const size_t num_id_chars = self.id.is_extended() ? 8 : 3;
-        str::_fmtnum_u32_r16(pbuf, id_u32, num_id_chars);
+        fmthex(pbuf, num_id_chars, id_u32);
         pbuf += num_id_chars;
         
         return os << (StringView(buf.data(), pbuf));
@@ -32,14 +45,14 @@ OutputStream & operator<<(OutputStream & os, const hal::ClassicCanFrame & frame)
     const auto guard = os.create_guard();
 
     os << '<'
-        << ((frame.is_standard()) ? StringView("Std") : StringView("Ext"))
-        << ((frame.is_remote()) ? StringView("Rmt") : StringView("Dat"))
-        << StringView("> ");
+        << ((frame.is_standard()) ? ("Std") : ("Ext"))
+        << ((frame.is_remote()) ? ("Rmt") : ("Dat"))
+        << ("> ");
 
-    os << StringView("id=") << PrettyIdConverter{.id = frame.identifier()};
+    os << ("id=") << PrettyIdConverter{.id = frame.identifier()};
 
     if(not frame.is_remote()){
-        os << StringView(" |") << frame.payload();
+        os << (" |") << frame.payload();
     }
 
     return os;

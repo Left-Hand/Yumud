@@ -79,12 +79,12 @@ static constexpr char * _fmtnum_abs_fixedpoint(
 
     const auto digit_part = res.digit_part;
     const auto frac_part = res.frac_part;
-    p_str = _fmtnum_u32_r10_fittest(p_str, digit_part);
+    p_str = _fmtnum_u32_dec_fittest(p_str, digit_part);
 
     if(precsion){
         p_str[0] = '.';
         p_str++;
-        _fmtnum_u32_r10_padded(p_str, frac_part, precsion);
+        _fmtnum_u32_dec_padded({p_str, p_str + precsion}, frac_part);
         p_str += precsion;
     }
 

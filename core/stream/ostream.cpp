@@ -224,11 +224,21 @@ OutputStream & OutputStream::operator<<(const float val){
 }
 
 void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<int32_t>, this->config_.eps, Q)
+    const str::FixedTypeErased type = {
+        .is_signed = true,
+        .q_num = static_cast<uint8_t>(Q)
+    };
+
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
 }
 
 void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<uint32_t>, this->config_.eps, Q)
+    const str::FixedTypeErased type = {
+        .is_signed = false,
+        .q_num = static_cast<uint8_t>(Q)
+    };
+
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
 }
 
 OutputStream & OutputStream::operator<<(const double val){
@@ -237,11 +247,11 @@ OutputStream & OutputStream::operator<<(const double val){
 
 
 void OutputStream::print_int32(const uint32_t val, const str::IntTypeErased type){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum32_erased, this->config_.radix, type);
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_integral32, this->config_.radix, type);
 }
 
 void OutputStream::print_int64(const uint64_t val, const str::IntTypeErased type){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum64_erased, this->config_.radix, type);
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_integral64, this->config_.radix, type);
 }
 
 

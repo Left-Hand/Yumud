@@ -145,13 +145,13 @@ namespace ymd::str{
     }
     
     // 转换整数部分
-    p_str = _fmtnum_u32_r10_fittest(p_str, digit_part);
+    p_str = _fmtnum_u32_dec_fittest(p_str, digit_part);
     
     // 转换小数部分
     if (precision > 0) {
         p_str[0] = '.';
         p_str++;
-        _fmtnum_u32_r10_padded(p_str, frac_part, precision);
+        _fmtnum_u32_dec_padded({p_str, p_str + precision} , frac_part);
         p_str += precision;
     }
     
