@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+
+
 namespace ymd::mem{
 void memcpy_dst_aligned4(__restrict__ void *dest, __restrict__ const void *source, size_t len){
     if (len == 0) return;

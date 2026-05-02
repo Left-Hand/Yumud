@@ -18,7 +18,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Proximeter/STL06N/stl06n.hpp"
+#include "drivers/Proximeter/STL06N/stl06n_lidar.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"

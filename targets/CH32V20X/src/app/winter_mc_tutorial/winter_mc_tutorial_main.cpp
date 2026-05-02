@@ -301,14 +301,15 @@ void winter_mc_tutorial_main(){
 
     while(true){
         repl_server.invoke(repl_list);
-
+        const auto now_secs = clock::seconds();
 
         DEBUG_PRINTLN(
             target_rotor_x1,
             target_rotor_x2,
             meas_rotor_x1,
             meas_rotor_x2,
-            pwm_dutycycle
+            pwm_dutycycle,
+            400 * iq16(math::sinpu(4 * now_secs))
         );
 
         clock::delay(1ms);

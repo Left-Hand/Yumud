@@ -1,12 +1,12 @@
 #pragma once
 
 #include "stl06n_utils.hpp"
+#include "stl06n_msgs.hpp"
 
 
 namespace ymd::drivers::stl06n{
 
 
-using Callback = std::function<void(Event)>;
 
 
 class [[nodiscard]] STL06N_ParseReceiver final{

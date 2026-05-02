@@ -29,10 +29,10 @@ void ld19_main(){
     auto ld19_ev_handler = [&](const LD19Event & ev){
         if(ev.is<LD19Event::DataReady>()){
             const auto & packet = ev.unwrap_as<LD19Event::DataReady>().packet;
-            // for(const auto & points: packet.points){
+            // for(const auto & packed_points: packet.packed_points){
             //     DEBUG_PRINTLN();
             // }
-            DEBUG_PRINTLN(packet.points[0], packet.points[11]);
+            DEBUG_PRINTLN(packet.packed_points[0], packet.packed_points[11]);
         }else if(ev.is<LD19Event::InvalidCrc>()){
             DEBUG_PRINTLN(ev.unwrap_as<LD19Event::InvalidCrc>());
             PANIC{};

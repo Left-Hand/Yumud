@@ -9,6 +9,8 @@ struct [[nodiscard]] DigitFracPair final{
     uint32_t digit_part;
     uint32_t frac_part;
 
+
+    __attribute__((always_inline))
     [[nodiscard]] constexpr char * fmt_str(char * p_str, const uint8_t precision) const {
         auto & self = *this;
         // 转换整数部分
@@ -27,6 +29,7 @@ struct [[nodiscard]] DigitFracPair final{
 };
 
 // 0 < Q <= 32
+__attribute__((optimize("Ofast")))
 [[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint(
     uint32_t abs_value_bits, 
     uint8_t precision,
@@ -47,12 +50,8 @@ struct [[nodiscard]] DigitFracPair final{
     const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
 
     // 右移Q位提取小数部分（注意处理Q=0的情况）
-    uint32_t frac_part;
-    uint32_t digit_part;
-
-
-    frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (Q - 1)) + 1) >> 1;
-    digit_part = (uint32_t(abs_value_bits) >> Q);
+    uint32_t frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (Q - 1)) + 1) >> 1;
+    uint32_t digit_part = (uint32_t(abs_value_bits) >> Q);
 
 
     // 检查是否需要进位到整数部分
@@ -62,8 +61,6 @@ struct [[nodiscard]] DigitFracPair final{
         // 如果发生进位，调整小数部分
         frac_part -= pow10_scale;
     }
-
-
 
     return {
         .digit_part = digit_part, 

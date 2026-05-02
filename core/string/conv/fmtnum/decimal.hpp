@@ -14,15 +14,13 @@ struct [[nodiscard]] MutStrSpan final{
     [[nodiscard]] constexpr size_t length() const {
         return static_cast<size_t>(end - begin);
     }
-
+    __attribute__((optimize( "-Ofast" )))
     constexpr void fill(const char chr){
         for(char * p_chr = begin; p_chr < end; p_chr++){
             *p_chr = chr;
         }
     }
 };
-
-__attribute__((always_inline))
 
 [[nodiscard]] static constexpr uint32_t  _div_100000( const uint32_t u32_in ) noexcept{
     // constexpr size_t SHIFTS = 43;
@@ -33,7 +31,7 @@ __attribute__((always_inline))
 
 
 
-__attribute__((always_inline, hot))
+__attribute__((always_inline, hot, optimize( "-Ofast" )))
 static constexpr size_t _least_u32_num_digits_dec(uint32_t int_val){
     if(int_val == 0) [[unlikely]] return 1;
 
@@ -60,13 +58,10 @@ static constexpr size_t _least_u32_num_digits_dec(uint32_t int_val){
 }
 
 namespace details{
+__attribute__((optimize( "-Ofast" )))
 static constexpr void _fmtnum_u32_dec_inner(MutStrSpan s, uint32_t unsigned_val){
     // 从右向左填充数字
     char * pchr = s.end - 1;  // 当前填充位置
-
-    auto fast_div10 = [](const uint32_t x) -> uint32_t{
-        return str::div_10_maylossy(x);
-    };
 
     {
         uint32_t quotient = str::div_10(unsigned_val);
@@ -80,7 +75,7 @@ static constexpr void _fmtnum_u32_dec_inner(MutStrSpan s, uint32_t unsigned_val)
 
     // 从右到左逐位填充数字
     while (unsigned_val) {  // 当还有数字要处理且未越界时
-        uint32_t quotient = fast_div10(unsigned_val);
+        uint32_t quotient = str::div_10_maylossy(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // 获取余数（即当前位数字）
 
         *pchr = digit + '0';                   // 转换为字符并填入字符串
@@ -92,7 +87,7 @@ static constexpr void _fmtnum_u32_dec_inner(MutStrSpan s, uint32_t unsigned_val)
 
 }
 
-
+__attribute__((optimize( "-Ofast" )))
 [[nodiscard]] static constexpr char * _fmtnum_u32_dec_fittest(
     char * p_str, 
     uint32_t unsigned_val
@@ -107,6 +102,7 @@ static constexpr void _fmtnum_u32_dec_inner(MutStrSpan s, uint32_t unsigned_val)
     return p_str + len;
 }
 
+__attribute__((optimize( "-Ofast" )))
 static constexpr void _fmtnum_u32_dec_padded(MutStrSpan s, uint32_t unsigned_val){
     // 即使数据为0也不做卫语句 会产生不必要的分支开销 对于小数位而言为0的可能性很小
     // 即使数据为0 也需要先填充所有位置为'0'

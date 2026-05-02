@@ -1,4 +1,4 @@
-#include "stl06n.hpp"
+#include "stl06n_lidar.hpp"
 #include <span>
 
 using namespace ymd;

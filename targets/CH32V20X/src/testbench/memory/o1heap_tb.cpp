@@ -11,8 +11,6 @@
 #include "hal/gpio/gpio_port.hpp"
 
 
-#include "drivers/Proximeter/STL06N/stl06n.hpp"
-
 #include <ranges>
 
 #include "core/mem/o1heap/o1heap_alloc.hpp"

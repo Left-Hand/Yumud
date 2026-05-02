@@ -89,8 +89,8 @@ struct [[nodiscard]] LidarSectorPacket final{
     using Self = LidarSectorPacket;
 
     #pragma pack(push, 1)
-    LidarSpinSpeedCode spin_speed;
-    LidarAngleCode start_angle;
+    LidarSpinSpeedCode spin_speed_code;
+    LidarAngleCode start_angle_code;
 
 
     struct [[nodiscard]] LidarPoints{
@@ -101,8 +101,10 @@ struct [[nodiscard]] LidarSectorPacket final{
             return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + index * 3, 3));
         }
     };
-    LidarPoints points;
-    LidarAngleCode end_angle;
+
+
+    LidarPoints packed_points;
+    LidarAngleCode end_angle_code;
     TimeStamp timestamp;
     #pragma pack(pop)
 };
