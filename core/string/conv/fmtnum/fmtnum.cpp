@@ -44,32 +44,23 @@ using namespace ymd::str;
             return _fmtnum_mayneg_i32_dec(p_str, static_cast<uint32_t>(int_val), type);
         case 16:{
             constexpr size_t NUM_DIGITS_U32 = (sizeof(uint32_t) * 8) / 4;
-            _fmtnum_u32_r16({p_str, p_str + NUM_DIGITS_U32}, high32);
-            _fmtnum_u32_r16({p_str + NUM_DIGITS_U32, p_str + 2 * NUM_DIGITS_U32}, low32);
+            _fmtnum_u32_hex({p_str, p_str + NUM_DIGITS_U32}, high32);
+            _fmtnum_u32_hex({p_str + NUM_DIGITS_U32, p_str + 2 * NUM_DIGITS_U32}, low32);
             return p_str + (NUM_DIGITS_U32 * 2);
         }
         case 8:
-            // return _fmtnum_u32_r8(p_str, static_cast<uint32_t>(int_val));
+            // return _fmtnum_u32_oct(p_str, static_cast<uint32_t>(int_val));
             //TODO
             return p_str;
         case 2:{
             constexpr size_t NUM_DIGITS_U32 = (sizeof(uint32_t) * 8) / 1;
-            _fmtnum_u32_r16({p_str, p_str + NUM_DIGITS_U32}, high32);
-            _fmtnum_u32_r16({p_str + NUM_DIGITS_U32, p_str + 2 * NUM_DIGITS_U32}, low32);
+            _fmtnum_u32_hex({p_str, p_str + NUM_DIGITS_U32}, high32);
+            _fmtnum_u32_hex({p_str + NUM_DIGITS_U32, p_str + 2 * NUM_DIGITS_U32}, low32);
             return p_str + (NUM_DIGITS_U32 * 2);
         }
         default:
             //no chars 
             return p_str;
     }
-}
-
-
-char * str::fmtnum_f32(
-    char * p_str, 
-    float float_val, 
-    uint8_t precision
-){
-    return _fmtnum_f32(p_str, float_val, precision);
 }
 

@@ -82,8 +82,8 @@ OutputStream & OutputStream::operator<<(const std::string & str){
 OutputStream & OutputStream::operator<<(const std::endian endian){
     auto & os = *this;
     switch(endian){
-        case std::endian::little: return os << StringView("little");
-        case std::endian::big: return os << StringView("big");
+        case std::endian::little: return os << ("little");
+        case std::endian::big: return os << ("big");
     }
     __builtin_unreachable();
 }
@@ -108,7 +108,7 @@ OutputStream & OutputStream::operator<<(const std::_Setfill<char> setfill){
 }
 
 OutputStream & OutputStream::operator<<(const std::monostate){
-    return *this << StringView("monostate");
+    return *this << ("monostate");
 }
 
 
@@ -146,21 +146,21 @@ size_t OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
 
 OutputStream & OutputStream::operator<<(const std::strong_ordering & ordering){
     if (ordering == std::strong_ordering::greater) {
-        return *this << StringView("greater");
+        return *this << ("greater");
     } else if (ordering == std::strong_ordering::less) {
-        return *this << StringView("less");
+        return *this << ("less");
     } else {
-        return *this << StringView("equal");
+        return *this << ("equal");
     }
 }
 
 OutputStream & OutputStream::operator<<(const std::weak_ordering & ordering){
     if (ordering == std::weak_ordering::greater) {
-        return *this << StringView("greater");
+        return *this << ("greater");
     } else if (ordering == std::weak_ordering::less) {
-        return *this << StringView("less");
+        return *this << ("less");
     } else {
-        return *this << StringView("equivalent");
+        return *this << ("equivalent");
     }
 }
 
@@ -186,7 +186,7 @@ static constexpr bool is_positive(T val){
 } 
 
 #define PRINT_NUMERIC_BEGIN(cap)\
-    std::array<char, cap> buf;\
+    alignas(4) std::array<char, cap> buf;\
     char * p_str = buf.data();\
 
 #define PRINT_NUMERIC_END(convfunc, ...)\

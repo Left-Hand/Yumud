@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/math/fixed/fixed.hpp"
 #include "decimal.hpp"
 #include "nondecimal.hpp"
 #include "fixedpoint.hpp"
@@ -10,7 +9,11 @@ namespace ymd::str{
 
 
 
-[[nodiscard]] constexpr char * _fmtnum_mayneg_i32_dec(char * p_str, uint32_t int_val, const IntTypeErased type){
+[[nodiscard]] constexpr char * _fmtnum_mayneg_i32_dec(
+    char * p_str, 
+    uint32_t int_val, 
+    const IntTypeErased type
+){
     if (type.is_signed) {
         const bool is_negative = std::bit_cast<int32_t>(int_val) < 0;
         if(is_negative) {
@@ -36,19 +39,19 @@ namespace ymd::str{
         case 16:{
             const size_t len = type.width / 4;
             char * end = p_str + len;
-            _fmtnum_u32_r16({p_str, end}, static_cast<uint32_t>(int_val));
+            _fmtnum_u32_hex({p_str, end}, static_cast<uint32_t>(int_val));
             return end;
         }
         case 8:{
-            const size_t len = _least_u32_num_digits_r8(static_cast<uint32_t>(int_val));
+            const size_t len = _least_u32_num_digits_oct(static_cast<uint32_t>(int_val));
             char * end = p_str + len;
-            _fmtnum_u32_r8({p_str, end}, static_cast<uint32_t>(int_val));
+            _fmtnum_u32_oct({p_str, end}, static_cast<uint32_t>(int_val));
             return end;
         }
         case 2:{
             const size_t len = type.width;
             char * end = p_str + len;
-            _fmtnum_u32_r2({p_str, end}, static_cast<uint32_t>(int_val));
+            _fmtnum_u32_bin({p_str, end}, static_cast<uint32_t>(int_val));
             return end;
         }
     }
@@ -65,7 +68,9 @@ namespace ymd::str{
     const IntTypeErased type
 );
 
-[[nodiscard]] char * fmtnum_f32(char * p_str, const float value, uint8_t precsion);
+[[nodiscard]] constexpr char * fmtnum_f32(char * p_str, const float value, uint8_t precision){
+    return _fmtnum_f32(p_str, value, precision);
+}
 
 
 struct [[nodiscard]] alignas(4) FixedTypeErased final{
@@ -76,7 +81,7 @@ struct [[nodiscard]] alignas(4) FixedTypeErased final{
 [[nodiscard]] constexpr char * fmtnum_fixedpoint(
     char * p_str, 
     uint32_t bits, 
-    uint8_t precsion, 
+    uint8_t precision, 
     FixedTypeErased type
 ){
     if(type.is_signed){
@@ -89,7 +94,7 @@ struct [[nodiscard]] alignas(4) FixedTypeErased final{
         }
     }
 
-    return _fmtnum_abs_fixedpoint(p_str, static_cast<uint32_t>(bits), precsion, type.q_num);
+    return _fmtnum_abs_fixedpoint(p_str, static_cast<uint32_t>(bits), precision, type.q_num);
 }
 
 

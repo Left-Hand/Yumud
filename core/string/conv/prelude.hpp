@@ -3,7 +3,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/stream/ostream.hpp"
 
-namespace ymd::strconv2{
+namespace ymd::strconv{
 
 enum class [[nodiscard]] DeformatError:uint8_t{
     InvalidNumber,

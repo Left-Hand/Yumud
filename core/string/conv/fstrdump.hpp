@@ -9,7 +9,7 @@
 
 #include "core/string/view/string_view.hpp"
 
-namespace ymd::strconv2{
+namespace ymd::strconv{
 
 struct alignas(4) [[nodiscard]] FstrDump final{
 	//整数部分的数值 eg: "12.34" => 12

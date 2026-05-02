@@ -1,7 +1,7 @@
-#include "strconv2.hpp"
+#include "strconv.hpp"
 
 using namespace ymd;
-using namespace ymd::strconv2;
+using namespace ymd::strconv;
 
 template<typename D>
 static constexpr D err_bits(const D a, const D b){

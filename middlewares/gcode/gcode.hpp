@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 #include "core/string/utils/split_iter.hpp"
 #include "core/utils/result.hpp"
 
@@ -23,7 +23,7 @@ enum class [[nodiscard]] GcodeParseError:uint8_t{
 
 DEF_DERIVE_DEBUG(GcodeParseError)
 
-DEF_ERROR_WITH_KINDS(Error, GcodeParseError, strconv2::DeformatError)
+DEF_ERROR_WITH_KINDS(Error, GcodeParseError, strconv::DeformatError)
 
 template<typename T = void>
 using IResult = Result<T, Error>;   
@@ -242,7 +242,7 @@ struct GcodeValue{
     }
 
     static constexpr Result<GcodeValue, Error> try_from_str(const StringView str){
-        using namespace strconv2;
+        using namespace strconv;
 
 		if (str.length() == 0) {	
 			return Err(DeformatError::EmptyString);
@@ -475,7 +475,7 @@ struct [[nodiscard]] GcodeLine final{
     constexpr IResult<uint16_t> query_major(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
+            const auto res = (strconv::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.digit_part > std::numeric_limits<uint16_t>::max())
@@ -487,7 +487,7 @@ struct [[nodiscard]] GcodeLine final{
     constexpr IResult<uint16_t> query_minor(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
+            const auto res = (strconv::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.num_frac_digits == 0) return Err(GcodeParseError::NoMinorNumber);
@@ -499,7 +499,7 @@ struct [[nodiscard]] GcodeLine final{
 
     constexpr IResult<iq16> query_arg_value(const char letter) const {
         return details::query_tmp<iq16>(line, letter, [](const StringView str) -> IResult<iq16>{
-            const auto res = (strconv2::defmt_from_str<iq16>(str.substr(1).unwrap()));
+            const auto res = (strconv::defmt_from_str<iq16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });

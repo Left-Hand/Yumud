@@ -19,6 +19,17 @@ static_assert(_least_u32_num_digits_dec(99) == 2, "99 should return 2");
 static_assert(_least_u32_num_digits_dec(100) == 3, "100 should return 3");
 static_assert(_least_u32_num_digits_dec(100000) == 6, "100 should return 3");
 
+static_assert(div_10_maylossy(0) == 0);
+static_assert(div_10_maylossy(9) == 0);
+static_assert(div_10_maylossy(99) == 9);
+static_assert(div_10_maylossy(100) == 10);
+static_assert(div_10_maylossy(100000) == 10000);
+static_assert(div_10_maylossy(999999) == 99999);
+static_assert(div_10_maylossy(1000000) == 100000);
+static_assert(div_10_maylossy(9999999) == 999999);
+static_assert(div_10_maylossy(10000000) == 1000000);
+static_assert(div_10_maylossy(99999999) == 9999999);
+
 // 关键测试：0x80000000
 static_assert(_least_u32_num_digits_dec(0x80000000) == 10, "0x80000000 should return 10");
 
@@ -62,29 +73,29 @@ static_assert(_div_3(33) == 11);
 
 
 
-static_assert(_least_u32_num_digits_r16(0xFFFFFFFF) == 8);
-static_assert(_least_u32_num_digits_r16(0xFFFFFFF) == 7);
-static_assert(_least_u32_num_digits_r16(0xFFFFFF) == 6);
-static_assert(_least_u32_num_digits_r16(0xFFFFF) == 5);
-static_assert(_least_u32_num_digits_r16(0xFFFF) == 4);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFFF) == 8);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFF) == 7);
+static_assert(_least_u32_num_digits_hex(0xFFFFFF) == 6);
+static_assert(_least_u32_num_digits_hex(0xFFFFF) == 5);
+static_assert(_least_u32_num_digits_hex(0xFFFF) == 4);
 
 
 // 测试用例
-static_assert(_least_u32_num_digits_r8(0xFFFFFFFF) == 11);  // 37777777777 (32位全1，11位八进制)
-static_assert(_least_u32_num_digits_r8(077777777) == 8);    // 8位八进制
-static_assert(_least_u32_num_digits_r8(0777777) == 6);      // 6位八进制
-static_assert(_least_u32_num_digits_r8(07777) == 4);        // 4位八进制
-static_assert(_least_u32_num_digits_r8(077) == 2);          // 2位八进制
-static_assert(_least_u32_num_digits_r8(07) == 1);           // 1位八进制
-static_assert(_least_u32_num_digits_r8(0) == 1);            // 0特殊处理
+static_assert(_least_u32_num_digits_oct(0xFFFFFFFF) == 11);  // 37777777777 (32位全1，11位八进制)
+static_assert(_least_u32_num_digits_oct(077777777) == 8);    // 8位八进制
+static_assert(_least_u32_num_digits_oct(0777777) == 6);      // 6位八进制
+static_assert(_least_u32_num_digits_oct(07777) == 4);        // 4位八进制
+static_assert(_least_u32_num_digits_oct(077) == 2);          // 2位八进制
+static_assert(_least_u32_num_digits_oct(07) == 1);           // 1位八进制
+static_assert(_least_u32_num_digits_oct(0) == 1);            // 0特殊处理
 
 
 
-static_assert(_least_u32_num_digits_r16(0xFFFFFFFF) == 8);
-static_assert(_least_u32_num_digits_r16(0xFFFFFFF) == 7);
-static_assert(_least_u32_num_digits_r16(0xFFFFFF) == 6);
-static_assert(_least_u32_num_digits_r16(0xFFFFF) == 5);
-static_assert(_least_u32_num_digits_r16(0xFFFF) == 4);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFFF) == 8);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFF) == 7);
+static_assert(_least_u32_num_digits_hex(0xFFFFFF) == 6);
+static_assert(_least_u32_num_digits_hex(0xFFFFF) == 5);
+static_assert(_least_u32_num_digits_hex(0xFFFF) == 4);
 
 
 static_assert(_div_100000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 100000);

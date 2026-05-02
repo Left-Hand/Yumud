@@ -23,11 +23,12 @@ __attribute__((always_inline))
 }
 
 
+// 这里取2的35次方，是因为取到 大于等于 这个值，即算法的推导过程中使用的数字要高于32bit数字8倍以上，
+// 才能够保证任意32bit除数计算的精度，
+// 过去有很多算法论文中给出的 magic number 并不能保证32bit任意数字除十都是完全正确的，是工程中的大坑
+
 __attribute__((always_inline))
 [[nodiscard]] static constexpr uint32_t  div_10( const uint32_t u32_in ) noexcept{
-    // 这里取2的35次方，是因为取到 大于等于 这个值，即算法的推导过程中使用的数字要高于32bit数字8倍以上，
-    // 才能够保证任意32bit除数计算的精度，
-    // 过去有很多算法论文中给出的 magic number 并不能保证32bit任意数字除十都是完全正确的，是工程中的大坑
     constexpr size_t SHIFT = 35;
     constexpr uint32_t MAGIC = (1ull << SHIFT) / 10 + 1;
     uint64_t  u64_out = MAGIC;

@@ -4,7 +4,7 @@
 #include "core/tmp/functor.hpp"
 #include "core/tmp/reflect/enum.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 
 #include "core/utils/hash_redirector.hpp"
 
@@ -31,7 +31,7 @@ enum class [[nodiscard]] EntryInteractError: uint8_t{
 
 DEF_DERIVE_DEBUG(EntryInteractError)
 
-DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv2::DeformatError)
+DEF_ERROR_WITH_KINDS(Error, EntryAccessError, EntryInteractError, strconv::DeformatError)
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -142,7 +142,7 @@ struct ConvertHelper {
 private:
     template<typename T>
     static constexpr Result<void, Error> exact_one(T && element, const StringView str){
-        const auto res = strconv2::defmt_from_str<std::decay_t<T>>(str);
+        const auto res = strconv::defmt_from_str<std::decay_t<T>>(str);
         if(res.is_err()) return Err(Error(res.unwrap_err())); 
         else{
             element = res.unwrap();
@@ -379,7 +379,7 @@ struct EntryVisitor<Property<T>> {
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         const auto val = ({
-            const auto res = strconv2::defmt_from_str<std::decay_t<T>>(ap[0]);
+            const auto res = strconv::defmt_from_str<std::decay_t<T>>(ap[0]);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         });
@@ -416,7 +416,7 @@ struct EntryVisitor<PropertyWithLimit<T>> {
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         const auto val = ({
-            const auto res = strconv2::defmt_from_str<std::decay_t<T>>(ap[0]);
+            const auto res = strconv::defmt_from_str<std::decay_t<T>>(ap[0]);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         });

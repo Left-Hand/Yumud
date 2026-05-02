@@ -256,7 +256,7 @@ void stl06n_main(){
             script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),
             script::make_function("add3", [&](const float a, const float b){return a + b;}),
             script::make_function("ssm", [&](const StringView a, const StringView b){return str::ngram_similarity(a, b);}),
-            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
+            script::make_function("test", [&](const StringView a){return strconv::FstrDump::parse(a);}),
 
             script::make_list( "alct",
                 script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),

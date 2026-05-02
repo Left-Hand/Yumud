@@ -8,7 +8,7 @@ namespace ymd::str{
 
 
 
-static constexpr size_t _least_u32_num_digits_r16(uint32_t val) {
+static constexpr size_t _least_u32_num_digits_hex(uint32_t val) {
     if (val == 0) return 1;
     
     uint32_t bits_needed = 32 - __builtin_clz(val);  // GCC/Clang 内置函数
@@ -16,7 +16,7 @@ static constexpr size_t _least_u32_num_digits_r16(uint32_t val) {
     return (bits_needed + 3) / 4;
 }
 
-static constexpr void _fmtnum_u32_r16(
+static constexpr void _fmtnum_u32_hex(
     MutStrSpan s, 
     uint32_t unsigned_val
 ) {
@@ -36,7 +36,7 @@ static constexpr uint32_t _div_3(const uint32_t n){
 
 
 // 使用 CLZ 计算 32 位无符号整数的八进制位数
-static constexpr size_t _least_u32_num_digits_r8(uint32_t val) {
+static constexpr size_t _least_u32_num_digits_oct(uint32_t val) {
     if (val == 0) return 1;
     
     uint32_t bits_needed = 32 - __builtin_clz(val);  // 有效二进制位数
@@ -46,16 +46,16 @@ static constexpr size_t _least_u32_num_digits_r8(uint32_t val) {
 }
 
 template<typename T>
-static constexpr size_t total_num_digits_r8(){
+static constexpr size_t total_num_digits_oct(){
     switch(sizeof(T)){
-        case 1: return _least_u32_num_digits_r8(0xff);
-        case 2: return _least_u32_num_digits_r8(0xffff);
-        case 4: return _least_u32_num_digits_r8(0xffff'ffff);
+        case 1: return _least_u32_num_digits_oct(0xff);
+        case 2: return _least_u32_num_digits_oct(0xffff);
+        case 4: return _least_u32_num_digits_oct(0xffff'ffff);
     }
     return 0;
 }
 
-static constexpr void _fmtnum_u32_r8(
+static constexpr void _fmtnum_u32_oct(
     MutStrSpan s, 
     uint32_t unsigned_val
 ) {
@@ -69,7 +69,7 @@ static constexpr void _fmtnum_u32_r8(
 
 
 
-static constexpr void _fmtnum_u32_r2(
+static constexpr void _fmtnum_u32_bin(
     MutStrSpan s, 
     uint32_t unsigned_val
 ) {

@@ -6,7 +6,7 @@
 #include "core/async/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/clock/time.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 #include "core/utils/combo_counter.hpp"
 #include "core/utils/default.hpp"
 #include "core/async/delayed_semphr.hpp"
@@ -304,14 +304,13 @@ void winter_mc_tutorial_main(){
         const auto now_secs = clock::seconds();
 
         DEBUG_PRINTLN(
-            target_rotor_x1,
-            target_rotor_x2,
-            meas_rotor_x1,
-            meas_rotor_x2,
-            pwm_dutycycle,
-            400 * iq16(math::sinpu(4 * now_secs))
+            // target_rotor_x1,
+            // target_rotor_x2,
+            // meas_rotor_x1,
+            // meas_rotor_x2,
+            // pwm_dutycycle,
+            iq16(math::sinpu(400 * now_secs)) + iq16(math::sinpu(4 * now_secs))
         );
 
-        clock::delay(1ms);
     }
 }

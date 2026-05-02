@@ -90,7 +90,7 @@ struct Diag{
         constexpr auto diag = []{
             Diag ret;
             ret.length = 2;
-            _fmtnum_u32_r16(ret.crop(), 0x5a);
+            _fmtnum_u32_hex(ret.crop(), 0x5a);
             return ret;
         }();
 
@@ -103,7 +103,7 @@ struct Diag{
         constexpr auto diag = []{
             Diag ret;
             ret.length = 8;
-            _fmtnum_u32_r2(ret.crop(), 0x5a);
+            _fmtnum_u32_bin(ret.crop(), 0x5a);
             return ret;
         }();
 
@@ -169,6 +169,23 @@ struct Diag{
         static_assert(diag.buffer[4 + 2] == '1');
         static_assert(diag.buffer[4 + 3] == '0');
         static_assert(diag.length == 8);
+    }
+
+    {
+        constexpr auto diag = []{
+            Diag ret;
+            const auto end = fmtnum_integral32(ret.buffer.data(), -123, 10, IntTypeErased::from<int8_t>());
+            ret.length = end - ret.buffer.data();
+            return ret;
+        }();
+
+
+        static_assert(diag.buffer[0] == '-');
+        static_assert(diag.buffer[1] == '1');
+        static_assert(diag.buffer[2] == '2');
+        static_assert(diag.buffer[3] == '3');
+
+        static_assert(diag.length == 4);
     }
 
     {

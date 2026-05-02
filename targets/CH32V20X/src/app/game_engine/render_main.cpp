@@ -6,7 +6,7 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 
 #include "primitive/arithmetic/rescaler.hpp"
 #include "primitive/image/painter/painter.hpp"

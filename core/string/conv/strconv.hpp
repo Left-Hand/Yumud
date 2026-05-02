@@ -16,7 +16,7 @@
 
 #include "primitive/arithmetic/angular.hpp"
 
-namespace ymd::strconv2 {
+namespace ymd::strconv {
 
 //是否为0~9的ascii字符
 [[nodiscard]] __always_inline static constexpr 

@@ -184,62 +184,6 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
         .frac_part = frac_part
     };
 
-    #if 0
-    const int32_t exponent = ((std::bit_cast<uint32_t>(fval) >> 23) & 0xFF) - 127;
-    const uint32_t mantissa = std::bit_cast<uint32_t>(fval) & 0x7FFFFF;
-
-    // 构建完整尾数（包含隐含的1）
-    uint32_t full_mantissa = (mantissa | (1U << 23));
-    
-
-    
-    // 计算标准精度的缩放值
-    uint64_t full_value = static_cast<uint64_t>(full_mantissa) * static_cast<uint64_t>(scale);
-    uint64_t scaled_value;
-    int shift_amount;
-
-    if (exponent >= 0) {
-        shift_amount = 23 - exponent;
-        scaled_value = full_value >> shift_amount;
-    } else {
-        shift_amount = 23 + (-exponent);
-        if (shift_amount >= 0 && shift_amount < 64) {
-            scaled_value = full_value >> shift_amount;
-        } else {
-            scaled_value = 0;
-        }
-    }
-
-    // 基于被舍弃的低位检查是否需要舍入
-    // 被舍弃的部分 >= 0.5 时舍入
-    uint64_t discard_mask = (1ULL << shift_amount) - 1;
-    uint64_t discarded_bits = full_value & discard_mask;
-    bool need_round_up = false;
-    if((discarded_bits << 1) & (1ULL << (shift_amount))){
-        need_round_up = true;
-    }
-
-    // 应用舍入
-    if (need_round_up) {
-        scaled_value += 1;
-    }
-    
-    // 分离整数和小数部分，避免直接的64位除法
-    uint32_t digit_part, frac_part;
-    
-    // 使用预先计算的方法分离整数和小数部分
-    if (scaled_value < UINT32_MAX) {
-        // 对于较小的值，可以直接使用32位除法
-        // 这里使用除法并不会比连续快速除法慢 除法占用约10个周期 快速除法占用约4个周期
-        uint32_t val32 = static_cast<uint32_t>(scaled_value);
-        digit_part = val32 / scale;
-        frac_part = val32 % scale;
-    } else {
-        std::tie(digit_part, frac_part) = u64_div_u32(scaled_value, scale);
-    }
-    
-    #endif
-
 }
 
 
