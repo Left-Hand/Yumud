@@ -2,6 +2,7 @@
 
 #include "core/utils/Errno.hpp"
 #include "core/stream/ostream.hpp"
+#include "fmtnum/prelude.hpp"
 
 namespace ymd::strconv{
 
@@ -133,6 +134,9 @@ private:
 
 };
 
+
+#if 0
+
 namespace details{
 
 template<typename T>
@@ -192,4 +196,5 @@ template<typename T>
 	return details::chars_capacity_for_int<T>::value(eps); 
 }
 
+#endif
 }

@@ -29,6 +29,9 @@ static_assert(div_10_maylossy(1000000) == 100000);
 static_assert(div_10_maylossy(9999999) == 999999);
 static_assert(div_10_maylossy(10000000) == 1000000);
 static_assert(div_10_maylossy(99999999) == 9999999);
+static_assert(div_10_maylossy(100000000) == 10000000);
+static_assert(div_10_maylossy(999999999) == 99999999);
+
 
 // 关键测试：0x80000000
 static_assert(_least_u32_num_digits_dec(0x80000000) == 10, "0x80000000 should return 10");

@@ -32,91 +32,89 @@ namespace {
 [[maybe_unused]] static void test_hex(){
 
 
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint32_t>("ffff").unwrap() 
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("ffff", str::IntTypeErased::from<uint32_t>()).unwrap() 
         == 0xffff);
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint32_t>("ffffffff").unwrap() 
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("ffffffff", str::IntTypeErased::from<uint32_t>()).unwrap() 
         == 0xffffffff);
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint64_t>("ffffffffffffffff").unwrap() 
-        == 0xffffffff'ffffffff);
 
 
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint8_t>("00").unwrap() == 0x00);
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint8_t>("f0").unwrap() == 0xf0);
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint8_t>("ff").unwrap() == 0xff);
-    static_assert(IntDeformatterGeneric::parse_bare_hex<uint8_t>("fff").unwrap_err() == DeformatError::StrTooLong);
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("00", str::IntTypeErased::from<uint8_t>()).unwrap() == 0x00);
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("f0", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xf0);
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("ff", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xff);
+    static_assert(IntDeformatterGeneric::parse_bare_hex32("fff", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::StrTooLong);
 }
 
 [[maybe_unused]] static void test_oct(){
     // 八进制基础测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint32_t>("37777777777").unwrap() 
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("37777777777", str::IntTypeErased::from<uint32_t>()).unwrap() 
         == 0xffffffff);  // 八进制 37777777777 = 十六进制 ffffffff
 
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint64_t>("1777777777777777777777").unwrap() 
-        == 0xffffffff'ffffffff);  // 64位全1
+    // static_assert(IntDeformatterGeneric::parse_bare_oct32("1777777777777777777777", str::IntTypeErased::from<uint64_t>()).unwrap() 
+    //     == 0xffffffff'ffffffff);  // 64位全1
 
     // 8位类型测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("000").unwrap() == 0x00);
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("377").unwrap() == 0xff);  // 377 octal = 255 decimal
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("400").unwrap_err() == DeformatError::Overflow);  // 400 > 377
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("000", str::IntTypeErased::from<uint8_t>()).unwrap() == 0x00);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("377", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xff);  // 377 octal = 255 decimal
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("400", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::Overflow);  // 400 > 377
 
     // 边界和错误测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("").unwrap_err() == DeformatError::EmptyString);
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("1234").unwrap_err() == DeformatError::StrTooLong);  // 4 > max_digits(3)
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("8").unwrap_err() == DeformatError::DigitExceedsOct);  // 无效八进制字符
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint8_t>("9").unwrap_err() == DeformatError::DigitExceedsOct);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::EmptyString);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("1234", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::StrTooLong);  // 4 > max_digits(3)
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("8", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::DigitExceedsOct);  // 无效八进制字符
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("9", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::DigitExceedsOct);
 
     // 前导零测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint16_t>("0017777").unwrap_err() == DeformatError::StrTooLong);  // 前导零
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint16_t>("17777").unwrap() == 017777);    // 无前导零
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("0017777", str::IntTypeErased::from<uint16_t>()).unwrap_err() == DeformatError::StrTooLong);  // 前导零
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("17777", str::IntTypeErased::from<uint16_t>()).unwrap() == 017777);    // 无前导零
 
     // 各种值测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint16_t>("7777").unwrap() == 07777);
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint32_t>("1234567").unwrap() == 01234567);
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint32_t>("7654321").unwrap() == 07654321);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("7777", str::IntTypeErased::from<uint16_t>()).unwrap() == 07777);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("1234567", str::IntTypeErased::from<uint32_t>()).unwrap() == 01234567);
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("7654321", str::IntTypeErased::from<uint32_t>()).unwrap() == 07654321);
 
     // 最大长度测试
-    static_assert(IntDeformatterGeneric::parse_bare_oct<uint32_t>("77777777777").unwrap_err() 
+    static_assert(IntDeformatterGeneric::parse_bare_oct32("77777777777", str::IntTypeErased::from<uint32_t>()).unwrap_err() 
         == DeformatError::Overflow);  // 超过32位
 }
 
 [[maybe_unused]] static void test_bin(){
     // 二进制基础测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint32_t>("11111111111111111111111111111111").unwrap() 
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11111111111111111111111111111111", str::IntTypeErased::from<uint32_t>()).unwrap() 
         == 0xffffffff);  // 32个1
 
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint64_t>("1111111111111111111111111111111111111111111111111111111111111111").unwrap() 
-        == 0xffffffff'ffffffff);  // 64个1
+    // static_assert(IntDeformatterGeneric::parse_bare_bin32("1111111111111111111111111111111111111111111111111111111111111111", str::IntTypeErased::from<uint64_t>()).unwrap() 
+    //     == 0xffffffff'ffffffff);  // 64个1
 
     // 8位类型测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("00000000").unwrap() == 0x00);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("11110000").unwrap() == 0xf0);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("11111111").unwrap() == 0xff);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("111111111").unwrap_err() == DeformatError::StrTooLong);  // 9 > 8
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("00000000", str::IntTypeErased::from<uint8_t>()).unwrap() == 0x00);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11110000", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xf0);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11111111", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xff);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("111111111", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::StrTooLong);  // 9 > 8
 
     // 边界和错误测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("").unwrap_err() == DeformatError::EmptyString);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("2").unwrap_err() == DeformatError::DigitExceedsBin);  // 无效二进制字符
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("a").unwrap_err() == DeformatError::InvalidChar);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("10101012").unwrap_err() == DeformatError::DigitExceedsBin);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::EmptyString);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("2", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::DigitExceedsBin);  // 无效二进制字符
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("a", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::InvalidChar);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("10101012", str::IntTypeErased::from<uint8_t>()).unwrap_err() == DeformatError::DigitExceedsBin);
 
     // 各种模式测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("10101010").unwrap() == 0xaa);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("01010101").unwrap() == 0x55);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint16_t>("1010101010101010").unwrap() == 0xaaaa);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint16_t>("0101010101010101").unwrap() == 0x5555);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("10101010", str::IntTypeErased::from<uint8_t>()).unwrap() == 0xaa);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("01010101", str::IntTypeErased::from<uint8_t>()).unwrap() == 0x55);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("1010101010101010", str::IntTypeErased::from<uint16_t>()).unwrap() == 0xaaaa);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("0101010101010101", str::IntTypeErased::from<uint16_t>()).unwrap() == 0x5555);
 
     // 前导零测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint16_t>("0011111111111111").unwrap() == 0x3fff);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint16_t>("1111111111111111").unwrap() == 0xffff);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("0011111111111111", str::IntTypeErased::from<uint16_t>()).unwrap() == 0x3fff);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("1111111111111111", str::IntTypeErased::from<uint16_t>()).unwrap() == 0xffff);
 
     // 混合测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint32_t>("11001100110011001100110011001100").unwrap() == 0xcccccccc);
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint32_t>("00110011001100110011001100110011").unwrap() == 0x33333333);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11001100110011001100110011001100", str::IntTypeErased::from<uint32_t>()).unwrap() == 0xcccccccc);
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("00110011001100110011001100110011", str::IntTypeErased::from<uint32_t>()).unwrap() == 0x33333333);
 
     // 最大长度边缘测试
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint8_t>("11111111").is_ok());
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint16_t>("1111111111111111").is_ok());
-    static_assert(IntDeformatterGeneric::parse_bare_bin<uint32_t>("11111111111111111111111111111111").is_ok());
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11111111", str::IntTypeErased::from<uint8_t>()).is_ok());
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("1111111111111111", str::IntTypeErased::from<uint16_t>()).is_ok());
+    static_assert(IntDeformatterGeneric::parse_bare_bin32("11111111111111111111111111111111", str::IntTypeErased::from<uint32_t>()).is_ok());
 }
 
 

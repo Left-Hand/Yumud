@@ -10,6 +10,7 @@
 #include "core/string/view/mut_string_view.hpp"
 #include "core/string/utils/pow10.hpp"
 
+
 #include "prelude.hpp"
 #include "fstrdump.hpp"
 
@@ -119,7 +120,7 @@ struct [[nodiscard]] IntDeformatterGeneric{
 
 
 	template<typename T>
-	static constexpr DestringResult<T> parse_dec(const StringView str) {
+	static constexpr DestringResult<T> parse_dec32(const StringView str) {
 		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
 		const auto length = str.length();
 		if(length == 0) return Err(DeformatError::EmptyString);
@@ -136,12 +137,42 @@ struct [[nodiscard]] IntDeformatterGeneric{
 			}
 		};
 
+// 		const char * pchr = str.data();
+
+// 		for(;pchr < str.end(); pchr++){
+// 			char chr = *pchr;
+
+// 			switch(chr){
+// 				case '\0':
+// 					return Err(DeformatError::InvalidNullTerminator);
+// 				case '-':
+// 					if constexpr(std::is_unsigned_v<T>)
+// 						return Err(DeformatError::NegForUnsigned);
+// 					if(existing_sign != 0) 
+// 						return Err(DeformatError::MultiplyNegative);
+// 					existing_sign = '-';
+// 					break;
+// 				case '+':
+// 					if(existing_sign != 0) 
+// 						return Err(DeformatError::MultiplyPositive);
+// 					existing_sign = '+';
+// 					break;
+// 				case '.':
+// 					return Err(DeformatError::UnexpectedDotInInteger);
+// 				case 'a' ... 'z':
+// 				case 'A' ... 'Z':
+// 					return Err(DeformatError::UnexpectedAlpha);
+// 				default:
+// 					return Err(DeformatError::InvalidChar);
+// 			}
+// 		}
+// proc_digits:
 		for(size_t i = size_t(bool(existing_sign)); i < length; i++){
 			char chr = str[i];
 
 			switch(chr){
 				case '\0':
-					return Ok(compute_final());
+					return Err(DeformatError::InvalidNullTerminator);
 				case '-':
 					if constexpr(std::is_unsigned_v<T>)
 						return Err(DeformatError::NegForUnsigned);
@@ -161,15 +192,6 @@ struct [[nodiscard]] IntDeformatterGeneric{
 					}
 
 					unsigned_temp = (10u * unsigned_temp) + static_cast<U>(chr - '0');
-					{
-						constexpr U MAX_INT_NUM = static_cast<U>(std::numeric_limits<T>::max());
-						if constexpr(std::is_signed_v<T>){
-							if((existing_sign == '-') and (unsigned_temp > MAX_INT_NUM + 1)) [[unlikely]]
-								return Err(DeformatError::Underflow);
-						}
-						if((unsigned_temp > MAX_INT_NUM)) [[unlikely]]
-							return Err(DeformatError::Overflow);
-					}
 
 					break;
 				}
@@ -182,21 +204,33 @@ struct [[nodiscard]] IntDeformatterGeneric{
 					return Err(DeformatError::InvalidChar);
 			}
 		}
+
+		{
+			constexpr U MAX_INT_NUM = static_cast<U>(std::numeric_limits<T>::max());
+			if constexpr(std::is_signed_v<T>){
+				if((existing_sign == '-') and (unsigned_temp > MAX_INT_NUM + 1)) [[unlikely]]
+					return Err(DeformatError::Underflow);
+			}
+			if((unsigned_temp > MAX_INT_NUM)) [[unlikely]]
+				return Err(DeformatError::Overflow);
+		}
+
+
 		return Ok(compute_final());
 	}
 
-	template<typename T>
-	static constexpr DestringResult<T> parse_bare_hex(const StringView str) {
-		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
-		static_assert(std::is_unsigned_v<T>, "hex must be unsigned");
+	static constexpr DestringResult<uint32_t> parse_bare_hex32(
+		const StringView str,
+		const str::IntTypeErased type
+	) {
 
 		const auto str_length = str.length();
 		if(str_length == 0) return Err(DeformatError::EmptyString);
 
-		U temp = 0;
+		uint32_t temp = 0;
 
 		//nibble calc
-		if(str_length > sizeof(T) * 2) return Err(DeformatError::StrTooLong);
+		if(str_length > (type.width / 4)) return Err(DeformatError::StrTooLong);
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i ++){
@@ -223,95 +257,104 @@ struct [[nodiscard]] IntDeformatterGeneric{
 			temp = (temp << 4) | nibble;
 		}
 
-		return Ok(static_cast<T>(temp));
+		return Ok(static_cast<uint32_t>(temp));
 	}
 
-	template<typename T>
-	static constexpr DestringResult<T> parse_bare_oct(const StringView str) {
-		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
-		static_assert(std::is_unsigned_v<T>, "oct must be unsigned");
-
+	static constexpr DestringResult<uint32_t> parse_bare_oct32(
+		const StringView str,
+		const str::IntTypeErased type
+	) {
 		const auto str_length = str.length();
 		if(str_length == 0) return Err(DeformatError::EmptyString);
 
-		U temp = 0;
+		uint32_t temp = 0;
 
 		// 八进制：每个字符3位，但需要处理前导零
 		// 最大长度 = ceil(sizeof(T) * 8 / 3)
-		constexpr size_t MAX_OCT_DIGITS = (sizeof(T) * 8 + 2) / 3; // 向上取整
+		const size_t MAX_OCT_DIGITS = (type.width + 2) / 3; // 向上取整
 		if(str_length > MAX_OCT_DIGITS) return Err(DeformatError::StrTooLong);
+
+		const uint32_t max_temp = [&] -> uint32_t{
+			switch(type.width){
+				case 32: return std::numeric_limits<uint32_t>::max();
+				case 16: return std::numeric_limits<uint16_t>::max();
+				case 8: return std::numeric_limits<uint8_t>::max();
+			}
+			return 0;
+		}() >> 3;
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i++) {
 			const auto chr = str[i];
 
-			uint8_t digit = 0;
-			switch(chr) {
-				case '\0':
-					return Err(DeformatError::InvalidNullTerminator);
-				case '0' ... '7':
-					digit = chr - '0';
-					break;
-				case '8' ... '9':
+			if(chr > '7') [[unlikely]]{
+				if(chr <= '9'){
 					return Err(DeformatError::DigitExceedsOct);
-				default:
-					return Err(DeformatError::InvalidChar);
+				}
+
+			return Err(DeformatError::InvalidChar);
 			}
 
-			// 检查移位是否会导致溢出（对于U可能小于T的情况）
-			if constexpr (sizeof(U) * 8 <= sizeof(T) * 8) {
-				// 如果U不比T大，需要检查移位溢出
-				constexpr U max_shift_safe = std::numeric_limits<U>::max() >> 3;
-				if (temp > max_shift_safe) {
-					return Err(DeformatError::Overflow);
+			if(chr < '0') [[unlikely]]{
+				if(chr == '\0'){
+					return Err(DeformatError::InvalidNullTerminator);
 				}
+
+				return Err(DeformatError::InvalidChar);
+			}
+
+			if (temp > max_temp) [[unlikely]] {
+				return Err(DeformatError::Overflow);
 			}
 			
-			temp = (temp << 3) | digit;
+			temp = (temp << 3) | (chr - '0');
 		}
 
 		// 最终检查是否适合T
-		if (temp > std::numeric_limits<T>::max()) {
+		if (temp > std::numeric_limits<uint32_t>::max()) {
 			return Err(DeformatError::Overflow);
 		}
 
-		return Ok(static_cast<T>(temp));
+		return Ok(static_cast<uint32_t>(temp));
 	}
 
-	template<typename T>
-	static constexpr DestringResult<T> parse_bare_bin(const StringView str) {
-		using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
-		static_assert(std::is_unsigned_v<U>, "bin must be unsigned");
-
+	static constexpr DestringResult<uint32_t> parse_bare_bin32(
+		const StringView str, 
+		const str::IntTypeErased type
+	) {
 		const auto str_length = str.length();
 		if(str_length == 0) return Err(DeformatError::EmptyString);
 
-		U temp = 0;
+		uint32_t temp = 0;
 
 		// 二进制：每个字符1位
-		if(str_length > sizeof(T) * 8) return Err(DeformatError::StrTooLong);
+		if(str_length > type.width) return Err(DeformatError::StrTooLong);
 
 		#pragma GCC unroll 2
 		for(size_t i = 0; i < str_length; i++) {
 			const auto chr = str[i];
 
-			uint8_t bit = 0;
-			switch(chr) {
-				case '\0':
-					return Err(DeformatError::InvalidNullTerminator);
-				case '0' ... '1':
-					bit = chr - '0';
-					break;
-				case '2' ... '9':
+
+			if(chr > '1') [[unlikely]]{
+				if(chr < '9'){
 					return Err(DeformatError::DigitExceedsBin);
-				default:
-					return Err(DeformatError::InvalidChar);
+				}
+
+				return Err(DeformatError::InvalidChar);
 			}
-			
-			temp = (temp << 1) | bit;
+
+			if(chr < '0') [[unlikely]]{
+				if(chr == '\0'){
+					return Err(DeformatError::InvalidNullTerminator);
+				}
+
+				return Err(DeformatError::InvalidChar);
+			}
+
+			temp = (temp << 1) | (chr - '0');
 		}
 
-		return Ok(static_cast<T>(temp));
+		return Ok(static_cast<uint32_t>(temp));
 	}
 };
 
@@ -320,7 +363,7 @@ struct [[nodiscard]] IntDeformatter final:public IntDeformatterGeneric{
 	using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
 	static constexpr DestringResult<T> parse(StringView str){
 		if constexpr(std::is_signed_v<T>){
-			return parse_dec<T>(str);
+			return parse_dec32<T>(str);
 		}else{
 			//只有无符号数才可能检测为hex/oct/bin
 
@@ -336,15 +379,17 @@ struct [[nodiscard]] IntDeformatter final:public IntDeformatterGeneric{
 			}
 
 			switch(radix.count()){
-				case 2: return parse_bare_bin<T>(str);
-				case 8: return parse_bare_oct<T>(str);
-				case 10: return parse_dec<T>(str);
-				case 16: return parse_bare_hex<T>(str);
+				case 2: return parse_bare_bin32(str, str::IntTypeErased::from<T>())
+					.template map([](const uint32_t x){return static_cast<T>(x);});
+				case 8: return parse_bare_oct32(str, str::IntTypeErased::from<T>())
+					.template map([](const uint32_t x){return static_cast<T>(x);});
+				case 10: return parse_dec32<T>(str);
+				case 16: return parse_bare_hex32(str, str::IntTypeErased::from<T>())
+					.template map([](const uint32_t x){return static_cast<T>(x);});
 			}
 
 			return Err(DeformatError::InvalidRadix);
 		}
-
 	}
 };
 
@@ -399,7 +444,7 @@ struct [[nodiscard]] FixedPointSynthesizer final{
 		return ret;
 	}();
 
-	static constexpr DestringResult<T> synthesize(
+	static constexpr T synthesize(
 		const FstrDump & dump
 	){
 		auto apply_sign = [&](const T x) -> T{
@@ -412,30 +457,34 @@ struct [[nodiscard]] FixedPointSynthesizer final{
 		};
 		
 		if (dump.num_frac_digits == 0){
-			return Ok(apply_sign(static_cast<T>(dump.digit_part)));
+			return apply_sign(static_cast<T>(dump.digit_part));
 		}else{
-			if(dump.num_frac_digits >= TABLE_LEN){
-				return Err(DeformatError::FracTooLong);
-			}
 
 			const T res = T::from_bits(
 				static_cast<D>((uint64_t(dump.frac_part) * INV_POW10_TABLE[dump.num_frac_digits]) >> 32)
 			) + static_cast<T>(dump.digit_part);
 
-			return Ok(apply_sign(res));
+			return apply_sign(res);
 		}
 	}
 };
 
+
+struct [[nodiscard]] BasicFixedPointDeformatter{
+
+};
+
+
 template<size_t NUM_Q, typename D>
-struct [[nodiscard]] FixedPointDeformatter final{
+struct [[nodiscard]] FixedPointDeformatter final:public BasicFixedPointDeformatter{
 	using T = math::fixed<NUM_Q, D>;
+	static_assert(sizeof(D) <= 4, "64bit is not supported yet");
+	static constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
 
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
 		std::numeric_limits<math::fixed<NUM_Q, D>>::max());	
-	static constexpr DestringResult<T> parse(const StringView str){
-		static_assert(sizeof(D) <= 4, "64bit is not supported yet");
 
+	static constexpr DestringResult<T> parse(const StringView str){
 		//从字符串dump出相关信息
 		const FstrDump dump = ({
 			const auto res = FstrDump::parse(str);
@@ -458,9 +507,13 @@ struct [[nodiscard]] FixedPointDeformatter final{
 			}
 		}
 
-		return FixedPointSynthesizer<NUM_Q, D>::synthesize(
+		if(dump.num_frac_digits >= TABLE_LEN){
+			return Err(DeformatError::FracTooLong);
+		}
+
+		return Ok(FixedPointSynthesizer<NUM_Q, D>::synthesize(
 			dump
-		);
+		));
 
 	}
 };
