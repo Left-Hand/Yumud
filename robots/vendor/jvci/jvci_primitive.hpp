@@ -11,7 +11,7 @@ namespace ymd::robots::jvci{
 
 namespace utils{
 static constexpr iq16 degree001_to_turns(const int32_t bits){
-    constexpr uint32_t S = 26;
+    constexpr uint32_t S = 32;
     constexpr int64_t M = static_cast<int64_t>(((1ULL << (16 + S)) + 36000 - 1) / 36000);
     
     const int64_t product = static_cast<int64_t>(bits) * M;
@@ -22,9 +22,100 @@ static constexpr iq16 degree001_to_turns(const int32_t bits){
 
 static constexpr int32_t turns_to_degree001(const iq16 turns){
     const int32_t turns_bits = turns.to_bits();
-    const int32_t degree001 = static_cast<int32_t>((static_cast<int64_t>(turns_bits) * 36000LL) >> 16);
+    const int32_t degree001 = static_cast<int32_t>((static_cast<int64_t>(turns_bits) * (36000LL << 16)) >> 32);
     return degree001;
 }
+
+
+template<size_t SHIFTS>
+static constexpr int32_t right_shift_rounded(const int32_t x){
+    return ((x >> (SHIFTS - 1)) + 1) >> 1;
+}
+
+
+
+template<typename T, uint32_t SCALE>
+struct mul;
+
+template<std::floating_point T, uint32_t SCALE>
+struct mul<T, SCALE>{
+    static constexpr int32_t calc(const T x){
+        return static_cast<int32_t>(x * SCALE);
+    }
+};
+
+template<size_t Q>
+struct mul<math::fixed<Q, int32_t>, 100u>{
+    static constexpr int32_t calc(const math::fixed<Q, int32_t> x){
+        constexpr int32_t FACTOR = 100 * (1u << (32 - x.NUM_Q));
+        return static_cast<int32_t>(
+            (int64_t(x.to_bits()) * FACTOR) >> 32
+        );
+    }
+};
+
+template<size_t Q>
+struct mul<math::fixed<Q, int32_t>, 6000u>{
+    static constexpr int32_t calc(const math::fixed<Q, int32_t> x){
+        constexpr int32_t FACTOR = 60 * 100 * (1u << (32 - x.NUM_Q));
+        return static_cast<int32_t>(
+            (int64_t(x.to_bits()) * FACTOR) >> 32
+        );
+    }
+};
+
+
+template<typename Meta, typename T>
+static constexpr int32_t bounded_encode(T x){
+    if constexpr(std::is_floating_point_v<T>){
+        constexpr T min = (T)(Meta::MIN_VALUE);
+
+        constexpr T max = (T)(Meta::MAX_VALUE);
+
+        x = std::clamp(x, min, max);
+    }else{
+        constexpr T min = (T)std::max(
+            (long double)std::numeric_limits<T>::min(), 
+            (long double)(Meta::MIN_VALUE));
+    
+        constexpr T max = (T)std::min(
+            (long double)std::numeric_limits<T>::max(), 
+            (long double)(Meta::MAX_VALUE));
+
+        x = std::clamp(x, min, max);
+    }
+
+
+    int32_t bits = utils::mul<T, Meta::RATIO>::calc(x);
+    return bits;
+}
+
+template<typename T, uint32_t SCALE>
+struct div;
+
+template<>
+struct div<iq16, 100>{
+    static constexpr iq16 calc(int32_t bits){
+        constexpr int32_t FACTOR = int32_t(0.01 * (1ull << 32));
+        return iq16::from_bits((int64_t(bits) * FACTOR) >> 16);
+    }
+};
+
+template<uint32_t SCALE>
+struct div<float, SCALE>{
+    static constexpr float INV_SCALE = 1.0f / SCALE;
+    static constexpr float calc(int32_t bits){
+        return static_cast<float>(bits) * INV_SCALE;
+    }
+};
+
+
+template<typename Meta, typename T>
+static constexpr T bounded_decode(int32_t x){
+    return div<T, Meta::RATIO>::calc(x);
+}
+
+
 }
 
 
@@ -138,7 +229,6 @@ enum class [[nodiscard]] RegAddr : uint16_t {
     RealSpeedH         = 0x0006, // 只读 ×100 实时速度H ±10000rpm
     RealPositionH      = 0x0007, // 只读 ×100 实时位置H
     RealPositionL      = 0x0008, // 只读 ×100 实时位置L
-    Reserved0009       = 0x0009, // 只读 预留
     DriverTemperature  = 0x000A, // 只读 ×10 驱动器温度 0-150°C
     MotorTemperature   = 0x000B, // 只读 ×10 电机温度 0-150°C
     ErrorInfoH         = 0x000C, // 只读 错误信息H 32bit
@@ -290,21 +380,21 @@ struct [[nodiscard]] BusbarVoltageCode final {
 
     uint16_t bits;
 
-    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = volt
-    static constexpr float INV_SCALE = 1.0 / SCALE; 
+    static constexpr float LSB_VALUE = 0.1f;      ///< 反编码倍数：bits * 0.1 = volt
+    static constexpr float INV_LSB_VALUE = 1.0 / LSB_VALUE; 
     static constexpr uint16_t OFFSET = 0;
 
     /// 从电压值（单位：V）编码为电源电压码
     /// @param volt 电压值，范围 0-100V
     /// @return 编码后的电源电压码
     static constexpr BusbarVoltageCode from_volt(const float volt){
-        const auto bits = bounded_encode_to<uint16_t>(volt, INV_SCALE, OFFSET);
+        const auto bits = bounded_encode_to<uint16_t>(volt, INV_LSB_VALUE, OFFSET);
         return BusbarVoltageCode{.bits = bits};
     }
 
     /// 将电源电压码解码为电压值（单位：V）
     [[nodiscard]] constexpr float to_volt() const {
-        return decode_from(bits, SCALE, OFFSET);
+        return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
 
@@ -315,23 +405,53 @@ struct [[nodiscard]] BusbarVoltageCode final {
 struct [[nodiscard]] SpeedCode final {
     using Self = SpeedCode;
 
-    int32_t bits;
+    using bits_type = int32_t;
+    bits_type bits;
 
-    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = rpm
-    static constexpr float INV_SCALE = 1.0 / SCALE;
-    static constexpr int32_t OFFSET = 0;
+    static constexpr bits_type MAX_BITS = 100 * 10000;
+    static constexpr bits_type MIN_BITS = -MAX_BITS;
+    
+    struct RpmScaleMeta{
+        static constexpr uint32_t RATIO = 100;
+        static constexpr float MAX_VALUE = 10000;
+        static constexpr float MIN_VALUE = -MAX_VALUE;
+    };
 
-    /// 从转速值（单位：rpm）编码为速度码
-    /// @param rpm 转速值，范围 ±10000rpm
-    /// @return 编码后的速度码
-    static constexpr SpeedCode from_rpm(const float rpm){
-        const auto bits = bounded_encode_to<int32_t>(rpm, INV_SCALE, OFFSET);
+    struct TpsScaleMeta{
+        static constexpr uint32_t RATIO = 6000;
+        static constexpr float MAX_VALUE = 10000 * 60;
+        static constexpr float MIN_VALUE = -MAX_VALUE;
+    };
+
+
+    static constexpr SpeedCode from_bits_bounded(bits_type bits){
+        bits = std::clamp(bits, MIN_BITS, MAX_BITS);
         return SpeedCode{.bits = bits};
     }
 
+
+    template<typename T>
+    static constexpr SpeedCode from_rpm_bounded(T rpm){
+        const auto bits = utils::bounded_encode<RpmScaleMeta>(rpm);
+        return from_bits_bounded(bits);
+    }
+
+    template<typename T>
+    static constexpr SpeedCode from_tps_bounded(T tps){
+        const auto bits = utils::bounded_encode<TpsScaleMeta>(tps);
+        return from_bits_bounded(bits);
+    }
+
+
     /// 将速度码解码为转速值（单位：rpm）
-    [[nodiscard]] constexpr float to_rpm() const {
-        return decode_from(bits, SCALE, OFFSET);
+    template<typename T>
+    [[nodiscard]] constexpr T to_rpm() const {
+        return utils::bounded_decode<RpmScaleMeta, T>(bits);
+    }
+
+    template<typename T>
+    [[nodiscard]] constexpr T to_tps() const {
+        return utils::bounded_decode<TpsScaleMeta, T>(bits);
     }
 };
 
@@ -344,21 +464,23 @@ struct [[nodiscard]] PositionCode final {
 
     int32_t bits;
 
-    static constexpr float DEG_SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = degrees
-    static constexpr float INV_DEG_SCALE = 1.0 / DEG_SCALE;
+    static constexpr float DEG_VALUE = 0.01f;     ///< 反编码倍数：bits * 0.01 = degrees
+    static constexpr float INV_DEG_VALUE = 1.0 / DEG_VALUE;
     static constexpr int32_t OFFSET = 0;
+
+    static constexpr int32_t TURNS_LIMIT = 11796480 / 360;
 
     /// 从角度值（单位：°）编码为位置码
     /// @param degrees 角度值，范围 -11796120°~11796480°
     /// @return 编码后的位置码
     static constexpr PositionCode from_degrees(const float degrees){
-        const auto bits = bounded_encode_to<int32_t>(degrees, INV_DEG_SCALE, OFFSET);
+        const auto bits = bounded_encode_to<int32_t>(degrees, INV_DEG_VALUE, OFFSET);
         return PositionCode{.bits = bits};
     }
 
     /// 将位置码解码为角度值（单位：°）
     [[nodiscard]] constexpr float to_degrees() const {
-        return decode_from(bits, DEG_SCALE, OFFSET);
+        return decode_from(bits, DEG_VALUE, OFFSET);
     }
 
     static constexpr PositionCode from_turns(const iq16 turns){
@@ -378,23 +500,36 @@ struct [[nodiscard]] PositionCode final {
 struct [[nodiscard]] BusCurrentCode final {
     using Self = BusCurrentCode;
 
-    int16_t bits;
+    using bits_type = int16_t;
+    bits_type bits;
 
-    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = ampere
-    static constexpr float INV_SCALE = 1.0 / SCALE;
-    static constexpr int16_t OFFSET = 0;
+    static constexpr bits_type MAX_BITS = 20 * 100;
+    static constexpr bits_type MIN_BITS = - MAX_BITS;
 
-    /// 从电流值（单位：A）编码为母线电流码
-    /// @param ampere 电流值，范围 ±20A
-    /// @return 编码后的母线电流码
-    static constexpr BusCurrentCode from_ampere(const float ampere){
-        const auto bits = bounded_encode_to<int16_t>(ampere, INV_SCALE, OFFSET);
+    struct AmpereScaleMeta{
+        static constexpr uint32_t RATIO = 100;
+        static constexpr float MAX_VALUE = 20.0;
+        static constexpr float MIN_VALUE = -MAX_VALUE;
+    };
+
+
+    static constexpr BusCurrentCode from_bits_bounded(bits_type bits){
+        bits = std::clamp(bits, MIN_BITS, MAX_BITS);
         return BusCurrentCode{.bits = bits};
     }
 
+
+    template<typename T>
+    static constexpr BusCurrentCode from_ampere_bounded(T ampere){
+        const auto bits = static_cast<int16_t>(utils::bounded_encode<AmpereScaleMeta>(ampere));
+        return from_bits_bounded(bits);
+    }
+
+
     /// 将母线电流码解码为电流值（单位：A）
-    [[nodiscard]] constexpr float to_ampere() const {
-        return decode_from(bits, SCALE, OFFSET);
+    template<typename T>
+    [[nodiscard]] constexpr T to_ampere() const {
+        return utils::bounded_decode<AmpereScaleMeta, T>(static_cast<int32_t>(bits));
     }
 };
 
@@ -402,55 +537,30 @@ struct [[nodiscard]] BusCurrentCode final {
 /// 寄存器地址：0x000A
 /// 倍数×10，范围：0-150°C
 /// 编码示例：34.5°C → 0x0159 (345)
-struct [[nodiscard]] DriverTemperatureCode final {
-    using Self = DriverTemperatureCode;
+struct [[nodiscard]] TemperatureCode final {
+    using Self = TemperatureCode;
 
     uint16_t bits;
 
-    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = celsius
-    static constexpr float INV_SCALE = 1.0 / SCALE; 
+    static constexpr float LSB_VALUE = 0.1f;      ///< 反编码倍数：bits * 0.1 = celsius
+    static constexpr float INV_LSB_VALUE = 1.0 / LSB_VALUE; 
     static constexpr uint16_t OFFSET = 0;
 
     /// 从温度值（单位：°C）编码为驱动器温度码
     /// @param celsius 温度值，范围 0-150°C
     /// @return 编码后的驱动器温度码
-    static constexpr DriverTemperatureCode from_celsius(const float celsius){
-        const auto bits = bounded_encode_to<uint16_t>(celsius, INV_SCALE, OFFSET);
-        return DriverTemperatureCode{.bits = bits};
+    static constexpr TemperatureCode from_celsius_bounded(float celsius){
+        celsius = std::clamp(celsius, 0.0f, 150.0f);
+        const auto bits = static_cast<uint16_t>(celsius * 10);
+        return TemperatureCode{.bits = bits};
     }
 
     /// 将驱动器温度码解码为温度值（单位：°C）
-    [[nodiscard]] constexpr float to_celsius() const {
-        return decode_from(bits, SCALE, OFFSET);
+    [[nodiscard]] constexpr float to_celsius_f() const {
+        return static_cast<float>(bits) * 0.1f;
     }
 };
 
-/// 电机温度编码
-/// 寄存器地址：0x000B
-/// 倍数×10，范围：0-150°C
-/// 编码示例：67.8°C → 0x0237 (567)
-struct [[nodiscard]] MotorTemperatureCode final {
-    using Self = MotorTemperatureCode;
-
-    uint16_t bits;
-
-    static constexpr float SCALE = 0.1f;      ///< 反编码倍数：bits * 0.1 = celsius
-    static constexpr float INV_SCALE = 1.0 / SCALE; 
-    static constexpr uint16_t OFFSET = 0;
-
-    /// 从温度值（单位：°C）编码为电机温度码
-    /// @param celsius 温度值，范围 0-150°C
-    /// @return 编码后的电机温度码
-    static constexpr MotorTemperatureCode from_celsius(const float celsius){
-        const auto bits = bounded_encode_to<uint16_t>(celsius, INV_SCALE, OFFSET);
-        return MotorTemperatureCode{.bits = bits};
-    }
-
-    /// 将电机温度码解码为温度值（单位：°C）
-    [[nodiscard]] constexpr float to_celsius() const {
-        return decode_from(bits, SCALE, OFFSET);
-    }
-};
 
 /// 力矩编码
 /// 寄存器地址：0x0020
@@ -461,21 +571,27 @@ struct [[nodiscard]] TorqueCode final {
 
     int16_t bits;
 
-    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = newton_meter
-    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr float LSB_VALUE = 0.01f;     ///< 反编码倍数：bits * 0.01 = newton_meter
+    static constexpr float INV_LSB_VALUE = 1.0 / LSB_VALUE;
     static constexpr int16_t OFFSET = 0;
 
-    /// 从力矩值（单位：Nm）编码为力矩码
-    /// @param newton_meter 力矩值，范围 ±100Nm
-    /// @return 编码后的力矩码
-    static constexpr TorqueCode from_newton_meter(const float newton_meter){
-        const auto bits = bounded_encode_to<int16_t>(newton_meter, INV_SCALE, OFFSET);
+
+    struct NewtonMeterScaleMeta{
+        static constexpr uint32_t RATIO = 100;
+        static constexpr float MAX_VALUE = 100.0;
+        static constexpr float MIN_VALUE = -MAX_VALUE;
+    };
+
+
+    template<typename T>
+    static constexpr TorqueCode from_newton_meter_bounded(T newton_meter){
+        const auto bits = static_cast<int16_t>(utils::bounded_encode<NewtonMeterScaleMeta>(newton_meter));
         return TorqueCode{.bits = bits};
     }
 
     /// 将力矩码解码为力矩值（单位：Nm）
     [[nodiscard]] constexpr float to_newton_meter() const {
-        return decode_from(bits, SCALE, OFFSET);
+        return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
 
@@ -485,17 +601,14 @@ struct [[nodiscard]] PvSpeedCode final {
 
     int16_t bits;
 
-    static constexpr float SCALE = 1.0f;     ///< 反编码倍数：bits * 0.01 = rpm
-    static constexpr float INV_SCALE = 1.0 / SCALE;
-    static constexpr int16_t OFFSET = 0;
-
-    static constexpr PvSpeedCode from_rpm(const float rpm){
-        const auto bits = bounded_encode_to<int16_t>(rpm, INV_SCALE, OFFSET);
+    static constexpr PvSpeedCode from_rpm_bounded(float rpm){
+        rpm = std::clamp(rpm, -15000.0f, 15000.0f);
+        const auto bits = static_cast<int16_t>(rpm);
         return PvSpeedCode{.bits = bits};
     }
 
     [[nodiscard]] constexpr float to_rpm() const {
-        return decode_from(bits, SCALE, OFFSET);
+        return static_cast<float>(bits);
     }
 };
 
@@ -504,17 +617,17 @@ struct [[nodiscard]] PvTorqueCode final {
 
     uint8_t bits;
 
-    static constexpr float SCALE = 1.0f;     ///< 反编码倍数：bits * 0.01 = rpm
-    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr float LSB_VALUE = 1.0f;     ///< 反编码倍数：bits * 0.01 = rpm
+    static constexpr float INV_LSB_VALUE = 1.0 / LSB_VALUE;
     static constexpr uint8_t OFFSET = 0;
 
     static constexpr PvTorqueCode from_percents(const float rpm){
-        const auto bits = bounded_encode_to<uint8_t>(rpm, INV_SCALE, OFFSET);
+        const auto bits = bounded_encode_to<uint8_t>(rpm, INV_LSB_VALUE, OFFSET);
         return PvTorqueCode{.bits = bits};
     }
 
     [[nodiscard]] constexpr float to_percents() const {
-        return decode_from(bits, SCALE, OFFSET);
+        return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
 
@@ -528,21 +641,27 @@ struct [[nodiscard]] LowSpeedCode final {
 
     int16_t bits;
 
-    static constexpr float SCALE = 0.01f;     ///< 反编码倍数：bits * 0.01 = rpm
-    static constexpr float INV_SCALE = 1.0 / SCALE;
+    static constexpr float LSB_VALUE = 0.01f;     ///< 反编码倍数：bits * 0.01 = rpm
+    static constexpr float INV_LSB_VALUE = 1.0 / LSB_VALUE;
     static constexpr int16_t OFFSET = 0;
 
-    /// 从低速值（单位：rpm）编码为低速码
-    /// @param rpm 低速值，范围 ±300rpm
-    /// @return 编码后的低速码
-    static constexpr LowSpeedCode from_rpm(const float rpm){
-        const auto bits = bounded_encode_to<int16_t>(rpm, INV_SCALE, OFFSET);
+    struct RpmScaleMeta{
+        static constexpr uint32_t RATIO = 100;
+        static constexpr float MAX_VALUE = 300.0;
+        static constexpr float MIN_VALUE = -MAX_VALUE;
+    };
+
+
+    template<typename T>
+    static constexpr LowSpeedCode from_rpm_bounded(T rpm){
+        const auto bits = static_cast<int16_t>(utils::bounded_encode<RpmScaleMeta>(rpm));
         return LowSpeedCode{.bits = bits};
     }
 
+
     /// 将低速码解码为低速值（单位：rpm）
     [[nodiscard]] constexpr float to_rpm() const {
-        return decode_from(bits, SCALE, OFFSET);
+        return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
 

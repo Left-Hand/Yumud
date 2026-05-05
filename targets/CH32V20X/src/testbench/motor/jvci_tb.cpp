@@ -28,8 +28,8 @@ static constexpr uint8_t RIGHT_MOTOR_AXIS_ID = 0x02;
 
 
 void jvci_main(){
-    auto & DBG_UART = hal::usart2;
 
+    auto & DBG_UART = hal::usart2;
 
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -45,6 +45,15 @@ void jvci_main(){
         .no_fieldname(EN)
         .force_sync(EN)
         .finalize();
+
+    auto led_pin = hal::PC<13>();
+    led_pin.outpp();
+
+    auto poll_led = [&]{
+        const uint32_t now_millis = static_cast<uint32_t>(clock::millis().count());
+        led_pin.write(BoolLevel::from(now_millis % 200 > 100));
+    };
+
 
     auto & can = hal::can1;
     //初始化CAN外设
@@ -113,39 +122,54 @@ void jvci_main(){
     // ;
 
 
-    static constexpr jvci::CanRequestFrameFactory factory{
-        .node_id = jvci::NodeId::try_from_u8(2).unwrap()
+    static constexpr jvci::CanRequestFrameFactory left_factory{
+        .node_id = jvci::NodeId::try_from_u8(LEFT_MOTOR_AXIS_ID).unwrap()
+    };
+
+    static constexpr jvci::CanRequestFrameFactory right_factory{
+        .node_id = jvci::NodeId::try_from_u8(RIGHT_MOTOR_AXIS_ID).unwrap()
     };
 
 
-    write_can_frame(factory.set_control_mode(jvci::ControlMode::DirectPosition), 2ms);
-    write_can_frame(factory.enter_close_loop(), 2ms);
+    write_can_frame(left_factory.set_control_mode(jvci::ControlMode::Speed), 2ms);
+    write_can_frame(left_factory.enter_close_loop(), 2ms);
+    write_can_frame(right_factory.set_control_mode(jvci::ControlMode::Speed), 2ms);
+    write_can_frame(right_factory.enter_close_loop(), 2ms);
     
     while(true){
-        // const auto now_secs = clock::seconds();
-        // const auto frame = ;
-        // DEBUG_PRINTLN(frame);
-        // DEBUG_PRINTLN(
-        //     std::hex, std::showbase, 
-        //     frame.at(0),
-        //     frame.at(1),
-        //     frame.at(2)
-        // );
-        const auto now_secs = clock::seconds();
-        const iq16 turns = iq16(math::sin(now_secs)) * 0.03_iq16;
+        [[maybe_unused]] const auto now_secs = clock::seconds();
+        
+        poll_led();
+        
+        #if 0
+        const iq16 turns = iq16(math::sin(now_secs)) * 0.3_iq16;
+        const auto left_position_code = jvci::PositionCode::from_turns(turns);
+        const auto right_position_code = jvci::PositionCode::from_turns(-turns);
+
+        write_can_frame(left_factory.set_absolute_position(left_position_code), 2ms);
+        write_can_frame(right_factory.set_absolute_position(right_position_code), 2ms);
+        #else
+        // const iq16 left_x2 = iq16(math::sin(now_secs)) * 20.3_iq16;
+        // const iq16 right_x2 = iq16(math::cos(now_secs)) * 20.3_iq16;
+
+        const iq16 left_x2 = 32 * 17.3_iq16;
+        const iq16 right_x2 = 32 * 22.3_iq16;
 
 
+        const auto left_speed_code = jvci::SpeedCode::from_rpm_bounded(left_x2);
+        const auto right_speed_code = jvci::SpeedCode::from_rpm_bounded(-right_x2);
 
-        const auto position_code = jvci::PositionCode::from_turns(turns);
-        write_can_frame(factory.set_absolute_position(position_code), 2ms);
+        write_can_frame(left_factory.set_speed(left_speed_code), 2ms);
+        write_can_frame(right_factory.set_speed(right_speed_code), 2ms);
 
-        // const auto speed_code = jvci::SpeedCode::from_rpm(float(turns * 600));
-        // write_can_frame(factory.set_speed(speed_code), 2ms);
-        // while(can.available()){
-        //     DEBUG_PRINTLN(can.try_read().unwrap());
-        // }
-        DEBUG_PRINTLN(turns, position_code.bits);
-        clock::delay(20ms);
+        DEBUG_PRINTLN(left_speed_code.bits);
+        #endif
+
+        while(can.available()){
+            handle_can_frame(can.try_read().unwrap());
+        }
+
+        // clock::delay(20ms);
     }
 }
 

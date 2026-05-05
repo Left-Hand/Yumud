@@ -15,7 +15,8 @@ int main(){
     // cap_main();
     // stl06n_main();
     // nuedc_2025e_joint_main();
-    nuedc_2025e_laser_main();
+    // nuedc_2025e_laser_main();
+        jvci_main();
     // winter_mc_tutorial_main();
     // lz77_main();
     // o1heap_main();

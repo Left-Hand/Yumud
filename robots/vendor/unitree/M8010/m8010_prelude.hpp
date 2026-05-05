@@ -201,16 +201,18 @@ struct [[nodiscard]] TxContext final{
     }
     
     template<typename Serializer>
-    void sink_to(Serializer && serializer) const {
+    Result<void, typename Serializer::Error> 
+    serialize(Serializer && serializer) const {
         auto & self = *this;
         std::array<uint8_t, 17> buffer;
+
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
         self.fill_bytes(std::span(buffer).template subspan<2, 13>());
         const auto crc_code = encrypt::crc::crc16_ccitt(std::span(buffer).template subspan<0, 15>());
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
-        serializer.sink_bytes(std::span(buffer));
+        return serializer.push_bytes(std::span(buffer));
     } 
 };
 

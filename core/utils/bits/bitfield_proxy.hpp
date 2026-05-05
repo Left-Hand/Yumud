@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/tmp/bits/width.hpp"
+#include <atomic>
+
 
 namespace ymd{
 
@@ -12,8 +14,8 @@ struct [[nodiscard]] BitFieldProxy final{
 private:    
     D * p_bits_;
 
-    static constexpr D lower_mask = tmp::mask_calculator::lower_mask_of<D>(BEGIN_OFFSET);
-	static constexpr D mask = tmp::mask_calculator::mask_of<D>(BEGIN_OFFSET, END_OFFSET);
+    // static constexpr D lower_mask = tmp::mask_calculator::lower_mask_of<D>(BEGIN_OFFSET);
+	static constexpr D MASK = tmp::mask_calculator::mask_of<D>(BEGIN_OFFSET, END_OFFSET);
 
     static constexpr size_t WIDTH = END_OFFSET - BEGIN_OFFSET;
 
@@ -44,8 +46,33 @@ public:
     }
 
     __attribute__((always_inline)) constexpr 
+    void atomic_set_high(
+        std::memory_order order = std::memory_order_seq_cst
+    ) requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
+        atomic_set_all(order);
+    }
+
+    __attribute__((always_inline)) constexpr 
+    void atomic_set_low(std::memory_order order = std::memory_order_seq_cst
+    ) requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
+        atomic_clear_all(order);
+    }
+
+    __attribute__((always_inline)) constexpr 
+    void atomic_set_all(std::memory_order order = std::memory_order_seq_cst) requires (!std::is_const_v<D>) {
+        auto aref = std::atomic_ref<D>(*p_bits_);
+        aref.fetch_or(MASK, order);
+    }
+
+    __attribute__((always_inline)) constexpr 
+    void atomic_clear_all(std::memory_order order = std::memory_order_seq_cst) requires (!std::is_const_v<D>) {
+        auto aref = std::atomic_ref<D>(*p_bits_);
+        aref.fetch_and(~MASK, order);
+    }
+
+    __attribute__((always_inline)) constexpr 
     void set_bits(const auto in_bits) requires (!std::is_const_v<D>) {
-        *p_bits_ = (static_cast<D>(in_bits) << BEGIN_OFFSET) | (*p_bits_ & ~mask);
+        *p_bits_ = (static_cast<D>(in_bits) << BEGIN_OFFSET) | (*p_bits_ & ~MASK);
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -55,7 +82,7 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     bits_type crop_bits() const{
-        return static_cast<bits_type>((*p_bits_ & mask) >> (BEGIN_OFFSET));
+        return static_cast<bits_type>((*p_bits_ & MASK) >> (BEGIN_OFFSET));
     }
 
 

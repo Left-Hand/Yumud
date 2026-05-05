@@ -19,12 +19,19 @@ namespace {
         static constexpr auto f_32700 = (degree001_to_turns(32700 * 360 * 100));
         static constexpr auto f_n32700 = (degree001_to_turns(-32700 * 360 * 100));
 
+        static constexpr auto f_32767 = (degree001_to_turns(32767 * 360 * 100));
+        static constexpr auto f_n32767 = (degree001_to_turns(-32767 * 360 * 100));
+
         static_assert((float)math::abs(f_1 - 1.0_iq16) < 1E-4);
         static_assert((float)math::abs(f_1000 - 1000.0_iq16) < 1E-4);
         static_assert((float)math::abs(f_30000 - 30000.0_iq16) < 1E-4);
         static_assert((float)math::abs(f_n30000 - -30000.0_iq16) < 1E-4);
+
         static_assert((float)math::abs(f_32700 - 32700.0_iq16) < 1E-4);
         static_assert((float)math::abs(f_n32700 - -32700.0_iq16) < 1.2E-4);
+
+        static_assert((float)math::abs(f_32767 - 32767.0_iq16) < 1E-4);
+        static_assert((float)math::abs(f_n32767 - -32767.0_iq16) < 1.2E-4);
     }
 
     {
@@ -42,12 +49,19 @@ namespace {
         static constexpr auto b_32700 = turns_to_degree001(32700.0_iq16);
         static constexpr auto b_n32700 = turns_to_degree001(-32700.0_iq16);
 
+        static constexpr auto b_32767 = turns_to_degree001(32767.0_iq16);
+        static constexpr auto b_n32767 = turns_to_degree001(-32767.0_iq16);
+
         static_assert(abs_i32(b_1 - 360 * 100) < 2);
         static_assert(abs_i32(b_1000 - 1000 * 360 * 100) < 2);
         static_assert(abs_i32(b_30000 - 30000 * 360 * 100) < 6);
         static_assert(abs_i32(b_n30000 - (-30000 * 360 * 100)) < 6);
+
         static_assert(abs_i32(b_32700 - 32700 * 360 * 100) < 6);
         static_assert(abs_i32(b_n32700 - (-32700 * 360 * 100)) < 5);
+
+        static_assert(abs_i32(b_32767 - 32767 * 360 * 100) < 3);
+        static_assert(abs_i32(b_n32767 - (-32767 * 360 * 100)) < 5);
     }
 
 }
@@ -64,16 +78,47 @@ namespace {
         static constexpr auto p2 = PositionCode::from_degrees(-114.514f);
         static_assert(std::abs(p2.to_degrees() - (-114.514f)) < 0.01f);
     }
+
+
     {
         // SpeedCode 正值测试
-        static constexpr auto s1 = SpeedCode::from_rpm(500.0f);
-        static_assert(std::abs(s1.to_rpm() - 500.0f) < 0.01f);
+        static constexpr auto s1 = SpeedCode::from_rpm_bounded(500.23f);
+        static constexpr auto s2 = SpeedCode::from_rpm_bounded(500.23_iq16);
+        static constexpr auto s3 = SpeedCode::from_rpm_bounded(9999.23_iq16);
+
+        static_assert(std::abs(s1.to_rpm<float>() - 500.23f) < 0.02f);
+        static_assert(std::abs(s2.to_rpm<float>() - 500.23f) < 0.02f);
+        static_assert(std::abs(s3.to_rpm<float>() - 9999.23f) < 0.02f);
+
+        static_assert(std::abs(s1.to_rpm<iq16>() - 500.23_iq16) < 0.02_iq16);
+        static_assert(std::abs(s2.to_rpm<iq16>() - 500.23_iq16) < 0.02_iq16);
+        static_assert(std::abs(s3.to_rpm<iq16>() - 9999.23_iq16) < 0.02_iq16);
     }
+
+    {
+        // SpeedCode 正值测试
+        static constexpr auto s1 = SpeedCode::from_tps_bounded(1.0_iq16);
+        static constexpr auto s2 = SpeedCode::from_tps_bounded(iq16(500.23 / 60));
+        static constexpr auto s3 = SpeedCode::from_tps_bounded(iq16(9999.23 / 60));
+
+        static_assert(s1.bits == SpeedCode::from_tps_bounded(1.0_iq24).bits);
+        static_assert(std::abs(s1.to_tps<float>() - 1.00f) < 0.02f);
+        static_assert(std::abs(s2.to_tps<float>() - 500.23f / 60) < 0.02f);
+        static_assert(std::abs(s3.to_tps<float>() - 9999.23f / 60) < 0.02f);
+    }
+
+
     {
         // SpeedCode 负值测试
-        static constexpr auto s2 = SpeedCode::from_rpm(-500.23f);
-        static_assert(std::abs(s2.to_rpm() - (-500.23f)) < 0.01f);
+        static constexpr auto s1 = SpeedCode::from_rpm_bounded(-500.23f);
+        static constexpr auto s2 = SpeedCode::from_rpm_bounded(-500.23_iq16);
+        static constexpr auto s3 = SpeedCode::from_rpm_bounded(-9999.23_iq16);
+        static_assert(std::abs(s1.to_rpm<float>() - (-500.23f)) < 0.02f);
+        static_assert(std::abs(s2.to_rpm<float>() - (-500.23f)) < 0.02f);
+        static_assert(std::abs(s3.to_rpm<float>() - -9999.23f) < 0.02f);
     }
+
+
     {
         // BusbarVoltageCode 测试
         static constexpr auto v1 = BusbarVoltageCode::from_volt(12.3f);
@@ -81,7 +126,7 @@ namespace {
     }
     {
         // TorqueCode 测试
-        static constexpr auto t1 = TorqueCode::from_newton_meter(0.2f);
+        static constexpr auto t1 = TorqueCode::from_newton_meter_bounded(0.2f);
         static_assert(std::abs(t1.to_newton_meter() - 0.2f) < 0.01f);
     }
 }
@@ -161,7 +206,7 @@ namespace {
     {
         static constexpr auto frame = factory.pvt_command(
             PositionCode::from_degrees(-360.0f),
-            PvSpeedCode::from_rpm(150.0f),
+            PvSpeedCode::from_rpm_bounded(150.0f),
             PvTorqueCode::from_percents(60.0f)
         );
         static constexpr auto bytes = frame.payload_bytes();
@@ -181,7 +226,7 @@ namespace {
     {
         static constexpr auto frame = factory.pvt_command(
             PositionCode::from_degrees(0.0f),
-            PvSpeedCode::from_rpm(60.0f),
+            PvSpeedCode::from_rpm_bounded(60.0f),
             PvTorqueCode::from_percents(80.0f)
         );
         static constexpr auto bytes = frame.payload_bytes();
@@ -215,7 +260,7 @@ namespace {
     // 8. 设置速度 500rpm（寄存器0x0022，编码值0xC350=50000）
     // 请求帧ID:0x601，数据:`23 00 21 00 00 00 C3 50`；回复:`2A FF FF FD 00 00 00 00`
     {
-        static constexpr auto frame = factory.set_speed(SpeedCode::from_rpm(500.0f));
+        static constexpr auto frame = factory.set_speed(SpeedCode::from_rpm_bounded(500.0f));
         static constexpr auto bytes = frame.payload_bytes();
 
         static_assert(bytes[0] == 0x23);  // WriteReg32
@@ -231,7 +276,7 @@ namespace {
     // 9. 设置速度 0rpm（寄存器0x0022，编码值0x00000000）
     // 请求帧ID:0x601，数据:`23 00 21 00 00 00 00 00`；回复:`2A B9 07 AD 01 F4 00 00`
     {
-        static constexpr auto frame = factory.set_speed(SpeedCode::from_rpm(0.0f));
+        static constexpr auto frame = factory.set_speed(SpeedCode::from_rpm_bounded(0.0f));
         static constexpr auto bytes = frame.payload_bytes();
 
         static_assert(bytes[0] == 0x23);  // WriteReg32

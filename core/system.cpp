@@ -3,7 +3,6 @@
 #include "core/platform.hpp"
 #include "core/sdk.hpp"
 #include "core/arch.hpp"
-#include "core/intrinsics/memop.hpp"
 
 #include "hal/sysmisc/crc/crc.hpp"
 #include "hal/timer/hw_singleton.hpp"

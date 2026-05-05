@@ -191,6 +191,7 @@ private:
     /// @param command 命令字
     /// @param reg_addr 寄存器地址
     /// @return 填充好头部的帧缓冲区
+    __attribute__((always_inline))
     static constexpr std::array<uint8_t, 8> make_noarg_context(const Command command, const RegAddr reg_addr){
         std::array<uint8_t, 8> buf = {
             static_cast<uint8_t>(command),
