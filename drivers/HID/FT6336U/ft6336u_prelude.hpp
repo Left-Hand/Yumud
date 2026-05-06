@@ -135,10 +135,10 @@ public:
             }
         }
 
-        constexpr bool is_some() const { return kind_ != k_None; }
-        constexpr bool is_none() const { return kind_ == k_None; }
+        constexpr bool is_some() const noexcept { return kind_ != k_None; }
+        constexpr bool is_none() const noexcept { return kind_ == k_None; }
 
-        constexpr Kind unwrap() const { 
+        constexpr Kind unwrap() const noexcept { 
             if(is_none()) __builtin_trap();
             return std::bit_cast<Kind>(kind_);
         }
@@ -176,7 +176,7 @@ public:
             {;}
 
 
-        constexpr size_t size() const{
+        constexpr size_t size() const noexcept {
             return touch_count_;
         }
 
@@ -189,7 +189,7 @@ public:
         }
 
         // 将当前点映射到下一帧的点，寻找各自最近的位置重新映射
-        constexpr TouchPoints map_to_next(const TouchPoints& next) const {
+        constexpr TouchPoints map_to_next(const TouchPoints& next) const noexcept {
             auto manhattan_dist = [](const TouchPoint p1, const TouchPoint p2) {
                 return std::abs(p1.x - p2.x) + std::abs(p1.y - p2.y);
             };
@@ -247,14 +247,14 @@ public:
             return next;
         }
 
-        constexpr std::span<const TouchPoint> view() const{
+        constexpr std::span<const TouchPoint> view() const noexcept {
             return std::span(points_.data(), touch_count_);
         }
     private:
         std::array<TouchPoint,FT6336_MAX_POINTS_COUNT> points_;
         uint8_t touch_count_;
 
-        constexpr Option<TouchPoint> get(const size_t nth) const{
+        constexpr Option<TouchPoint> get(const size_t nth) const noexcept {
             if(nth >= touch_count_){
                 return None;
             }

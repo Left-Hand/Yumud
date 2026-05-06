@@ -86,7 +86,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq20 phase_resistance;        // 相电阻 (Ω)
     iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const noexcept {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)

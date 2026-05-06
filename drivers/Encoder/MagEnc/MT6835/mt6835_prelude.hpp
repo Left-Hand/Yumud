@@ -49,7 +49,7 @@ struct MT6835_Prelude{
             return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
         }
 
-        [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const {
+        [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const noexcept {
             if(calc_crc() != crc) [[unlikely]]
                 return Err(Error::InvalidCrc);
 
@@ -66,13 +66,13 @@ struct MT6835_Prelude{
             return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
-        [[nodiscard]] constexpr uint32_t angle21() const {
+        [[nodiscard]] constexpr uint32_t angle21() const noexcept {
             return (static_cast<uint32_t>(angle_20_13) << 13) 
                 | (static_cast<uint32_t>(angle_12_5) << 5) 
                 | static_cast<uint32_t>(angle_4_0);
         }
 
-        [[nodiscard]] constexpr uint8_t calc_crc() const{
+        [[nodiscard]] constexpr uint8_t calc_crc() const noexcept {
             // CRC校验公式：x^8+x^2+x+1 angle[20]作为最高位先移位进入
             uint8_t calculated_crc = 0;
             uint32_t data_bits = std::bit_cast<uint32_t>(*this) & 0xFFFFFF; // Extract the 24-bit data portion (excluding CRC)

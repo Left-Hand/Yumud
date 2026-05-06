@@ -40,20 +40,20 @@ struct [[nodiscard]] CanStdId{
     [[nodiscard]] constexpr bool operator ==(const CanStdId& other) const = default;
 
     //是否比另一个canid要更优先
-    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const {
+    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const noexcept {
         //less id means higher priority
         return bits_ < other.bits_;
     }
 
-    [[nodiscard]] constexpr uint16_t to_u11() const {
+    [[nodiscard]] constexpr uint16_t to_u11() const noexcept {
         return bits_;
     }
 
-    [[nodiscard]] constexpr literals::bs11 to_b11() const {
+    [[nodiscard]] constexpr literals::bs11 to_b11() const noexcept {
         return literals::bs11::from_bits_unchecked(bits_);
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {return bits_;}
 
     friend OutputStream & operator << (OutputStream & os, const Self & self);
 private:
@@ -91,15 +91,15 @@ struct [[nodiscard]] CanExtId{
     [[nodiscard]] constexpr bool operator ==(const CanExtId& other) const = default;
 
     //是否比另一个canid要更优先
-    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const {
+    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const noexcept {
         //less id means higher priority
         return bits_ < other.bits_;
     }
 
-    [[nodiscard]] constexpr uint32_t to_u29() const {
+    [[nodiscard]] constexpr uint32_t to_u29() const noexcept {
         return bits_;
     }
-    [[nodiscard]] constexpr uint32_t to_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {return bits_;}
 
     friend OutputStream & operator << (OutputStream & os, const Self & self);
 private:

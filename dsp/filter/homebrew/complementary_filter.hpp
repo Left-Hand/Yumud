@@ -51,7 +51,7 @@ struct ComplementaryFilter{
         is_inited_ = false;
     }
 
-    [[nodiscard]] constexpr T get() const {
+    [[nodiscard]] constexpr T get() const noexcept {
         return rot_;
     }
 

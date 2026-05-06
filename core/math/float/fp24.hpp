@@ -56,7 +56,7 @@ public:
     constexpr fp24(uint64_t uint_val) : fp24(float(uint_val)) {}
 
     // 一元负号运算符
-    constexpr fp24 operator -() const {
+    constexpr fp24 operator -() const noexcept {
         return fp24::from_bits(to_bits() ^ std::numeric_limits<uint32_t>::min());
     }
 
@@ -71,11 +71,11 @@ public:
         return std::bit_cast<fp24>(bits24 << 8);
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this) >> 8;
     }
     // fp24 -> float
-    [[nodiscard]] explicit constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const noexcept {
         // 处理特殊情况
         if (exp == EXP_MAX) {  // 无穷大或NaN
             uint32_t f32_bits = (sign << 31) | (0xFF << 23);
@@ -107,14 +107,14 @@ public:
     }
 
     // fp24 -> int（截断）
-    [[nodiscard]] explicit constexpr operator int() const {
+    [[nodiscard]] explicit constexpr operator int() const noexcept {
         float f = static_cast<float>(*this);
         return static_cast<int>(f);
     }
 
     // fp24 -> 定点数
     template <size_t Q>
-    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const {
+    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const noexcept {
         return fixed<Q, int32_t>::from(static_cast<float>(*this));
     }
 private:

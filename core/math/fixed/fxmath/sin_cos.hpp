@@ -61,7 +61,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
     template<typename Fn>
     __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const {
+    math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const noexcept {
         //获取查找表的校准值
         int32_t a, b;
         switch(sect_num){
@@ -105,7 +105,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
     template<typename Fn>
     __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const {
+    math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const noexcept {
         int32_t a, b;
         switch(sect_num){
             case 0:
@@ -149,7 +149,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
     template<typename Fn>
     __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    auto exact_sincos(Fn && taylor_law) const {
+    auto exact_sincos(Fn && taylor_law) const noexcept {
         return SinCosResult{
             exact_sin(std::forward<Fn>(taylor_law)),
             exact_cos(std::forward<Fn>(taylor_law))

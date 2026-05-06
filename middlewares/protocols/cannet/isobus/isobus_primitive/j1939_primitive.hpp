@@ -23,11 +23,11 @@ struct [[nodiscard]] PduFormat{
     using Self = PduFormat;
     uint8_t bits;
 
-    [[nodiscard]] constexpr bool is_pdu1() const {
+    [[nodiscard]] constexpr bool is_pdu1() const noexcept {
         return bits < 240;
     }
 
-    [[nodiscard]] constexpr bool is_pdu2() const {
+    [[nodiscard]] constexpr bool is_pdu2() const noexcept {
         return bits & 0b11001000;
     }
 };
@@ -101,11 +101,11 @@ struct alignas(4) [[nodiscard]] Pdn final{
         return Pdn::from_bits(id.to_bits());
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
-    constexpr hal::CanExtId to_can_id() const {
+    constexpr hal::CanExtId to_can_id() const noexcept {
         return hal::CanExtId::from_bits(to_bits());
     }
 

@@ -185,14 +185,14 @@ template <class T, size_t N> struct possibly_empty_array {
   MDSPAN_INLINE_FUNCTION
   constexpr T &operator[](size_t r) { return vals[r]; }
   MDSPAN_INLINE_FUNCTION
-  constexpr const T &operator[](size_t r) const { return vals[r]; }
+  constexpr const T &operator[](size_t r) const noexcept { return vals[r]; }
 };
 
 template <class T> struct possibly_empty_array<T, 0> {
   MDSPAN_INLINE_FUNCTION
   constexpr T operator[](size_t) { return T(); }
   MDSPAN_INLINE_FUNCTION
-  constexpr const T operator[](size_t) const { return T(); }
+  constexpr const T operator[](size_t) const noexcept { return T(); }
 };
 
 // ------------------------------------------------------------------
@@ -357,7 +357,7 @@ public:
   constexpr static TStatic static_value(size_t r) { return static_vals_t::get(r); }
 
   MDSPAN_INLINE_FUNCTION
-  constexpr TDynamic value(size_t r) const {
+  constexpr TDynamic value(size_t r) const noexcept {
     TStatic static_val = static_vals_t::get(r);
 
     // FIXME: workaround for nvhpc OpenACC compiler bug
@@ -366,7 +366,7 @@ public:
                                      : static_cast<TDynamic>(static_val);
   }
   MDSPAN_INLINE_FUNCTION
-  constexpr TDynamic operator[](size_t r) const { return value(r); }
+  constexpr TDynamic operator[](size_t r) const noexcept { return value(r); }
 
 
   // observers

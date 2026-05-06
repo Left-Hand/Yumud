@@ -91,7 +91,7 @@ struct MP2980_Prelude{
             };
         }
 
-        [[nodiscard]] constexpr uint16_t to_mv() const {
+        [[nodiscard]] constexpr uint16_t to_mv() const noexcept {
             auto & self = *this;
             return (uint8_t(self.bytes[1]) << 3) 
                 | uint8_t(self.bytes[0]);

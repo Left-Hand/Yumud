@@ -49,13 +49,13 @@ public:
         return Arc2(center1, radius, {start_angle1, end_angle1});
     }
     
-	__fast_inline constexpr bool intersects(const Arc2<T> & other) const {
+	__fast_inline constexpr bool intersects(const Arc2<T> & other) const noexcept {
 		//FIXME
 
 		return (center - other.center).length_squared() <= square(radius + other.radius);
 	}
 
-	__fast_inline constexpr bool tangent(const Arc2<T> & other) const {
+	__fast_inline constexpr bool tangent(const Arc2<T> & other) const noexcept {
 
 		//FIXME
 		return (center - other.center).length_squared() == square(radius + other.radius);		

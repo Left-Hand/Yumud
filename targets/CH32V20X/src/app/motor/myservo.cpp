@@ -70,7 +70,7 @@ public:
         state_ = forward_state(state_, params.curr_targ - curr_now);
     }
 
-    const State & get() const {return state_;}
+    const State & get() const noexcept {return state_;}
 private:
     using Lpf = dsp::FirstOrderLowpassFilter<iq24>;
     // SenseConfig sense_cfg_;
@@ -80,7 +80,7 @@ private:
 
     State state_ = {};
 
-    constexpr State forward_state(const State & state, const iq24 err) const {
+    constexpr State forward_state(const State & state, const iq24 err) const noexcept {
         return State{
             .duty = state.duty + (err) * kp_
         };
@@ -123,7 +123,7 @@ public:
         };
     }
 
-    const State & state() const {return state_;}
+    const State & state() const noexcept {return state_;}
 private:
     iq24 kp_;
     iq24 kd_;

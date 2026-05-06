@@ -22,9 +22,9 @@ struct [[nodiscard]] StatusBitFields final{
     uint8_t uncalibrated:1;
     uint8_t mode:2;
 
-    [[nodiscard]] constexpr bool is_running() const {return mode == 2;}
-    [[nodiscard]] constexpr bool is_reset() const {return mode == 0;}
-    [[nodiscard]] constexpr bool is_calibrating() const {return mode == 1;}
+    [[nodiscard]] constexpr bool is_running() const noexcept {return mode == 2;}
+    [[nodiscard]] constexpr bool is_reset() const noexcept {return mode == 0;}
+    [[nodiscard]] constexpr bool is_calibrating() const noexcept {return mode == 1;}
 };
 static_assert(sizeof(StatusBitFields) == 2);
 
@@ -63,7 +63,7 @@ namespace details{
 struct [[nodiscard]] TemperatureCode final{
     uint16_t bits;
 
-    constexpr iq16 to_celsius() const {
+    constexpr iq16 to_celsius() const noexcept {
         return iq16(bits) / 10;
     }
 };
@@ -138,7 +138,7 @@ struct [[nodiscard]] CyberGearRx{
 
     Feedback feedback_ = {};
 
-    [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
+    [[nodiscard]] Option<uint64_t> get_device_mcu_id() const noexcept {return device_mcu_id_;}
 
     IResult<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
     IResult<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);

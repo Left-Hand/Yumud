@@ -169,11 +169,11 @@ namespace experimental{
                 return Index{nth};
             }
 
-            constexpr bool is_valid(Index index) const{
+            constexpr bool is_valid(Index index) const noexcept {
                 return nth_ != INVALID_NTH;
             }
 
-            constexpr uint16_t unwrap() const {
+            constexpr uint16_t unwrap() const noexcept {
                 if(nth_ == INVALID_NTH){
                     PANIC();
                 }

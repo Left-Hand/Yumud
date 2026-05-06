@@ -448,7 +448,7 @@ struct [[nodiscard]] Response final{
         std::array<uint8_t, 10> bytes;
     }context;
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
         return std::span{reinterpret_cast<const uint8_t *>(this), 11};
     }
 

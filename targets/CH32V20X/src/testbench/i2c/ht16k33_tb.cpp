@@ -178,7 +178,7 @@ private:
             position_(position),
             max_limit_(max_limit){;}
 
-        [[nodiscard]] constexpr Result<Cursor, void> shift(int delta, size_t _limit = UINT32_MAX) const{
+        [[nodiscard]] constexpr Result<Cursor, void> shift(int delta, size_t _limit = UINT32_MAX) const noexcept {
             const int next_position = int(position_) + delta;
             const int limit = int(MIN(_limit, max_limit_));
             // ASSERT(next_position >= 0);
@@ -188,11 +188,11 @@ private:
             return Ok(Cursor(CLAMP(next_position, 0, limit), max_limit_));
         }
 
-        [[nodiscard]] constexpr uint8_t position() const {
+        [[nodiscard]] constexpr uint8_t position() const noexcept {
             return position_;
         }
 
-        [[nodiscard]] constexpr size_t max_limit() const {
+        [[nodiscard]] constexpr size_t max_limit() const noexcept {
             return max_limit_;
         }
 
@@ -268,11 +268,11 @@ public:
         std::forward<Fn>(fn)(str_.view());
     }
 
-    [[nodiscard]] constexpr StringView str() const{
+    [[nodiscard]] constexpr StringView str() const noexcept {
         return str_.view();
     }
 
-    [[nodiscard]] constexpr auto cursor() const{
+    [[nodiscard]] constexpr auto cursor() const noexcept {
         return cursor_;
     }
 private:

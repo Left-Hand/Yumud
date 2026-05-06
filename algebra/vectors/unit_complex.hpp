@@ -47,17 +47,17 @@ public:
     }
 
     [[nodiscard]] constexpr 
-    UnitComplex forward_90deg() const {
+    UnitComplex forward_90deg() const noexcept {
         return UnitComplex{-sine(), cosine()};
     }
 
     [[nodiscard]] constexpr
-    UnitComplex backward_90deg() const {
+    UnitComplex backward_90deg() const noexcept {
         return UnitComplex{sine(), -cosine()};
     }
 
     [[nodiscard]] constexpr 
-    Vec2<T> operator*(const Vec2<T>& v) const {
+    Vec2<T> operator*(const Vec2<T>& v) const noexcept {
         return Vec2<T>(
             cosine() * v.x - sine() * v.y,
             sine() * v.x + cosine() * v.y
@@ -65,7 +65,7 @@ public:
     }
 
     [[nodiscard]] constexpr 
-    UnitComplex<T> operator*(const UnitComplex<T> & other) const {
+    UnitComplex<T> operator*(const UnitComplex<T> & other) const noexcept {
         // 三角函数公式：sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
         //             cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
         return UnitComplex<T>(
@@ -75,14 +75,14 @@ public:
     }
 
 
-    [[nodiscard]] constexpr T sine() const {return im;}
-    [[nodiscard]] constexpr T cosine() const {return re;}
+    [[nodiscard]] constexpr T sine() const noexcept {return im;}
+    [[nodiscard]] constexpr T cosine() const noexcept {return re;}
 
-    [[nodiscard]] constexpr std::array<T, 2> sincos() const {
+    [[nodiscard]] constexpr std::array<T, 2> sincos() const noexcept {
         return {sine(), cosine()};
     }
 
-    [[nodiscard]] __fast_inline constexpr T arg() const {return std::atan2(im, re);}
+    [[nodiscard]] __fast_inline constexpr T arg() const noexcept {return std::atan2(im, re);}
 
     __fast_inline constexpr UnitComplex operator-() {
         return UnitComplex(-re, -im);
@@ -94,19 +94,19 @@ public:
     }
 
     template<size_t I>
-    [[nodiscard]] __fast_inline constexpr T get() const {
+    [[nodiscard]] __fast_inline constexpr T get() const noexcept {
         return get_element(*this);
     }
 
-    [[nodiscard]] constexpr Angular<T> to_angle() const {
+    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
         return Angular<T>::from_turns(math::atan2pu(im, re));
     }
 
-    [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const {
+    [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const noexcept {
         return Vec2<T>(re * length, im * length);
     }
 
-    [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const {
+    [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const noexcept {
         return Vec2<T>(re, im);
     }
 
@@ -120,7 +120,7 @@ private:
         else if constexpr(I == 1){ return self.im; }
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("re")(self.re) << os.splitter()
             << os.field("im")(self.im)

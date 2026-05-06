@@ -47,7 +47,7 @@ struct RotatedZebraRect{
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr math::Vec2<iq16> get_corner() const {
+    constexpr math::Vec2<iq16> get_corner() const noexcept {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -77,7 +77,7 @@ struct alignas(4) PreComputedOf<RotatedZebraRect, bool>{
         };
     }
 
-    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<iq16> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<iq16> offset) const noexcept {
         return s_color_from_point(*this, offset);
     }
 private:
@@ -133,7 +133,7 @@ struct PreComputedOf<SpotLight, bool>{
         return PreComputedOf{obj.radius * obj.radius};
     }
 
-    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<iq16> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<iq16> offset) const noexcept {
         return s_color_from_point(*this, offset);
     }
 private:
@@ -223,21 +223,21 @@ struct PrecomputedTable final{
         width_ = width;
     }
 
-    [[nodiscard]] constexpr iq16 operator()(const iq16 x) const {
+    [[nodiscard]] constexpr iq16 operator()(const iq16 x) const noexcept {
         const int32_t idx = static_cast<int32_t>(x * width_) + (width_ >> 1);
         if(idx < 0 or static_cast<size_t>(idx) >= width_) PANIC{};
         return table_.get()[static_cast<size_t>(idx)];
     }
 
-    [[nodiscard]] constexpr size_t width() const {
+    [[nodiscard]] constexpr size_t width() const noexcept {
         return width_;
     }
 
-    [[nodiscard]] constexpr iq16 operator[](const size_t i) const {
+    [[nodiscard]] constexpr iq16 operator[](const size_t i) const noexcept {
         return table_[i];
     }
 
-    [[nodiscard]] constexpr iq16 at(const size_t i) const{
+    [[nodiscard]] constexpr iq16 at(const size_t i) const noexcept {
         if(i >= width_) PANIC{};
         return table_[i];
     }
@@ -316,7 +316,7 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Gray> render(const math::Isometry2<iq16> pose, const iq16 zoom) const {
+    Image<Gray> render(const math::Isometry2<iq16> pose, const iq16 zoom) const noexcept {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, pose, zoom);
@@ -364,7 +364,7 @@ public:
         return Image<Gray>(std::reinterpret_pointer_cast<Gray[]>(pbuf), CAMERA_SIZE);
     }
 
-    Image<Gray> render2(const ViewPoint & view_point) const {
+    Image<Gray> render2(const ViewPoint & view_point) const noexcept {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto p0 =    math::Vec2(view_point.position.x, view_point.position.y);

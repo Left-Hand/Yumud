@@ -41,7 +41,7 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
         return ret;
     }
 
-    [[nodiscard]] constexpr T operator [](const size_t idx) const {
+    [[nodiscard]] constexpr T operator [](const size_t idx) const noexcept {
         return *(&u + idx);
     }
 
@@ -49,12 +49,12 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
         return *(&u + idx);
     }
 
-    [[nodiscard]] constexpr T numeric_sum() const {
+    [[nodiscard]] constexpr T numeric_sum() const noexcept {
         return u + v + w;
     }
 
     template<typename U>
-    [[nodiscard]] constexpr T dot(const UvwCoord<U> & rhs) const {
+    [[nodiscard]] constexpr T dot(const UvwCoord<U> & rhs) const noexcept {
         return static_cast<T>(u * rhs.u + v * rhs.v + w * rhs.w);
     }
 
@@ -73,7 +73,7 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
 
     template<size_t I>
     requires (I < 3)
-    [[nodiscard]] constexpr T get() const {
+    [[nodiscard]] constexpr T get() const noexcept {
         if constexpr(I == 0){
             return this->u;
         } else if constexpr(I == 1){
@@ -84,7 +84,7 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
     }
 
     template<Axis A>
-    [[nodiscard]] constexpr T get_axis() const {
+    [[nodiscard]] constexpr T get_axis() const noexcept {
         if constexpr(A == Axis::U){
             return this->u;
         } else if constexpr(A == Axis::V){

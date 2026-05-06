@@ -28,29 +28,29 @@ struct Ray3{
     }
 
     [[nodiscard]] constexpr math::Vec3<T>
-    point_at_length(const T length) const {
+    point_at_length(const T length) const noexcept {
         return base + direction * length;
     }
 
     [[nodiscard]] constexpr Ray3<T>
-    conj() const {
+    conj() const noexcept {
         return Ray3{base, -direction};
     }
 
     //构造经过某点的法平面 计算到点的距离
-    [[nodiscard]] constexpr T distance_to_point(const math::Vec3<T>& point) const {
+    [[nodiscard]] constexpr T distance_to_point(const math::Vec3<T>& point) const noexcept {
         math::Vec3<T> diff = point - base;
         return (diff - direction * diff.dot(direction)).length();
     }
 
     //构造经过某点的法平面 计算与法平面的交点
-    [[nodiscard]] constexpr math::Vec3<T> project_point(const math::Vec3<T>& point) const {
+    [[nodiscard]] constexpr math::Vec3<T> project_point(const math::Vec3<T>& point) const noexcept {
         T t = (point - base).dot(direction);
         return base + direction * t;
     }
 
     //计算经过方向法向量反射后的射线
-    [[nodiscard]] constexpr Ray3<T> reflect(const math::Vec3<T> & normal) const {
+    [[nodiscard]] constexpr Ray3<T> reflect(const math::Vec3<T> & normal) const noexcept {
         const auto unit_normal = normal.normalize();
         return Ray3<T>::from_base_and_dir(
             base, 
@@ -61,7 +61,7 @@ struct Ray3{
 
     //计算与球体的交点，返回包含两个交点距离(t0, t1)的Option，无交点时返回None
     [[nodiscard]] constexpr Option<std::pair<T, T>> 
-    intersect_sphere(const math::Vec3<T>& center, T radius) const {
+    intersect_sphere(const math::Vec3<T>& center, T radius) const noexcept {
         const math::Vec3<T> oc = base - center;
         const T a = direction.dot(direction);
         const T b = 2 * oc.dot(direction);

@@ -61,8 +61,8 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline constexpr size_t rows() const { return R;}
-    [[nodiscard]] __fast_inline constexpr size_t cols() const { return C;}
+    [[nodiscard]] __fast_inline constexpr size_t rows() const noexcept { return R;}
+    [[nodiscard]] __fast_inline constexpr size_t cols() const noexcept { return C;}
 
     [[nodiscard]] __fast_inline constexpr std::span<T, C> 
     operator[](const size_t row) 
@@ -96,17 +96,17 @@ public:
     [[nodiscard]] __fast_inline constexpr const T & 
     operator()(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
-    [[nodiscard]] __fast_inline constexpr size_t size() const { return R*C;}
+    [[nodiscard]] __fast_inline constexpr size_t size() const noexcept { return R*C;}
     [[nodiscard]] __fast_inline constexpr T * data() { return storage_.data();}
-    [[nodiscard]] __fast_inline constexpr const T * data() const { return storage_.data(); }
+    [[nodiscard]] __fast_inline constexpr const T * data() const noexcept { return storage_.data(); }
 
-    [[nodiscard]] __fast_inline constexpr T sum() const {
+    [[nodiscard]] __fast_inline constexpr T sum() const noexcept {
         return std::reduce(storage_.begin(), storage_.end());
     }
 
     template<size_t R2, size_t C2>
     [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix(
-        const size_t row_start, const size_t col_start) const{   
+        const size_t row_start, const size_t col_start) const noexcept {   
         static_assert(R2 <= R and C2 <= C);
 
         Matrix<T, R2, C2> ret = Matrix<T, R2, C2>::from_uninitialized();
@@ -121,7 +121,7 @@ public:
     }
 
     [[nodiscard]]
-    __fast_inline constexpr T frobenius_norm() const {
+    __fast_inline constexpr T frobenius_norm() const noexcept {
         const T sum_sq = std::reduce(
             storage_.begin(), storage_.end(), T(0), 
             [](T a, T b) { return a + square(b); 
@@ -131,7 +131,7 @@ public:
 
 
     template<size_t Y, size_t X, size_t R2, size_t C2>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix() const {
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix() const noexcept {
         static_assert(Y <= R and X <= C);
         static_assert(R2 <= R - Y and C2 <= C - X);
 
@@ -158,7 +158,7 @@ public:
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & rhs) const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & rhs) const noexcept {
         Matrix ret = *this;
         ret += rhs;
         return ret;
@@ -176,13 +176,13 @@ public:
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & rhs) const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & rhs) const noexcept {
         Matrix ret = *this;
         ret -= rhs;
         return ret;
     }
 
-    [[nodiscard]] __fast_inline constexpr Matrix operator - () const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator - () const noexcept {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -194,7 +194,7 @@ public:
     }
 
 
-    [[nodiscard]] __fast_inline constexpr Matrix operator * (const arithmetic auto & scalar) const{
+    [[nodiscard]] __fast_inline constexpr Matrix operator * (const arithmetic auto & scalar) const noexcept {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -205,7 +205,7 @@ public:
     }
 
 
-    [[nodiscard]] __fast_inline constexpr Matrix operator / (const arithmetic auto & scalar) const{
+    [[nodiscard]] __fast_inline constexpr Matrix operator / (const arithmetic auto & scalar) const noexcept {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -217,7 +217,7 @@ public:
 
     
     template<typename Fn>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> map(Fn fn) const{ 
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> map(Fn fn) const noexcept { 
         Matrix<T, R, C> ret = Matrix<T, R, C>::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -227,20 +227,20 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> abs() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> abs() const noexcept {
         return map([](T x){ return std::abs(x); });
     }
 
-    [[nodiscard]] constexpr T max() const {
+    [[nodiscard]] constexpr T max() const noexcept {
         return *std::max_element(storage_.begin(), storage_.end());
     }
 
-    [[nodiscard]] constexpr T min() const {
+    [[nodiscard]] constexpr T min() const noexcept {
         return *std::min_element(storage_.begin(), storage_.end());
     }
 
     template<size_t C2>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & rhs) const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & rhs) const noexcept {
         auto ret = Matrix<T, R, C2>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C2; j++) {
@@ -254,7 +254,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __fast_inline constexpr T trace() const {
+    [[nodiscard]] __fast_inline constexpr T trace() const noexcept {
         static_assert(R == C, "Matrix must be square");
         T ret = 0;
         for (size_t i = 0; i < C; i++) {
@@ -262,7 +262,7 @@ public:
         }
         return ret;
     }
-    [[nodiscard]] __fast_inline constexpr Matrix<T, C, R> transpose() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, C, R> transpose() const noexcept {
         Matrix<T, C, R> ret = Matrix<T, C, R>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C; j++) {
@@ -272,7 +272,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, R> lu_inverse() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, R> lu_inverse() const noexcept {
         // https://blog.csdn.net/weixin_46207279/article/details/120374064
 
         T L[R][R], U[R][R], L_n[R][R], U_n[R][R];
@@ -387,7 +387,7 @@ public:
 
     template<typename U = T>
     requires(std::is_arithmetic_v<U>)
-    [[nodiscard]] constexpr Matrix<T, R, R> inverse() const{
+    [[nodiscard]] constexpr Matrix<T, R, R> inverse() const noexcept {
         static_assert(R == C);
 
         Matrix<T, R, 2 * R> augmented = Matrix<T, R, 2 * R>::from_uninitialized();
@@ -443,7 +443,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] constexpr Option<Matrix<T, R, R>> try_inverse() const {
+    [[nodiscard]] constexpr Option<Matrix<T, R, R>> try_inverse() const noexcept {
         static_assert(R == C, "Inverse can only be computed for square matrices.");
         
         // First check if the matrix is invertible by computing its determinant
@@ -459,7 +459,7 @@ public:
 
     
 
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R-1, C-1> minor(size_t i, size_t j) const {
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R-1, C-1> minor(size_t i, size_t j) const noexcept {
         static_assert(R > 1, "minor: matrix rows must be greater than 1");
         static_assert(C > 1, "minor: matrix columns must be greater than 1");
         Matrix<T, R-1, C-1> ret = Matrix<T, R-1, C-1>::from_uninitialized();
@@ -477,7 +477,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __fast_inline constexpr T minor_determinant(size_t i, size_t j) const {
+    [[nodiscard]] __fast_inline constexpr T minor_determinant(size_t i, size_t j) const noexcept {
         static_assert(R > 1, "minor_determinant: matrix rows must be greater than 1");
         static_assert(C > 1, "minor_determinant: matrix columns must be greater than 1");
         static_assert(R == C, "minor_determinant: matrix must be square for determinant calculation");
@@ -507,7 +507,7 @@ public:
     }
 
     #if 0
-    [[nodiscard]] __fast_inline constexpr auto symmetric_eigen() const {
+    [[nodiscard]] __fast_inline constexpr auto symmetric_eigen() const noexcept {
         static_assert(R == C, "Eigen decomposition requires a square matrix");
         
         struct EigenSolution {
@@ -625,7 +625,7 @@ public:
     #endif
 
     [[nodiscard]] __fast_inline constexpr
-    T determinant() const{
+    T determinant() const noexcept {
         static_assert(R == C, "Determinant can only be calculated for square matrices.");
 
         if constexpr (R == 1) {
@@ -644,12 +644,12 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    bool is_symmetric() const {
+    bool is_symmetric() const noexcept {
         return this->transpose() == *this;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    const std::array<T, C * R> & to_flatten_array() const { 
+    const std::array<T, C * R> & to_flatten_array() const noexcept { 
         return storage_;
     }
 private:
@@ -658,7 +658,7 @@ private:
     __fast_inline constexpr Matrix(){}
 
     // 辅助函数：计算跳过指定行和列的行列式
-    [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col(size_t skip_row, size_t skip_col) const {
+    [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col(size_t skip_row, size_t skip_col) const noexcept {
         constexpr size_t N = R - 1;
         
         if constexpr (N == 1) {
@@ -709,7 +709,7 @@ private:
 
     // 辅助函数：计算跳过两行两列的行列式
     [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col_col(
-        size_t skip_row1, size_t skip_col1, size_t skip_row2, size_t skip_col2) const {
+        size_t skip_row1, size_t skip_col1, size_t skip_row2, size_t skip_col2) const noexcept {
         
         constexpr size_t N = R - 2;
         
@@ -748,7 +748,7 @@ private:
     }
 
     #if 1
-    [[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const {
+    [[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const noexcept {
         // 手动展开4x4矩阵的3x3子矩阵行列式计算
         // 选择展开行（跳过第i行）
         size_t rows[3];

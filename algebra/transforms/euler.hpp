@@ -27,7 +27,7 @@ struct _EulerAngleStorage<T, EulerAnglePolicy::XYZ> {
         return {.x = x, .y = y, .z = z};
     }
 
-    [[nodiscard]] constexpr Self to_xyz() const {
+    [[nodiscard]] constexpr Self to_xyz() const noexcept {
         return *this;
     }
 };
@@ -45,7 +45,7 @@ struct _EulerAngleStorage<T, EulerAnglePolicy::ZYX> {
         return {.z = z, .y = y, .x = x};
     }
 
-    [[nodiscard]] constexpr _EulerAngleStorage<T, EulerAnglePolicy::XYZ> to_xyz() const {
+    [[nodiscard]] constexpr _EulerAngleStorage<T, EulerAnglePolicy::XYZ> to_xyz() const noexcept {
         return {.x = x, .y = y, .z = z};
     }
 };
@@ -64,7 +64,7 @@ struct _EulerAngleStorage<T, EulerAnglePolicy::YXZ> {
         return {.y = y, .x = x, .z = z};
     }
 
-    [[nodiscard]] constexpr _EulerAngleStorage<T, EulerAnglePolicy::XYZ> to_xyz() const {
+    [[nodiscard]] constexpr _EulerAngleStorage<T, EulerAnglePolicy::XYZ> to_xyz() const noexcept {
         return {.x = x, .y = y, .z = z};
     }
 };

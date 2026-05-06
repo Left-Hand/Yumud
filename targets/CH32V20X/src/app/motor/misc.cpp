@@ -691,7 +691,7 @@ public:
         return elapsed_ticks_ >= period_ticks_;
     }
 
-    UvwCurrent result() const{
+    UvwCurrent result() const noexcept {
         return {
             lpfs_[0].get(),
             lpfs_[1].get(),

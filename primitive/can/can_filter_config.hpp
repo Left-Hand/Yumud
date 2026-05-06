@@ -83,11 +83,11 @@ public:
 
     static Option<CanFilterConfig> from_str(const StringView str);
 
-    constexpr bool is_list_mode() const{
+    constexpr bool is_list_mode() const noexcept {
         return is_list_mode_;
     }
 
-    constexpr bool is_32bit() const{
+    constexpr bool is_32bit() const noexcept {
         return is_32bit_;
     }
 

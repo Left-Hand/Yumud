@@ -51,7 +51,7 @@ public:
         }
     }
 
-    std::span<const T, N> result() const {
+    std::span<const T, N> result() const noexcept {
         return std::span(y);
     }
 

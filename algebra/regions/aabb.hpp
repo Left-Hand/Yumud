@@ -47,17 +47,17 @@ struct AABB{
 	math::Vec3<T> size;
 
 	T get_volume() const;
-	__fast_inline bool has_volume() const {
+	__fast_inline bool has_volume() const noexcept {
 		return size.x > 0 and size.y > 0 and size.z > 0;
 	}
 
-	__fast_inline bool has_surface() const {
+	__fast_inline bool has_surface() const noexcept {
 		return size.x > 0 or size.y > 0 or size.z > 0;
 	}
 
-	const math::Vec3<T> & get_position() const { return position; }
+	const math::Vec3<T> & get_position() const noexcept { return position; }
 	void set_position(const math::Vec3<T> & p_pos) { position = p_pos; }
-	const math::Vec3<T> & get_size() const { return size; }
+	const math::Vec3<T> & get_size() const noexcept { return size; }
 	void set_size(const math::Vec3<T> & p_size) { size = p_size; }
 
 	bool operator==(const AABB<T> &p_rval) const;
@@ -75,7 +75,7 @@ struct AABB{
 	__fast_inline bool smits_intersect_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir, T p_t0, T p_t1) const;
 
 	bool intersects_segment(const math::Vec3<T> & p_from, const math::Vec3<T> & p_to, math::Vec3<T> *r_intersection_point = nullptr, math::Vec3<T> *r_normal = nullptr) const;
-	bool intersects_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir) const {
+	bool intersects_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir) const noexcept {
 		bool inside;
 		return find_intersects_ray(p_from, p_dir, inside);
 	}
@@ -106,7 +106,7 @@ struct AABB{
 
 	// template<typename... Args>
 	// requires std::conjunction_v<std::is_same_v<math::Vec3<T>, Args>...>
-	// AABB<T> expand(const Args&... points) const {
+	// AABB<T> expand(const Args&... points) const noexcept {
 	// 	AABB<T> aabb = *this;
 	// 	(aabb.expand_to(points), ...);
 	// 	return aabb;
@@ -115,7 +115,7 @@ struct AABB{
 	__fast_inline void project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const;
 	__fast_inline void expand_to(const math::Vec3<T> & p_vector); /** expand to contain a point if necessary */
 
-	__fast_inline AABB abs() const {
+	__fast_inline AABB abs() const noexcept {
 		return AABB(position + size.minf(0), size.abs());
 	}
 
@@ -129,11 +129,11 @@ struct AABB{
 		size = p_end - position;
 	}
 
-	__fast_inline math::Vec3<T> get_end() const {
+	__fast_inline math::Vec3<T> get_end() const noexcept {
 		return position + size;
 	}
 
-	__fast_inline math::Vec3<T> get_center() const {
+	__fast_inline math::Vec3<T> get_center() const noexcept {
 		return position + (size * T(static_cast<T>(0.5f)));
 	}
 
@@ -145,7 +145,7 @@ struct AABB{
 };
 
 template<arithmetic T>
-inline bool AABB<T>::intersects(const AABB<T> &p_aabb) const {
+inline bool AABB<T>::intersects(const AABB<T> &p_aabb) const noexcept {
 	if (position.x >= (p_aabb.position.x + p_aabb.size.x)) {
 		return false;
 	}
@@ -170,7 +170,7 @@ inline bool AABB<T>::intersects(const AABB<T> &p_aabb) const {
 
 
 template<arithmetic T>
-inline bool AABB<T>::intersects_inclusive(const AABB<T> &p_aabb) const {
+inline bool AABB<T>::intersects_inclusive(const AABB<T> &p_aabb) const noexcept {
 	if (position.x > (p_aabb.position.x + p_aabb.size.x)) {
 		return false;
 	}
@@ -194,7 +194,7 @@ inline bool AABB<T>::intersects_inclusive(const AABB<T> &p_aabb) const {
 }
 
 template<arithmetic T>
-inline bool AABB<T>::encloses(const AABB<T> &p_aabb) const {
+inline bool AABB<T>::encloses(const AABB<T> &p_aabb) const noexcept {
 	math::Vec3<T> src_min = position;
 	math::Vec3<T> src_max = position + size;
 	math::Vec3<T> dst_min = p_aabb.position;
@@ -210,7 +210,7 @@ inline bool AABB<T>::encloses(const AABB<T> &p_aabb) const {
 }
 
 template<arithmetic T>
-math::Vec3<T> AABB<T>::get_support(const math::Vec3<T> & p_normal) const {
+math::Vec3<T> AABB<T>::get_support(const math::Vec3<T> & p_normal) const noexcept {
 	math::Vec3<T> half_extents = size * static_cast<T>(0.5f);
 	math::Vec3<T> ofs = position + half_extents;
 
@@ -222,7 +222,7 @@ math::Vec3<T> AABB<T>::get_support(const math::Vec3<T> & p_normal) const {
 }
 
 template<arithmetic T>
-math::Vec3<T> AABB<T>::get_endpoint(int p_point) const {
+math::Vec3<T> AABB<T>::get_endpoint(int p_point) const noexcept {
 	switch (p_point) {
 		default:
 			__builtin_unreachable();
@@ -246,7 +246,7 @@ math::Vec3<T> AABB<T>::get_endpoint(int p_point) const {
 }
 
 template<arithmetic T>
-bool AABB<T>::intersects_convex_shape(const Plane<T> *p_planes, int p_plane_count, const math::Vec3<T> *p_points, int p_point_count) const {
+bool AABB<T>::intersects_convex_shape(const Plane<T> *p_planes, int p_plane_count, const math::Vec3<T> *p_points, int p_point_count) const noexcept {
 	math::Vec3<T> half_extents = size * static_cast<T>(0.5f);
 	math::Vec3<T> ofs = position + half_extents;
 
@@ -289,7 +289,7 @@ bool AABB<T>::intersects_convex_shape(const Plane<T> *p_planes, int p_plane_coun
 }
 
 template<arithmetic T>
-bool AABB<T>::inside_convex_shape(const Plane<T> *p_planes, int p_plane_count) const {
+bool AABB<T>::inside_convex_shape(const Plane<T> *p_planes, int p_plane_count) const noexcept {
 	math::Vec3<T> half_extents = size * static_cast<T>(0.5f);
 	math::Vec3<T> ofs = position + half_extents;
 
@@ -309,7 +309,7 @@ bool AABB<T>::inside_convex_shape(const Plane<T> *p_planes, int p_plane_count) c
 }
 
 template<arithmetic T>
-bool AABB<T>::has_point(const math::Vec3<T> & p_point) const {
+bool AABB<T>::has_point(const math::Vec3<T> & p_point) const noexcept {
 	if (p_point.x < position.x) {
 		return false;
 	}
@@ -362,7 +362,7 @@ inline void AABB<T>::expand_to(const math::Vec3<T> & p_vector) {
 }
 
 template<arithmetic T>
-void AABB<T>::project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const {
+void AABB<T>::project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max) const noexcept {
 	math::Vec3<T> half_extents(size.x * static_cast<T>(static_cast<T>(0.5f)), size.y * static_cast<T>(static_cast<T>(0.5f)), size.z * static_cast<T>(static_cast<T>(0.5f)));
 	math::Vec3<T> center(position.x + half_extents.x, position.y + half_extents.y, position.z + half_extents.z);
 
@@ -373,7 +373,7 @@ void AABB<T>::project_range_in_plane(const Plane<T> &p_plane, T &r_min, T &r_max
 }
 
 template<arithmetic T>
-inline T AABB<T>::get_longest_axis_size() const {
+inline T AABB<T>::get_longest_axis_size() const noexcept {
 	T max_size = size.x;
 
 	if (size.y > max_size) {
@@ -388,7 +388,7 @@ inline T AABB<T>::get_longest_axis_size() const {
 }
 
 template<arithmetic T>
-inline T AABB<T>::get_shortest_axis_size() const {
+inline T AABB<T>::get_shortest_axis_size() const noexcept {
 	T max_size = size.x;
 
 	if (size.y < max_size) {
@@ -403,7 +403,7 @@ inline T AABB<T>::get_shortest_axis_size() const {
 }
 
 template<arithmetic T>
-bool AABB<T>::smits_intersect_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir, T p_t0, T p_t1) const {
+bool AABB<T>::smits_intersect_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir, T p_t0, T p_t1) const noexcept {
 	T divx = static_cast<T>(1) / p_dir.x;
 	T divy = static_cast<T>(1) / p_dir.y;
 	T divz = static_cast<T>(1) / p_dir.z;
@@ -482,7 +482,7 @@ void AABB<T>::quantize(T p_unit) {
 }
 
 template<arithmetic T>
-AABB<T> AABB<T>::quantized(T p_unit) const {
+AABB<T> AABB<T>::quantized(T p_unit) const noexcept {
 	AABB<T> ret = *this;
 	ret.quantize(p_unit);
 	return ret;
@@ -506,17 +506,17 @@ __inline OutputStream & operator<<(OutputStream & os, const AABB<T> & aabb){
 namespace ymd{
 
 template<arithmetic T>
-T AABB<T>::get_volume() const {
+T AABB<T>::get_volume() const noexcept {
 	return size.x * size.y * size.z;
 }
 
 template<arithmetic T>
-bool AABB<T>::operator==(const AABB<T> & p_rval) const {
+bool AABB<T>::operator==(const AABB<T> & p_rval) const noexcept {
 	return ((position == p_rval.position) && (size == p_rval.size));
 }
 
 template<arithmetic T>
-bool AABB<T>::operator!=(const AABB<T> & p_rval) const {
+bool AABB<T>::operator!=(const AABB<T> & p_rval) const noexcept {
 	return ((position != p_rval.position) || (size != p_rval.size));
 }
 
@@ -549,17 +549,17 @@ void AABB<T>::merge_with(const AABB<T> & p_aabb) {
 }
 
 template<arithmetic T>
-bool AABB<T>::is_equal_approx(const AABB<T> & p_aabb) const {
+bool AABB<T>::is_equal_approx(const AABB<T> & p_aabb) const noexcept {
 	return position.is_equal_approx(p_aabb.position) && size.is_equal_approx(p_aabb.size);
 }
 
 template<arithmetic T>
-bool AABB<T>::is_finite() const {
+bool AABB<T>::is_finite() const noexcept {
 	return position.is_finite() && size.is_finite();
 }
 
 template<arithmetic T>
-AABB<T> AABB<T>::intersection(const AABB<T> & p_aabb) const {
+AABB<T> AABB<T>::intersection(const AABB<T> & p_aabb) const noexcept {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0 || p_aabb.size.x < 0 || p_aabb.size.y < 0 || p_aabb.size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -602,7 +602,7 @@ AABB<T> AABB<T>::intersection(const AABB<T> & p_aabb) const {
 // backtracked intersection, or use p_from as the intersection, and
 // carry on progressing without e.g. reflecting against the normal.
 template<arithmetic T>
-bool AABB<T>::find_intersects_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir, bool &r_inside, math::Vec3<T> *r_intersection_point, math::Vec3<T> *r_normal) const {
+bool AABB<T>::find_intersects_ray(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir, bool &r_inside, math::Vec3<T> *r_intersection_point, math::Vec3<T> *r_normal) const noexcept {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -666,7 +666,7 @@ bool AABB<T>::find_intersects_ray(const math::Vec3<T> & p_from, const math::Vec3
 }
 
 template<arithmetic T>
-bool AABB<T>::intersects_segment(const math::Vec3<T> & p_from, const math::Vec3<T> & p_to, math::Vec3<T> *r_intersection_point, math::Vec3<T> *r_normal) const {
+bool AABB<T>::intersects_segment(const math::Vec3<T> & p_from, const math::Vec3<T> & p_to, math::Vec3<T> *r_intersection_point, math::Vec3<T> *r_normal) const noexcept {
 #ifdef MATH_CHECKS
 	if (unlikely(size.x < 0 || size.y < 0 || size.z < 0)) {
 		ERR_PRINT("AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.");
@@ -732,7 +732,7 @@ bool AABB<T>::intersects_segment(const math::Vec3<T> & p_from, const math::Vec3<
 }
 
 template<arithmetic T>
-bool AABB<T>::intersects_plane(const Plane<T> &p_plane) const {
+bool AABB<T>::intersects_plane(const Plane<T> &p_plane) const noexcept {
 	math::Vec3<T> points[8] = {
 		math::Vec3<T>(position.x, position.y, position.z),
 		math::Vec3<T>(position.x, position.y, position.z + size.z),
@@ -759,7 +759,7 @@ bool AABB<T>::intersects_plane(const Plane<T> &p_plane) const {
 }
 
 template<arithmetic T>
-math::Vec3<T> AABB<T>::get_longest_axis() const {
+math::Vec3<T> AABB<T>::get_longest_axis() const noexcept {
 	math::Vec3<T> axis(1, 0, 0);
 	T max_size = size.x;
 
@@ -776,7 +776,7 @@ math::Vec3<T> AABB<T>::get_longest_axis() const {
 }
 
 template<arithmetic T>
-int AABB<T>::get_longest_axis_index() const {
+int AABB<T>::get_longest_axis_index() const noexcept {
 	int axis = 0;
 	T max_size = size.x;
 
@@ -793,7 +793,7 @@ int AABB<T>::get_longest_axis_index() const {
 }
 
 template<arithmetic T>
-math::Vec3<T> AABB<T>::get_shortest_axis() const {
+math::Vec3<T> AABB<T>::get_shortest_axis() const noexcept {
 	math::Vec3<T> axis(1, 0, 0);
 	T min_size = size.x;
 
@@ -810,7 +810,7 @@ math::Vec3<T> AABB<T>::get_shortest_axis() const {
 }
 
 template<arithmetic T>
-int AABB<T>::get_shortest_axis_index() const {
+int AABB<T>::get_shortest_axis_index() const noexcept {
 	int axis = 0;
 	T min_size = size.x;
 
@@ -827,28 +827,28 @@ int AABB<T>::get_shortest_axis_index() const {
 }
 
 template<arithmetic T>
-AABB<T> AABB<T>::merge(const AABB<T> & p_with) const {
+AABB<T> AABB<T>::merge(const AABB<T> & p_with) const noexcept {
 	AABB<T> aabb = *this;
 	aabb.merge_with(p_with);
 	return aabb;
 }
 
 template<arithmetic T>
-AABB<T> AABB<T>::expand(const math::Vec3<T> & p_vector) const {
+AABB<T> AABB<T>::expand(const math::Vec3<T> & p_vector) const noexcept {
 	AABB<T> aabb = *this;
 	aabb.expand_to(p_vector);
 	return aabb;
 }
 
 template<arithmetic T>
-AABB<T> AABB<T>::grow(T p_by) const {
+AABB<T> AABB<T>::grow(T p_by) const noexcept {
 	AABB<T> aabb = *this;
 	aabb.grow_by(p_by);
 	return aabb;
 }
 
 template<arithmetic T>
-void AABB<T>::get_edge(int p_edge, math::Vec3<T> &r_from, math::Vec3<T> &r_to) const {
+void AABB<T>::get_edge(int p_edge, math::Vec3<T> &r_from, math::Vec3<T> &r_to) const noexcept {
 	switch (p_edge) {
 		default:
 		    __builtin_unreachable();
@@ -912,7 +912,7 @@ void AABB<T>::get_edge(int p_edge, math::Vec3<T> &r_from, math::Vec3<T> &r_to) c
 }
 
 template<arithmetic T>
-std::optional<math::Vec3<T>> AABB<T>::intersects_segment_bind(const math::Vec3<T> & p_from, const math::Vec3<T> & p_to) const {
+std::optional<math::Vec3<T>> AABB<T>::intersects_segment_bind(const math::Vec3<T> & p_from, const math::Vec3<T> & p_to) const noexcept {
 	math::Vec3<T> inters;
 	if (intersects_segment(p_from, p_to, &inters)) {
 		return inters;
@@ -921,7 +921,7 @@ std::optional<math::Vec3<T>> AABB<T>::intersects_segment_bind(const math::Vec3<T
 }
 
 template<arithmetic T>
-std::optional<math::Vec3<T>> AABB<T>::intersects_ray_bind(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir) const {
+std::optional<math::Vec3<T>> AABB<T>::intersects_ray_bind(const math::Vec3<T> & p_from, const math::Vec3<T> & p_dir) const noexcept {
 	math::Vec3<T> inters;
 	bool inside = false;
 

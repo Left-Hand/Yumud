@@ -77,10 +77,10 @@ struct ST1615_Prelude{
             }
         }
 
-        [[nodiscard]] constexpr bool is_some() const { return kind_ != NONE; }
-        [[nodiscard]] constexpr bool is_none() const { return kind_ == NONE; }
+        [[nodiscard]] constexpr bool is_some() const noexcept { return kind_ != NONE; }
+        [[nodiscard]] constexpr bool is_none() const noexcept { return kind_ == NONE; }
 
-        constexpr Kind unwrap() const { 
+        constexpr Kind unwrap() const noexcept { 
             if(is_none()) __builtin_trap();
             return std::bit_cast<Kind>(kind_);
         }

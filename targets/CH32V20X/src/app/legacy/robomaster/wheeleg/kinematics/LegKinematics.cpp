@@ -15,7 +15,7 @@ using namespace ymd::rmst;
 
 
 
-// Option<RadianPair> LegKinematics::_inverse(Vec2 const pos) const {
+// Option<RadianPair> LegKinematics::_inverse(Vec2 const pos) const noexcept {
 //     // return Some(RadianPair{Radian(0),Radian(0)});
 
 //     return None;

@@ -60,19 +60,19 @@ struct TMR3111_Prelude{
     struct [[nodiscard]] AngleCode final{
         uint32_t bits;
 
-        [[nodiscard]] constexpr bool is_error() const {return bits & 0x01;}
-        [[nodiscard]] constexpr uint32_t angle23() const {
+        [[nodiscard]] constexpr bool is_error() const noexcept {return bits & 0x01;}
+        [[nodiscard]] constexpr uint32_t angle23() const noexcept {
             constexpr uint32_t MASK = ((1 << 23) - 1);
             return (bits >> 5) & MASK;
         }
 
 
-        [[nodiscard]] constexpr uint8_t checksum4() const {
+        [[nodiscard]] constexpr uint8_t checksum4() const noexcept {
             constexpr uint32_t MASK = ((1 << 4) - 1);
             return (bits >> 1) & MASK;
         }
 
-        [[nodiscard]] constexpr uint8_t calc_actual_checksum() const {
+        [[nodiscard]] constexpr uint8_t calc_actual_checksum() const noexcept {
             // 4-bit CRC 检验码，校验范围为 1-bit “0” 后接 23-bit 角度值（总共 24-bit 数据）,CRC 校验多
             // 项式为 x^4 + x^3 + x^2 + 1,初始值为 4'b0011
 

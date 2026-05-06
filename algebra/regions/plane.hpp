@@ -73,14 +73,14 @@ struct Plane {
 
 	template<typename U>
 	void set_normal(const math::Vec3<U> &p_normal);
-	__fast_inline math::Vec3<T> get_normal() const { return normal; };
+	__fast_inline math::Vec3<T> get_normal() const noexcept { return normal; };
 
 	void normalize();
 	Plane normalized() const;
 
 	/* Plane-Point operations */
 
-	__fast_inline math::Vec3<T> get_center() const { return normal * d; }
+	__fast_inline math::Vec3<T> get_center() const noexcept { return normal * d; }
 	math::Vec3<T> get_any_perpendicular_normal() const;
 
 	__fast_inline bool is_point_over(const math::Vec3<T> &p_point) const; ///< Point is over plane
@@ -98,13 +98,13 @@ struct Plane {
 	std::optional<math::Vec3<T>> intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir) const;
 	std::optional<math::Vec3<T>> intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end) const;
 
-	__fast_inline math::Vec3<T> project(const math::Vec3<T> &p_point) const {
+	__fast_inline math::Vec3<T> project(const math::Vec3<T> &p_point) const noexcept {
 		return p_point - normal * distance_to(p_point);
 	}
 
 	/* misc */
 
-	// Plane operator-() const { return Plane(math::Vec3<T>(-normal), static_cast<T>(-d));}
+	// Plane operator-() const noexcept { return Plane(math::Vec3<T>(-normal), static_cast<T>(-d));}
 	bool is_equal_approx(const Plane & p_plane) const;
 	bool is_equal_approx_any_side(const Plane & p_plane) const;
 	bool is_finite() const;
@@ -120,17 +120,17 @@ struct Plane {
 };
 
 template<typename T>
-bool Plane<T>::is_point_over(const math::Vec3<T> &p_point) const {
+bool Plane<T>::is_point_over(const math::Vec3<T> &p_point) const noexcept {
 	return (normal.dot(p_point) > d);
 }
 
 template<typename T>
-T Plane<T>::distance_to(const math::Vec3<T> &p_point) const {
+T Plane<T>::distance_to(const math::Vec3<T> &p_point) const noexcept {
 	return (normal.dot(p_point) - d);
 }
 
 template<typename T>
-bool Plane<T>::has_point(const math::Vec3<T> &p_point, const T p_tolerance) const {
+bool Plane<T>::has_point(const math::Vec3<T> &p_point, const T p_tolerance) const noexcept {
 	T dist = normal.normalized().dot(p_point) - d;
 	dist = ABS(dist);
 	return (dist <= p_tolerance);
@@ -139,12 +139,12 @@ bool Plane<T>::has_point(const math::Vec3<T> &p_point, const T p_tolerance) cons
 
 
 template<typename T>
-bool Plane<T>::operator==(const Plane<T> &p_plane) const {
+bool Plane<T>::operator==(const Plane<T> &p_plane) const noexcept {
 	return normal == p_plane.normal && d == p_plane.d;
 }
 
 template<typename T>
-bool Plane<T>::operator!=(const Plane<T> &p_plane) const {
+bool Plane<T>::operator!=(const Plane<T> &p_plane) const noexcept {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
@@ -176,7 +176,7 @@ void Plane<T>::normalize() {
 
 
 template<typename T>
-Plane<T> Plane<T>::normalized() const {
+Plane<T> Plane<T>::normalized() const noexcept {
 	Plane<T> p = *this;
 	p.normalize();
 	return p;
@@ -184,7 +184,7 @@ Plane<T> Plane<T>::normalized() const {
 
 
 template<typename T>
-math::Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
+math::Vec3<T> Plane<T>::get_any_perpendicular_normal() const noexcept {
 	static constexpr auto p1 = math::Vec3<T>(1, 0, 0);
 	static constexpr auto p2 = math::Vec3<T>(0, 1, 0);
 	math::Vec3<T> p;
@@ -204,7 +204,7 @@ math::Vec3<T> Plane<T>::get_any_perpendicular_normal() const {
 /* intersections */
 
 template<typename T>
-bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, math::Vec3<T> & r_result) const {
+bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, math::Vec3<T> & r_result) const noexcept {
 	const Plane<T> &p_plane0 = *this;
 	math::Vec3<T> normal0 = p_plane0.normal;
 	math::Vec3<T> normal1 = p_plane1.normal;
@@ -226,7 +226,7 @@ bool Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2, m
 
 
 template<typename T>
-bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir, math::Vec3<T> & p_intersection) const {
+bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir, math::Vec3<T> & p_intersection) const noexcept {
 	math::Vec3<T> segment = p_dir;
 	T den = normal.dot(segment);
 
@@ -249,7 +249,7 @@ bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &
 
 
 template<typename T>
-bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end, math::Vec3<T> & p_intersection) const {
+bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end, math::Vec3<T> & p_intersection) const noexcept {
 	math::Vec3<T> segment = p_begin - p_end;
 	T den = normal.dot(segment);
 	if (is_equal_approx(0, den)) {
@@ -269,7 +269,7 @@ bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3
 
 
 template<typename T>
-std::optional<math::Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const {
+std::optional<math::Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, const Plane<T> &p_plane2) const noexcept {
 	math::Vec3<T> inters;
 	if (intersect_3(p_plane1, p_plane2, inters)) {
 		return inters;
@@ -280,7 +280,7 @@ std::optional<math::Vec3<T>> Plane<T>::intersect_3(const Plane<T> &p_plane1, con
 
 
 template<typename T>
-std::optional<math::Vec3<T>> Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir) const {
+std::optional<math::Vec3<T>> Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &p_dir) const noexcept {
 	math::Vec3<T> inters;
 	if (intersects_ray(p_from, p_dir, inters)) {
 		return inters;
@@ -291,7 +291,7 @@ std::optional<math::Vec3<T>> Plane<T>::intersects_ray(const math::Vec3<T> &p_fro
 
 
 template<typename T>
-std::optional<math::Vec3<T>> Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end) const {
+std::optional<math::Vec3<T>> Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3<T> &p_end) const noexcept {
 	math::Vec3<T> inters;
 	if (intersects_segment(p_begin, p_end, inters)) {
 		return inters;
@@ -303,19 +303,19 @@ std::optional<math::Vec3<T>> Plane<T>::intersects_segment(const math::Vec3<T> &p
 /* misc */
 
 template<typename T>
-bool Plane<T>::is_equal_approx_any_side(const Plane<T> &p_plane) const {
+bool Plane<T>::is_equal_approx_any_side(const Plane<T> &p_plane) const noexcept {
 	return (normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d)) || (normal.is_equal_approx(-p_plane.normal) && is_equal_approx(d, -p_plane.d));
 }
 
 
 template<typename T>
-bool Plane<T>::is_equal_approx(const Plane<T> &p_plane) const {
+bool Plane<T>::is_equal_approx(const Plane<T> &p_plane) const noexcept {
 	return normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d);
 }
 
 
 template<typename T>
-bool Plane<T>::is_finite() const {
+bool Plane<T>::is_finite() const noexcept {
 	return normal.is_finite() && is_finite(d);
 }
 

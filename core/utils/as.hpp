@@ -5,7 +5,7 @@ namespace ymd{
 template<typename T>
 struct As{
     template<typename U>
-    constexpr T operator |(const U & u) const {
+    constexpr T operator |(const U & u) const noexcept {
         return static_cast<T>(u);
     }
 

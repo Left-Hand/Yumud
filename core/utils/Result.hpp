@@ -121,11 +121,11 @@ namespace details{
         __fast_inline constexpr ResultStorage_Same(const ResultStorage_Same &) = default;
         __fast_inline constexpr ResultStorage_Same(ResultStorage_Same &&) = default;
     
-        __fast_inline constexpr bool is_ok() const{return is_ok_;}
-        __fast_inline constexpr bool is_err() const{return !is_ok_;}
+        __fast_inline constexpr bool is_ok() const noexcept {return is_ok_;}
+        __fast_inline constexpr bool is_err() const noexcept {return !is_ok_;}
     
-        __fast_inline constexpr T get_ok() const{return ok_val_;}
-        __fast_inline constexpr T get_err() const{return err_val_;}
+        __fast_inline constexpr T get_ok() const noexcept {return ok_val_;}
+        __fast_inline constexpr T get_err() const noexcept {return err_val_;}
     private:
         bool is_ok_;
         union{
@@ -148,11 +148,11 @@ namespace details{
         __fast_inline constexpr ResultStorage_ErrorOnly(const Err<E> & val):
             val_(val.get_inner()){;}
     
-        __fast_inline constexpr bool is_ok() const{return !val_.has_value();}
-        __fast_inline constexpr bool is_err() const{return val_.has_value();}
+        __fast_inline constexpr bool is_ok() const noexcept {return !val_.has_value();}
+        __fast_inline constexpr bool is_err() const noexcept {return val_.has_value();}
     
-        __fast_inline constexpr void get_ok() const{}
-        __fast_inline constexpr E get_err() const{return (val_.value());}
+        __fast_inline constexpr void get_ok() const noexcept {}
+        __fast_inline constexpr E get_err() const noexcept {return (val_.value());}
     private:
         std::optional<E> val_;
     };
@@ -170,11 +170,11 @@ namespace details{
         __fast_inline constexpr ResultStorage_OkOnly(const ResultStorage_OkOnly &) = default;
         __fast_inline constexpr ResultStorage_OkOnly(ResultStorage_OkOnly &&) = default;
     
-        __fast_inline constexpr bool is_ok() const{return val_.has_value();}
-        __fast_inline constexpr bool is_err() const{return !val_.has_value();}
+        __fast_inline constexpr bool is_ok() const noexcept {return val_.has_value();}
+        __fast_inline constexpr bool is_err() const noexcept {return !val_.has_value();}
     
-        __fast_inline constexpr T get_ok() const{return (val_.value());}
-        __fast_inline constexpr void get_err() const{return;}
+        __fast_inline constexpr T get_ok() const noexcept {return (val_.value());}
+        __fast_inline constexpr void get_err() const noexcept {return;}
     private:
         std::optional<T> val_;
     };
@@ -194,10 +194,10 @@ namespace details{
         __fast_inline constexpr ResultStorage_VoidOnly& operator=(const ResultStorage_VoidOnly &) = default;
         __fast_inline constexpr ResultStorage_VoidOnly& operator=(ResultStorage_VoidOnly &&) = default;
 
-        __fast_inline constexpr bool is_ok() const{return is_ok_;}
-        __fast_inline constexpr bool is_err() const{return !is_ok_;}
-        __fast_inline constexpr void get_ok() const{}
-        __fast_inline constexpr void get_err() const{}
+        __fast_inline constexpr bool is_ok() const noexcept {return is_ok_;}
+        __fast_inline constexpr bool is_err() const noexcept {return !is_ok_;}
+        __fast_inline constexpr void get_ok() const noexcept {}
+        __fast_inline constexpr void get_err() const noexcept {}
     private:
         bool is_ok_;
     };
@@ -248,7 +248,7 @@ private:
         std::source_location loc_;
 
         template<typename ... Args>
-        constexpr T expect(Args && ... args) const{
+        constexpr T expect(Args && ... args) const noexcept {
             return owner_.except_impl(loc_, std::forward<Args>(args)...);
         }
     };
@@ -257,7 +257,7 @@ private:
     constexpr T except_impl(
         const std::source_location & loc,
         Args && ... args
-    ) const {
+    ) const noexcept {
         if ((is_ok())) [[likely]] {
             return storage_.get_ok();
         } else {
@@ -325,7 +325,7 @@ public:
 
     template<typename Tok>
     [[nodiscard]] __fast_inline constexpr 
-    Result<std::decay_t<Tok>, E> to(Tok && ok) const{
+    Result<std::decay_t<Tok>, E> to(Tok && ok) const noexcept {
         if (is_ok()) {
             return Ok<std::decay_t<Tok>>(ok);
         }
@@ -428,7 +428,7 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    Result<T, E> inspect(Fn && fn) const {
+    Result<T, E> inspect(Fn && fn) const noexcept {
         if (is_ok()){
             if constexpr(!std::is_void_v<T>) std::forward<Fn>(fn)(unwrap());
             else std::forward<Fn>(fn)();
@@ -440,7 +440,7 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    const Result<T, E> & inspect_err(Fn && fn) const {
+    const Result<T, E> & inspect_err(Fn && fn) const noexcept {
         if (is_err()) {
             std::forward<Fn>(fn)(unwrap_err());
         }
@@ -449,18 +449,18 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    Result<T, E> if_ok(Fn && fn) const {
+    Result<T, E> if_ok(Fn && fn) const noexcept {
         if (is_ok()) std::forward<Fn>(fn)();
         return *this;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool is_ok() const {
+    bool is_ok() const noexcept {
         return storage_.is_ok();
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool is_err() const {
+    bool is_err() const noexcept {
         return storage_.is_err();
     }
     
@@ -468,7 +468,7 @@ public:
 
     template<typename ... Args>
     constexpr 
-    T expect(Args && ... args) const{
+    T expect(Args && ... args) const noexcept {
         if ((is_ok())) [[likely]]{
             return storage_.get_ok();
         } else {
@@ -479,19 +479,19 @@ public:
     
     template<bool en, typename ... Args>
     [[nodiscard]] constexpr 
-    const Result & check_if(Args && ... args) const{
+    const Result & check_if(Args && ... args) const noexcept {
         if constexpr (en) {
             return check(std::forward<Args>(args)...);
         }
         return *this;
     }
     [[nodiscard]] constexpr 
-    _Loc loc(const std::source_location & loca = std::source_location::current()) const{
+    _Loc loc(const std::source_location & loca = std::source_location::current()) const noexcept {
         return {*this, loca};
     }
 
     __fast_inline constexpr 
-    T unwrap() const {
+    T unwrap() const noexcept {
         if ((is_ok())) [[likely]] {
             return storage_.get_ok();
         } else {
@@ -500,7 +500,7 @@ public:
     }
 
     __fast_inline constexpr
-    T examine(const std::source_location & loca = std::source_location::current()) const {
+    T examine(const std::source_location & loca = std::source_location::current()) const noexcept {
         if ((!is_ok())) [[unlikely]]{
             if constexpr (not std::is_same_v<E, void>)
                 abort_unwrap_err(loca);
@@ -514,7 +514,7 @@ public:
 
     template<typename U = T>
     __fast_inline constexpr 
-    T unwrap_or(const U & val) const {
+    T unwrap_or(const U & val) const noexcept {
         if ((is_ok())) [[likely]]{
             return storage_.get_ok();
         } else {
@@ -522,7 +522,7 @@ public:
         }
     }
     __fast_inline constexpr 
-    E unwrap_err() const {
+    E unwrap_err() const noexcept {
         if ((is_err())) [[likely]]{
             return storage_.get_err();
         } else {
@@ -531,7 +531,7 @@ public:
     }
 
     constexpr Option<T> 
-    ok() const{
+    ok() const noexcept {
         if ((is_ok())) [[likely]]{
             return Some(storage_.get_ok());
         } else {
@@ -540,7 +540,7 @@ public:
     }
 
     constexpr Option<E> 
-    err() const{
+    err() const noexcept {
         if ((is_err())) [[likely]]{
             return Some(storage_.get_err());
         } else {
@@ -609,12 +609,12 @@ struct [[nodiscard]] Result<T, Infallible>{
     constexpr Result(Ok<T> && okay):value_(okay.get_inner()){;}
     consteval Result(Err<Infallible> && error){;}
 
-    constexpr T examine() const {return value_;}
-    constexpr T unwrap() const {return value_;}
+    constexpr T examine() const noexcept {return value_;}
+    constexpr T unwrap() const noexcept {return value_;}
 
-    consteval Infallible unwrap_err() const {return Infallible{};};
-    consteval bool is_err() const {return false;}
-    consteval bool is_ok() const {return true;}
+    consteval Infallible unwrap_err() const noexcept {return Infallible{};};
+    consteval bool is_err() const noexcept {return false;}
+    consteval bool is_ok() const noexcept {return true;}
 private:
     T value_;
 };
@@ -625,12 +625,12 @@ struct [[nodiscard]] Result<void, Infallible>{
     consteval Result([[maybe_unused]] Ok<void> && okay){;}
     consteval Result([[maybe_unused]] Err<Infallible> && error){;}
 
-    constexpr void examine() const {}
-    constexpr void unwrap() const {}
+    constexpr void examine() const noexcept {}
+    constexpr void unwrap() const noexcept {}
 
-    constexpr Infallible unwrap_err() const {return Infallible{};};
-    consteval bool is_err() const {return false;}
-    consteval bool is_ok() const {return true;}
+    constexpr Infallible unwrap_err() const noexcept {return Infallible{};};
+    consteval bool is_err() const noexcept {return false;}
+    consteval bool is_ok() const noexcept {return true;}
 private:
 
 };

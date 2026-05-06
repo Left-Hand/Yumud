@@ -32,16 +32,16 @@ struct VCE2755_Prelude{
 
         uint8_t bits;
 
-        [[nodiscard]] constexpr bool is_valid() const {
+        [[nodiscard]] constexpr bool is_valid() const noexcept {
             return bits == KEY1 || bits == KEY2;
         }
 
-        [[nodiscard]] constexpr Option<Package> try_into_package() const {
+        [[nodiscard]] constexpr Option<Package> try_into_package() const noexcept {
             if(not is_valid()) return None;
             return Some(into_package());
         }
         
-        [[nodiscard]] Package into_package() const {
+        [[nodiscard]] Package into_package() const noexcept {
             return static_cast<Package>(bits);
         }
 
@@ -159,7 +159,7 @@ struct VCE2755_Prelude{
         }
 
 
-        [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const {
+        [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const noexcept {
             const auto bits20 = b20();
             #if 0
             // TODO 验证crc校验功能
@@ -171,7 +171,7 @@ struct VCE2755_Prelude{
         }
     private:
 
-        [[nodiscard]] constexpr uint32_t b20() const{
+        [[nodiscard]] constexpr uint32_t b20() const noexcept {
             uint32_t bits = 0;
             bits |= static_cast<uint32_t>(bytes[0]) << 12;
             bits |= static_cast<uint32_t>(bytes[1]) << 4;
@@ -243,7 +243,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
             abz_res_7_0 = resolution & 0xFF;
         }
 
-        uint16_t get_resolution() const {
+        uint16_t get_resolution() const noexcept {
             return (abz_res_9_8 << 8) | abz_res_7_0;
         }
     };

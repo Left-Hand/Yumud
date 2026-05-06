@@ -196,7 +196,7 @@ protected:
     AdcInjectedChannel injected_channels_[4];
 
 
-    [[nodiscard]] uint32_t get_max_value() const{
+    [[nodiscard]] uint32_t get_max_value() const noexcept {
         // return ((1 << 12) - 1) << (left_aligned_ ? 4 : 4);
         if(left_aligned_) return 0xFFFF;
         else return 0x0FFF;
@@ -258,7 +258,7 @@ struct [[nodiscard]] TemperatureCompensator final{
         };
     }
     
-    constexpr iq16 comp_u12(const uint16_t x) const {
+    constexpr iq16 comp_u12(const uint16_t x) const noexcept {
         constexpr uint16_t K = static_cast<uint16_t>(-COEFF1 * 65536);
         return iq16::from_bits(b.to_bits() - (K * x)); 
     }

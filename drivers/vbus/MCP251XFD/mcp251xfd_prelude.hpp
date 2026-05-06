@@ -348,7 +348,7 @@ struct [[nodiscard]] ChecksumBuilder final{
         return ChecksumBuilder{.val = 0xffff};
     }
 
-    constexpr ChecksumBuilder push_byte(const uint8_t byte) const{
+    constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
         ChecksumBuilder self = *this;
 
         self.val = static_cast<uint16_t>(
@@ -359,7 +359,7 @@ struct [[nodiscard]] ChecksumBuilder final{
         return self;
     }
 
-    constexpr ChecksumBuilder push_bytes(const std::span<const uint8_t> bytes) const {
+    constexpr ChecksumBuilder push_bytes(const std::span<const uint8_t> bytes) const noexcept {
         ChecksumBuilder self = *this;
 
         for(size_t i = 0; i < bytes.size(); i++){
@@ -367,7 +367,7 @@ struct [[nodiscard]] ChecksumBuilder final{
         }
     }
 
-    constexpr uint16_t finalize() const {
+    constexpr uint16_t finalize() const noexcept {
         return val;
     }
 };

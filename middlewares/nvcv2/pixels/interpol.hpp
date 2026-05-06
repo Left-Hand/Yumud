@@ -5,7 +5,7 @@
 namespace ymd::nvcv2::pixels{
 
 template<typename ColorType>
-constexpr ColorType Image<ColorType>::bilinear_interpol(const math::Vec2<iq16> & pos) const {
+constexpr ColorType Image<ColorType>::bilinear_interpol(const math::Vec2<iq16> & pos) const noexcept {
     math::Vec2u16 pos_i = {size_t(pos.x), size_t(pos.y)};
     // return img(pos_i);
     if(!this->size().has_point(pos_i) || !this->size().has_point(pos_i + math::Vec2u16{1,1})) return ColorType();

@@ -33,7 +33,7 @@ struct StateTransition<Linear, T, N_STATES, N_INPUTS>{
         const Matrix<T, N_STATES, 1> & x,
         const Matrix<T, N_INPUTS, 1> & u,
         const Matrix<T, N_STATES, N_STATES> & F
-    ) const {
+    ) const noexcept {
         return F * x + u; // 默认线性模型
     }
 };
@@ -44,7 +44,7 @@ struct Observation<Linear, T, N_STATES, N_MEAS> {
     constexpr Matrix<T, N_MEAS, 1> operator()(
         const Matrix<T, N_STATES, 1>& x,
         const Matrix<T, N_MEAS, N_STATES>& H
-    ) const {
+    ) const noexcept {
         return H * x; // 默认线性观测
     }
 };
@@ -55,7 +55,7 @@ struct ProcessNoise<Linear, T, N_STATES>  {
     constexpr Matrix<T, N_STATES, N_STATES> operator()(
         const Matrix<T, N_STATES, N_STATES>& Q,
         T dt
-    ) const {
+    ) const noexcept {
         return Q; // 默认恒定过程噪声
     }
 };
@@ -66,7 +66,7 @@ struct MeasurementNoise<Linear, T, N_MEAS>  {
     constexpr Matrix<T, N_MEAS, N_MEAS> operator()(
         const Matrix<T, N_MEAS, N_MEAS>& R,
         const Matrix<T, N_MEAS, 1>& z
-    ) const {
+    ) const noexcept {
         return R; // 默认恒定测量噪声
     }
 };
@@ -181,13 +181,13 @@ public:
     }
     
     // 获取当前状态估计
-    constexpr const Matrix<T, N_STATES, 1>& state() const { return x_; }
+    constexpr const Matrix<T, N_STATES, 1>& state() const noexcept { return x_; }
     
     // 获取当前协方差
-    constexpr const Matrix<T, N_STATES, N_STATES>& covariance() const { return P_; }
+    constexpr const Matrix<T, N_STATES, N_STATES>& covariance() const noexcept { return P_; }
     
     // 获取卡尔曼增益（用于调试）
-    constexpr Matrix<T, N_STATES, N_MEAS> compute_kalman_gain() const {
+    constexpr Matrix<T, N_STATES, N_MEAS> compute_kalman_gain() const noexcept {
         const auto H_transpose = H_.transpose();
         const auto S = H_ * P_ * H_transpose + R_;
         return P_ * H_transpose * S.inverse();

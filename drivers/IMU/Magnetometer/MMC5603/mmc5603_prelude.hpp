@@ -61,7 +61,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
     struct R8_Temp:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
         uint8_t bits;
-        operator int() const {
+        operator int() const noexcept {
             return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
         }
     };

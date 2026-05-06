@@ -58,7 +58,7 @@ struct SGM58031_Prelude{
         };
 
         constexpr FS(Kind kind):kind_(kind){;}
-        constexpr iq16 to_real() const{
+        constexpr iq16 to_real() const noexcept {
             switch(kind_){
                 case FS::_0_256:
                     return iq16(0.256);
@@ -76,11 +76,11 @@ struct SGM58031_Prelude{
             __builtin_unreachable();
         }
 
-        [[nodiscard]] constexpr uint8_t to_u8() const {
+        [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
             return uint8_t(kind_);
         }
 
-        [[nodiscard]] constexpr auto to_pga() const {
+        [[nodiscard]] constexpr auto to_pga() const noexcept {
             return static_cast<PGA>(kind_);
         }
     private:

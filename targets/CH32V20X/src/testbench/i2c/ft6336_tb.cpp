@@ -35,7 +35,7 @@ struct [[nodiscard]] MyU18BurstPixelDataIter{
     constexpr explicit MyU18BurstPixelDataIter(const Iter iter):
         iter_(iter) {}
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return is_runout_ == false;
     };
 

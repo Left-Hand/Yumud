@@ -29,7 +29,7 @@ private:
 
     struct body{
         public:
-        inline iq16 area ( ) const{
+        inline iq16 area ( ) const noexcept {
             return vtable_-> area (self_);
         } 
 
@@ -72,7 +72,7 @@ public:
     ~Rectangle(){
         // DEBUG_PRINTLN("rect dropped");
     }
-    iq16 area() const { return width_ * height_; }
+    iq16 area() const noexcept { return width_ * height_; }
 
     friend OutputStream & operator<<(OutputStream & os, const Rectangle & rect) {
         return os << "{Rectangle: width = " << rect.width_ << ", height = " << rect.height_ << "}";
@@ -93,7 +93,7 @@ public:
     ~Circle(){
     }
 
-    iq16 area() const { return radius_ * radius_ * iq16(M_PI);}
+    iq16 area() const noexcept { return radius_ * radius_ * iq16(M_PI);}
 
     friend OutputStream & operator<<(OutputStream & os, const Circle & circle) {
         return os << "{Circle: radius = " << circle.radius_ << "}";

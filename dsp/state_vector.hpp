@@ -27,7 +27,7 @@ public:
         x_.fill(0);
     }
 
-    constexpr const T & operator [](const size_t idx) const {
+    constexpr const T & operator [](const size_t idx) const noexcept {
         return x_[idx];
     }
     
@@ -43,15 +43,15 @@ public:
 
     template<size_t I>
     requires (I < N)
-    constexpr const T & get() const{return x_[I];}
+    constexpr const T & get() const noexcept {return x_[I];}
 
     constexpr T * begin() {return x_.begin();}
-    constexpr const T * begin() const {return x_.begin();}
+    constexpr const T * begin() const noexcept {return x_.begin();}
 
     constexpr T * end() {return x_.end();}
-    constexpr const T * end() const {return x_.end();}
+    constexpr const T * end() const noexcept {return x_.end();}
 
-    constexpr const T & back() const{return x_.back();}
+    constexpr const T & back() const noexcept {return x_.back();}
 private:    
     std::array<T, N> x_;
 };

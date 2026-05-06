@@ -19,7 +19,7 @@ struct alignas(8) [[nodiscard]] fp64 final{
 		*this = std::bit_cast<fp64>(dv);
 	}
 
-	constexpr fp64 operator -() const {
+	constexpr fp64 operator -() const noexcept {
 		return Self::from_bits(to_bits() ^ std::numeric_limits<uint64_t>::min());
 	}
 
@@ -27,15 +27,15 @@ struct alignas(8) [[nodiscard]] fp64 final{
 		return std::bit_cast<Self>(bits);
 	}
 
-	[[nodiscard]] constexpr uint64_t to_bits() const {
+	[[nodiscard]] constexpr uint64_t to_bits() const noexcept {
 		return std::bit_cast<uint64_t>(*this);
 	}
 
-	[[nodiscard]] consteval Self from_nan() const {
+	[[nodiscard]] consteval Self from_nan() const noexcept {
 		return Self{0x7ff8000000000000};
 	}
 
-    [[nodiscard]] constexpr operator double() const {
+    [[nodiscard]] constexpr operator double() const noexcept {
         return std::bit_cast<double>(*this);
     }
 

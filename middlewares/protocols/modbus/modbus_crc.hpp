@@ -80,7 +80,7 @@ struct [[nodiscard]] Crc16ModbusAccumulator final{
         };
     }
     
-    constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const noexcept {
         Self self = *this;
 
         #pragma GCC unroll 4
@@ -93,7 +93,7 @@ struct [[nodiscard]] Crc16ModbusAccumulator final{
 
 
     __attribute__((always_inline))
-    constexpr Self push_byte(const uint8_t byte) const {
+    constexpr Self push_byte(const uint8_t byte) const noexcept {
         Self self = *this;
         const uint8_t index = self.crc_low ^ byte;
         self.crc_low = self.crc_high ^ CRC_HIGH_TABLE[index];
@@ -102,7 +102,7 @@ struct [[nodiscard]] Crc16ModbusAccumulator final{
         return self;
     }
 
-    [[nodiscard]] constexpr uint16_t finalize()const {
+    [[nodiscard]] constexpr uint16_t finalize() const noexcept {
         return (crc_high << 8) | crc_low;
     }
 };

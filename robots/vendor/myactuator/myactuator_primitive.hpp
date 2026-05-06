@@ -55,7 +55,7 @@ struct [[nodiscard]] SpeedCode_i16 final{
         return Ok(Self{.bits = std::bit_cast<int16_t>(bits)});
     }
 
-    constexpr iq8 to_dps() const {
+    constexpr iq8 to_dps() const noexcept {
         return bits;
     }
 };
@@ -70,7 +70,7 @@ struct [[nodiscard]] SpeedLimitCode_u16 final{
         return SpeedLimitCode_u16{static_cast<uint16_t>(dps)};
     }
 
-    constexpr uq8 to_dps() const {
+    constexpr uq8 to_dps() const noexcept {
         return bits;
     }
 };
@@ -87,7 +87,7 @@ struct [[nodiscard]] SpeedCtrlCode_i32 final{
         return from_bits(static_cast<int32_t>(dps * 100));
     }
 
-    [[nodiscard]] constexpr iq8 to_dps() const {
+    [[nodiscard]] constexpr iq8 to_dps() const noexcept {
         return static_cast<iq8>(bits) / 100;
     }
 };
@@ -116,7 +116,7 @@ struct [[nodiscard]] AccelCode_u32 final{
         const uint32_t bits = static_cast<uint32_t>(dpss);
         return Ok(AccelCode_u32{bits});
     }
-    [[nodiscard]] constexpr uint32_t to_dpss() const {
+    [[nodiscard]] constexpr uint32_t to_dpss() const noexcept {
         return bits;
     }
 };
@@ -125,7 +125,7 @@ struct [[nodiscard]] DegreeCode_i16 final{
     using Self = DegreeCode_i16;
     int16_t bits;
 
-    [[nodiscard]] constexpr Angular<iq16> to_angle() const {
+    [[nodiscard]] constexpr Angular<iq16> to_angle() const noexcept {
         return Angular<iq16>::from_turns(degree_to_turns(bits));
     }
 };
@@ -135,7 +135,7 @@ struct [[nodiscard]] LapAngleCode_u16 final{
     // 电机单圈角度circleAngle, 为 uint16_t类型数据， 以编码器零点为起始点，顺时针
     // 增加，再次到达零点时数值回0,单位0.01°LSB, 数值范围0~35999。
     uint16_t bits;
-    constexpr Angular<uq32> to_angle() const {
+    constexpr Angular<uq32> to_angle() const noexcept {
         return Angular<uq32>::from_turns(degree001_to_turns(bits));
     }
 };
@@ -143,7 +143,7 @@ struct [[nodiscard]] LapAngleCode_u16 final{
 struct [[nodiscard]] TemperatureCode_i8 final{
     uint8_t bits;
 
-    [[nodiscard]] constexpr int8_t to_celsius() const {
+    [[nodiscard]] constexpr int8_t to_celsius() const noexcept {
         return std::bit_cast<int8_t>(bits);
     }
 };
@@ -151,7 +151,7 @@ struct [[nodiscard]] TemperatureCode_i8 final{
 struct [[nodiscard]] VoltageCode_u16 final{
     uint16_t bits;
 
-    [[nodiscard]] constexpr uq16 to_volts() const {
+    [[nodiscard]] constexpr uq16 to_volts() const noexcept {
         return uq16(0.1) * bits;
     }
 };
@@ -159,7 +159,7 @@ struct [[nodiscard]] VoltageCode_u16 final{
 struct [[nodiscard]] CurrentCode_i16 final{
     int16_t bits;
 
-    [[nodiscard]] constexpr iq16 to_amps() const {
+    [[nodiscard]] constexpr iq16 to_amps() const noexcept {
         return iq16(0.01) * bits;
     }
 };
@@ -170,7 +170,7 @@ struct [[nodiscard]] PositionCode_i32 final{
     // 至少需要iq15以表示全域数据
     int32_t bits;
 
-    [[nodiscard]] constexpr Angular<iq15> to_angle() const {
+    [[nodiscard]] constexpr Angular<iq15> to_angle() const noexcept {
         // 单次乘法，无除法
         const iiq47 product = static_cast<int64_t>(bits) * iiq47::from_rcp(36000);
         const int32_t iq15_turns_bits = static_cast<int32_t>(product.to_bits() >> 32);
@@ -200,11 +200,11 @@ struct [[nodiscard]] FaultStatus final{
     uint16_t encoder_data_incorrect:1;
     uint16_t __resv3__:1;
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr bool is_ok() const {
+    [[nodiscard]] constexpr bool is_ok() const noexcept {
         return to_bits() == 0;
     }
 };

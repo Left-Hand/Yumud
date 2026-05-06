@@ -16,19 +16,19 @@ struct [[nodiscard]] SubjectId final{
     using Self = SubjectId;
     uint16_t bits;
 
-    [[nodiscard]] constexpr bool is_standerd() const {
+    [[nodiscard]] constexpr bool is_standerd() const noexcept {
         return (bits < 20000);
     }
 
-    [[nodiscard]] constexpr bool is_manufacturer_specific() const {
+    [[nodiscard]] constexpr bool is_manufacturer_specific() const noexcept {
         return (bits >= 20000) and (bits < 21000);
     }
 
-    [[nodiscard]] constexpr bool is_preserved() const {
+    [[nodiscard]] constexpr bool is_preserved() const noexcept {
         return bits >= 21000;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         return os << self.bits;
     }
 };
@@ -37,18 +37,18 @@ struct [[nodiscard]] ServiceId final{
     using Self = ServiceId;
     uint8_t bits;
 
-    [[nodiscard]] constexpr bool is_standerd() const {
+    [[nodiscard]] constexpr bool is_standerd() const noexcept {
         return (bits < 100);
     }
 
-    [[nodiscard]] constexpr bool is_preserved() const {
+    [[nodiscard]] constexpr bool is_preserved() const noexcept {
         return (bits >= 100) and (bits < 200);
     }
 
-    [[nodiscard]] constexpr bool is_manufacturer_specific() const {
+    [[nodiscard]] constexpr bool is_manufacturer_specific() const noexcept {
         return bits >= 200;
     }
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         return os << self.bits;
     }
 };
@@ -74,18 +74,18 @@ struct [[nodiscard]] NodeId final{
         return from_u7(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t to_u7() const{
+    [[nodiscard]] constexpr uint8_t to_u7() const noexcept {
         return bits;
     }
 
-    [[nodiscard]] constexpr uint8_t count() const{
+    [[nodiscard]] constexpr uint8_t count() const noexcept {
         return to_u7();
     }
-    [[nodiscard]] constexpr bool is_unknown() const {
+    [[nodiscard]] constexpr bool is_unknown() const noexcept {
         return count() == 0;
     }
 
-    [[nodiscard]] constexpr bool is_preserved() const {
+    [[nodiscard]] constexpr bool is_preserved() const noexcept {
         return count() >= 126;
     }
 };
@@ -104,16 +104,16 @@ struct [[nodiscard]] Priority final{
     }
 
     [[nodiscard]] constexpr bool operator==(const Self & other) const = default;
-    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const {
+    [[nodiscard]] constexpr bool is_senior_than(const Self & other) const noexcept {
         //less count means higher priority
         return count < other.count;
     }
 
-    [[nodiscard]] constexpr bool is_high_priority() const {
+    [[nodiscard]] constexpr bool is_high_priority() const noexcept {
         return count < 4;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         switch(self.count){
             case 0: return os << StringView("Exceptional");
             case 1: return os << StringView("Immediate");
@@ -139,23 +139,23 @@ struct [[nodiscard]] MessageFrameHeader final{
         return std::bit_cast<Self>(id.to_u29());
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
-    constexpr hal::CanExtId to_can_id() const {
+    constexpr hal::CanExtId to_can_id() const noexcept {
         return hal::CanExtId::from_bits(to_bits());
     }
 
-    [[nodiscard]] constexpr Priority priority() const {
+    [[nodiscard]] constexpr Priority priority() const noexcept {
         return Priority(priority_);
     }
 
-    [[nodiscard]] NodeId source_id() const {
+    [[nodiscard]] NodeId source_id() const noexcept {
         return NodeId::from_bits(static_cast<uint8_t>(source_node_id_));
     }
 
-    [[nodiscard]] SubjectId subject_id() const {
+    [[nodiscard]] SubjectId subject_id() const noexcept {
         return SubjectId{static_cast<uint16_t>(message_type_id_)};
     }
 private:
@@ -179,19 +179,19 @@ struct [[nodiscard]] AnonymousMessageFrameHeader final{
         return std::bit_cast<Self>(id.to_u29());
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
-    constexpr hal::CanExtId to_can_id() const {
+    constexpr hal::CanExtId to_can_id() const noexcept {
         return hal::CanExtId::from_bits(to_bits());
     }
 
 
-    [[nodiscard]] constexpr Priority priority() const {
+    [[nodiscard]] constexpr Priority priority() const noexcept {
         return Priority(priority_);
     }
 
-    [[nodiscard]] NodeId source_id() const {
+    [[nodiscard]] NodeId source_id() const noexcept {
         return NodeId::from_bits(static_cast<uint8_t>(source_node_id_));
     }
 private:
@@ -214,27 +214,27 @@ struct [[nodiscard]] ServiceFrameHeader final{
         return std::bit_cast<Self>(id.to_u29());
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
-    constexpr hal::CanExtId to_can_id() const {
+    constexpr hal::CanExtId to_can_id() const noexcept {
         return hal::CanExtId::from_bits(to_bits());
     }
 
-    [[nodiscard]] constexpr Priority priority() const {
+    [[nodiscard]] constexpr Priority priority() const noexcept {
         return Priority(priority_);
     }
 
 
-    constexpr NodeId dest_id() const {
+    constexpr NodeId dest_id() const noexcept {
         return NodeId::from_bits(static_cast<uint8_t>(dest_node_id_));
     }
 
-    [[nodiscard]] constexpr bool is_request() const{
+    [[nodiscard]] constexpr bool is_request() const noexcept {
         return request_else_response_;
     }
 
-    [[nodiscard]] NodeId source_id() const {
+    [[nodiscard]] NodeId source_id() const noexcept {
         return NodeId::from_bits(static_cast<uint8_t>(source_node_id_));
     }
 private:
@@ -261,7 +261,7 @@ struct [[nodiscard]] TailByte final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };
@@ -275,7 +275,7 @@ struct [[nodiscard]] Header final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -289,31 +289,31 @@ struct [[nodiscard]] Header final{
         std::is_same_v<T, AnonymousMessageFrameHeader> ||
         std::is_same_v<T, ServiceFrameHeader>
     )
-    [[nodiscard]] constexpr T to_header() const {
+    [[nodiscard]] constexpr T to_header() const noexcept {
         return T::from_bits(this->to_bits());
     }
 
-    [[nodiscard]] constexpr hal::CanExtId to_can_id() const {
+    [[nodiscard]] constexpr hal::CanExtId to_can_id() const noexcept {
         return hal::CanExtId::from_bits(this->to_bits());
     }
 
-    [[nodiscard]] constexpr NodeId source_id() const {
+    [[nodiscard]] constexpr NodeId source_id() const noexcept {
         return NodeId::from_bits(static_cast<uint8_t>(to_bits() & 0b1111111));
     }
 
-    [[nodiscard]] constexpr bool is_service_frame() const {
+    [[nodiscard]] constexpr bool is_service_frame() const noexcept {
         return bits & (1u << 7);
     }
 
-    [[nodiscard]] constexpr bool is_message_frame() const {
+    [[nodiscard]] constexpr bool is_message_frame() const noexcept {
         return !is_service_frame();
     }
 
-    [[nodiscard]] constexpr bool is_anonymous_message_frame() const {
+    [[nodiscard]] constexpr bool is_anonymous_message_frame() const noexcept {
         return (bits & 0xff) == 0;
     }
 
-    [[nodiscard]] constexpr Priority priority() const {
+    [[nodiscard]] constexpr Priority priority() const noexcept {
         return Priority((bits >> 24) & 0b11111);
     }
 };

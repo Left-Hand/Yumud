@@ -71,10 +71,10 @@ public:
             return None;
         }
 
-        constexpr bool is_some() const { return kind_ != k_None; }
-        constexpr bool is_none() const { return kind_ == k_None; }
+        constexpr bool is_some() const noexcept { return kind_ != k_None; }
+        constexpr bool is_none() const noexcept { return kind_ == k_None; }
 
-        constexpr Kind unwrap() const { 
+        constexpr Kind unwrap() const noexcept { 
             if(is_none()) __builtin_trap();
             return std::bit_cast<Kind>(kind_);
         }
@@ -156,7 +156,7 @@ struct [[nodiscard]] CST816S_Regs:public CST816S_Prelude{
         static constexpr RegAddr NUM_ADDRESS = 0x8140;
         std::array<uint8_t, 4> id;
 
-        constexpr bool is_valid() const {
+        constexpr bool is_valid() const noexcept {
             return id[0] == '9' && id[1] == '1' && id[2] == '1' && id[3] == '\0';
         }
     };

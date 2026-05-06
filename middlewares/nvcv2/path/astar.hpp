@@ -45,7 +45,7 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> astar(
         bool in_closed_set = false;
         std::optional<math::Vec2<uint16_t>> parent;
         
-        inline int32_t f() const { return g + h; }
+        inline int32_t f() const noexcept { return g + h; }
     };
 
     const uint16_t width = static_cast<uint16_t>(image.width());

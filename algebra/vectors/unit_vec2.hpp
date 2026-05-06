@@ -33,44 +33,44 @@ struct [[nodiscard]] UnitVec2 final{
         return {static_cast<T>(c), static_cast<T>(s)};
     }
 
-    constexpr T length() const {return 1;}
-    constexpr T inv_length() const {return 1;}
-    constexpr T length_squared() const {return 1;}
+    constexpr T length() const noexcept {return 1;}
+    constexpr T inv_length() const noexcept {return 1;}
+    constexpr T length_squared() const noexcept {return 1;}
 
-    constexpr UnitVec2<T> normalized() const { return *this; }
-    constexpr UnitVec2<T> operator-() const { return UnitVec2<T>{-x, -y}; }
-    constexpr UnitVec2<T> operator+() const { return UnitVec2<T>{x, y}; }
+    constexpr UnitVec2<T> normalized() const noexcept { return *this; }
+    constexpr UnitVec2<T> operator-() const noexcept { return UnitVec2<T>{-x, -y}; }
+    constexpr UnitVec2<T> operator+() const noexcept { return UnitVec2<T>{x, y}; }
 
     template<typename U>
-    constexpr Vec2<T> operator *(const U rhs) const { 
+    constexpr Vec2<T> operator *(const U rhs) const noexcept { 
         return Vec2<T>{x * rhs, y * rhs};
     }
 
     template<typename U>
-    constexpr Vec2<T> operator /(const U rhs) const { 
+    constexpr Vec2<T> operator /(const U rhs) const noexcept { 
         const auto inv_rhs = 1 / rhs;
         return Vec2<T>{x * inv_rhs, y * inv_rhs};
     }
 
-    constexpr T dot(const UnitVec2<T> & other) const {
+    constexpr T dot(const UnitVec2<T> & other) const noexcept {
         return dot(Vec2<T>(*this));
     }
 
-    constexpr T dot(const Vec2<T> & other) const {
+    constexpr T dot(const Vec2<T> & other) const noexcept {
         return x * other.x + y * other.y;
     }
 
-    constexpr Vec2<T> cross(const UnitVec2<T> & other) const {
+    constexpr Vec2<T> cross(const UnitVec2<T> & other) const noexcept {
         return Vec2<T>(*this).cross(Vec2<T>(other));
     }
 
-    constexpr Vec2<T> cross(const Vec2<T> & other) const {
+    constexpr Vec2<T> cross(const Vec2<T> & other) const noexcept {
         return Vec2<T>(*this).cross(other);
     }
 
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr UnitVec2<T> rotated(const Angular<U> angle)const{
+    [[nodiscard]] __fast_inline constexpr UnitVec2<T> rotated(const Angular<U> angle) const noexcept {
         static_assert(not std::is_integral_v<U>);
         const auto [_s,_c] = angle.sincos();
         const auto s = static_cast<T>(_s);
@@ -80,7 +80,7 @@ struct [[nodiscard]] UnitVec2 final{
             static_cast<T>(x*s + y*c)
         );
     }
-    constexpr explicit operator Vec2<T>() const { return Vec2<T>{x, y}; }
+    constexpr explicit operator Vec2<T>() const noexcept { return Vec2<T>{x, y}; }
 };
 
 template<typename U, typename T>

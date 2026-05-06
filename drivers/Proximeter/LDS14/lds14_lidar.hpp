@@ -27,7 +27,7 @@ struct [[nodiscard]] LidarPoint{
 struct [[nodiscard]] LidarPoints{
     std::array<uint8_t, POINTS_PER_PACK * 3> bytes;
 
-    constexpr LidarPoint operator[](size_t i) const{
+    constexpr LidarPoint operator[](size_t i) const noexcept {
         return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + 3u * i, 3));
     }
 };
@@ -79,8 +79,8 @@ struct [[nodiscard]] LidarPacket final{
     uint16_t timestamp;
     uint8_t crc8;
 
-    [[nodiscard]] bool is_valid() const {return crc8 == calc_actual_crc();}
-    [[nodiscard]] uint8_t calc_actual_crc() const {
+    [[nodiscard]] bool is_valid() const noexcept {return crc8 == calc_actual_crc();}
+    [[nodiscard]] uint8_t calc_actual_crc() const noexcept {
         static constexpr size_t len = sizeof(Self) - CRC8_TABLE.size();
         const uint8_t * p = reinterpret_cast<const uint8_t *>(this);
         return calc_crc(std::span<const uint8_t>(p, len));

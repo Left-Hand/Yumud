@@ -270,7 +270,7 @@ struct [[nodiscard]] alignas(8) Pong final{
 
     uint8_t motor_id;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_LENGTH> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_LENGTH> bytes) const noexcept {
         bytes[0] = motor_id;
         bytes[1] = static_cast<uint8_t>(HwType::VESC);
     }
@@ -393,7 +393,7 @@ struct [[nodiscard]] alignas(8) Status5 final{
     int32_t tacho_value;
     Scaled<int16_t, 10> v_in_filtered;
 
-    constexpr void fill_bytes(const std::span<uint8_t, PAYLOAD_LENGTH> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, PAYLOAD_LENGTH> bytes) const noexcept {
         auto & self = *this;
         auto filler = BytesFiller(bytes);
         filler.push_be_i32(self.tacho_value);
@@ -411,7 +411,7 @@ struct [[nodiscard]] alignas(8) PollTS5700N8501Status final{
 
     TS5700N8501Status status;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         const auto status_bytes = status.as_bytes();
         std::copy(status_bytes.begin(), status_bytes.end(), bytes.begin());
     }
@@ -515,7 +515,7 @@ struct [[nodiscard]] alignas(8) IoBoardSetOutputDigital final{
     uint8_t channel;
     uint8_t on_state;
 
-    constexpr void fill_bytes(const std::span<uint8_t, PAYLOAD_LENGTH> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, PAYLOAD_LENGTH> bytes) const noexcept {
         bytes[0] = channel;
         bytes[1] = 1;
         bytes[2] = on_state;

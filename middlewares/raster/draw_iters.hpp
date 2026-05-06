@@ -31,7 +31,7 @@ struct [[nodiscard]] Sprite final{
     Image<T> image;
     math::Vec2u position;
 
-    math::Rect2u bounding_box() const{
+    math::Rect2u bounding_box() const noexcept {
         // return image.bounding_box() + position;
         return math::Rect2u16::from_xywh(
             static_cast<uint16_t>(position.x),
@@ -62,7 +62,7 @@ struct LineText{
     // MonoFont7x7 font;
     Font font;
 
-    constexpr math::Rect2u16 bounding_box() const {
+    constexpr math::Rect2u16 bounding_box() const noexcept {
         const size_t str_len = str.length();
         const uint16_t width = (str_len * font.size().x) + (str_len - 1) * spacing;
         const uint16_t height = font.size().y;
@@ -139,7 +139,7 @@ struct RasterizationIterator<math::Rect2<T>> {
         return Ok();
     }
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_range_.stop;
     }
 
@@ -168,7 +168,7 @@ struct RasterizationIterator<math::Segment2<T>> {
         : iter_(segment){}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 
@@ -212,7 +212,7 @@ struct RasterizationIterator<math::Circle2<T>> {
         : iter_(shape){}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 
@@ -262,7 +262,7 @@ struct RasterizationIterator<Sprite<T>> {
         {}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_stop_;
     }
 
@@ -304,7 +304,7 @@ struct RasterizationIterator<HorizonSpectrum<T, D>> {
         {}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < shape_.top_left.y + shape_.cell_size.y;
     }
 
@@ -416,7 +416,7 @@ struct RasterizationIterator<LineText<Encoding, Font>> {
         return Ok();
     }
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_range_.stop;
     }
 
@@ -441,7 +441,7 @@ struct DemoShapeFactory{
     // Font en_font_;
     // Font ch_font_;
 
-    auto make_segment2() const {
+    auto make_segment2() const noexcept {
         auto shape = math::Segment2<uint16_t>{
             math::Vec2u16{
                 uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_r))), 
@@ -451,7 +451,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_vertical_oval2() const {
+    auto make_vertical_oval2() const noexcept {
         auto shape = VerticalOval2<uint16_t>::from_bounding_box(
             math::Rect2u16{
                 math::Vec2u16{0,0},
@@ -461,7 +461,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_rect2() const {
+    auto make_rect2() const noexcept {
         auto shape = math::Rect2u16{
                 math::Vec2u16{20,20},
                 math::Vec2u16{12,60},
@@ -471,7 +471,7 @@ struct DemoShapeFactory{
 
 
     template<typename Font>
-    auto make_line_text(const Font & font) const {
+    auto make_line_text(const Font & font) const noexcept {
         auto shape = LineText<void, Font>{
             .left_top = {20,20},
             .spacing = 2,
@@ -482,20 +482,20 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_circle2() const {
+    auto make_circle2() const noexcept {
         auto shape = math::Circle2<uint16_t>{
             math::Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
         return shape;
     }
 
-    auto make_horizon_oval2(const math::Rect2<int16_t> rect) const {
+    auto make_horizon_oval2(const math::Rect2<int16_t> rect) const noexcept {
         auto shape = HorizonOval2<int16_t>::try_from_bounding_box(
             rect
         ).unwrap();
         return shape;
     }
 
-    auto make_rounded_rect2_moving() const {
+    auto make_rounded_rect2_moving() const noexcept {
         auto shape = RoundedRect2<uint16_t>{
             .bounding_rect = math::Rect2u{
                 math::Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
@@ -506,7 +506,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_horizon_spectrum(std::span<const iq16> samples) const {
+    auto make_horizon_spectrum(std::span<const iq16> samples) const noexcept {
         auto shape = HorizonSpectrum<uint16_t, iq16>{
             .top_left = {20, 20},
             .cell_size = {8, 140},
@@ -517,7 +517,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_full_screen_rounded_rect() const {
+    auto make_full_screen_rounded_rect() const noexcept {
         auto shape = RoundedRect2<uint16_t>{
             .bounding_rect = tft_bounding_box.shrink(0).unwrap(), 
             .radius = 40
@@ -525,7 +525,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_grid_map(uint16_t shape_x, uint16_t shape_y) const {
+    auto make_grid_map(uint16_t shape_x, uint16_t shape_y) const noexcept {
         return GridMap2<uint16_t>{
             .top_left_cell = math::Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
             .padding = {2,2},
@@ -534,7 +534,7 @@ struct DemoShapeFactory{
         };
     }
 
-    auto make_triangle2(Angular<iq16> dest_angle) const {
+    auto make_triangle2(Angular<iq16> dest_angle) const noexcept {
         auto shape = Triangle2<iq16>{
             .points = {
                 math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle),
@@ -554,7 +554,7 @@ struct DemoShapeFactory{
         return shape_pixeded;
     }
 
-    auto make_annular_sector() const {
+    auto make_annular_sector() const noexcept {
         const auto shape = AnnularSector<uint16_t, iq16>{
             .center = {uint16_t(160 + 79.2_r * iq16(math::sinpu(now_secs * 0.2_r))), 80},
             .radius_range = {8, 12},
@@ -569,7 +569,7 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    // auto make_sector() const {
+    // auto make_sector() const noexcept {
     //     const auto shape = Sector<uint16_t, iq16>{
     //         .center = {uint16_t(160 + 80 * math::sinpu(now_secs * 0.2_r)), 80},
     //         .radius = 12,

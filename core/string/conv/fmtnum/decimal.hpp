@@ -11,7 +11,7 @@ struct [[nodiscard]] MutStrSpan final{
     char * begin;
     char * end;
 
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
         return static_cast<size_t>(end - begin);
     }
     __attribute__((optimize( "-Ofast" )))

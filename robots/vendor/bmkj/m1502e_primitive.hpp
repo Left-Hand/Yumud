@@ -49,21 +49,21 @@ struct [[nodiscard]] MotorId final{
         return Some(from_bits(static_cast<uint8_t>(nth.count())));
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits_;
     }
 
-    [[nodiscard]] constexpr bool operator==(const MotorId& rhs) const{
+    [[nodiscard]] constexpr bool operator==(const MotorId& rhs) const noexcept {
         return bits_ == rhs.bits_;
     }
 
-    constexpr Nth nth() const {
+    constexpr Nth nth() const noexcept {
         return Nth(bits_);
     }
 private:
     uint8_t bits_;
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept {
         return os << self.nth().count();
     }
 };
@@ -100,22 +100,22 @@ struct [[nodiscard]] ExceptionCode final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr bool is_none() const {
+    [[nodiscard]] constexpr bool is_none() const noexcept {
         return bits == NONE;
     }
 
-    [[nodiscard]] constexpr Exception unwrap() const {
+    [[nodiscard]] constexpr Exception unwrap() const noexcept {
         if(is_none()) 
             __builtin_trap();
         return std::bit_cast<Exception>(bits);
     }
 
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits;
     }
 private:
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept {
         if(self.is_none()) [[likely]]
             return os << "None";
         return os << self.unwrap();
@@ -175,7 +175,7 @@ struct [[nodiscard]] CurrentCode final{
     }
 
     //转为安培
-    constexpr iq16 to_amps() const {
+    constexpr iq16 to_amps() const noexcept {
         const int32_t i32_bits = static_cast<int32_t>(bits);
         return iq16::from_bits(i32_bits * 66);
     }
@@ -203,11 +203,11 @@ struct [[nodiscard]] SpeedCode final{
         return Ok(from_bits(bits));
     }
 
-    constexpr iq16 to_rpm() const {
+    constexpr iq16 to_rpm() const noexcept {
         return iq16(std::bit_cast<int16_t>(bits)) * uq16(0.01);
     }
 
-    constexpr iq16 to_rps() const {
+    constexpr iq16 to_rps() const noexcept {
         return iq16(std::bit_cast<int16_t>(bits)) * uq32(0.01 / 60);
     }
 };
@@ -231,7 +231,7 @@ struct [[nodiscard]] PositionCode final{
     //     return Ok(from_bits(bits));
     // }
 
-    // constexpr Angular<uq32> to_angle() const {
+    // constexpr Angular<uq32> to_angle() const noexcept {
     //     const auto turns = uq32::from_bits(bits << 1);
     //     return Angular<uq32>::from_turns(turns);
     // }
@@ -248,7 +248,7 @@ struct [[nodiscard]] PositionCode final{
         return Ok(from_bits(bits));
     }
 
-    constexpr Angular<uq32> to_angle() const {
+    constexpr Angular<uq32> to_angle() const noexcept {
         // Convert 0-32767 back to 0-1 turns (0°-360°)
         // bits is 15-bit value (0-32767), we need to convert to uq32
         const uint32_t expanded = (static_cast<uint32_t>(bits) << 17);
@@ -299,7 +299,7 @@ struct [[nodiscard]] FeedbackStrategy final{
         });
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };

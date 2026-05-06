@@ -55,7 +55,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
 
 
     __attribute__((always_inline,  optimize( "-Ofast" )))
-    [[nodiscard]] constexpr uint32_t into_bits() const {
+    [[nodiscard]] constexpr uint32_t into_bits() const noexcept {
 
         /*
         * Initialize the coefficient pointer to the Taylor Series iq30 coefficients

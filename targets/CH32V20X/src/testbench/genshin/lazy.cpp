@@ -382,17 +382,17 @@ public:
     //     return result.ok() ? (*result) : Layout();
     // }
 
-    // constexpr Layout Extend(size_t size) const {
+    // constexpr Layout Extend(size_t size) const noexcept {
     //     Hardening::Increment(size, size_);
     //     return Layout(size, alignment_);
     // }
 
-    constexpr Layout Align(size_t alignment) const {
+    constexpr Layout Align(size_t alignment) const noexcept {
         return Layout(size_, std::max(alignment, alignment_));
     }
 
-    constexpr size_t size() const { return size_; }
-    constexpr size_t alignment() const { return alignment_; }
+    constexpr size_t size() const noexcept { return size_; }
+    constexpr size_t alignment() const noexcept { return alignment_; }
 
     private:
     size_t size_;
@@ -417,7 +417,7 @@ public:
     /// Creates a `CoroContext` which will allocate coroutine state using
     /// `alloc`.
     explicit CoroContext(Allocator& alloc) : alloc_(alloc) {}
-    Allocator& alloc() const { return alloc_; }
+    Allocator& alloc() const noexcept { return alloc_; }
 
 private:
     Allocator& alloc_;
@@ -474,7 +474,7 @@ auto sleep(uint32_t ms) {
 // Mock sensor interface
 struct Sensor {
     Sensor(int value) : value_(value) {}
-    Deferred<int> read_data() const {
+    Deferred<int> read_data() const noexcept {
         co_await sleep(100);
         co_return value_;
     }

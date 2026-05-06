@@ -368,7 +368,7 @@ public:
     }
     
     // 获取当前 CRC 值
-    [[nodiscard]] constexpr value_type get() const {
+    [[nodiscard]] constexpr value_type get() const noexcept {
         value_type result = crc_;
         
         // 应用输出反射
@@ -437,7 +437,7 @@ public:
         }
     }
     
-    [[nodiscard]] constexpr uint16_t get() const {
+    [[nodiscard]] constexpr uint16_t get() const noexcept {
         uint16_t result = (static_cast<uint16_t>(crchi_) << 8) | crclo_;
         
         // 应用输出反射

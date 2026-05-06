@@ -20,11 +20,11 @@ protected:
     }
 
 
-    bool first() const {
+    bool first() const noexcept {
         return is_executed_ == false;
     }
 
-    iq16 progress() const {
+    iq16 progress() const noexcept {
         return iq16(1) - iq16(sustain_) / full_;
     }
 
@@ -32,7 +32,7 @@ protected:
         is_finished_ = true;
     }
 
-    iq16 time() const {
+    iq16 time() const noexcept {
         return CLAMP(full_ - sustain_, size_t(0), UINT32_MAX) / 1000;
     }
 public:
@@ -45,7 +45,7 @@ public:
 
     virtual ~ActionBase() = default;
 
-    bool is_finished() const{
+    bool is_finished() const noexcept {
         // return sustain <= 0;
         return is_finished_;
     }
@@ -62,7 +62,7 @@ public:
         return *this;
     }
 
-    int32_t remain() const {
+    int32_t remain() const noexcept {
         return sustain_;
     }
 

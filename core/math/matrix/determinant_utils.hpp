@@ -4,7 +4,7 @@ namespace ymd{
 
 #if 0
 // 辅助函数：计算跳过指定行和列的行列式
-[[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col(size_t skip_row, size_t skip_col) const {
+[[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col(size_t skip_row, size_t skip_col) const noexcept {
     constexpr size_t N = R - 1;
     
     if constexpr (N == 1) {
@@ -55,7 +55,7 @@ namespace ymd{
 
 // 辅助函数：计算跳过两行两列的行列式
 [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col_col(
-    size_t skip_row1, size_t skip_col1, size_t skip_row2, size_t skip_col2) const {
+    size_t skip_row1, size_t skip_col1, size_t skip_row2, size_t skip_col2) const noexcept {
     
     constexpr size_t N = R - 2;
     
@@ -94,7 +94,7 @@ namespace ymd{
 }
 
 
-[[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const {
+[[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const noexcept {
     // 手动展开4x4矩阵的3x3子矩阵行列式计算
     // 选择展开行（跳过第i行）
     const size_t rows[3];

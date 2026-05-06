@@ -122,8 +122,8 @@ static constexpr T bounded_decode(int32_t x){
 struct [[nodiscard]] BooleanError final{
     bool bit;
 
-    [[nodiscard]] constexpr bool is_ok() const {return bit == 0;}
-    [[nodiscard]] constexpr bool is_err() const {return bit == 1;}
+    [[nodiscard]] constexpr bool is_ok() const noexcept {return bit == 0;}
+    [[nodiscard]] constexpr bool is_err() const noexcept {return bit == 1;}
 
     static constexpr BooleanError ok(){
         return {false};
@@ -146,7 +146,7 @@ struct [[nodiscard]] NodeId final{
 
 
 
-    constexpr uint8_t to_u8() const {
+    constexpr uint8_t to_u8() const noexcept {
         return bits;
     }
 };
@@ -260,72 +260,72 @@ struct [[nodiscard]] FaultIndicatorL final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_overload(this Self&& self) {
-        return ymd::make_bitfield_proxy<0, 1, BooleanError>(self.bits);
+        return make_bitfield_proxy<0, 1, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto phase_resistor_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<1, 2, BooleanError>(self.bits);
+        return make_bitfield_proxy<1, 2, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto motor_phase_loss(this Self&& self) {
-        return ymd::make_bitfield_proxy<2, 3, BooleanError>(self.bits);
+        return make_bitfield_proxy<2, 3, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_current_fluctuate(this Self&& self) {
-        return ymd::make_bitfield_proxy<3, 4, BooleanError>(self.bits);
+        return make_bitfield_proxy<3, 4, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto calibrate_inductance_large(this Self&& self) {
-        return ymd::make_bitfield_proxy<4, 5, BooleanError>(self.bits);
+        return make_bitfield_proxy<4, 5, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_bandwidth_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<5, 6, BooleanError>(self.bits);
+        return make_bitfield_proxy<5, 6, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_spi_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<6, 7, BooleanError>(self.bits);
+        return make_bitfield_proxy<6, 7, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_type_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<7, 8, BooleanError>(self.bits);
+        return make_bitfield_proxy<7, 8, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_uncalibrated(this Self&& self) {
-        return ymd::make_bitfield_proxy<8, 9, BooleanError>(self.bits);
+        return make_bitfield_proxy<8, 9, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_data_unread(this Self&& self) {
-        return ymd::make_bitfield_proxy<9, 10, BooleanError>(self.bits);
+        return make_bitfield_proxy<9, 10, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto encoder_cpr_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<10, 11, BooleanError>(self.bits);
+        return make_bitfield_proxy<10, 11, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto need_calibrate_before_loop(this Self&& self) {
-        return ymd::make_bitfield_proxy<11, 12, BooleanError>(self.bits);
+        return make_bitfield_proxy<11, 12, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto run_state_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<12, 13, BooleanError>(self.bits);
+        return make_bitfield_proxy<12, 13, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto hall_motor_signal_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<15, 16, BooleanError>(self.bits);
+        return make_bitfield_proxy<15, 16, BooleanError>(self.bits);
     }
 };
 
@@ -336,37 +336,37 @@ struct [[nodiscard]] FaultIndicatorH final{
 
     template <typename Self>
     [[nodiscard]] constexpr auto second_encoder_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<1, 2, BooleanError>(self.bits);
+        return make_bitfield_proxy<1, 2, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto jc2804_driver_error(this Self&& self) {
-        return ymd::make_bitfield_proxy<3, 4, BooleanError>(self.bits);
+        return make_bitfield_proxy<3, 4, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto mos_overtemp_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<4, 5, BooleanError>(self.bits);
+        return make_bitfield_proxy<4, 5, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto motor_overtemp_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<5, 6, BooleanError>(self.bits);
+        return make_bitfield_proxy<5, 6, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto under_voltage_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<6, 7, BooleanError>(self.bits);
+        return make_bitfield_proxy<6, 7, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto over_voltage_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<7, 8, BooleanError>(self.bits);
+        return make_bitfield_proxy<7, 8, BooleanError>(self.bits);
     }
 
     template <typename Self>
     [[nodiscard]] constexpr auto over_current_alarm(this Self&& self) {
-        return ymd::make_bitfield_proxy<8, 9, BooleanError>(self.bits);
+        return make_bitfield_proxy<8, 9, BooleanError>(self.bits);
     }
 
 };
@@ -393,7 +393,7 @@ struct [[nodiscard]] BusbarVoltageCode final {
     }
 
     /// 将电源电压码解码为电压值（单位：V）
-    [[nodiscard]] constexpr float to_volt() const {
+    [[nodiscard]] constexpr float to_volt() const noexcept {
         return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
@@ -445,12 +445,12 @@ struct [[nodiscard]] SpeedCode final {
 
     /// 将速度码解码为转速值（单位：rpm）
     template<typename T>
-    [[nodiscard]] constexpr T to_rpm() const {
+    [[nodiscard]] constexpr T to_rpm() const noexcept {
         return utils::bounded_decode<RpmScaleMeta, T>(bits);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr T to_tps() const {
+    [[nodiscard]] constexpr T to_tps() const noexcept {
         return utils::bounded_decode<TpsScaleMeta, T>(bits);
     }
 };
@@ -479,7 +479,7 @@ struct [[nodiscard]] PositionCode final {
     }
 
     /// 将位置码解码为角度值（单位：°）
-    [[nodiscard]] constexpr float to_degrees() const {
+    [[nodiscard]] constexpr float to_degrees() const noexcept {
         return decode_from(bits, DEG_VALUE, OFFSET);
     }
 
@@ -488,7 +488,7 @@ struct [[nodiscard]] PositionCode final {
         return PositionCode{.bits = bits};
     }
 
-    [[nodiscard]] constexpr iq16 to_turns() const {
+    [[nodiscard]] constexpr iq16 to_turns() const noexcept {
         return utils::degree001_to_turns(bits);
     }
 };
@@ -528,7 +528,7 @@ struct [[nodiscard]] BusCurrentCode final {
 
     /// 将母线电流码解码为电流值（单位：A）
     template<typename T>
-    [[nodiscard]] constexpr T to_ampere() const {
+    [[nodiscard]] constexpr T to_ampere() const noexcept {
         return utils::bounded_decode<AmpereScaleMeta, T>(static_cast<int32_t>(bits));
     }
 };
@@ -556,7 +556,7 @@ struct [[nodiscard]] TemperatureCode final {
     }
 
     /// 将驱动器温度码解码为温度值（单位：°C）
-    [[nodiscard]] constexpr float to_celsius_f() const {
+    [[nodiscard]] constexpr float to_celsius_f() const noexcept {
         return static_cast<float>(bits) * 0.1f;
     }
 };
@@ -590,7 +590,7 @@ struct [[nodiscard]] TorqueCode final {
     }
 
     /// 将力矩码解码为力矩值（单位：Nm）
-    [[nodiscard]] constexpr float to_newton_meter() const {
+    [[nodiscard]] constexpr float to_newton_meter() const noexcept {
         return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
@@ -607,7 +607,7 @@ struct [[nodiscard]] PvSpeedCode final {
         return PvSpeedCode{.bits = bits};
     }
 
-    [[nodiscard]] constexpr float to_rpm() const {
+    [[nodiscard]] constexpr float to_rpm() const noexcept {
         return static_cast<float>(bits);
     }
 };
@@ -626,7 +626,7 @@ struct [[nodiscard]] PvTorqueCode final {
         return PvTorqueCode{.bits = bits};
     }
 
-    [[nodiscard]] constexpr float to_percents() const {
+    [[nodiscard]] constexpr float to_percents() const noexcept {
         return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };
@@ -660,7 +660,7 @@ struct [[nodiscard]] LowSpeedCode final {
 
 
     /// 将低速码解码为低速值（单位：rpm）
-    [[nodiscard]] constexpr float to_rpm() const {
+    [[nodiscard]] constexpr float to_rpm() const noexcept {
         return decode_from(bits, LSB_VALUE, OFFSET);
     }
 };

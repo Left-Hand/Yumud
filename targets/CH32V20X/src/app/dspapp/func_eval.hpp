@@ -63,7 +63,7 @@ struct TransferSysEvaluator{
         timer.start();
     }
 
-    constexpr auto get_input_and_output() const {
+    constexpr auto get_input_and_output() const noexcept {
         return std::make_tuple(input_,output_);
     }
 
@@ -73,11 +73,11 @@ struct TransferSysEvaluator{
         delta_ = 1_iq24 / fs;
     }
 
-    auto time() const {
+    auto time() const noexcept {
         return time_;
     }
 
-    auto delta() const {
+    auto delta() const noexcept {
         return delta_;
     }
 

@@ -70,7 +70,7 @@ struct Packet{
     uint16_t reg_addr:4;
     uint16_t is_write:1;
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 

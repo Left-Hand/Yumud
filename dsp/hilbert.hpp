@@ -160,7 +160,7 @@ public:
     /// Calculate the complex response of the filter at the given frequency.
     /// 
     /// Returns a pair of the amplitude and phase in radians.
-    constexpr math::Complex<T> complex_response(T freq) const {
+    constexpr math::Complex<T> complex_response(T freq) const noexcept {
         T frequency = static_cast<T>(TAU) * freq / static_cast<T>(fs);
 
         T cos_f = cos(frequency);
@@ -199,7 +199,7 @@ public:
         apply_transform(samples);
     }
 
-    size_t delay() const {
+    size_t delay() const noexcept {
         return 0;
     }
 

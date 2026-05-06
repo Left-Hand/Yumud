@@ -159,7 +159,7 @@ struct [[nodiscard]] RecentBuf {
     }
     
     // 查看最新的元素但不移除
-    [[nodiscard]] constexpr Option<const T&> peek() const {
+    [[nodiscard]] constexpr Option<const T&> peek() const noexcept {
         if (is_empty()) {
             return None;
         }
@@ -174,7 +174,7 @@ struct [[nodiscard]] RecentBuf {
     }
     
     // 查看最旧的元素但不移除
-    [[nodiscard]] constexpr Option<const T&> peek_oldest() const {
+    [[nodiscard]] constexpr Option<const T&> peek_oldest() const noexcept {
         if (is_empty()) {
             return None;
         }
@@ -202,7 +202,7 @@ struct [[nodiscard]] RecentBuf {
     }
     
     // 访问元素，索引 0 表示最新的元素，索引 size()-1 表示最旧的元素
-    [[nodiscard]] constexpr const T& operator[](size_t idx) const {
+    [[nodiscard]] constexpr const T& operator[](size_t idx) const noexcept {
         // idx = 0 表示最新的元素（write_idx_）
         // idx = size()-1 表示最旧的元素（read_idx_）
         size_t actual_idx = (write_idx_ + idx) & MASK;
@@ -215,7 +215,7 @@ struct [[nodiscard]] RecentBuf {
     }
     
     // 安全的元素访问，返回 Option
-    [[nodiscard]] constexpr Option<const T&> at(size_t idx) const {
+    [[nodiscard]] constexpr Option<const T&> at(size_t idx) const noexcept {
         if (idx >= size_) {
             return None;
         }
@@ -239,7 +239,7 @@ struct [[nodiscard]] RecentBuf {
     
     // 转换为数组（按最新到最旧的顺序）
     template<size_t M = N>
-    [[nodiscard]] constexpr std::array<T, M> to_array() const {
+    [[nodiscard]] constexpr std::array<T, M> to_array() const noexcept {
         std::array<T, M> result{};
         const size_t copy_size = size_ < M ? size_ : M;
         
@@ -266,11 +266,11 @@ struct [[nodiscard]] RecentBuf {
         constexpr Iterator(const RecentBuf* buf, size_t index)
             : buf_(buf), index_(index) {}
         
-        constexpr reference operator*() const {
+        constexpr reference operator*() const noexcept {
             return (*buf_)[index_];
         }
         
-        constexpr pointer operator->() const {
+        constexpr pointer operator->() const noexcept {
             return &(*buf_)[index_];
         }
         
@@ -285,20 +285,20 @@ struct [[nodiscard]] RecentBuf {
             return temp;
         }
         
-        constexpr bool operator==(const Iterator& other) const {
+        constexpr bool operator==(const Iterator& other) const noexcept {
             return buf_ == other.buf_ && index_ == other.index_;
         }
         
-        constexpr bool operator!=(const Iterator& other) const {
+        constexpr bool operator!=(const Iterator& other) const noexcept {
             return !(*this == other);
         }
     };
     
-    [[nodiscard]] constexpr Iterator begin() const {
+    [[nodiscard]] constexpr Iterator begin() const noexcept {
         return Iterator(this, 0);
     }
     
-    [[nodiscard]] constexpr Iterator end() const {
+    [[nodiscard]] constexpr Iterator end() const noexcept {
         return Iterator(this, size_);
     }
     
@@ -318,11 +318,11 @@ struct [[nodiscard]] RecentBuf {
         constexpr ReverseIterator(const RecentBuf* buf, size_t index)
             : buf_(buf), index_(index) {}
         
-        constexpr reference operator*() const {
+        constexpr reference operator*() const noexcept {
             return (*buf_)[index_];
         }
         
-        constexpr pointer operator->() const {
+        constexpr pointer operator->() const noexcept {
             return &(*buf_)[index_];
         }
         
@@ -337,20 +337,20 @@ struct [[nodiscard]] RecentBuf {
             return temp;
         }
         
-        constexpr bool operator==(const ReverseIterator& other) const {
+        constexpr bool operator==(const ReverseIterator& other) const noexcept {
             return buf_ == other.buf_ && index_ == other.index_;
         }
         
-        constexpr bool operator!=(const ReverseIterator& other) const {
+        constexpr bool operator!=(const ReverseIterator& other) const noexcept {
             return !(*this == other);
         }
     };
     
-    [[nodiscard]] constexpr ReverseIterator rbegin() const {
+    [[nodiscard]] constexpr ReverseIterator rbegin() const noexcept {
         return ReverseIterator(this, size_ - 1);
     }
     
-    [[nodiscard]] constexpr ReverseIterator rend() const {
+    [[nodiscard]] constexpr ReverseIterator rend() const noexcept {
         return ReverseIterator(this, -1); // 使用 -1 作为结束标记
     }
 

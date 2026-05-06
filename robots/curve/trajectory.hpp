@@ -40,11 +40,11 @@ public:
         uint32_t index;
     };
 
-    // TrajectoryIterator begin() const{
+    // TrajectoryIterator begin() const noexcept {
     //     return TrajectoryIterator(*this, 0);
     // }
 
-    // TrajectoryIterator end() const{
+    // TrajectoryIterator end() const noexcept {
     //     return TrajectoryIterator(*this, buf.size());
     // }
     E * begin(){
@@ -55,11 +55,11 @@ public:
         return &buf[buf.size()];
     }
 
-    auto size() const {
+    auto size() const noexcept {
         return buf.size();
     }
 
-    bool is_full() const {
+    bool is_full() const noexcept {
         return buf.size() == buf.capacity();
     }
 
@@ -67,7 +67,7 @@ public:
         buf.clear();
     }
 
-    auto capacity() const {
+    auto capacity() const noexcept {
         return buf.capacity();
     }
     void push(const uint x, const uint y, const uint z, const bool nz){
@@ -79,7 +79,7 @@ public:
         if(buf.size() < RECORD_LENGTH) buf.push_back(item);
     }
 
-    const E & operator[](size_t index) const {
+    const E & operator[](size_t index) const noexcept {
         return buf[std::min<size_t>(index, RECORD_LENGTH - 1)];
     }
 private:

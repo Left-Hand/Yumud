@@ -18,7 +18,7 @@ struct Ready{
     constexpr explicit Ready(const T & val):
         value_((val)){}
 
-    constexpr Poll<T> poll() const {
+    constexpr Poll<T> poll() const noexcept {
         return Ready(value_);
     }
 private:
@@ -42,15 +42,15 @@ public:
     constexpr Poll(Pending pending):
         state_(pending){}
 
-    constexpr bool is_ready() const {
+    constexpr bool is_ready() const noexcept {
         return std::holds_alternative<Ready<T>>(state_);
     }
 
-    constexpr bool is_pending() const {
+    constexpr bool is_pending() const noexcept {
         return std::holds_alternative<Pending>(state_);
     }
 
-    constexpr const T & unwrap() const {
+    constexpr const T & unwrap() const noexcept {
         if(!std::holds_alternative<Ready<T>>(state_)) __builtin_abort();
         return std::get<Ready<T>>(state_).value_;
     }
@@ -66,7 +66,7 @@ struct Context {
     void (*wake_fn)(void*);
     void* data;
     
-    void wake() const {
+    void wake() const noexcept {
         if(wake_fn) wake_fn(data);
     }
 };
@@ -85,15 +85,15 @@ public:
 
     struct FutureState {
 
-        constexpr bool is_ready() const {
+        constexpr bool is_ready() const noexcept {
             return result_.is_some();
         }
 
-        constexpr bool is_pending() const {
+        constexpr bool is_pending() const noexcept {
             return !result_.is_some();
         }
 
-        constexpr const Result<T, E> & unwrap() const {
+        constexpr const Result<T, E> & unwrap() const noexcept {
             return result_.unwrap();
         }
 
@@ -126,7 +126,7 @@ public:
 
 
     template<typename Fn>
-    constexpr Future<T, E> map(Fn&& fn) const {
+    constexpr Future<T, E> map(Fn&& fn) const noexcept {
         if(state_.is_ready()) {
             return Ready(fn(state_.unwrap()));
         }

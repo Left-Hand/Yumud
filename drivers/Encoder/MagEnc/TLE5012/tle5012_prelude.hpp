@@ -73,7 +73,7 @@ struct [[nodiscard]] SafetyWord final{
     uint16_t system_error:1;
     uint16_t watchdog_overflow:1;
 
-    constexpr Result<void, void> check(const uint16_t command, const uint16_t readreg) const {
+    constexpr Result<void, void> check(const uint16_t command, const uint16_t readreg) const noexcept {
         auto & self = *this;
 		uint8_t temp[4] = {
             [0] = (uint8_t) (command >> 8),

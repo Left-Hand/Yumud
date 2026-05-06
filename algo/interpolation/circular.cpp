@@ -11,7 +11,7 @@ static __fast_inline T square(const T x){
     return x * x;
 }
 
-bool ArcInterpolation::IsPerpendicular(const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const {
+bool ArcInterpolation::IsPerpendicular(const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const noexcept {
     const auto [pt1x, pt1y] = pt1;
     const auto [pt2x, pt2y] = pt2;
     const auto [pt3x, pt3y] = pt3;
@@ -41,7 +41,7 @@ bool ArcInterpolation::IsPerpendicular(const Vec2<iq16> & pt1,const Vec2<iq16> &
     else return false;
 }
 
-std::tuple<iq16, iq16, iq16> ArcInterpolation::calcCircleFrom3Points (const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const {
+std::tuple<iq16, iq16, iq16> ArcInterpolation::calcCircleFrom3Points (const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const noexcept {
     const auto [pt1x, pt1y] = pt1;
     const auto [pt2x, pt2y] = pt2;
     const auto [pt3x, pt3y] = pt3;
@@ -112,7 +112,7 @@ ArcInterpolation::ArcInterpolation(const Vec2<iq16> & handle):
     };
 
 
-iq16 ArcInterpolation::forward(iq16 x) const {
+iq16 ArcInterpolation::forward(iq16 x) const noexcept {
     static constexpr iq16 epsilon = iq16(0.001);
     // static constexpr iq16 min_param_a = iq16(0 + epsilon);
     // static constexpr iq16 max_param_a = iq16(1 - epsilon);
@@ -280,7 +280,7 @@ iq16 arcCenterX, arcCenterY;
 iq16 arcRadius;
 
 //--------------------------------------------------------
-iq16 CircularFilletInterpoation::forward(iq16 x) const {
+iq16 CircularFilletInterpoation::forward(iq16 x) const noexcept {
   
 //   static constexpr iq16 epsilon = iq16(0.001);
 //   static constexpr iq16 min_param_a = iq16(0 + epsilon);

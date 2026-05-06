@@ -48,7 +48,7 @@ public:
     
     //impure fn
     [[nodiscard]]
-    constexpr const auto & state() const {
+    constexpr const auto & state() const noexcept {
         return state_;
     }
 private:
@@ -176,7 +176,7 @@ public:
         cfg_ = cfg;
     }
 
-    constexpr Solution inverse(const Gesture & gesture) const {
+    constexpr Solution inverse(const Gesture & gesture) const noexcept {
         const auto x = gesture.x;
         const auto y = gesture.y - cfg_.gimbal_base_height;
 
@@ -210,7 +210,7 @@ public:
         iq16 seconds;
     };
 
-    size_t pending() const {
+    size_t pending() const noexcept {
         TODO();
         return 0;
     }

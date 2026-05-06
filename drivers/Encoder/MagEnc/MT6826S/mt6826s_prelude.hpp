@@ -52,11 +52,11 @@ struct Status{
     uint8_t magweak:1;
     uint8_t uvlo:1;
 
-    [[nodiscard]] bool any_fault() const {
+    [[nodiscard]] bool any_fault() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 
-    [[nodiscard]] EncoderFaultBitFields to_encoder_fault() const {
+    [[nodiscard]] EncoderFaultBitFields to_encoder_fault() const noexcept {
         EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
         if(overspeed){
             fault.is_over_speed = true;
@@ -83,7 +83,7 @@ struct Packet{
         return std::span<uint8_t, 4>(reinterpret_cast<uint8_t *>(this), 4);
     }
 
-    [[nodiscard]] constexpr bool is_crc_valid() const {
+    [[nodiscard]] constexpr bool is_crc_valid() const noexcept {
         //TODO
         return true;
     }

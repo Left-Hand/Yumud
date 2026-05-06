@@ -158,24 +158,24 @@ struct alignas(1) [[nodiscard]] fp8_e4m3 final{
 		return std::bit_cast<fp8_e4m3>(bits);
 	}
 
-	[[nodiscard]] constexpr uint8_t to_bits() const {
+	[[nodiscard]] constexpr uint8_t to_bits() const noexcept {
 		return std::bit_cast<uint8_t>(*this);
 	}
 
-	[[nodiscard]] constexpr bool is_nan() const {
+	[[nodiscard]] constexpr bool is_nan() const noexcept {
 		return exp == 0xF && mant != 0;
 	}
 
-	explicit constexpr operator int() const{
+	explicit constexpr operator int() const noexcept {
 		return static_cast<int>(static_cast<float>(*this));
 	}
 
-	explicit constexpr operator float() const {
+	explicit constexpr operator float() const noexcept {
 		return intrinsics::fp8_e4m3_to_fp32_nonfpu(to_bits());
 	}
 
 	template<size_t Q, typename D>
-	explicit constexpr operator fixed<Q, D>() const {
+	explicit constexpr operator fixed<Q, D>() const noexcept {
 		return fixed<Q, D>(float(*this));
 	}
 };
@@ -204,24 +204,24 @@ struct alignas(1) [[nodiscard]] fp8_e5m2 final{
 		return std::bit_cast<fp8_e5m2>(bits);
 	}
 
-	[[nodiscard]] constexpr uint8_t to_bits() const {
+	[[nodiscard]] constexpr uint8_t to_bits() const noexcept {
 		return std::bit_cast<uint8_t>(*this);
 	}
 
-	[[nodiscard]] constexpr bool is_nan() const {
+	[[nodiscard]] constexpr bool is_nan() const noexcept {
 		return exp == 0x1F && mant != 0;
 	}
 
-	explicit constexpr operator int() const{
+	explicit constexpr operator int() const noexcept {
 		return static_cast<int>(static_cast<float>(*this));
 	}
 
-	explicit constexpr operator float() const {
+	explicit constexpr operator float() const noexcept {
 		return intrinsics::fp8_e5m2_to_fp32_nonfpu(to_bits());
 	}
 
 	template<size_t Q, typename D>
-	explicit constexpr operator fixed<Q, D>() const {
+	explicit constexpr operator fixed<Q, D>() const noexcept {
 		return fixed<Q, D>(float(*this));
 	}
 };

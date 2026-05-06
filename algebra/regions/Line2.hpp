@@ -58,7 +58,7 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> abs() const {
+    Line2<T> abs() const noexcept {
         if(Angular<T>::ZERO <= orientation and orientation < Angular<T>::HALF) return *this; 
 
         auto m = orientation.signed_normalized().to_turns();
@@ -73,7 +73,7 @@ public:
 
 
 	[[nodiscard]] __fast_inline constexpr
-    bool is_equal_approx(const Line2 & other, const T epsilon) const{
+    bool is_equal_approx(const Line2 & other, const T epsilon) const noexcept {
         auto regular = this->abs();
         auto other_regular = other.abs();
         return math::is_equal_approx(regular.d, other_regular.d, epsilon) 
@@ -81,24 +81,24 @@ public:
     }
 
 	[[nodiscard]] __fast_inline constexpr
-    bool operator!=(const Line2 & other) const{
+    bool operator!=(const Line2 & other) const noexcept {
         return (*this == other) == false; 
     }
 
     [[nodiscard]] __fast_inline constexpr
-    T distance_to(const math::Vec2<T> & p) const{
+    T distance_to(const math::Vec2<T> & p) const noexcept {
         return ABS(this->signed_distance_to(p));
     }
     
     [[nodiscard]] __fast_inline constexpr
-    T signed_distance_to(const math::Vec2<T> & p) const{
+    T signed_distance_to(const math::Vec2<T> & p) const noexcept {
         // x * -sin(orientation) + y * cos(orientation) + d = 0
         const auto [s,c] = orientation.sincos();
         return -p.x * s + p.y * c + d;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    T angle_between(const Line2<T> & other) const{
+    T angle_between(const Line2<T> & other) const noexcept {
         auto regular = this->abs();
         auto other_regular = other.abs();
 
@@ -106,7 +106,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    bool is_parallel_with(const Line2 & other, const T epsilon) const{
+    bool is_parallel_with(const Line2 & other, const T epsilon) const noexcept {
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (math::is_equal_approx(regular.d, other_regular.d, epsilon)) and 
@@ -114,20 +114,20 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<T> distance_with(const Line2<T> & other) const{
+    Option<T> distance_with(const Line2<T> & other) const noexcept {
         if(not this->is_parallel_with(other)) return std::nullopt;
         return Some<T>({this->d - other.d});
     }
 
     [[nodiscard]] __fast_inline constexpr
-    bool intersects(const Line2<T> & other, const T epsilon) const{
+    bool intersects(const Line2<T> & other, const T epsilon) const noexcept {
         if(this->is_parallel_with(other, epsilon)) return false;
         else if(this->is_equal_approx(other, epsilon)) return false;
         return true;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<math::Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const{
+    Option<math::Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const noexcept {
         if((false == this->intersects(other, epsilon))) [[unlikely]]
             return None;
         
@@ -177,7 +177,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<math::Vec2<T>> fillet(const Line2<T> & other, const T radius) const{
+    Option<math::Vec2<T>> fillet(const Line2<T> & other, const T radius) const noexcept {
         if(false == this->intersects(other)) return std::nullopt;
 
 
@@ -186,18 +186,18 @@ public:
     }
     
     [[nodiscard]] __fast_inline constexpr
-    bool has_point(const math::Vec2<T> & p, const T epsilon) const{
+    bool has_point(const math::Vec2<T> & p, const T epsilon) const noexcept {
         return ymd::is_equal_approx(distance_to(p), T(0), epsilon);
     }
 
     [[nodiscard]] __fast_inline constexpr
-    int sign(const math::Vec2<T> & p) const{
+    int sign(const math::Vec2<T> & p) const noexcept {
         return sign(this->signed_distance_to(Line2(p, this->orientation)));
     }
 
     //直线标准方程 ax + by + c = 0的三个系数
     [[nodiscard]] __fast_inline constexpr
-    std::tuple<T, T, T> abc() const{
+    std::tuple<T, T, T> abc() const noexcept {
         const auto [s,c] = orientation.sincos();
         return {static_cast<T>(-s), static_cast<T>(c), d};
     }
@@ -206,13 +206,13 @@ public:
 
     //是否与另一条直线正交
     // [[nodiscard]] __fast_inline constexpr
-    // bool is_orthogonal_with(const Line2<T> & other, const Angular<T> & epsilon) const {
+    // bool is_orthogonal_with(const Line2<T> & other, const Angular<T> & epsilon) const noexcept {
     //     return other.orientation.is_orthogonal_with(this->orientation, epsilon);
     //     // return fposmod(other.orientation - this->orientation, T(PI));
     // }
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> mean(const Line2<T> & other) const {
+    Line2<T> mean(const Line2<T> & other) const noexcept {
         auto regular = this->abs();
         auto other_regular = other.abs();
 
@@ -232,7 +232,7 @@ public:
 
     //计算直线关于某个点的垂足
     [[nodiscard]] __fast_inline constexpr
-    math::Vec2<T> foot_of(const math::Vec2<T> & p) const{
+    math::Vec2<T> foot_of(const math::Vec2<T> & p) const noexcept {
         //https://blog.csdn.net/hjxu2016/article/details/111594359
 
         // x * -sin(orientation) + y * cos(orientation) + d = 0
@@ -259,13 +259,13 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    math::Vec2<T> mirror(const math::Vec2<T> & p) const {
+    math::Vec2<T> mirror(const math::Vec2<T> & p) const noexcept {
         return (this->foot_of(p) * 2) - p;
     }
 
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> reflect(const Line2<T> & other) const {
+    Line2<T> reflect(const Line2<T> & other) const noexcept {
         auto res = other.intersection(other);
         if(res){
             //cross
@@ -285,7 +285,7 @@ public:
     }
     
     [[nodiscard]] __fast_inline constexpr
-    math::Vec2<T> reflect(const math::Vec2<T> & p, const math::Vec2<T> & base) const {
+    math::Vec2<T> reflect(const math::Vec2<T> & p, const math::Vec2<T> & base) const noexcept {
         
         // TODO
 
@@ -293,7 +293,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Segment2<T> perpendicular(const math::Vec2<T> & p) const{
+    Segment2<T> perpendicular(const math::Vec2<T> & p) const noexcept {
         return {p, this->foot_of(p)};
     }
 };

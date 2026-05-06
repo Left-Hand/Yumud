@@ -25,7 +25,7 @@ struct [[nodiscard]] Identify final{
     };
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -56,7 +56,7 @@ struct [[nodiscard]] IspEnd final{
     uint8_t reason;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -83,7 +83,7 @@ struct [[nodiscard]] IspKey final{
     std::span<const uint8_t> key;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -117,7 +117,7 @@ struct [[nodiscard]] Erase final{
 
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -149,7 +149,7 @@ struct [[nodiscard]] Program final{
     std::span<const uint8_t> data;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         const uint16_t payload_size = static_cast<uint16_t>(1 + 2 + 4 + 1 + self.data.size() - 3);
@@ -192,7 +192,7 @@ struct [[nodiscard]] Verify final{
     std::span<const uint8_t> data;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         const uint16_t payload_size = static_cast<uint16_t>(1 + 2 + 4 + 1 + self.data.size() - 3);
@@ -232,7 +232,7 @@ struct [[nodiscard]] ReadConfig final{
     uint8_t bit_mask;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -260,7 +260,7 @@ struct [[nodiscard]] WriteConfig final{
     std::span<const uint8_t> data;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         const uint16_t payload_size = static_cast<uint16_t>(2 + self.data.size());
@@ -297,7 +297,7 @@ struct [[nodiscard]] DataErase final{
     uint32_t sectors;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -327,7 +327,7 @@ struct [[nodiscard]] DataProgram final{
     std::span<const uint8_t> data;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         const uint16_t payload_size = static_cast<uint16_t>(1 + 2 + 4 + 1 + self.data.size() - 3);
@@ -368,7 +368,7 @@ struct [[nodiscard]] DataRead final{
     uint16_t len;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -399,7 +399,7 @@ struct [[nodiscard]] WriteOtp final{
     uint8_t bits;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -425,7 +425,7 @@ struct [[nodiscard]] ReadOtp final{
     uint8_t bits;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {
@@ -451,7 +451,7 @@ struct [[nodiscard]] SetBaud final{
     uint32_t baudrate;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize() const{
+    constexpr Result<void, typename Receiver::Error> serialize() const noexcept {
         auto & self = *this;
 
         {

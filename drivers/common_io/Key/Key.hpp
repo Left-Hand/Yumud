@@ -32,11 +32,11 @@ public:
         now_state = filter_.is_active();
     }
 
-    [[nodiscard]] bool just_pressed() const {
+    [[nodiscard]] bool just_pressed() const noexcept {
         return last_state == false and now_state == true;
     }
 
-    [[nodiscard]] bool is_pressed() const {
+    [[nodiscard]] bool is_pressed() const noexcept {
         return now_state == true;
     }
 

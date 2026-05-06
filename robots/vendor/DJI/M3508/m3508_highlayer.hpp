@@ -60,9 +60,9 @@ public:
         return position_filter_.accumulated_angle().to_turns() / reduction_ratio;
         // return 0;
     }
-    iq16 get_current() const {return curr_;}
-    iq16 get_speed() const {return speed_ / reduction_ratio * iq16(2.5);}
-    iq16 read_temp() const {return temperature_;}
+    iq16 get_current() const noexcept {return curr_;}
+    iq16 get_speed() const noexcept {return speed_ / reduction_ratio * iq16(2.5);}
+    iq16 read_temp() const noexcept {return temperature_;}
     auto delta(){return micros_delta;}
     auto & enc() {return enc_;}
 private:

@@ -40,7 +40,7 @@ struct [[nodiscard]] Status final{
 struct [[nodiscard]] HumidityCode final{
     uint32_t bits;
 
-    constexpr float into() const {
+    constexpr float into() const noexcept {
         return bits / 1048576.0 * 100.0;
     }
 };
@@ -48,7 +48,7 @@ struct [[nodiscard]] HumidityCode final{
 struct [[nodiscard]] TemperatureCode final{
     uint32_t bits;
 
-    constexpr float into() const {
+    constexpr float into() const noexcept {
         return (bits/1048576.0) * 200 - 50;
     }
 };
@@ -57,16 +57,16 @@ struct [[nodiscard]] TemperatureCode final{
 struct [[nodiscard]] Packet final{
     std::array<uint8_t, 6> bytes;
 
-    constexpr Status status() const {
+    constexpr Status status() const noexcept {
         return std::bit_cast<Status>(bytes[0]);
     }
 
-    constexpr HumidityCode humidity_code() const {
+    constexpr HumidityCode humidity_code() const noexcept {
         const uint32_t bits = (((bytes[1]<<12) | (bytes[2]<<4)) | (bytes[3]>>4));
         return HumidityCode{bits};
     }
 
-    constexpr TemperatureCode temperature_code() const {
+    constexpr TemperatureCode temperature_code() const noexcept {
         const uint32_t bits = ((bytes[3] &0x0F) << 16 ) | ( bytes[4] << 8) | bytes[5];
         return TemperatureCode{bits};
     }

@@ -20,8 +20,8 @@ public:
     __fast_inline void set() {port_.set_nth(nth_);}
     __fast_inline void clr() {port_.clr_nth(nth_);}
     __fast_inline void write(const BoolLevel val){port_.write_nth(nth_, val);}
-    __fast_inline BoolLevel read() const {return port_.read_nth(nth_);}
-    __fast_inline Nth nth() const {return nth_;}
+    __fast_inline BoolLevel read() const noexcept {return port_.read_nth(nth_);}
+    __fast_inline Nth nth() const noexcept {return nth_;}
     void set_mode(const GpioMode mode) { port_.set_mode(nth_, mode);}
 };
 

@@ -37,7 +37,7 @@ public:
     }
 
     [[nodiscard]]
-    constexpr char to_char() const { 
+    constexpr char to_char() const noexcept { 
         switch(kind_){
             case X: return 'X';
             case O: return 'O';
@@ -46,20 +46,20 @@ public:
     }
 
     [[nodiscard]]
-    constexpr bool operator ==(const Kind kind) const{return kind_ == kind;}
+    constexpr bool operator ==(const Kind kind) const noexcept {return kind_ == kind;}
 
     [[nodiscard]]
-    constexpr bool operator !=(const Kind kind) const{return kind_ != kind;}
+    constexpr bool operator !=(const Kind kind) const noexcept {return kind_ != kind;}
 
     [[nodiscard]]
-    constexpr bool operator ==(const Role other) const{return kind_ == other.kind_;}
+    constexpr bool operator ==(const Role other) const noexcept {return kind_ == other.kind_;}
 
     [[nodiscard]]
-    constexpr bool operator !=(const Role other) const{return kind_ != other.kind_;}
+    constexpr bool operator !=(const Role other) const noexcept {return kind_ != other.kind_;}
 
-    [[nodiscard]] constexpr Role opponent() const{return Role(kind_ == X ? O : X);}
+    [[nodiscard]] constexpr Role opponent() const noexcept {return Role(kind_ == X ? O : X);}
 
-    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 private:
     Kind kind_;
 };
@@ -94,7 +94,7 @@ public:
     }
 
     [[nodiscard]]
-    constexpr char to_char() const {
+    constexpr char to_char() const noexcept {
         if(data_.is_none()) return 'N';
         switch(data_.unwrap().kind()){
             case Role::X: return 'X';
@@ -104,27 +104,27 @@ public:
     }
 
     [[nodiscard]]
-    constexpr bool operator == (const Role kind) const {
+    constexpr bool operator == (const Role kind) const noexcept {
         return data_.is_some() && data_.unwrap() == kind;
     }
 
     [[nodiscard]]
-    constexpr bool operator != (const Role & role) const{
+    constexpr bool operator != (const Role & role) const noexcept {
         return data_.is_some() && data_.unwrap() != role;
     } 
     
     [[nodiscard]]
-    constexpr bool operator == (const ymd::_None_t) const {
+    constexpr bool operator == (const ymd::_None_t) const noexcept {
         return data_.is_none();
     }
 
     [[nodiscard]]
-    constexpr bool operator != (const ymd::_None_t) const{
+    constexpr bool operator != (const ymd::_None_t) const noexcept {
         return data_.is_some();
     }
 
     [[nodiscard]]
-    constexpr bool is_some() const {
+    constexpr bool is_some() const noexcept {
         return data_.is_some();
     }
 private:
@@ -187,13 +187,13 @@ public:
     }
     
     [[nodiscard]]
-    constexpr const auto & at(const math::Vec2u pos) const{
+    constexpr const auto & at(const math::Vec2u pos) const noexcept {
         if(not (pos.x < WIDTH and pos.y < WIDTH)) PANIC();
         return data_[pos.y][pos.x];
     }
 
     [[nodiscard]]
-    constexpr bool is_full() const {
+    constexpr bool is_full() const noexcept {
         auto & self = *this;
         for (size_t y = 0; y < ChessBoard::WIDTH; ++y)
             for (size_t x = 0; x < ChessBoard::WIDTH; ++x)
@@ -202,19 +202,19 @@ public:
     }
 
     [[nodiscard]] 
-    constexpr ChessBoard remove_chess(const math::Vec2u pos) const {
+    constexpr ChessBoard remove_chess(const math::Vec2u pos) const noexcept {
         if(this->at({pos.x, pos.y}) == None) PANIC();
         return modify(pos, ChessCell::N());
     }
 
     [[nodiscard]] 
-    constexpr ChessBoard add_chess(const math::Vec2u pos, const Role role) const {
+    constexpr ChessBoard add_chess(const math::Vec2u pos, const Role role) const noexcept {
         if(this->at({pos.x, pos.y}) != None) PANIC();
         return modify(pos, role == Role::X ? ChessCell::X() : ChessCell::O());
     }
 
     [[nodiscard]]
-    constexpr ChessBoard modify(const math::Vec2u pos, const ChessCell chess) const {
+    constexpr ChessBoard modify(const math::Vec2u pos, const ChessCell chess) const noexcept {
 
         if(not (pos.x < WIDTH and pos.y < WIDTH)) PANIC();
         auto data = data_;

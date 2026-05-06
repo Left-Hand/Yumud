@@ -13,7 +13,7 @@ struct HorizonSpectrum{
     math::Range2<D> sample_range;
 
     [[nodiscard]] constexpr 
-    math::Range2<T> y_range(const Nth nth) const {
+    math::Range2<T> y_range(const Nth nth) const noexcept {
         const auto y_stop = top_left.y + cell_size.y;
         // const auto y_top = top_left.y;
         const auto data_height = sample_range.invlerp(samples[nth.count()]) * cell_size.y;
@@ -22,7 +22,7 @@ struct HorizonSpectrum{
     }
 
     [[nodiscard]] constexpr 
-    math::Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const noexcept {
         const size_t cnt = samples.size();
         return math::Rect2<T>{top_left, 
             math::Vec2<T>(

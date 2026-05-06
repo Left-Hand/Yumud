@@ -34,10 +34,10 @@ struct [[nodiscard]] Tq final{
         return std::bit_cast<Self>(static_cast<uint8_t>(bits));
     }
 
-    constexpr bool operator ==(const Self& other) const {return bits == other.bits;}
-    [[nodiscard]] constexpr uint8_t to_num() const {return bits + 1;}
+    constexpr bool operator ==(const Self& other) const noexcept {return bits == other.bits;}
+    [[nodiscard]] constexpr uint8_t to_num() const noexcept {return bits + 1;}
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {return bits;}
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {return bits;}
 
     friend OutputStream & operator <<(OutputStream & os, const Tq & self){
         return os << self.to_num() << "tq";
@@ -82,12 +82,12 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
     // [[nodiscard]] constexpr bool operator ==(const NominalBitTimmingCoeffs &) = default;
     [[nodiscard]] constexpr uint32_t calc_baudrate_hz(
         const uint32_t aligned_bus_clk_freq_hz
-    ) const {
+    ) const noexcept {
         uint32_t total_tq = 1 + bs1.to_num() + bs2.to_num();
         return aligned_bus_clk_freq_hz / (prescale * total_tq);
     }
 
-    [[nodiscard]] constexpr Percentage<uint8_t> calc_sample_point() const {
+    [[nodiscard]] constexpr Percentage<uint8_t> calc_sample_point() const noexcept {
         const uint8_t bs1_num = bs1.to_num();
         const uint8_t bs2_num = bs2.to_num();
         const uint8_t total_tq = 1 + bs1_num + bs2_num;
@@ -246,7 +246,7 @@ public:
     constexpr Option<NominalBitTimmingCoeffs> try_into_coeffs(
         const uint32_t aligned_bus_clk_freq_hz,
         const Percentage<uint8_t> _sample_point = DEFAULT_SAMPLE_POINT
-    ) const {
+    ) const noexcept {
         return NominalBitTimmingCoeffs::try_from(
             aligned_bus_clk_freq_hz, 
             bitrate_hz, 
@@ -254,15 +254,15 @@ public:
         );
     }
 
-    [[nodiscard]] constexpr bool has_same_freq(const Baudrate& rhs) const {
+    [[nodiscard]] constexpr bool has_same_freq(const Baudrate& rhs) const noexcept {
         return bitrate_hz == rhs.bitrate_hz;
     }
 
-    [[nodiscard]] constexpr bool has_same_freq(const Kind kind) const {
+    [[nodiscard]] constexpr bool has_same_freq(const Kind kind) const noexcept {
         return bitrate_hz == kind2freq(kind);
     }
 
-    [[nodiscard]] constexpr uint32_t freq() const {return bitrate_hz;}
+    [[nodiscard]] constexpr uint32_t freq() const noexcept {return bitrate_hz;}
 private:
 
     static constexpr uint32_t kind2freq(const Kind kind) {
@@ -315,9 +315,9 @@ struct [[nodiscard]] WiringMode final{
     };
 
     constexpr WiringMode(Kind kind):kind_(kind){}
-    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr bool is_loopback() const{
+    [[nodiscard]] constexpr bool is_loopback() const noexcept {
         switch(kind_){
             case Kind::Normal: return false;
             case Kind::Silent: return false;
@@ -326,7 +326,7 @@ struct [[nodiscard]] WiringMode final{
             default:__builtin_unreachable();
         }
     }
-    [[nodiscard]] constexpr bool is_slient() const {
+    [[nodiscard]] constexpr bool is_slient() const noexcept {
         switch(kind_){
             case Kind::Normal: return false;
             case Kind::Silent: return true;

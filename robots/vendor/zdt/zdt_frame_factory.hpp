@@ -33,7 +33,7 @@ struct [[nodiscard]] ZdtFrameFactory final{
     }
 
 
-    constexpr FlatPacket set_angle(const Angular<iq16> angle, iq16 speed) const {
+    constexpr FlatPacket set_angle(const Angular<iq16> angle, iq16 speed) const noexcept {
         return ser_req(req_msgs::SetPosition{
             .is_ccw = (angle.is_negative()),
             .rpm = Rpm::from_tps(speed),
@@ -44,7 +44,7 @@ struct [[nodiscard]] ZdtFrameFactory final{
         });
     }
 
-    constexpr FlatPacket set_speed(iq16 speed) const {
+    constexpr FlatPacket set_speed(iq16 speed) const noexcept {
         return ser_req(req_msgs::SetSpeed{
             .is_ccw = speed < 0,
             .rpm = Rpm::from_tps(math::abs(speed)),
@@ -54,20 +54,20 @@ struct [[nodiscard]] ZdtFrameFactory final{
         });
     }
 
-    constexpr FlatPacket brake() const {
+    constexpr FlatPacket brake() const noexcept {
         return ser_req(req_msgs::Brake{
             .is_sync = is_multi_axis_sync
         });
     }
 
-    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const {
+    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const noexcept {
         return ser_req(req_msgs::SetSubDivides{
             .is_burned = false,
             .subdivides = uint8_t(subdivides & 0xff)
         });
     }
 
-    constexpr FlatPacket activate(const Enable en) const {
+    constexpr FlatPacket activate(const Enable en) const noexcept {
         return ser_req(req_msgs::Actvation{
             .en = (en == EN),
             .is_sync = is_multi_axis_sync
@@ -75,15 +75,15 @@ struct [[nodiscard]] ZdtFrameFactory final{
     }
 
 
-    constexpr FlatPacket trig_cali() const {
+    constexpr FlatPacket trig_cali() const noexcept {
         return ser_req(req_msgs::TrigCali{});  
     }
 
-    constexpr FlatPacket query_homming_paraments() const {
+    constexpr FlatPacket query_homming_paraments() const noexcept {
         return ser_req(req_msgs::QueryHommingParaments{});
     }
 
-    constexpr FlatPacket trig_homming(const HommingMode mode) const {
+    constexpr FlatPacket trig_homming(const HommingMode mode) const noexcept {
         return ser_req(req_msgs::TrigHomming{
             .homming_mode = mode,
             .is_sync = is_multi_axis_sync
@@ -93,7 +93,7 @@ struct [[nodiscard]] ZdtFrameFactory final{
 
 private:
 template<typename T>
-    [[nodiscard]] constexpr FlatPacket ser_req(const T & req) const {
+    [[nodiscard]] constexpr FlatPacket ser_req(const T & req) const noexcept {
         return make_req(node_id, verify_method, req);
     }
 

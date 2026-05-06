@@ -58,9 +58,9 @@ public:
     ~Rectangle(){
         // DEBUG_PRINTLN("rect dropped");
     }
-    iq16 Area() const { return width_ * height_; }
+    iq16 Area() const noexcept { return width_ * height_; }
 
-    // OutputStream & operator <<(OutputStream & os) const{
+    // OutputStream & operator <<(OutputStream & os) const noexcept {
     //     return os << "{Rectangle: width = " << width_ << ", height = " << height_ << "}";
     // }
 
@@ -88,8 +88,8 @@ public:
         // DEBUG_PRINTLN("circle dropped");
     }
 
-    iq16 Area() const { return radius_ * radius_ * iq16(M_PI);}
-    // OutputStream & operator <<(OutputStream & os) const{
+    iq16 Area() const noexcept { return radius_ * radius_ * iq16(M_PI);}
+    // OutputStream & operator <<(OutputStream & os) const noexcept {
     //     return os << "{Circle: radius = " << radius_ << "}";
     // }
 
@@ -100,7 +100,7 @@ private:
     iq16 radius_;
 };
 
-// OutputStream & ymd::operator <<(OutputStream & os) const{
+// OutputStream & ymd::operator <<(OutputStream & os) const noexcept {
 //     return os << "{Circle: radius = " << radius_ << "}";
 // }
 

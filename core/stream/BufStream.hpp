@@ -27,9 +27,9 @@ public:
 
     }
 
-    [[nodiscard]] constexpr size_t free_capacity() const {return capacity_ - len_;}
+    [[nodiscard]] constexpr size_t free_capacity() const noexcept {return capacity_ - len_;}
 
-    [[nodiscard]] StringView collected_str() const {
+    [[nodiscard]] StringView collected_str() const noexcept {
         return StringView(reinterpret_cast<const char *>(buf_), len_);
     }
 private:

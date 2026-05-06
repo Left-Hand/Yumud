@@ -36,16 +36,16 @@ struct [[nodiscard]] Month final{
     }
 
 
-    constexpr bool operator == (const Month & rhs) const{
+    constexpr bool operator == (const Month & rhs) const noexcept {
         return kind == rhs.kind;
     }
 
-    constexpr bool operator < (const Month & rhs) const{
+    constexpr bool operator < (const Month & rhs) const noexcept {
         return std::bit_cast<uint8_t>(kind) < std::bit_cast<uint8_t>(rhs.kind);
     }
 
 
-    constexpr bool is_valid() const {
+    constexpr bool is_valid() const noexcept {
         switch(kind){
             case Kind::Jan ... Kind::Dec: return true;
             default: return false;
@@ -114,7 +114,7 @@ struct [[nodiscard]] Date final{
     }
 
 
-    constexpr bool is_valid() const {
+    constexpr bool is_valid() const noexcept {
         if(year < BUILT_YEAR) return false;
         if(month.is_valid() == false) return false;
         if(day < 1) return false;
@@ -138,7 +138,7 @@ struct [[nodiscard]] Date final{
         return day < rhs.day;
     }
 
-    constexpr bool is_latest() const {
+    constexpr bool is_latest() const noexcept {
         return *this == Date::from_comptime();
     }
 
@@ -182,15 +182,15 @@ struct [[nodiscard]] Time final{
         return None;
     }
 
-    constexpr bool is_valid() const {
+    constexpr bool is_valid() const noexcept {
         return (hour < 24) && (minute < 60) && (seconds < 60);
     }
 
-    constexpr bool operator==(const Time & rhs) const {
+    constexpr bool operator==(const Time & rhs) const noexcept {
         return hour == rhs.hour && minute == rhs.minute && seconds == rhs.seconds;
     }
 
-    constexpr auto operator <=> (const Time & rhs) const {
+    constexpr auto operator <=> (const Time & rhs) const noexcept {
         // 层级比较：小时 → 分钟 → 秒
         if (hour != rhs.hour) {
             return hour <=> rhs.hour;

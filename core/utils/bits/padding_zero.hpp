@@ -3,7 +3,7 @@
 template<size_t Extents>
 struct PaddingZero{
     using Self = PaddingZero;
-    [[nodiscard]] constexpr RepeatIter<uint8_t, Extents> to_bytes() const {
+    [[nodiscard]] constexpr RepeatIter<uint8_t, Extents> to_bytes() const noexcept {
         return RepeatIter<uint8_t, Extents>(0, Extents);
     };
 

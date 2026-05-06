@@ -25,19 +25,19 @@ struct [[nodiscard]] AccumulationBuilder final{
     using Self = AccumulationBuilder<ET>;
     explicit constexpr AccumulationBuilder(ET value) : value_(value){}
 
-    constexpr AccumulationBuilder add(const auto value) const {
+    constexpr AccumulationBuilder add(const auto value) const noexcept {
         return AccumulationBuilder(value_ + static_cast<ET>(value));
     }
-    constexpr AccumulationBuilder madd(const auto lhs, const auto rhs) const {
+    constexpr AccumulationBuilder madd(const auto lhs, const auto rhs) const noexcept {
         return AccumulationBuilder(value_ + math::extended_mul(lhs, rhs));
     }
 
-    constexpr ET get() const{
+    constexpr ET get() const noexcept {
         return value_;
     }
 
     template<typename T>
-    constexpr Result<T, std::strong_ordering> try_get_as() const {
+    constexpr Result<T, std::strong_ordering> try_get_as() const noexcept {
         constexpr auto E_TARGET_MAX = static_cast<ET>(std::numeric_limits<T>::max());
         constexpr auto E_TARGET_MIN = static_cast<ET>(std::numeric_limits<T>::min());
         if(value_ > E_TARGET_MAX) return Err(std::strong_ordering::greater);
@@ -46,7 +46,7 @@ struct [[nodiscard]] AccumulationBuilder final{
     }
 
     template<typename T>
-    constexpr T get_as_saturated() const {
+    constexpr T get_as_saturated() const noexcept {
         constexpr T TARGET_MAX = std::numeric_limits<T>::max();
         constexpr T TARGET_MIN = std::numeric_limits<T>::min();
         constexpr ET E_TARGET_MAX = static_cast<ET>(TARGET_MAX);
@@ -57,7 +57,7 @@ struct [[nodiscard]] AccumulationBuilder final{
     }
 
     template<typename T = ET>
-    constexpr T get_as_clamped(const auto min, const auto max) const{
+    constexpr T get_as_clamped(const auto min, const auto max) const noexcept {
         if(value_ > max) return static_cast<T>(max);
         if(value_ < min) return static_cast<T>(min);
         return static_cast<T>(value_);
@@ -100,7 +100,7 @@ struct [[nodiscard]] AccumulationBuilder final{
 
     // 转换为其他累加器类型
     template<typename NewExtendedT>
-    [[nodiscard]] constexpr AccumulationBuilder<NewExtendedT> recast() const {
+    [[nodiscard]] constexpr AccumulationBuilder<NewExtendedT> recast() const noexcept {
         return AccumulationBuilder<NewExtendedT>(
             static_cast<NewExtendedT>(value_)
         );

@@ -13,11 +13,11 @@ struct Header{
     HashCode hashcode;
     ReleaseInfo release_info;
 
-    constexpr size_t size() const {
+    constexpr size_t size() const noexcept {
         return sizeof(*this);
     }
 
-    std::span<const uint8_t> as_bytes() const {
+    std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t>{
             reinterpret_cast<const uint8_t *>(this), size()};
     }
@@ -79,22 +79,22 @@ struct Bin{
     HashCode hashcode;
     Context<T> context;
 
-    constexpr HashCode calc_hash_of_context() const{
+    constexpr HashCode calc_hash_of_context() const noexcept {
         return hash(context);
     } 
 
     constexpr bool is_verify_passed(){
         return calc_hash_of_context() == hashcode;
     } 
-    constexpr const Context<T> * operator ->() const {
+    constexpr const Context<T> * operator ->() const noexcept {
         return context;
     }
 
-    constexpr size_t size() const {
+    constexpr size_t size() const noexcept {
         return sizeof(*this);
     }
 
-    std::span<const uint8_t> as_bytes() const {
+    std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t>{
             reinterpret_cast<const uint8_t *>(this), size()};
     }

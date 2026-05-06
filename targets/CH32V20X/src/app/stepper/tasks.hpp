@@ -98,7 +98,7 @@ struct MotorTaskPrelude{
             return tick_cnt_ > ticks_;
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             return Dignosis{
                 .err = None,
             };
@@ -145,7 +145,7 @@ struct MotorTaskPrelude{
             return tick_cnt_ > period_.count() * 100;
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             return Dignosis{
                 .err = None,
             };
@@ -192,7 +192,7 @@ struct MotorTaskPrelude{
             return tick_cnt_ > linear_position_to_ticks(ABS(delta_));
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             return Dignosis{
                 .err = None,
             };
@@ -239,7 +239,7 @@ struct MotorTaskPrelude{
             return tick_cnt_ > linear_position_to_ticks(ABS(delta_));
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             return Dignosis{
                 .err = None,
             };
@@ -296,7 +296,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             return tick_cnt_ > STALL_CHECK_TICKS;
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             ASSERT(may_move_range_.is_some());
             const auto move_range = may_move_range_.unwrap();
             
@@ -359,7 +359,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             return tick_cnt_ > MOVE_CHECK_TICKS;
         }
 
-        constexpr Dignosis dignosis() const {
+        constexpr Dignosis dignosis() const noexcept {
             // ASSERT(may_move_range_.is_some());
 
             const auto move_range = may_move_range_.unwrap();
@@ -471,7 +471,7 @@ struct CalibrateRotateTask final{
         return tick_cnt_ >= linear_position_to_ticks(ABS(delta_turns_));
     }
 
-    constexpr Dignosis dignosis() const {
+    constexpr Dignosis dignosis() const noexcept {
         return Dignosis{
             .err = None,
         };
@@ -527,7 +527,7 @@ struct TaskSequence final{
         }, tasks_variant_);
     };
 
-    constexpr Option<TaskError> err() const {
+    constexpr Option<TaskError> err() const noexcept {
         if(may_dignosis_variant_.is_none())
             return None;
         
@@ -536,23 +536,23 @@ struct TaskSequence final{
         }, may_dignosis_variant_.unwrap());
     }
 
-    constexpr bool is_finished() const {
+    constexpr bool is_finished() const noexcept {
         return is_all_tasks_finished_;
     }
 
-    constexpr bool is_done() const {
+    constexpr bool is_done() const noexcept {
         return is_all_tasks_finished_ and err().is_none();
     }
 
-    consteval size_t task_count() const {
+    consteval size_t task_count() const noexcept {
         return std::tuple_size_v<Configs>;
     }
 
-    constexpr size_t task_index() const {
+    constexpr size_t task_index() const noexcept {
         return task_index_;
     }
 
-    const TasksVariant & tasks_variant() const {
+    const TasksVariant & tasks_variant() const noexcept {
         return tasks_variant_;
     }
 private:
@@ -675,11 +675,11 @@ public:
         return task_sequence_.resume(lap_position);
     }
 
-    bool is_finished() const {
+    bool is_finished() const noexcept {
         return task_sequence_.is_finished();
     }
 
-    size_t task_index() const {
+    size_t task_index() const noexcept {
         return task_sequence_.task_index();
     }
 
@@ -700,7 +700,7 @@ public:
             task_sequence_.tasks_variant());
     }
 
-    auto err() const {
+    auto err() const noexcept {
         return task_sequence_.err();
     }
 
@@ -749,15 +749,15 @@ public:
         return task_sequence_.resume(lap_position);
     }
 
-    bool is_finished() const {
+    bool is_finished() const noexcept {
         return task_sequence_.is_finished();
     }
 
-    size_t task_index() const {
+    size_t task_index() const noexcept {
         return task_sequence_.task_index();
     }
 
-    auto err() const {
+    auto err() const noexcept {
         return task_sequence_.err();
     }
 
@@ -808,15 +808,15 @@ public:
         return task_sequence_.resume(lap_position);
     }
 
-    bool is_finished() const {
+    bool is_finished() const noexcept {
         return task_sequence_.is_finished();
     }
 
-    size_t task_index() const {
+    size_t task_index() const noexcept {
         return task_sequence_.task_index();
     }
 
-    auto err() const {
+    auto err() const noexcept {
         return task_sequence_.err();
     }
 

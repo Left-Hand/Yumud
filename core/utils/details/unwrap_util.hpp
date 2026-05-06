@@ -27,7 +27,7 @@ public:
         return val_;
     }
 
-    constexpr const T & get_inner() const{
+    constexpr const T & get_inner() const noexcept {
         return val_;
     }
 private:
@@ -47,11 +47,11 @@ public:
     constexpr Some(std::nullptr_t) = delete;
     constexpr Some(T * ptr):ptr_(ptr){;}
 
-    constexpr T * get_inner() const {
+    constexpr T * get_inner() const noexcept {
         return ptr_;
     }
 
-    constexpr T & deref() const {
+    constexpr T & deref() const noexcept {
         return *ptr_;
     }
 private:

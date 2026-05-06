@@ -33,19 +33,19 @@ public:
         return sto_[i];
     }
 
-    constexpr const T & operator[](size_t i) const {
+    constexpr const T & operator[](size_t i) const noexcept {
         return sto_[i];
     }
 
-    constexpr size_t size() const {
+    constexpr size_t size() const noexcept {
         return N;
     }
 
-    constexpr const T * begin() const {
+    constexpr const T * begin() const noexcept {
         return sto_.data();
     }
 
-    constexpr const T * end() const {
+    constexpr const T * end() const noexcept {
         return sto_.data() + N;
     }
 
@@ -57,12 +57,12 @@ public:
         return sto_.data() + N;
     }
 
-    constexpr std::span<const T> iter() const {
+    constexpr std::span<const T> iter() const noexcept {
         return std::span<const T>(sto_.data(), N);
     }
     
     // Addition operator
-    constexpr VectorX operator+(const VectorX& other) const {
+    constexpr VectorX operator+(const VectorX& other) const noexcept {
         VectorX result;
         for (size_t i = 0; i < N; ++i) {
             result[i] = sto_[i] + other[i];
@@ -71,7 +71,7 @@ public:
     }
     
     // Subtraction operator
-    constexpr VectorX operator-(const VectorX& other) const {
+    constexpr VectorX operator-(const VectorX& other) const noexcept {
         VectorX result;
         for (size_t i = 0; i < N; ++i) {
             result[i] = sto_[i] - other[i];
@@ -79,7 +79,7 @@ public:
         return result;
     }
 
-    constexpr VectorX substract_bounded(const VectorX& other) const {
+    constexpr VectorX substract_bounded(const VectorX& other) const noexcept {
         VectorX result;
         for (size_t i = 0; i < N; ++i) {
             if constexpr (std::is_integral_v<T>){
@@ -99,7 +99,7 @@ public:
         return result;
     }
 
-    constexpr VectorX addition_bounded(const VectorX& other) const { 
+    constexpr VectorX addition_bounded(const VectorX& other) const noexcept { 
         VectorX result;
         for (size_t i = 0; i < size(); ++i) {
             if constexpr(std::is_integral<T>::value) {
@@ -119,7 +119,7 @@ public:
     }
 
     // Subtraction operator
-    constexpr VectorX operator-() const {
+    constexpr VectorX operator-() const noexcept {
         VectorX result;
         for (size_t i = 0; i < N; ++i) {
             result[i] = -sto_[i];
@@ -144,7 +144,7 @@ public:
     }
 
     #define DEF_BINARY_OPERATOR(op)\
-    constexpr VectorX<bool, N >operator op (const T value) const{\
+    constexpr VectorX<bool, N >operator op (const T value) const noexcept {\
         VectorX<bool, N> result = VectorX<bool, N>::from_uninitialized();\
         for (size_t i = 0; i < N; ++i) {\
             result[i] = (sto_[i] op value);\

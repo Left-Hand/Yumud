@@ -111,7 +111,7 @@ public:
         color_ = color_cast<RGB888>(color);
     }
 
-    RGB888 get_color() const{
+    RGB888 get_color() const noexcept {
         return color_;
     }
 
@@ -184,7 +184,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] math::Rect2u get_crop_rect() const{
+    [[nodiscard]] math::Rect2u get_crop_rect() const noexcept {
         return crop_rect_;
     }
 protected:

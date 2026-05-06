@@ -50,32 +50,32 @@ struct [[nodiscard]] NodeId final{
         return from_u7(0);
     }
 
-    [[nodiscard]] constexpr uint8_t to_u7() const{
+    [[nodiscard]] constexpr uint8_t to_u7() const noexcept {
         return static_cast<uint8_t>(bits & 0x7f);
     }
 
-    [[nodiscard]] constexpr bs7 to_b7() const{
+    [[nodiscard]] constexpr bs7 to_b7() const noexcept {
         return bs7::from_bits_unchecked(bits);
     }
 
     //是否为广播地址
-    [[nodiscard]] constexpr bool is_boardcast() const {
+    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
         return bits == 0;
     }
 
     //是否为保留地址
-    [[nodiscard]] constexpr bool is_preserved() const{
+    [[nodiscard]] constexpr bool is_preserved() const noexcept {
         return bits == 244 || bits == 255;
     }
 
-    [[nodiscard]] constexpr bool is_acceptable_with(const NodeId & other) const {
+    [[nodiscard]] constexpr bool is_acceptable_with(const NodeId & other) const noexcept {
         return other.is_boardcast() || bits == other.bits;
     }
 
     // cobid + fcode
     [[nodiscard]] constexpr CobId with_func_code(const FunctionCode fcode) const;
 
-    [[nodiscard]] constexpr bool operator==(const NodeId & other) const{
+    [[nodiscard]] constexpr bool operator==(const NodeId & other) const noexcept {
         return bits == other.bits;
     }
 };
@@ -98,11 +98,11 @@ struct [[nodiscard]] CobId final{
         return from_bits(bits);
     }
 
-    constexpr hal::CanStdId to_stdid() const {
+    constexpr hal::CanStdId to_stdid() const noexcept {
         return hal::CanStdId::from_bits(to_bits());
     }
 
-    constexpr FunctionCode func_code() const {
+    constexpr FunctionCode func_code() const noexcept {
         return FunctionCode::from_bits(static_cast<uint8_t>(fcode_));
     }
 
@@ -110,7 +110,7 @@ struct [[nodiscard]] CobId final{
         return std::bit_cast<CobId>(bits);
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
@@ -120,11 +120,11 @@ struct [[nodiscard]] CobId final{
         return from_bits(bits);
     }
 
-    [[nodiscard]] constexpr uint16_t to_u11() const {
+    [[nodiscard]] constexpr uint16_t to_u11() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    constexpr NodeId node_id() const {
+    constexpr NodeId node_id() const noexcept {
         return NodeId::from_u7(nodeid_);
     }
 
@@ -170,11 +170,11 @@ struct [[nodiscard]] OdPreIndex final{
         return Self{bits};
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const{
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return count;
     }
 
-    [[nodiscard]] constexpr bool operator==(const Self & other) const{
+    [[nodiscard]] constexpr bool operator==(const Self & other) const noexcept {
         return count == other.count;
     }
 };
@@ -191,11 +191,11 @@ struct [[nodiscard]] OdSubIndex final{
         return Self{bits};
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return count;
     }
 
-    [[nodiscard]] constexpr bool operator==(const Self & other) const{
+    [[nodiscard]] constexpr bool operator==(const Self & other) const noexcept {
         return count == other.count;
     }
 };
@@ -215,13 +215,13 @@ struct [[nodiscard]] OdIndex final{
     static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
         return Self(_pre.to_bits(), _sub.to_bits());
     }
-    [[nodiscard]] constexpr bool operator==(const OdIndex& other) const{
+    [[nodiscard]] constexpr bool operator==(const OdIndex& other) const noexcept {
         return pre == other.pre and sub == other.sub;
     }
 };
 
 
-[[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const{
+[[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const noexcept {
     return CobId::from_parts(*this, fcode);
 }
 

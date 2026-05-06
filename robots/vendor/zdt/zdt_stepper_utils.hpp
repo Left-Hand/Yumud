@@ -46,11 +46,11 @@ public:
         push_le_u16(int_val >> 16);
     }
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return idx_ == bytes_.size();
     }
 
-    size_t size() const {
+    size_t size() const noexcept {
         return idx_;
     }
 private:

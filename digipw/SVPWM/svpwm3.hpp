@@ -47,7 +47,7 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
     }
 
     __attribute__((optimize("Ofast"), always_inline, hot, flatten))
-    constexpr UvwCoord<iq16> to_uvw_dutycycle() const{
+    constexpr UvwCoord<iq16> to_uvw_dutycycle() const noexcept {
         switch(sector){
             case Sector::_1:
             case Sector::_4:

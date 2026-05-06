@@ -10,7 +10,7 @@ struct RoundedRect2{
     math::Rect2<T> bounding_rect;
     T radius;
 
-    constexpr auto bounding_box() const {
+    constexpr auto bounding_box() const noexcept {
         return bounding_rect;
     }
 };
@@ -40,11 +40,11 @@ public:
         replace_x();
     }
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_range_.stop;
     }
 
-    constexpr math::Range2u16 x_range() const{
+    constexpr math::Range2u16 x_range() const noexcept {
         if(get_y_overhit()){
             return math::Range2u16::from_start_and_stop_unchecked(
                 left_and_right_center_x_.start  + x_offset_,
@@ -55,7 +55,7 @@ public:
         }
     }
 
-    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
+    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const noexcept {
         const auto [left, right] = x_range();
 
         return {math::Range2u16{left, left + 1}, math::Range2u16{right - 1, right}};
@@ -84,11 +84,11 @@ private:
         // x_offset_ = -radius_;
     }
 
-    constexpr bool is_y_at_edge() const {
+    constexpr bool is_y_at_edge() const noexcept {
         return y_ == (y_range_.start) || y_ == (y_range_.stop);
     }
 
-    constexpr uint16_t get_y_overhit() const {
+    constexpr uint16_t get_y_overhit() const noexcept {
         if(y_ < y_range_.start + radius_){
             return y_range_.start + radius_ - y_;
         }else if(y_ > y_range_.stop - radius_){
@@ -117,7 +117,7 @@ struct RasterizationIterator<RoundedRect2<T>> {
         : iter_(shape){;}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 

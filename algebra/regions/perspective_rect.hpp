@@ -241,7 +241,7 @@ public:
 
 
     // 计算透视中心点（两条对角线的交点）
-    constexpr math::Vec2<T> perspective_center() const {
+    constexpr math::Vec2<T> perspective_center() const noexcept {
         // 对于四边形，中心点应该是两条对角线的交点
         // 对角线1: 从 points[0] 到 points[2]
         // 对角线2: 从 points[1] 到 points[3]
@@ -271,7 +271,7 @@ public:
     }
 
     
-    constexpr math::Vec2<T> average() const {
+    constexpr math::Vec2<T> average() const noexcept {
         return math::Vec2<T>{
             points[0] +
             points[1] +
@@ -282,7 +282,7 @@ public:
 
 
     // 计算面积（使用鞋带公式）
-    constexpr T area() const {
+    constexpr T area() const noexcept {
         T a = 0;
         for (size_t i = 0; i < 4; ++i) {
             size_t j = (i + 1) % 4;
@@ -292,7 +292,7 @@ public:
     }
 
     // 平移变换
-    constexpr PerspectiveRect shifted(math::Vec2<T> offset) const {
+    constexpr PerspectiveRect shifted(math::Vec2<T> offset) const noexcept {
         std::array<math::Vec2<T>, 4> new_points;
         for (size_t i = 0; i < 4; ++i) {
             new_points[i] = points[i] + offset;
@@ -301,7 +301,7 @@ public:
     }
 
     // 缩放变换（以中心点为原点）
-    constexpr PerspectiveRect scaled(T factor) const {
+    constexpr PerspectiveRect scaled(T factor) const noexcept {
         const auto c = perspective_center();
         std::array<math::Vec2<T>, 4> new_points;
         for (size_t i = 0; i < 4; ++i) {
@@ -311,7 +311,7 @@ public:
     }
 
     // 检查是否是凸四边形
-    constexpr bool is_convex() const {
+    constexpr bool is_convex() const noexcept {
         auto cross = [](math::Vec2<T> a, math::Vec2<T> b, math::Vec2<T> c) {
             return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x);
         };
@@ -333,7 +333,7 @@ public:
 
 
     // 计算单应性矩阵 H（3x3）
-    constexpr math::Matrix3x3<T> homography() const {
+    constexpr math::Matrix3x3<T> homography() const noexcept {
         // 源点（单位正方形）
         [[maybe_unused]] constexpr std::array<math::Vec2<T>, 4> src = {
             math::Vec2<T>{0, 0},
@@ -347,13 +347,13 @@ public:
 
     }
 
-    constexpr PerspectiveRect operator *(const T rhs) const {
+    constexpr PerspectiveRect operator *(const T rhs) const noexcept {
         return PerspectiveRect::from_clockwise_points(
             { rhs * points[0], rhs * points[1], rhs * points[2], rhs * points[3] }
         );
     }
 
-    constexpr PerspectiveRect operator +(const PerspectiveRect & other) const {
+    constexpr PerspectiveRect operator +(const PerspectiveRect & other) const noexcept {
         return PerspectiveRect::from_clockwise_points(
             { 
                 other.points[0] + points[0], 

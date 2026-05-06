@@ -10,7 +10,7 @@ struct [[nodiscard]] XL2400_Address final{
 
     std::array<uint8_t, 5> bytes;
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         auto guard = os.create_guard();
         os << std::hex << 
             self.bytes[0] << ':' << 

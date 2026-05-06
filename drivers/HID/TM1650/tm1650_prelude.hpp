@@ -33,8 +33,8 @@ public:
         return KeyEvent{Some(row), Some(col)};
     }
 
-    [[nodiscard]] constexpr Option<uint8_t> row() const {return row_;}
-    [[nodiscard]] constexpr Option<uint8_t> col() const {return col_;}
+    [[nodiscard]] constexpr Option<uint8_t> row() const noexcept {return row_;}
+    [[nodiscard]] constexpr Option<uint8_t> col() const noexcept {return col_;}
     
 private:
 
@@ -81,7 +81,7 @@ struct TM1650_Prelude{
             return {uint8_t(0x68 + (idx << 1))};
         }
 
-        constexpr uint8_t to_bits() const {return addr;}
+        constexpr uint8_t to_bits() const noexcept {return addr;}
         const uint8_t addr;
     };
 
@@ -94,7 +94,7 @@ struct TM1650_Prelude{
         uint8_t lim:3;
         const uint8_t __resv2__:1 = 0b0;
 
-        constexpr uint8_t to_bits() const {return *reinterpret_cast<const uint8_t *>(this);}
+        constexpr uint8_t to_bits() const noexcept {return *reinterpret_cast<const uint8_t *>(this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);

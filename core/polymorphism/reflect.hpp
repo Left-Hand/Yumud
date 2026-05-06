@@ -605,8 +605,8 @@ struct fixed_string {
     data[Size] = T();
   }
   [[nodiscard]] constexpr auto operator<=>(const fixed_string&) const = default;
-  [[nodiscard]] constexpr explicit(false) operator std::string_view() const { return {std::data(data), Size}; }
-  [[nodiscard]] constexpr auto size() const { return Size; }
+  [[nodiscard]] constexpr explicit(false) operator std::string_view() const noexcept { return {std::data(data), Size}; }
+  [[nodiscard]] constexpr auto size() const noexcept { return Size; }
   T data[Size + 1u];
 };
 template<class T, std::size_t Capacity, std::size_t Size = Capacity-1> fixed_string(const T (&str)[Capacity]) -> fixed_string<T, Size>;
@@ -744,12 +744,12 @@ template<class T, std::size_t Size>
 struct static_vector {
   constexpr static_vector() = default;
   constexpr auto push_back(const T& value) { values_[size_++] = value; }
-  [[nodiscard]] constexpr const auto& operator[](auto i) const { return values_[i]; }
-  [[nodiscard]] constexpr auto begin() const { return &values_[0]; }
-  [[nodiscard]] constexpr auto end() const { return &values_[0] + size_; }
-  [[nodiscard]] constexpr auto size() const { return size_; }
-  [[nodiscard]] constexpr auto empty() const { return not size_; }
-  [[nodiscard]] constexpr auto capacity() const { return Size; }
+  [[nodiscard]] constexpr const auto& operator[](auto i) const noexcept { return values_[i]; }
+  [[nodiscard]] constexpr auto begin() const noexcept { return &values_[0]; }
+  [[nodiscard]] constexpr auto end() const noexcept { return &values_[0] + size_; }
+  [[nodiscard]] constexpr auto size() const noexcept { return size_; }
+  [[nodiscard]] constexpr auto empty() const noexcept { return not size_; }
+  [[nodiscard]] constexpr auto capacity() const noexcept { return Size; }
   std::array<T, Size> values_{};
   std::size_t size_{};
 };

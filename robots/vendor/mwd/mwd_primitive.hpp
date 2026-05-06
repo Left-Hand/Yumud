@@ -73,7 +73,7 @@ struct [[nodiscard]] ErrorState{
         return std::bit_cast<Self>(bits);
     }
 
-    constexpr Bits to_bits() const{
+    constexpr Bits to_bits() const noexcept {
         return std::bit_cast<Bits>(*this);
     }
 };
@@ -82,7 +82,7 @@ struct [[nodiscard]] ErrorState{
 struct [[nodiscard]] MotorTemperatureCode final{
     int8_t bits;
 
-    constexpr int8_t to_celeus() const {
+    constexpr int8_t to_celeus() const noexcept {
         return bits;
     }
 };
@@ -103,7 +103,7 @@ struct [[nodiscard]] VoltageCode final{
     static constexpr double MAX_VOLTS = LSB_VOLTS * std::numeric_limits<Bits>::max();
     static constexpr double MIN_VOLTS = LSB_VOLTS * std::numeric_limits<Bits>::min();
 
-    constexpr iq16 to_volts() const {
+    constexpr iq16 to_volts() const noexcept {
         return div100(bits);
     }
 
@@ -132,7 +132,7 @@ struct [[nodiscard]] CurrentCode final{
     static constexpr double MAX_AMPS = LSB_AMPS * std::numeric_limits<Bits>::max();
     static constexpr double MIN_AMPS = LSB_AMPS * std::numeric_limits<Bits>::min();
 
-    constexpr iq16 to_volts() const {
+    constexpr iq16 to_volts() const noexcept {
         return div100(bits);
     }
 
@@ -163,7 +163,7 @@ struct [[nodiscard]] TorqueCode final{
     static constexpr double MAX_AMPS = LSB_AMPS * std::numeric_limits<Bits>::max();
     static constexpr double MIN_AMPS = LSB_AMPS * std::numeric_limits<Bits>::min();
 
-    constexpr iq16 to_volts() const {
+    constexpr iq16 to_volts() const noexcept {
         return div100(bits);
     }
 
@@ -191,7 +191,7 @@ struct [[nodiscard]] PhaseCurrentCode final{
     static constexpr double MAX_AMPS = LSB_AMPS * std::numeric_limits<Bits>::max();
     static constexpr double MIN_AMPS = LSB_AMPS * std::numeric_limits<Bits>::min();
 
-    constexpr iq16 to_amps() const {
+    constexpr iq16 to_amps() const noexcept {
         return div100(bits);
     }
 
@@ -234,7 +234,7 @@ struct EncoderSpeedCode{
         return Ok(Self{.bits = static_cast<Bits>(ret_bits)});
     }
     
-    constexpr int16_t to_dps() const {
+    constexpr int16_t to_dps() const noexcept {
         return bits;
     }
 };
@@ -321,7 +321,7 @@ struct PackedStatus3{
 
     template<typename Receiver>
     constexpr Result<void, typename Receiver::Error>
-    serialize(Receiver & receiver) const {
+    serialize(Receiver & receiver) const noexcept {
         
     }
 };

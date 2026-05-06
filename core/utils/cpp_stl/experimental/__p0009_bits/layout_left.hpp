@@ -52,7 +52,7 @@ class layout_left::mapping {
     template <size_t r, size_t Rank, class I, class... Indices>
     MDSPAN_IMPL_HOST_DEVICE
     constexpr index_type compute_offset(
-      rank_count<r,Rank>, const I& i, Indices... idx) const {
+      rank_count<r,Rank>, const I& i, Indices... idx) const noexcept {
       return compute_offset(rank_count<r+1,Rank>(), idx...) *
                  m_extents.extent(r) + i;
     }
@@ -60,12 +60,12 @@ class layout_left::mapping {
     template<class I>
     MDSPAN_IMPL_HOST_DEVICE
     constexpr index_type compute_offset(
-      rank_count<extents_type::rank()-1,extents_type::rank()>, const I& i) const {
+      rank_count<extents_type::rank()-1,extents_type::rank()>, const I& i) const noexcept {
       return i;
     }
 
     MDSPAN_IMPL_HOST_DEVICE
-    constexpr index_type compute_offset(rank_count<0,0>) const { return 0; }
+    constexpr index_type compute_offset(rank_count<0,0>) const noexcept { return 0; }
 
   public:
 
@@ -239,7 +239,7 @@ class layout_left::mapping {
     // Not really public, but currently needed to implement fully constexpr useable submdspan:
     template<size_t N, class SizeType, size_t ... E, size_t ... Idx>
     MDSPAN_INLINE_FUNCTION
-    constexpr index_type impl_get_stride(MDSPAN_IMPL_STANDARD_NAMESPACE::extents<SizeType, E...>,std::integer_sequence<size_t, Idx...>) const {
+    constexpr index_type impl_get_stride(MDSPAN_IMPL_STANDARD_NAMESPACE::extents<SizeType, E...>,std::integer_sequence<size_t, Idx...>) const noexcept {
       return MDSPAN_IMPL_FOLD_TIMES_RIGHT((Idx<N? m_extents.template extent<Idx>():1),1);
     }
     template<size_t N>

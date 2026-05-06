@@ -28,15 +28,15 @@ struct [[nodiscard]] AxisId final{
         return from_bits(bs.to_bits());
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits_;
     }
 
-    constexpr literals::bs6 to_b6() const {
+    constexpr literals::bs6 to_b6() const noexcept {
         return literals::bs6::from_bits(to_bits());
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << self.to_bits();
     }
 private:
@@ -73,7 +73,7 @@ struct [[nodiscard]] AxisFaultFlags final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t to_u32() const {
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -105,7 +105,7 @@ struct [[nodiscard]] MotorFlags final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t to_u8() const {
+    [[nodiscard]] constexpr uint32_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 
@@ -282,7 +282,7 @@ struct [[nodiscard]] Command final{
         return from_bits(bs.to_bits());
     }
 
-    constexpr literals::bs5 to_b5() const {
+    constexpr literals::bs5 to_b5() const noexcept {
         return literals::bs5::from_bits_bounded(static_cast<uint8_t>(kind_));
     }
 
@@ -290,7 +290,7 @@ struct [[nodiscard]] Command final{
         return static_cast<Kind>(bits);
     }
 
-    constexpr CommandKind kind() const{ return kind_; }
+    constexpr CommandKind kind() const noexcept { return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
         switch(kind){
             case Kind::Nop:   return "Nop";

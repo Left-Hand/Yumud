@@ -45,15 +45,15 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr math::Vec2u16 size() const {return size_;}
+    [[nodiscard]] constexpr math::Vec2u16 size() const noexcept {return size_;}
     [[nodiscard]] uint8_t * head_ptr() {return resource_.get();}
-    [[nodiscard]] const uint8_t * head_ptr() const {return resource_.get();}
+    [[nodiscard]] const uint8_t * head_ptr() const noexcept {return resource_.get();}
 
     [[nodiscard]] uint8_t & operator[](const size_t idx){
         return resource_[idx];
     }
 
-    [[nodiscard]] uint8_t operator[](const size_t idx) const {
+    [[nodiscard]] uint8_t operator[](const size_t idx) const noexcept {
         return resource_[idx];
     }
 
@@ -68,7 +68,7 @@ public:
         }
 
     }
-    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const{
+    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const noexcept {
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t pixel_index = point_index / 8;
         color = Binary::from_bool(head_ptr()[pixel_index] & (1 << (point_index % 8)));
@@ -110,15 +110,15 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr math::Vec2u16 size() const {return size_;}
+    [[nodiscard]] constexpr math::Vec2u16 size() const noexcept {return size_;}
     [[nodiscard]] uint8_t * head_ptr() {return resource_.get();}
-    [[nodiscard]] const uint8_t * head_ptr() const {return resource_.get();}
+    [[nodiscard]] const uint8_t * head_ptr() const noexcept {return resource_.get();}
 
     [[nodiscard]] uint8_t & operator[](const size_t idx){
         return resource_[idx];
     }
 
-    [[nodiscard]] uint8_t operator[](const size_t idx) const {
+    [[nodiscard]] uint8_t operator[](const size_t idx) const noexcept {
         return resource_[idx];
     }
 
@@ -133,7 +133,7 @@ public:
         }
     }
 
-    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const{
+    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const noexcept {
         uint32_t pixel_index = pos.x + (pos.y / 8) * size().x; 
         color = Binary::from_bool(head_ptr()[pixel_index] & (color.is_white() << (pos.y % 8)));
     }

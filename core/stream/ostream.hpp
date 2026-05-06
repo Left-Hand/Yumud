@@ -142,7 +142,7 @@ public:
             };
         }
 
-        [[nodiscard]] std::span<const uint8_t> splitter_byte() const {
+        [[nodiscard]] std::span<const uint8_t> splitter_byte() const noexcept {
             return {
                 reinterpret_cast<const uint8_t *>(this->splitter_chars), 
                 this->splitter_len
@@ -223,7 +223,7 @@ public:
     //write null-terminated chars
     void write_nt_chars(const char * p_str);
 
-    [[nodiscard]] uint8_t indent() const{
+    [[nodiscard]] uint8_t indent() const noexcept {
         return config_.indent;
     }
 
@@ -588,8 +588,8 @@ public:
         return *this;
     }
 
-    [[nodiscard]] __attribute__((const)) constexpr auto eps() const {return config_.eps;}
-    [[nodiscard]] __attribute__((const)) constexpr auto radix() const {return config_.radix;}
+    [[nodiscard]] __attribute__((const)) constexpr auto eps() const noexcept {return config_.eps;}
+    [[nodiscard]] __attribute__((const)) constexpr auto radix() const noexcept {return config_.radix;}
 
 
     [[nodiscard]] __attribute__((const))
@@ -677,7 +677,7 @@ public:
         return *this;
     }
 
-    inline const Config & config() const {return config_;}
+    inline const Config & config() const noexcept {return config_;}
 
     class [[nodiscard]] ConfigGuard{
         OutputStream & os_;
@@ -687,7 +687,7 @@ public:
         
         inline ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
 
-        inline constexpr const Config & config() const {return config_;}
+        inline constexpr const Config & config() const noexcept {return config_;}
         inline ~ConfigGuard(){
             os_.reconf(std::move(config_));
         }
@@ -890,7 +890,7 @@ public:
         p_route_(std::move(route)){;}
 
 
-    [[nodiscard]] size_t free_capacity() const {
+    [[nodiscard]] size_t free_capacity() const noexcept {
         if(p_route_ == nullptr) [[unlikely]]
             __builtin_trap();
         return p_route_->free_capacity();

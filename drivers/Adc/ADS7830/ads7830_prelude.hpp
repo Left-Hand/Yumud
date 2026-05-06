@@ -60,15 +60,15 @@ struct ADS7830_Prelude{
             return Some(ChannelSelection(std::bit_cast<Kind>(nth)));
         }
 
-        [[nodiscard]] constexpr Kind kind() const {
+        [[nodiscard]] constexpr Kind kind() const noexcept {
             return kind_;
         }
 
-        [[nodiscard]] constexpr bool operator == (ChannelSelection const & rhs) const{
+        [[nodiscard]] constexpr bool operator == (ChannelSelection const & rhs) const noexcept {
             return kind_ == rhs.kind_;
         }
 
-        [[nodiscard]] constexpr bool operator == (Kind kind) const {
+        [[nodiscard]] constexpr bool operator == (Kind kind) const noexcept {
             return kind_ == kind;
         }
     private:
@@ -117,7 +117,7 @@ struct ADS7830_Prelude{
                 map([](const Kind kind){return PairSelection(kind);});
         }
 
-        [[nodiscard]] constexpr Kind kind() const {return kind_;};
+        [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;};
     private:
         Kind kind_;
 
@@ -158,7 +158,7 @@ struct ADS7830_Prelude{
         const PowerDownSel pd:2;
         const PairSelection::Kind sel:4;
 
-        [[nodiscard]] constexpr uint8_t to_u8() const {
+        [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
             return std::bit_cast<uint8_t>(*this);
         }
     };
@@ -168,7 +168,7 @@ struct ADS7830_Prelude{
     struct ConvResult{
         uint8_t bits;
 
-        constexpr uint8_t to_u8() const {
+        constexpr uint8_t to_u8() const noexcept {
             return bits;
         }
     };

@@ -46,13 +46,13 @@ struct [[nodiscard]] uint24_t final{
     template<std::endian E>
     constexpr void fill_bytes(std::span<uint8_t, 3> bytes) noexcept {
         if constexpr(E == std::endian::little){
-            bytes[0] = static_cast<uint8_t>(bits && 0xff);
-            bytes[1] = static_cast<uint8_t>((bits >> 8) && 0xff);
-            bytes[2] = static_cast<uint8_t>((bits >> 16) && 0xff);
+            bytes[0] = static_cast<uint8_t>(bits & 0xff);
+            bytes[1] = static_cast<uint8_t>((bits >> 8) & 0xff);
+            bytes[2] = static_cast<uint8_t>((bits >> 16) & 0xff);
         }else{
-            bytes[2] = static_cast<uint8_t>(bits && 0xff);
-            bytes[1] = static_cast<uint8_t>((bits >> 8) && 0xff);
-            bytes[0] = static_cast<uint8_t>((bits >> 16) && 0xff);
+            bytes[2] = static_cast<uint8_t>(bits & 0xff);
+            bytes[1] = static_cast<uint8_t>((bits >> 8) & 0xff);
+            bytes[0] = static_cast<uint8_t>((bits >> 16) & 0xff);
         }
     }
 
@@ -99,13 +99,13 @@ struct [[nodiscard]] int24_t final{
     template<std::endian E>
     constexpr void fill_bytes(std::span<uint8_t, 3> bytes) noexcept {
         if constexpr(E == std::endian::little){
-            bytes[0] = static_cast<uint8_t>(bits && 0xff);
-            bytes[1] = static_cast<uint8_t>((bits >> 8) && 0xff);
-            bytes[2] = static_cast<uint8_t>((bits >> 16) && 0xff);
+            bytes[0] = static_cast<uint8_t>(bits & 0xff);
+            bytes[1] = static_cast<uint8_t>((bits >> 8) & 0xff);
+            bytes[2] = static_cast<uint8_t>((bits >> 16) & 0xff);
         }else{
-            bytes[2] = static_cast<uint8_t>(bits && 0xff);
-            bytes[1] = static_cast<uint8_t>((bits >> 8) && 0xff);
-            bytes[0] = static_cast<uint8_t>((bits >> 16) && 0xff);
+            bytes[2] = static_cast<uint8_t>(bits & 0xff);
+            bytes[1] = static_cast<uint8_t>((bits >> 8) & 0xff);
+            bytes[0] = static_cast<uint8_t>((bits >> 16) & 0xff);
         }
     }
 

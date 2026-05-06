@@ -15,7 +15,7 @@ protected:
     
     virtual bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) = 0;
     void set_scale(const uint8_t _scale){scale = _scale;}
-    math::Vec2<uint8_t> get_size() const { return size * scale; }
+    math::Vec2<uint8_t> get_size() const noexcept { return size * scale; }
 };
 
 
@@ -70,7 +70,7 @@ private:
     uint8_t buf[7];
 
 
-    const font_item_t * find_font_item(wchar_t code) const{
+    const font_item_t * find_font_item(wchar_t code) const noexcept {
         size_t left = 0;
         const auto & res = font_res::chfont_7x7;
         size_t right = std::size(res) - 1;
@@ -127,7 +127,7 @@ struct MonoFont7x7 final{
 		}
 	}
 
-    constexpr math::Vec2u16 size() const {
+    constexpr math::Vec2u16 size() const noexcept {
         return math::Vec2u16{7,7};
     }
 private:
@@ -136,7 +136,7 @@ private:
     uint8_t buf[7] = {0};
 
 
-    const font_item_t * find_font_item(wchar_t code) const{
+    const font_item_t * find_font_item(wchar_t code) const noexcept {
         size_t left = 0;
         const auto & res = font_res::chfont_7x7;
         size_t right = std::size(res) - 1;
@@ -195,7 +195,7 @@ struct MonoFont16x8 final{
 	}
 
 
-    constexpr math::Vec2u16 size() const {
+    constexpr math::Vec2u16 size() const noexcept {
         return math::Vec2u16{8,16};
     }
 public:

@@ -152,7 +152,7 @@ struct R8_USB_CTRL {
      * @brief 检查是否为主机模式
      * @return true-主机模式；false-设备模式
      */
-    [[nodiscard]] constexpr bool is_host_mode() const {
+    [[nodiscard]] constexpr bool is_host_mode() const noexcept {
         return RB_UC_HOST_MODE == 1U;
     }
 
@@ -160,7 +160,7 @@ struct R8_USB_CTRL {
      * @brief 检查是否为低速模式
      * @return true-1.5Mbps；false-12Mbps
      */
-    [[nodiscard]] constexpr bool is_low_speed() const {
+    [[nodiscard]] constexpr bool is_low_speed() const noexcept {
         return RB_UC_LOW_SPEED == 1U;
     }
 
@@ -168,7 +168,7 @@ struct R8_USB_CTRL {
      * @brief 检查DMA是否使能
      * @return true-DMA使能；false-DMA禁用
      */
-    [[nodiscard]] constexpr bool is_dma_enabled() const {
+    [[nodiscard]] constexpr bool is_dma_enabled() const noexcept {
         return RB_UC_DMA_EN == 1U;
     }
 };
@@ -265,7 +265,7 @@ struct R8_USB_INT_EN {
      * @brief 检查传输完成中断是否使能
      * @return true-使能；false-禁止
      */
-    [[nodiscard]] constexpr bool is_transfer_irq_enabled() const {
+    [[nodiscard]] constexpr bool is_transfer_irq_enabled() const noexcept {
         return RB_UIE_TRANSFER == 1U;
     }
 
@@ -273,7 +273,7 @@ struct R8_USB_INT_EN {
      * @brief 检查总线复位/设备检测中断是否使能
      * @return true-使能；false-禁止
      */
-    [[nodiscard]] constexpr bool is_bus_rst_detect_irq_enabled() const {
+    [[nodiscard]] constexpr bool is_bus_rst_detect_irq_enabled() const noexcept {
         return RB_UIE_BUS_RST_DETECT == 1U;
     }
 };
@@ -318,7 +318,7 @@ struct R8_USB_DEV_AD {
      * @brief 获取当前USB地址
      * @return 地址值（0~127）
      */
-    [[nodiscard]] constexpr uint8_t get_dev_addr() const {
+    [[nodiscard]] constexpr uint8_t get_dev_addr() const noexcept {
         return static_cast<uint8_t>(MASK_USB_ADDR & 0x7FU);
     }
 
@@ -326,7 +326,7 @@ struct R8_USB_DEV_AD {
      * @brief 获取通用标志位值
      * @return 标志值（0或1）
      */
-    [[nodiscard]] constexpr bool get_gp_bit() const {
+    [[nodiscard]] constexpr bool get_gp_bit() const noexcept {
         return RB_UDA_GP_BIT == 1U;
     }
 };
@@ -392,7 +392,7 @@ struct R8_USB_MIS_ST {
      * @brief 检查USB协议处理器是否空闲
      * @return true-空闲；false-忙
      */
-    [[nodiscard]] constexpr bool is_sie_free() const {
+    [[nodiscard]] constexpr bool is_sie_free() const noexcept {
         return RB_UMS_SIE_FREE == 1U;
     }
 
@@ -400,7 +400,7 @@ struct R8_USB_MIS_ST {
      * @brief 检查接收FIFO是否有数据
      * @return true-FIFO非空；false-FIFO为空
      */
-    [[nodiscard]] constexpr bool is_rx_fifo_ready() const {
+    [[nodiscard]] constexpr bool is_rx_fifo_ready() const noexcept {
         return RB_UMS_R_FIFO_RDY == 1U;
     }
 
@@ -408,7 +408,7 @@ struct R8_USB_MIS_ST {
      * @brief 检查USB总线是否处于复位状态
      * @return true-复位中；false-正常
      */
-    [[nodiscard]] constexpr bool is_bus_reset() const {
+    [[nodiscard]] constexpr bool is_bus_reset() const noexcept {
         return RB_UMS_BUS_RST == 1U;
     }
 
@@ -416,7 +416,7 @@ struct R8_USB_MIS_ST {
      * @brief 检查USB总线是否挂起
      * @return true-挂起；false-正常
      */
-    [[nodiscard]] constexpr bool is_bus_suspended() const {
+    [[nodiscard]] constexpr bool is_bus_suspended() const noexcept {
         return RB_UMS_SUSPEND == 1U;
     }
 
@@ -424,7 +424,7 @@ struct R8_USB_MIS_ST {
      * @brief 主机模式检查是否有设备连接
      * @return true-设备已连接；false-无设备
      */
-    [[nodiscard]] constexpr bool is_device_attached() const {
+    [[nodiscard]] constexpr bool is_device_attached() const noexcept {
         return RB_UMS_DEV_ATTACH == 1U;
     }
 };
@@ -507,7 +507,7 @@ struct R8_USB_INT_FG {
      * @brief 检查传输完成中断是否触发
      * @return true-已触发；false-未触发
      */
-    [[nodiscard]] constexpr bool is_transfer_flag_set() const {
+    [[nodiscard]] constexpr bool is_transfer_flag_set() const noexcept {
         return RB_UIF_TRANSFER == 1U;
     }
 
@@ -515,7 +515,7 @@ struct R8_USB_INT_FG {
      * @brief 检查FIFO溢出中断是否触发
      * @return true-已触发；false-未触发
      */
-    [[nodiscard]] constexpr bool is_fifo_overflow_flag_set() const {
+    [[nodiscard]] constexpr bool is_fifo_overflow_flag_set() const noexcept {
         return RB_UIF_FIFO_OV == 1U;
     }
 
@@ -523,7 +523,7 @@ struct R8_USB_INT_FG {
      * @brief 检查同步标志是否匹配
      * @return true-匹配；false-不匹配
      */
-    [[nodiscard]] constexpr bool is_tog_ok() const {
+    [[nodiscard]] constexpr bool is_tog_ok() const noexcept {
         return RB_U_TOG_OK == 1U;
     }
 };
@@ -565,7 +565,7 @@ struct R8_USB_INT_ST {
      * @brief 设备模式获取当前传输端点号
      * @return 端点号（0~15）
      */
-    [[nodiscard]] constexpr uint8_t dev_get_endpoint_id() const {
+    [[nodiscard]] constexpr uint8_t dev_get_endpoint_id() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_ENDP_H_RES & 0x0FU);
     }
 
@@ -573,7 +573,7 @@ struct R8_USB_INT_ST {
      * @brief 设备模式获取当前传输令牌PID类型
      * @return 0-OUT包；1-保留；2-IN包；3-SETUP包
      */
-    [[nodiscard]] constexpr uint8_t dev_get_token_pid() const {
+    [[nodiscard]] constexpr uint8_t dev_get_token_pid() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_TOKEN & 0x03U);
     }
 
@@ -581,7 +581,7 @@ struct R8_USB_INT_ST {
      * @brief 主机模式获取设备应答PID
      * @return 应答PID标识（0=无应答/超时，1~15=对应应答）
      */
-    [[nodiscard]] constexpr uint8_t host_get_response_pid() const {
+    [[nodiscard]] constexpr uint8_t host_get_response_pid() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_ENDP_H_RES & 0x0FU);
     }
 
@@ -589,7 +589,7 @@ struct R8_USB_INT_ST {
      * @brief 检查同步标志是否匹配
      * @return true-匹配；false-不匹配
      */
-    [[nodiscard]] constexpr bool is_tog_ok() const {
+    [[nodiscard]] constexpr bool is_tog_ok() const noexcept {
         return RB_UIS_TOG_OK == 1U;
     }
 
@@ -597,7 +597,7 @@ struct R8_USB_INT_ST {
      * @brief 设备模式检查是否回应NAK
      * @return true-已回应NAK；false-无
      */
-    [[nodiscard]] constexpr bool dev_is_nak_responded() const {
+    [[nodiscard]] constexpr bool dev_is_nak_responded() const noexcept {
         return RB_UIS_IS_NAK == 1U;
     }
 
@@ -605,7 +605,7 @@ struct R8_USB_INT_ST {
      * @brief 设备模式检查是否为SETUP事务
      * @return true-SETUP事务；false-其他事务
      */
-    [[nodiscard]] constexpr bool dev_is_setup_transaction() const {
+    [[nodiscard]] constexpr bool dev_is_setup_transaction() const noexcept {
         return dev_get_token_pid() == 3U;
     }
 };
@@ -633,7 +633,7 @@ struct R32_USB_RX_LEN {
      * @brief 获取实际接收的数据字节数
      * @return 字节数（0~1023）
      */
-    [[nodiscard]] constexpr uint16_t get_rx_length() const {
+    [[nodiscard]] constexpr uint16_t get_rx_length() const noexcept {
         return static_cast<uint16_t>(R16_USB_RX_LEN & 0x3FFU);
     }
 };
@@ -733,7 +733,7 @@ struct R32_USB_OTG_CR {
      * @brief 检查OTG功能是否使能
      * @return true-已使能；false-未使能
      */
-    [[nodiscard]] constexpr bool is_otg_enabled() const {
+    [[nodiscard]] constexpr bool is_otg_enabled() const noexcept {
         return RB_CR_OTG_EN == 1U;
     }
 };
@@ -779,7 +779,7 @@ struct R32_USB_OTG_SR {
      * @brief 检查是否为B设备
      * @return true-B设备；false-A设备
      */
-    [[nodiscard]] constexpr bool is_b_device() const {
+    [[nodiscard]] constexpr bool is_b_device() const noexcept {
         return RB_SR_ID_DIG == 1U;
     }
 
@@ -787,7 +787,7 @@ struct R32_USB_OTG_SR {
      * @brief 检查VBUS电压是否有效
      * @return true-电压有效；false-无效
      */
-    [[nodiscard]] constexpr bool is_vbus_valid() const {
+    [[nodiscard]] constexpr bool is_vbus_valid() const noexcept {
         return RB_SR_VBUS_VLD == 1U;
     }
 
@@ -795,7 +795,7 @@ struct R32_USB_OTG_SR {
      * @brief 检查OTG会话是否有效
      * @return true-会话有效；false-无效
      */
-    [[nodiscard]] constexpr bool is_session_valid() const {
+    [[nodiscard]] constexpr bool is_session_valid() const noexcept {
         return RB_SR_SESS_VLD == 1U;
     }
 };
@@ -891,7 +891,7 @@ struct R8_UDEV_CTRL {
      * @brief 检查设备端口是否使能
      * @return true-已使能；false-未使能
      */
-    [[nodiscard]] constexpr bool is_port_enabled() const {
+    [[nodiscard]] constexpr bool is_port_enabled() const noexcept {
         return RB_UD_PORT_EN == 1U;
     }
 
@@ -899,7 +899,7 @@ struct R8_UDEV_CTRL {
      * @brief 获取UD+引脚当前状态
      * @return true-高电平；false-低电平
      */
-    [[nodiscard]] constexpr bool get_dp_pin_state() const {
+    [[nodiscard]] constexpr bool get_dp_pin_state() const noexcept {
         return RB_UD_DP_PIN == 1U;
     }
 };
@@ -987,7 +987,7 @@ struct R8_UEP4_1_MOD {
      * @brief 检查端点1是否使能接收
      * @return true-使能；false-禁止
      */
-    [[nodiscard]] constexpr bool is_ep1_rx_enabled() const {
+    [[nodiscard]] constexpr bool is_ep1_rx_enabled() const noexcept {
         return RB_UEP1_RX_EN == 1U;
     }
 };
@@ -1230,7 +1230,7 @@ struct R32_UEPn_DMA {
      * @brief 获取缓冲区起始地址
      * @return 32位对齐地址
      */
-    [[nodiscard]] constexpr uint32_t get_dma_addr() const {
+    [[nodiscard]] constexpr uint32_t get_dma_addr() const noexcept {
         return R32_UEPn_DMA;
     }
 
@@ -1238,7 +1238,7 @@ struct R32_UEPn_DMA {
      * @brief 检查地址是否4字节对齐
      * @return true-对齐；false-未对齐
      */
-    [[nodiscard]] constexpr bool is_addr_aligned() const {
+    [[nodiscard]] constexpr bool is_addr_aligned() const noexcept {
         return (R32_UEPn_DMA & 0x03U) == 0U;
     }
 };

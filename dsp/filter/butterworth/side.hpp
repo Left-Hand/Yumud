@@ -57,7 +57,7 @@ protected:
             w0 = w1 = w2 = 0;
         }
 
-        constexpr T conv(const T x) const {
+        constexpr T conv(const T x) const noexcept {
             return d1 * w1 + d2 * w2 + x;
         }
         
@@ -94,7 +94,7 @@ public:
         this->result_ = x;
     }
 
-    constexpr const T & get() const {
+    constexpr const T & get() const noexcept {
         return this->result_;
     }
     constexpr T operator()(const T x){
@@ -126,7 +126,7 @@ public:
         this->result_ = x;
     }
 
-    constexpr const T & get() const {
+    constexpr const T & get() const noexcept {
         return this->result_;
     }
     constexpr T operator()(const T x){

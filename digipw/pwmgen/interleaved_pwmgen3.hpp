@@ -35,14 +35,14 @@ public:
     
         constexpr TrigOccasion(Kind kind):kind_(kind){}
     
-        constexpr bool operator == (const Kind kind) const {
+        constexpr bool operator == (const Kind kind) const noexcept {
             return kind_ == kind;}
-        constexpr bool operator == (const TrigOccasion other) const {
+        constexpr bool operator == (const TrigOccasion other) const noexcept {
             return kind_ == other.kind_;}
     
         // constexpr bool 
         [[nodiscard]]
-        constexpr TrigOccasion iter_next() const {
+        constexpr TrigOccasion iter_next() const noexcept {
             switch(kind_){
                 case UpJust: return UpFirst;
                 case UpFirst: return UpSecond;
@@ -56,7 +56,7 @@ public:
         }
     
         [[nodiscard]]
-        constexpr TrigOccasion iter_next_on_upisr() const {
+        constexpr TrigOccasion iter_next_on_upisr() const noexcept {
             switch(kind_){
                 case UpSecond: return DownJust;
                 case DownSecond: return UpJust;
@@ -66,7 +66,7 @@ public:
         }
     
         [[nodiscard]]
-        constexpr TrigOccasion iter_next_on_ch4isr() const {
+        constexpr TrigOccasion iter_next_on_ch4isr() const noexcept {
             switch(kind_){
                 case UpJust: return UpFirst;
                 case UpFirst: return UpSecond;
@@ -78,27 +78,27 @@ public:
     
     
         [[nodiscard]]
-        constexpr bool is_aligned() const {
+        constexpr bool is_aligned() const noexcept {
             return (kind_ == TrigOccasion::UpJust) or 
                 (kind_ == TrigOccasion::DownJust);
         }
     
         [[nodiscard]]
-        constexpr bool is_first() const {
+        constexpr bool is_first() const noexcept {
             return (kind_ == TrigOccasion::UpFirst) or 
                 (kind_ == TrigOccasion::DownFirst);
         }
     
         [[nodiscard]]
-        constexpr bool is_second() const {
+        constexpr bool is_second() const noexcept {
             return (kind_ == TrigOccasion::UpSecond) or 
                 (kind_ == TrigOccasion::DownSecond);
         }
     
-        constexpr size_t to_idx() const {
+        constexpr size_t to_idx() const noexcept {
             return static_cast<size_t>(kind_);
         }
-        constexpr auto kind() const {return kind_;}
+        constexpr auto kind() const noexcept {return kind_;}
     private:
         Kind kind_;
     };

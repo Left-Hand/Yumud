@@ -83,7 +83,7 @@ public:
         current_ = lpf_.get();
     };
 
-    const iq16 & get() const{
+    const iq16 & get() const noexcept {
         return current_;
     }
 private:
@@ -125,7 +125,7 @@ public:
         set_dutycycle(0.7_r);
     }
 
-    const auto & get_dutycycle() const {
+    const auto & get_dutycycle() const noexcept {
         return ctrl_.get();
     }
 
@@ -208,17 +208,17 @@ struct StationName final{
     constexpr StationName & operator = (StationName && other) = default;
 
 
-    constexpr size_t to_index() const {
+    constexpr size_t to_index() const noexcept {
         return size_t(kind_);
     }
 
     StringView to_gbk_str() const;
 
-    constexpr Kind kind() const {
+    constexpr Kind kind() const noexcept {
         return kind_;
     }
 
-    bool operator ==(const Kind kind) const {
+    bool operator ==(const Kind kind) const noexcept {
         return kind_ == kind;
     }
 
@@ -285,7 +285,7 @@ struct StationDict{
         return data_[name.to_index()];
     }
 
-    const T & operator [](const StationName & name) const {
+    const T & operator [](const StationName & name) const noexcept {
         return data_[name.to_index()];
     }
 private:
@@ -293,7 +293,7 @@ private:
 };
 
 static constexpr auto TABLE = StationData::calc_hash_table(StationData::GBK_DATA);
-StringView StationName::to_gbk_str() const {
+StringView StationName::to_gbk_str() const noexcept {
     const auto idx = this->to_index();
     const auto line = reinterpret_cast<const char *>(
         static_cast<const uint8_t *>(StationData::GBK_DATA[idx].data()));
@@ -333,11 +333,11 @@ public:
         reconf(cfg);
     }
 
-    const auto & get_dutycycle() const {
+    const auto & get_dutycycle() const noexcept {
         return motor_.get_dutycycle();
     }
 
-    const auto & get_current() const {
+    const auto & get_current() const noexcept {
         return sensor_.get();
     }
 
@@ -483,11 +483,11 @@ private:
         StationName name;
         iq16 sustain;
         iq16 start_time;
-        iq16 has_been_played(const iq16 t) const {
+        iq16 has_been_played(const iq16 t) const noexcept {
             return t - start_time;
         }
 
-        bool is_timeout(const iq16 t) const {
+        bool is_timeout(const iq16 t) const noexcept {
             return has_been_played(t) > sustain;
         }
     };
@@ -547,7 +547,7 @@ private:
             state_ = State::Idle;
         }
 
-        Option<std::span<const uint8_t>> get_payload() const{
+        Option<std::span<const uint8_t>> get_payload() const noexcept {
             if(payload_buffer_.size() < len_) return None;
             return Some(std::span(payload_buffer_.begin(), payload_buffer_.size()));
         }
@@ -560,7 +560,7 @@ private:
     FrameDecoder frame_decoder_{};
     DelayedSemphr semphr_{RESPONSE_DELAY};
 
-    Option<StationName> match_context(std::span<const uint8_t, 16> data) const {
+    Option<StationName> match_context(std::span<const uint8_t, 16> data) const noexcept {
         return StationName::from_gbk(data);
     }
 

@@ -85,7 +85,7 @@ struct R32_USBD_CNTR {
      * @brief 检查USB是否处于强制复位状态
      * @return true-强制复位中; false-未复位
      */
-    constexpr bool is_forced_reset() const {
+    constexpr bool is_forced_reset() const noexcept {
         return FRES == 1;
     }
 };
@@ -138,7 +138,7 @@ struct R32_USBD_ISTR {
      * @param ep_type 端点类型(0-批量,1-控制,2-同步,3-中断)
      * @return true-高优先级中断; false-非高优先级
      */
-    constexpr bool is_high_prio_irq(uint8_t ep_type) const {
+    constexpr bool is_high_prio_irq(uint8_t ep_type) const noexcept {
         return CTR == 1 && (ep_type == 0 || ep_type == 2);
     }
 
@@ -146,7 +146,7 @@ struct R32_USBD_ISTR {
      * @brief 获取中断对应的端点号
      * @return 端点号(0~7)
      */
-    constexpr uint8_t get_ep_id() const {
+    constexpr uint8_t get_ep_id() const noexcept {
         return static_cast<uint8_t>(EP_ID & 0x07);
     }
 
@@ -154,7 +154,7 @@ struct R32_USBD_ISTR {
      * @brief 检查是否为OUT事务中断
      * @return true-OUT事务; false-IN事务
      */
-    constexpr bool is_out_trans() const {
+    constexpr bool is_out_trans() const noexcept {
         return DIR == 1 && CTR == 1;
     }
 };
@@ -183,7 +183,7 @@ struct R32_USBD_FNR {
      * @brief 获取当前USB帧编号
      * @return 帧编号(0~2047)
      */
-    constexpr uint16_t get_frame_num() const {
+    constexpr uint16_t get_frame_num() const noexcept {
         return static_cast<uint16_t>(FN & 0x7FF);
     }
 
@@ -191,7 +191,7 @@ struct R32_USBD_FNR {
      * @brief 检查SOF计数是否锁定
      * @return true-锁定; false-未锁定
      */
-    constexpr bool is_lck() const {
+    constexpr bool is_lck() const noexcept {
         return LCK == 1;
     }
 
@@ -199,7 +199,7 @@ struct R32_USBD_FNR {
      * @brief 检查USB总线是否处于复位状态（D+D-均为0且>10ms）
      * @return true-总线复位中; false-非复位
      */
-    constexpr bool is_bus_reset() const {
+    constexpr bool is_bus_reset() const noexcept {
         return RXDP == 0 && RXDM == 0;
     }
 
@@ -207,7 +207,7 @@ struct R32_USBD_FNR {
      * @brief 获取丢失的SOF包数目
      * @return 丢失数目(0~3)
      */
-    constexpr uint8_t get_lost_sof() const {
+    constexpr uint8_t get_lost_sof() const noexcept {
         return static_cast<uint8_t>(LSOF & 0x03);
     }
 };
@@ -250,7 +250,7 @@ struct R32_USBD_DADDR {
      * @brief 检查USB设备是否已使能
      * @return true-已使能; false-未使能
      */
-    constexpr bool is_usb_enable() const {
+    constexpr bool is_usb_enable() const noexcept {
         return EF == 1;
     }
 
@@ -258,7 +258,7 @@ struct R32_USBD_DADDR {
      * @brief 获取当前USB设备地址
      * @return 设备地址(0~127)
      */
-    constexpr uint8_t get_dev_addr() const {
+    constexpr uint8_t get_dev_addr() const noexcept {
         return static_cast<uint8_t>(ADD & 0x7F);
     }
 };
@@ -291,7 +291,7 @@ struct R32_USBD_BTABLE {
      * @brief 获取缓冲区描述表实际基地址
      * @return 32位基地址
      */
-    constexpr uint32_t get_btable_addr() const {
+    constexpr uint32_t get_btable_addr() const noexcept {
         return static_cast<uint32_t>(BTABLE << 3) | 0x40006000;
     }
 
@@ -299,7 +299,7 @@ struct R32_USBD_BTABLE {
      * @brief 检查地址是否按8字节对齐
      * @return true-对齐; false-未对齐
      */
-    constexpr bool is_addr_align() const {
+    constexpr bool is_addr_align() const noexcept {
         return (get_btable_addr() & 0x07) == 0;
     }
 };
@@ -467,7 +467,7 @@ struct R32_USBD_ADDRx_TX {
      * @brief 获取发送缓冲区实际地址
      * @return 32位缓冲区地址
      */
-    constexpr uint32_t get_tx_buf_addr() const {
+    constexpr uint32_t get_tx_buf_addr() const noexcept {
         return static_cast<uint32_t>(ADDRx_TX << 1) | 0x40006000;
     }
 };
@@ -498,7 +498,7 @@ struct R32_USBD_COUNTx_TX {
      * @brief 获取当前设置的发送数据长度
      * @return 数据长度(0~1023)
      */
-    constexpr uint16_t get_tx_len() const {
+    constexpr uint16_t get_tx_len() const noexcept {
         return static_cast<uint16_t>(COUNTx_TX & 0x3FF);
     }
 };
@@ -531,7 +531,7 @@ struct R32_USBD_ADDRx_RX {
      * @brief 获取接收缓冲区实际地址
      * @return 32位缓冲区地址
      */
-    constexpr uint32_t get_rx_buf_addr() const {
+    constexpr uint32_t get_rx_buf_addr() const noexcept {
         return static_cast<uint32_t>(ADDRx_RX << 1) | 0x40006000;
     }
 };
@@ -574,7 +574,7 @@ struct R32_USBD_COUNTx_RX {
      * @brief 获取实际接收的字节数
      * @return 实际接收长度(0~1023)
      */
-    constexpr uint16_t get_actual_rx_len() const {
+    constexpr uint16_t get_actual_rx_len() const noexcept {
         return static_cast<uint16_t>(COUNTx_RX & 0x3FF);
     }
 
@@ -582,7 +582,7 @@ struct R32_USBD_COUNTx_RX {
      * @brief 计算配置的接收缓冲区总大小
      * @return 缓冲区大小(字节)
      */
-    constexpr uint16_t get_rx_buf_size() const {
+    constexpr uint16_t get_rx_buf_size() const noexcept {
         uint16_t blk = BL_SIZE == 0 ? 2 : 32;
         return static_cast<uint16_t>(blk * (NUM_BLOCK + 1));
     }
@@ -591,7 +591,7 @@ struct R32_USBD_COUNTx_RX {
      * @brief 检查接收是否溢出（实际长度≥配置大小）
      * @return true-溢出; false-正常
      */
-    constexpr bool is_rx_overflow() const {
+    constexpr bool is_rx_overflow() const noexcept {
         return get_actual_rx_len() >= get_rx_buf_size();
     }
 };

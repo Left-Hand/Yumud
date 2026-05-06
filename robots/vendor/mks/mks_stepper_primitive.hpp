@@ -19,7 +19,7 @@ struct [[nodiscard]] NodeId final{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return count;
     }
 };
@@ -149,11 +149,11 @@ struct [[nodiscard]] Rpm final{
     static constexpr Rpm from_tps(const iq16 tps){
         return {int16_t(tps * 60)};
     }
-    constexpr int16_t to_bits() const {
+    constexpr int16_t to_bits() const noexcept {
         return bits;
     }
 
-    constexpr iq16 to_tps() const {
+    constexpr iq16 to_tps() const noexcept {
         return iq16(bits) / 60;
     }
 
@@ -166,11 +166,11 @@ struct [[nodiscard]] iRpm final{
     static constexpr iRpm from_tps(const iq16 tps){
         return {int16_t(int16_t(tps * 60) & int16_t(0x8fff))};
     }
-    constexpr int16_t to_bits() const {
+    constexpr int16_t to_bits() const noexcept {
         return bits;
     }
 
-    constexpr iq16 to_tps() const {
+    constexpr iq16 to_tps() const noexcept {
         return iq16(bits) / 60;
     }
 
@@ -203,7 +203,7 @@ struct [[nodiscard]] PulseCnt final{
         };
     }
 
-    constexpr uint32_t as_u24() const {
+    constexpr uint32_t as_u24() const noexcept {
         return (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
     }
 

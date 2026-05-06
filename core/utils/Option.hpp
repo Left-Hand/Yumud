@@ -72,7 +72,7 @@ private:
 
 
     constexpr T & get_inner(){return storage_;}
-    constexpr const T & get_inner() const {return storage_;}
+    constexpr const T & get_inner() const noexcept {return storage_;}
 public:
     [[nodiscard]] constexpr 
     Option(_None_t):
@@ -148,27 +148,27 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     Option(const S & other):Option(custom::option_converter<T, S>::convert(other)){}
     [[nodiscard]] __fast_inline constexpr bool 
-    is_some() const{ return exists_; }
+    is_some() const noexcept { return exists_; }
 
     template<typename Fn>
     [[nodiscard]] __fast_inline constexpr bool 
-    is_some_and(Fn && fn) const{ 
+    is_some_and(Fn && fn) const noexcept { 
         if(not exists_) return false;
         return std::forward<Fn>(fn)(get_inner());
     }
 
 
     [[nodiscard]] __fast_inline constexpr bool 
-    is_none() const{ return !exists_; }
+    is_none() const noexcept { return !exists_; }
 
     [[nodiscard]] __fast_inline constexpr bool 
-    is_value(const T value) const{
+    is_value(const T value) const noexcept {
         if(not exists_) return false;
         return value == unwrap();
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
-    unwrap_loc(const std::source_location & loc = std::source_location::current()) const {
+    unwrap_loc(const std::source_location & loc = std::source_location::current()) const noexcept {
         if((exists_ == false)) [[unlikely]]{
             abort_unwrap_empty_option(loc);
         }
@@ -176,7 +176,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
-    unwrap() const {
+    unwrap() const noexcept {
         if((exists_ == false)) [[unlikely]] 
             abort_unwrap_empty_option();
         return get_inner();
@@ -190,7 +190,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
-    examine(const std::source_location loca = std::source_location::current()) const {
+    examine(const std::source_location loca = std::source_location::current()) const noexcept {
         if ((!is_some())) [[unlikely]] {
             abort_unwrap_empty_option(loca);
         }
@@ -200,7 +200,7 @@ public:
 
     template<typename ... Args>
     [[nodiscard]] __fast_inline constexpr const T & 
-    expect(Args && ... args) const {
+    expect(Args && ... args) const noexcept {
         if ((!is_some())) [[unlikely]] {
             PANIC_NSRC(std::forward<Args>(args) ...);
         }
@@ -208,7 +208,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr const T 
-    unwrap_or(const T choice) const {
+    unwrap_or(const T choice) const noexcept {
         if((exists_ == false)) [[unlikely]]
             return choice;
         return get_inner();
@@ -261,14 +261,14 @@ public:
 
     template<typename Fn>
     __fast_inline constexpr 
-    const Option<T> & inspect(Fn && fn) const {
+    const Option<T> & inspect(Fn && fn) const noexcept {
         if (is_some()) std::forward<Fn>(fn)(unwrap());
         return *this;
     }
 
     template<typename Dummy = void>
     requires (is_option_v<T>)
-    __fast_inline constexpr auto flatten() const {
+    __fast_inline constexpr auto flatten() const noexcept {
         using RT = typename T::value_type;
         using Ret = Option<RT>;
         if (is_none()) return Ret(None);
@@ -312,12 +312,12 @@ public:
     Option(_None_t): pobj_(nullptr){;}
 
     [[nodiscard]] constexpr 
-    bool is_some() const {return pobj_ != nullptr;}
+    bool is_some() const noexcept {return pobj_ != nullptr;}
     [[nodiscard]] constexpr 
-    bool is_none() const {return pobj_ == nullptr;}
+    bool is_none() const noexcept {return pobj_ == nullptr;}
     
     [[nodiscard]] constexpr 
-    T & unwrap() const {
+    T & unwrap() const noexcept {
         if(pobj_ == nullptr) [[unlikely]]
             {__builtin_abort();}
         return *pobj_;
@@ -328,7 +328,7 @@ public:
         typename Ret = std::conditional_t<std::is_const_v<Arg>, const T &, T &>
     >
     [[nodiscard]] constexpr 
-    Ret unwrap_or(Arg && other) const {
+    Ret unwrap_or(Arg && other) const noexcept {
         if(pobj_ == nullptr) [[unlikely]]
             return other;
         return *pobj_;

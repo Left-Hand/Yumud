@@ -9,7 +9,7 @@ struct static_string
 {
     static constexpr const char str[]={args...};
 
-    constexpr explicit operator std::string_view()const{
+    constexpr explicit operator std::string_view() const noexcept {
         return std::string_view(static_string::str, sizeof...(args));}
 };
 }

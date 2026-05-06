@@ -65,7 +65,7 @@ public:
         return HashDjbBuilder(HASHDJB_SEED);
     }
 
-    constexpr HashCode finalize() const{return val_;} 
+    constexpr HashCode finalize() const noexcept {return val_;} 
 
     template <typename T>
     constexpr HashDjbBuilder & operator << (T && obj){

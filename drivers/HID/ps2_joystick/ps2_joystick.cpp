@@ -54,7 +54,7 @@ IResult<> Ps2Joystick::update(){
     return Ok();
 }
 
-IResult<Ps2Joystick::RxPacket> Ps2Joystick::read_info() const {
+IResult<Ps2Joystick::RxPacket> Ps2Joystick::read_info() const noexcept {
     switch(dev_id_){
         case DevId::Digit:
             return Err(Error::CantParseAtDigitMode);

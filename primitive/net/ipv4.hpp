@@ -30,12 +30,12 @@ struct [[nodiscard]] Ipv4{
     static constexpr Self from_u32(const uint32_t bits){return Self(bits);} 
 
     template<size_t I> requires(I < 4)
-    [[nodiscard]] constexpr uint8_t get() const {return get_element<I>(*this);}
+    [[nodiscard]] constexpr uint8_t get() const noexcept {return get_element<I>(*this);}
 
     template<size_t I> requires(I < 4)
     [[nodiscard]] constexpr uint8_t & get() {return get_element<I>(*this);}
 
-    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const{
+    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const noexcept {
         return bytes_[idx];
     }
 
@@ -43,7 +43,7 @@ struct [[nodiscard]] Ipv4{
         return bytes_[idx];
     }
 
-    [[nodiscard]] constexpr uint8_t at(const size_t idx) const{
+    [[nodiscard]] constexpr uint8_t at(const size_t idx) const noexcept {
         if(idx >= 4) [[unlikely]] __builtin_trap();
         return bytes_[idx];
     }
@@ -53,12 +53,12 @@ struct [[nodiscard]] Ipv4{
         return bytes_[idx];
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t, 4> bytes() const {return std::span(bytes_);}
+    [[nodiscard]] constexpr std::span<const uint8_t, 4> bytes() const noexcept {return std::span(bytes_);}
     [[nodiscard]] constexpr std::span<uint8_t, 4> bytes_mut() {return std::span(bytes_);}
 
-    [[nodiscard]] constexpr uint32_t to_u32() const {return std::bit_cast<uint32_t>(bytes_);}
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {return std::bit_cast<uint32_t>(bytes_);}
 
-    [[nodiscard]] constexpr bool operator ==(const Self & other) const {
+    [[nodiscard]] constexpr bool operator ==(const Self & other) const noexcept {
         return to_u32() == other.to_u32();
     }
 private:

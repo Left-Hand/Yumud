@@ -25,7 +25,7 @@ public:
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
 
-        constexpr Result<Precomputed, StringView> try_into_precomputed() const {
+        constexpr Result<Precomputed, StringView> try_into_precomputed() const noexcept {
             auto & cfg = *this;
             const iq12 pm_flux_sqr_mf_2 = math::square(iq12(cfg.pm_flux_linkage * cfg.fs));
             const iq20 temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
@@ -49,7 +49,7 @@ public:
         float observer_gain; // [rad/s]
         float pm_flux_linkage; // [V / (rad/s)]
 
-        constexpr Result<Precomputed, StringView> try_into_precomputed() const {
+        constexpr Result<Precomputed, StringView> try_into_precomputed() const noexcept {
             auto & cfg = *this;
             const float pm_flux_sqr_mf_2 = math::square((cfg.pm_flux_linkage * cfg.fs));
             const float temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
@@ -160,15 +160,15 @@ public:
         state_.turns = math::atan2pu(eta_mf[1], eta_mf[0]);
     }
 
-    constexpr Angular<uq32> angle() const {
+    constexpr Angular<uq32> angle() const noexcept {
         return Angular<uq32>::from_turns(state_.turns);
     }
 
-    constexpr const State & state() const {
+    constexpr const State & state() const noexcept {
         return state_;
     }
 
-    constexpr const Precomputed & coeffs() const {
+    constexpr const Precomputed & coeffs() const noexcept {
         return precomputed_;
     }
 // private:

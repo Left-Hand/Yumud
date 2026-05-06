@@ -16,7 +16,7 @@ struct [[nodiscard]] OnceIter{
         return ret;
     }
 
-    [[nodiscard]] __always_inline constexpr bool has_next() const{
+    [[nodiscard]] __always_inline constexpr bool has_next() const noexcept {
         return is_done_ == false;
     }
 private:
@@ -39,7 +39,7 @@ struct [[nodiscard]] RepeatIter{
         return ret;
     }
 
-    [[nodiscard]] __always_inline constexpr bool has_next() const {
+    [[nodiscard]] __always_inline constexpr bool has_next() const noexcept {
         return index_ < Extents;
     }
 private:
@@ -59,7 +59,7 @@ struct [[nodiscard]] RepeatIter<T, std::dynamic_extent>{
         return ret;
     }
 
-    [[nodiscard]] __always_inline constexpr bool has_next() const {
+    [[nodiscard]] __always_inline constexpr bool has_next() const noexcept {
         return index_ < size_;
     }
 private:
@@ -80,7 +80,7 @@ struct [[nodiscard]] BurstIter{
         return ret;
     }
     
-    [[nodiscard]] __always_inline constexpr bool has_next() const {
+    [[nodiscard]] __always_inline constexpr bool has_next() const noexcept {
         return index_ < pbuf_.size();
     }
 private:

@@ -66,10 +66,10 @@ struct [[nodiscard]] SegCode{
         }
     }
 
-    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr bool operator==(Kind kind) const{return kind == this->kind_;}
-    [[nodiscard]] constexpr bool operator!=(Kind kind) const{return kind != this->kind_;}
+    [[nodiscard]] constexpr bool operator==(Kind kind) const noexcept {return kind == this->kind_;}
+    [[nodiscard]] constexpr bool operator!=(Kind kind) const noexcept {return kind != this->kind_;}
 
 private:
     Kind kind_;

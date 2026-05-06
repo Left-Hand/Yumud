@@ -12,7 +12,7 @@ namespace req_msgs{
 struct [[nodiscard]] SetLowQuadMotorSetpoint final{
     static constexpr uint16_t NUM_CANID = 0x32;
     std::array<SetPoint, 4> setpoints;
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         for(const auto & setpoint: setpoints){
             filler.push_be_u16(setpoint.bits);
@@ -32,7 +32,7 @@ struct [[nodiscard]] SetLoopMode final{
         return Self{.modes = modes};
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         for(const auto & mode: modes){
             filler.push_u8(static_cast<uint8_t>(mode));
@@ -53,7 +53,7 @@ struct [[nodiscard]] SetFeedbackStrategy final{
         return Self{.strategies = strategies};
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         for(const auto & strategy: strategies){
             filler.push_u8(strategy.to_bits());
@@ -70,7 +70,7 @@ struct [[nodiscard]] QueryItems final{
     std::array<QueryKind, 3> query_kinds;
     uint8_t custom_key = CUSTOM_MAGIC_KEY;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_u8((motor_id.to_bits()));
         for(const auto & kind: query_kinds){
@@ -87,7 +87,7 @@ struct [[nodiscard]] SetMotorId final{
     static constexpr uint8_t RESVERED_BYTE_CONTEXT = 0xff;
     MotorId motor_id;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = motor_id.to_bits();
         std::fill(bytes.begin() + 1, bytes.end(), RESVERED_BYTE_CONTEXT);
     }
@@ -96,7 +96,7 @@ struct [[nodiscard]] SetMotorId final{
 struct [[nodiscard]] QueryFirmwareVersion final{
     static constexpr uint16_t NUM_CANID = 0x10B;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill(bytes.begin(), bytes.end(), 0);
     }
 };
@@ -116,7 +116,7 @@ struct [[nodiscard]] StateFeedback{
     ExceptionCode exception_code;
     LoopMode loop_mode;
 
-    constexpr CanFrame to_can_frame() const{
+    constexpr CanFrame to_can_frame() const noexcept {
         const auto can_id = CanId::from_u11(
             NUM_GENERIC_FEEDBACK_CANID_BASE + motor_id.nth().count()
         );
@@ -167,7 +167,7 @@ struct [[nodiscard]] StateFeedback{
         });
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os 
             << os.field("motor_id")(self.motor_id) << os.splitter()
             << os.field("speed(rpm)")(self.speed.to_rpm()) << os.splitter()
@@ -187,7 +187,7 @@ struct [[nodiscard]] SetLoopMode{
     LoopMode loop_mode;
 
 
-    constexpr CanFrame to_can_frame() const{
+    constexpr CanFrame to_can_frame() const noexcept {
         const auto can_id = CanId::from_u11(
             NUM_CANID_BASE + motor_id.nth().count()
         );
@@ -305,7 +305,7 @@ struct [[nodiscard]] QueryFirmwareVersion{
         });
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os 
             << os.field("software_major")(self.software_major) << os.splitter()
             << os.field("software_minor")(self.software_minor) << os.splitter()

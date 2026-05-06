@@ -20,7 +20,7 @@ public:
     ):
         buf_(buf), y_(y){;}
 
-    constexpr std::span<const Color> view() const {
+    constexpr std::span<const Color> view() const noexcept {
         return std::span<const Color>(buf_);
     }
 
@@ -28,27 +28,27 @@ public:
         return std::span<Color>(buf_);
     }
 
-    constexpr const Color * data() const {return buf_.data();}
+    constexpr const Color * data() const noexcept {return buf_.data();}
 
     constexpr Color * data() {return buf_.data();}
 
-    constexpr auto begin() const {return buf_.begin();}
+    constexpr auto begin() const noexcept {return buf_.begin();}
 
     constexpr auto begin() {return buf_.begin();}
 
-    constexpr auto end() const {return buf_.end();}
+    constexpr auto end() const noexcept {return buf_.end();}
 
     constexpr auto end() {return buf_.end();}
 
-    constexpr size_t size() const {return buf_.size();}
+    constexpr size_t size() const noexcept {return buf_.size();}
 
-    constexpr Color operator[](const size_t index) const {return buf_[index];}
+    constexpr Color operator[](const size_t index) const noexcept {return buf_[index];}
 
     constexpr Color & operator[](const size_t index) {return buf_[index];}
 
-    constexpr math::Rect2u16 bounding_box() const {return math::Rect2u16::from_xywh(0, y_, buf_.size(), 1);}
+    constexpr math::Rect2u16 bounding_box() const noexcept {return math::Rect2u16::from_xywh(0, y_, buf_.size(), 1);}
 
-    constexpr ScanLine to_scanline() const {
+    constexpr ScanLine to_scanline() const noexcept {
         return ScanLine{
             .x_range = {0, static_cast<uint16_t>(buf_.size())}, 
             .y = static_cast<uint16_t>(y_)
@@ -228,7 +228,7 @@ struct FrameBufferSpan{
         return Some(ret);
     }
 
-    constexpr const Color * data() const {
+    constexpr const Color * data() const noexcept {
         return buf_.data();
     }
 
@@ -252,7 +252,7 @@ struct FrameBufferSpan{
         return LineBufferSpan<Color>(std::span<Color>(pdata + y * width, width), y);
     }
 
-    constexpr math::Rect2u16 bounding_box() const {
+    constexpr math::Rect2u16 bounding_box() const noexcept {
         return math::Rect2u16::from_size(size_);
     }
 
@@ -346,7 +346,7 @@ private:
             return ret;
         }
 
-        [[nodiscard]] constexpr bool has_next() const{
+        [[nodiscard]] constexpr bool has_next() const noexcept {
             return (y_ < y_stop_);
         }
 

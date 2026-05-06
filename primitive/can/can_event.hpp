@@ -75,7 +75,7 @@ struct alignas(4) [[nodiscard]] Event final{
 
     template<typename E>
     __attribute__((always_inline))
-    constexpr auto exact_arg() const {
+    constexpr auto exact_arg() const noexcept {
         if constexpr(std::is_same_v<E, TransmitEvent>){
             return std::bit_cast<TransmitEvent>(arg.u32_digit);
         }else if constexpr (std::is_same_v<E, ReceiveEvent>){

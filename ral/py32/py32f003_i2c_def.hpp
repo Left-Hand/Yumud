@@ -233,11 +233,11 @@ struct I2C_Def{
             );
         }
 
-        uint16_t low16() const{
+        uint16_t low16() const noexcept {
             return uint16_t(BIT_CAST(uint32_t, *this));
         }
 
-        uint8_t high8() const{
+        uint8_t high8() const noexcept {
             return uint8_t(BIT_CAST(uint32_t, *this) >> 16);
         }
     };

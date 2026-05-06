@@ -103,7 +103,7 @@ struct LT8960L_Prelude{
             return *this;
         }
 
-        constexpr auto kind() const {return status_;}
+        constexpr auto kind() const noexcept {return status_;}
         constexpr auto & timeout() {return timeout_;}
 
         //暂时不能为constexpr 方便调试时显示状态
@@ -124,7 +124,7 @@ struct LT8960L_Prelude{
         constexpr Channel & operator = (const Channel & other) = default;
         constexpr Channel & operator = (Channel && other) = default;
 
-        constexpr auto to_u8() const {
+        constexpr auto to_u8() const noexcept {
             return ch_;
         }
     private:    

@@ -7,7 +7,7 @@ namespace ymd::intp{
 
 struct [[nodiscard]] CosineInterpolation final{
 public:
-    constexpr iq16 forward(iq16 x) const{
+    constexpr iq16 forward(iq16 x) const noexcept {
         iq16 x2 = x*x;
         iq16 x4 = x2*x2;
         iq16 x6 = x4*x2;
@@ -44,7 +44,7 @@ public:
         std::tie(a,b) = get_ab(handle);
     }
 
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         iq16 y = 0;
         if (x <= a){
             y = b - b*math::cubic(1-x/a);
@@ -59,7 +59,7 @@ struct [[nodiscard]] SeatLineInterpolation final{
 public:
     iq16 a;
     iq16 b;
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         iq16 y = 0;
         if (x<=a){
             y = b*x + (1-b)*a*(1-math::cubic(1-x/a));
@@ -76,7 +76,7 @@ struct [[nodiscard]] SeatOddInterpolation final{
     // p(2 * n + 1)
     int p;
 public:
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         // auto [a,b] = get_ab(handle);
         // int p = 2*n + 1;
         iq16 y = 0;
@@ -96,7 +96,7 @@ struct [[nodiscard]] SymmetricInterpolation final{
     iq16 b;
     int _n;
 
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         iq16 y = 0;
         if (+_n%2 == 0){ 
             // even polynomial
@@ -126,7 +126,7 @@ struct [[nodiscard]] QuadraticSeatInterpolation final{
     iq16 b;
     int _n;
 public:
-    constexpr iq16 forward(const iq16 x) const {
+    constexpr iq16 forward(const iq16 x) const noexcept {
         iq16 A = (1-b)/(1-a) - (b/a);
         iq16 B = (A*(a*a)-b)/a;
         iq16 y = A*(x*x) - B*(x);

@@ -83,35 +83,35 @@ struct [[nodiscard]] Radix final{
 	[[nodiscard]] constexpr explicit Radix(const uint8_t count):
 		count_(count){;}
 
-	[[nodiscard]] constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const noexcept {
 		return count_;
 	}
 
-	[[nodiscard]] constexpr bool is_dec() const{
+	[[nodiscard]] constexpr bool is_dec() const noexcept {
 		return static_cast<Kind>(count_) == Dec;
 	}
 
-	[[nodiscard]] constexpr bool is_oct() const{
+	[[nodiscard]] constexpr bool is_oct() const noexcept {
 		return static_cast<Kind>(count_) == Oct;
 	}
 
-	[[nodiscard]] constexpr bool is_hex() const{
+	[[nodiscard]] constexpr bool is_hex() const noexcept {
 		return static_cast<Kind>(count_) == Hex;
 	}
 
-	[[nodiscard]] constexpr bool is_bin() const{
+	[[nodiscard]] constexpr bool is_bin() const noexcept {
 		return static_cast<Kind>(count_) == Bin;
 	}
 
-	[[nodiscard]] constexpr Kind kind() const{
+	[[nodiscard]] constexpr Kind kind() const noexcept {
 		return static_cast<Kind>(count_);
 	}
 
-    [[nodiscard]] constexpr bool operator ==(const Radix & rhs) const{
+    [[nodiscard]] constexpr bool operator ==(const Radix & rhs) const noexcept {
 		return count_ == rhs.count_;
 	}
 
-    [[nodiscard]] constexpr bool operator !=(const Radix & rhs) const{
+    [[nodiscard]] constexpr bool operator !=(const Radix & rhs) const noexcept {
 		return count_ == rhs.count_;
 	}
 
@@ -125,7 +125,7 @@ struct [[nodiscard]] Eps final{
 	constexpr explicit Eps(const uint8_t count):
 		count_(count){;}
 
-	[[nodiscard]] constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const noexcept {
 		return count_;
 	}
 

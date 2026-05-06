@@ -28,11 +28,11 @@ struct Receiver{
         return Ok();
     }
 
-    constexpr size_t length() const{
+    constexpr size_t length() const noexcept {
         return ind;
     }
 
-    constexpr std::span<const uint8_t> collected_bytes() const{
+    constexpr std::span<const uint8_t> collected_bytes() const noexcept {
         return std::span<const uint8_t>(bytes.data(), ind);
     }
 };

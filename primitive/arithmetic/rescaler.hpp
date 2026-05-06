@@ -54,7 +54,7 @@ struct [[nodiscard]] Rescaler {
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator *(const Rescaler<U>& rhs) const {
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator *(const Rescaler<U>& rhs) const noexcept {
         auto & lhs = *this;
         return Rescaler<D>{
             .scale = lhs.scale * rhs.scale,
@@ -62,7 +62,7 @@ struct [[nodiscard]] Rescaler {
         };
     }
 
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator +(const Rescaler<D>& rhs) const {
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator +(const Rescaler<D>& rhs) const noexcept {
         auto & lhs = *this;
         return Rescaler<D>{
             .scale = lhs.scale + rhs.scale,
@@ -70,7 +70,7 @@ struct [[nodiscard]] Rescaler {
         };
     }
 
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator -(const Rescaler<D>& rhs) const {
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator -(const Rescaler<D>& rhs) const noexcept {
         auto & lhs = *this;
         return Rescaler<D>{
             .scale = lhs.scale - rhs.scale,
@@ -79,7 +79,7 @@ struct [[nodiscard]] Rescaler {
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator *(const U rhs) const { 
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator *(const U rhs) const noexcept { 
         return Rescaler<D>{
             .scale = scale * rhs,
             .offset = offset * rhs
@@ -91,21 +91,21 @@ struct [[nodiscard]] Rescaler {
     //     return self.scale * lhs + self.offset;
     // }
 
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator -() const {
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> operator -() const noexcept {
         return Rescaler<D>{
             .scale = -scale,
             .offset = -offset
         };
     }
 
-    [[nodiscard]] __fast_inline constexpr Rescaler<D> inverse() const {
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> inverse() const noexcept {
         return Rescaler<D>{
             .scale = 1 / scale,
             .offset = -offset / scale
         };
     }
     
-    [[nodiscard]] __fast_inline constexpr D operator()(const D& d) const {
+    [[nodiscard]] __fast_inline constexpr D operator()(const D& d) const noexcept {
         return scale * d + offset;
     }
 

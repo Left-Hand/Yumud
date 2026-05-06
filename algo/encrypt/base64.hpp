@@ -83,14 +83,14 @@ struct Base64Error{
 
     constexpr Base64Error(Kind kind):kind_(kind){}
 
-    constexpr bool operator == (const Base64Error & rhs) const{
+    constexpr bool operator == (const Base64Error & rhs) const noexcept {
         return kind() == rhs.kind();
     }
 
-    constexpr bool operator == (const Kind other_kind) const{
+    constexpr bool operator == (const Kind other_kind) const noexcept {
         return kind() == other_kind;
     }
-    constexpr Kind kind() const {return kind_;}
+    constexpr Kind kind() const noexcept {return kind_;}
 private:
 
     Kind kind_;

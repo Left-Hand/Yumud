@@ -160,53 +160,53 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     T & x() { return top_left.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T x() const { return top_left.x; }
+    const T x() const noexcept { return top_left.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & y() { return top_left.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T y() const { return top_left.y; }
+    const T y() const noexcept { return top_left.y; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & w() { return size.x; }
     [[nodiscard]] __fast_inline constexpr 
-    const T w() const { return size.x; }
+    const T w() const noexcept { return size.x; }
 
     [[nodiscard]] __fast_inline constexpr 
     T & h() { return size.y; }
     [[nodiscard]] __fast_inline constexpr 
-    const T h() const { return size.y; }
+    const T h() const noexcept { return size.y; }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool contains_x(const T p_x) const{
+    bool contains_x(const T p_x) const noexcept {
         return p_x >= top_left.x && p_x < top_left.x + size.x;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool contains_y(const T p_y) const{
+    bool contains_y(const T p_y) const noexcept {
         return p_y >= top_left.y && p_y < top_left.y + size.y;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    T area() const {
+    T area() const noexcept {
         return ABS(size.x * size.y);}
     [[nodiscard]] __fast_inline constexpr 
-    Vec2<T> center() const {
+    Vec2<T> center() const noexcept {
         return(top_left + size / 2);}
     [[nodiscard]] __fast_inline constexpr 
-    Vec2<T> bottom_right() const {
+    Vec2<T> bottom_right() const noexcept {
         return(top_left + size);
     }
     
     [[nodiscard]] __fast_inline constexpr 
-    Option<Rect2<T>> expand(const T val) const {
+    Option<Rect2<T>> expand(const T val) const noexcept {
         if constexpr(std::is_integral_v<T> and std::is_signed_v<T>)
             if(val < 0) return None;
         return shrink_impl(-static_cast<Tsigned>(val));
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Option<Rect2<T>> shrink(const T val) const {
+    Option<Rect2<T>> shrink(const T val) const noexcept {
         if constexpr(std::is_integral_v<T> and std::is_signed_v<T>)
             if(val < 0) return None;
         return shrink_impl(static_cast<Tsigned>(val));
@@ -217,7 +217,7 @@ public:
     template<size_t I>
     requires(I < 4)
     [[nodiscard]] __fast_inline constexpr 
-    Vec2<T> get_corner() const {
+    Vec2<T> get_corner() const noexcept {
         switch(I){
             case 0: return top_left;
             case 1: return Vec2<T>(top_left.x + size.x, top_left.y);
@@ -227,11 +227,11 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr bool is_regular() const{
+    [[nodiscard]] constexpr bool is_regular() const noexcept {
         return(this->size.x >= 0 && this->size.y >= 0);
     }
 
-    [[nodiscard]] constexpr Rect2<T> abs() const {
+    [[nodiscard]] constexpr Rect2<T> abs() const noexcept {
         if(is_regular()) return(*this);
         const T x0 = top_left.x;
         const T x1 = top_left.x + size.x;
@@ -253,13 +253,13 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr 
-    bool contains_point(const Vec2<T> & point) const {
+    bool contains_point(const Vec2<T> & point) const noexcept {
         return IN_RANGE(point.x, top_left.x, top_left.x + size.x)
             and IN_RANGE(point.y, top_left.y, top_left.y + size.y);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool contains(const Rect2<T> & other) const {
+    bool contains(const Rect2<T> & other) const noexcept {
         bool x_ins = this->x_range().contains(other.x_range());
         if(false == x_ins) return false;
         bool y_ins = this->y_range().contains(other.y_range());
@@ -267,7 +267,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool is_inside(const Rect2<T> & other) const{
+    bool is_inside(const Rect2<T> & other) const noexcept {
         return other.contains(*this);
     }
 
@@ -290,14 +290,14 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     Rect2<T> scale_around_corner(
         const auto & ratio
-    ) const{
+    ) const noexcept {
         Rect2<T> ret = (*this);
         ret.top_left *= ratio;
         ret.size *= ratio;
         return(ret);
     }
 
-    [[nodiscard]] constexpr bool intersects(const Rect2<T> & other) const{
+    [[nodiscard]] constexpr bool intersects(const Rect2<T> & other) const noexcept {
         const auto & self = *this;
 
         return (self.x() < other.x() + other.w()) &&
@@ -309,13 +309,13 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     Rect2<T> shift(
         const Vec2<T> & other
-    ) const{
+    ) const noexcept {
         Rect2<T> ret = (*this);
         ret.top_left += other;
         return ret;
     }
 
-    [[nodiscard]] constexpr Option<Rect2<T>> intersection(const Rect2<T> & other) const{
+    [[nodiscard]] constexpr Option<Rect2<T>> intersection(const Rect2<T> & other) const noexcept {
 
         const auto ins_position = Vec2<T>(
             MAX(T(this->x()), T(other.x())),
@@ -331,13 +331,13 @@ public:
         return Some(Rect2<T>{ins_position, ins_size});
     }
 
-    [[nodiscard]] constexpr Rect2<T> merge(const Rect2<T> & other) const{
+    [[nodiscard]] constexpr Rect2<T> merge(const Rect2<T> & other) const noexcept {
         Range2<T> range_x = this->x_range().merge(other.x_range());
         Range2<T> range_y = this->y_range().merge(other.y_range());
         return Rect2<T>(range_x, range_y);
     }
 
-    [[nodiscard]] constexpr Rect2<T> merge(const Vec2<T> & point) const{
+    [[nodiscard]] constexpr Rect2<T> merge(const Vec2<T> & point) const noexcept {
         const auto & self = *this;
 
         auto x_min = math::floor_cast<T>(MIN(self.x(), point.x));
@@ -351,27 +351,27 @@ public:
         );
     }
 
-    [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const{
+    [[nodiscard]] constexpr Vec2<T> constrain(const Vec2<T> & point) const noexcept {
         Vec2<T> ret;
         ret.x() = this->x_range().clamp(point.x);
         ret.y() = this->y_range().clamp(point.y);
         return ret;
     }
 
-    [[nodiscard]] constexpr Rect2<T> scale_around_center(const auto & amount)const {
+    [[nodiscard]] constexpr Rect2<T> scale_around_center(const auto & amount) const noexcept {
         return Rect2<T>::from_center_and_size(
             this->center(), this->size * amount);
     }
 
-    [[nodiscard]] constexpr Range2<T> x_range() const{
+    [[nodiscard]] constexpr Range2<T> x_range() const noexcept {
         return Range2<T>::from_start_and_length(top_left.x, size.x);
     }
 
-    [[nodiscard]] constexpr Range2<T> y_range() const{
+    [[nodiscard]] constexpr Range2<T> y_range() const noexcept {
         return Range2<T>::from_start_and_length(top_left.y, size.y);
     }
 
-    [[nodiscard]] constexpr Rect2<T> bounding_box() const{
+    [[nodiscard]] constexpr Rect2<T> bounding_box() const noexcept {
         return *this;
     }
 
@@ -384,7 +384,7 @@ private:
     [[nodiscard]] __fast_inline constexpr 
     Option<Rect2<T>> shrink_impl(
         const Tsigned val
-    ) const {
+    ) const noexcept {
         if constexpr(std::is_integral_v<T>){
             const Tsigned next_pos_x =  static_cast<Tsigned>((top_left.x) + val);
             const Tsigned next_pos_y =  static_cast<Tsigned>((top_left.y) + val);
@@ -412,7 +412,7 @@ private:
         }
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("x")(self.top_left.x) << os.splitter()
             << os.field("y")(self.top_left.y) << os.splitter()

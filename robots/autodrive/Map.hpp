@@ -44,12 +44,12 @@ public:
     FieldKind kind_;
 public:
     constexpr Field(FieldKind kind):kind_(kind){}
-    constexpr FieldKind kind() const{return kind_;}
+    constexpr FieldKind kind() const noexcept {return kind_;}
     constexpr Field & operator = (const FieldKind kind){kind_ = kind; return *this;}
-    constexpr bool operator ==(const FieldKind kind) const {return kind_ == kind;}
-    constexpr bool operator ==(const Field other) const {return kind_ == other.kind_;}
+    constexpr bool operator ==(const FieldKind kind) const noexcept {return kind_ == kind;}
+    constexpr bool operator ==(const Field other) const noexcept {return kind_ == other.kind_;}
 
-    [[nodiscard]] Vec2<iq16> to_position(const Map & map) const {
+    [[nodiscard]] Vec2<iq16> to_position(const Map & map) const noexcept {
         switch(kind_){
             default:
                 HALT;
@@ -66,7 +66,7 @@ public:
         }
     }
 
-    [[nodiscard]] Angular<iq16> to_angle(const Map & map) const {
+    [[nodiscard]] Angular<iq16> to_angle(const Map & map) const noexcept {
         switch(kind_){
             default:
                 HALT;
@@ -83,7 +83,7 @@ public:
         }
     }
 
-    [[nodiscard]] Ray2<iq16> to_isometry(const Map & map) const{
+    [[nodiscard]] Ray2<iq16> to_isometry(const Map & map) const noexcept {
         return {to_pos(map), to_rot(map)};
     }
 };

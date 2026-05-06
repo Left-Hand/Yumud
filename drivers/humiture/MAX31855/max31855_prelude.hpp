@@ -28,13 +28,13 @@ struct MAX31855_Prelude{
         uint32_t __resv2__:1;
         uint32_t ther_temp:14;
 
-        iq16 ther_temperature() const{
+        iq16 ther_temperature() const noexcept {
             const iq16 uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
             const bool is_negative = (ther_temp & (1 << 13)) != 0;
             return is_negative ? (-uns_ther_temp) : uns_ther_temp;
         }
 
-        iq16 junc_temperature() const{
+        iq16 junc_temperature() const noexcept {
             const iq16 uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
             const bool is_negative = (junc_temp & (1 << 11)) != 0;
             return is_negative ? (-uns_junc_temp) : uns_junc_temp;

@@ -9,7 +9,7 @@ namespace req_msgs{
 #define DEF_COMMAND_ONLY_REQ_MSG(cmd_type)\
 struct [[nodiscard]] cmd_type final{\
     static constexpr ReqCommand COMMAND = ReqCommand::cmd_type;\
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {\
     BytesFiller(bytes).fill_remaining(0);}};\
 
 //取PID参数命令(0×30) page2
@@ -18,7 +18,7 @@ struct [[nodiscard]] cmd_type final{\
 struct [[nodiscard]] GetPidParameter final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetPidParameter;  
     PidIndex pid_idx;
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.fill_remaining(0);
@@ -31,7 +31,7 @@ struct [[nodiscard]] WritePidParameterToRam final{
     PidIndex pid_idx;
     math::fp32 value;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.push_zeros(2);
@@ -45,7 +45,7 @@ struct [[nodiscard]] WritePidParameterToRom final{
     PidIndex pid_idx;
     math::fp32 value;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.push_zeros(2);
@@ -57,7 +57,7 @@ struct [[nodiscard]] WritePidParameterToRom final{
 struct [[nodiscard]] GetPlanAccel final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetPlanAccel;
     PlanAccelKind kind;
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_byte(std::bit_cast<uint8_t>(kind));
         filler.fill_remaining(0);
@@ -70,7 +70,7 @@ struct [[nodiscard]] SetPlanAccel final{
 
     PlanAccelKind accel_kind;
     AccelCode_u32 accel_code;
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_byte(std::bit_cast<uint8_t>(accel_kind));
         filler.push_zeros(2);
@@ -92,7 +92,7 @@ struct [[nodiscard]] WriteEncoderMultilapOffset final{
     static constexpr ReqCommand COMMAND = ReqCommand::WriteEncoderMultilapOffset;
     int32_t encoder_offset;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_zeros(3);
         filler.push_int<int32_t>(encoder_offset);
@@ -127,7 +127,7 @@ DEF_COMMAND_ONLY_REQ_MSG(ShutDown);
 struct [[nodiscard]] SetTorque final{
     CurrentCode_i16 q_current;
     constexpr void 
-    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_zeros(3);
         filler.push_int<int16_t>(q_current.bits);
@@ -142,7 +142,7 @@ struct [[nodiscard]] SetSpeed final{
     SpeedCtrlCode_i32 speed;
 
     constexpr void 
-    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(rated_current_ratio.percents());
         filler.push_zeros(2);
@@ -157,7 +157,7 @@ struct [[nodiscard]] SetPosition final{
     PositionCode_i32 abs_position;
 
     constexpr void 
-    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_zeros(1);
         filler.push_int<uint16_t>(speed_limit.bits);
@@ -177,7 +177,7 @@ struct [[nodiscard]] SetLapPosition final{
     SpeedLimitCode_u16 max_speed;
 
     constexpr void 
-    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(is_ccw);
         filler.push_int<uint16_t>(max_speed.bits);
@@ -203,7 +203,7 @@ struct [[nodiscard]] SetTorquePosition final{
     // 即 36000代表360° ,电机转动方向由目标位置和当前位置的差值决定
     PositionCode_i32 position;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(rated_current_ratio.percents());
         filler.push_int<uint16_t>(max_speed.bits);
@@ -239,7 +239,7 @@ struct [[nodiscard]] MitParams final{
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
         bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
@@ -268,7 +268,7 @@ namespace resp_msgs{
 #define DEF_COMMAND_ONLY_RESP_MSG(cmd_type)\
 struct [[nodiscard]] cmd_type final{};
 // struct cmd{
-//    constexpr CommandHeadedDataFielfill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+//    constexpr CommandHeadedDataFielfill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
 //        return CommandHeadedDataField::from_command(ReqCommand::cmd)};}
 
 
@@ -415,7 +415,7 @@ struct [[nodiscard]] GetPackage final{
         return Ok(self);
     }
 
-    friend OutputStream& operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream& operator<<(OutputStream & os, const Self & self) noexcept { 
         return os << StringView(self.str, MAX_STR_LENGTH);
     }
 };
@@ -430,7 +430,7 @@ struct [[nodiscard]] MitParams final{
     mit::MitSpeedCode_u12 speed;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const {
+    constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const noexcept {
         const uint8_t motor_id_bits = 
             bytes[0];
         const uint16_t position_bits = 

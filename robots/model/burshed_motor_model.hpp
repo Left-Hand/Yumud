@@ -17,7 +17,7 @@ public:
         dt_ = uq32::from_rcp(cfg.fs);
     }
 
-    constexpr State update(const State & state, const iq16 u_in) const {
+    constexpr State update(const State & state, const iq16 u_in) const noexcept {
         const auto & self = *this;
         // const auto distrb_of_partial = 0;
         // constexpr auto DAMPING = 0;

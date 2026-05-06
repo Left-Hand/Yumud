@@ -22,11 +22,11 @@ struct [[nodiscard]] Polar{
         return Polar<T>{vec.length(), vec.angle()};
     }
 
-    [[nodiscard]] constexpr Vec2<T> to_vec2() const {
+    [[nodiscard]] constexpr Vec2<T> to_vec2() const noexcept {
         return Vec2<T>::from_angle_and_length(phase, amplitude);
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("amplitude")(self.amplitude) << os.splitter()
             << os.field("phase")(self.phase.to_radians())

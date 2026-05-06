@@ -40,7 +40,7 @@ struct [[nodiscard]] HashRedirector final {
         return Ok();
     }
 
-    constexpr Option<uint8_t> find(const uint32_t hash) const {
+    constexpr Option<uint8_t> find(const uint32_t hash) const noexcept {
         size_t left = 0, right = N;
         while (left < right) {
             size_t mid = left + (right - left) / 2;

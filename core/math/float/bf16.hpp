@@ -36,7 +36,7 @@ struct alignas(2) [[nodiscard]] bf16 final{
     template<size_t Q>
     constexpr bf16(fixed<Q, int32_t> qv) : bf16(float(qv)) {}
     constexpr bf16(int int_val) : bf16(float(int_val)) {}
-    constexpr bf16 operator -() const{
+    constexpr bf16 operator -() const noexcept {
         return from_bits(to_bits() ^ 0x8000);
     }
 
@@ -44,22 +44,22 @@ struct alignas(2) [[nodiscard]] bf16 final{
         return std::bit_cast<bf16>(bits);
     }
     
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
     // bf16 -> float
-    [[nodiscard]] explicit constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const noexcept {
         uint32_t f32_bits = uint32_t(to_bits()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
-    [[nodiscard]] explicit constexpr operator int() const {
+    [[nodiscard]] explicit constexpr operator int() const noexcept {
         return int(float(*this));
     }
 
     template <size_t Q>
-    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const{
+    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const noexcept {
         return fixed<Q, int32_t>::from(float(*this));
     }
 };

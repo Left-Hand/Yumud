@@ -28,9 +28,9 @@ public:
         idx_(idx){}
     EndpointAddress(const EndpointAddress & other) = delete;
     EndpointAddress(const EndpointAddress && other) = delete;
-    constexpr Kind oaddr() const{return Kind(idx_ & 0x7f);}
-    constexpr Kind iaddr() const{return Kind(idx_ | 0x80);}
-    constexpr uint8_t idx() const{return idx_;}
+    constexpr Kind oaddr() const noexcept {return Kind(idx_ & 0x7f);}
+    constexpr Kind iaddr() const noexcept {return Kind(idx_ | 0x80);}
+    constexpr uint8_t idx() const noexcept {return idx_;}
 };
 
 

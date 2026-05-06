@@ -16,7 +16,7 @@ struct [[nodiscard]] MavlinkHeaderV1{
     uint8_t compid;
     uint8_t msgid;
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const{
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&header), 6);
     }
@@ -48,7 +48,7 @@ struct [[nodiscard]] MavlinkTrailerV1{
         return crc;
     }
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const{
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&crc_low), 2);
     }

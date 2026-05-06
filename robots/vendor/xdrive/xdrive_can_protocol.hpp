@@ -94,7 +94,7 @@ private:
         return ret;
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
         return bytes_;
     }
 };
@@ -114,7 +114,7 @@ struct EnableMotor{
         });
     }
 
-    constexpr CanPayload to_can_payload() const{ 
+    constexpr CanPayload to_can_payload() const noexcept { 
         uint8_t buf[4] = {request_mode != Mode::Stop, 0, 0, 0};
         return CanPayload::from_bytes(buf);
     }
@@ -179,7 +179,7 @@ struct SetVelocitySetPoint{
 //         });
 //     }
 
-//     constexpr CanPayload to_can_payload() const{ 
+//     constexpr CanPayload to_can_payload() const noexcept { 
 //         const auto buf = velocity.to_le_bytes();
 //         return CanPayload::from_bytes(buf);
 //     }

@@ -11,14 +11,14 @@ struct BoxRect final{
     T width;
     T height;
 
-    // constexpr auto to_cache() const {
+    // constexpr auto to_cache() const noexcept {
     //     return Cache{
     //         .half_width = width / 2,
     //         .half_height = height / 2,
     //     };
     // }
 
-    constexpr auto bounding_box() const {
+    constexpr auto bounding_box() const noexcept {
         return math::Rect2<T>{-width/2,-height/2, width, height};
     }
 };
@@ -27,7 +27,7 @@ struct BoxRect final{
 //     T half_width;
 //     T half_height;
 
-//     __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
+//     __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const noexcept {
 //         return s_color_from_point(*this, offset);
 //     }
 // private:

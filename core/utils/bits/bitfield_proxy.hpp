@@ -35,37 +35,42 @@ public:
     explicit BitFieldProxy(D * p_bits):p_bits_(p_bits){;}
 
     __attribute__((always_inline)) constexpr 
-    auto & operator =(const T & in){
+    auto & operator =(const T & in) noexcept{
         set(in);
         return *this;
     }
     
     __attribute__((always_inline)) constexpr 
-    void set(const T & in) requires (!std::is_const_v<D>) {
+    void set(const T & in) noexcept requires (!std::is_const_v<D>) {
         set_bits(std::bit_cast<tmp::size_to_uint_t<sizeof(in)>>(in));
     }
 
     __attribute__((always_inline)) constexpr 
     void atomic_set_high(
         std::memory_order order = std::memory_order_seq_cst
-    ) requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
+    ) noexcept requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
         atomic_set_all(order);
     }
 
     __attribute__((always_inline)) constexpr 
-    void atomic_set_low(std::memory_order order = std::memory_order_seq_cst
-    ) requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
+    void atomic_set_low(
+        std::memory_order order = std::memory_order_seq_cst
+    ) noexcept requires (!std::is_const_v<D> && (BEGIN_OFFSET + 1 == END_OFFSET)) {
         atomic_clear_all(order);
     }
 
     __attribute__((always_inline)) constexpr 
-    void atomic_set_all(std::memory_order order = std::memory_order_seq_cst) requires (!std::is_const_v<D>) {
+    void atomic_set_all(
+        std::memory_order order = std::memory_order_seq_cst
+    ) noexcept requires (!std::is_const_v<D>) {
         auto aref = std::atomic_ref<D>(*p_bits_);
         aref.fetch_or(MASK, order);
     }
 
     __attribute__((always_inline)) constexpr 
-    void atomic_clear_all(std::memory_order order = std::memory_order_seq_cst) requires (!std::is_const_v<D>) {
+    void atomic_clear_all(
+        std::memory_order order = std::memory_order_seq_cst
+    ) noexcept requires (!std::is_const_v<D>) {
         auto aref = std::atomic_ref<D>(*p_bits_);
         aref.fetch_and(~MASK, order);
     }
@@ -76,18 +81,23 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T get() const{
+    T get() const noexcept{
         return std::bit_cast<T>(crop_bits());
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    bits_type crop_bits() const{
+    bool is_zero() const noexcept{
+        return crop_bits() == bits_type(0);
+    }
+
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    bits_type crop_bits() const noexcept{
         return static_cast<bits_type>((*p_bits_ & MASK) >> (BEGIN_OFFSET));
     }
 
 
     [[nodiscard]] __attribute__((always_inline)) consteval
-    size_t width() const{
+    size_t width() const noexcept{
         return WIDTH;
     }
 };
@@ -117,7 +127,7 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T get() const{
+    T get() const noexcept{
         return static_cast<T>((*p_bits_ & mask_) >> (beign_offset));
     }
 
@@ -142,7 +152,7 @@ public:
     constexpr explicit BitFieldArrayProxy(D * p_bits):p_bits_(p_bits){;}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    DynBitFieldProxy<D> operator [](const size_t idx) const {
+    DynBitFieldProxy<D> operator [](const size_t idx) const noexcept{
         const size_t start = BEGIN_OFFSET + ELEMENT_WIDTH * idx;
         return DynBitFieldProxy<D>(
             p_bits_, 
@@ -152,13 +162,13 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    auto get_element(size_t idx) const {
+    auto get_element(size_t idx) const noexcept{
         return (*this)[idx];
     }
 
     template<size_t idx>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    auto get_element() const {
+    auto get_element() const noexcept{
         static_assert(idx < LEN, "index out of range");
         return BitFieldProxy<D, 
             BEGIN_OFFSET + ELEMENT_WIDTH * idx, 

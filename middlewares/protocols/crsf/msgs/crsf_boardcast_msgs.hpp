@@ -195,7 +195,7 @@ struct [[nodiscard]] RcChannelsPacked final{
     struct Channels {
         std::array<uint8_t, 22> bytes{};
 
-        [[nodiscard]] constexpr uint16_t operator[](size_t index) const {
+        [[nodiscard]] constexpr uint16_t operator[](size_t index) const noexcept {
             if(index >= 16) __builtin_trap();
             
             size_t bit_offset = index * 11;

@@ -29,7 +29,7 @@ public:
 
         bool operator==(const iterator&) const = default;
 
-        StringView operator*() const {
+        StringView operator*() const noexcept {
             auto pos = current_.find(delimiter_);
             if (pos == size_t(-1)) return current_;
             return current_.substr(0, pos);
@@ -48,11 +48,11 @@ public:
 
         void operator++(int) { ++*this; }
 
-        bool at_end() const { return current_.empty() || (max_pieces_ && count_ >= *max_pieces_); }
+        bool at_end() const noexcept { return current_.empty() || (max_pieces_ && count_ >= *max_pieces_); }
     };
 
-    iterator begin() const { return iterator(base_, delimiter_, max_pieces_); }
-    std::default_sentinel_t end() const { return {}; }
+    iterator begin() const noexcept { return iterator(base_, delimiter_, max_pieces_); }
+    std::default_sentinel_t end() const noexcept { return {}; }
 };
 
 // Range adaptor object for `views::split`
@@ -68,7 +68,7 @@ struct SplitAdaptor {
 
 inline constexpr struct {
     template<typename... Args>
-    constexpr auto operator()(Args&&... args) const {
+    constexpr auto operator()(Args&&... args) const noexcept {
         return SplitAdaptor{static_cast<char>(args)...};
     }
 } split;

@@ -46,15 +46,15 @@ struct [[nodiscard]] UartEvent final{
     constexpr UartEvent(Kind kind):kind_(kind){}
     constexpr UartEvent(const UartEvent & ) = default;
     constexpr UartEvent(UartEvent && ) = default;
-    [[nodiscard]] constexpr bool is_tx() const {
+    [[nodiscard]] constexpr bool is_tx() const noexcept {
         return kind_ == TxIdle || kind_ == TxOverrun;
     }
 
-    [[nodiscard]] constexpr bool is_rx() const {
+    [[nodiscard]] constexpr bool is_rx() const noexcept {
         return not is_tx();
     }
 
-    [[nodiscard]] constexpr Kind kind() const {
+    [[nodiscard]] constexpr Kind kind() const noexcept {
         return kind_;
     }
 

@@ -116,20 +116,20 @@ public:
 
     }
 
-    const auto & particles() const{
+    const auto & particles() const noexcept {
         // return std::span(particles_);
         return particles_;
     }
 
-    T gbest() const{
+    T gbest() const noexcept {
         return gbest_;
     }
 
-    T geval() const{
+    T geval() const noexcept {
         return geval_;
     }
 
-    auto bestidx() const{
+    auto bestidx() const noexcept {
         return best_idx_;
     }
 

@@ -35,7 +35,7 @@ struct [[nodiscard]] Coeffs final{
         int64_t sens2;
     };
 
-    constexpr Intermediate calc_intermediate(const uint32_t d1, const uint32_t d2) const{
+    constexpr Intermediate calc_intermediate(const uint32_t d1, const uint32_t d2) const noexcept {
         const int32_t dt = d2 - (c_table[4] << 8);
 
         const int32_t temp = 2000 + ((static_cast<int64_t>(dt) * static_cast<int64_t>(c_table[5])) >> 23);
@@ -73,16 +73,16 @@ struct [[nodiscard]] Coeffs final{
         int32_t temp;
         int32_t pressure;
 
-        [[nodiscard]] constexpr float pressure_mbar() const {
+        [[nodiscard]] constexpr float pressure_mbar() const noexcept {
             return static_cast<float>(pressure) / 100.0f;
         }
 
-        [[nodiscard]] constexpr float temperature_c() const {
+        [[nodiscard]] constexpr float temperature_c() const noexcept {
             return static_cast<float>(temp) / 100.0f;
         }
     };
 
-    constexpr Product calc_product(const Intermediate intermediate) const {
+    constexpr Product calc_product(const Intermediate intermediate) const noexcept {
         const int64_t off = (static_cast<uint32_t>(c_table[1]) << 16) + 
             ((static_cast<int64_t>(c_table[3]) * static_cast<int64_t>(intermediate.dt)) >> 7) - intermediate.off2;
 
@@ -152,7 +152,7 @@ struct [[nodiscard]] CrcBuilder final{
 
     // https://github.com/libdriver/ms5611/blob/main/src/driver_ms5611.c
     // MIT license
-    constexpr Self push_byte(const uint8_t byte) const {
+    constexpr Self push_byte(const uint8_t byte) const noexcept {
         Self self = *this;
         for (int32_t n_bit = 8; n_bit > 0; n_bit--){
             const uint16_t rhs = ((byte & 0x8000U) != 0)
@@ -163,7 +163,7 @@ struct [[nodiscard]] CrcBuilder final{
         return *this;
     }
 
-    constexpr uint16_t finalize() const {
+    constexpr uint16_t finalize() const noexcept {
         Self self = *this;
         self.n_rem = (0x000F & (n_rem >> 12));                                /* get rem */
         self.n_rem ^= 0x00;  

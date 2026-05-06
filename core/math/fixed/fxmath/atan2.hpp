@@ -24,7 +24,7 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
     }
 
     __attribute__((always_inline,  optimize( "-Ofast" )))
-    [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
+    [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const noexcept {
         auto & self = *this;
 
         /* Check if we swapped the transformation. */

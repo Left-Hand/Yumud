@@ -18,7 +18,7 @@ struct Task {
     int priority;
     std::string name;
     
-    bool operator<(const Task& other) const {
+    bool operator<(const Task& other) const noexcept {
         return priority < other.priority; // 优先级值大的更重要
     }
     

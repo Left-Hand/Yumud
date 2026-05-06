@@ -97,7 +97,7 @@ struct [[nodiscard]] DictVal final{
     }
 
     template<typename T>
-    constexpr T to() const {
+    constexpr T to() const noexcept {
         static_assert(sizeof(T) <= 4);
         if constexpr(sizeof(T) == 1){
             return std::bit_cast<T>(static_cast<uint8_t>(bits));
@@ -110,7 +110,7 @@ struct [[nodiscard]] DictVal final{
         }
     }
 
-    constexpr std::array<uint8_t, 4> to_bytes() const{
+    constexpr std::array<uint8_t, 4> to_bytes() const noexcept {
         return std::bit_cast<std::array<uint8_t, 4>>(bits);
     }
 };
@@ -144,7 +144,7 @@ struct [[nodiscard]] CanIdFields final{
         return Ok(self);
     }
 
-    [[nodiscard]] constexpr hal::CanExtId pack() const{
+    [[nodiscard]] constexpr hal::CanExtId pack() const noexcept {
         const auto bits = (static_cast<uint8_t>(command) << 24) | (arg1 << 8) | arg2;
         return hal::CanExtId::from_bits(bits);
     }
@@ -168,7 +168,7 @@ struct [[nodiscard]] TorqueCode final{
         return Ok(TorqueCode::from_bits(bits));
     }
 
-    constexpr iq16 to_nm() const {
+    constexpr iq16 to_nm() const noexcept {
         return iq16::from_bits(static_cast<uint32_t>(bits)) * 12 - 6;
     }
 };
@@ -191,7 +191,7 @@ struct [[nodiscard]] AngleCode final{
         return Ok(AngleCode::from_bits(bits));
     }
 
-    constexpr Angular<iq16> to_angle() const {
+    constexpr Angular<iq16> to_angle() const noexcept {
         return Angular<iq16>::from_turns(iq16::from_bits(static_cast<uint32_t>(bits)) * 2 - 4);
     }
 };
@@ -213,7 +213,7 @@ struct [[nodiscard]] AngularVelocityCode final{
         return Ok(AngularVelocityCode::from_bits(bits));
     }
 
-    constexpr Angular<iq16> to_speed() const {
+    constexpr Angular<iq16> to_speed() const noexcept {
         return Angular<iq16>::from_radians(iq16::from_bits(static_cast<uint32_t>(bits)) * 50);
     }
 };
@@ -236,7 +236,7 @@ struct [[nodiscard]] KpCode final{
         return Ok(KpCode::from_bits(bits));
     }
 
-    constexpr uq16 to_val() const {
+    constexpr uq16 to_val() const noexcept {
         return uq16::from_bits(static_cast<uint32_t>(bits)) * 500 / 65535;
     }
 };
@@ -259,7 +259,7 @@ struct [[nodiscard]] KdCode final{
         return Ok(KdCode::from_bits(bits));
     }
 
-    constexpr uq16 to_val() const {
+    constexpr uq16 to_val() const noexcept {
         return uq16::from_bits(static_cast<uint32_t>(bits)) * 5 / 65535;
     }
 };
@@ -301,7 +301,7 @@ struct [[nodiscard]] FaultFlags final{
     uint8_t uncalibrated:1;
     Mode mode:2;
 
-    constexpr uint8_t to_u8() const{
+    constexpr uint8_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 

@@ -45,11 +45,11 @@ struct CalibrateTable{
 
 
 
-    [[nodiscard]] constexpr PackedCalibrateSample operator[](const size_t idx) const {
+    [[nodiscard]] constexpr PackedCalibrateSample operator[](const size_t idx) const noexcept {
         return block_[idx];
     }
 
-    [[nodiscard]] constexpr PackedCalibrateSample operator[](const Angular<uq32> raw_angle) const {
+    [[nodiscard]] constexpr PackedCalibrateSample operator[](const Angular<uq32> raw_angle) const noexcept {
         return block_[angle_to_index(raw_angle)];
     }
 
@@ -58,14 +58,14 @@ struct CalibrateTable{
         sector_collected_nums_.fill(0);
     }
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return std::accumulate(sector_collected_nums_.begin(), sector_collected_nums_.end(), 0u) == capacity_;
     }
 
     [[nodiscard]] constexpr std::span<const PackedCalibrateSample>
-    view() const {return std::span(block_);}
+    view() const noexcept {return std::span(block_);}
 
-    [[nodiscard]] constexpr size_t angle_to_index(const Angular<uq32> angle) const{
+    [[nodiscard]] constexpr size_t angle_to_index(const Angular<uq32> angle) const noexcept {
         return size_t(uq24(angle.to_turns()) * capacity_);
     }
 private:

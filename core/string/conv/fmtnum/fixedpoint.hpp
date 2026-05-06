@@ -11,7 +11,7 @@ struct [[nodiscard]] DigitFracPair final{
 
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr char * fmt_str(char * p_str, const uint8_t precision) const {
+    [[nodiscard]] constexpr char * fmt_str(char * p_str, const uint8_t precision) const noexcept {
         auto & self = *this;
         // 转换整数部分
         p_str = _fmtnum_u32_dec_fittest(p_str, self.digit_part);

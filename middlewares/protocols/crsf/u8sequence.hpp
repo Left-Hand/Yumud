@@ -16,20 +16,20 @@ struct [[nodiscard]] U8Sequence final{
         return ret;
     }
 
-    [[nodiscard]] constexpr uint8_t operator[](size_t idx) const {return p_bytes_[idx];}
-    [[nodiscard]] constexpr const uint8_t char_at(size_t idx) const {
+    [[nodiscard]] constexpr uint8_t operator[](size_t idx) const noexcept {return p_bytes_[idx];}
+    [[nodiscard]] constexpr const uint8_t char_at(size_t idx) const noexcept {
         if(idx >= length_) __builtin_trap();
         return p_chars_[idx];
     }
 
-    [[nodiscard]] constexpr const uint8_t byte_at(size_t idx) const {
+    [[nodiscard]] constexpr const uint8_t byte_at(size_t idx) const noexcept {
         if(idx >= length_) __builtin_trap();
         return p_bytes_[idx];
     }
-    [[nodiscard]] constexpr size_t length() const {return length_;}
-    [[nodiscard]] constexpr size_t size() const {return length_;}
-    [[nodiscard]] constexpr std::span<const char> as_chars() const {return {p_chars_, length_};}
-    [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const {return {p_bytes_, length_};}
+    [[nodiscard]] constexpr size_t length() const noexcept {return length_;}
+    [[nodiscard]] constexpr size_t size() const noexcept {return length_;}
+    [[nodiscard]] constexpr std::span<const char> as_chars() const noexcept {return {p_chars_, length_};}
+    [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const noexcept {return {p_bytes_, length_};}
 
 private:
     union{

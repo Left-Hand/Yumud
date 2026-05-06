@@ -46,7 +46,7 @@ struct StringSplitSeeker{
 private:
     char delimiter_;
 
-    constexpr bool is_delimiter(const char c) const{
+    constexpr bool is_delimiter(const char c) const noexcept {
         return (c == delimiter_) || (c == '\0');
     }
 };

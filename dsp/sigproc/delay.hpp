@@ -34,7 +34,7 @@ struct DelayLine {
     constexpr void set_delay_ticks(size_t delay){
         delay_ = (delay);
     }
-    constexpr T delay() const { 
+    constexpr T delay() const noexcept { 
         return delay_; 
     }
 private:

@@ -113,7 +113,7 @@ struct [[nodiscard]] RGB888 final{
         };
     }
 
-    [[nodiscard]] constexpr math::uint24_t as_u24() const {return math::uint24_t(r | (g << 8) | (b << 16));}
+    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {return math::uint24_t(r | (g << 8) | (b << 16));}
 };
 
 static_assert(sizeof(RGB888) == 3);
@@ -125,7 +125,7 @@ struct [[nodiscard]] LAB888 final{
 
 public:
 
-    [[nodiscard]] constexpr math::uint24_t as_u24() const {return math::uint24_t(l | (a << 8) | (b << 16));}
+    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {return math::uint24_t(l | (a << 8) | (b << 16));}
 
     static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
         return LAB888(l, a, b);
@@ -160,7 +160,7 @@ struct [[nodiscard]] RGB332 final{
         return Self(r,g,b);
     } 
 
-    [[nodiscard]] constexpr uint8_t to_u8() const {return bits;}
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return bits;}
 
 private:
     constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
@@ -187,7 +187,7 @@ struct alignas(2) [[nodiscard]] RGB565 final{
     RGB565 from_u16(const uint16_t raw){
         return std::bit_cast<RGB565>(raw);
     }
-    [[nodiscard]] constexpr uint16_t to_u16() const {
+    [[nodiscard]] constexpr uint16_t to_u16() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 private:
@@ -219,7 +219,7 @@ struct [[nodiscard]] HSV888 final{
         };
     }
 
-    [[nodiscard]] constexpr math::uint24_t as_u24() const {
+    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {
         return math::uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
     }
 
@@ -245,7 +245,7 @@ struct alignas(4) [[nodiscard]] ARGB32 final{
             };
         }
 
-    [[nodiscard]] constexpr uint32_t to_u32() const {
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -275,34 +275,34 @@ struct [[nodiscard]] Binary final{
         return Binary(static_cast<uint8_t>(WHITE));
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Binary& rhs) const {
+    [[nodiscard]] constexpr bool operator ==(const Binary& rhs) const noexcept {
         return bits == rhs.bits;
     }
 
 
-    [[nodiscard]] constexpr bool operator !=(const Binary& rhs) const {
+    [[nodiscard]] constexpr bool operator !=(const Binary& rhs) const noexcept {
         return bits != rhs.bits;
     }
 
-    [[nodiscard]] constexpr Binary operator ~() const {return flip();}
+    [[nodiscard]] constexpr Binary operator ~() const noexcept {return flip();}
 
-    [[nodiscard]] constexpr Binary bitwise_or(const Binary & other) const { 
+    [[nodiscard]] constexpr Binary bitwise_or(const Binary & other) const noexcept { 
         return Binary(bits | other.bits);
     }
 
-    [[nodiscard]] constexpr Binary bitwise_and(const Binary & other) const { 
+    [[nodiscard]] constexpr Binary bitwise_and(const Binary & other) const noexcept { 
         return Binary(bits & other.bits);
     }
-    [[nodiscard]] constexpr bool is_white() const {return bits == WHITE;}
+    [[nodiscard]] constexpr bool is_white() const noexcept {return bits == WHITE;}
 
-    [[nodiscard]] constexpr bool is_black() const {return bits == BLACK;}
+    [[nodiscard]] constexpr bool is_black() const noexcept {return bits == BLACK;}
 
-    [[nodiscard]] constexpr Binary flip() const {
+    [[nodiscard]] constexpr Binary flip() const noexcept {
         const uint8_t ret = ~bits;
         return Binary(uint8_t(ret));
     }
 
-    [[nodiscard]] constexpr uint8_t to_u8() const {return bits;}
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return bits;}
 
 
 private:
@@ -338,19 +338,19 @@ struct [[nodiscard]] Gray final{
         return RGB888::from_r8g8b8(bits, bits, bits);
     }
 
-    [[nodiscard]] constexpr auto operator <=> (const Gray & other) const {
+    [[nodiscard]] constexpr auto operator <=> (const Gray & other) const noexcept {
         return bits <=> other.bits;}
-    [[nodiscard]] constexpr bool operator == (const Gray & other) const {
+    [[nodiscard]] constexpr bool operator == (const Gray & other) const noexcept {
         return bits == other.bits;}
 
 
-    [[nodiscard]] constexpr bool is_white() const {return bits == uint8_t(0xff);}
+    [[nodiscard]] constexpr bool is_white() const noexcept {return bits == uint8_t(0xff);}
 
-    [[nodiscard]] constexpr bool is_black() const {return bits == uint8_t(0x00);}
+    [[nodiscard]] constexpr bool is_black() const noexcept {return bits == uint8_t(0x00);}
 
-    [[nodiscard]] constexpr uint8_t to_u8() const {return bits;}
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return bits;}
 
-    [[nodiscard]] constexpr Gray flip() const {
+    [[nodiscard]] constexpr Gray flip() const noexcept {
         const uint8_t ret = ~bits;
         return Gray(uint8_t(ret));
     }
@@ -377,8 +377,8 @@ struct [[nodiscard]] IGray final{
     [[nodiscard]] static consteval IGray white() { return IGray(WHITE); }
     [[nodiscard]] static consteval IGray black() { return IGray(BLACK); }
 
-    [[nodiscard]] constexpr int8_t as_i8() const {return bits;}
-    [[nodiscard]] constexpr auto operator <=> (const IGray & other) const {
+    [[nodiscard]] constexpr int8_t as_i8() const noexcept {return bits;}
+    [[nodiscard]] constexpr auto operator <=> (const IGray & other) const noexcept {
         return bits <=> other.bits;}
 
     [[nodiscard]] constexpr Binary to_binary(const Gray threshold){

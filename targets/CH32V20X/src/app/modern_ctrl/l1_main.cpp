@@ -34,11 +34,11 @@ public:
         angle += angular_velocity * dt;
     }
 
-    float get_angle() const {
+    float get_angle() const noexcept {
         return angle;
     }
 
-    std::pair<float, float> get_position() const {
+    std::pair<float, float> get_position() const noexcept {
         float x = length * std::cos(angle);
         float y = length * std::sin(angle);
         return std::make_pair(x, y);

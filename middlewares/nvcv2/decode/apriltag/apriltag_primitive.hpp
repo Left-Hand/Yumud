@@ -25,7 +25,7 @@ public:
         return {raw};
     }
 
-    constexpr uint16_t to_u16() const{
+    constexpr uint16_t to_u16() const noexcept {
         return index_;
     }
 private:
@@ -46,13 +46,13 @@ public:
     using enum Kind;
 
     constexpr ApriltagDirection(Kind kind):kind_(kind){}
-    constexpr Kind kind() const {return kind_;}
+    constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr bool operator==(const ApriltagDirection other) const {
+    [[nodiscard]] constexpr bool operator==(const ApriltagDirection other) const noexcept {
         return kind_ == other.kind_;
     }
 
-    [[nodiscard]] constexpr bool operator==(const Kind kind) const {
+    [[nodiscard]] constexpr bool operator==(const Kind kind) const noexcept {
         return kind_ == kind;
     }
 

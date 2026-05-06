@@ -107,7 +107,7 @@ struct [[nodiscard]] Modifiers final{
     PressLevel cross:1;
     PressLevel squ:1;
 
-    [[nodiscard]] constexpr math::Vec2i left_direction() const{
+    [[nodiscard]] constexpr math::Vec2i left_direction() const noexcept {
         auto & self =  *this;
         return math::Vec2i(
             int(PressLevel::Pressed == self.right) - int(PressLevel::Pressed == self.left),
@@ -115,7 +115,7 @@ struct [[nodiscard]] Modifiers final{
         );
     }
 
-    [[nodiscard]] constexpr std::bitset<16> to_bitset() const {
+    [[nodiscard]] constexpr std::bitset<16> to_bitset() const noexcept {
         return std::bitset<16>(std::bit_cast<uint16_t>(*this));
     }
 };
@@ -125,7 +125,7 @@ struct alignas(2) [[nodiscard]] JoystickPosition final{
     uint8_t x;
     uint8_t y;
 
-    constexpr math::Vec2<iq16> to_vec2() const{
+    constexpr math::Vec2<iq16> to_vec2() const noexcept {
         constexpr auto SCALE = iq16(1.0/510);
         return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
     }
@@ -140,7 +140,7 @@ struct [[nodiscard]] RxPacket{
 
     #pragma pack(pop)
 
-    [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannelSelection sel) const {
+    [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannelSelection sel) const noexcept {
         switch(sel){
             case JoyStickChannelSelection::Select:
                 return (PressLevel::Pressed == modifiers.select) ? uint8_t(255) : uint8_t(0);
@@ -210,7 +210,7 @@ struct TxPacket{
         return {left, right, {}};
     }
 
-    std::span<const uint8_t, 6> as_bytes() const {
+    std::span<const uint8_t, 6> as_bytes() const noexcept {
         return std::span<const uint8_t, 6>{
             reinterpret_cast<const uint8_t*>(this), sizeof(*this)
         };
@@ -232,7 +232,7 @@ public:
 
     IResult<> init();
     IResult<> update();
-    IResult<DevId> devid() const {
+    IResult<DevId> devid() const noexcept {
         return Ok(dev_id_);
     }
 

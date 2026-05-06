@@ -118,8 +118,8 @@ struct AK09911C_Regset : public AK09911C_Prelude{
         uint8_t __resv__:5;
         uint8_t hsm:1;
 
-        [[nodiscard]] constexpr bool is_data_ready() const {return drdy;}
-        [[nodiscard]] constexpr bool is_data_overrun() const {return dor;}
+        [[nodiscard]] constexpr bool is_data_ready() const noexcept {return drdy;}
+        [[nodiscard]] constexpr bool is_data_overrun() const noexcept {return dor;}
     } DEF_R8(st1_reg)
 
     REG16_QUICK_DEF(0x11, MagXReg, mag_x_reg);

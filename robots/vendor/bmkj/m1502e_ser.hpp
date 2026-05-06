@@ -17,34 +17,34 @@ struct [[nodiscard]] FrameFactory final{
 public:
     constexpr hal::ClassicCanFrame set_low_quad_motor_setpoint(
         const req_msgs::SetLowQuadMotorSetpoint & msg
-    ) const{
+    ) const noexcept {
         return serialize_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_loop_mode(const req_msgs::SetLoopMode & msg) const {
+    constexpr hal::ClassicCanFrame set_loop_mode(const req_msgs::SetLoopMode & msg) const noexcept {
         return serialize_msg(msg);
     }
 
     constexpr hal::ClassicCanFrame set_feedback_strategy(
         const req_msgs::SetFeedbackStrategy & msg
-    ) const{
+    ) const noexcept {
         return serialize_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame set_motor_id(const req_msgs::SetMotorId & msg) const{
+    constexpr hal::ClassicCanFrame set_motor_id(const req_msgs::SetMotorId & msg) const noexcept {
         return serialize_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame query_items(const req_msgs::QueryItems & msg) const{
+    constexpr hal::ClassicCanFrame query_items(const req_msgs::QueryItems & msg) const noexcept {
         return serialize_msg(msg);
     }
 
-    constexpr hal::ClassicCanFrame query_firmware_version(const req_msgs::QueryFirmwareVersion & msg) const{
+    constexpr hal::ClassicCanFrame query_firmware_version(const req_msgs::QueryFirmwareVersion & msg) const noexcept {
         return serialize_msg(msg);
     }
 private:
     template<typename T>
-    constexpr hal::ClassicCanFrame serialize(const T & msg) const {
+    constexpr hal::ClassicCanFrame serialize(const T & msg) const noexcept {
         return serialize_msg(msg);
     }
 };

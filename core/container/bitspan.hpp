@@ -28,7 +28,7 @@ public:
         iterator(const _BitSpan* parent, size_t bit_pos) 
             : parent_(parent), bit_pos_(bit_pos) {}
             
-        bool operator*() const {
+        bool operator*() const noexcept {
             return parent_->test(bit_pos_);
         }
         
@@ -80,27 +80,27 @@ public:
             return lhs.bit_pos_ - rhs.bit_pos_;
         }
         
-        bool operator==(const iterator& other) const {
+        bool operator==(const iterator& other) const noexcept {
             return parent_ == other.parent_ && bit_pos_ == other.bit_pos_;
         }
         
-        bool operator!=(const iterator& other) const {
+        bool operator!=(const iterator& other) const noexcept {
             return !(*this == other);
         }
         
-        bool operator<(const iterator& other) const {
+        bool operator<(const iterator& other) const noexcept {
             return bit_pos_ < other.bit_pos_;
         }
         
-        bool operator>(const iterator& other) const {
+        bool operator>(const iterator& other) const noexcept {
             return bit_pos_ > other.bit_pos_;
         }
         
-        bool operator<=(const iterator& other) const {
+        bool operator<=(const iterator& other) const noexcept {
             return bit_pos_ <= other.bit_pos_;
         }
         
-        bool operator>=(const iterator& other) const {
+        bool operator>=(const iterator& other) const noexcept {
             return bit_pos_ >= other.bit_pos_;
         }
     };
@@ -116,7 +116,7 @@ public:
     bool empty() const noexcept { return bytes_.empty(); }
     
     // Element access
-    bool test(size_t bit_pos) const {
+    bool test(size_t bit_pos) const noexcept {
         size_t byte_idx = bit_pos / 8;
         size_t bit_idx = bit_pos % 8;
         return (bytes_[byte_idx] >> bit_idx) & 0x01;
@@ -137,7 +137,7 @@ public:
 
     struct MutableBitProxy{
         MutableBitProxy(T & byte, size_t bit_pos): byte_(byte), bit_pos_(bit_pos) {}
-        operator bool() const { return byte_[bit_pos_ / 8] & (1 << (bit_pos_ % 8)); }
+        operator bool() const noexcept { return byte_[bit_pos_ / 8] & (1 << (bit_pos_ % 8)); }
         MutableBitProxy & operator=(bool value) {
             // byte_ = (bit_pos_, value);
             const uint8_t mask = (1 << (bit_pos_ & 0b111));;
@@ -151,14 +151,14 @@ public:
         T & byte_;
         size_t bit_pos_;
     };
-    bool operator[](size_t bit_pos) const { return test(bit_pos); }
+    bool operator[](size_t bit_pos) const noexcept { return test(bit_pos); }
     
     // Iterators
-    iterator begin() const { return iterator(this, 0); }
-    iterator end() const { return iterator(this, size()); }
+    iterator begin() const noexcept { return iterator(this, 0); }
+    iterator end() const noexcept { return iterator(this, size()); }
     
     // Underlying storage access
-    std::span<T> bytes() const { return bytes_; }
+    std::span<T> bytes() const noexcept { return bytes_; }
 
 };
 

@@ -51,7 +51,7 @@ struct [[nodiscard]] BytesSpawner final{
         return ret;
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
         return bytes_.subspan(offset_);
     }
 private:
@@ -286,13 +286,13 @@ struct [[nodiscard]] CrcAccumulator final{
         return {.crc = 0};
     }
 
-    constexpr Self push_byte(const uint8_t byte) const { 
+    constexpr Self push_byte(const uint8_t byte) const noexcept { 
         auto self = *this;
         self.crc ^= byte;
         return self;
     }
 
-    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const { 
+    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const noexcept { 
         auto self = *this;
         for(const auto byte : bytes){
             self.crc ^= byte;

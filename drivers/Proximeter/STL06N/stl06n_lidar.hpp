@@ -32,7 +32,7 @@ public:
     struct CommandCode{
         uint8_t bits;
 
-        constexpr Option<Command> parse() const {
+        constexpr Option<Command> parse() const noexcept {
             return Command::try_from_u8(bits);
         }
     };

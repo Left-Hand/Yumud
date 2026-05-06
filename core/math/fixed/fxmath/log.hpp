@@ -67,7 +67,7 @@ struct [[nodiscard]] IqLnIntermediate final{
 
     template<size_t Q>
     __attribute__((always_inline,  optimize( "-Ofast" )))
-    constexpr int32_t into_bits() const{
+    constexpr int32_t into_bits() const noexcept {
         int32_t iq_n_result = iq30_result >> (30 - Q);
         /*
         * Add exp * ln(2) to the iqN result. This will never saturate since we

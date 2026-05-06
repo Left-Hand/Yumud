@@ -18,7 +18,7 @@ struct [[nodiscard]] ConnectionManagement final{
 
     constexpr ConnectionManagement(Kind kind) : kind_(kind) {}
 
-    [[nodiscard]] constexpr auto kind() const{return kind_;}
+    [[nodiscard]] constexpr auto kind() const noexcept {return kind_;}
 
     [[nodiscard]] constexpr bool operator ==(const Kind rhs){
         return kind_ == rhs;
@@ -40,7 +40,7 @@ private:
 
     DEF_FRIEND_DERIVE_DEBUG(Kind)
 
-    friend OutputStream& operator <<(OutputStream& os, const Self & self){
+    friend OutputStream& operator <<(OutputStream& os, const Self & self) noexcept {
         return os << self.kind_;
     }
 };

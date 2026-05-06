@@ -49,7 +49,7 @@ struct SPLL_1PH_SOGI{
         float lpf_b0;
         float lpf_b1;
 
-        [[nodiscard]] constexpr OsgCoeff to_coeff() const {
+        [[nodiscard]] constexpr OsgCoeff to_coeff() const noexcept {
             const float fn=acFreq;
             const float delta_t=((1.0f)/isrFrequency);
             OsgCoeff osg_coeff;

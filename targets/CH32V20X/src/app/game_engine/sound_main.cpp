@@ -53,7 +53,7 @@ struct [[nodiscard]] Saturator{
     float p;
     float gain;
 
-    constexpr void process(std::span<T> dst, std::span<const T> src) const {
+    constexpr void process(std::span<T> dst, std::span<const T> src) const noexcept {
         auto & self = *this;
         ASSERT(src.size() == dst.size());
         const size_t len = src.size(); 
@@ -91,7 +91,7 @@ struct [[nodiscard]] FilterParaments{
     T f0;
     T q;
 
-    [[nodiscard]] constexpr std::pair<T, T> k_and_norm() const {
+    [[nodiscard]] constexpr std::pair<T, T> k_and_norm() const noexcept {
         T k = tan(M_PI * f0 / fs);
         T norm = 1 / (1 + k / q + k * k);
         return {k, norm};
@@ -172,7 +172,7 @@ struct [[nodiscard]] SecondOrderFilterConfig{
     T fc;
 
 
-    [[nodiscard]] constexpr Z_TransferCoefficients<T, 3, 3> to_coeffs() const {
+    [[nodiscard]] constexpr Z_TransferCoefficients<T, 3, 3> to_coeffs() const noexcept {
         auto & self = *this;
         static constexpr T q_butterworth = T(0.7071);
 

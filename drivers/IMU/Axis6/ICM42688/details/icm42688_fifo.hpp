@@ -50,7 +50,7 @@ struct [[nodiscard]] FifoPacket4 {
     uint8_t ext_accel_z_gyro_z; // Accel Z [3:0] Gyro Z [3:0]
 private:
     // 内部辅助函数，将高8位、低8位和扩展4位拼成20位有符号整数
-    int32_t convert_parts_to_20bit(uint8_t high_8, uint8_t low_8, uint8_t ext_low_4) const {
+    int32_t convert_parts_to_20bit(uint8_t high_8, uint8_t low_8, uint8_t ext_low_4) const noexcept {
         uint32_t high_12 = (uint32_t(high_8) << 12);
         uint32_t low_12 = (uint32_t(low_8) << 4);
         uint32_t ext_4 = (uint32_t(ext_low_4) & 0xF);
@@ -64,41 +64,41 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr int32_t accel_data_x() const {
+    [[nodiscard]] constexpr int32_t accel_data_x() const noexcept {
         uint8_t ext_accel_x = (ext_accel_x_gyro_x & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_x1, accel_data_x0, ext_accel_x);
     }
 
-    [[nodiscard]] constexpr int32_t accel_data_y() const {
+    [[nodiscard]] constexpr int32_t accel_data_y() const noexcept {
         uint8_t ext_accel_y = (ext_accel_y_gyro_y & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_y1, accel_data_y0, ext_accel_y);
     }
 
-    [[nodiscard]] constexpr int32_t accel_data_z() const {
+    [[nodiscard]] constexpr int32_t accel_data_z() const noexcept {
         uint8_t ext_accel_z = (ext_accel_z_gyro_z & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_z1, accel_data_z0, ext_accel_z);
     }
 
-    [[nodiscard]] constexpr int32_t gyro_data_x() const {
+    [[nodiscard]] constexpr int32_t gyro_data_x() const noexcept {
         uint8_t ext_gyro_x = ext_accel_x_gyro_x & 0x0F;
         return convert_parts_to_20bit(gyro_data_x1, gyro_data_x0, ext_gyro_x);
     }
 
-    [[nodiscard]] constexpr int32_t gyro_data_y() const {
+    [[nodiscard]] constexpr int32_t gyro_data_y() const noexcept {
         uint8_t ext_gyro_y = ext_accel_y_gyro_y & 0x0F;
         return convert_parts_to_20bit(gyro_data_y1, gyro_data_y0, ext_gyro_y);
     }
 
-    [[nodiscard]] constexpr int32_t gyro_data_z() const {
+    [[nodiscard]] constexpr int32_t gyro_data_z() const noexcept {
         uint8_t ext_gyro_z = ext_accel_z_gyro_z & 0x0F;
         return convert_parts_to_20bit(gyro_data_z1, gyro_data_z0, ext_gyro_z);
     }
 
-    [[nodiscard]] constexpr uint16_t temperature_raw() const {
+    [[nodiscard]] constexpr uint16_t temperature_raw() const noexcept {
         return (uint16_t(temp_data1) << 8) | temp_data0;
     }
 
-    [[nodiscard]] constexpr uint16_t timestamp() const {
+    [[nodiscard]] constexpr uint16_t timestamp() const noexcept {
         return (uint16_t(timestamp_h) << 8) | timestamp_l;
     }
 };

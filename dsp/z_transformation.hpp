@@ -33,7 +33,7 @@ struct Z_TransferCoefficients{
     // 串联操作（级联）
     template<size_t N_NUM2, size_t N_DEN2>
     [[nodiscard]] constexpr auto 
-    operator*(const Z_TransferCoefficients<T, N_NUM2, N_DEN2>& other) const {
+    operator*(const Z_TransferCoefficients<T, N_NUM2, N_DEN2>& other) const noexcept {
         constexpr size_t NewNUM = N_NUM + N_NUM2 - 1;
         constexpr size_t NewDEN = N_DEN + N_DEN2 - 1;
         
@@ -64,7 +64,7 @@ struct Z_TransferCoefficients{
     // 并联操作修正版本
     template<size_t N_NUM2, size_t N_DEN2>
     [[nodiscard]] constexpr auto 
-    operator+(const Z_TransferCoefficients<T, N_NUM2, N_DEN2>& other) const {
+    operator+(const Z_TransferCoefficients<T, N_NUM2, N_DEN2>& other) const noexcept {
         constexpr size_t NewNUM = (N_NUM + N_DEN2 - 1 > N_NUM2 + N_DEN - 1) 
                                 ? (N_NUM + N_DEN2 - 1) 
                                 : (N_NUM2 + N_DEN - 1);
@@ -104,7 +104,7 @@ struct Z_TransferCoefficients{
     
     // 串联多个系统（链式调用）
     template<typename... Others>
-    [[nodiscard]] constexpr auto series(Others&&... others) const {
+    [[nodiscard]] constexpr auto series(Others&&... others) const noexcept {
         if constexpr (sizeof...(others) == 0) {
             return *this;
         } else {
@@ -114,7 +114,7 @@ struct Z_TransferCoefficients{
     
     // 并联多个系统
     template<typename... Others>
-    [[nodiscard]] constexpr auto parallel(Others&&... others) const {
+    [[nodiscard]] constexpr auto parallel(Others&&... others) const noexcept {
         if constexpr (sizeof...(others) == 0) {
             return *this;
         } else {
@@ -122,11 +122,11 @@ struct Z_TransferCoefficients{
         }
     }
 
-    [[nodiscard]] constexpr auto complex_response(const auto freq, const auto fs) const {
+    [[nodiscard]] constexpr auto complex_response(const auto freq, const auto fs) const noexcept {
         return ResponseCalculator<Self>::calc_complex_response(*this, freq, fs);
     }
 
-    [[nodiscard]] constexpr Z_TransferCoefficients<T, N_NUM, N_DEN> complementary() const {
+    [[nodiscard]] constexpr Z_TransferCoefficients<T, N_NUM, N_DEN> complementary() const noexcept {
         std::array<T, N_NUM> new_num{};
         const Self& self = *this;
 

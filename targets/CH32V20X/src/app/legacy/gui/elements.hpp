@@ -60,7 +60,7 @@ public:
     // struct Config{
     math::Rect2u rect = math::Rect2u();
     // };  
-    // auto config() const{return config_;}
+    // auto config() const noexcept {return config_;}
 protected:
     // Config & config_;
     const Theme & theme_;

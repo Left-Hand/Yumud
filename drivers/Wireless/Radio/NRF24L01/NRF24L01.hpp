@@ -155,7 +155,7 @@ protected:
     struct Command{
         uint8_t bits;
 
-        constexpr uint8_t to_u8() const {
+        constexpr uint8_t to_u8() const noexcept {
             return bits;
         }
     };

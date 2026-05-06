@@ -29,13 +29,13 @@ public:
 
     constexpr Mode(Kind kind):kind_(kind){}
 
-    [[nodiscard]] constexpr Kind kind()const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr bool is_circular()const{
+    [[nodiscard]] constexpr bool is_circular() const noexcept {
         return (std::bit_cast<uint8_t>(kind()) & 0b100) != 0;
     }
 
-    [[nodiscard]] constexpr bool dst_is_periph() const {
+    [[nodiscard]] constexpr bool dst_is_periph() const noexcept {
         switch(kind()){
             case Kind::BurstMemoryToPeriph:
             case Kind::BurstMemoryToPeriphCircular:
@@ -64,13 +64,13 @@ public:
     constexpr Direction(Mode mode):kind_(
         Kind{static_cast<uint8_t>(std::bit_cast<uint8_t>(mode.kind()) & 0b011)}){}
 
-    [[nodiscard]] constexpr Kind kind()const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr Mode with_circular()const{
+    [[nodiscard]] constexpr Mode with_circular() const noexcept {
         return std::bit_cast<Mode>(static_cast<uint8_t>(std::bit_cast<uint8_t>(kind()) | 0b100));
     }
 
-    [[nodiscard]] constexpr Mode without_circular()const{
+    [[nodiscard]] constexpr Mode without_circular() const noexcept {
         return std::bit_cast<Mode>(static_cast<uint8_t>(std::bit_cast<uint8_t>(kind()) & 0b011));
     }
 

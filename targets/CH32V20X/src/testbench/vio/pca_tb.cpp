@@ -38,7 +38,7 @@ using namespace ymd::drivers;
 
 //     BoolLevel read() const;
 
-//     __fast_inline Nth nth() const {return nth_;}
+//     __fast_inline Nth nth() const noexcept {return nth_;}
 
 //     void set_mode(const hal::GpioMode mode){}
 // private:

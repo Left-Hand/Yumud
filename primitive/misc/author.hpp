@@ -15,7 +15,7 @@ struct [[nodiscard]] Author final{
         return Some(Author{str});
     }
 
-    constexpr StringView name() const{
+    constexpr StringView name() const noexcept {
         return StringView(name_.data(), 8);
     }
 

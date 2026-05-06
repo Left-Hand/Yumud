@@ -66,9 +66,9 @@ struct alignas(4) [[nodiscard]] CgId final{
         return self;
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {return bits;}
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {return bits;}
 
-    [[nodiscard]] constexpr hal::CanExtId to_extid() const {return hal::CanExtId::from_bits(bits);}
+    [[nodiscard]] constexpr hal::CanExtId to_extid() const noexcept {return hal::CanExtId::from_bits(bits);}
 };
 
 
@@ -91,7 +91,7 @@ struct alignas(4)  [[nodiscard]] TxContext final{
     [[nodiscard]] constexpr auto cmd_kd(this Self && self) {
         return make_bitfield_proxy<48, 64, KdCode>(&self.bits);}
 
-    constexpr hal::ClassicCanPayload to_can_payload() const {return hal::ClassicCanPayload::from_u64(bits);}
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {return hal::ClassicCanPayload::from_u64(bits);}
 };
 
 static_assert(sizeof(TxContext) == 8);  

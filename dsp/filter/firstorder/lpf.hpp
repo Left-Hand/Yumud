@@ -46,7 +46,7 @@ public:
         // return last_ * wc_;
     }
 
-    constexpr T get() const {
+    constexpr T get() const noexcept {
         return last_ * wc_;
     }
 

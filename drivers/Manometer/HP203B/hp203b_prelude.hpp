@@ -83,7 +83,7 @@ struct [[nodiscard]] AdcConvertCommand final{
     Osr osr:3;
     uint8_t __fixed__:3 = 0b010;
 
-    constexpr uint8_t to_u8() const{
+    constexpr uint8_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };
@@ -114,7 +114,7 @@ struct [[nodiscard]] Data20 final{
 
         return Data20{bits};
     }
-    [[nodiscard]] iq16 count() const {
+    [[nodiscard]] iq16 count() const noexcept {
         return iq24(bits) / 100;
     }
 

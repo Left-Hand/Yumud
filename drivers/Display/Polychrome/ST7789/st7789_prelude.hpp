@@ -66,7 +66,7 @@ struct ST7789_Prelude{
             return update(math::Rect2<uint16_t>{p, size_});
         }
 
-        auto size() const {return size_;}
+        auto size() const noexcept {return size_;}
     private:
         const math::Vec2<uint16_t> size_;
         math::Rect2<uint16_t> now_area_ = math::Rect2<uint16_t>::ZERO;

@@ -109,7 +109,7 @@ struct alignas(sizeof(T)) [[nodiscard]] Scaled final{
         return Ok(Self{static_cast<T>(x * RATIO)});
     }
 
-    constexpr float to_float() const {
+    constexpr float to_float() const noexcept {
         return static_cast<float>(bits) / RATIO;
     }
 };
@@ -144,7 +144,7 @@ struct [[nodiscard]] alignas(4) TS5700N8501Status final{
     uint8_t abm2;
     uint8_t almc;
 
-    [[nodiscard]] constexpr std::span<const uint8_t, 8> as_bytes() const {
+    [[nodiscard]] constexpr std::span<const uint8_t, 8> as_bytes() const noexcept {
         return std::span<const uint8_t, 8>(&this->sf, 8);
     }
 

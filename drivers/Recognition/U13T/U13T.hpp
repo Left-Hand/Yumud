@@ -31,8 +31,8 @@ struct U13T_Prelude{
             return Command(static_cast<Kind>(bits), bits & 0x80);
         }
 
-        constexpr Kind kind() const {return kind_;}
-        constexpr bool is_rx() const {return is_rx_;}
+        constexpr Kind kind() const noexcept {return kind_;}
+        constexpr bool is_rx() const noexcept {return is_rx_;}
     private:
         Kind kind_:7;
         bool is_rx_:1;

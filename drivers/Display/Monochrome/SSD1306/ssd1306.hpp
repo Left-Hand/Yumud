@@ -44,7 +44,7 @@ public:
     IResult<> enable_inversion(const Enable inv_en){
         return transport_.write_command(0xA7 - ((inv_en == EN)));}  
 
-    [[nodiscard]] math::Vec2<uint16_t> size() const {return frame_.size();}
+    [[nodiscard]] math::Vec2<uint16_t> size() const noexcept {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
 
 private:

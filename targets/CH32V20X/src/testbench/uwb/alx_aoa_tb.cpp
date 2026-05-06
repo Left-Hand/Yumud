@@ -49,7 +49,7 @@ struct [[nodiscard]] Mk8Measurement{
         };
     }
 
-    friend OutputStream & operator << (OutputStream & os, const Self & self){
+    friend OutputStream & operator << (OutputStream & os, const Self & self) noexcept {
         return os
             << os.field("distance")(self.distance) << os.splitter()
             << os.field("strength")(self.strength)

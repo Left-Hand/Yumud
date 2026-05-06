@@ -68,7 +68,7 @@ public:
     }
 
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return pos_ == bytes_.size();
     }
 private:
@@ -118,7 +118,7 @@ struct CDS55XX_Prelude {
 
         constexpr Command(Kind kind):kind_(kind){}
 
-        constexpr uint8_t to_u8() const {return static_cast<uint8_t>(kind_);}
+        constexpr uint8_t to_u8() const noexcept {return static_cast<uint8_t>(kind_);}
     private:
         Kind kind_;
     };
@@ -128,7 +128,7 @@ struct CDS55XX_Prelude {
     class ServoId{
     public:
         explicit constexpr ServoId(uint8_t id):id_(id){}
-        constexpr uint8_t to_u8() const {return id_;}
+        constexpr uint8_t to_u8() const noexcept {return id_;}
     private:
         uint8_t id_;
     };
@@ -372,14 +372,14 @@ class CDS55XX_Transport:public CDS55XX_Prelude{
 
     class Oper{
         template<size_t N>
-        [[nodiscard]] constexpr auto write_data(const uint8_t addr, const std::array<uint8_t, N>data) const {
+        [[nodiscard]] constexpr auto write_data(const uint8_t addr, const std::array<uint8_t, N>data) const noexcept {
             return make_oper(CDS55XX_MetaUtils::FrameFactory::write_data(id_, addr, std::span(data)));
         }
     private:
         ServoId id_;
     };
 
-    const auto operate() const {
+    const auto operate() const noexcept {
         return oper_;
     }
 private:

@@ -53,13 +53,13 @@ struct S21C_RxActivity{
                 break;
         }
     }
-    State state() const{ return state_; }
+    State state() const noexcept { return state_; }
 
-    bool has_received() const{ 
+    bool has_received() const noexcept { 
         return state_ == State::Received;
     }
 
-    Option<Microseconds> elapsed() const {
+    Option<Microseconds> elapsed() const noexcept {
         if(state_ != State::Received) return None;
         return Some(Microseconds{end_us_ - begin_us_});
     }

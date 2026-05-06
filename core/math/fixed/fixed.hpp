@@ -141,12 +141,12 @@ public:
 
     template<size_t P, typename U>
     requires (sizeof(D) == sizeof(U))
-    __attribute__((always_inline)) constexpr operator fixed<P, U>() const {
+    __attribute__((always_inline)) constexpr operator fixed<P, U>() const noexcept {
         const auto new_bits = static_cast<U>(transform<P>(bits));
         return fixed<P, U>::from_bits(new_bits);
     }
 
-    __attribute__((always_inline)) constexpr D to_bits() const {return bits;}
+    __attribute__((always_inline)) constexpr D to_bits() const noexcept {return bits;}
     
     template<size_t P>
     __attribute__((always_inline)) constexpr 
@@ -200,7 +200,7 @@ public:
     }
 
     __attribute__((always_inline)) constexpr 
-    fixed operator+() const {
+    fixed operator+() const noexcept {
         return *this;
     }
 
@@ -213,7 +213,7 @@ public:
 
     template<typename D2>
     __attribute__((always_inline)) constexpr 
-    fixed<Q, D2> cast_inner() const {
+    fixed<Q, D2> cast_inner() const noexcept {
         return fixed<Q, D2>::from_bits(static_cast<D2>(to_bits()));
     }
 
@@ -244,32 +244,32 @@ public:
 
     //#region shifts
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    fixed operator<<(size_t shift) const {
+    fixed operator<<(size_t shift) const noexcept {
         return fixed::from_bits((this->to_bits() << shift));
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    fixed operator>>(size_t shift) const {
+    fixed operator>>(size_t shift) const noexcept {
         return fixed::from_bits((this->to_bits() >> shift));
     }
     //#endregion
 
     [[nodiscard]] __attribute__((always_inline)) constexpr explicit 
-    operator bool() const {
+    operator bool() const noexcept {
         return bool(this->to_bits());
     }
 
     template<typename T>
     requires std::is_integral_v<T>
     [[nodiscard]] __attribute__((always_inline)) constexpr explicit 
-    operator T() const {
+    operator T() const noexcept {
         return static_cast<T>(this->to_bits() >> Q);
     }
     
 
     template<typename T>
     requires std::is_floating_point_v<T> __inline constexpr explicit 
-    operator T() const{
+    operator T() const noexcept {
         if(std::is_constant_evaluated()){
             return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{

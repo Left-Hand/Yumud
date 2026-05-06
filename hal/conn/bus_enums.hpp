@@ -21,7 +21,7 @@ public:
 
     PeriphUserId(const id_type id):id_(id){}
     
-    PeriphUserId clone() const{return *this;}
+    PeriphUserId clone() const noexcept {return *this;}
 
     void emplace(const PeriphUserId & other){id_ = other.id_;}
     void emplace(PeriphUserId && other){id_ = other.id_;}

@@ -32,7 +32,7 @@ public:
             z = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angular<iq20> angle() const {
+        constexpr Angular<iq20> angle() const noexcept {
             return e.angle();
         }
     };
@@ -79,7 +79,7 @@ public:
 
 
     // 获取估计的转子角度
-    Angular<iq16> angle() const {return Angular<iq16>::from_turns(turns_);}
+    Angular<iq16> angle() const noexcept {return Angular<iq16>::from_turns(turns_);}
 
 private:
     iq16 f_para_ = 0;
@@ -96,7 +96,7 @@ public:
     // 滑模阈值的倒数
     static constexpr iq16 invE0 = iq16(1/1.5);
 
-    constexpr iq16 sat(const iq16 x) const {
+    constexpr iq16 sat(const iq16 x) const noexcept {
         if(x > E0) return Kslide_;
         else if (x < -E0) return -Kslide_;
         else return Kslide_ * x * invE0;

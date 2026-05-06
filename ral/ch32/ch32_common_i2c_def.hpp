@@ -284,11 +284,11 @@ struct [[nodiscard]] I2C_Def{
             );
         }
 
-        constexpr uint16_t low16() const{
+        constexpr uint16_t low16() const noexcept {
             return uint16_t(std::bit_cast<uint32_t> (*this));
         }
 
-        constexpr uint8_t high8() const{
+        constexpr uint8_t high8() const noexcept {
             return uint8_t(std::bit_cast<uint32_t> (*this) >> 16);
         }
     };

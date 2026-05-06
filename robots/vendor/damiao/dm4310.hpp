@@ -14,7 +14,7 @@ struct [[nodiscard]] PosVelParam final{
     math::fp32 q;
     math::fp32 dq;
 
-    constexpr hal::ClassicCanPayload to_can_payload() const {
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
         const auto pos_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.q);
@@ -36,7 +36,7 @@ struct [[nodiscard]] PosVelParam final{
 
 struct [[nodiscard]] PosVelParam final{
     math::fp32 dq;
-    constexpr hal::ClassicCanPayload to_can_payload() const {
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
         const auto vel_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.dq);
@@ -58,11 +58,11 @@ struct [[nodiscard]] QdCode final{
         return Self{std::bit_cast<uint16_t>(uint16_t(rps * 100.0f))};
     }
 
-    constexpr std::array<uint8_t, 2> to_bytes() const{ 
+    constexpr std::array<uint8_t, 2> to_bytes() const noexcept { 
         return {uint8_t(bits & 0xFF), uint8_t(bits >> 8)};
     }
 
-    constexpr float to_rps() const{
+    constexpr float to_rps() const noexcept {
         return float(bits) / 100.0f;
     }
 };
@@ -78,12 +78,12 @@ struct [[nodiscard]] TorqueCurrentLimitCode final{
         return Self{static_cast<uint16_t>(x * 10000.0f)};
     }
 
-    constexpr std::array<uint8_t, 2> to_bytes() const{ 
+    constexpr std::array<uint8_t, 2> to_bytes() const noexcept { 
         return {uint8_t(bits & 0xFF), uint8_t(bits >> 8)};
     }
 
 
-    constexpr float to_perunit() const{
+    constexpr float to_perunit() const noexcept {
         return float(bits) / 10000.0f;
     }
 };
@@ -95,7 +95,7 @@ struct PosForceParam{
     QdCode qd_code;
     TorqueCurrentLimitCode torque_current_limit_code;
 
-    constexpr hal::ClassicCanPayload to_can_payload() const {
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
         const auto pos_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.q);
@@ -122,7 +122,7 @@ struct [[nodiscard]] MitParams final{
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
         bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
@@ -133,7 +133,7 @@ struct [[nodiscard]] MitParams final{
         bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
     };
 
-    constexpr hal::ClassicCanPayload to_can_payload() const{
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         std::array<uint8_t, 8> bytes;
         fill_bytes(bytes);
         return hal::ClassicCanPayload::from_u8x8(bytes);
@@ -148,30 +148,30 @@ struct FrameFactory{
     // 7.2.1 使能、失能、保存零点、清除错误
     // 电机需要发送使能命令后，电机LED由红变绿之后才可以进行控制，无论使用哪种模
     // 式，使能电机的命令都是一样的
-    constexpr hal::ClassicCanFrame enable() const {
+    constexpr hal::ClassicCanFrame enable() const noexcept {
         return hal::ClassicCanFrame::from_parts(motor_can_id, pack_command_data(0xFC));
     }
 
-    constexpr hal::ClassicCanFrame disable() const {
+    constexpr hal::ClassicCanFrame disable() const noexcept {
         return hal::ClassicCanFrame::from_parts(motor_can_id, pack_command_data(0xFD));
     }
 
     // 保存零点
-    constexpr hal::ClassicCanFrame set_zero() const {
+    constexpr hal::ClassicCanFrame set_zero() const noexcept {
         return hal::ClassicCanFrame::from_parts(motor_can_id, pack_command_data(0xFE));
     }
 
     //清除错误
-    constexpr hal::ClassicCanFrame clear_error() const {
+    constexpr hal::ClassicCanFrame clear_error() const noexcept {
         return hal::ClassicCanFrame::from_parts(motor_can_id, pack_command_data(0xFC));
     }
 
-    constexpr hal::ClassicCanFrame mit_control(const MitParams& mit_param) const {
+    constexpr hal::ClassicCanFrame mit_control(const MitParams& mit_param) const noexcept {
         return hal::ClassicCanFrame::from_parts(motor_can_id, mit_param.to_can_payload());
     }
 
 
-    constexpr hal::ClassicCanFrame posvel_control(const PosVelParam& posvel_param) const {
+    constexpr hal::ClassicCanFrame posvel_control(const PosVelParam& posvel_param) const noexcept {
         // pos vel mode needs extra 0x100
         return hal::ClassicCanFrame::from_parts(POS_VEL_MODE + motor_can_id, posvel_param.to_can_payload());
     }
@@ -188,7 +188,7 @@ struct FrameFactory{
         return pack_write_param(motor_can_id, reg_addr, param_bytes); 
     }
 
-    constexpr hal::ClassicCanFrame query_param(uint8_t reg_addr) const {
+    constexpr hal::ClassicCanFrame query_param(uint8_t reg_addr) const noexcept {
 
         return hal::ClassicCanFrame::from_parts(NMT_CAN_FRAME_ID, pack_query_param_data(motor_can_id, reg_addr));
     }
@@ -197,7 +197,7 @@ private:
     struct [[nodiscard]] IdBase final{
         uint16_t count;
 
-        constexpr hal::CanStdId  operator +(const hal::CanStdId stdid) const {
+        constexpr hal::CanStdId  operator +(const hal::CanStdId stdid) const noexcept {
             return hal::CanStdId::from_u11(count + stdid.to_u11());
         }
     };

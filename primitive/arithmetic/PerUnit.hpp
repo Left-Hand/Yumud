@@ -14,7 +14,7 @@ struct [[nodiscard]] _PerUnitCrtpBase{
         D(INVLERP(_get_min(), _get_max(), CLAMP(count, _get_min(), _get_max())) * std::numeric_limits<D>::max()))){;}
 
     template<typename T>
-    [[nodiscard]] constexpr T to() const {
+    [[nodiscard]] constexpr T to() const noexcept {
         return LERP(
             _get_min(), 
             _get_max(), 
@@ -30,15 +30,15 @@ struct [[nodiscard]] _PerUnitCrtpBase{
         return std::weak_ordering::equivalent;
     }
 
-    [[nodiscard]] constexpr std::weak_ordering validate() const {
+    [[nodiscard]] constexpr std::weak_ordering validate() const noexcept {
         return static_validate(count());
     }
 
-    [[nodiscard]] constexpr auto operator<=>(const auto other) const {
+    [[nodiscard]] constexpr auto operator<=>(const auto other) const noexcept {
         return count_ <=> other.count_;
     }
 
-    [[nodiscard]] constexpr D count() const {return count_;}
+    [[nodiscard]] constexpr D count() const noexcept {return count_;}
     
 private:
     D count_;

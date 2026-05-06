@@ -41,7 +41,7 @@ void m2006_main(){
             int16_t d;
             int16_t d2;
 
-            constexpr std::array<uint8_t, 4> to_bytes() const{
+            constexpr std::array<uint8_t, 4> to_bytes() const noexcept {
                 return std::bit_cast<std::array<uint8_t, 4>>(*this);
             }
         };

@@ -30,7 +30,7 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return self;
 	}
 
-	constexpr fp32 operator -() const {
+	constexpr fp32 operator -() const noexcept {
 		return Self::from_bits(this->to_bits() ^ 0x80000000);
 	}
 
@@ -38,7 +38,7 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return fp32(std::bit_cast<float>(bits));
 	}
 
-	[[nodiscard]] constexpr uint32_t to_bits() const {
+	[[nodiscard]] constexpr uint32_t to_bits() const noexcept {
 		return std::bit_cast<uint32_t>(*this);
 	}
 
@@ -46,7 +46,7 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return float(*this) <=> float(other);
 	}
 
-	[[nodiscard]] constexpr bool is_nan() const{
+	[[nodiscard]] constexpr bool is_nan() const noexcept {
 		return std::bit_cast<uint32_t>(*this) == 0x7fc00000;
 	}
 
@@ -54,7 +54,7 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return Self::from_bits(0x7fc00000);
 	}
 
-    [[nodiscard]] explicit constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const noexcept {
         return std::bit_cast<float>(*this);
     }
 

@@ -122,7 +122,7 @@ struct alignas(2) [[nodiscard]] fp16 final{
         return std::bit_cast<fp16>(bits);
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
@@ -135,23 +135,23 @@ struct alignas(2) [[nodiscard]] fp16 final{
     }
     constexpr fp16(const double val):fp16(static_cast<float>(val)){};
 
-    [[nodiscard]] constexpr bool is_nan() const {
+    [[nodiscard]] constexpr bool is_nan() const noexcept {
         return exp == 0x1F && mant != 0;
     }
 
-    [[nodiscard]] explicit constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const noexcept {
         return intrinsics::fp16_to_fp32_nonfpu(to_bits());
     }
 
     template<typename D>
     requires (std::is_integral_v<D>)
-    [[nodiscard]] explicit constexpr operator D() const {
+    [[nodiscard]] explicit constexpr operator D() const noexcept {
         return static_cast<D>(static_cast<float>(*this));
     }
 
 
     template<size_t Q, typename D>
-    [[nodiscard]] explicit constexpr operator fixed<Q, D>() const{
+    [[nodiscard]] explicit constexpr operator fixed<Q, D>() const noexcept {
         return fixed<Q, D>(float(*this));
     }
 

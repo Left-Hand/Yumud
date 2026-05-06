@@ -23,7 +23,7 @@ struct ScanLine{
     math::Range2<uint16_t> x_range;
     uint16_t y;
 
-    math::Rect2u16 bounding_box() const{
+    math::Rect2u16 bounding_box() const noexcept {
         return math::Rect2u16(math::Vec2u16{x_range.start, y}, math::Vec2u16{x_range.length(), 1});
     }
 };
@@ -150,7 +150,7 @@ template<
 requires (is_placed_t<Shape>::value)
 struct RasterizationIterator final{
     // template<typename Target>
-    // Result<void, Error> draw(Target & target) const{
+    // Result<void, Error> draw(Target & target) const noexcept {
     //     target.draw(shape_, style_);
     // }
 };

@@ -88,7 +88,7 @@ struct [[nodiscard]] ArrAndPsc{
         return ret;
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("arr")(self.arr) << os.splitter() 
             << os.field("psc")(self.psc);
     }
@@ -136,11 +136,11 @@ struct [[nodiscard]] CountMode{
 
     constexpr CountMode(Kind kind):kind_(kind){}
     constexpr CountMode(const CountMode &) = default;
-    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {return static_cast<uint32_t>(kind_);}
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {return static_cast<uint32_t>(kind_);}
 
-    [[nodiscard]] constexpr bool is_center_aligned() const {
+    [[nodiscard]] constexpr bool is_center_aligned() const noexcept {
         switch(kind()){
             case CenterAlignedDownTrig:
             case CenterAlignedUpTrig:
@@ -173,13 +173,13 @@ struct [[nodiscard]] ChannelSelection{
     constexpr ChannelSelection(const Kind kind):
         kind_(kind){}
 
-    [[nodiscard]] constexpr Kind kind() const{ return kind_; }
+    [[nodiscard]] constexpr Kind kind() const noexcept { return kind_; }
 
-    [[nodiscard]] constexpr size_t index() const {
+    [[nodiscard]] constexpr size_t index() const noexcept {
         return (std::bit_cast<uint8_t>(kind_) >> 1);
     }
 
-    [[nodiscard]] constexpr bool is_co() const {
+    [[nodiscard]] constexpr bool is_co() const noexcept {
         return (std::bit_cast<uint8_t>(kind_)) & 0x01;
     }
 private:

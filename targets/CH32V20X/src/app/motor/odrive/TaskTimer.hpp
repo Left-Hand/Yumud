@@ -54,7 +54,7 @@ public:
         context_.max_length = std::max(context_.max_length, length);
     }
 
-    const auto & context() const{return context_;}
+    const auto & context() const noexcept {return context_;}
 };
 
 

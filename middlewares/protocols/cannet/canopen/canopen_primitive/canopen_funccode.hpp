@@ -70,7 +70,7 @@ struct [[nodiscard]] PdoOnlyFunctionCode final{
     }
 
     [[nodiscard]] constexpr 
-    Option<uint8_t> rank() const {
+    Option<uint8_t> rank() const noexcept {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo1):
@@ -89,7 +89,7 @@ struct [[nodiscard]] PdoOnlyFunctionCode final{
     }
 
     [[nodiscard]] constexpr 
-    Option<Self> conj() const {
+    Option<Self> conj() const noexcept {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
                 return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo1));
@@ -126,28 +126,28 @@ struct [[nodiscard]] FunctionCode final{
         return FunctionCode(static_cast<Kind>(bits));
     }
 
-    [[nodiscard]] constexpr uint8_t to_u4() const {
+    [[nodiscard]] constexpr uint8_t to_u4() const noexcept {
         return static_cast<uint8_t>(static_cast<uint8_t>(kind_) & 0x0f);
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return static_cast<uint8_t>(kind_);
     }
 
-    [[nodiscard]] constexpr bool operator ==(const FunctionCode &other) const {
+    [[nodiscard]] constexpr bool operator ==(const FunctionCode &other) const noexcept {
         return kind_ == other.kind_;
     }
 
-    [[nodiscard]] constexpr bool operator ==(const FunctionCodeKind &kind) const {
+    [[nodiscard]] constexpr bool operator ==(const FunctionCodeKind &kind) const noexcept {
         return kind_ == kind;
     }
-    [[nodiscard]] constexpr bool is_nmt() const {return kind_ == Kind::Nmt;}
-    [[nodiscard]] constexpr bool is_sync() const {return kind_ == Kind::Sync;}
-    [[nodiscard]] constexpr bool is_energency() const {return kind_ == Kind::Emergency;}
-    [[nodiscard]] constexpr bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
-    [[nodiscard]] constexpr bool is_resp_sdo() const { return (kind_ == Kind::RespSdo);}
-    [[nodiscard]] constexpr bool is_req_sdo() const { return (kind_ == Kind::ReqSdo);}
-    [[nodiscard]] constexpr bool is_tx_pdo() const {
+    [[nodiscard]] constexpr bool is_nmt() const noexcept {return kind_ == Kind::Nmt;}
+    [[nodiscard]] constexpr bool is_sync() const noexcept {return kind_ == Kind::Sync;}
+    [[nodiscard]] constexpr bool is_energency() const noexcept {return kind_ == Kind::Emergency;}
+    [[nodiscard]] constexpr bool is_heartbeat() const noexcept {return kind_ == Kind::Heartbeat;}
+    [[nodiscard]] constexpr bool is_resp_sdo() const noexcept { return (kind_ == Kind::RespSdo);}
+    [[nodiscard]] constexpr bool is_req_sdo() const noexcept { return (kind_ == Kind::ReqSdo);}
+    [[nodiscard]] constexpr bool is_tx_pdo() const noexcept {
         switch(kind_){
             case Kind::TxPdo1:
             case Kind::TxPdo2:
@@ -158,7 +158,7 @@ struct [[nodiscard]] FunctionCode final{
                 return false;
         }
     }
-    [[nodiscard]] constexpr bool is_rx_pdo() const {
+    [[nodiscard]] constexpr bool is_rx_pdo() const noexcept {
         switch(kind_){
             case Kind::RxPdo1:
             case Kind::RxPdo2:
@@ -171,7 +171,7 @@ struct [[nodiscard]] FunctionCode final{
     }
 
     [[nodiscard]] constexpr 
-    Option<uint8_t> pdo_rank() const {
+    Option<uint8_t> pdo_rank() const noexcept {
         switch(kind_){
             case Kind::RxPdo1:
                 return Some<uint8_t>(1);
@@ -187,7 +187,7 @@ struct [[nodiscard]] FunctionCode final{
     }
 
     [[nodiscard]] constexpr 
-    Option<PdoOnlyFunctionCode> try_to_pdo_fc() const {
+    Option<PdoOnlyFunctionCode> try_to_pdo_fc() const noexcept {
         return PdoOnlyFunctionCode::try_from_fc_kind(kind_);
     }
 

@@ -38,11 +38,11 @@ struct BresenhamIterator {
         }
     }
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return current_y_ <= max_y_;
     }
 
-    constexpr math::Range2<T> current() const {
+    constexpr math::Range2<T> current() const noexcept {
         if (!has_next()) return math::Range2<T>{0, 0};
         return math::Range2<T>::from_start_and_length(current_x_, 1);
     }
@@ -110,15 +110,15 @@ struct LineDDAIterator{
         self.stop_y_ = fixed_segment.stop.y;
     }
 
-    __fast_inline constexpr bool has_next() const {
+    __fast_inline constexpr bool has_next() const noexcept {
         return current_y_ < stop_y_;
     }
 
-    __fast_inline constexpr iq16 x() const {
+    __fast_inline constexpr iq16 x() const noexcept {
         return current_x_;
     }
 
-    __fast_inline constexpr math::Range2<int16_t> x_range() const{
+    __fast_inline constexpr math::Range2<int16_t> x_range() const noexcept {
         const iq16 a = x();
         const iq16 b = a + x_step();
         if(a < b){
@@ -139,7 +139,7 @@ struct LineDDAIterator{
         current_x_ += x_step_;
     }
 
-    __fast_inline constexpr iq16 x_step() const {
+    __fast_inline constexpr iq16 x_step() const noexcept {
         return x_step_;
     }
 private:
@@ -170,26 +170,26 @@ public:
         replace_x();
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return y_offset_ < radius_;
     }
 
-    [[nodiscard]] constexpr math::Range2<int16_t> x_range() const{
+    [[nodiscard]] constexpr math::Range2<int16_t> x_range() const noexcept {
         return math::Range2<int16_t>{x0_ + x_offset_, x0_ - x_offset_};
     }
 
-    constexpr std::tuple<math::Range2<int16_t>, math::Range2<int16_t>> left_and_right() const {
+    constexpr std::tuple<math::Range2<int16_t>, math::Range2<int16_t>> left_and_right() const noexcept {
         return {
             math::Range2<int16_t>{x0_ + x_offset_, x0_ + x_offset_ + 1},
             math::Range2<int16_t>{x0_ - x_offset_, x0_ - x_offset_ + 1}
         };
     }
 
-    constexpr bool is_y_at_edge() const {
+    constexpr bool is_y_at_edge() const noexcept {
         return y_offset_ == (radius_ - 1) || y_offset_ == (-radius_);
     }
 
-    constexpr bool is_y_at_zero() const {
+    constexpr bool is_y_at_zero() const noexcept {
         return y_offset_ == 0;
     }
 private:

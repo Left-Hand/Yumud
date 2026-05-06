@@ -44,7 +44,7 @@ public:
         // return output;
     }
 
-    T result() const {
+    T result() const noexcept {
         return y1_;
     }
     

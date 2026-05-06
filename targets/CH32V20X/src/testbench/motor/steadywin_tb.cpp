@@ -41,7 +41,7 @@ struct EncoderFeedback{
         };
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         return os 
             << os.field("multilap_angle")(self.multilap_angle.to_turns()) << os.splitter()
             << os.field("lap_angle")(self.lap_angle.to_turns());

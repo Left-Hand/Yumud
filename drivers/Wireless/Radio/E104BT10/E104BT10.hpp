@@ -42,11 +42,11 @@ struct E104BT10_Prelude{
             };
         }
 
-        constexpr std::span<const uint8_t> as_bytes() const {
+        constexpr std::span<const uint8_t> as_bytes() const noexcept {
             return std::span<const uint8_t>(payload.data(), len);
         }
 
-        constexpr size_t size()const{
+        constexpr size_t size() const noexcept {
             return len;
         }
     };

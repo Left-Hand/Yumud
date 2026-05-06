@@ -18,11 +18,11 @@ struct [[nodiscard]] NodeId{
         return from_u7(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t to_u7() const{
+    [[nodiscard]] constexpr uint8_t to_u7() const noexcept {
         return bits;
     }
 
-    [[nodiscard]] constexpr uint8_t count() const{
+    [[nodiscard]] constexpr uint8_t count() const noexcept {
         return to_u7();
     }
 };

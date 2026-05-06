@@ -336,20 +336,20 @@ private:
   extents_type exts = {};
 
   MDSPAN_INLINE_FUNCTION constexpr index_type
-  compute_offset(std::index_sequence<>) const {
+  compute_offset(std::index_sequence<>) const noexcept {
     return 0;
   }
 
   template <size_t Rank, class IndexOffset>
   MDSPAN_INLINE_FUNCTION constexpr index_type
-  compute_offset(std::index_sequence<Rank>, IndexOffset index_offset) const {
+  compute_offset(std::index_sequence<Rank>, IndexOffset index_offset) const noexcept {
     return index_offset;
   }
 
   template <size_t... Ranks, class... IndexOffsets>
   MDSPAN_INLINE_FUNCTION constexpr index_type
   compute_offset(std::index_sequence<Ranks...>,
-                 IndexOffsets... index_offsets) const {
+                 IndexOffsets... index_offsets) const noexcept {
     index_type indices[] = {static_cast<index_type>(index_offsets)...};
     // self-recursive fold trick from
     // https://github.com/llvm/llvm-project/blob/96e1914aa2e6d8966acbfbe2f4d184201f1aa318/libcxx/include/mdspan/layout_left.h#L144
@@ -735,20 +735,20 @@ public:
   extents_type exts = {};
 
   MDSPAN_INLINE_FUNCTION constexpr index_type
-  compute_offset(std::index_sequence<>) const {
+  compute_offset(std::index_sequence<>) const noexcept {
     return 0;
   }
 
   template <size_t Rank, class IndexOffset>
   MDSPAN_INLINE_FUNCTION constexpr index_type
-  compute_offset(std::index_sequence<Rank>, IndexOffset index_offset) const {
+  compute_offset(std::index_sequence<Rank>, IndexOffset index_offset) const noexcept {
     return index_offset;
   }
 
   template <size_t... Ranks, class... IndexOffsets>
   MDSPAN_INLINE_FUNCTION constexpr index_type
   compute_offset(std::index_sequence<Ranks...>,
-                 IndexOffsets... index_offsets) const {
+                 IndexOffsets... index_offsets) const noexcept {
     // self-recursive fold trick from
     // https://github.com/llvm/llvm-project/blob/4d9771741d40cc9cfcccb6b033f43689d36b705a/libcxx/include/mdspan/layout_right.h#L141
     index_type res = 0;

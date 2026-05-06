@@ -72,7 +72,7 @@ struct StdRange<Iter> {
             }
         }
 
-        constexpr const value_type& operator*() const { return current_.value(); }
+        constexpr const value_type& operator*() const noexcept { return current_.value(); }
         constexpr value_type& operator*() { return current_.value(); }
 
         constexpr Iterator& operator++() {
@@ -90,7 +90,7 @@ struct StdRange<Iter> {
             return tmp;
         }
 
-        constexpr bool operator==(Sentinel) const {
+        constexpr bool operator==(Sentinel) const noexcept {
             return !current_.has_value();
         }
 
@@ -101,11 +101,11 @@ struct StdRange<Iter> {
 
     explicit constexpr StdRange(Iter iter) : iter_(iter) {}
 
-    constexpr Iterator begin() const {
+    constexpr Iterator begin() const noexcept {
         return Iterator(iter_);
     }
 
-    constexpr Sentinel end() const {
+    constexpr Sentinel end() const noexcept {
         return Sentinel{};
     }
 
@@ -134,8 +134,8 @@ struct StdRange<Iter> {
 
         explicit constexpr StdRange(Iter iter) : iter_(iter) {}
 
-        constexpr reference operator*() const { return *iter_; }
-        constexpr pointer operator->() const { return &(*iter_); }
+        constexpr reference operator*() const noexcept { return *iter_; }
+        constexpr pointer operator->() const noexcept { return &(*iter_); }
 
         constexpr StdRange& operator++() {
             ++iter_;
@@ -148,7 +148,7 @@ struct StdRange<Iter> {
             return tmp;
         }
 
-        constexpr bool operator==(const StdRange& other) const {
+        constexpr bool operator==(const StdRange& other) const noexcept {
             return iter_ == other.iter_;
         }
     }
@@ -183,8 +183,8 @@ struct StdRange<Range> {
             : iter_(iter), end_(end) {}
 
         // 解引用
-        constexpr reference operator*() const { return *iter_; }
-        constexpr pointer operator->() const { return &(*iter_); }
+        constexpr reference operator*() const noexcept { return *iter_; }
+        constexpr pointer operator->() const noexcept { return &(*iter_); }
 
         // 前置++
         constexpr Iterator& operator++() {
@@ -200,21 +200,21 @@ struct StdRange<Range> {
         }
 
         // == 比较
-        constexpr bool operator==(const Iterator& other) const {
+        constexpr bool operator==(const Iterator& other) const noexcept {
             return iter_ == other.iter_;
         }
 
         // != 比较（C++20 前 range-for 需要）
-        constexpr bool operator!=(const Iterator& other) const {
+        constexpr bool operator!=(const Iterator& other) const noexcept {
             return iter_ != other.iter_;
         }
 
         // 与哨位比较
-        constexpr bool operator==(const sentinel_type& end) const {
+        constexpr bool operator==(const sentinel_type& end) const noexcept {
             return iter_ == end;
         }
 
-        constexpr bool operator!=(const sentinel_type& end) const {
+        constexpr bool operator!=(const sentinel_type& end) const noexcept {
             return iter_ != end;
         }
 
@@ -229,8 +229,8 @@ struct StdRange<Range> {
             end_(std::forward<Range>(range).end()) {}
 
     // 提供 begin() 和 end()，支持 range-for
-    constexpr Iterator begin() const { return Iterator(begin_, end_); }
-    constexpr sentinel_type end() const { return end_; }
+    constexpr Iterator begin() const noexcept { return Iterator(begin_, end_); }
+    constexpr sentinel_type end() const noexcept { return end_; }
 
 private:
     iterator_type begin_;

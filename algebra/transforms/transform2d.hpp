@@ -68,13 +68,13 @@ struct Transform2D{
 	static constexpr Transform2D<T> FLIP_Y = Transform2D(1, 0, 0, -1, 0, 0);
 
 
-	inline T tdotx(const Vec2<T> &v) const { return elements[0][0] * v.x + elements[1][0] * v.y; }
-	inline T tdoty(const Vec2<T> &v) const { return elements[0][1] * v.x + elements[1][1] * v.y; }
+	inline T tdotx(const Vec2<T> &v) const noexcept { return elements[0][0] * v.x + elements[1][0] * v.y; }
+	inline T tdoty(const Vec2<T> &v) const noexcept { return elements[0][1] * v.x + elements[1][1] * v.y; }
 
-	inline const Vec2<T> &operator[](int p_idx) const { return elements[p_idx]; }
+	inline const Vec2<T> &operator[](int p_idx) const noexcept { return elements[p_idx]; }
 	inline Vec2<T> &operator[](int p_idx) { return elements[p_idx]; }
 
-	inline Vec2<T> get_axis(int p_axis) const {
+	inline Vec2<T> get_axis(int p_axis) const noexcept {
 		return elements[p_axis];
 	}
 	inline void set_axis(int p_axis, const Vec2<T> &p_vec) {
@@ -101,7 +101,7 @@ struct Transform2D{
 
 	Vec2<T> get_scale() const;
 
-	inline const Vec2<T> &get_origin() const { return elements[2]; }
+	inline const Vec2<T> &get_origin() const noexcept { return elements[2]; }
 	inline void set_origin(const Vec2<T> &p_origin) { elements[2] = p_origin; }
 
 	Transform2D scaled(const Vec2<T> &p_scale) const;
@@ -157,21 +157,21 @@ Transform2D<T>::Transform2D(T p_rot, const Vec2<T> &p_position) {
 
 
 template<arithmetic T>
-Vec2<T> Transform2D<T>::basis_xform(const Vec2<T> &v) const {
+Vec2<T> Transform2D<T>::basis_xform(const Vec2<T> &v) const noexcept {
 	return Vec2<T>(
 			tdotx(v),
 			tdoty(v));
 }
 
 template<arithmetic T>
-Vec2<T> Transform2D<T>::basis_xform_inv(const Vec2<T> &v) const {
+Vec2<T> Transform2D<T>::basis_xform_inv(const Vec2<T> &v) const noexcept {
 	return Vec2<T>(
 			elements[0].dot(v),
 			elements[1].dot(v));
 }
 
 template<arithmetic T>
-Vec2<T> Transform2D<T>::xform(const Vec2<T> &v) const {
+Vec2<T> Transform2D<T>::xform(const Vec2<T> &v) const noexcept {
 	return Vec2<T>(
 				   tdotx(v),
 				   tdoty(v)) +
@@ -179,7 +179,7 @@ Vec2<T> Transform2D<T>::xform(const Vec2<T> &v) const {
 }
 
 template<arithmetic T>
-Vec2<T> Transform2D<T>::xform_inv(const Vec2<T> &p_vec) const {
+Vec2<T> Transform2D<T>::xform_inv(const Vec2<T> &p_vec) const noexcept {
 	Vec2<T> v = p_vec - elements[2];
 
 	return Vec2<T>(
@@ -188,7 +188,7 @@ Vec2<T> Transform2D<T>::xform_inv(const Vec2<T> &p_vec) const {
 }
 
 template<arithmetic T>
-Rect2<T> Transform2D<T>::xform(const Rect2<T> &p_rect) const {
+Rect2<T> Transform2D<T>::xform(const Rect2<T> &p_rect) const noexcept {
 	Vec2<T> x = elements[0] * p_rect.size.x;
 	Vec2<T> y = elements[1] * p_rect.size.y;
 	Vec2<T> position = xform(p_rect.position);
@@ -214,7 +214,7 @@ void Transform2D<T>::set_rotation_and_scale(T p_rot, const Vec2<T> &p_scale) {
 
 
 template<arithmetic T>
-Rect2<T> Transform2D<T>::xform_inv(const Rect2<T> &p_rect) const {
+Rect2<T> Transform2D<T>::xform_inv(const Rect2<T> &p_rect) const noexcept {
 	Vec2<T> ends[4] = {
 		xform_inv(p_rect.position),
 		xform_inv(Vec2<T>(p_rect.position.x, p_rect.position.y + p_rect.size.y)),
@@ -240,7 +240,7 @@ void Transform2D<T>::invert() {
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::inverse() const {
+Transform2D<T> Transform2D<T>::inverse() const noexcept {
 	Transform2D inv = *this;
 	inv.invert();
 	return inv;
@@ -260,7 +260,7 @@ void Transform2D<T>::affine_invert() {
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::affine_inverse() const {
+Transform2D<T> Transform2D<T>::affine_inverse() const noexcept {
 	Transform2D inv = *this;
 	inv.affine_invert();
 	return inv;
@@ -272,7 +272,7 @@ void Transform2D<T>::rotate(T p_phi) {
 }
 
 template<arithmetic T>
-T Transform2D<T>::get_rotation() const {
+T Transform2D<T>::get_rotation() const noexcept {
 	T det = basis_determinant();
 	Transform2D m = orthonormalized();
 	if (det < 0) {
@@ -294,7 +294,7 @@ void Transform2D<T>::set_rotation(T p_rot) {
 
 
 template<arithmetic T>
-Vec2<T> Transform2D<T>::get_scale() const {
+Vec2<T> Transform2D<T>::get_scale() const noexcept {
 	T det_sign = basis_determinant() > 0 ? 1 : -1;
 	return det_sign * Vec2<T>(elements[0].length(), elements[1].length());
 }
@@ -339,14 +339,14 @@ void Transform2D<T>::orthonormalize() {
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::orthonormalized() const {
+Transform2D<T> Transform2D<T>::orthonormalized() const noexcept {
 	Transform2D on = *this;
 	on.orthonormalize();
 	return on;
 }
 
 template<arithmetic T>
-bool Transform2D<T>::operator==(const Transform2D &p_transform) const {
+bool Transform2D<T>::operator==(const Transform2D &p_transform) const noexcept {
 	for (int i = 0; i < 3; i++) {
 		if (elements[i] != p_transform.elements[i])
 			return false;
@@ -356,7 +356,7 @@ bool Transform2D<T>::operator==(const Transform2D &p_transform) const {
 }
 
 template<arithmetic T>
-bool Transform2D<T>::operator!=(const Transform2D &p_transform) const {
+bool Transform2D<T>::operator!=(const Transform2D &p_transform) const noexcept {
 	for (int i = 0; i < 3; i++) {
 		if (elements[i] != p_transform.elements[i])
 			return true;
@@ -383,54 +383,54 @@ void Transform2D<T>::operator*=(const Transform2D &p_transform) {
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::operator*(const Transform2D &p_transform) const {
+Transform2D<T> Transform2D<T>::operator*(const Transform2D &p_transform) const noexcept {
 	Transform2D _t = *this;
 	_t *= p_transform;
 	return _t;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::scaled(const Vec2<T> &p_scale) const {
+Transform2D<T> Transform2D<T>::scaled(const Vec2<T> &p_scale) const noexcept {
 	Transform2D copy = *this;
 	copy.scale(p_scale);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::basis_scaled(const Vec2<T> &p_scale) const {
+Transform2D<T> Transform2D<T>::basis_scaled(const Vec2<T> &p_scale) const noexcept {
 	Transform2D copy = *this;
 	copy.scale_basis(p_scale);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::untranslated() const {
+Transform2D<T> Transform2D<T>::untranslated() const noexcept {
 	Transform2D copy = *this;
 	copy.elements[2] = Vec2<T>();
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::translated(const Vec2<T> &p_offset) const {
+Transform2D<T> Transform2D<T>::translated(const Vec2<T> &p_offset) const noexcept {
 	Transform2D copy = *this;
 	copy.translate(p_offset);
 	return copy;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::rotated(T p_phi) const {
+Transform2D<T> Transform2D<T>::rotated(T p_phi) const noexcept {
 	Transform2D copy = *this;
 	copy.rotate(p_phi);
 	return copy;
 }
 
 template<arithmetic T>
-T Transform2D<T>::basis_determinant() const {
+T Transform2D<T>::basis_determinant() const noexcept {
 	return elements[0].x * elements[1].y - elements[0].y * elements[1].x;
 }
 
 template<arithmetic T>
-Transform2D<T> Transform2D<T>::interpolate_with(const Transform2D &p_transform, T p_c) const {
+Transform2D<T> Transform2D<T>::interpolate_with(const Transform2D &p_transform, T p_c) const noexcept {
 	//extract parameters
 	Vec2<T> p1 = get_origin();
 	Vec2<T> p2 = p_transform.get_origin();

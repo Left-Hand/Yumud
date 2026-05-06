@@ -41,7 +41,7 @@ struct Zip<Views...>::iterator {
     iterator() = default;
     constexpr iterator(Views &...views): _currents{std::ranges::begin(views)...} {}
 
-    constexpr auto operator*() const {
+    constexpr auto operator*() const noexcept {
         return std::apply([&](auto &&...iters) {
             // No <auto> decay!
             // Example: zip(views::iota(1, 5), named_vector_of_int).
@@ -50,7 +50,7 @@ struct Zip<Views...>::iterator {
         }, _currents);
     }
 
-    constexpr auto operator[](difference_type n) const {
+    constexpr auto operator[](difference_type n) const noexcept {
         auto tmp = *this;
         tmp.operator+=(n);
         return tmp;
@@ -96,7 +96,7 @@ inline constexpr struct Zip_fn {
     // template <std::ranges::input_range ...Rs>
     template <typename ...Rs>
     [[nodiscard]]
-    constexpr auto operator()(Rs &&...rs) const {
+    constexpr auto operator()(Rs &&...rs) const noexcept {
         if constexpr (sizeof...(rs) == 0) {
             return std::views::empty<std::tuple<>>;
         } else {

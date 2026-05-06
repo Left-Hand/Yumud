@@ -26,7 +26,7 @@ struct [[nodiscard]] AngleLoopPid final{
     uint16_t kd;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             static_cast<uint8_t>(kp),
             static_cast<uint8_t>(kp >> 8),
@@ -50,7 +50,7 @@ struct [[nodiscard]] SpeedLoopPid final{
     uint16_t kd;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             static_cast<uint8_t>(kp),
             static_cast<uint8_t>(kp >> 8),
@@ -74,7 +74,7 @@ struct [[nodiscard]] CurrentLoopPid final{
     uint16_t kd;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             static_cast<uint8_t>(kp),
             static_cast<uint8_t>(kp >> 8),
@@ -96,7 +96,7 @@ struct [[nodiscard]] MaxTorqueCurrent final{
     int16_t value;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         // 协议：放在 byte3、byte4，前两字节填 0x00
         const std::array<uint8_t, 6> buf = {
             0x00,
@@ -119,7 +119,7 @@ struct [[nodiscard]] MaxSpeed final{
     int32_t value;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         // 协议：放在 byte3~6，前两字节填 0x00
         const std::array<uint8_t, 6> buf = {
             0x00,
@@ -142,7 +142,7 @@ struct [[nodiscard]] AngleLimit final{
     int32_t value;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             0x00,
             0x00,
@@ -164,7 +164,7 @@ struct [[nodiscard]] CurrentRamp final{
     int32_t value;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             0x00,
             0x00,
@@ -186,7 +186,7 @@ struct [[nodiscard]] SpeedRamp final{
     int32_t value;
 
     template <typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize(Receiver &receiver) const noexcept {
         const std::array<uint8_t, 6> buf = {
             0x00,
             0x00,

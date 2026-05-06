@@ -19,7 +19,7 @@ struct PAJ7620_Prelude{
         uint8_t cw:1;
         uint8_t ccw:1;
 
-        constexpr std::bitset<8> to_bitset() const{
+        constexpr std::bitset<8> to_bitset() const noexcept {
             return std::bitset<8>(std::bit_cast<uint8_t>(*this));
         }
     };

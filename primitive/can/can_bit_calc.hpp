@@ -59,7 +59,7 @@ struct BitTimmingCalculateIterator {
     }
 
     // 检查是否还有更多组合
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return state.current_sjw != 0;
     }
 

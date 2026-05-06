@@ -39,11 +39,11 @@ public:
         push_be_u16(int_val & 0xFFFF);
     }
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return pos_ == bytes_.size();
     }
 
-    [[nodiscard]] constexpr size_t size() const {
+    [[nodiscard]] constexpr size_t size() const noexcept {
         return pos_;
     }
 private:

@@ -18,14 +18,14 @@ struct req_msgs{
 struct [[nodiscard]] Start final{
     static constexpr Command COMMAND = Command::Start;
 
-    constexpr ReqArg to_req_arg() const {
+    constexpr ReqArg to_req_arg() const noexcept {
         return ReqArg::zero();
     }
 };
 
 struct [[nodiscard]] Stop final{
     static constexpr Command COMMAND = Command::Stop;
-    constexpr ReqArg to_req_arg() const {
+    constexpr ReqArg to_req_arg() const noexcept {
         return ReqArg::zero();
     }
 };
@@ -34,7 +34,7 @@ struct [[nodiscard]] SetSpeed final{
     static constexpr Command COMMAND = Command::SetSpeed;
 
     LidarSpinSpeedCode speed;
-    constexpr ReqArg to_req_arg() const {
+    constexpr ReqArg to_req_arg() const noexcept {
         return ReqArg{static_cast<uint32_t>(speed.bits)};
     }
 };
@@ -42,7 +42,7 @@ struct [[nodiscard]] SetSpeed final{
 struct [[nodiscard]] GetSpeed final{
     static constexpr Command COMMAND = Command::GetSpeed;
 
-    constexpr ReqArg to_req_arg() const {
+    constexpr ReqArg to_req_arg() const noexcept {
         return ReqArg::zero();
     }
 };
@@ -79,7 +79,7 @@ struct [[nodiscard]] InvalidCrc final{
     uint8_t expected;
     uint8_t actual;
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("command")(self.command) << os.splitter()
             << os.field("expected")(self.expected) << os.splitter()
             << os.field("actual")(self.actual);

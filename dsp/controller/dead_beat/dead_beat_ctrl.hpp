@@ -43,7 +43,7 @@ public:
         last_i_dq_ = i_dq;
     }
 
-    constexpr const auto & get() const {return u_dq_pre_;}
+    constexpr const auto & get() const noexcept {return u_dq_pre_;}
 private:
     T R_;
     
@@ -65,14 +65,14 @@ private:
     State last_i_dq_;
     State u_dq_pre_;
     using State = StateVector<T, 2>;
-    constexpr State predict(const State i_dq_ref, const State i_dq_meas, const iq16 omega) const {
+    constexpr State predict(const State i_dq_ref, const State i_dq_meas, const iq16 omega) const noexcept {
         return {
             R_ * i_dq_ref[0] + L_d_mul_fs_ * (i_dq_ref[0] - i_dq_meas[0]) - omega * L_q_ * i_dq_meas[1],
             R_ * i_dq_ref[1] + L_q_mul_fs_ * (i_dq_ref[1] - i_dq_meas[1]) + omega * L_d_ * i_dq_meas[0] - omega * phi_;
         };
     }
 
-    constexpr State comp(const State i_dq, const State last_u_dq, const iq16 omega) const {
+    constexpr State comp(const State i_dq, const State last_u_dq, const iq16 omega) const noexcept {
         return {
             (1 - R_by_Ldfs_) * i_dq[0] + delta_ * omega * i_dq[1] + last_u_dq[0] * inv_Ldfs_;
             (1 - R_by_Lqfs_) * i_dq[1] - delta_ * omega * i_dq[0] + last_u_dq[1] * inv_Lqfs_;

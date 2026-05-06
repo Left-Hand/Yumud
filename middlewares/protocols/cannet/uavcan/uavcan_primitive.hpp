@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include "transport/uavcan_transport_primitive.hpp"
-#include "uavcan_f16.hpp"
+#include "core/math/float/fp16.hpp"
 #include "core/container/bits_set.hpp"
 
 
@@ -27,7 +27,7 @@ struct [[nodiscard]] TransferId final{
         return TransferId{static_cast<uint8_t>(bits & 0b11111)};
     }
 
-    constexpr Self rounded_inc() const {
+    constexpr Self rounded_inc() const noexcept {
         return Self{static_cast<uint8_t>((bits + 1) & 0b11111)};
     }
 };

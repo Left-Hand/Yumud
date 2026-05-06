@@ -38,7 +38,7 @@ public:
     constexpr CurvePoint(const math::Ray2<iq16> & ray):
         CurvePoint(ray.center.x, ray.center.y, ray.orientation){;}
 
-    constexpr math::Ray2<iq16> to_ray() const{
+    constexpr math::Ray2<iq16> to_ray() const noexcept {
         return math::Ray2<iq16>(
             math::Vec2<iq16>(
                 iq16(x_) >> XY_SHIFT_BITS, 

@@ -19,31 +19,31 @@ struct [[nodiscard]] dB{
         return dB(0);
     }
 
-    [[nodiscard]] constexpr T to_linear() const{
+    [[nodiscard]] constexpr T to_linear() const noexcept {
         return pow(10, val_/10);
     }
 
-    [[nodiscard]] constexpr dB operator -() const {
+    [[nodiscard]] constexpr dB operator -() const noexcept {
         return dB(-val_);
     }
 
-    [[nodiscard]] constexpr dB operator +() const {
+    [[nodiscard]] constexpr dB operator +() const noexcept {
         return dB(val_);
     }
 
-    [[nodiscard]] constexpr dB operator +(const dB & rhs) const {
+    [[nodiscard]] constexpr dB operator +(const dB & rhs) const noexcept {
         return dB(val_ + rhs.val_);
     }
 
-    [[nodiscard]] constexpr dB operator -(const dB & rhs) const {
+    [[nodiscard]] constexpr dB operator -(const dB & rhs) const noexcept {
         return dB(val_ + rhs.val_);
     }
 
-    [[nodiscard]] constexpr dB scale(const T rhs) const {
+    [[nodiscard]] constexpr dB scale(const T rhs) const noexcept {
         return dB(val_ * rhs);
     }
 
-    [[nodiscard]] constexpr T operator *(const T rhs) const {
+    [[nodiscard]] constexpr T operator *(const T rhs) const noexcept {
         return to_linear() * rhs;
     }
 private:

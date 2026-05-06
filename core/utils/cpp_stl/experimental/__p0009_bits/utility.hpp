@@ -112,7 +112,7 @@ struct tuple_member {
   static constexpr size_t idx = Idx;
   T val;
   MDSPAN_FUNCTION constexpr T& get() { return val; }
-  MDSPAN_FUNCTION constexpr const T& get() const { return val; }
+  MDSPAN_FUNCTION constexpr const T& get() const noexcept { return val; }
 };
 
 // A helper class which will be used via a fold expression to
@@ -122,7 +122,7 @@ struct tuple_idx_matcher {
   using type = tuple_member<T, Idx>;
   template<class Other>
   MDSPAN_FUNCTION
-  constexpr auto operator | ([[maybe_unused]] Other v) const {
+  constexpr auto operator | ([[maybe_unused]] Other v) const noexcept {
     if constexpr (Idx == SearchIdx) { return *this; }
     else { return v; }
   }
@@ -145,7 +145,7 @@ struct tuple_impl<std::index_sequence<Idx...>, Elements...>: public tuple_member
   }
   template<size_t N>
   MDSPAN_FUNCTION
-  constexpr const auto& get() const {
+  constexpr const auto& get() const noexcept {
     using base_t = decltype((tuple_idx_matcher<N, Idx, Elements>() | ...) );
     return base_t::type::get();
   }

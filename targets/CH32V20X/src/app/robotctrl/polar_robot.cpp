@@ -210,7 +210,7 @@ struct [[nodiscard]] StepPointIterator final{
         return now_coord_;
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return may_end_coord_.is_some() and 
             (not now_coord_.is_equal_approx(may_end_coord_.unwrap(), 0.001_iq16));
     }
@@ -266,7 +266,7 @@ struct [[nodiscard]] PolarRobotCurveGenerator final{
         return coord_;
     }
 
-    constexpr math::Vec2<iq24> last_coord() const {
+    constexpr math::Vec2<iq24> last_coord() const noexcept {
         return coord_;
     }
 private:    

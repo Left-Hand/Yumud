@@ -33,11 +33,11 @@ public:
     BinaryHeapIterator(const BinaryHeap<T, N, Compare>* heap, size_t index)
         : heap_(heap), index_(index) {}
     
-    reference operator*() const {
+    reference operator*() const noexcept {
         return (*heap_)[index_];
     }
     
-    pointer operator->() const {
+    pointer operator->() const noexcept {
         return &(*heap_)[index_];
     }
     
@@ -52,11 +52,11 @@ public:
         return temp;
     }
     
-    bool operator==(const BinaryHeapIterator& other) const {
+    bool operator==(const BinaryHeapIterator& other) const noexcept {
         return heap_ == other.heap_ && index_ == other.index_;
     }
     
-    bool operator!=(const BinaryHeapIterator& other) const {
+    bool operator!=(const BinaryHeapIterator& other) const noexcept {
         return !(*this == other);
     }
 };
@@ -214,7 +214,7 @@ public:
     constexpr size_t length() const noexcept { return len_; }
     
     // 元素访问
-    const_reference peek() const {
+    const_reference peek() const noexcept {
         if (is_empty()) {
             PANIC("Heap is empty");
         }
@@ -308,29 +308,29 @@ public:
     
     // 迭代器支持
     iterator begin() { return iterator(this, 0); }
-    const_iterator begin() const { return const_iterator(this, 0); }
-    const_iterator cbegin() const { return const_iterator(this, 0); }
+    const_iterator begin() const noexcept { return const_iterator(this, 0); }
+    const_iterator cbegin() const noexcept { return const_iterator(this, 0); }
     
     iterator end() { return iterator(this, len_); }
-    const_iterator end() const { return const_iterator(this, len_); }
-    const_iterator cend() const { return const_iterator(this, len_); }
+    const_iterator end() const noexcept { return const_iterator(this, len_); }
+    const_iterator cend() const noexcept { return const_iterator(this, len_); }
     
     reverse_iterator rbegin() { return reverse_iterator(end()); }
-    const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
-    const_reverse_iterator crbegin() const { return const_reverse_iterator(cend()); }
+    const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+    const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
     
     reverse_iterator rend() { return reverse_iterator(begin()); }
-    const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
-    const_reverse_iterator crend() const { return const_reverse_iterator(cbegin()); }
+    const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+    const_reverse_iterator crend() const noexcept { return const_reverse_iterator(cbegin()); }
     
     // 元素访问（不安全，用于迭代器）
-    const_reference operator[](size_t index) const {
+    const_reference operator[](size_t index) const noexcept {
         return data_[index];
     }
     
     // // 比较运算符
     // template<size_t M, typename OtherCompare>
-    // bool operator==(const BinaryHeap<T, M, OtherCompare>& other) const {
+    // bool operator==(const BinaryHeap<T, M, OtherCompare>& other) const noexcept {
     //     if (len_ != other.length()) {
     //         return false;
     //     }
@@ -340,7 +340,7 @@ public:
     // }
     
     template<size_t M, typename OtherCompare>
-    bool operator!=(const BinaryHeap<T, M, OtherCompare>& other) const {
+    bool operator!=(const BinaryHeap<T, M, OtherCompare>& other) const noexcept {
         return !(*this == other);
     }
     

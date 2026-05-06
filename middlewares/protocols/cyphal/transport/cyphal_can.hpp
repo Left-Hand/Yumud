@@ -14,23 +14,23 @@ public:
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const{
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
-    [[nodiscard]] constexpr TransferPriority priority() const{
+    [[nodiscard]] constexpr TransferPriority priority() const noexcept {
         return std::bit_cast<TransferPriority>(static_cast<uint8_t>(priority_));
     }
 
-    [[nodiscard]] constexpr NodeId source_id() const{
+    [[nodiscard]] constexpr NodeId source_id() const noexcept {
         return NodeId::from_bits(source_node_id_);
     }
 
-    [[nodiscard]] constexpr bool is_anoymous() const{
+    [[nodiscard]] constexpr bool is_anoymous() const noexcept {
         return anonymous_ == 0;
     }
 
-    [[nodiscard]] constexpr uint16_t subject_id() const{
+    [[nodiscard]] constexpr uint16_t subject_id() const noexcept {
         return subject_id_;
     }
 
@@ -54,27 +54,27 @@ public:
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const{
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
 
-    [[nodiscard]] constexpr TransferPriority priority() const{
+    [[nodiscard]] constexpr TransferPriority priority() const noexcept {
         return static_cast<TransferPriority>(priority_);
     }
 
-    [[nodiscard]] constexpr NodeId source_id() const{
+    [[nodiscard]] constexpr NodeId source_id() const noexcept {
         return NodeId::from_bits(source_node_id_);
     }
 
-    [[nodiscard]] constexpr NodeId destination_id() const{
+    [[nodiscard]] constexpr NodeId destination_id() const noexcept {
         return NodeId::from_bits(destination_node_id_);
     }
 
-    [[nodiscard]] constexpr bool is_request() const{
+    [[nodiscard]] constexpr bool is_request() const noexcept {
         return is_request_;
     }
 
-    [[nodiscard]] constexpr uint16_t service_id() const{
+    [[nodiscard]] constexpr uint16_t service_id() const noexcept {
         return service_id_;
     }
 private:
@@ -107,7 +107,7 @@ struct [[nodiscard]] TailByte final{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };

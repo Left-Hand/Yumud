@@ -49,23 +49,23 @@ struct [[nodiscard]] ST1663I_Regs : public ST1663I_Prelude {
         uint8_t u8_z;
 
 
-        constexpr uint16_t x() const {
+        constexpr uint16_t x() const noexcept {
             return (u8XY0H.u8X0_H << 5) | u8X0_L;
         }
 
-        constexpr uint16_t y() const {
+        constexpr uint16_t y() const noexcept {
             return (u8XY0H.u8Y0_H << 5) | u8Y0_L;
         }
 
-        constexpr uint8_t z() const {
+        constexpr uint8_t z() const noexcept {
             return u8_z;
         }
 
-        bool is_valid() const {
+        bool is_valid() const noexcept {
             return u8XY0H.is_valid;
         }
 
-        std::span<const uint8_t, 4> as_bytes() const {
+        std::span<const uint8_t, 4> as_bytes() const noexcept {
             return std::span<const uint8_t, 4>(reinterpret_cast<const uint8_t*>(std::assume_aligned<4>(this)), 4);
         }
 

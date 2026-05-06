@@ -68,10 +68,10 @@ struct Transform3D{
 	Transform3D<T> translated(const math::Vec3<T> &p_translation) const;
 	Transform3D<T> translated_local(const math::Vec3<T> &p_translation) const;
 
-	const Basis<T> &get_basis() const { return basis; }
+	const Basis<T> &get_basis() const noexcept { return basis; }
 	void set_basis(const Basis<T> &p_basis) { basis = p_basis; }
 
-	const math::Vec3<T> &get_origin() const { return origin; }
+	const math::Vec3<T> &get_origin() const noexcept { return origin; }
 	void set_origin(const math::Vec3<T> &p_origin) { origin = p_origin; }
 
 	void orthonormalize();
@@ -113,7 +113,7 @@ struct Transform3D{
 
 	Transform3D<T> interpolate_with(const Transform3D<T> &p_transform, T p_c) const;
 
-	__fast_inline Transform3D<T> inverse_xform(const Transform3D<T> & other) const {
+	__fast_inline Transform3D<T> inverse_xform(const Transform3D<T> & other) const noexcept {
 		math::Vec3<T> v = other.origin - origin;
 		return Transform3D<T>(basis.transpose_xform(other.basis),
 				basis.xform(v));
@@ -133,7 +133,7 @@ struct Transform3D{
 };
 
 template<arithmetic T>
-__fast_inline math::Vec3<T> Transform3D<T>::xform(const math::Vec3<T> &p_vector) const {
+__fast_inline math::Vec3<T> Transform3D<T>::xform(const math::Vec3<T> &p_vector) const noexcept {
 	return math::Vec3<T>(
 			basis[0].dot(p_vector) + origin.x,
 			basis[1].dot(p_vector) + origin.y,
@@ -141,7 +141,7 @@ __fast_inline math::Vec3<T> Transform3D<T>::xform(const math::Vec3<T> &p_vector)
 }
 
 template<arithmetic T>
-__fast_inline math::Vec3<T> Transform3D<T>::xform_inv(const math::Vec3<T> &p_vector) const {
+__fast_inline math::Vec3<T> Transform3D<T>::xform_inv(const math::Vec3<T> &p_vector) const noexcept {
 	math::Vec3<T> v = p_vector - origin;
 
 	return math::Vec3<T>(
@@ -157,7 +157,7 @@ __fast_inline math::Vec3<T> Transform3D<T>::xform_inv(const math::Vec3<T> &p_vec
 
 
 template<arithmetic T>
-__fast_inline Plane<T> Transform3D<T>::xform(const Plane<T> &p_plane) const {
+__fast_inline Plane<T> Transform3D<T>::xform(const Plane<T> &p_plane) const noexcept {
 	Basis<T> b = basis.inverse();
 	b.transpose();
 	return xform_fast(p_plane, b);
@@ -165,7 +165,7 @@ __fast_inline Plane<T> Transform3D<T>::xform(const Plane<T> &p_plane) const {
 
 
 template<arithmetic T>
-__fast_inline Plane<T> Transform3D<T>::xform_inv(const Plane<T> &p_plane) const {
+__fast_inline Plane<T> Transform3D<T>::xform_inv(const Plane<T> &p_plane) const noexcept {
 	Transform3D<T> inv = affine_inverse();
 	Basis<T> basis_transpose = basis.transposed();
 	return xform_inv_fast(p_plane, inv, basis_transpose);
@@ -173,7 +173,7 @@ __fast_inline Plane<T> Transform3D<T>::xform_inv(const Plane<T> &p_plane) const 
 
 
 template<arithmetic T>
-__fast_inline AABB<T> Transform3D<T>::xform(const AABB<T> &p_aabb) const {
+__fast_inline AABB<T> Transform3D<T>::xform(const AABB<T> &p_aabb) const noexcept {
 	/* https://dev.theomader.com/transform-bounding-boxes/ */
 	math::Vec3<T> min = p_aabb.position;
 	math::Vec3<T> max = p_aabb.position + p_aabb.size;
@@ -200,7 +200,7 @@ __fast_inline AABB<T> Transform3D<T>::xform(const AABB<T> &p_aabb) const {
 
 
 template<arithmetic T>
-__fast_inline AABB<T> Transform3D<T>::xform_inv(const AABB<T> &p_aabb) const {
+__fast_inline AABB<T> Transform3D<T>::xform_inv(const AABB<T> &p_aabb) const noexcept {
 	/* define vertices */
 	math::Vec3<T> vertices[8] = {
 		math::Vec3<T>(p_aabb.position.x + p_aabb.size.x, p_aabb.position.y + p_aabb.size.y, p_aabb.position.z + p_aabb.size.z),
@@ -226,7 +226,7 @@ __fast_inline AABB<T> Transform3D<T>::xform_inv(const AABB<T> &p_aabb) const {
 
 
 template<arithmetic T>
-std::vector<math::Vec3<T>> Transform3D<T>::xform(const std::vector<math::Vec3<T>> &p_array) const {
+std::vector<math::Vec3<T>> Transform3D<T>::xform(const std::vector<math::Vec3<T>> &p_array) const noexcept {
 	std::vector<math::Vec3<T>> array;
 	array.resize(p_array.size());
 
@@ -239,7 +239,7 @@ std::vector<math::Vec3<T>> Transform3D<T>::xform(const std::vector<math::Vec3<T>
 
 
 template<arithmetic T>
-std::vector<math::Vec3<T>> Transform3D<T>::xform_inv(const std::vector<math::Vec3<T>> &p_array) const {
+std::vector<math::Vec3<T>> Transform3D<T>::xform_inv(const std::vector<math::Vec3<T>> &p_array) const noexcept {
 	std::vector<math::Vec3<T>> array;
 	array.resize(p_array.size());
 
@@ -252,7 +252,7 @@ std::vector<math::Vec3<T>> Transform3D<T>::xform_inv(const std::vector<math::Vec
 
 
 template<arithmetic T>
-__fast_inline Plane<T> Transform3D<T>::xform_fast(const Plane<T> &p_plane, const Basis<T> &p_basis_inverse_transpose) const {
+__fast_inline Plane<T> Transform3D<T>::xform_fast(const Plane<T> &p_plane, const Basis<T> &p_basis_inverse_transpose) const noexcept {
 	// Transform a single point on the plane.
 	math::Vec3<T> point = p_plane.normal * p_plane.d;
 	point = xform(point);
@@ -309,7 +309,7 @@ void Transform3D<T>::affine_invert() {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::affine_inverse() const {
+Transform3D<T> Transform3D<T>::affine_inverse() const noexcept {
 	Transform3D<T> ret = *this;
 	ret.affine_invert();
 	return ret;
@@ -322,7 +322,7 @@ void Transform3D<T>::invert() {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::inverse() const {
+Transform3D<T> Transform3D<T>::inverse() const noexcept {
 	// FIXME: this function assumes the basis is a rotation matrix, with no scaling.
 	// Transform3D<T>::affine_inverse can handle matrices with scaling, so GDScript should eventually use that.
 	Transform3D<T> ret = *this;
@@ -336,14 +336,14 @@ void Transform3D<T>::rotate(const math::Vec3<T> &p_axis, T p_angle) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::rotated(const math::Vec3<T> &p_axis, T p_angle) const {
+Transform3D<T> Transform3D<T>::rotated(const math::Vec3<T> &p_axis, T p_angle) const noexcept {
 	// Equivalent to left multiplication
 	Basis<T> p_basis(p_axis, p_angle);
 	return Transform3D<T>(p_basis * basis, p_basis.xform(origin));
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::rotated_local(const math::Vec3<T> &p_axis, T p_angle) const {
+Transform3D<T> Transform3D<T>::rotated_local(const math::Vec3<T> &p_axis, T p_angle) const noexcept {
 	// Equivalent to right multiplication
 	Basis<T> p_basis(p_axis, p_angle);
 	return Transform3D<T>(basis * p_basis, origin);
@@ -355,7 +355,7 @@ void Transform3D<T>::rotate_basis(const math::Vec3<T> &p_axis, T p_angle) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::looking_at(const math::Vec3<T> &p_target, const math::Vec3<T> &p_up, bool p_use_model_front) const {
+Transform3D<T> Transform3D<T>::looking_at(const math::Vec3<T> &p_target, const math::Vec3<T> &p_up, bool p_use_model_front) const noexcept {
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(origin.is_equal_approx(p_target), Transform3D<T>(), "The transform's origin and target can't be equal.");
 #endif
@@ -374,7 +374,7 @@ void Transform3D<T>::set_look_at(const math::Vec3<T> &p_eye, const math::Vec3<T>
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::interpolate_with(const Transform3D<T> &p_transform, T p_c) const {
+Transform3D<T> Transform3D<T>::interpolate_with(const Transform3D<T> &p_transform, T p_c) const noexcept {
 	Transform3D<T> interp;
 
 	math::Vec3<T> src_scale = basis.get_scale();
@@ -398,13 +398,13 @@ void Transform3D<T>::scale(const math::Vec3<T> &p_scale) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::scaled(const math::Vec3<T> &p_scale) const {
+Transform3D<T> Transform3D<T>::scaled(const math::Vec3<T> &p_scale) const noexcept {
 	// Equivalent to left multiplication
 	return Transform3D<T>(basis.scaled(p_scale), origin * p_scale);
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::scaled_local(const math::Vec3<T> &p_scale) const {
+Transform3D<T> Transform3D<T>::scaled_local(const math::Vec3<T> &p_scale) const noexcept {
 	// Equivalent to right multiplication
 	return Transform3D<T>(basis.scaled_local(p_scale), origin);
 }
@@ -427,13 +427,13 @@ void Transform3D<T>::translate_local(const math::Vec3<T> &p_translation) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::translated(const math::Vec3<T> &p_translation) const {
+Transform3D<T> Transform3D<T>::translated(const math::Vec3<T> &p_translation) const noexcept {
 	// Equivalent to left multiplication
 	return Transform3D<T>(basis, origin + p_translation);
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::translated_local(const math::Vec3<T> &p_translation) const {
+Transform3D<T> Transform3D<T>::translated_local(const math::Vec3<T> &p_translation) const noexcept {
 	// Equivalent to right multiplication
 	return Transform3D<T>(basis, origin + basis.xform(p_translation));
 }
@@ -444,7 +444,7 @@ void Transform3D<T>::orthonormalize() {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::orthonormalized() const {
+Transform3D<T> Transform3D<T>::orthonormalized() const noexcept {
 	Transform3D<T> _copy = *this;
 	_copy.orthonormalize();
 	return _copy;
@@ -456,29 +456,29 @@ void Transform3D<T>::orthogonalize() {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::orthogonalized() const {
+Transform3D<T> Transform3D<T>::orthogonalized() const noexcept {
 	Transform3D<T> _copy = *this;
 	_copy.orthogonalize();
 	return _copy;
 }
 
 template<arithmetic T>
-bool Transform3D<T>::is_equal_approx(const Transform3D<T> &p_transform) const {
+bool Transform3D<T>::is_equal_approx(const Transform3D<T> &p_transform) const noexcept {
 	return basis.is_equal_approx(p_transform.basis) && origin.is_equal_approx(p_transform.origin);
 }
 
 template<arithmetic T>
-bool Transform3D<T>::is_finite() const {
+bool Transform3D<T>::is_finite() const noexcept {
 	return basis.is_finite() && origin.is_finite();
 }
 
 template<arithmetic T>
-bool Transform3D<T>::operator==(const Transform3D<T> &p_transform) const {
+bool Transform3D<T>::operator==(const Transform3D<T> &p_transform) const noexcept {
 	return (basis == p_transform.basis && origin == p_transform.origin);
 }
 
 template<arithmetic T>
-bool Transform3D<T>::operator!=(const Transform3D<T> &p_transform) const {
+bool Transform3D<T>::operator!=(const Transform3D<T> &p_transform) const noexcept {
 	return (basis != p_transform.basis || origin != p_transform.origin);
 }
 
@@ -489,7 +489,7 @@ void Transform3D<T>::operator*=(const Transform3D<T> &p_transform) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::operator*(const Transform3D<T> &p_transform) const {
+Transform3D<T> Transform3D<T>::operator*(const Transform3D<T> &p_transform) const noexcept {
 	Transform3D<T> other = *this;
 	other *= p_transform;
 	return other;
@@ -502,7 +502,7 @@ void Transform3D<T>::operator*=(T p_val) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::operator*(T p_val) const {
+Transform3D<T> Transform3D<T>::operator*(T p_val) const noexcept {
 	Transform3D<T> ret(*this);
 	ret *= p_val;
 	return ret;
@@ -515,7 +515,7 @@ void Transform3D<T>::operator/=(T p_val) {
 }
 
 template<arithmetic T>
-Transform3D<T> Transform3D<T>::operator/(T p_val) const {
+Transform3D<T> Transform3D<T>::operator/(T p_val) const noexcept {
 	Transform3D<T> ret(*this);
 	ret /= p_val;
 	return ret;

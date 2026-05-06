@@ -28,20 +28,20 @@ public:
         else __builtin_abort();
     }
 
-    constexpr const T & operator [](const E e) const {
+    constexpr const T & operator [](const E e) const noexcept {
         const auto rank_opt = Dump::enum_to_rank(e);
         if(rank_opt.has_value()) return arr_[rank_opt.value()];
         else __builtin_abort();
     }
 
-    constexpr Option<const T &> at(const E e) const {
+    constexpr Option<const T &> at(const E e) const noexcept {
         const auto rank_opt = Dump::enum_to_rank(e);
         if(rank_opt.has_value()) return Some(&arr_[rank_opt.value()]);
         else return None;
     }
 
     template<typename U>
-    constexpr Option<E> lower_bound(U&& val) const {
+    constexpr Option<E> lower_bound(U&& val) const noexcept {
         // 使用二分查找找到第一个大于等于 val 的枚举项
         auto it = std::lower_bound(arr_.begin(), arr_.end(), std::forward<U>(val));
         if (it != arr_.end()) {
@@ -53,7 +53,7 @@ public:
     }
 
     template<typename U>
-    constexpr Option<E> upper_bound(U&& val) const {
+    constexpr Option<E> upper_bound(U&& val) const noexcept {
         // 使用二分查找找到第一个大于 val 的枚举项
         auto it = std::upper_bound(arr_.begin(), arr_.end(), std::forward<U>(val));
         if (it != arr_.end()) {
@@ -64,8 +64,8 @@ public:
         return None; // 未找到
     }
 
-    const T * begin() const { return arr_.begin(); }
-    const T * end() const { return arr_.end(); }
+    const T * begin() const noexcept { return arr_.begin(); }
+    const T * end() const noexcept { return arr_.end(); }
 
     T * begin() { return arr_.begin(); }
     T * end() { return arr_.end(); }

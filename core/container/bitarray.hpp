@@ -19,7 +19,7 @@ private:
             : byte_(byte), offset_(offset) {}
 
         // 转换为 bool（读取位值）
-        [[nodiscard]] constexpr operator bool() const {
+        [[nodiscard]] constexpr operator bool() const noexcept {
             return (byte_ >> offset_) & 1;
         }
 
@@ -47,12 +47,12 @@ private:
         constexpr explicit BitProxy(const uint8_t byte, const uint8_t offset)
             : byte_(byte), offset_(offset) {}
         // 获取位值
-        [[nodiscard]] constexpr bool get() const {
+        [[nodiscard]] constexpr bool get() const noexcept {
             return (byte_ >> offset_) & 1;
         }
 
         // 转换为 bool（读取位值）
-        [[nodiscard]] constexpr operator bool() const {
+        [[nodiscard]] constexpr operator bool() const noexcept {
             return get();
         }
 
@@ -91,33 +91,33 @@ public:
     }
 
     // 只读的位访问操作符 []
-    [[nodiscard]] constexpr BitProxy operator[](size_t index) const {
+    [[nodiscard]] constexpr BitProxy operator[](size_t index) const noexcept {
         if(index >= NUM_BITS) [[unlikely]]
             on_out_of_range();
         return BitProxy(flag_[index / 8], index % 8);
     }
 
     // 获取位总数
-    [[nodiscard]] constexpr size_t size() const {
+    [[nodiscard]] constexpr size_t size() const noexcept {
         return NUM_BITS;
     }
 
     // 检查是否所有位都是 0
-    [[nodiscard]] constexpr bool is_zero() const {
+    [[nodiscard]] constexpr bool is_zero() const noexcept {
         return std::all_of(flag_.begin(), flag_.end(), [](uint8_t byte) {
             return byte == 0;
         });
     }
 
     // 检查是否所有位都是 1
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return std::all_of(flag_.begin(), flag_.end(), [](uint8_t byte) {
             return byte == 0xFF;
         });
     }
 
     // 统计设置为 1 的位数
-    [[nodiscard]] constexpr size_t count() const {
+    [[nodiscard]] constexpr size_t count() const noexcept {
         size_t result = 0;
         for (uint8_t byte : flag_) {
             result += __builtin_popcount(byte); // GCC/Clang

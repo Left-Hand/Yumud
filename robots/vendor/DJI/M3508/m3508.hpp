@@ -8,6 +8,8 @@
 
 
 namespace ymd::robots::dji::m3508{
+
+
 static constexpr uint16_t NUM_HIGHER_QUAD_CAN_ID = 0x200;
 static constexpr uint16_t NUM_LOWER_QUAD_CAN_ID = 0x1ff;
 static constexpr size_t NUM_MAX_MOTORS = 8;
@@ -22,7 +24,7 @@ struct [[nodiscard]] CurrentCode final{
             .bits = std::bit_cast<uint16_t>(__builtin_bswap16(temp))
         };
     }
-    constexpr iq16 to_amps() const {
+    constexpr iq16 to_amps() const noexcept {
         return (iq16(std::bit_cast<int16_t>(bits)) >> 14) * 20;
     }
 };
@@ -30,7 +32,7 @@ struct [[nodiscard]] CurrentCode final{
 struct [[nodiscard]] AngleCode final{
     uint16_t bits;
 
-    constexpr Angular<uq32> to_angle() const {
+    constexpr Angular<uq32> to_angle() const noexcept {
         const auto angle_u13 = uint16_t(__builtin_bswap16(bits));
         const auto turns = uq32::from_bits(angle_u13 << (32u - 13u));
         return Angular<uq32>::from_turns(turns);
@@ -40,7 +42,7 @@ struct [[nodiscard]] AngleCode final{
 struct [[nodiscard]] SpeedCode final{
     uint16_t bits;
 
-    constexpr iq16 to_tps() const {
+    constexpr iq16 to_tps() const noexcept {
         return uq32(1.0 / 60) * std::bit_cast<int16_t>(__builtin_bswap16(bits));
     }
 };
@@ -48,7 +50,7 @@ struct [[nodiscard]] SpeedCode final{
 struct [[nodiscard]] TemperatureCode final{
     uint8_t bits;
 
-    constexpr iq16 to_celsius() const {
+    constexpr iq16 to_celsius() const noexcept {
         return iq16(bits) - 40;
     }
 };
@@ -59,7 +61,7 @@ struct alignas(8) [[nodiscard]] TxContext final{
 
     std::array<CurrentCode, 4> current_codes; 
 
-    constexpr hal::ClassicCanPayload to_can_payload() const {
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 
@@ -76,7 +78,7 @@ struct alignas(8) [[nodiscard]] RxContext final{
     CurrentCode current_code;
     SpeedCode speed_code;
     TemperatureCode temperature_code;
-    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
+    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const noexcept {
         return Self{
             .angle_code = AngleCode{.bits = static_cast<uint16_t>(bytes[0] | (bytes[1] << 8))},
             .current_code = CurrentCode{.bits = static_cast<uint16_t>(bytes[2] | (bytes[3] << 8))},

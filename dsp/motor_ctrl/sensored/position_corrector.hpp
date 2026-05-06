@@ -16,7 +16,7 @@ struct PositionCorrector{
         backward_cali_table_(cfg.backward_cali_table)
     {}
 
-    constexpr Angular<uq32> correct_raw_angle(const Angular<uq32> raw_angle) const {
+    constexpr Angular<uq32> correct_raw_angle(const Angular<uq32> raw_angle) const noexcept {
         const auto corr1 = forward_cali_table_[raw_angle].to_inaccuracy();
         const auto corr2 = backward_cali_table_[raw_angle].to_inaccuracy();
 

@@ -73,7 +73,7 @@ struct Future {
         }
     }
 
-    bool await_ready() const { return false; } // 示例实现
+    bool await_ready() const noexcept { return false; } // 示例实现
     void await_suspend(handle_type h) { /* 挂起逻辑 */ }
     // T await_resume() { return value; } // 返回结果
 

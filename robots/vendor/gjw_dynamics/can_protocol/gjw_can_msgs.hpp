@@ -59,7 +59,7 @@ struct [[nodiscard]] ReadSingle final{
     uint8_t quantity;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
 
         {
@@ -89,7 +89,7 @@ struct [[nodiscard]] LapTurn final {
     uint16_t current;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const noexcept {
         return serialize_be_u16x4(receiver, target_pos, acceleration, speed, current);
     }
 };
@@ -104,7 +104,7 @@ struct [[nodiscard]] MultiTurns final {
     uint16_t speed;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const noexcept {
         return serialize_be_u16x4(
             receiver,
             static_cast<uint16_t>(target_pos >> 16),
@@ -129,7 +129,7 @@ struct [[nodiscard]] LapTurnSync final {
     uint16_t current;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const noexcept {
         return serialize_be_u16x4(receiver, target_pos, acceleration, speed, current);
     }
 };
@@ -144,7 +144,7 @@ struct [[nodiscard]] MultiTurnsSync final {
     uint16_t speed;
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const {
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver& receiver) const noexcept {
         return serialize_be_u16x4(
             receiver,
             static_cast<uint16_t>(target_pos >> 16),

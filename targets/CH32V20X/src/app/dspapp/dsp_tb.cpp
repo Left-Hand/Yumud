@@ -46,7 +46,7 @@ public:
         lpf_.update(in * in);
     }
 
-    T result() const{
+    T result() const noexcept {
         return std::sqrt(lpf_.result());
     }
 
@@ -71,7 +71,7 @@ public:
         result_ = result;
     }
 
-    T result() const{
+    T result() const noexcept {
         return result_;
     }
 
@@ -125,7 +125,7 @@ public:
         lpf_.update(h * h);
     }
 
-    T result() const{
+    T result() const noexcept {
         return sqrt(lpf_.result());
     }
 

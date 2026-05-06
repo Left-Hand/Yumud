@@ -30,7 +30,7 @@ protected:
         return temp;
     }()};
 
-	constexpr Coord sincosu(const T _x) const{
+	constexpr Coord sincosu(const T _x) const noexcept {
 		T unit = T(PI / 4);
 		T x = fmod(_x, PI);
 		Coord coord = Coord{T(1), T(0)};
@@ -49,7 +49,7 @@ protected:
 		return coord;
 	}
 
-	constexpr Coord atan2squu(const T _y, const T _x) const{
+	constexpr Coord atan2squu(const T _y, const T _x) const noexcept {
 		Coord coord = Coord{_x, _y};
 		T angleSum = T(0);
 		T angle = T(PI / 4);
@@ -74,7 +74,7 @@ protected:
 		return Coord{coord.x, angleSum};
 	}
 
-	constexpr Coord atan2squ(const T y, const T x) const{
+	constexpr Coord atan2squ(const T y, const T x) const noexcept {
 
 		if(x >= 0){
 			Coord ret = atan2squu(abs(y), x);
@@ -94,27 +94,27 @@ protected:
 public:
 	consteval Cordic(){;}
 
-	constexpr T squ(const T y, const T x) const{
+	constexpr T squ(const T y, const T x) const noexcept {
 		return atan2squ(y,x).x;
 	}
 
-	constexpr T atan2(const T y, const T x) const{
+	constexpr T atan2(const T y, const T x) const noexcept {
 		return atan2squ(y, x).y;
 	}
 
-	constexpr T asin(const T x) const {
+	constexpr T asin(const T x) const noexcept {
 		if (x <= -1) return -T(PI / 2);
 		if (x >= 1) return T(PI / 2);
 		return atan2(x, sqrt(1 - x * x));
 	}
 
-	constexpr T acos(const T x) const{
+	constexpr T acos(const T x) const noexcept {
 		if (x <= -1) return T(PI);
 		if (x >= 1) return T(0);
 		return atan2(sqrt(1 - x * x), x);
 	}
 
-	constexpr T sin(const T x) const{
+	constexpr T sin(const T x) const noexcept {
 		T ret = sincosu(x).y;
 		return x > 0 ? ret : -ret;
 	}

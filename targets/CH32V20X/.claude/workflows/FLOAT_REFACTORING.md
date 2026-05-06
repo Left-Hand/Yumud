@@ -217,15 +217,15 @@ struct alignas(1) [[nodiscard]] fp8_e4m3 final{
         return std::bit_cast<fp8_e4m3>(bits);
     }
     
-    constexpr uint8_t to_bits() const {
+    constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
     
-    constexpr bool is_nan() const {
+    constexpr bool is_nan() const noexcept {
         return exp == 0xF && mant != 0;
     }
     
-    explicit constexpr operator float() const {
+    explicit constexpr operator float() const noexcept {
         return intrinsics::fp8_e4m3_to_fp32_nonfpu(to_bits());
     }
 };

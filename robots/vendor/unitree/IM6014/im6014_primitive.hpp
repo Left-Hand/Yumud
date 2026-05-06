@@ -16,7 +16,7 @@ struct [[nodiscard]] Crc32Builder final{
         return {0xFFFFFFFF};
     }
 
-    constexpr Crc32Builder push_element(const uint32_t element) const {
+    constexpr Crc32Builder push_element(const uint32_t element) const noexcept {
         #if 1
         uint32_t xbit = 0; 
         uint32_t data = 0; 
@@ -43,7 +43,7 @@ struct [[nodiscard]] Crc32Builder final{
         return push_bytes(std::span(bytes));
         #endif
     }
-    [[nodiscard]] constexpr uint32_t finalize() const {
+    [[nodiscard]] constexpr uint32_t finalize() const noexcept {
         return count;
     }
 
@@ -86,7 +86,7 @@ struct [[nodiscard]] Crc32Builder final{
     };//查表法计算crc
 
 
-    constexpr Crc32Builder push_bytes(std::span<const uint8_t> bytes) const {
+    constexpr Crc32Builder push_bytes(std::span<const uint8_t> bytes) const noexcept {
         const uint8_t * ptr = bytes.data();
         uint32_t len = bytes.size();
         uint32_t crc = this->count;
@@ -104,7 +104,7 @@ struct [[nodiscard]] TorqueCode final{
     using Self = TorqueCode;
     int16_t bits;
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -118,7 +118,7 @@ struct [[nodiscard]] X2Code final{
 
 
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -131,7 +131,7 @@ struct [[nodiscard]] X1Code final{
     int32_t bits;
 
 
-    constexpr void fill_bytes(const std::span<uint8_t, 4> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 4> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
         bytes[2] = static_cast<uint8_t>(bits >> 16);
@@ -146,7 +146,7 @@ struct [[nodiscard]] KpCode final{
 
     static constexpr auto MAX_BITS_VAL = static_cast<uint16_t>(25.6 * 1280u);
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -157,7 +157,7 @@ struct [[nodiscard]] KdCode final{
     using Self = KdCode;
     uint16_t bits;
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }

@@ -50,7 +50,7 @@ struct [[nodiscard]] FhanPrecomputed<iq16>{
 
     [[nodiscard]] constexpr iq16 operator()(
         const std::array<iq16, 2> e
-    ) const{
+    ) const noexcept {
         const auto [e1, e2] = e;
         const iq16 y = -e1 - e2 * h_;
         const iq16 abs_y = math::abs(y);

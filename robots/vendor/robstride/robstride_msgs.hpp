@@ -13,7 +13,7 @@ struct [[nodiscard]] GetDeviceId final{
     NodeId host_id;
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(host_id.count), motor_id.count).pack();
     }
 
@@ -33,7 +33,7 @@ struct [[nodiscard]] MotionControl final{
     KpCode kp_code;
     KdCode kd_code;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, torque_code.bits, motor_id.count).pack();
     }
 
@@ -61,7 +61,7 @@ struct [[nodiscard]] EnableRunning final{
     NodeId main_id;
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
     }
 };
@@ -72,11 +72,11 @@ struct [[nodiscard]] DisableRunning final{
     NodeId motor_id;
     bool clear_fault;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(clear_fault);
         std::fill_n(bytes.begin() + 1, bytes.size() - 1, 0);
     }
@@ -88,11 +88,11 @@ struct [[nodiscard]] SetMechanicalZero final{
     NodeId main_id;
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = 1;
         std::fill_n(bytes.begin() + 1, bytes.size() - 1, 0);
     }
@@ -105,7 +105,7 @@ struct [[nodiscard]] SetMotorId final{
     NodeId motor_id;
     NodeId preset_id;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         const uint16_t arg1 = static_cast<uint16_t>(
             static_cast<uint16_t>(static_cast<uint16_t>(preset_id.count) << 8) 
             | static_cast<uint16_t>(motor_id.count));
@@ -120,11 +120,11 @@ struct [[nodiscard]] GetSingleParament final{
     DictKey dict_key;
     DictVal dict_val;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(static_cast<uint16_t>(dict_key));
         bytes[1] = static_cast<uint8_t>(static_cast<uint16_t>(dict_key) >> 8);
         bytes[2] = 0;
@@ -140,11 +140,11 @@ struct [[nodiscard]] SetBaudrate final{
     NodeId motor_id;
     CanBaudrate baudrate;
 
-    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+    [[nodiscard]] constexpr hal::CanExtId can_id() const noexcept {
         return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = 0x01;
         bytes[1] = 0x02;
         bytes[2] = 0x03;
@@ -163,12 +163,12 @@ using namespace primitive;
 struct [[nodiscard]] EnableMit final{
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill_n(bytes.begin(), bytes.size(), 0xff);
         bytes.back() = 0xfc;
     }
@@ -177,12 +177,12 @@ struct [[nodiscard]] EnableMit final{
 struct [[nodiscard]] DisableMit final{
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill_n(bytes.begin(), bytes.size(), 0xff);
         bytes.back() = 0xfd;
     }
@@ -192,12 +192,12 @@ struct [[nodiscard]] SetMotorType final{
     NodeId motor_id;
     uint8_t motor_type;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill_n(bytes.begin(), bytes.size(), 0xff);
         bytes[6] = motor_type;
         bytes.back() = 0xfc;
@@ -208,12 +208,12 @@ struct [[nodiscard]] SetMotorId final{
     NodeId motor_id;
     uint8_t f_cmd;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill_n(bytes.begin(), bytes.size(), 0xff);
         bytes[6] = f_cmd;
         bytes.back() = 0x01;
@@ -227,11 +227,11 @@ struct [[nodiscard]] MitControl final{
     mit::MitKpCode_u12 kp;
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
         return hal::CanStdId::from_u11(id_bits);
     }
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
         bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
@@ -248,12 +248,12 @@ struct [[nodiscard]] MitPositionControl final{
     math::fp32 x1_radians;
     math::fp32 x2_radians;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | (1u << 8));
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         //little endian
         const auto x1_bytes = std::bit_cast<std::array<uint8_t, 4>>(x1_radians.to_bits());
         const auto x2_bytes = std::bit_cast<std::array<uint8_t, 4>>(x2_radians.to_bits());
@@ -267,12 +267,12 @@ struct [[nodiscard]] MitSpeedControl final{
     math::fp32 x2_radians;
     math::fp32 current_limit;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | (2u << 8));
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         //little endian
         const auto x2_bytes = std::bit_cast<std::array<uint8_t, 4>>(x2_radians.to_bits());
         const auto current_bytes = std::bit_cast<std::array<uint8_t, 4>>(current_limit.to_bits());
@@ -284,12 +284,12 @@ struct [[nodiscard]] MitSpeedControl final{
 struct [[nodiscard]] SetZeroPosition final{
     NodeId motor_id;
 
-    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+    [[nodiscard]] constexpr hal::CanStdId can_id() const noexcept {
         const auto id_bits = static_cast<uint16_t>(motor_id.count | (0));
         return hal::CanStdId::from_u11(id_bits);
     }
 
-    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         std::fill_n(bytes.begin(), bytes.size(), 0xff);
         bytes.back() = 0xfe;
     }

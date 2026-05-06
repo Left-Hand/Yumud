@@ -11,7 +11,7 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
         uq16 wheel_radius;
         uq16 track_width;
 
-        constexpr Self into() const {
+        constexpr Self into() const noexcept {
             const uq16 angular_body2wheel_ratio = (track_width / (wheel_radius * 2));
             const uq16 angular_wheel2body_ratio = uq16(1) / angular_body2wheel_ratio;
             
@@ -35,7 +35,7 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
     //逆运动学 输入机体的纵向速度和自转速度 得到轮速度
     constexpr std::tuple<Angular<iq16>, Angular<iq16>> inverse(
         iq16 body_linear_x2, Angular<iq16> body_angular_x2 
-    ) const { 
+    ) const noexcept { 
 
         const iq16 body_xn_radians = body_angular_x2.to_radians();
 
@@ -62,7 +62,7 @@ struct [[nodiscard]] DifferentialDriveKinematicsF final {
         float wheel_radius;
         float track_width;
 
-        constexpr Self into() const {
+        constexpr Self into() const noexcept {
             const float angular_body2wheel_ratio = (track_width / (wheel_radius * 2));
             const float angular_wheel2body_ratio = float(1) / angular_body2wheel_ratio;
             
@@ -88,7 +88,7 @@ struct [[nodiscard]] DifferentialDriveKinematicsF final {
     constexpr std::tuple<Angular<float>, Angular<float>> inverse(
         float body_linear_x2, 
         Angular<float> body_angular_x2 
-    ) const { 
+    ) const noexcept { 
 
         const float body_xn_radians = body_angular_x2.to_radians();
 

@@ -26,7 +26,7 @@ void Gpio::write(const BoolLevel val){
     *(&SPL_INST(inst_)->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);
 }
 
-BoolLevel Gpio::read() const {
+BoolLevel Gpio::read() const noexcept {
     return BoolLevel::from(SPL_INST(inst_)->INDR & static_cast<uint16_t>(pin_nth_));
 }
 
@@ -122,7 +122,7 @@ static inline void * portsource_to_inst(PortSource port) {
 }
 
 
-PortSource Gpio::port() const {
+PortSource Gpio::port() const noexcept {
     return inst_to_portsource(SPL_INST(inst_));
 }
 

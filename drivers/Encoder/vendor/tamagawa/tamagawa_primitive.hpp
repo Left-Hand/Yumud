@@ -55,11 +55,11 @@ struct [[nodiscard]] StatusField final{
     }
 
 
-    [[nodiscard]] constexpr bool is_none() const {
+    [[nodiscard]] constexpr bool is_none() const noexcept {
         return std::bit_cast<uint8_t>(*this) == 0;
     }
 
-    [[nodiscard]] constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };
@@ -79,7 +79,7 @@ struct [[nodiscard]] Abs24 final{
     using Self = Abs24;
     std::array<uint8_t, 3> bytes;
 
-    constexpr uint32_t b24() const {
+    constexpr uint32_t b24() const noexcept {
         uint32_t bits = 0;
         bits |= static_cast<uint32_t>(bytes[0]);
         bits |= static_cast<uint32_t>(bytes[1]) << 8;
@@ -88,13 +88,13 @@ struct [[nodiscard]] Abs24 final{
     }
 
 
-    constexpr Angular<uq32> to_angle(size_t enc_resolution) const {
+    constexpr Angular<uq32> to_angle(size_t enc_resolution) const noexcept {
         const size_t shift_cnt = static_cast<size_t>(32u - enc_resolution);
         const uint32_t bits = static_cast<uint32_t>(static_cast<uint32_t>(b24()) << shift_cnt);
         return Angular<uq32>::from_turns(uq32::from_bits(bits));
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 3> other_bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 3> other_bytes) const noexcept {
         other_bytes[0] = bytes[0];
         other_bytes[1] = bytes[1];
         other_bytes[2] = bytes[2];
@@ -111,7 +111,7 @@ struct [[nodiscard]] Abm24 final{
     using Self = Abm24;
     std::array<uint8_t, 3> bytes;
 
-    constexpr uint32_t to_turns() const {
+    constexpr uint32_t to_turns() const noexcept {
         uint32_t bits;
         bits |= static_cast<uint32_t>(bytes[0]);
         bits |= static_cast<uint32_t>(bytes[1]) << 8;

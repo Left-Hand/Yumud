@@ -30,8 +30,8 @@ public:
         return *this;
     }
     
-    const auto & queue() const {return action_queue_;}
-    size_t pending() const {return action_queue_.size();}
+    const auto & queue() const noexcept {return action_queue_;}
+    size_t pending() const noexcept {return action_queue_.size();}
 
     void CombinedAction::execute() {
         if(action_queue_.empty() == false){

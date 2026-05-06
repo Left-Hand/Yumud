@@ -41,10 +41,10 @@ public:
     }
 
     // 获取传递函数对象
-    [[nodiscard]] constexpr const Z_TransferCoefficients<T, 3, 3>& transfer_function() const { return tf_; }
+    [[nodiscard]] constexpr const Z_TransferCoefficients<T, 3, 3>& transfer_function() const noexcept { return tf_; }
     
     // 获取当前输出
-    [[nodiscard]] constexpr T output() const { return output_; }
+    [[nodiscard]] constexpr T output() const noexcept { return output_; }
 
 
 private:
@@ -63,7 +63,7 @@ struct QPRControllerConfig {
     T wc;        // 谐振峰带宽
     T t_sample;  // 采样时间
 
-    constexpr Z_TransferCoefficients<T, 3, 3> to_coeffs() const {
+    constexpr Z_TransferCoefficients<T, 3, 3> to_coeffs() const noexcept {
         const T d0 = (t_sample * t_sample * wr * wr) + (4 * wc * t_sample) + 4;
         const T inv_d0 = 1 / d0;
 

@@ -434,7 +434,7 @@ struct alignas(4) [[nodiscard]] EcuName final{
         return Self::from_u64(0xFFFFFFFFFFFFFFFF);
     }
 
-    [[nodiscard]] uint64_t to_u64() const{
+    [[nodiscard]] uint64_t to_u64() const noexcept {
         return bits | (static_cast<uint64_t>(1ull) << 48);
     }
 
@@ -484,7 +484,7 @@ struct alignas(4) [[nodiscard]] EcuName final{
         return make_bitfield_proxy<63,64, AribitaryAddressCapable>(self.bits);
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("identity_number")(self.identity_number().get()) << os.splitter()
             << os.field("manufacturer_code")(self.manufacturer_code().get()) << os.splitter()
             << os.field("ecu_instance")(self.ecu_instance().get()) << os.splitter()
@@ -499,7 +499,7 @@ struct alignas(4) [[nodiscard]] EcuName final{
 
 
 
-    [[nodiscard]] hal::ClassicCanFrame to_can_frame(const Pdn pdn) const{
+    [[nodiscard]] hal::ClassicCanFrame to_can_frame(const Pdn pdn) const noexcept {
         return hal::ClassicCanFrame::from_parts(
             pdn.to_can_id(),
             hal::ClassicCanPayload::from_u64(to_u64())

@@ -141,12 +141,12 @@ struct [[nodiscard]] CanFrameAssemblyIterator final {
         return Ok(false);
     }
     
-    [[nodiscard]] constexpr size_t bytes_received() const {
+    [[nodiscard]] constexpr size_t bytes_received() const noexcept {
         return state_.bytes_received;
     }
     
     
-    [[nodiscard]] constexpr std::span<const uint8_t> assembled_data() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> assembled_data() const noexcept {
         return std::span<const uint8_t>(
             paras_.buffer.data(),
             state_.bytes_received

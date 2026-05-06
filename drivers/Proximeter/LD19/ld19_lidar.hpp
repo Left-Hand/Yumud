@@ -32,7 +32,7 @@ struct [[nodiscard]] LidarPoint final{
         };
     }
 
-    [[nodiscard]] constexpr uq16 distance_meters() const {
+    [[nodiscard]] constexpr uq16 distance_meters() const noexcept {
         return distance_mm * 0.001_uq16;
     }
 
@@ -49,7 +49,7 @@ public:
         return LidarSpinSpeedCode{bits};
     }
 
-    [[nodiscard]] constexpr uq16 to_turns_per_secs() const{
+    [[nodiscard]] constexpr uq16 to_turns_per_secs() const noexcept {
         constexpr uq16 RATIO = uq16(1.0 / 360);
         return RATIO * bits;
     }
@@ -63,7 +63,7 @@ public:
         return LidarAngleCode{bits};
     }
 
-    [[nodiscard]] constexpr uq16 to_turns() const{
+    [[nodiscard]] constexpr uq16 to_turns() const noexcept {
         constexpr auto RATIO = iq24(1.0 / 360 * 0.01);
         return RATIO * bits;
     }
@@ -79,7 +79,7 @@ struct [[nodiscard]] TimeStamp final{
     }
 
     [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli>
-    to_ms() const {
+    to_ms() const noexcept {
         return std::chrono::duration<uint16_t, std::milli>(bits);
     }
 };
@@ -97,7 +97,7 @@ struct [[nodiscard]] LidarSectorPacket final{
         std::array<uint8_t, 3 * POINTS_PER_FRAME> bytes;
 
         //3字节对齐 必须值语义返回
-        [[nodiscard]] constexpr LidarPoint operator[](size_t index) const{
+        [[nodiscard]] constexpr LidarPoint operator[](size_t index) const noexcept {
             return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + index * 3, 3));
         }
     };

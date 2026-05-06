@@ -63,7 +63,7 @@ public:
         u_beta_ += u_alpha * w_by_freq;
     }
 
-    constexpr AbCurrent ab() const {
+    constexpr AbCurrent ab() const noexcept {
         return {u_alpha_, u_beta_};
     }
 

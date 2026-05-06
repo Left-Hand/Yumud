@@ -56,7 +56,7 @@ alignas(4) struct [[nodiscard]] Header final{
     //offset 22
     uint16_t header_crc16_be;
 
-    [[nodiscard]] constexpr std::span<const uint8_t, 24> as_bytes() const {
+    [[nodiscard]] constexpr std::span<const uint8_t, 24> as_bytes() const noexcept {
         return std::span<const uint8_t, 24>(reinterpret_cast<const uint8_t *>(this), 24);
     }
 
@@ -76,24 +76,24 @@ alignas(4) struct [[nodiscard]] Header final{
         }
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 24> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 24> bytes) const noexcept {
         for(size_t i = 0; i < 24; i++){
             bytes[i] = as_bytes()[i];
         }
     }
 
-    constexpr void fill_aligned_bytes(const std::span<uint8_t, 24> bytes) const {
+    constexpr void fill_aligned_bytes(const std::span<uint8_t, 24> bytes) const noexcept {
         for(size_t i = 0; i < 24 / sizeof(size_t); i++){
             reinterpret_cast<size_t *>(bytes.data())[i] = reinterpret_cast<const size_t *>(this)[i];
         }
     }
 
 
-    [[nodiscard]] constexpr uint8_t calc_crc() const {
+    [[nodiscard]] constexpr uint8_t calc_crc() const noexcept {
         return crc::crc16(as_bytes());
     }
 
-    [[nodiscard]] constexpr bool is_crc_valid() const {
+    [[nodiscard]] constexpr bool is_crc_valid() const noexcept {
         return __builtin_bswap16(calc_crc() == header_crc16_be);
     }
 };

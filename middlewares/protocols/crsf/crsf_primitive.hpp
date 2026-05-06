@@ -107,34 +107,34 @@ struct [[nodiscard]] DeviceAddress final{
         return None;
     }
 
-    [[nodiscard]] constexpr Kind kind() const {
+    [[nodiscard]] constexpr Kind kind() const noexcept {
         return kind_;
     }
 
-    [[nodiscard]] constexpr bool is_esc() const {
+    [[nodiscard]] constexpr bool is_esc() const noexcept {
         switch(kind()){
             case Kind::Esc1 ... Kind::Esc8: return true;
             default: return false;
         }
     }
 
-    [[nodiscard]] constexpr bool is_boardcast() const {
+    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
         return kind() == Kind::Broadcast;
     }
 
-    [[nodiscard]] constexpr bool is_rc_receiver() const {
+    [[nodiscard]] constexpr bool is_rc_receiver() const noexcept {
         return kind() == Kind::RcReceiver;
     }
 
-    [[nodiscard]] constexpr bool is_rc_transmitter() const {
+    [[nodiscard]] constexpr bool is_rc_transmitter() const noexcept {
         return kind() == Kind::RcTransmitter;
     }
 
-    [[nodiscard]] constexpr bool operator ==(const DeviceAddress & rhs) const {
+    [[nodiscard]] constexpr bool operator ==(const DeviceAddress & rhs) const noexcept {
         return kind() == rhs.kind();
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Kind rhs_kind) const {
+    [[nodiscard]] constexpr bool operator ==(const Kind rhs_kind) const noexcept {
         return kind() == rhs_kind;
     }
 private:
@@ -192,19 +192,19 @@ struct [[nodiscard]] DataType final{
         return Option<Self>(Self{static_cast<Kind>(b)});
     }
 
-    [[nodiscard]] constexpr Kind kind_unchecked() const {
+    [[nodiscard]] constexpr Kind kind_unchecked() const noexcept {
         return static_cast<Kind>(bits);
     }
 
-    [[nodiscard]] constexpr bool is_valid() const {
+    [[nodiscard]] constexpr bool is_valid() const noexcept {
         return bits <= MAX_VALID_KIND || bits == static_cast<uint8_t>(Kind::OutOfRange);
     }
 
-    [[nodiscard]] constexpr bool is(const Kind kind) const {
+    [[nodiscard]] constexpr bool is(const Kind kind) const noexcept {
         return kind_unchecked() == kind;
     }
 
-    [[nodiscard]] constexpr bool is_integral() const {
+    [[nodiscard]] constexpr bool is_integral() const noexcept {
         switch(bits){
             case static_cast<uint8_t>(Kind::U8) ... static_cast<uint8_t>(Kind::I32):
                 return true;
@@ -212,12 +212,12 @@ struct [[nodiscard]] DataType final{
         }
     }
 
-    [[nodiscard]] constexpr bool is_float() const {return is(Kind::Float);}
-    [[nodiscard]] constexpr bool is_string() const {return is(Kind::String);}
-    [[nodiscard]] constexpr bool is_folder() const {return is(Kind::Folder);}
-    [[nodiscard]] constexpr bool is_command() const {return is(Kind::Command);}
-    [[nodiscard]] constexpr bool is_info() const {return is(Kind::Info);}
-    [[nodiscard]] constexpr bool is_text_selection() const {return is(Kind::TextSelection);}
+    [[nodiscard]] constexpr bool is_float() const noexcept {return is(Kind::Float);}
+    [[nodiscard]] constexpr bool is_string() const noexcept {return is(Kind::String);}
+    [[nodiscard]] constexpr bool is_folder() const noexcept {return is(Kind::Folder);}
+    [[nodiscard]] constexpr bool is_command() const noexcept {return is(Kind::Command);}
+    [[nodiscard]] constexpr bool is_info() const noexcept {return is(Kind::Info);}
+    [[nodiscard]] constexpr bool is_text_selection() const noexcept {return is(Kind::TextSelection);}
 
 
     using enum Kind;

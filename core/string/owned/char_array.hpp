@@ -51,11 +51,11 @@ struct [[nodiscard]] CharArray final{
         return N;
     }
 
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
         return strnlen(chars.data(), N);
     }
 
-    [[nodiscard]] constexpr const char * data() const {
+    [[nodiscard]] constexpr const char * data() const noexcept {
         return chars.data();
     }
 
@@ -63,7 +63,7 @@ struct [[nodiscard]] CharArray final{
         std::fill(chars.begin(), chars.end(), c);
     }
 
-    constexpr char operator[](size_t i) const {
+    constexpr char operator[](size_t i) const noexcept {
         return chars[i];
     }
 

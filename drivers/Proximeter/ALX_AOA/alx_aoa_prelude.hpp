@@ -41,7 +41,7 @@ struct [[nodiscard]] TargetDistanceCode final{
     uint32_t bits;
 
     template<typename T> 
-    [[nodiscard]] constexpr T to_meters() const{
+    [[nodiscard]] constexpr T to_meters() const noexcept {
         return T(bits) * static_cast<T>(1.0 / 100);
     }
     static constexpr Self from_bits(const uint32_t bits){
@@ -57,7 +57,7 @@ struct [[nodiscard]] TargetAngleCode final{
     int16_t bits;
 
     template<typename T>
-    [[nodiscard]] constexpr Angular<T> to_angle() const{
+    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
         return Angular<T>::from_degrees(bits);
     }
 
@@ -91,7 +91,7 @@ struct [[nodiscard]] Location final{
     TargetAngleCode elevation_code;
 
     template<typename T>
-    constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const{
+    constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const noexcept {
         return math::SphericalCoordinates<T>{
             distance_code.to_meters<T>(),
             azimuth_code.to_angle<T>(), 

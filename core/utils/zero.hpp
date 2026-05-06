@@ -38,7 +38,7 @@ struct FromZeroDispatcher<T>{
 
 struct _Zero{
     template<typename T>
-    consteval operator T() const {
+    consteval operator T() const noexcept {
         return FromZeroDispatcher<T>::zero();
     }
 };

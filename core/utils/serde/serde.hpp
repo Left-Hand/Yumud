@@ -161,7 +161,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, math::fixed<Q, D>>{
     static constexpr size_t N = sizeof(D);
     constexpr explicit SerializeGenerator(const math::fixed<Q, D> num):
         buf_(serialize(num)){;}
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return pos_ < N;
     }
     [[nodiscard]] constexpr Item next() {
@@ -190,7 +190,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, T>{
     constexpr explicit SerializeGenerator(const T num):
         buf_(serialize(num)){;}
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return pos_ < N;
     }
     [[nodiscard]] constexpr uint8_t next() {
@@ -212,7 +212,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, math::bf16>{
     constexpr explicit SerializeGenerator(const math::bf16 num):
         buf_(serialize(num)){;}
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return pos_ < N;
     }
     [[nodiscard]] constexpr uint8_t next() {
@@ -244,7 +244,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, T> {
     constexpr explicit SerializeGenerator(const T value)
         : buf_(serialize(value)) {}
 
-    [[nodiscard]] constexpr bool has_next() const { return pos_ < N; }
+    [[nodiscard]] constexpr bool has_next() const noexcept { return pos_ < N; }
     
     [[nodiscard]] constexpr uint8_t next() { return buf_[pos_++]; }
 
@@ -282,7 +282,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, std::span<const T>> {
         }
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         if(index_ >= pbuf_.size()) return false;
         else if(index_ + 1 == pbuf_.size()) return element_iter_.has_next();    
         return true;
@@ -353,7 +353,7 @@ struct [[nodiscard]] SerializeGenerator<Protocol, std::tuple<Ts ... >> {
     constexpr explicit SerializeGenerator(const std::tuple<Ts...> & tup)
         : sub_generators_(make_generator_tuple(tup, std::index_sequence_for<Ts...>{})) {}
         
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         bool searched = false;
         bool result = false;
         return [&]<size_t ...Is>(std::index_sequence<Is...>) {
@@ -425,7 +425,7 @@ struct [[nodiscard]] SerializeGenerator<Protocol, Option<T>> {
         inner_serialize_iter_(InnerSerializeGenerator(may_value)),
         is_some_(may_value.is_some()){;}
 
-    constexpr bool has_next() const { return is_some_ && inner_serialize_iter_.has_next();}
+    constexpr bool has_next() const noexcept { return is_some_ && inner_serialize_iter_.has_next();}
     
     constexpr uint8_t next() { return is_some_ ? inner_serialize_iter_.next() : 0;}
 

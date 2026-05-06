@@ -119,7 +119,7 @@ struct [[nodiscard]] HT16K33_Prelude{
         constexpr Command(const T cmd):
             bits_(std::bit_cast<uint8_t>(cmd)){;}
 
-        [[nodiscard]] uint8_t to_u8() const{
+        [[nodiscard]] uint8_t to_u8() const noexcept {
             return bits_;
         }
     private:
@@ -151,13 +151,13 @@ struct [[nodiscard]] HT16K33_Prelude{
     };
 
     struct [[nodiscard]] KeyData final{
-        [[nodiscard]] constexpr bool test(const uint8_t x ,const uint8_t y) const {
+        [[nodiscard]] constexpr bool test(const uint8_t x ,const uint8_t y) const noexcept {
             const bool is_high_byte = x >= 8;
             const auto byte = buf_[y * 2 + is_high_byte];
             return byte & (1 << (x % 8));
         }
 
-        constexpr Option<std::tuple<uint8_t, uint8_t>> first_xy() const {
+        constexpr Option<std::tuple<uint8_t, uint8_t>> first_xy() const noexcept {
             const auto it = std::find_if(buf_.begin(), buf_.end(), 
                 [](const uint8_t data){return data != 0x00;}
             );
@@ -173,7 +173,7 @@ struct [[nodiscard]] HT16K33_Prelude{
 
         template<size_t R>
         requires (R < 3)
-        constexpr std::bitset<13> row_to_bitset() const {
+        constexpr std::bitset<13> row_to_bitset() const noexcept {
             const auto low_byte = buf_[R * 2];
             const auto high_byte = buf_[R * 2 + 1];
             return std::bitset<13>((high_byte << 8) | low_byte);
@@ -183,7 +183,7 @@ struct [[nodiscard]] HT16K33_Prelude{
             return std::span(buf_);
         }
 
-        constexpr std::span<const uint8_t> as_bytes() const {
+        constexpr std::span<const uint8_t> as_bytes() const noexcept {
             return std::span(buf_);
         }
 
@@ -283,7 +283,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
 
         GcRam() = default;
 
-        constexpr auto as_bytes() const {return std::span(bytes);}
+        constexpr auto as_bytes() const noexcept {return std::span(bytes);}
 
         constexpr IResult<> write_pixel(const uint8_t x, const uint8_t y, const bool val){
             if(x > 7) return Err(Error::DisplayXOutOfRange);
@@ -364,7 +364,7 @@ public:
             int_input_.unwrap().is_active();
     }
 
-    [[nodiscard]] bool has_int_io() const{
+    [[nodiscard]] bool has_int_io() const noexcept {
         return int_input_.is_some();
     }
 private:

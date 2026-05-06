@@ -43,7 +43,7 @@ public:
     
     // void update(const IV3 & gyr,const IV3 & acc, const IV3 & mag);
 
-    [[nodiscard]] IQuat rotation() const {return q;}
+    [[nodiscard]] IQuat rotation() const noexcept {return q;}
 
 private:
     iq24 dt_ = 0;

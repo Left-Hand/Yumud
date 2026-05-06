@@ -25,7 +25,7 @@ struct [[nodiscard]] Isometry2 {
         };
     }
 
-    [[nodiscard]] constexpr Matrix<T, 3, 3> to_matrix() const { 
+    [[nodiscard]] constexpr Matrix<T, 3, 3> to_matrix() const noexcept { 
         return make_matrix_from_quad(
             rotation.to_matrix(), translation.to_matrix(),
             ZERO_1x2, ONE_1x1

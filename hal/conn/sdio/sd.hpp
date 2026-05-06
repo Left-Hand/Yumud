@@ -204,12 +204,12 @@ public:
     SD_Error ReadDisk(uint8_t * buf,uint32_t sector,uint8_t cnt);
     SD_Error WriteDisk(const uint8_t*buf,uint32_t sector,uint8_t cnt);
 
-    auto type() const {return CardType;}
-    auto manufacturer() const {return cardinfo.SD_cid.ManufacturerID;}
-    auto rca() const {return cardinfo.RCA;}
+    auto type() const noexcept {return CardType;}
+    auto manufacturer() const noexcept {return cardinfo.SD_cid.ManufacturerID;}
+    auto rca() const noexcept {return cardinfo.RCA;}
 
-    auto blocksize() const{return cardinfo.CardBlockSize;}
-    auto capacity() const{return cardinfo.CardCapacity;}
+    auto blocksize() const noexcept {return cardinfo.CardBlockSize;}
+    auto capacity() const noexcept {return cardinfo.CardCapacity;}
 
 };
 

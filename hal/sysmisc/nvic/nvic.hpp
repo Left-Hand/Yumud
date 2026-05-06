@@ -27,7 +27,7 @@ namespace ymd::hal{
 
 //     hal::NvicPriorityCode priority_code;
 
-//     [[nodiscard]] constexpr NvicRequest with_irqn(const IRQn irqn) const {
+//     [[nodiscard]] constexpr NvicRequest with_irqn(const IRQn irqn) const noexcept {
 //         return NvicRequest(priority_code, irqn);
 //     }
 // private:

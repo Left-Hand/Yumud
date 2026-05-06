@@ -18,11 +18,11 @@ struct alignas(4) [[nodiscard]] GbkChar final{
         return GbkChar{0};
     }
 
-    constexpr wchar_t count() const {
+    constexpr wchar_t count() const noexcept {
         return bits;
     }
 
-    constexpr bool operator ==(const GbkChar & rhs) const{
+    constexpr bool operator ==(const GbkChar & rhs) const noexcept {
         return bits == rhs.bits;
     }
 };
@@ -33,7 +33,7 @@ public:
         str_(str), 
         idx_(0) {}
     
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return idx_ < str_.size() && str_[idx_] != '\0';
     }
     
@@ -66,7 +66,7 @@ public:
         return GbkChar(gbk_value);
     }
     
-    constexpr size_t current_index() const {
+    constexpr size_t current_index() const noexcept {
         return idx_;
     }
 

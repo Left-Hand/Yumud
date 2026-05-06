@@ -64,7 +64,7 @@ struct alignas(16) Object{
     uint32_t y;
     uint32_t length;
 
-    friend OutputStream & operator << (OutputStream & os, const Self & self){
+    friend OutputStream & operator << (OutputStream & os, const Self & self) noexcept {
         return os << char(self.name[0]) << os.splitter() 
         << self.x <<os.splitter() 
         << self.y <<os.splitter() 

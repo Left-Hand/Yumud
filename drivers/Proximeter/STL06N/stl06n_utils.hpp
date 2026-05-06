@@ -38,14 +38,14 @@ struct [[nodiscard]] Crc8Builder final{
 
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr Crc8Builder push_byte(uint8_t byte) const {
+    [[nodiscard]] constexpr Crc8Builder push_byte(uint8_t byte) const noexcept {
         uint8_t crc = crc_;
         crc = CRC8_TABLE[(crc ^ byte) & 0xff];
         return Crc8Builder{crc};
     }
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr Crc8Builder push_bytes(std::span<const uint8_t> bytes) const {
+    [[nodiscard]] constexpr Crc8Builder push_bytes(std::span<const uint8_t> bytes) const noexcept {
         uint8_t crc = crc_;
         #pragma GCC unroll 8
         for (size_t i = 0; i < bytes.size(); i++) {
@@ -54,7 +54,7 @@ struct [[nodiscard]] Crc8Builder final{
         return Crc8Builder{crc};
     }
 
-    [[nodiscard]] constexpr uint8_t finalize() const {
+    [[nodiscard]] constexpr uint8_t finalize() const noexcept {
         return crc_;
     }
 };
@@ -77,13 +77,13 @@ struct alignas(2) [[nodiscard]] LidarDistanceCode final{
     }
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr uq16 to_meters() const {
+    [[nodiscard]] constexpr uq16 to_meters() const noexcept {
         constexpr uint64_t FACTOR = static_cast<uint64_t>(static_cast<double>(0.001f) * (1ull << 48));
         return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(millis) * FACTOR) >> 32u));
     }
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr uint16_t to_milimeters() const {
+    [[nodiscard]] constexpr uint16_t to_milimeters() const noexcept {
         return millis;
     }
 };
@@ -138,7 +138,7 @@ struct [[nodiscard]] PackedClusterIterator final{
         );
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return (idx < POINTS_PER_FRAME);
     }
 };
@@ -149,17 +149,17 @@ struct alignas(4) [[nodiscard]] LidarPackedPoints final{
 
     using Iterator = PackedClusterIterator;
     //3字节对齐 必须值语义返回
-    [[nodiscard]] constexpr PackedLidarPoint operator[](size_t idx) const{
+    [[nodiscard]] constexpr PackedLidarPoint operator[](size_t idx) const noexcept {
         return PackedLidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + idx * 3, 3));
     }
 
-    constexpr void clone_to(std::span<PackedLidarPoint, 12> points) const{
+    constexpr void clone_to(std::span<PackedLidarPoint, 12> points) const noexcept {
         for(size_t i = 0; i < POINTS_PER_FRAME; i++){
             points[i] = PackedLidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + i * 3, 3));
         }
     }
 
-    constexpr Iterator iter() const {
+    constexpr Iterator iter() const noexcept {
         return Iterator(std::span(bytes), 0);
     }
 };
@@ -199,11 +199,11 @@ struct alignas(1) [[nodiscard]] Command final{
     }
 
 
-    [[nodiscard]] constexpr uint8_t to_u8() const{
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return static_cast<uint8_t>(kind_);
     }
 
-    [[nodiscard]] constexpr size_t payload_length() const {
+    [[nodiscard]] constexpr size_t payload_length() const noexcept {
         switch(kind_){
             case Kind::Sector: return SECTOR_PAYLOAD_LENGTH;
             default: return 1 + 4 + 1;
@@ -211,7 +211,7 @@ struct alignas(1) [[nodiscard]] Command final{
         __builtin_unreachable();
     }
 
-    [[nodiscard]] constexpr Kind kind() const{
+    [[nodiscard]] constexpr Kind kind() const noexcept {
         return kind_;
     }
 private:
@@ -246,7 +246,7 @@ public:
         return Self::from_bits(static_cast<uint16_t>(tps * 360));
     }
 
-    [[nodiscard]] constexpr uq16 to_tps() const{
+    [[nodiscard]] constexpr uq16 to_tps() const noexcept {
         constexpr uq16 RATIO = uq16(1.0 / 360);
         return RATIO * bits;
     }
@@ -260,12 +260,12 @@ public:
         return LidarAngleCode{bits};
     }
 
-    [[nodiscard]] constexpr uq32 to_turns() const{
+    [[nodiscard]] constexpr uq32 to_turns() const noexcept {
         constexpr auto RATIO = uq32::from_rcp(36000u);
         return RATIO * bits;
     }
 
-    [[nodiscard]] constexpr Angular<uq32> to_angle() const{
+    [[nodiscard]] constexpr Angular<uq32> to_angle() const noexcept {
         return make_angular_from_turns(to_turns());
     }
 
@@ -283,7 +283,7 @@ struct alignas(2) [[nodiscard]] TimeStamp final{
     }
 
     [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli>
-    to_ms() const {
+    to_ms() const noexcept {
         return std::chrono::duration<uint16_t, std::milli>(bits);
     }
 };
@@ -300,7 +300,7 @@ struct [[nodiscard]] LidarSectorPacket final{
     static constexpr size_t PAYLOAD_LEN = 44;
 
 
-    [[nodiscard]] uint8_t calc_crc() const {
+    [[nodiscard]] uint8_t calc_crc() const noexcept {
         const auto payload_bytes = std::span<const uint8_t, PAYLOAD_LEN>(
             reinterpret_cast<const uint8_t *>(this),
             PAYLOAD_LEN

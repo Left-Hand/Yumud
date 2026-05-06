@@ -31,74 +31,74 @@ public:
             orientation(std::get<3>(tup)){;}
 
 	[[nodiscard]] __fast_inline constexpr 
-    bool operator==(const Ray2 & other) const{
+    bool operator==(const Ray2 & other) const noexcept {
         return (this->center == other.center) and (this->orientation == other.orientation);
     }
 
 	[[nodiscard]] __fast_inline constexpr 
-    bool is_equal_approx(const Ray2 & other) const{
+    bool is_equal_approx(const Ray2 & other) const noexcept {
         return ymd::is_equal_approx(this->center, other.center) and ymd::is_equal_approx(this->orientation, other.orientation);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool operator!=(const Ray2 & other) const{
+    bool operator!=(const Ray2 & other) const noexcept {
         return (*this == other) == false; 
     }
     
 	[[nodiscard]] __fast_inline constexpr 
-    Ray2 operator + (const Ray2 & other) const{
+    Ray2 operator + (const Ray2 & other) const noexcept {
         return Ray2{this->center + other.center, this->orientation + other.orientation}.regular();
     }
 
 	[[nodiscard]] __fast_inline constexpr 
-    Ray2 operator - (const Ray2 & other) const{
+    Ray2 operator - (const Ray2 & other) const noexcept {
         return Ray2{this->center - other.center, this->orientation - other.orientation}.regular();
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Ray2 regular() const{
+    Ray2 regular() const noexcept {
         return Ray2{this->center, fposmod(this->orientation, T(TAU))};
     }
 
 
 
     [[nodiscard]] __fast_inline constexpr 
-    bool contains_point(const Vec2<T> & pt) const{
+    bool contains_point(const Vec2<T> & pt) const noexcept {
         return is_equal_approx(distance_to(pt), 0);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool is_parallel_with(const Ray2 & other) const{
+    bool is_parallel_with(const Ray2 & other) const noexcept {
         return is_equal_approx(this->orientation, other.orientation);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Option<Vec2<T>> intersection(const Ray2<T> & other, const T epsilon) const{
+    Option<Vec2<T>> intersection(const Ray2<T> & other, const T epsilon) const noexcept {
         return this->to_line().intersection(other.to_line(), epsilon);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Line2<T> normal() const{
+    Line2<T> normal() const noexcept {
         return Line2<T>::from_point_and_angle(this->center, this->orientation + Angular<T>::from_radians(T(M_PI/2)));
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Ray2<T> rotated(const Angular<T> angle) const{
+    Ray2<T> rotated(const Angular<T> angle) const noexcept {
         return {this->center, this->orientation + angle};
     }
     
     [[nodiscard]] __fast_inline constexpr 
-    Vec2<T> endpoint_at_length(const T l) const{
+    Vec2<T> endpoint_at_length(const T l) const noexcept {
         return this->center + Vec2<T>{l, 0}.rotated(this->orientation);
     }
     
     [[nodiscard]] __fast_inline constexpr 
-    Segment2<T> cut_by_length(const T l) const{
+    Segment2<T> cut_by_length(const T l) const noexcept {
         return {this->center, endpoint_at_length(l)};
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    std::tuple<T, T, T> abc() const{
+    std::tuple<T, T, T> abc() const noexcept {
 
         //(y - y0) = tan(orientation) * (x - x0)
         // -tan(orientation) * x + y - y0 + tan(orientation) * x0 = 0
@@ -117,7 +117,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Line2<T> to_line() const{
+    Line2<T> to_line() const noexcept {
         return Line2<T>::from_point_and_angle(this->center, this->orientation);
     }
 };

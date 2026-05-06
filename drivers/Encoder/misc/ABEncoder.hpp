@@ -40,7 +40,7 @@ namespace ymd::drivers{
 //         return ret;
 //     }
 
-//     bool stable() const {
+//     bool stable() const noexcept {
 //         return true;
 //     }
 // };
@@ -149,7 +149,7 @@ public:
         b_pin_.inpu();    
     }
 
-    [[nodiscard]] uint8_t get_code() const {
+    [[nodiscard]] uint8_t get_code() const noexcept {
 
         const auto a = a_pin_.read().to_bool(); 
         const auto b = b_pin_.read().to_bool(); 
@@ -157,11 +157,11 @@ public:
         return uint8_t(uint8_t(b) << 1) | uint8_t(a);
     }
 
-    [[nodiscard]] constexpr int32_t count() const{
+    [[nodiscard]] constexpr int32_t count() const noexcept {
         return cnt_;
     }
 
-    [[nodiscard]] constexpr uint32_t get_err_cnt() const{
+    [[nodiscard]] constexpr uint32_t get_err_cnt() const noexcept {
         return err_cnt_;
     }
 

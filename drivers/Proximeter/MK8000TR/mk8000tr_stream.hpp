@@ -21,11 +21,11 @@ struct [[nodiscard]] SignalStrengthCode final{
     }
 
     template<typename T = int16_t>
-    constexpr T to_dbm() const {
+    constexpr T to_dbm() const noexcept {
         return static_cast<T>(bits) - 256;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept {
         return os << self.to_dbm() << "dBm";
     }
 };
@@ -38,7 +38,7 @@ struct [[nodiscard]] Packet final{
     uint16_t dist_cm;
     SignalStrengthCode signal_strength;
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept {
         return os
             << os.field("sender_addr")(self.sender_addr) << os.splitter()
             << os.field("dist_cm")(self.dist_cm) << os.splitter()

@@ -17,17 +17,17 @@ public:
 
     constexpr explicit Mecanum4Kinematics(const Config & cfg):cfg_(cfg) {}
 
-    constexpr math::Twist2<T> forward(const T4 & spd4) const {
+    constexpr math::Twist2<T> forward(const T4 & spd4) const noexcept {
         return {get_velocity_from_wheels(spd4), get_spinrate_from_wheels(spd4)};
     }
     
-    constexpr T4 inverse(const math::Twist2<T> & pv) const {
+    constexpr T4 inverse(const math::Twist2<T> & pv) const noexcept {
         return get_wheels_from_status(pv.linear, pv.angular);
     }
 private:
     const Config cfg_;
 
-    constexpr math::Vec2<T> get_velocity_from_wheels(const T4 & spd4) const {
+    constexpr math::Vec2<T> get_velocity_from_wheels(const T4 & spd4) const noexcept {
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
         T s2 = std::get<2>(spd4);
@@ -38,7 +38,7 @@ private:
         return math::Vec2<T>(x, y);
     }
 
-    constexpr T get_spinrate_from_wheels(const T4 & spd4) const {
+    constexpr T get_spinrate_from_wheels(const T4 & spd4) const noexcept {
         T temp = (cfg_.chassis_height + cfg_.chassis_width) / 2;
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
@@ -47,7 +47,7 @@ private:
         return (s1 - s0 + s2 - s3) / (4 * temp);
     }
 
-    constexpr T4  get_wheels_from_status(const math::Vec2<T>& spd, T spinrate) const {
+    constexpr T4  get_wheels_from_status(const math::Vec2<T>& spd, T spinrate) const noexcept {
         T temp = (cfg_.chassis_height + cfg_.chassis_width) / 2;
         return {
             spd.y + spd.x - spinrate * temp,

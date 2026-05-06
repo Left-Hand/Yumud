@@ -20,7 +20,7 @@ struct [[nodiscard]] SphericalCoordinates{
         };
     }
 
-    [[nodiscard]] math::Vec3<T> constexpr to_vec3() const {
+    [[nodiscard]] math::Vec3<T> constexpr to_vec3() const noexcept {
         const auto [azimuth_sine, azimuth_cosine] = azimuth.sincos();
         const auto [elevation_sine, elevation_cosine] = elevation.sincos();
         return math::Vec3<T>{
@@ -46,17 +46,17 @@ struct [[nodiscard]] SphericalCoordinates{
         };
     }
 
-    [[nodiscard]] math::Vec3<T> constexpr to_vec3_downplaced() const {
+    [[nodiscard]] math::Vec3<T> constexpr to_vec3_downplaced() const noexcept {
         const auto [x,y,z] = to_vec3();
         return math::Vec3{x, -y, z};
     }
 
-    // [[nodiscard]] Polar<T> constexpr to_polar() const{
+    // [[nodiscard]] Polar<T> constexpr to_polar() const noexcept {
     //     const auto elevation_cosine = elevation.cos();
     //     return Polar<T>(distance * elevation_cosine, azimuth);
     // }
 
-    [[nodiscard]] std::tuple<Polar<T>, T> constexpr to_polar_and_height() const{
+    [[nodiscard]] std::tuple<Polar<T>, T> constexpr to_polar_and_height() const noexcept {
         const auto [elevation_sine, elevation_cosine] = elevation.sincos();
         return std::make_tuple(
             Polar<T>(distance * elevation_cosine, azimuth), 
@@ -64,7 +64,7 @@ struct [[nodiscard]] SphericalCoordinates{
         );
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("distance")(self.distance) << os.splitter()
             << os.field("azimuth")(self.azimuth.to_radians()) << os.splitter()

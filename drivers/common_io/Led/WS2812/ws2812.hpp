@@ -17,7 +17,7 @@ struct W8212_BurstPwmSer{
     constexpr void apply_gs8_to_buf(
         const std::span<uint16_t, 8> buf, 
         uint8_t gs8
-    ) const{
+    ) const noexcept {
 
         for(size_t i = 0; i < 8; i++){
             buf[i] = (gs8 & 0x80) ? high_cvr : low_cvr;
@@ -28,7 +28,7 @@ struct W8212_BurstPwmSer{
     constexpr void apply_rgb888_to_buf(
         std::span<uint16_t, 24> buf, 
         std::array<uint8_t, 3> rgb888
-    ) const{
+    ) const noexcept {
         apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 0, 8), rgb888[0]);
         apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 8, 8), rgb888[1]);
         apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 16, 8), rgb888[2]);

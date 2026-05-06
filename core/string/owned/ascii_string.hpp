@@ -21,12 +21,12 @@ public:
         using reference = char&;
 
         constexpr iterator(pointer p) : ptr(p) {}
-        constexpr reference operator*() const { return *ptr; }
+        constexpr reference operator*() const noexcept { return *ptr; }
         constexpr pointer operator->() { return ptr; }
         constexpr iterator& operator++() { ++ptr; return *this; }
         constexpr iterator operator++(int) { iterator tmp = *this; ++ptr; return tmp; }
-        constexpr bool operator==(const iterator& other) const { return ptr == other.ptr; }
-        constexpr bool operator!=(const iterator& other) const { return ptr != other.ptr; }
+        constexpr bool operator==(const iterator& other) const noexcept { return ptr == other.ptr; }
+        constexpr bool operator!=(const iterator& other) const noexcept { return ptr != other.ptr; }
     private:
         char * ptr;
     };
@@ -42,12 +42,12 @@ public:
         using reference = const char &;
 
         constexpr const_iterator(pointer p) : ptr(p) {}
-        constexpr reference operator*() const { return *ptr; }
+        constexpr reference operator*() const noexcept { return *ptr; }
         constexpr pointer operator->() { return ptr; }
         constexpr const_iterator& operator++() { ++ptr; return *this; }
         constexpr const_iterator operator++(int) { const_iterator tmp = *this; ++ptr; return tmp; }
-        constexpr bool operator==(const const_iterator& other) const { return ptr == other.ptr; }
-        constexpr bool operator!=(const const_iterator& other) const { return ptr != other.ptr; }
+        constexpr bool operator==(const const_iterator& other) const noexcept { return ptr == other.ptr; }
+        constexpr bool operator!=(const const_iterator& other) const noexcept { return ptr != other.ptr; }
     private:
         const char* ptr;
     };
@@ -137,20 +137,20 @@ public:
     }
 
     // Example additions:
-    constexpr bool operator==(const AsciiString& other) const {
+    constexpr bool operator==(const AsciiString& other) const noexcept {
         if(length_ != other.length_) [[likely]] 
             return false;
         return std::memcmp(c_str(), other.c_str(), length_) == 0;
     }
 
     
-    constexpr const_iterator begin() const {
+    constexpr const_iterator begin() const noexcept {
         return const_iterator{is_sso_ ? sso_buffer : dynamic_data->data};}
 
-    constexpr const_iterator end() const {
+    constexpr const_iterator end() const noexcept {
         return const_iterator{(is_sso_ ? sso_buffer : dynamic_data->data) + length_};}
 
-    constexpr size_t capacity() const { 
+    constexpr size_t capacity() const noexcept { 
         return is_sso_ ? SSO_CAPACITY : dynamic_data->capacity - 1; 
     }
 
@@ -160,16 +160,16 @@ public:
         return is_sso_ ? sso_buffer[index] : dynamic_data->data[index];
     }
 
-    constexpr const char& operator[](size_t index) const {
+    constexpr const char& operator[](size_t index) const noexcept {
         return is_sso_ ? sso_buffer[index] : dynamic_data->data[index];
     }
 
-    constexpr const char* c_str() const {
+    constexpr const char* c_str() const noexcept {
         return is_sso_ ? sso_buffer : dynamic_data->data;
     }
 
-    constexpr size_t size() const { return length_; }
-    constexpr bool empty() const { return length_ == 0; }
+    constexpr size_t size() const noexcept { return length_; }
+    constexpr bool empty() const noexcept { return length_ == 0; }
 
     // Iterators
     iterator begin() { 

@@ -9,11 +9,11 @@ struct [[nodiscard]] SpiRequestPackage final{
     uint16_t is_read:1;
     uint16_t is_even:1;
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr bool is_verification_passed() const {
+    [[nodiscard]] constexpr bool is_verification_passed() const noexcept {
         return std::popcount(to_bits()) % 2 == is_even;
     }
 };
@@ -26,11 +26,11 @@ struct [[nodiscard]] SpiResponsePackage final{
     uint16_t error_flag:1;
     uint16_t is_even:1;
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr bool is_verification_passed() const {
+    [[nodiscard]] constexpr bool is_verification_passed() const noexcept {
         return std::popcount(to_bits()) % 2 == is_even;
     }
 };

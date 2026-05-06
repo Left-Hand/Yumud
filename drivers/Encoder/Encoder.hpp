@@ -74,7 +74,7 @@ struct alignas(4) [[nodiscard]] EncoderFaultBitFields final{
         return std::bit_cast<Self>(uint32_t(0));
     }
 
-    [[nodiscard]] constexpr uint32_t to_u32() const {
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
         return std::bit_cast<uint32_t>(*this);
     }
     [[nodiscard]] constexpr bool is_ok(){

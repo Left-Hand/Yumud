@@ -19,7 +19,7 @@ public:
     }
 
     [[nodiscard]] constexpr __fast_inline
-    uint32_t get() const { return state_; }
+    uint32_t get() const noexcept { return state_; }
 
     [[nodiscard]] constexpr __fast_inline
     iq16 get_as_01(){

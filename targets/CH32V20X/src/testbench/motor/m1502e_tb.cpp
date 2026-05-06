@@ -43,7 +43,7 @@ public:
         uq16 fc;
         uq8 b0;
 
-        constexpr Coeffs to_coeffs() const{
+        constexpr Coeffs to_coeffs() const noexcept {
             auto & self = *this;
             return Coeffs{
                 .b0 = self.b0,
@@ -63,7 +63,7 @@ public:
     constexpr explicit MotorLeso(const Coeffs & coeffs):
         coeffs_(coeffs){;}
 
-    constexpr State forward(const State & state, const iq16 y, const iq16 u) const {
+    constexpr State forward(const State & state, const iq16 y, const iq16 u) const noexcept {
         return State{
             state.x1 + (state.x2 + coeffs_.b0 * u + coeffs_.g1 * (y - state.x1)) * coeffs_.dt,
             state.x2 + coeffs_.g2 * (y - state.x1) * coeffs_.dt

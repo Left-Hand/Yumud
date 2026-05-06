@@ -37,19 +37,19 @@ public:
         result_ = math::sin(fl_ * rad) + math::sin(fh_ * rad);
     }
 
-    constexpr auto fl() const{
+    constexpr auto fl() const noexcept {
         return fl_map_[fl_index_];
     }
 
-    constexpr auto fh() const{
+    constexpr auto fh() const noexcept {
         return fh_map_[fh_index_];
     }
 
-    constexpr auto result() const{
+    constexpr auto result() const noexcept {
         return result_;
     }
 
-    constexpr auto operator ()() const{
+    constexpr auto operator ()() const noexcept {
         return result();
     }
 private:

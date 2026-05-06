@@ -105,7 +105,7 @@ public:
         return yFromT (currentt,  E,F,G,H);
     }
 
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         return forward({_a, _b}, {_c, _d}, x);
     }
 };
@@ -181,7 +181,7 @@ public:
         y = MAX(0, MIN(1, y));
         return y;
     }
-    constexpr iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const noexcept {
         return forward({_a, _b}, {_c, _d}, x);
     }
 

@@ -221,7 +221,7 @@ OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{DERIVE_DEBUG_X
 //     *this = xyz_to_lab888(rgb888_to_xyz(rgb));
 // }
 
-// LAB888::operator RGB888() const {
+// LAB888::operator RGB888() const noexcept {
 //     const auto [x,y,z] = lab888_to_xyz(*this);
 //     return xyz_to_rgb888(std::make_tuple(x,y,z));
 // }

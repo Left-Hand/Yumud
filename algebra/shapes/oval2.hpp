@@ -24,7 +24,7 @@ struct HorizonOval2{
 			.length = length
 		});
 	}
-	__fast_inline constexpr math::Rect2<T> bounding_box() const {
+	__fast_inline constexpr math::Rect2<T> bounding_box() const noexcept {
 		const auto top_left = left_center + math::Vec2<T>(-radius, -radius);
 		const auto size = math::Vec2<T>(radius * 2 + length, radius * 2);
 		return math::Rect2<T>{top_left, size};
@@ -50,7 +50,7 @@ struct VerticalOval2{
 			.length = length
 		});
 	}
-	__fast_inline constexpr math::Rect2<T> bounding_box() const {
+	__fast_inline constexpr math::Rect2<T> bounding_box() const noexcept {
 		const auto top_left = top_center + math::Vec2<T>(-radius, -radius);
 		const auto size = math::Vec2<T>(radius * 2, radius * 2 + length);
 		return math::Rect2<T>{top_left, size};
@@ -101,11 +101,11 @@ public:
         replace_x();
     }
 
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_range_.stop;
     }
 
-    constexpr math::Range2u16 x_range() const{
+    constexpr math::Range2u16 x_range() const noexcept {
         if(get_y_overhit()){
             return math::Range2u16::from_start_and_stop_unchecked(
                 static_cast<uint16_t>(x0_ + x_offset_),
@@ -116,7 +116,7 @@ public:
         }
     }
 
-    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
+    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const noexcept {
         const auto [left, right] = x_range();
 
         return {math::Range2u16{left, left + 1}, math::Range2u16{right - 1, right}};
@@ -150,14 +150,14 @@ private:
         #endif
     }
 
-    constexpr bool is_y_at_edge() const {
+    constexpr bool is_y_at_edge() const noexcept {
         return y_ == (y_range_.start) || y_ == (y_range_.stop);
     }
 
     static constexpr int32_t fast_relu_i32(const int32_t x){
         return x & (~(x >> 31));
     }
-    constexpr uint16_t get_y_overhit() const {
+    constexpr uint16_t get_y_overhit() const noexcept {
         // const uint16_t y_top    = static_cast<uint16_t>(y_range_.start + radius_);
         // const uint16_t y_bottom = static_cast<uint16_t>(y_range_.stop - radius_);
         // const int32_t y_top = static_cast<int32_t>(y_range_.start) + static_cast<int32_t>(radius_);
@@ -199,7 +199,7 @@ struct RasterizationIterator<HorizonOval2<T>> {
             length_(shape.length){}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 
@@ -256,7 +256,7 @@ struct RasterizationIterator<VerticalOval2<T>> {
         : iter_(shape){;}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 

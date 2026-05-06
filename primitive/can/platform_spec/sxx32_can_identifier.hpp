@@ -23,15 +23,15 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
         //完整的id
         uint32_t full_id:29;
 
-        [[nodiscard]] constexpr uint32_t full29() const {
+        [[nodiscard]] constexpr uint32_t full29() const noexcept {
             return full_id;
         }
 
-        [[nodiscard]] constexpr uint32_t high11() const {
+        [[nodiscard]] constexpr uint32_t high11() const noexcept {
             return full_id >> (29 - 11);
         }
 
-        [[nodiscard]] constexpr uint32_t low18() const {
+        [[nodiscard]] constexpr uint32_t low18() const noexcept {
             constexpr uint32_t MASK = (1u << (29 - 11)) - 1;
             return full_id & MASK;
         }
@@ -67,31 +67,31 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
 
     /// @brief 转换为原始32位bit
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t to_sxx32_txmir_with_txrq() const{
+    constexpr uint32_t to_sxx32_txmir_with_txrq() const noexcept {
         return static_cast<uint32_t>(bits | 0x01);
     }
 
     /// @brief 是否为拓展帧
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr bool is_extended() const{
+    constexpr bool is_extended() const noexcept {
         return std::bit_cast<BitFields>(bits).is_extended;
     }
 
     /// @brief 是否为标准帧
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr bool is_standard() const{
+    constexpr bool is_standard() const noexcept {
         return !is_extended();
     }
 
     /// @brief 是否为远程帧
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr bool is_remote() const {
+    constexpr bool is_remote() const noexcept {
         return std::bit_cast<BitFields>(bits).is_remote;
     }
 
     /// @brief 不顾帧格式，直接获取帧ID大小
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t id_u32() const {
+    constexpr uint32_t id_u32() const noexcept {
         if(std::bit_cast<BitFields>(bits).is_extended)
             return std::bit_cast<BitFields>(bits).full29();
         else
@@ -100,18 +100,18 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
 
 
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t full29() const {
+    constexpr uint32_t full29() const noexcept {
         return std::bit_cast<BitFields>(bits).full29();
     }
 
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t high11() const {
+    constexpr uint32_t high11() const noexcept {
         return std::bit_cast<BitFields>(bits).high11();
     }
 
     /// @brief 尝试将帧ID转为标准帧ID
     __attribute__((always_inline)) 
-    [[nodiscard]] constexpr Option<CanStdId> try_to_stdid() const {
+    [[nodiscard]] constexpr Option<CanStdId> try_to_stdid() const noexcept {
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             return None;
@@ -120,7 +120,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
 
     /// @brief 尝试将帧ID转为 帧ID
     __attribute__((always_inline)) 
-    [[nodiscard]] constexpr Option<CanExtId> try_to_extid() const {
+    [[nodiscard]] constexpr Option<CanExtId> try_to_extid() const noexcept {
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             return None;
@@ -129,7 +129,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
 
     /// @brief 不顾帧格式，直接获取标准帧
     __attribute__((always_inline)) 
-    [[nodiscard]] constexpr CanStdId to_stdid() const {
+    [[nodiscard]] constexpr CanStdId to_stdid() const noexcept {
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == true) [[unlikely]]
             __builtin_trap();
@@ -138,7 +138,7 @@ struct alignas(4) [[nodiscard]] SXX32_CanIdentifier final{
 
     /// @brief 不顾帧格式，直接获取拓展帧
     __attribute__((always_inline)) 
-    [[nodiscard]] constexpr CanExtId to_extid() const {
+    [[nodiscard]] constexpr CanExtId to_extid() const noexcept {
         const auto fields = std::bit_cast<BitFields>(bits);
         if(fields.is_extended == false) [[unlikely]]
             __builtin_trap();

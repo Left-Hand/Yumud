@@ -76,7 +76,7 @@ public:
         return *this;
     }
 
-    constexpr Ret operator()(Args... args) const {
+    constexpr Ret operator()(Args... args) const noexcept {
         return invoke_(storage_, std::forward<Args>(args)...);
     }
 
@@ -104,7 +104,7 @@ public:
     requires (std::is_convertible_v<F, FnPtr>)
     constexpr Function(F&& f) noexcept : fn_(std::forward<F>(f)) {}
 
-    constexpr Ret operator()(Args... args) const {
+    constexpr Ret operator()(Args... args) const noexcept {
         return fn_(std::forward<Args>(args)...);
     }
 

@@ -114,7 +114,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         struct TempCode{
             uint16_t bits;
 
-            constexpr iq16 to_celsius() const {
+            constexpr iq16 to_celsius() const noexcept {
                 return (int32_t(uint32_t(bits) * iq16(0.8)) - 75);
             }
         };

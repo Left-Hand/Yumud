@@ -72,11 +72,11 @@ struct [[nodiscard]] alignas(4) Packet final{
         return std::span<uint8_t, 3>(reinterpret_cast<uint8_t *>(this), sizeof(Self));
     }
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t, 3>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 
-    IResult<Angular<uq32>> parse() const {
+    IResult<Angular<uq32>> parse() const noexcept {
         
         // if(not is_overspeed) [[unlikely]] 
         //     return Err(Error::OverSpeed);
@@ -88,19 +88,19 @@ struct [[nodiscard]] alignas(4) Packet final{
         return Ok(Angular<uq32>::from_turns(uq18::from_bits(angle_u18())));
     }
 
-    [[nodiscard]] constexpr bool is_pc1_valid() const {
+    [[nodiscard]] constexpr bool is_pc1_valid() const noexcept {
         const uint16_t bits = d1 & 0xfeff;
         const bool is_odd = (std::popcount(bits) & 0x01);
         return is_odd == pc1;
     }
 
-    [[nodiscard]] constexpr bool is_pc2_valid() const {
+    [[nodiscard]] constexpr bool is_pc2_valid() const noexcept {
         const uint8_t bits = d2 & 0xf8;
         const bool is_odd = (std::popcount(bits) & 0x01);
         return is_odd == pc2;
     }
 private:
-    [[nodiscard]] constexpr uint32_t angle_u18() const {
+    [[nodiscard]] constexpr uint32_t angle_u18() const noexcept {
         return (angle_17_10 << 10) | (angle_9_4 << 4) | angle_3_0;
     }
 };

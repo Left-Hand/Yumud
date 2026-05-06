@@ -92,7 +92,7 @@ struct PerdefErrFieldReg{
     }
 
     #if 0
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
         static constexpr OdSubIndex base_idx = 1;
 
         if(unlikely(sidx) < 1){

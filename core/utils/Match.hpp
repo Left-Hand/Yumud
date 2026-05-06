@@ -74,7 +74,7 @@ public:
 
     // template<typename Obj>
     // requires (rhs_is_functor)
-    // constexpr auto execute(Obj && obj) const { 
+    // constexpr auto execute(Obj && obj) const noexcept { 
     //     using Params = tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>;
     //     if constexpr (std::is_same_v<Params, std::tuple<void>>) return rhs_();
     //     else if constexpr (std::is_same_v<Params, std::tuple<std::decay_t<Obj>>>) 
@@ -90,35 +90,35 @@ public:
     requires (rhs_is_functor 
         and (not std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<void>>) 
         and (not std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
-    constexpr auto execute(Obj && obj) const { 
+    constexpr auto execute(Obj && obj) const noexcept { 
         // static_assert(tmp::false_v<std::pair<std::decay_t<Obj>, tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>>>, "unsupported para")
         return tmp::functor_ret_t<Rhs>();
     }
 
     template<typename Obj>
     requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<void>>))
-    constexpr auto execute(Obj && obj) const { 
+    constexpr auto execute(Obj && obj) const noexcept { 
         return rhs_();
     }
 
 
     template<typename Obj>
     requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
-    constexpr auto execute(Obj && obj) const { 
+    constexpr auto execute(Obj && obj) const noexcept { 
         return rhs_(std::forward<Obj>(obj));
         // return rhs_(obj);
     }
 
     template<typename Obj>
     requires (!rhs_is_functor)
-    constexpr auto execute(Obj) const { 
+    constexpr auto execute(Obj) const noexcept { 
         return rhs_;
     }
 
     // template<typename Dummy = void>
     // requires (rhs_is_functor
     //     and std::is_same_v<Rhs, std::tuple<void>>)
-    // constexpr auto execute() const {
+    // constexpr auto execute() const noexcept {
     //     return rhs_();
     // }
 
@@ -127,7 +127,7 @@ public:
     //     rhs_is_functor
     //     and (not std::is_same_v<Rhs, std::tuple<void>>)
     // >>
-    // constexpr auto execute(const Obj & obj) const {
+    // constexpr auto execute(const Obj & obj) const noexcept {
     //     using Params = rhs_args_tuple;
     //     return rhs_();
     // }

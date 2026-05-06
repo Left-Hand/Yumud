@@ -109,12 +109,12 @@ public:
 
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    Range2<T> swap() const {
+    Range2<T> swap() const noexcept {
         return {stop, start};
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    Range2<T> swap_if_inversed() const {
+    Range2<T> swap_if_inversed() const noexcept {
         return start > stop ? swap() : *this;
     }
 
@@ -143,10 +143,10 @@ public:
         {return *(&this->start + index);}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const T * begin() const { return &this->start;}
+    const T * begin() const noexcept { return &this->start;}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const T * end() const { return &this->stop;}
+    const T * end() const noexcept { return &this->stop;}
 
     template<typename U>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -157,42 +157,42 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    bool is_regular() const {
+    bool is_regular() const noexcept {
         return start <= stop;
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T length() const{
+    T length() const noexcept {
         if(stop > start) return static_cast<T>(stop - start);
         return static_cast<T>(start - stop);
         // return std::abs(stop - start);
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T length_unchecked() const{
+    T length_unchecked() const noexcept {
         return stop - start;
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T half_length_unchecked() const{
+    T half_length_unchecked() const noexcept {
         return (stop - start) >> 1;
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    T length_signed() const{
+    T length_signed() const noexcept {
         return (stop - start);
     }
 
-    [[nodiscard]] constexpr Range2<T> abs() const{
+    [[nodiscard]] constexpr Range2<T> abs() const noexcept {
         if((start > stop)) return Range2<T>(stop, start);
         return *this;
     }
 
-    [[nodiscard]] constexpr Range2<T> operator * (const arithmetic auto rhs) const{
+    [[nodiscard]] constexpr Range2<T> operator * (const arithmetic auto rhs) const noexcept {
         return Range2<T>(this->start * rhs, this->stop * rhs);
     }
 
-    [[nodiscard]] constexpr Range2<T> operator / (const arithmetic auto & rhs) const{
+    [[nodiscard]] constexpr Range2<T> operator / (const arithmetic auto & rhs) const noexcept {
         if constexpr(std::is_integral_v<T>){
             return {this->start / rhs, this->stop / rhs};
         }else{
@@ -203,47 +203,47 @@ public:
 
 
     template<typename U>
-    [[nodiscard]] constexpr bool operator == (const Range2<U> & other) const {
+    [[nodiscard]] constexpr bool operator == (const Range2<U> & other) const noexcept {
         return (this->start == other.start && this->stop == other.stop);
     }
 
     template<typename U>
-    [[nodiscard]] constexpr bool operator != (const Range2<U> & other) const {
+    [[nodiscard]] constexpr bool operator != (const Range2<U> & other) const noexcept {
         return !(*this == other);
     }
 
     template<typename U>
-    [[nodiscard]] constexpr bool intersects(const Range2<U> & other) const {
+    [[nodiscard]] constexpr bool intersects(const Range2<U> & other) const noexcept {
         return(this->contains(other.start) || other.contains(this->start));
     }
 
     template<typename U>
-    [[nodiscard]] constexpr bool contains(const Range2<U> & other) const {
+    [[nodiscard]] constexpr bool contains(const Range2<U> & other) const noexcept {
         return (this->start <= other.start && this->stop >= other.stop);
     }
 
     template<typename U>
-    [[nodiscard]] constexpr bool is_inside(const Range2<U> & other) const {
+    [[nodiscard]] constexpr bool is_inside(const Range2<U> & other) const noexcept {
         return other.contains(*this);
     }
 
-    [[nodiscard]] constexpr bool contains(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr bool contains(const arithmetic auto & value) const noexcept {
         return (this->start <= static_cast<T>(value)
             && static_cast<T>(value) < this->stop);
     }
 
-    [[nodiscard]] constexpr T padding(const Range2<T> other) const {
+    [[nodiscard]] constexpr T padding(const Range2<T> other) const noexcept {
         if(this->intersects(other)) return 0;
         return MIN((other.stop - this->start), (other.start - this->stop));
     }
 
     template<typename U>
-    [[nodiscard]] constexpr Range2<T> intersection(const Range2<U> & other) const {
+    [[nodiscard]] constexpr Range2<T> intersection(const Range2<U> & other) const noexcept {
         if(false == this->intersects(other)) return Range2<T>();
         return Range2<T>(MAX(T(this->start), T(other.start)), MIN(T(this->stop), T(other.stop)));
     }
 
-    [[nodiscard]] constexpr T center()const{
+    [[nodiscard]] constexpr T center() const noexcept {
         return (start + stop) / 2;
     }
 
@@ -257,7 +257,7 @@ public:
     }
 
 
-    [[nodiscard]] constexpr Option<Range2<T>> expand(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr Option<Range2<T>> expand(const arithmetic auto & value) const noexcept {
         const auto next_start = this->start - value;
         const auto next_stop = this->stop + value;
 
@@ -265,7 +265,7 @@ public:
         return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
     }
 
-    [[nodiscard]] constexpr Option<Range2<T>> shrink(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr Option<Range2<T>> shrink(const arithmetic auto & value) const noexcept {
 
         const auto next_start = this->start + value;
         const auto next_stop = this->stop - value;
@@ -274,49 +274,49 @@ public:
         return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
     }
 
-    [[nodiscard]] constexpr Range2<T> merge(const Range2<arithmetic auto> & other) const {
+    [[nodiscard]] constexpr Range2<T> merge(const Range2<arithmetic auto> & other) const noexcept {
         return Range2<T>(MIN(this->start, other.start), MAX(this->stop, other.stop));
     }
 
-    [[nodiscard]] constexpr Range2<T> shift(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr Range2<T> shift(const arithmetic auto & value) const noexcept {
         Range2<T> ret = Range2<T>(this->start + value, this->stop + value);
         return ret;
     }
 
-    [[nodiscard]] constexpr Range2<T> merge(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr Range2<T> merge(const arithmetic auto & value) const noexcept {
         return Range2<T>(MIN(T(this->start), T(value)), MAX(T(this->stop), T(value)));
     }
 
-    [[nodiscard]] constexpr T invlerp(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr T invlerp(const arithmetic auto & value) const noexcept {
         return T((value - start) / (stop - start));
     }
 
-    [[nodiscard]] constexpr T lerp(const arithmetic auto & value) const {
+    [[nodiscard]] constexpr T lerp(const arithmetic auto & value) const noexcept {
         return start + (value) * (stop - start);
     }
 
-    [[nodiscard]] constexpr bool is_complete_less_than(const arithmetic auto & value) const {
+    [[nodiscard]] constexpr bool is_complete_less_than(const arithmetic auto & value) const noexcept {
         return this->stop < value;
     }
 
-    [[nodiscard]] constexpr bool is_partical_less_than(const arithmetic auto & value) const {
+    [[nodiscard]] constexpr bool is_partical_less_than(const arithmetic auto & value) const noexcept {
         return this->start < value && this->stop >= value;
     }
 
-    [[nodiscard]] constexpr bool is_complete_great_than(const arithmetic auto & value) const {
+    [[nodiscard]] constexpr bool is_complete_great_than(const arithmetic auto & value) const noexcept {
         return this->start > value;
     }
-    [[nodiscard]] constexpr bool is_partical_great_than(const arithmetic auto & value) const {
+    [[nodiscard]] constexpr bool is_partical_great_than(const arithmetic auto & value) const noexcept {
         return this->start <= value && this->stop > value;
     }
 
 
-    [[nodiscard]] constexpr T clamp(const arithmetic auto & value) const{
+    [[nodiscard]] constexpr T clamp(const arithmetic auto & value) const noexcept {
         return CLAMP(value, this->start, this->stop);
     }
 
-    [[nodiscard]] constexpr T max() const {return MAX(this->start, this->stop);}
-    [[nodiscard]] constexpr T min() const {return MIN(this->start, this->stop);}
+    [[nodiscard]] constexpr T max() const noexcept {return MAX(this->start, this->stop);}
+    [[nodiscard]] constexpr T min() const noexcept {return MIN(this->start, this->stop);}
 
 private:
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -353,31 +353,31 @@ struct [[nodiscard]] RangeGridIter{
 
     constexpr Option<Range2u32> next(
         const Range2u32 range_in
-    )const{
+    ) const noexcept {
         return next_of_range(range_in, range_targ_, gsize_);
     }
 
     constexpr Option<Range2u32> prev(
         const Range2u32 range_in
-    )const{
+    ) const noexcept {
         return prev_of_range(range_in, range_targ_, gsize_);
     }
 
-    constexpr Range2u32 begin()const{
+    constexpr Range2u32 begin() const noexcept {
         return begin_of_range(range_targ_, gsize_);
     }
 
-    constexpr Range2u32 end()const{
+    constexpr Range2u32 end() const noexcept {
         return end_of_range(range_targ_, gsize_);
     }
 
     template<typename T>
-    constexpr std::span<T> subspan(const std::span<T> pbuf, const Range2u32 range) const{
+    constexpr std::span<T> subspan(const std::span<T> pbuf, const Range2u32 range) const noexcept {
         const auto offset = range.start - range_targ_.start;
         return pbuf.subspan(offset, range.length());
     }
 
-    constexpr Range2u32 whole() const {
+    constexpr Range2u32 whole() const noexcept {
         return range_targ_;
     }
 private:

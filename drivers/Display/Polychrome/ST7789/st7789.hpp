@@ -16,9 +16,9 @@ public:
         algo_(size){;}
 
 
-    math::Vec2<uint16_t> size() const {return algo_.size();}
+    math::Vec2<uint16_t> size() const noexcept {return algo_.size();}
 
-    math::Rect2u16 bounding_box() const {
+    math::Rect2u16 bounding_box() const noexcept {
         return math::Rect2u16{
             math::Vec2<uint16_t>::ZERO,
             size()

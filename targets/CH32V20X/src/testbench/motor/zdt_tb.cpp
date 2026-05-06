@@ -25,8 +25,8 @@ using namespace ymd::robots;
 #define PHY_SEL_CAN 0
 #define PHY_SEL_UART 1
 
-#define PHY_SEL PHY_SEL_UART
-// #define PHY_SEL PHY_SEL_CAN
+// #define PHY_SEL PHY_SEL_UART
+#define PHY_SEL PHY_SEL_CAN
 
 void zdt_main(){
     DBG_UART.init({

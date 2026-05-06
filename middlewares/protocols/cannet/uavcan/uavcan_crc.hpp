@@ -105,7 +105,7 @@ struct [[nodiscard]] CrcBuilder final{
         return *this;
     }
 
-    [[nodiscard]] constexpr uint16_t get() const{
+    [[nodiscard]] constexpr uint16_t get() const noexcept {
         return crc_val;
     }
 };

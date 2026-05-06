@@ -45,11 +45,11 @@ struct [[nodiscard]] alignas(4) AbortInfo final{
                 };
             }
 
-            [[nodiscard]] constexpr bool is_cstr() const{
+            [[nodiscard]] constexpr bool is_cstr() const noexcept {
                 return kind == Kind::Cstring;
             }
 
-            [[nodiscard]] constexpr uint32_t to_u32() const{
+            [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
                 return std::bit_cast<uint32_t>(*this);
             }
         };
@@ -66,12 +66,12 @@ struct [[nodiscard]] alignas(4) AbortInfo final{
                 return std::bit_cast<Flag>(uint32_t(0));
             }
 
-            [[nodiscard]] constexpr uint32_t to_u32() const{
+            [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
                 return std::bit_cast<uint32_t>(*this);
             }
 
             template<size_t I>
-            constexpr ArgDescr arg_descr() const{
+            constexpr ArgDescr arg_descr() const noexcept {
                 static_assert(I <= 2);
                 static_assert(I != 0);
 

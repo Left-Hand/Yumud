@@ -44,7 +44,7 @@ struct FromDefaultDispatcher {
 
 struct _Default{
     template<typename T>
-    constexpr operator T() const {
+    constexpr operator T() const noexcept {
         return FromDefaultDispatcher<T>::from_default();
     }
 };

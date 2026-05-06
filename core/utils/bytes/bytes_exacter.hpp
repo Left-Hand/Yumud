@@ -15,7 +15,7 @@ struct [[nodiscard]] BytesExacter {
 
     template<typename ... Ts>
     requires ((tmp::total_bytes_of_bits_ctorable_v<std::tuple<Ts...>> == Extents))
-    constexpr void exact_to_elements(Ts&... ts) const {
+    constexpr void exact_to_elements(Ts&... ts) const noexcept {
         // 使用折叠表达式为每个参数调用绑定函数
         [&]<std::size_t... Indices>(std::index_sequence<Indices...>) {
             (exact_to_element<Indices, std::tuple<Ts...>>(ts), ...);
@@ -23,7 +23,7 @@ struct [[nodiscard]] BytesExacter {
     }
 
     template<typename T> 
-    [[nodiscard]] constexpr T make_struct() const {
+    [[nodiscard]] constexpr T make_struct() const noexcept {
         using Tup = std::decay_t<decltype(reflect::to<std::tuple>(std::declval<T>()))>;
         T ret;
         using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
@@ -42,7 +42,7 @@ private:
         typename Tup, 
         typename T = std::tuple_element_t<I, Tup >
         >
-    constexpr __always_inline void exact_to_element(T& element) const {
+    constexpr __always_inline void exact_to_element(T& element) const noexcept {
         using D = tmp::from_bits_t<T>;
         constexpr size_t WIDTH = sizeof(D);
         constexpr size_t OFFSET = tmp::offset_of_bits_ctorable_v<I, Tup>;
