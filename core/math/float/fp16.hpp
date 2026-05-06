@@ -125,6 +125,7 @@ struct alignas(2) [[nodiscard]] fp16 final{
     [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
+
     constexpr fp16(float f_val) {
         *this = f32_to_fp16(f_val);
     }

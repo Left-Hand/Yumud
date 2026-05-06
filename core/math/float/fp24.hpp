@@ -18,19 +18,19 @@ struct alignas(4) [[nodiscard]] fp24 final {
     // 内存布局：1位符号 + 8位指数 + 15位尾数
     // 24位存储在32位中，低8位未使用（便于对齐）
 private:
-    ::uint32_t padding   : 8;
+    uint32_t padding   : 8;
 public:
-    ::uint32_t mantissa : 15;
-    ::uint32_t exp      : 8;
-    ::uint32_t sign     : 1;
+    uint32_t mantissa : 15;
+    uint32_t exp      : 8;
+    uint32_t sign     : 1;
 
     // 常量定义
-    static constexpr ::uint32_t EXP_BIAS = 127;      // 与FP32相同的指数偏置
-    static constexpr ::uint32_t EXP_MAX = 0xFF;      // 全1表示无穷大/NaN
-    static constexpr ::uint32_t EXP_MIN = 0x00;      // 全0表示0或次正规数
-    static constexpr ::uint32_t MANTISSA_BITS = 15;
-    static constexpr ::uint32_t TOTAL_BITS = 24;
-    static constexpr ::uint32_t STORAGE_BITS = 32;   // 实际存储大小
+    static constexpr uint32_t EXP_BIAS = 127;      // 与FP32相同的指数偏置
+    static constexpr uint32_t EXP_MAX = 0xFF;      // 全1表示无穷大/NaN
+    static constexpr uint32_t EXP_MIN = 0x00;      // 全0表示0或次正规数
+    static constexpr uint32_t MANTISSA_BITS = 15;
+    static constexpr uint32_t TOTAL_BITS = 24;
+    static constexpr uint32_t STORAGE_BITS = 32;   // 实际存储大小
 
     constexpr fp24() : mantissa(0), exp(0), sign(0){}
     constexpr fp24(const fp24& other) = default;
@@ -117,41 +117,6 @@ public:
     [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const {
         return fixed<Q, int32_t>::from(static_cast<float>(*this));
     }
-
-    // 转换为3字节数组
-    [[nodiscard]] constexpr std::array<uint8_t, 3> to_bytes() const {
-        uint32_t bits = to_bits();
-        std::array<uint8_t, 3> bytes;
-        bytes[0] = (bits >> 16) & 0xFF;
-        bytes[1] = (bits >> 8) & 0xFF;
-        bytes[2] = bits & 0xFF;
-        return bytes;
-    }
-
-    // 转换为字节视图
-    [[nodiscard]] std::span<const uint8_t, 3> as_bytes() const {
-        return std::span<const uint8_t, 3>(
-            reinterpret_cast<const uint8_t*>(this) + 1// 跳过第一个填充字节
-            , 3
-        );
-    }
-
-    // 按指定字节序填充字节
-    template<std::endian ENDIAN>
-    constexpr void fill_bytes(std::span<uint8_t, 3> bytes) const {
-        uint32_t bits = to_bits();
-        if constexpr(ENDIAN == std::endian::little) {
-            bytes[0] = bits & 0xFF;
-            bytes[1] = (bits >> 8) & 0xFF;
-            bytes[2] = (bits >> 16) & 0xFF;
-        }else{
-            bytes[0] = (bits >> 16) & 0xFF;
-            bytes[1] = (bits >> 8) & 0xFF;
-            bytes[2] = bits & 0xFF;
-        }
-    }
-
-
 private:
 };
 

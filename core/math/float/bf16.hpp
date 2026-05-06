@@ -48,8 +48,6 @@ struct alignas(2) [[nodiscard]] bf16 final{
         return std::bit_cast<uint16_t>(*this);
     }
 
-
-
     // bf16 -> float
     [[nodiscard]] explicit constexpr operator float() const {
         uint32_t f32_bits = uint32_t(to_bits()) << 16;
@@ -64,29 +62,6 @@ struct alignas(2) [[nodiscard]] bf16 final{
     [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const{
         return fixed<Q, int32_t>::from(float(*this));
     }
-
-    [[nodiscard]] constexpr std::array<uint8_t, 2> to_bytes() const {
-        const uint16_t bits = to_bits();
-        return std::bit_cast<std::array<uint8_t, 2>>(bits);
-    }
-
-    [[nodiscard]] std::span<const uint8_t, 2> as_bytes() const {
-        return std::span<const uint8_t, 2>(
-            reinterpret_cast<const uint8_t *>(this), 2
-        );
-    }
-
-    template<std::endian ENDIAN>
-    constexpr void fill_bytes(std::span<uint8_t, 2> bytes){
-        if constexpr(ENDIAN == std::endian::little){
-            bytes[0] = mant;
-            bytes[1] = exp | (sign << 7);
-        }else{
-            bytes[0] = exp | (sign << 7);
-            bytes[1] = mant;
-        }
-    }
-
 };
 
 static_assert(sizeof(bf16) == 2);
