@@ -149,6 +149,10 @@ struct [[nodiscard]] FlatPacket final{
         return Ok();
     }
 
+    [[nodiscard]] constexpr std::span<const uint8_t> transmittable_bytes() const {
+        return std::span<const uint8_t>(&node_id.count, static_cast<size_t>(payload_len));
+    }
+
     constexpr Bytes2CanFrameIterator to_canframe_iter() const {
         auto & self = *this;
         return Bytes2CanFrameIterator(

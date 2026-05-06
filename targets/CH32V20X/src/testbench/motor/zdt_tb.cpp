@@ -25,8 +25,8 @@ using namespace ymd::robots;
 #define PHY_SEL_CAN 0
 #define PHY_SEL_UART 1
 
-// #define PHY_SEL PHY_SEL_UART
-#define PHY_SEL PHY_SEL_CAN
+#define PHY_SEL PHY_SEL_UART
+// #define PHY_SEL PHY_SEL_CAN
 
 void zdt_main(){
     DBG_UART.init({
@@ -43,9 +43,22 @@ void zdt_main(){
         .force_sync(EN)
         .finalize();
 
+    zdtmotor::ZdtFrameFactory factory1 = zdtmotor::ZdtFrameFactory::with_node_id(1);
+    zdtmotor::ZdtFrameFactory factory2 = zdtmotor::ZdtFrameFactory::with_node_id(2);
+
     #if PHY_SEL == PHY_SEL_UART
-    COMM_UART.init({921600});
-    ZdtStepper motor{{.nodeid = {1}}, &COMM_UART};
+    COMM_UART.init({
+        .remap = hal::UartRemap::_0,
+        .baudrate = hal::NearestFreq(576_KHz),
+    });
+
+    auto write_packet = [&](const zdtmotor::FlatPacket & packet){
+        auto bytes = packet.transmittable_bytes();
+        const size_t act_len = COMM_UART.try_write_bytes(bytes);
+        if(bytes.size() != act_len){
+
+        }
+    };
     #else
     COMM_CAN.init({
         .remap = hal::CanRemap::_0,
@@ -54,12 +67,11 @@ void zdt_main(){
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
-    zdtmotor::ZdtFrameFactory factory1 = zdtmotor::ZdtFrameFactory::with_node_id(1);
-    zdtmotor::ZdtFrameFactory factory2 = zdtmotor::ZdtFrameFactory::with_node_id(2);
     auto write_packet = [&](const zdtmotor::FlatPacket & packet){
         auto && iter = packet.to_canframe_iter();
         while(iter.has_next()){
-            hal::can1.try_write(iter.next()).examine();
+            auto can_frame = iter.next();
+            hal::can1.try_write(can_frame).examine();
         }
     };
     #endif
@@ -75,9 +87,9 @@ void zdt_main(){
         if(COMM_UART.available()){
             std::vector<uint8_t> recv;
             while(COMM_UART.available()){
-                char chr;
-                COMM_UART.read_char(chr);
-                recv.push_back(chr);
+                uint8_t chr;
+                size_t len = COMM_UART.try_read_byte(chr);
+                if(len) recv.push_back(chr);
             }
 
             DEBUG_PRINTLN(

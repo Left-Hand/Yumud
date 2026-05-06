@@ -113,4 +113,50 @@ namespace std{
     struct is_floating_point<ymd::math::bf16> : std::true_type {};
     template<>
     struct is_signed<ymd::math::bf16> : std::true_type {};
+    template<>
+    struct is_integral<ymd::math::bf16> : std::false_type {};
+    template<>
+    struct is_scalar<ymd::math::bf16> : std::true_type {};
+    template<>
+    struct is_trivially_copyable<ymd::math::bf16> : std::true_type {};
+    template<>
+    struct is_trivially_destructible<ymd::math::bf16> : std::true_type {};
+    template<>
+    struct is_trivially_default_constructible<ymd::math::bf16> : std::true_type {};
+
+    template<>
+    struct numeric_limits<ymd::math::bf16> {
+        static constexpr bool is_specialized = true;
+        static constexpr bool is_signed = true;
+        static constexpr bool is_integer = false;
+        static constexpr bool is_exact = false;
+        static constexpr bool has_infinity = true;
+        static constexpr bool has_quiet_NaN = true;
+        static constexpr bool has_signaling_NaN = true;
+        static constexpr std::float_denorm_style has_denorm = std::denorm_present;
+        static constexpr bool has_denorm_loss = false;
+        static constexpr std::float_round_style round_style = std::round_to_nearest;
+        static constexpr bool is_iec559 = true;
+        static constexpr bool is_bounded = true;
+        static constexpr bool is_modulo = false;
+        static constexpr int digits = 8;      // 1 + 7 bits
+        static constexpr int digits10 = 2;
+        static constexpr int max_digits10 = 4;
+        static constexpr int radix = 2;
+        static constexpr int min_exponent = -126;
+        static constexpr int min_exponent10 = -38;
+        static constexpr int max_exponent = 127;
+        static constexpr int max_exponent10 = 38;
+
+        static constexpr ymd::math::bf16 min() noexcept { return ymd::math::bf16::from_bits(0x0080); }
+        static constexpr ymd::math::bf16 lowest() noexcept { return ymd::math::bf16::from_bits(0xFF7F); }
+        static constexpr ymd::math::bf16 max() noexcept { return ymd::math::bf16::from_bits(0x7F7F); }
+        static constexpr ymd::math::bf16 epsilon() noexcept { return ymd::math::bf16::from_bits(0x3C00); }
+        static constexpr ymd::math::bf16 round_error() noexcept { return ymd::math::bf16(0.5f); }
+        static constexpr ymd::math::bf16 infinity() noexcept { return ymd::math::bf16::from_bits(0x7F80); }
+        static constexpr ymd::math::bf16 quiet_NaN() noexcept { return ymd::math::bf16::from_bits(0x7FC0); }
+        static constexpr ymd::math::bf16 signaling_NaN() noexcept { return ymd::math::bf16::from_bits(0x7F81); }
+        static constexpr ymd::math::bf16 denorm_min() noexcept { return ymd::math::bf16::from_bits(0x0001); }
+    };
+
 }

@@ -169,25 +169,17 @@ public:
 
 
 namespace details{
-template<size_t BEGIN_OFFSET, size_t END_OFFSET, typename T>
+template<size_t BEGIN_OFFSET, size_t END_OFFSET, typename T, typename D>
 [[nodiscard]] __attribute__((always_inline)) static constexpr
-auto _make_bitfield_proxy(auto * p_obj){
-    using D = typename std::remove_pointer_t<decltype(p_obj)>;
+auto _make_bitfield_proxy(D * p_obj){
     return BitFieldProxy<D, BEGIN_OFFSET, END_OFFSET, T>(p_obj);
 }
 }
 
 
-template<size_t BEGIN_OFFSET, size_t END_OFFSET>
+template<size_t BEGIN_OFFSET, size_t END_OFFSET, typename T, typename D>
 [[nodiscard]] static constexpr 
-auto make_bitfield_proxy(auto * p_obj){
-    using D = typename std::remove_pointer_t<decltype(p_obj)>;
-    return details::_make_bitfield_proxy<BEGIN_OFFSET, END_OFFSET, D>(p_obj);
-}
-
-template<size_t BEGIN_OFFSET, size_t END_OFFSET, typename T>
-[[nodiscard]] static constexpr 
-auto make_bitfield_proxy(auto * p_obj){
+auto make_bitfield_proxy(D * p_obj){
     return details::_make_bitfield_proxy<BEGIN_OFFSET, END_OFFSET, T>(p_obj);
 }
 

@@ -78,4 +78,48 @@ namespace std{
     struct is_floating_point<ymd::math::fp32> : std::true_type {};
     template<>
     struct is_signed<ymd::math::fp32> : std::true_type {};
+    template<>
+    struct is_integral<ymd::math::fp32> : std::false_type {};
+    template<>
+    struct is_scalar<ymd::math::fp32> : std::true_type {};
+    template<>
+    struct is_trivially_copyable<ymd::math::fp32> : std::true_type {};
+    template<>
+    struct is_trivially_destructible<ymd::math::fp32> : std::true_type {};
+    template<>
+    struct is_trivially_default_constructible<ymd::math::fp32> : std::true_type {};
+
+    template<>
+    struct numeric_limits<ymd::math::fp32> {
+        static constexpr bool is_specialized = true;
+        static constexpr bool is_signed = true;
+        static constexpr bool is_integer = false;
+        static constexpr bool is_exact = false;
+        static constexpr bool has_infinity = true;
+        static constexpr bool has_quiet_NaN = true;
+        static constexpr bool has_signaling_NaN = true;
+        static constexpr bool has_denorm_loss = false;
+        static constexpr bool is_iec559 = true;
+        static constexpr bool is_bounded = true;
+        static constexpr bool is_modulo = false;
+        static constexpr int digits = 24;      // 1 + 23 bits
+        static constexpr int digits10 = 6;
+        static constexpr int max_digits10 = 9;
+        static constexpr int radix = 2;
+        static constexpr int min_exponent = -126;
+        static constexpr int min_exponent10 = -38;
+        static constexpr int max_exponent = 127;
+        static constexpr int max_exponent10 = 38;
+
+        static constexpr ymd::math::fp32 min() noexcept { return ymd::math::fp32::from_bits(0x00800000); }
+        static constexpr ymd::math::fp32 lowest() noexcept { return ymd::math::fp32::from_bits(0xFF7FFFFF); }
+        static constexpr ymd::math::fp32 max() noexcept { return ymd::math::fp32::from_bits(0x7F7FFFFF); }
+        static constexpr ymd::math::fp32 epsilon() noexcept { return ymd::math::fp32::from_bits(0x34000000); }
+        static constexpr ymd::math::fp32 round_error() noexcept { return ymd::math::fp32(0.5f); }
+        static constexpr ymd::math::fp32 infinity() noexcept { return ymd::math::fp32::from_bits(0x7F800000); }
+        static constexpr ymd::math::fp32 quiet_NaN() noexcept { return ymd::math::fp32::from_bits(0x7FC00000); }
+        static constexpr ymd::math::fp32 signaling_NaN() noexcept { return ymd::math::fp32::from_bits(0x7F800001); }
+        static constexpr ymd::math::fp32 denorm_min() noexcept { return ymd::math::fp32::from_bits(0x00000001); }
+    };
+
 }
