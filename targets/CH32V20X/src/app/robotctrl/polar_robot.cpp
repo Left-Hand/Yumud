@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/async/timer.hpp"
-#include "core/utils/Unit.hpp"
+#include "core/utils/unit/unit.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/utils/split_iter.hpp"
 #include "robots/vendor/zdt/zdt_frame_factory.hpp"
@@ -43,16 +43,6 @@ using namespace ymd::robots;
 #define PHY_SEL PHY_SEL_CAN
 
 //CAN1 TX/PB9 RX/PB8
-
-#define DEF_COMMAND_BIND(K, T) \
-template<> \
-struct command_to_kind<CommandKind, T>{ \
-    static constexpr CommandKind KIND = K; \
-};\
-template<> \
-struct kind_to_command<CommandKind, K>{ \
-    using type = T; \
-};
 
 
 
@@ -400,11 +390,11 @@ void polar_robot_main(){
             switch(major){
             case 0://rapid move
                 curve_gen_.set_move_speed(state_.max_speed);
-                curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
+                curve_gen_.add_end_coord({state_.x.count, state_.y.count});
                 break;
             case 1://linear move
                 curve_gen_.set_move_speed(state_.x2_limit);
-                curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
+                curve_gen_.add_end_coord({state_.x.count, state_.y.count});
                 break;
             case 4:
                 break;
