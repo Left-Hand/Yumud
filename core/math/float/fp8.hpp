@@ -16,6 +16,7 @@ namespace intrinsics{
 //   - 指数溢出/下溢处理
 //   - 指数范围 [-8, 7] 映射到 [0, 15]
 //   - 单调性保证
+__attribute__((optimize("-Ofast"), const))
 static constexpr uint8_t fp32_to_fp8_e4m3_nonfpu(float value){
 	uint32_t bits = std::bit_cast<uint32_t>(value);
 	uint8_t sign = (bits >> 31) & 0x1;
@@ -48,6 +49,7 @@ static constexpr uint8_t fp32_to_fp8_e4m3_nonfpu(float value){
 // FP8-E4M3 → FP32 反向转换
 // 关键特性：符号保留、指数范围 [1, 14] → [-6, 7]、尾数缩放 [0, 7] → 20 位左移
 // 形式化验证：见 core/math/float/formal_verification/verify_fp8_e4m3_reverse.py
+__attribute__((optimize("-Ofast"), const))
 static constexpr float fp8_e4m3_to_fp32_nonfpu(uint8_t value){
 	uint8_t sign = (value >> 7) & 0x1;
 	uint8_t exp = (value >> 3) & 0xF;
@@ -81,6 +83,7 @@ static constexpr float fp8_e4m3_to_fp32_nonfpu(uint8_t value){
 	return std::bit_cast<float>(f32_bits);
 }
 
+__attribute__((optimize("-Ofast"), const))
 static constexpr uint8_t fp32_to_fp8_e5m2_nonfpu(float value){
 	uint32_t bits = std::bit_cast<uint32_t>(value);
 	uint8_t sign = (bits >> 31) & 0x1;
@@ -107,6 +110,7 @@ static constexpr uint8_t fp32_to_fp8_e5m2_nonfpu(float value){
 	return out;
 }
 
+__attribute__((optimize("-Ofast"), const))
 static constexpr float fp8_e5m2_to_fp32_nonfpu(uint8_t value){
 	uint8_t sign = (value >> 7) & 0x1;
 	uint8_t exp = (value >> 2) & 0x1F;

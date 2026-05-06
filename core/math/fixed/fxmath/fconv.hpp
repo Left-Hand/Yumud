@@ -11,7 +11,7 @@ namespace ymd{
 namespace fxmath::details{
 
 #if 1
-
+__attribute__((const, optimize("-Ofast" )))
 [[nodiscard]] static constexpr float _IQNtoF(const int32_t iqNInput, size_t Q){
     //这段代码只有一处使用了Q, 不需要使用模板
     uint32_t uiq23_result_bits;
@@ -63,7 +63,7 @@ namespace fxmath::details{
 #endif
 
 
-
+__attribute__((const, optimize("-Ofast" )))
 [[nodiscard]] static constexpr int32_t _IQFtoN(const float fv, size_t Q){
     //这段代码没有使用Q进行特化，可以动态输入
     static_assert(sizeof(float) == 4);

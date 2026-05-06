@@ -12,7 +12,7 @@
 namespace ymd::heapless{
 
 template<typename T, size_t N>
-class alignas(8) [[nodiscard]] Vector {
+class alignas(4) [[nodiscard]] Vector {
 public:
     // 构造函数 - constexpr
     constexpr Vector() noexcept : size_(0) {}

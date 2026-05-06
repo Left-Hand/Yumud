@@ -422,7 +422,7 @@ private:
 static_assert(sizeof(SdoAbortCode) == 4);
 
 
-struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
+struct alignas(4) [[nodiscard]] SdoExpeditedContext final{
     using Self = SdoExpeditedContext;
     using Header = SdoExpeditedHeader;
     using U8X4 = std::array<uint8_t, 4>;

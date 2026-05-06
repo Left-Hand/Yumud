@@ -107,7 +107,7 @@ struct [[nodiscard]] Ipv6 {
 
 private:
     union {
-        alignas(8) std::array<uint8_t, 16> bytes_;
+        alignas(4) std::array<uint8_t, 16> bytes_;
         std::array<uint16_t, 8> words_;
     };
 

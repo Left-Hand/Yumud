@@ -20,6 +20,7 @@ constexpr uint32_t round_mask = ~0xFFFU;
 // 范围：2^-14 到 2^15（≈0.0000610352 到 65504）
 // 形式化验证：见 core/math/float/formal_verification/verify_fp16_complete.py
 // 验证结果：✓ 符号保留、✓ 边界值、✓ 单调性、✓ 溢出/下溢、✓ 特殊值（∞/NaN）
+__attribute__((optimize("-Ofast"), const))
 static constexpr uint16_t fp32_to_fp16_nonfpu(float value){
     constexpr uint32_t magic_bits = 15UL << 23;
 
@@ -62,6 +63,7 @@ static constexpr uint16_t fp32_to_fp16_nonfpu(float value){
 // 处理零值、规范化数、非规范化数、特殊值
 // 形式化验证：见 core/math/float/formal_verification/verify_fp16_complete.py
 // 验证结果：✓ 零值、✓ 规范化数、✓ 非规范化数、✓ 往返转换一致性、✓ 特殊值
+__attribute__((optimize("-Ofast"), const))
 static constexpr float fp16_to_fp32_nonfpu(uint16_t value){
     uint32_t sign = value & 0x8000U;
     uint32_t exp = (value >> 10U) & 0x1FU;

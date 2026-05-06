@@ -8,7 +8,7 @@
 static_assert(8 == sizeof(double));
 namespace ymd::math{
 
-struct alignas(8) [[nodiscard]] fp64 final{
+struct alignas(4) [[nodiscard]] fp64 final{
 	using Self = fp64;
 
 	uint64_t mant:52;

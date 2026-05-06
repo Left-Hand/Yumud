@@ -18,12 +18,12 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
     uint8_t x_is_neg;
     uint8_t swapped;
 
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((always_inline, const, optimize( "-Ofast" )))
     static constexpr Self zero(){
         return std::bit_cast<Self>(uint32_t(0));
     }
 
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((always_inline, const, optimize( "-Ofast" )))
     [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const noexcept {
         auto & self = *this;
 
@@ -62,7 +62,7 @@ struct [[nodiscard]] Atan2Intermediate{
     // *
     // *     atan(y/x) = pi/2 - atan(x/y)
     // */
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((always_inline, const, optimize( "-Ofast" )))
     [[nodiscard]] static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // uq32_input ∈ [0, 1)
 
@@ -98,7 +98,7 @@ struct [[nodiscard]] Atan2Intermediate{
 
 
 
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 constexpr ymd::math::fixed<32, uint32_t> atan2pu32(
     uint32_t uiqn_y,
     uint32_t uiqn_x
@@ -133,7 +133,7 @@ constexpr ymd::math::fixed<32, uint32_t> atan2pu32(
 }
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 constexpr ymd::math::fixed<32, uint32_t> atanpu32(
     uint32_t uiqn_y
 ){
@@ -171,6 +171,7 @@ namespace ymd::math{
 
 
 template<size_t Q>
+__attribute__((const))
 constexpr ymd::math::fixed<32, uint32_t> atan2pu(
     ymd::math::fixed<Q, int32_t> iqn_input_y, 
     ymd::math::fixed<Q, int32_t> iqn_input_x
@@ -181,6 +182,7 @@ constexpr ymd::math::fixed<32, uint32_t> atan2pu(
 
 
 template<size_t Q>
+__attribute__((const))
 constexpr ymd::math::fixed<29, int32_t> atan2(
     ymd::math::fixed<Q, int32_t> iqn_input_y, 
     ymd::math::fixed<Q, int32_t> iqn_input_x
@@ -189,6 +191,7 @@ constexpr ymd::math::fixed<29, int32_t> atan2(
 }
 
 template<size_t Q>
+__attribute__((const))
 constexpr ymd::math::fixed<32, uint32_t> atanpu(
     ymd::math::fixed<Q, int32_t> iqn_input_y
 ){
@@ -197,6 +200,7 @@ constexpr ymd::math::fixed<32, uint32_t> atanpu(
 
 
 template<size_t Q>
+__attribute__((const))
 constexpr ymd::math::fixed<29, int32_t> atan(
     ymd::math::fixed<Q, int32_t> iqn_input_y
 ){

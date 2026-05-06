@@ -14,7 +14,7 @@ namespace ymd::robots::vesc::can{
 // [0] 
 // Purpose: Set motor duty cycle (0.0 to 1.0)
 // Data Format: [0-3]: Duty cycle as int32 (duty * 100000)
-struct [[nodiscard]] alignas(8) SetDuty final{
+struct [[nodiscard]] alignas(4) SetDuty final{
     using Self = SetDuty;
     static constexpr PacketId PACKET_ID = PacketId::SetDuty;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -22,12 +22,11 @@ struct [[nodiscard]] alignas(8) SetDuty final{
     Scaled<int32_t, 100000> dutycycle;
 };
 
-static_assert(sizeof(SetDuty) == 8);
 
 // [1] 
 // Purpose: Set motor current in amperes
 // Data Format: [0-3]: Current as int32 (current * 1000)
-struct [[nodiscard]] alignas(8) SetCurrent final{
+struct [[nodiscard]] alignas(4) SetCurrent final{
     using Self = SetCurrent;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrent;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -38,7 +37,7 @@ struct [[nodiscard]] alignas(8) SetCurrent final{
 // [1] (same as SetCurrent but has different dlc)
 // Purpose: Set motor current with off delay
 // Data Format: [0-3]: Current as int32 (current * 1000), [4-5]: Off delay as int16
-struct [[nodiscard]] alignas(8) SetCurrentOffDelay final{
+struct [[nodiscard]] alignas(4) SetCurrentOffDelay final{
     using Self = SetCurrentOffDelay;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrent;
     static constexpr size_t PAYLOAD_LENGTH = 6;
@@ -50,7 +49,7 @@ struct [[nodiscard]] alignas(8) SetCurrentOffDelay final{
 // [2]
 // Purpose: Set brake current in amperes
 // Data Format: [0-3]: Current as int32 (current * 1000)
-struct [[nodiscard]] alignas(8) SetCurrentBrake final{
+struct [[nodiscard]] alignas(4) SetCurrentBrake final{
     using Self = SetCurrentBrake;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentBrake;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -61,7 +60,7 @@ struct [[nodiscard]] alignas(8) SetCurrentBrake final{
 // [3]
 // Purpose: Set motor RPM
 // Data Format: [0-3]: RPM as int32
-struct [[nodiscard]] alignas(8) SetRpm final{
+struct [[nodiscard]] alignas(4) SetRpm final{
     using Self = SetRpm;
     static constexpr PacketId PACKET_ID = PacketId::SetRpm;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -73,7 +72,7 @@ struct [[nodiscard]] alignas(8) SetRpm final{
 // [4]
 // Purpose: Set motor position
 // Data Format: [0-3]: Position as int32 (pos * 100000)
-struct [[nodiscard]] alignas(8) SetPos final{
+struct [[nodiscard]] alignas(4) SetPos final{
     using Self = SetPos;
     static constexpr PacketId PACKET_ID = PacketId::SetPos;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -87,14 +86,14 @@ struct [[nodiscard]] alignas(8) SetPos final{
 
 // [5]
 // Purpose: Fill receive buffer (7-byte chunks)
-struct [[nodiscard]] alignas(8) FillRxBuffer final{
+struct [[nodiscard]] alignas(4) FillRxBuffer final{
     using Self = FillRxBuffer;
     static constexpr PacketId PACKET_ID = PacketId::FillRxBuffer;
 };
 
 // [6]
 // Purpose: Fill receive buffer long (6-byte chunks)
-struct [[nodiscard]] alignas(8) FillRxBufferLong final{
+struct [[nodiscard]] alignas(4) FillRxBufferLong final{
     using Self = FillRxBufferLong;
     static constexpr PacketId PACKET_ID = PacketId::FillRxBufferLong;
 };
@@ -103,14 +102,14 @@ struct [[nodiscard]] alignas(8) FillRxBufferLong final{
 
 // [7]
 // Purpose: Process receive buffer
-struct [[nodiscard]] alignas(8) ProcessRxBuffer final{
+struct [[nodiscard]] alignas(4) ProcessRxBuffer final{
     using Self = ProcessRxBuffer;
     static constexpr PacketId PACKET_ID = PacketId::ProcessRxBuffer;
 };
 
 // [8]
 // Purpose: Process short buffer (≤6 bytes)
-struct [[nodiscard]] alignas(8) ProcessShortBuffer final{
+struct [[nodiscard]] alignas(4) ProcessShortBuffer final{
     using Self = ProcessShortBuffer;
     static constexpr PacketId PACKET_ID = PacketId::ProcessShortBuffer;
 };
@@ -120,7 +119,7 @@ struct [[nodiscard]] alignas(8) ProcessShortBuffer final{
 // [9]
 // Purpose: Broadcast motor status (RPM, current, duty)
 // Data Format: [0-3]: RPM as int32, [4-5]: Current as int16 (current * 10), [6-7]: Duty as int16 (duty * 1000)
-struct [[nodiscard]] alignas(8) Status1 final{
+struct [[nodiscard]] alignas(4) Status1 final{
     using Self = Status1;
     static constexpr PacketId PACKET_ID = PacketId::Status1;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -135,7 +134,7 @@ static_assert(sizeof(Status1) == 8);
 // [10]
 // Purpose: Set relative current value, range [-1.0 1.0]
 // Data Format: [0-3]: Relative current as int32 (current_rel * 100000)
-struct [[nodiscard]] alignas(8) SetCurrentRel final{
+struct [[nodiscard]] alignas(4) SetCurrentRel final{
     using Self = SetCurrentRel;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentRel;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -147,7 +146,7 @@ struct [[nodiscard]] alignas(8) SetCurrentRel final{
 // [10] (same as SetCurrentRel but has different dlc)
 // Purpose: Set relative current with off delay
 // Data Format: [0-3]: Relative current as float32 (scale 1e5), [4-5]: Off delay as float16 (scale 1e3)
-struct [[nodiscard]] alignas(8) SetCurrentRelOffDelay final{
+struct [[nodiscard]] alignas(4) SetCurrentRelOffDelay final{
     using Self = SetCurrentRelOffDelay;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentRel;
     static constexpr size_t PAYLOAD_LENGTH = 6;
@@ -160,7 +159,7 @@ struct [[nodiscard]] alignas(8) SetCurrentRelOffDelay final{
 // [11]
 // Purpose: Set relative brake current value, range [-1.0 1.0]
 // Data Format: [0-3]: Relative brake current as int32 (current_rel * 100000)
-struct [[nodiscard]] alignas(8) SetCurrentBrakeRel final{
+struct [[nodiscard]] alignas(4) SetCurrentBrakeRel final{
     using Self = SetCurrentBrakeRel;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentBrakeRel;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -173,7 +172,7 @@ struct [[nodiscard]] alignas(8) SetCurrentBrakeRel final{
 // [12]
 // Purpose: Set handbrake current in amperes
 // Data Format: [0-3]: Current as int32 (current * 1000)
-struct [[nodiscard]] alignas(8) SetCurrentHandbrake final{
+struct [[nodiscard]] alignas(4) SetCurrentHandbrake final{
     using Self = SetCurrentHandbrake;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentHandbrake;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -185,7 +184,7 @@ struct [[nodiscard]] alignas(8) SetCurrentHandbrake final{
 // [13]
 // Purpose: Set relative handbrake current value, range [-1.0 1.0]
 // Data Format: [0-3]: Relative current as int32 (current_rel * 100000)
-struct [[nodiscard]] alignas(8) SetCurrentHandbrakeRel final{
+struct [[nodiscard]] alignas(4) SetCurrentHandbrakeRel final{
     using Self = SetCurrentHandbrakeRel;
     static constexpr PacketId PACKET_ID = PacketId::SetCurrentHandbrakeRel;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -198,7 +197,7 @@ struct [[nodiscard]] alignas(8) SetCurrentHandbrakeRel final{
 // [14]
 // Purpose: Broadcast amp hours consumed and charged
 // Data Format: [0-3]: Ah consumed as int32 (Ah * 10000), [4-7]: Ah charged as int32 (Ah * 10000)
-struct [[nodiscard]] alignas(8) Status2 final{
+struct [[nodiscard]] alignas(4) Status2 final{
     using Self = Status2;
     static constexpr PacketId PACKET_ID = PacketId::Status2;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -211,7 +210,7 @@ struct [[nodiscard]] alignas(8) Status2 final{
 // [15]
 // Purpose: Broadcast watt hours consumed and charged
 // Data Format: [0-3]: Wh consumed as int32 (Wh * 10000), [4-7]: Wh charged as int32 (Wh * 10000)
-struct [[nodiscard]] alignas(8) Status3 final{
+struct [[nodiscard]] alignas(4) Status3 final{
     using Self = Status3;
     static constexpr PacketId PACKET_ID = PacketId::Status3;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -226,7 +225,7 @@ struct [[nodiscard]] alignas(8) Status3 final{
 // Purpose: Broadcast temperatures, input current, and PID position
 // Data Format: [0-1]: FET temp as int16 (temp * 10), [2-3]: Motor temp as int16 (temp * 10),
 //              [4-5]: Input current as int16 (current * 10), [6-7]: PID pos as int16 (pos * 50)
-struct [[nodiscard]] alignas(8) Status4 final{
+struct [[nodiscard]] alignas(4) Status4 final{
     using Self = Status4;
     static constexpr PacketId PACKET_ID = PacketId::Status4;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -242,7 +241,7 @@ static_assert(sizeof(Status4) == 8);
 
 // [17]
 // Purpose: Ping request
-struct [[nodiscard]] alignas(8) Ping final{
+struct [[nodiscard]] alignas(4) Ping final{
     using Self = Ping;
     static constexpr PacketId PACKET_ID = PacketId::Ping;
 
@@ -255,7 +254,7 @@ struct [[nodiscard]] alignas(8) Ping final{
 
 // [18]
 // Purpose: Ping response
-struct [[nodiscard]] alignas(8) Pong final{
+struct [[nodiscard]] alignas(4) Pong final{
     using Self = Pong;
 
     enum class HwType:uint8_t { 
@@ -279,7 +278,7 @@ struct [[nodiscard]] alignas(8) Pong final{
 
 // [19]
 // Purpose: Detect and apply all FOC
-struct [[nodiscard]] alignas(8) DetectApplyAllFoc final{
+struct [[nodiscard]] alignas(4) DetectApplyAllFoc final{
     using Self = DetectApplyAllFoc;
     static constexpr PacketId PACKET_ID = PacketId::DetectApplyAllFoc;
 
@@ -294,7 +293,7 @@ static_assert(sizeof(DetectApplyAllFoc) == 8);
 
 // [20]
 // Purpose: Detect and apply all FOC result
-struct [[nodiscard]] alignas(8) DetectApplyAllFocRes final{
+struct [[nodiscard]] alignas(4) DetectApplyAllFocRes final{
     using Self = DetectApplyAllFocRes;
     static constexpr PacketId PACKET_ID = PacketId::DetectApplyAllFocRes;
 
@@ -307,7 +306,7 @@ struct [[nodiscard]] alignas(8) DetectApplyAllFocRes final{
 
 // [21]
 // Purpose: Configure current limits
-struct [[nodiscard]] alignas(8) ConfCurrentLimits final{
+struct [[nodiscard]] alignas(4) ConfCurrentLimits final{
     using Self = ConfCurrentLimits;
     static constexpr PacketId PACKET_ID = PacketId::ConfCurrentLimits;
 
@@ -320,7 +319,7 @@ struct [[nodiscard]] alignas(8) ConfCurrentLimits final{
 
 // [22]
 // Purpose: Store current limits
-struct [[nodiscard]] alignas(8) ConfStoreCurrentLimits final{
+struct [[nodiscard]] alignas(4) ConfStoreCurrentLimits final{
     using Self = ConfStoreCurrentLimits;
     static constexpr PacketId PACKET_ID = PacketId::ConfStoreCurrentLimits;
 
@@ -333,7 +332,7 @@ struct [[nodiscard]] alignas(8) ConfStoreCurrentLimits final{
 
 // [23]
 // Purpose: Configure input current limits
-struct [[nodiscard]] alignas(8) ConfCurrentLimitsIn final{
+struct [[nodiscard]] alignas(4) ConfCurrentLimitsIn final{
     using Self = ConfCurrentLimitsIn;
     static constexpr PacketId PACKET_ID = PacketId::ConfCurrentLimitsIn;
 
@@ -346,7 +345,7 @@ struct [[nodiscard]] alignas(8) ConfCurrentLimitsIn final{
 
 // [24]
 // Purpose: Store input current limits
-struct [[nodiscard]] alignas(8) ConfStoreCurrentLimitsIn final{
+struct [[nodiscard]] alignas(4) ConfStoreCurrentLimitsIn final{
     using Self = ConfStoreCurrentLimitsIn;
     static constexpr PacketId PACKET_ID = PacketId::ConfStoreCurrentLimitsIn;
 
@@ -359,7 +358,7 @@ struct [[nodiscard]] alignas(8) ConfStoreCurrentLimitsIn final{
 
 // [25]
 // Purpose: Configure FOC ERPMs
-struct [[nodiscard]] alignas(8) ConfFocErpms final{
+struct [[nodiscard]] alignas(4) ConfFocErpms final{
     using Self = ConfFocErpms;
     static constexpr PacketId PACKET_ID = PacketId::ConfFocErpms;
 
@@ -372,7 +371,7 @@ struct [[nodiscard]] alignas(8) ConfFocErpms final{
 
 // [26]
 // Purpose: Store FOC ERPMs
-struct [[nodiscard]] alignas(8) ConfStoreFocErpms final{
+struct [[nodiscard]] alignas(4) ConfStoreFocErpms final{
     using Self = ConfStoreFocErpms;
     static constexpr PacketId PACKET_ID = PacketId::ConfStoreFocErpms;
 
@@ -385,7 +384,7 @@ struct [[nodiscard]] alignas(8) ConfStoreFocErpms final{
 
 // [27]
 // Purpose: Status message 5 (Tachometer, input voltage)
-struct [[nodiscard]] alignas(8) Status5 final{
+struct [[nodiscard]] alignas(4) Status5 final{
     using Self = Status5;
     static constexpr PacketId PACKET_ID = PacketId::Status5;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -405,7 +404,7 @@ struct [[nodiscard]] alignas(8) Status5 final{
 
 // [28]
 // Purpose: Poll TS5700N8501 status
-struct [[nodiscard]] alignas(8) PollTS5700N8501Status final{
+struct [[nodiscard]] alignas(4) PollTS5700N8501Status final{
     using Self = PollTS5700N8501Status;
     static constexpr PacketId PACKET_ID = PacketId::PollTS5700N8501Status;
 
@@ -422,7 +421,7 @@ static_assert(sizeof(PollTS5700N8501Status) == 8);
 
 // [29]
 // Purpose: Configure battery cut
-struct [[nodiscard]] alignas(8) ConfBatteryCut final{
+struct [[nodiscard]] alignas(4) ConfBatteryCut final{
     using Self = ConfBatteryCut;
     static constexpr PacketId PACKET_ID = PacketId::ConfBatteryCut;
 
@@ -435,7 +434,7 @@ struct [[nodiscard]] alignas(8) ConfBatteryCut final{
 
 // [30]
 // Purpose: Store battery cut
-struct [[nodiscard]] alignas(8) ConfStoreBatteryCut final{
+struct [[nodiscard]] alignas(4) ConfStoreBatteryCut final{
     using Self = ConfStoreBatteryCut;
     static constexpr PacketId PACKET_ID = PacketId::ConfStoreBatteryCut;
 
@@ -459,7 +458,7 @@ struct [[nodiscard]] Shutdown final{
 // [32]
 // Purpose: IO board ADC 1-4
 // Data Format: Multiple float16 values (scale 1e2)
-struct [[nodiscard]] alignas(8) IoBoardAdc1To4 final{
+struct [[nodiscard]] alignas(4) IoBoardAdc1To4 final{
     using Self = IoBoardAdc1To4;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardAdc1To4;
     // Variable length: 2 bytes per ADC value
@@ -471,7 +470,7 @@ struct [[nodiscard]] alignas(8) IoBoardAdc1To4 final{
 // [33]
 // Purpose: IO board ADC 5-8
 // Data Format: Multiple float16 values (scale 1e2)
-struct [[nodiscard]] alignas(8) IoBoardAdc5To8 final{
+struct [[nodiscard]] alignas(4) IoBoardAdc5To8 final{
     using Self = IoBoardAdc5To8;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardAdc5To8;
     // Variable length: 2 bytes per ADC value
@@ -483,7 +482,7 @@ struct [[nodiscard]] alignas(8) IoBoardAdc5To8 final{
 // [34]
 // Purpose: IO board ADC 9-12
 // Data Format: Multiple float16 values (scale 1e2)
-struct [[nodiscard]] alignas(8) IoBoardAdc9To12 final{
+struct [[nodiscard]] alignas(4) IoBoardAdc9To12 final{
     using Self = IoBoardAdc9To12;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardAdc9To12;
     // Variable length: 2 bytes per ADC value
@@ -495,7 +494,7 @@ struct [[nodiscard]] alignas(8) IoBoardAdc9To12 final{
 // [35]
 // Purpose: IO board digital inputs
 // Data Format: Bitmask of digital inputs as uint64 (spread over multiple bytes)
-struct [[nodiscard]] alignas(8) IoBoardDigitalIn final{
+struct [[nodiscard]] alignas(4) IoBoardDigitalIn final{
     using Self = IoBoardDigitalIn;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardDigitalIn;
     // Variable length: up to 8 bytes for 64-bit bitmask
@@ -507,7 +506,7 @@ struct [[nodiscard]] alignas(8) IoBoardDigitalIn final{
 // [36]
 // Purpose: Set IO board digital outputs
 // Data Format: [0]: Channel, [1]: Enable flag, [2]: On/off state
-struct [[nodiscard]] alignas(8) IoBoardSetOutputDigital final{
+struct [[nodiscard]] alignas(4) IoBoardSetOutputDigital final{
     using Self = IoBoardSetOutputDigital;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardSetOutputDigital;
     static constexpr size_t PAYLOAD_LENGTH = 3;
@@ -526,7 +525,7 @@ struct [[nodiscard]] alignas(8) IoBoardSetOutputDigital final{
 // [37]
 // Purpose: Set IO board PWM outputs
 // Data Format: [0]: Channel, [1-2]: Duty cycle as float16 (scale 1e3)
-struct [[nodiscard]] alignas(8) IoBoardSetOutputPwm final{
+struct [[nodiscard]] alignas(4) IoBoardSetOutputPwm final{
     using Self = IoBoardSetOutputPwm;
     static constexpr PacketId PACKET_ID = PacketId::IoBoardSetOutputPwm;
     static constexpr size_t PAYLOAD_LENGTH = 3;
@@ -538,7 +537,7 @@ struct [[nodiscard]] alignas(8) IoBoardSetOutputPwm final{
 
 // [38]
 // Purpose: BMS total voltage
-struct [[nodiscard]] alignas(8) BmsVTot final{
+struct [[nodiscard]] alignas(4) BmsVTot final{
     using Self = BmsVTot;
     static constexpr PacketId PACKET_ID = PacketId::BmsVTot;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -550,7 +549,7 @@ struct [[nodiscard]] alignas(8) BmsVTot final{
 
 // [39]
 // Purpose: BMS current
-struct [[nodiscard]] alignas(8) BmsI final{
+struct [[nodiscard]] alignas(4) BmsI final{
     using Self = BmsI;
     static constexpr PacketId PACKET_ID = PacketId::BmsI;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -562,7 +561,7 @@ struct [[nodiscard]] alignas(8) BmsI final{
 
 // [40]
 // Purpose: BMS amp hours and watt hours
-struct [[nodiscard]] alignas(8) BmsAhWh final{
+struct [[nodiscard]] alignas(4) BmsAhWh final{
     using Self = BmsAhWh;
     static constexpr PacketId PACKET_ID = PacketId::BmsAhWh;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -574,7 +573,7 @@ struct [[nodiscard]] alignas(8) BmsAhWh final{
 
 // [41]
 // Purpose: BMS cell voltages
-struct [[nodiscard]] alignas(8) BmsVCell final{
+struct [[nodiscard]] alignas(4) BmsVCell final{
     using Self = BmsVCell;
     static constexpr PacketId PACKET_ID = PacketId::BmsVCell;
 
@@ -584,7 +583,7 @@ struct [[nodiscard]] alignas(8) BmsVCell final{
 
 // [42]
 // Purpose: BMS balancing
-struct [[nodiscard]] alignas(8) BmsBal final{
+struct [[nodiscard]] alignas(4) BmsBal final{
     using Self = BmsBal;
     static constexpr PacketId PACKET_ID = PacketId::BmsBal;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -597,7 +596,7 @@ static_assert(sizeof(BmsBal) == 8);
 
 // [43]
 // Purpose: BMS temperatures
-struct [[nodiscard]] alignas(8) BmsTemps final{
+struct [[nodiscard]] alignas(4) BmsTemps final{
     using Self = BmsTemps;
     static constexpr PacketId PACKET_ID = PacketId::BmsTemps;
 
@@ -639,7 +638,7 @@ struct [[nodiscard]] alignas(8) BmsTemps final{
 
 // [44]
 // Purpose: BMS humidity
-struct [[nodiscard]] alignas(8) BmsHum final{
+struct [[nodiscard]] alignas(4) BmsHum final{
     using Self = BmsHum;
     static constexpr PacketId PACKET_ID = PacketId::BmsHum;
 
@@ -652,7 +651,7 @@ struct [[nodiscard]] alignas(8) BmsHum final{
 
 // [45]
 // Purpose: BMS SOC, SOH, temperature status
-struct [[nodiscard]] alignas(8) BmsSocSohTempStat final{
+struct [[nodiscard]] alignas(4) BmsSocSohTempStat final{
     using Self = BmsSocSohTempStat;
     static constexpr PacketId PACKET_ID = PacketId::BmsSocSohTempStat;
 
@@ -682,7 +681,7 @@ static_assert(sizeof(BmsSocSohTempStat) == 8);
 // Purpose: Power switch status
 // Data Format: [0-1]: V_in as float16 (scale 10.0), [2-3]: V_out as float16 (scale 10.0), 
 //              [4-5]: Temp as float16 (scale 10.0), [6]: Status flags
-struct [[nodiscard]] alignas(8) PswStat final{
+struct [[nodiscard]] alignas(4) PswStat final{
     using Self = PswStat;
     static constexpr PacketId PACKET_ID = PacketId::PswStat;
     static constexpr size_t PAYLOAD_LENGTH = 7;
@@ -702,7 +701,7 @@ static_assert(sizeof(PswStat) == 8);
 // [47]
 // Purpose: Power switch control
 // Data Format: [0]: Is on flag, [1]: Plot flag
-struct [[nodiscard]] alignas(8) PswSwitch final{
+struct [[nodiscard]] alignas(4) PswSwitch final{
     using Self = PswSwitch;
     static constexpr PacketId PACKET_ID = PacketId::PswSwitch;
     static constexpr size_t PAYLOAD_LENGTH = 2;
@@ -714,7 +713,7 @@ struct [[nodiscard]] alignas(8) PswSwitch final{
 
 // [48-54]
 // Purpose: BMS hardware data packets
-struct [[nodiscard]] alignas(8) BmsHwData1 final{
+struct [[nodiscard]] alignas(4) BmsHwData1 final{
     using Self = BmsHwData1;
     static constexpr PacketId PACKET_ID = PacketId::BmsHwData1;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -723,7 +722,7 @@ struct [[nodiscard]] alignas(8) BmsHwData1 final{
 };
 
 
-struct [[nodiscard]] alignas(8) BmsHwData2 final{
+struct [[nodiscard]] alignas(4) BmsHwData2 final{
     using Self = BmsHwData2;
     static constexpr PacketId PACKET_ID = PacketId::BmsHwData2;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -732,7 +731,7 @@ struct [[nodiscard]] alignas(8) BmsHwData2 final{
 };
 
 
-struct [[nodiscard]] alignas(8) BmsHwData3 final{
+struct [[nodiscard]] alignas(4) BmsHwData3 final{
     using Self = BmsHwData3;
     static constexpr PacketId PACKET_ID = PacketId::BmsHwData3;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -741,7 +740,7 @@ struct [[nodiscard]] alignas(8) BmsHwData3 final{
 };
 
 
-struct [[nodiscard]] alignas(8) BmsHwData4 final{
+struct [[nodiscard]] alignas(4) BmsHwData4 final{
     using Self = BmsHwData4;
     static constexpr PacketId PACKET_ID = PacketId::BmsHwData4;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -750,7 +749,7 @@ struct [[nodiscard]] alignas(8) BmsHwData4 final{
 };
 
 
-struct [[nodiscard]] alignas(8) BmsHwData5 final{
+struct [[nodiscard]] alignas(4) BmsHwData5 final{
     using Self = BmsHwData5;
     static constexpr PacketId PACKET_ID = PacketId::BmsHwData5;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -761,7 +760,7 @@ struct [[nodiscard]] alignas(8) BmsHwData5 final{
 
 // [53]
 // Purpose: BMS total charged amp hours and watt hours
-struct [[nodiscard]] alignas(8) BmsAhWhChgTotal final{
+struct [[nodiscard]] alignas(4) BmsAhWhChgTotal final{
     using Self = BmsAhWhChgTotal;
     static constexpr PacketId PACKET_ID = PacketId::BmsAhWhChgTotal;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -773,7 +772,7 @@ struct [[nodiscard]] alignas(8) BmsAhWhChgTotal final{
 
 // [54]
 // Purpose: BMS total discharged amp hours and watt hours
-struct [[nodiscard]] alignas(8) BmsAhWhDisTotal final{
+struct [[nodiscard]] alignas(4) BmsAhWhDisTotal final{
     using Self = BmsAhWhDisTotal;
     static constexpr PacketId PACKET_ID = PacketId::BmsAhWhDisTotal;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -786,7 +785,7 @@ struct [[nodiscard]] alignas(8) BmsAhWhDisTotal final{
 // [55]
 // Purpose: Update PID position offset
 // Data Format: [0-3]: Angle now as float32 (scale 1e4), [4]: Store flag
-struct [[nodiscard]] alignas(8) UpdatePidPosOffset final{
+struct [[nodiscard]] alignas(4) UpdatePidPosOffset final{
     using Self = UpdatePidPosOffset;
     static constexpr PacketId PACKET_ID = PacketId::UpdatePidPosOffset;
     static constexpr size_t PAYLOAD_LENGTH = 5;
@@ -799,7 +798,7 @@ struct [[nodiscard]] alignas(8) UpdatePidPosOffset final{
 // [56]
 // Purpose: Poll rotor position
 // Data Format: [0-3]: Position as int32 (scale 1e5)
-struct [[nodiscard]] alignas(8) PollRotorPos final{
+struct [[nodiscard]] alignas(4) PollRotorPos final{
     using Self = PollRotorPos;
     static constexpr PacketId PACKET_ID = PacketId::PollRotorPos;
     static constexpr size_t PAYLOAD_LENGTH = 4;
@@ -810,7 +809,7 @@ struct [[nodiscard]] alignas(8) PollRotorPos final{
 
 // [57]
 // Purpose: Notify bootloader
-struct [[nodiscard]] alignas(8) NotifyBoot final{
+struct [[nodiscard]] alignas(4) NotifyBoot final{
     using Self = NotifyBoot;
     static constexpr PacketId PACKET_ID = PacketId::NotifyBoot;
 };
@@ -820,7 +819,7 @@ struct [[nodiscard]] alignas(8) NotifyBoot final{
 // Purpose: Status message 6 (ADC values, PPM)
 // Data Format: [0-1]: ADC1 as float16 (scale 1e3), [2-3]: ADC2 as float16 (scale 1e3),
 //              [4-5]: ADC3 as float16 (scale 1e3), [6-7]: PPM as float16 (scale 1e3)
-struct [[nodiscard]] alignas(8) Status6 final{
+struct [[nodiscard]] alignas(4) Status6 final{
     using Self = Status6;
     static constexpr PacketId PACKET_ID = PacketId::Status6;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -837,7 +836,7 @@ struct [[nodiscard]] alignas(8) Status6 final{
 // [59]
 // Purpose: GNSS time
 // Data Format: [0-3]: ms_today as int32, [4-5]: Year as int16, [6]: Month, [7]: Day
-struct [[nodiscard]] alignas(8) GnssTime final{
+struct [[nodiscard]] alignas(4) GnssTime final{
     using Self = GnssTime;
     static constexpr PacketId PACKET_ID = PacketId::GnssTime;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -854,7 +853,7 @@ static_assert(sizeof(GnssTime) == 8);
 // [60]
 // Purpose: GNSS latitude
 // Data Format: [0-7]: Latitude as double64 (scale 1e16)
-struct [[nodiscard]] alignas(8) GnssLat final{
+struct [[nodiscard]] alignas(4) GnssLat final{
     using Self = GnssLat;
     static constexpr PacketId PACKET_ID = PacketId::GnssLat;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -866,7 +865,7 @@ struct [[nodiscard]] alignas(8) GnssLat final{
 // [61]
 // Purpose: GNSS longitude
 // Data Format: [0-7]: Longitude as double64 (scale 1e16)
-struct [[nodiscard]] alignas(8) GnssLon final{
+struct [[nodiscard]] alignas(4) GnssLon final{
     using Self = GnssLon;
     static constexpr PacketId PACKET_ID = PacketId::GnssLon;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -878,7 +877,7 @@ struct [[nodiscard]] alignas(8) GnssLon final{
 // [62]
 // Purpose: GNSS altitude, speed, HDOP
 // Data Format: [0-3]: Height as float32 auto, [4-5]: Speed as float16 (scale 1e2), [6-7]: HDOP as float16 (scale 1e2)
-struct [[nodiscard]] alignas(8) GnssAltSpeedHdop final{
+struct [[nodiscard]] alignas(4) GnssAltSpeedHdop final{
     using Self = GnssAltSpeedHdop;
     static constexpr PacketId PACKET_ID = PacketId::GnssAltSpeedHdop;
     static constexpr size_t PAYLOAD_LENGTH = 8;
@@ -889,7 +888,7 @@ struct [[nodiscard]] alignas(8) GnssAltSpeedHdop final{
 };
 
 // [63]
-struct [[nodiscard]] alignas(8) UpdateBaud final{
+struct [[nodiscard]] alignas(4) UpdateBaud final{
     using Self = UpdateBaud;
     static constexpr PacketId PACKET_ID = PacketId::UpdateBaud;
     static constexpr size_t PAYLOAD_LENGTH = 4;

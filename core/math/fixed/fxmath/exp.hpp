@@ -7,7 +7,7 @@ namespace ymd::fxmath{
     
 namespace details{
 
-struct alignas(8) [[nodiscard]] ExpIntermediate final{
+struct alignas(4) [[nodiscard]] ExpIntermediate final{
 
     uint32_t uiq32_fractional;
     uint32_t uiqn_integer_result;

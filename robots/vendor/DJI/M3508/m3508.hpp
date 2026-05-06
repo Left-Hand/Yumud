@@ -56,7 +56,7 @@ struct [[nodiscard]] TemperatureCode final{
 };
 
 
-struct alignas(8) [[nodiscard]] TxContext final{
+struct alignas(4) [[nodiscard]] TxContext final{
     using Self = TxContext;
 
     std::array<CurrentCode, 4> current_codes; 
@@ -72,7 +72,7 @@ struct alignas(8) [[nodiscard]] TxContext final{
 
 static_assert(sizeof(TxContext) == 8);
 
-struct alignas(8) [[nodiscard]] RxContext final{
+struct alignas(4) [[nodiscard]] RxContext final{
     using Self = RxContext;
     AngleCode angle_code;
     CurrentCode current_code;

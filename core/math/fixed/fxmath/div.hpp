@@ -8,7 +8,7 @@ namespace ymd::fxmath::details{
 
 
 template<size_t Q, bool IS_SIGNED>
-__attribute__((optimize( "-Ofast" )))
+__attribute__((const, optimize( "-Ofast" )))
 constexpr int32_t iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
     #if 0
@@ -199,13 +199,13 @@ constexpr int32_t iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 }
 
 template<size_t Q>
-__attribute__((optimize( "-Ofast" )))
+__attribute__((const, optimize("-Ofast" )))
 constexpr int32_t div32i(int32_t iqNInput1, int32_t iqNInput2){
     return iqn_div_impl<Q, true>(iqNInput1, iqNInput2);
 }
 
 template<size_t Q>
-__attribute__((optimize( "-Ofast" )))
+__attribute__((const, optimize("-Ofast" )))
 constexpr uint32_t div32u(uint32_t iqNInput1, uint32_t iqNInput2){
     return std::bit_cast<uint32_t>(iqn_div_impl<Q, false>(
         std::bit_cast<int32_t>(iqNInput1), 

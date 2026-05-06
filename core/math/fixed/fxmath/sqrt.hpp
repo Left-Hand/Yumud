@@ -13,12 +13,12 @@ enum class [[nodiscard]] SqrtNormStrategy {
 
 
 
-struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
+struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
     uint32_t uiq32_input;
     int32_t i16_exponent;
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((optimize( "-Ofast" )))
+    __attribute__((const, optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_u32(uint32_t iq_n_input_x) {
         if(iq_n_input_x == 0) [[unlikely]]
             return {0, 0};
@@ -70,7 +70,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((optimize( "-Ofast" )))
+    __attribute__((const, optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_u64(uint64_t uiiq_n_input_x) {
         if (uiiq_n_input_x == 0) [[unlikely]]
             return {0, 0};
@@ -137,7 +137,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((optimize( "-Ofast" )))
+    __attribute__((const, optimize( "-Ofast" )))
     static constexpr IqSqrtIntermediate from_sqsum(uint64_t ui64Sum) {
 
         if (ui64Sum == 0) [[unlikely]]
@@ -189,7 +189,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((optimize( "-Ofast" )))
+    __attribute__((const, optimize( "-Ofast" )))
     [[nodiscard]] constexpr uint32_t compute() && {
         if(uiq32_input == 0) [[unlikely]]
             return 0;
@@ -232,7 +232,7 @@ struct alignas(8) [[nodiscard]] IqSqrtIntermediate final{
         *     root(x) = x * 1/root(x)
         */
         {
-            auto newton_iter = [&]() __attribute__((always_inline,  optimize( "-Ofast" ))){
+            auto newton_iter = [&]() __attribute__((always_inline,  const, optimize( "-Ofast" ))){
                 if(uiq30_guess & 0x80000000) __builtin_unreachable();
                 const uint32_t uiq31_guess = uiq30_guess << 1;
                 uint32_t uiq32_temp = intrinsics::mul32hu(uiq32_input, uiq31_guess);
@@ -326,7 +326,7 @@ private:
 
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> sqrt32u(const math::fixed<Q, uint32_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtIntermediate::template from_u32<Q, SqrtNormStrategy::SQRT>(
@@ -336,7 +336,7 @@ constexpr math::fixed<Q, uint32_t> sqrt32u(const math::fixed<Q, uint32_t> x){
 }
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> inv_sqrt32u(const math::fixed<Q, uint32_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtIntermediate::template from_u32<Q, SqrtNormStrategy::ISQRT>(
@@ -346,7 +346,7 @@ constexpr math::fixed<Q, uint32_t> inv_sqrt32u(const math::fixed<Q, uint32_t> x)
 }
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> sqrt64u(const math::fixed<Q, uint64_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtIntermediate::template from_u64<Q, SqrtNormStrategy::SQRT>(
@@ -356,7 +356,7 @@ constexpr math::fixed<Q, uint32_t> sqrt64u(const math::fixed<Q, uint64_t> x){
 }
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> inv_sqrt64u(const math::fixed<Q, uint64_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtIntermediate::template from_u64<Q, SqrtNormStrategy::ISQRT>(
@@ -367,7 +367,7 @@ constexpr math::fixed<Q, uint32_t> inv_sqrt64u(const math::fixed<Q, uint64_t> x)
 
 // 计算单个值的平方（辅助函数）
 template<typename T>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr uint64_t square_value(const T& val) {
     using extended_t = std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>;
     auto bits = static_cast<extended_t>(val.to_bits());
@@ -377,7 +377,7 @@ constexpr uint64_t square_value(const T& val) {
 // 使用折叠表达式计算多个值的平方和
 template<typename... Args>
 requires (sizeof...(Args) > 0)
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr uint64_t sum_of_squares(Args&&... args) {
 
     return (square_value(args) + ...);
@@ -386,7 +386,7 @@ constexpr uint64_t sum_of_squares(Args&&... args) {
 
 // 支持任意数量参数的模长计算
 template<typename D, size_t Q, typename... Args>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> mag32(math::fixed<Q, D> first, Args&&... rest) {
     uint64_t sum = sum_of_squares(first, rest...);
     return math::fixed<Q, uint32_t>::from_bits(
@@ -397,7 +397,7 @@ constexpr math::fixed<Q, uint32_t> mag32(math::fixed<Q, D> first, Args&&... rest
 
 // 支持任意数量参数的逆模长计算
 template<typename D, size_t Q, typename... Args>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline,  const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, uint32_t> inv_mag32(math::fixed<Q, D> first, Args&&... rest) {
     uint64_t sum = sum_of_squares(first, rest...);
     return math::fixed<Q, uint32_t>::from_bits(
@@ -413,7 +413,7 @@ constexpr math::fixed<Q, uint32_t> inv_mag32(math::fixed<Q, D> first, Args&&... 
 namespace ymd::math{
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> sqrt(const fixed<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0) __builtin_trap();
@@ -423,7 +423,7 @@ fixed<Q, int32_t> sqrt(const fixed<Q, int32_t> x){
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> ssqrt(const fixed<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0){
@@ -438,7 +438,7 @@ fixed<Q, int32_t> ssqrt(const fixed<Q, int32_t> x){
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, uint32_t> sqrt(const fixed<Q, uint32_t> x){
     if(x.to_bits() == 0) return 0;
     return fixed<Q, uint32_t>(fxmath::details::sqrt32u(x));
@@ -446,7 +446,7 @@ fixed<Q, uint32_t> sqrt(const fixed<Q, uint32_t> x){
 
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> sqrt(const fixed<Q, int64_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0) __builtin_trap();
@@ -456,7 +456,7 @@ fixed<Q, int32_t> sqrt(const fixed<Q, int64_t> x){
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> ssqrt(const fixed<Q, int64_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0){
@@ -471,14 +471,14 @@ fixed<Q, int32_t> ssqrt(const fixed<Q, int64_t> x){
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, uint32_t> sqrt(const fixed<Q, uint64_t> x){
     if(x.to_bits() == 0) return 0;
     return fixed<Q, uint32_t>(fxmath::details::sqrt64u(x));
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> inv_sqrt(const fixed<Q, int32_t> x){
     return fixed<Q, int32_t>(fxmath::details::inv_sqrt32u(
         fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
@@ -486,20 +486,20 @@ fixed<Q, int32_t> inv_sqrt(const fixed<Q, int32_t> x){
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, uint32_t> inv_sqrt(const fixed<Q, uint32_t> x){
     return fixed<Q, uint32_t>(fxmath::details::inv_sqrt32u<Q>(x));
 }
 
 
 template<typename D, size_t Q, typename... Args>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, uint32_t> mag(const fixed<Q, D> first, Args&&... rest) {
     return fixed<Q, uint32_t>(fxmath::details::mag32(first, rest...));
 }
 
 template<typename D, size_t Q, typename... Args>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, uint32_t> inv_mag(const fixed<Q, D> first, Args&&... rest) {
     return fixed<Q, uint32_t>(fxmath::details::inv_mag32(first, rest...));
 }

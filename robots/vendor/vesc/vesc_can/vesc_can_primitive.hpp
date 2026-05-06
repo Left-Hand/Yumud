@@ -79,38 +79,36 @@ enum class PacketId:uint16_t{
 };
 
 
-static constexpr hal::CanExtId encode_can_id(const PacketId packet_id, const uint8_t controller_id){
-    const uint32_t id_u29 = static_cast<uint32_t>(
-		static_cast<uint32_t>(packet_id) << 8 
-		| controller_id
-	);
-    return hal::CanExtId::from_u29(id_u29);
-}
 
-template<typename T, size_t RATIO>
-struct alignas(sizeof(T)) [[nodiscard]] Scaled final{
+template<typename D, size_t RATIO>
+struct alignas(sizeof(D)) [[nodiscard]] Scaled final{
     using Self = Scaled;
-    static constexpr bool IS_SIGNED = std::is_signed_v<T>;
+    static constexpr bool IS_SIGNED = std::is_signed_v<D>;
+	
+	template<typename T>
+	static constexpr T INV_RATIO = static_cast<T>(1.0 / RATIO);
 
-    static constexpr float MAX_F = static_cast<long double>(std::numeric_limits<T>::max()) / RATIO;
-    static constexpr float MIN_F = static_cast<long double>(std::numeric_limits<T>::min()) / RATIO;
+	template<typename T>
+    static constexpr T MAX_VALUE = static_cast<T>((std::numeric_limits<T>::max()) * INV_RATIO<long double>);
 
-    T bits;
+	template<typename T>
+    static constexpr T MIN_VALUE = static_cast<T>((std::numeric_limits<T>::min()) * INV_RATIO<long double>);
+
+    D bits;
 
     static constexpr Result<Self, std::strong_ordering> try_from_float(const float x){
-        if(x > MAX_F) return Err(std::strong_ordering::greater);
-        if(x < MIN_F) return Err(std::strong_ordering::less);
-        return Ok(Self{static_cast<T>(x * RATIO)});
+        if(x > MAX_VALUE<float>) return Err(std::strong_ordering::greater);
+        if(x < MIN_VALUE<float>) return Err(std::strong_ordering::less);
+        return Ok(Self{static_cast<D>(x * RATIO)});
     }
 
-    static constexpr Self from_float(const float x){
-        if(x > MAX_F) return Err(std::strong_ordering::greater);
-        if(x < MIN_F) return Err(std::strong_ordering::less);
-        return Ok(Self{static_cast<T>(x * RATIO)});
+    static constexpr Self from_float_bounded(float x){
+		x = std::clamp(x, MIN_VALUE<float>, MAX_VALUE<float>);
+        return Self{static_cast<D>(x * RATIO)};
     }
 
     constexpr float to_float() const noexcept {
-        return static_cast<float>(bits) / RATIO;
+        return static_cast<float>(bits) * INV_RATIO<float>;
     }
 };
 
@@ -119,15 +117,15 @@ struct alignas(sizeof(T)) [[nodiscard]] InvScaled final{
     T bits;
 };
 
-struct [[nodiscard]] alignas(8) U64Bitset final{
+struct [[nodiscard]] alignas(4) U64Bitset final{
     uint64_t bits;
 
-    constexpr void set_high(const size_t index){
+    constexpr void set_high(const size_t index) noexcept {
         if(index > 63) __builtin_trap();
         bits |= (1ull << index);
     }
 
-    constexpr void set_low(const size_t index){
+    constexpr void set_low(const size_t index) noexcept {
         if(index > 63) __builtin_trap();
         const uint64_t mask = ~(1ull << index);
         bits &= mask;
@@ -148,7 +146,7 @@ struct [[nodiscard]] alignas(4) TS5700N8501Status final{
         return std::span<const uint8_t, 8>(&this->sf, 8);
     }
 
-    [[nodiscard]] constexpr std::span<uint8_t, 8> as_bytes_mut() {
+    [[nodiscard]] constexpr std::span<uint8_t, 8> as_bytes_mut() noexcept {
         return std::span<uint8_t, 8>(&this->sf, 8);
     }
 };

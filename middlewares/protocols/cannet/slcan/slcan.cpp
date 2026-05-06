@@ -144,7 +144,7 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     if(str.length() != dlc * 2) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
 
-    alignas(8) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
+    alignas(4) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
 
     #pragma GCC unroll 8
     for(size_t i = 0; i < dlc; i++){
