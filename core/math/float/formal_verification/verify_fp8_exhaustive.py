@@ -15,7 +15,7 @@ FP8-E4M3 饱和穷举验证
 
 import struct
 from typing import Tuple, List, Set
-from z3 import BitVec, Solver, And, Or, Not, Implies, BoolSort, sat
+from z3 import *
 
 
 # ============================================================================

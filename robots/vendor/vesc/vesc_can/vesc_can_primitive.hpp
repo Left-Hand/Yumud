@@ -96,6 +96,10 @@ struct alignas(sizeof(D)) [[nodiscard]] Scaled final{
 
     D bits;
 
+	static constexpr Self zero(){
+		return Self{0};
+	}
+
     static constexpr Result<Self, std::strong_ordering> try_from_float(const float x){
         if(x > MAX_VALUE<float>) return Err(std::strong_ordering::greater);
         if(x < MIN_VALUE<float>) return Err(std::strong_ordering::less);

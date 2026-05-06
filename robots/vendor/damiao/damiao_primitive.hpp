@@ -76,7 +76,7 @@ enum class [[nodiscard]] RegAddr : uint8_t {
 };
 
 
-struct [[nodiscard]] Status{
+struct [[nodiscard]] Status final{
 
     enum class [[nodiscard]] Kind:uint8_t{
         // 0——失能；
@@ -103,6 +103,14 @@ struct [[nodiscard]] Status{
 
     constexpr Status(const Kind kind):
         kind_(kind){}
+
+    static constexpr Status from_bits(const uint8_t b){
+        return Status(std::bit_cast<Kind>(b));
+    }
+
+    [[nodiscard]] constexpr Kind kind() const {
+        return kind_;
+    }
 private:
     Kind kind_;
 };
@@ -142,4 +150,6 @@ DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMG6220,        12.5, 45, 10)
 #undef DEF_DAMIAO_MOTOR_LIMIT_TABLE
 }
 
+
+using NodeId = uint8_t;
 }

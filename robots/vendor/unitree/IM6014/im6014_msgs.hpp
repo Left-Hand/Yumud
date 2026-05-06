@@ -1,6 +1,6 @@
 #pragma once
 
-#include "im6014_intrinsics.hpp"
+#include "im6014_utils.hpp"
 #include "im6014_prelude.hpp"
 
 namespace ymd::robots::unitree::im6014{
@@ -26,7 +26,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Crc>final {
     uint8_t * ptr;
 
     constexpr void finalize() && {
-        auto crc_builder = Crc32Builder::from_default();
+        auto crc_builder = utils::Crc32Builder::from_default();
 
         if(std::is_constant_evaluated()){
             const uint8_t * org_ptr = ptr - 16;

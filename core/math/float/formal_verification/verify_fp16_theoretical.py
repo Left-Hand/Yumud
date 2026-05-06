@@ -20,17 +20,17 @@ FP16_BITS = 16
 
 def extract_fp32_components(bv):
     """从位向量中提取 FP32 组件"""
-    sign = Extract(31, 31, bv)
-    exp  = Extract(30, 23, bv)
-    mant = Extract(22, 0, bv)
+    sign = LShR(bv, 31) & 1
+    exp  = LShR(bv, 23) & 0xFF
+    mant = bv & 0x7FFFFF
     return sign, exp, mant
 
 
 def extract_fp16_components(bv):
     """从位向量中提取 FP16 组件"""
-    sign = Extract(15, 15, bv)
-    exp  = Extract(14, 10, bv)
-    mant = Extract(9, 0, bv)
+    sign = LShR(bv, 15) & 1
+    exp  = LShR(bv, 10) & 0x1F
+    mant = bv & 0x3FF
     return sign, exp, mant
 
 
@@ -39,77 +39,66 @@ def fp32_to_fp16_symbolic(fp32_bv):
     sign, exp, mant = extract_fp32_components(fp32_bv)
 
     # 特殊值处理
-    is_nan = And(exp == 0xFF, mant != 0)
-    is_inf_pos = And(exp == 0xFF, mant == 0, sign == 0)
-    is_inf_neg = And(exp == 0xFF, mant == 0, sign == 1)
+    is_nan = (exp == 0xFF) & (mant != 0)
+    is_inf_pos = (exp == 0xFF) & (mant == 0) & (sign == 0)
+    is_inf_neg = (exp == 0xFF) & (mant == 0) & (sign == 1)
     
     # 下溢：exp < 113 → 零
     is_underflow = ULT(exp, 113)
     # 上溢：exp > 142 → inf
     is_overflow = UGT(exp, 142)
 
-    # 正常数路径 - 需要特别注意位宽
-    # exp16 = exp - 112，但是要防止下溢
-    exp16 = If(UGE(exp, 112), exp - 112, 0)
+    # 正常数路径
+    exp16 = exp - 112
     mant16 = LShR(mant, 13)  # 截断，不考虑舍入
 
-    # 使用Concat直接拼接各部分
-    # 从高位到低位：sign(1 bit) + exp(5 bits) + mant(10 bits)
-    # 需要从32位组件提取相应位数
-    sign_1bit = Extract(0, 0, sign)
-    exp_5bits = Extract(4, 0, exp16)
-    mant_10bits = Extract(9, 0, mant16)
+    # 构造 FP16 位
+    normal_fp16 = (sign << 15) | (exp16 << 10) | mant16
+    zero_fp16 = sign << 15  # ±0
+    inf_pos_fp16 = 0x7C00
+    inf_neg_fp16 = 0xFC00
+    nan_fp16 = 0x7FFF  # canonical NaN
 
-    # 拼接成16位的FP16值
-    normal_fp16 = Concat(sign_1bit, exp_5bits, mant_10bits)
-    
-    # 其他情况也确保是16位向量
-    zero_fp16 = Concat(sign_1bit, BitVecVal(0, 15))  # ±0
-    inf_pos_fp16 = BitVecVal(0x7C00, 16)
-    inf_neg_fp16 = BitVecVal(0xFC00, 16)
-    # 对于NaN，保留符号位，但固定指数和尾数
-    nan_with_sign = Concat(sign_1bit, BitVecVal(0x1F, 5), BitVecVal(0x3FF, 10))  # 符号+全1指数+全1尾数
-
-    # 条件选择 - 确保所有返回值都是16位向量
-    result = If(is_nan, nan_with_sign,  # 使用带符号的NaN
+    # 条件选择
+    result = If(is_nan, nan_fp16,
                 If(is_inf_pos, inf_pos_fp16,
                    If(is_inf_neg, inf_neg_fp16,
                       If(is_underflow, zero_fp16,
-                         If(is_overflow, 
-                            If(sign_1bit == 1, inf_neg_fp16, inf_pos_fp16),  # 正确处理符号位
-                            normal_fp16)))))
+                         If(is_overflow, If(sign == 1, inf_neg_fp16, inf_pos_fp16), normal_fp16)))))
     return result
 
 
 def fp16_to_fp32_symbolic(fp16_bv):
     """FP16 → FP32 转换（符号版本）"""
-    sign = Extract(15, 15, fp16_bv)
-    exp16 = Extract(14, 10, fp16_bv)
-    mant16 = Extract(9, 0, fp16_bv)
+    sign = LShR(fp16_bv, 15) & 1
+    exp16 = LShR(fp16_bv, 10) & 0x1F
+    mant16 = fp16_bv & 0x3FF
 
+    # FP32 组件
+    sign32 = sign
+    
     # 分类处理
-    is_zero = And(exp16 == 0, mant16 == 0)
+    is_zero = (exp16 == 0) & (mant16 == 0)
     is_inf_or_nan = (exp16 == 0x1F)
 
     # 正常数：exp32 = exp16 + 112, mant32 = mant16 << 13
-    exp32_normal = ZeroExt(27, exp16 + 112)  # 扩展到32位
-    exp32_normal_shifted = exp32_normal << 23
-    mant32_normal = ZeroExt(22, mant16 << 13)  # 10位左移13位后扩展到32位
+    exp32_normal = exp16 + 112
+    mant32_normal = mant16 << 13
 
     # 零
-    exp32_zero = BitVecVal(0, 32)
-    mant32_zero = BitVecVal(0, 32)
+    exp32_zero = 0
+    mant32_zero = 0
 
     # Inf/NaN
-    exp32_special = BitVecVal(0xFF << 23, 32)
-    mant32_special = ZeroExt(22, mant16 << 13)  # preserve payload
+    exp32_special = 0xFF
+    mant32_special = mant16 << 13  # preserve payload
 
     exp32 = If(is_zero, exp32_zero,
-                If(is_inf_or_nan, exp32_special, exp32_normal_shifted))
+               If(is_inf_or_nan, exp32_special, exp32_normal))
     mant32 = If(is_zero, mant32_zero,
-                 If(is_inf_or_nan, mant32_special, mant32_normal))
+                If(is_inf_or_nan, mant32_special, mant32_normal))
 
-    fp32_bits = (ZeroExt(31, sign) << 31) | exp32 | mant32
+    fp32_bits = (sign32 << 31) | (exp32 << 23) | mant32
     return fp32_bits
 
 
@@ -139,26 +128,18 @@ def verify_special_values():
     s.reset()
     print("  ✓ -∞ 映射正确 (0xFC00)")
 
-    # 测试 NaN: any with exp=0xFF, mant≠0 → 保留符号位的 NaN
-    # 使用具体的正 NaN 值进行测试
-    pos_nan = BitVecVal(0x7FC00000, 32)  # +NaN
-    fp16_pos_nan = fp32_to_fp16_symbolic(pos_nan)
-    s.add(fp16_pos_nan != 0x7FFF)  # 正的 NaN
+    # 测试 NaN: any with exp=0xFF, mant≠0 → 0x7FFF
+    nan_val = BitVec('nan_val', 32)
+    sign_n, exp_n, mant_n = extract_fp32_components(nan_val)
+    s.add(exp_n == 0xFF)
+    s.add(mant_n != 0)
+    fp16_nan = fp32_to_fp16_symbolic(nan_val)
+    s.add(fp16_nan != 0x7FFF)
     if s.check() == sat:
-        print("  ✗ +NaN 映射错误")
+        print("  ✗ NaN 映射错误")
         return False
     s.reset()
-    print("  ✓ +NaN 映射正确 (0x7FFF)")
-
-    # 使用具体的负 NaN 值进行测试
-    neg_nan = BitVecVal(0xFFC00000, 32)  # -NaN
-    fp16_neg_nan = fp32_to_fp16_symbolic(neg_nan)
-    s.add(fp16_neg_nan != 0xFFFF)  # 负的 NaN
-    if s.check() == sat:
-        print("  ✗ -NaN 映射错误")
-        return False
-    s.reset()
-    print("  ✓ -NaN 映射正确 (0xFFFF)")
+    print("  ✓ NaN 映射正确 (0x7FFF)")
 
     # 测试 +0: 0x00000000
     pos_zero = BitVecVal(0x00000000, 32)
@@ -286,7 +267,7 @@ def verify_sign_preservation():
 
     # 执行转换
     fp16_result = fp32_to_fp16_symbolic(x)
-    sign_result = Extract(15, 15, fp16_result)  # 获取最高位作为符号
+    sign_result = LShR(fp16_result, 15) & 1
 
     # 符号位应保持一致
     s.add(sign_x != sign_result)

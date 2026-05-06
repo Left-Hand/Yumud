@@ -39,6 +39,7 @@ struct [[nodiscard]] _PerUnitCrtpBase{
     }
 
     [[nodiscard]] constexpr D count() const noexcept {return count_;}
+    [[nodiscard]] constexpr D to_bits() const noexcept {return count_;}
     
 private:
     D count_;
