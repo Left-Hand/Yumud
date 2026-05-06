@@ -10,7 +10,7 @@ public:
         state_ = state;
     }
 
-    auto count() const{
+    auto count() const noexcept {
         return count_;
     }
 private:

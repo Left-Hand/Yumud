@@ -22,12 +22,12 @@ public:
     math::Range2<T> radius_range;
     AngularRange<D> angle_range;
 
-    constexpr bool contains_angle(const Angular<D> angle) const {
+    constexpr bool contains_angle(const Angular<D> angle) const noexcept {
         return angle_range.contains_angle(angle);
     }
 
     constexpr 
-    math::Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const noexcept {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
             contains_angle(Angular<D>::HALF);
@@ -71,7 +71,7 @@ public:
 
     __fast_inline constexpr bool contains_point(
         const math::Vec2<T>& p
-    ) const{
+    ) const noexcept {
         const auto offset = p - center;
         const auto p_r_squ = offset.length_squared();
         if(p_r_squ < math::square(radius_range.start)) return false;
@@ -81,7 +81,7 @@ public:
 
     __fast_inline constexpr bool contains_norm_dir(
         const math::Vec2<D> norm_dir_vec
-    ) const {
+    ) const noexcept {
         const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
         const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
@@ -133,7 +133,7 @@ struct [[nodiscard]] RoundedAnnularSector final{
     AngularRange<D> angle_range;
 
     constexpr 
-    math::Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const noexcept {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
             contains_angle(Angular<D>::HALF);
@@ -177,7 +177,7 @@ struct [[nodiscard]] RoundedAnnularSector final{
 
     __fast_inline constexpr bool contains_norm_dir(
         const math::Vec2<D> norm_dir_vec
-    ) const {
+    ) const noexcept {
         const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
         const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
@@ -240,12 +240,12 @@ struct [[nodiscard]] Sector final{
     T radius;
     AngularRange<D> angle_range;
 
-    constexpr bool contains_angle(const Angular<D> angle) const {
+    constexpr bool contains_angle(const Angular<D> angle) const noexcept {
         return angle_range.contains_angle(angle);
     }
 
     constexpr 
-    math::Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const noexcept {
         auto & self = *this;
 
         const bool x_reached_left = 
@@ -289,7 +289,7 @@ struct [[nodiscard]] Sector final{
 
     __fast_inline constexpr bool contains_point(
         const math::Vec2<T>& p
-    ) const{
+    ) const noexcept {
         const auto offset = p - center;
         const auto p_r_squ = offset.length_squared();
         if(p_r_squ > math::square(radius)) return false;
@@ -298,7 +298,7 @@ struct [[nodiscard]] Sector final{
 
     __fast_inline constexpr bool contains_norm_dir(
         const math::Vec2<D> norm_dir_vec
-    ) const {
+    ) const noexcept {
         const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
         const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
@@ -372,7 +372,7 @@ struct [[nodiscard]] RasterizationIterator<Sector<T, D>> {
         RasterizationIterator(shape, CtorHelper::from(shape)){;}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_stop_;
     }
 
@@ -475,7 +475,7 @@ struct [[nodiscard]] RasterizationIterator<AnnularSector<T, D>> {
         RasterizationIterator(shape, CtorHelper::from(shape)){;}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_stop_;
     }
 
@@ -605,7 +605,7 @@ struct [[nodiscard]] PreComputedOf<AnnularSector<T, D>, bool>{
         };
 
     } 
-    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<T> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<T> offset) const noexcept {
         return s_color_from_point(*this, offset);
     }
 private:

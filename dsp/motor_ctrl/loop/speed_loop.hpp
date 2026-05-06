@@ -17,7 +17,7 @@
 //         q_curr_ = (wc_ * err - f_hat_) / b0_ / fc_;
 //     }
 
-//     q16 output() const {return q_curr_;}
+//     q16 output() const noexcept {return q_curr_;}
 // private:
 //     uint fc_ = 0;
 //     q16 b0_ = 0;

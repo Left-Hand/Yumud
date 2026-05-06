@@ -34,10 +34,13 @@ void bmi160_main(){
         hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
-    DEBUGGER.no_fieldname(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     // hal::spi1.init({18'000'000});
     hal::spi1.init({

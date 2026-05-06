@@ -34,14 +34,14 @@ struct [[nodiscard]] Response final{
     const uint8_t * p_bytes_;
     size_t length_;
 
-    constexpr std::span<const uint8_t> payload() const{
+    constexpr std::span<const uint8_t> payload() const noexcept {
         return std::span<const uint8_t>(p_bytes_,length_);
     }
-    // constexpr bool is_ok() const{
+    // constexpr bool is_ok() const noexcept {
     //     return is_ok_;
     // }
 
-    // constexpr bool is_err() const{
+    // constexpr bool is_err() const noexcept {
     //     return not is_ok();
     // }
 

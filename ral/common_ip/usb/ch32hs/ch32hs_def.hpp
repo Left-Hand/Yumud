@@ -87,7 +87,7 @@ struct R32_USB_CTRL {
      * @brief 检查是否为主机模式
      * @return true-主机模式；false-设备模式
      */
-    constexpr bool is_host_mode() const {
+    constexpr bool is_host_mode() const noexcept {
         return RB_UC_HOST_MODE == 1;
     }
 
@@ -95,7 +95,7 @@ struct R32_USB_CTRL {
      * @brief 检查DMA是否使能
      * @return true-DMA使能；false-DMA关闭
      */
-    constexpr bool is_dma_enabled() const {
+    constexpr bool is_dma_enabled() const noexcept {
         return RB_UC_DMA_EN == 1;
     }
 };
@@ -162,7 +162,7 @@ struct R8_USB_INT_EN {
      * @brief 检查传输完成中断是否使能
      * @return true-使能；false-禁止
      */
-    constexpr bool is_transfer_irq_en() const {
+    constexpr bool is_transfer_irq_en() const noexcept {
         return RB_UIE_TRANSFER == 1;
     }
 };
@@ -193,7 +193,7 @@ struct R32_USB_DEV_AD {
      * @brief 获取当前USB地址
      * @return 地址值（0~127）
      */
-    constexpr uint8_t get_dev_addr() const {
+    constexpr uint8_t get_dev_addr() const noexcept {
         return static_cast<uint8_t>(RB_MASK_USB_ADDR & 0x7F);
     }
 };
@@ -216,7 +216,7 @@ struct R32_USB_FRAME_NO {
      * @brief 获取当前SOF帧号
      * @return 帧号（0~2047）
      */
-    constexpr uint16_t get_frame_num() const {
+    constexpr uint16_t get_frame_num() const noexcept {
         return static_cast<uint16_t>(FRAME_NO & 0x7FF);
     }
 
@@ -224,7 +224,7 @@ struct R32_USB_FRAME_NO {
      * @brief 获取高速模式微帧号
      * @return 微帧号（0~7）
      */
-    constexpr uint8_t get_micro_frame() const {
+    constexpr uint8_t get_micro_frame() const noexcept {
         return static_cast<uint8_t>(MICRO_FRAME & 0x07);
     }
 
@@ -232,7 +232,7 @@ struct R32_USB_FRAME_NO {
      * @brief 检查是否为高速模式微帧
      * @return true-高速微帧；false-全速/低速帧
      */
-    constexpr bool is_highspeed_micro() const {
+    constexpr bool is_highspeed_micro() const noexcept {
         return MICRO_FRAME != 0;
     }
 };
@@ -269,7 +269,7 @@ struct R32_USB_SUSPEND {
      * @brief 检查是否检测到唤醒信号
      * @return true-有唤醒信号；false-无
      */
-    constexpr bool is_wakeup_detected() const {
+    constexpr bool is_wakeup_detected() const noexcept {
         return RB_USB_WAKEUP_ST == 1;
     }
 
@@ -277,7 +277,7 @@ struct R32_USB_SUSPEND {
      * @brief 获取PHY线状态
      * @return 线状态值（0~3）
      */
-    constexpr uint8_t get_phy_linestate() const {
+    constexpr uint8_t get_phy_linestate() const noexcept {
         return static_cast<uint8_t>(RB_USB_LINESTATE & 0x03);
     }
 };
@@ -298,7 +298,7 @@ struct R32_USB_SPEED_TYPE {
      * @brief 检查当前是否为高速模式
      * @return true-高速(480Mbps)；false-全速/低速
      */
-    constexpr bool is_highspeed() const {
+    constexpr bool is_highspeed() const noexcept {
         return RB_USB_SPEED_TYPE == 1;
     }
 
@@ -306,7 +306,7 @@ struct R32_USB_SPEED_TYPE {
      * @brief 检查当前是否为全速模式
      * @return true-全速(12Mbps)；false-高速/低速
      */
-    constexpr bool is_fullspeed() const {
+    constexpr bool is_fullspeed() const noexcept {
         return RB_USB_SPEED_TYPE == 0;
     }
 
@@ -314,7 +314,7 @@ struct R32_USB_SPEED_TYPE {
      * @brief 检查当前是否为低速模式
      * @return true-低速(1.5Mbps)；false-高速/全速
      */
-    constexpr bool is_lowspeed() const {
+    constexpr bool is_lowspeed() const noexcept {
         return RB_USB_SPEED_TYPE == 2;
     }
 
@@ -322,7 +322,7 @@ struct R32_USB_SPEED_TYPE {
      * @brief 获取当前速率类型
      * @return 0-全速；1-高速；2-低速
      */
-    constexpr uint8_t get_speed_type() const {
+    constexpr uint8_t get_speed_type() const noexcept {
         return static_cast<uint8_t>(RB_USB_SPEED_TYPE & 0x03);
     }
 };
@@ -357,7 +357,7 @@ struct R32_USB_MIS_ST {
      * @brief 检查SIE协议处理器是否空闲
      * @return true-空闲；false-忙（传输中）
      */
-    constexpr bool is_sie_free() const {
+    constexpr bool is_sie_free() const noexcept {
         return RB_UMS_SIE_FREE == 1;
     }
 
@@ -365,7 +365,7 @@ struct R32_USB_MIS_ST {
      * @brief 检查接收FIFO是否有数据
      * @return true-FIFO非空；false-FIFO空
      */
-    constexpr bool is_rx_fifo_ready() const {
+    constexpr bool is_rx_fifo_ready() const noexcept {
         return RB_UMS_R_FIFO_RDY == 1;
     }
 
@@ -373,7 +373,7 @@ struct R32_USB_MIS_ST {
      * @brief 检查USB总线是否处于复位状态
      * @return true-复位中；false-正常
      */
-    constexpr bool is_bus_rst() const {
+    constexpr bool is_bus_rst() const noexcept {
         return RB_UMS_BUS_RST == 1;
     }
 
@@ -381,7 +381,7 @@ struct R32_USB_MIS_ST {
      * @brief 主机模式检查是否有设备连接
      * @return true-设备已连接；false-无设备
      */
-    constexpr bool is_dev_attached() const {
+    constexpr bool is_dev_attached() const noexcept {
         return RB_UMS_DEV_ATTACH == 1;
     }
 };
@@ -435,7 +435,7 @@ struct R8_USB_INT_FG {
      * @brief 检查传输完成中断是否触发
      * @return true-已触发；false-未触发
      */
-    constexpr bool is_transfer_flag() const {
+    constexpr bool is_transfer_flag() const noexcept {
         return RB_UIF_TRANSFER == 1;
     }
 
@@ -443,7 +443,7 @@ struct R8_USB_INT_FG {
      * @brief 检查SETUP事务完成中断是否触发
      * @return true-已触发；false-未触发
      */
-    constexpr bool is_setup_flag() const {
+    constexpr bool is_setup_flag() const noexcept {
         return RB_UIF_SETUP_ACT == 1;
     }
 
@@ -451,7 +451,7 @@ struct R8_USB_INT_FG {
      * @brief 检查FIFO溢出中断是否触发
      * @return true-已触发；false-未触发
      */
-    constexpr bool is_fifo_ov_flag() const {
+    constexpr bool is_fifo_ov_flag() const noexcept {
         return RB_UIF_FIFO_OV == 1;
     }
 };
@@ -478,7 +478,7 @@ struct R32_USB_INT_ST {
      * @brief 设备模式获取当前传输端点号
      * @return 端点号（0~15）
      */
-    constexpr uint8_t dev_get_ep_id() const {
+    constexpr uint8_t dev_get_ep_id() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_H_RES_ENDP & 0x0F);
     }
 
@@ -486,7 +486,7 @@ struct R32_USB_INT_ST {
      * @brief 设备模式获取当前令牌PID类型
      * @return 0-OUT 1-SOF 2-IN 3-SETUP
      */
-    constexpr uint8_t dev_get_token_pid() const {
+    constexpr uint8_t dev_get_token_pid() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_TOKEN & 0x03);
     }
 
@@ -494,7 +494,7 @@ struct R32_USB_INT_ST {
      * @brief 检查Toggle是否匹配
      * @return true-匹配；false-不匹配
      */
-    constexpr bool is_tog_ok() const {
+    constexpr bool is_tog_ok() const noexcept {
         return RB_UIS_TOG_OK == 1;
     }
 
@@ -502,7 +502,7 @@ struct R32_USB_INT_ST {
      * @brief 设备模式检查是否回应了NAK
      * @return true-已NAK；false-无
      */
-    constexpr bool dev_is_nak_resp() const {
+    constexpr bool dev_is_nak_resp() const noexcept {
         return RB_UIS_IS_NAK == 1;
     }
 
@@ -510,7 +510,7 @@ struct R32_USB_INT_ST {
      * @brief 主机模式获取设备应答PID
      * @return 应答PID标识（0~15，0=无应答/超时）
      */
-    constexpr uint8_t host_get_resp_pid() const {
+    constexpr uint8_t host_get_resp_pid() const noexcept {
         return static_cast<uint8_t>(MASK_UIS_H_RES_ENDP & 0x0F);
     }
 };
@@ -531,7 +531,7 @@ struct R32_USB_RX_LEN {
      * @brief 获取实际接收的数据字节数
      * @return 字节数（0~65535）
      */
-    constexpr uint16_t get_rx_len() const {
+    constexpr uint16_t get_rx_len() const noexcept {
         return static_cast<uint16_t>(R16_USB_RX_LEN & 0xFFFF);
     }
 };
@@ -601,7 +601,7 @@ struct R32_UEP_CONFIG {
      * @param ep_id 端点号（1~15）
      * @return true-使能；false-禁止
      */
-    constexpr bool is_ep_tx_en(uint8_t ep_id) const {
+    constexpr bool is_ep_tx_en(uint8_t ep_id) const noexcept {
         return (ep_id >=1 && ep_id <=15) ? ((RB_UEP_T_EN & (1 << (ep_id - 1))) != 0) : false;
     }
 
@@ -610,7 +610,7 @@ struct R32_UEP_CONFIG {
      * @param ep_id 端点号（1~15）
      * @return true-使能；false-禁止
      */
-    constexpr bool is_ep_rx_en(uint8_t ep_id) const {
+    constexpr bool is_ep_rx_en(uint8_t ep_id) const noexcept {
         return (ep_id >=1 && ep_id <=15) ? ((RB_UEP_R_EN & (1 << (ep_id - 1))) != 0) : false;
     }
 };
@@ -676,7 +676,7 @@ struct R32_UEP_TYPE {
      * @param ep_id 端点号（1~15）
      * @return true-同步；false-非同步
      */
-    constexpr bool is_ep_tx_iso(uint8_t ep_id) const {
+    constexpr bool is_ep_tx_iso(uint8_t ep_id) const noexcept {
         return (ep_id >=1 && ep_id <=15) ? ((RB_UEP_T_TYPE & (1 << (ep_id - 1))) != 0) : false;
     }
 };
@@ -728,7 +728,7 @@ struct R32_UEP_BUF_MOD {
      * @param ep_id 端点号（0~15）
      * @return true-双缓冲；false-单缓冲
      */
-    constexpr bool is_ep_double_buf(uint8_t ep_id) const {
+    constexpr bool is_ep_double_buf(uint8_t ep_id) const noexcept {
         return (ep_id >=0 && ep_id <=15) ? ((RB_UEP_BUF_MOD & (1 << ep_id)) != 0) : false;
     }
 };
@@ -755,7 +755,7 @@ struct R32_UEP0_DMA {
      * @brief 获取端点0缓冲区DMA地址
      * @return 32位对齐地址
      */
-    constexpr uint32_t get_dma_addr() const {
+    constexpr uint32_t get_dma_addr() const noexcept {
         return R32_UEP0_DMA;
     }
 };
@@ -782,7 +782,7 @@ struct R32_UEPn_RX_DMA {
      * @brief 获取接收缓冲区DMA地址
      * @return 32位对齐地址
      */
-    constexpr uint32_t get_dma_addr() const {
+    constexpr uint32_t get_dma_addr() const noexcept {
         return R32_UEPn_RX_DMA;
     }
 };
@@ -809,7 +809,7 @@ struct R32_UEPn_TX_DMA {
      * @brief 获取发送缓冲区DMA地址
      * @return 32位地址
      */
-    constexpr uint32_t get_dma_addr() const {
+    constexpr uint32_t get_dma_addr() const noexcept {
         return R32_UEPn_TX_DMA;
     }
 };
@@ -838,7 +838,7 @@ struct R32_UEPn_MAX_LEN {
      * @brief 获取端点最大接收包长度
      * @return 长度值（0~2047）
      */
-    constexpr uint16_t get_max_len() const {
+    constexpr uint16_t get_max_len() const noexcept {
         return static_cast<uint16_t>(UEPn_MAX_LEN & 0x7FF);
     }
 };
@@ -872,7 +872,7 @@ struct R32_UEPn_T_LEN {
      * @brief 获取端点发送数据长度
      * @return 长度值
      */
-    constexpr uint16_t get_tx_len() const {
+    constexpr uint16_t get_tx_len() const noexcept {
         return static_cast<uint16_t>(UEPn_T_LEN & 0x7FF);
     }
 };
@@ -946,7 +946,7 @@ struct R32_UEPn_TX_CTRL {
      * @brief 检查是否使能自动翻转
      * @return true-使能；false-禁止
      */
-    constexpr bool is_tog_auto_en() const {
+    constexpr bool is_tog_auto_en() const noexcept {
         return RB_UEP_T_TOG_AUTO == 1;
     }
 };
@@ -1007,7 +1007,7 @@ struct R32_UEPn_RX_CTRL {
      * @brief 检查接收同步触发位是否自动翻转
      * @return true-使能；false-禁止
      */
-    constexpr bool is_tog_auto_en() const {
+    constexpr bool is_tog_auto_en() const noexcept {
         return RB_UEP_R_TOG_AUTO == 1;
     }
 };

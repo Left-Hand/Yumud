@@ -26,8 +26,6 @@ constexpr void ser_just_float(Receiver & receiver, Args && ... args){
 
     (push_element(std::forward<Args>(args)), ...);
 
-
-
     push_bytes(std::span(TAIL_BYTES));
 };
 

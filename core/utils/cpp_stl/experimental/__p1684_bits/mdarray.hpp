@@ -394,7 +394,7 @@ public:
   MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return map_.is_unique(); }
   MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return map_.is_exhaustive(); }
   MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return map_.is_strided(); }
-  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const { return map_.stride(r); }
+  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const noexcept { return map_.stride(r); }
 
   // Converstion to mdspan
   MDSPAN_TEMPLATE_REQUIRES(
@@ -419,7 +419,7 @@ public:
                       const_mdspan_type)
     )
   )
-  constexpr operator mdspan<OtherElementType, OtherExtents, OtherLayoutType, OtherAccessorType> () const {
+  constexpr operator mdspan<OtherElementType, OtherExtents, OtherLayoutType, OtherAccessorType> () const noexcept {
     return const_mdspan_type(data(), map_);
   }
 
@@ -443,7 +443,7 @@ public:
     )
   )
   constexpr mdspan<const element_type, extents_type, layout_type, OtherAccessorType>
-    to_mdspan(const OtherAccessorType& a = default_accessor<const element_type>()) const {
+    to_mdspan(const OtherAccessorType& a = default_accessor<const element_type>()) const noexcept {
       return mdspan<const element_type, extents_type, layout_type, OtherAccessorType>(data(), map_, a);
   }
 

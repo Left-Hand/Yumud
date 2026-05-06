@@ -85,12 +85,12 @@ public:
     }
     
     // 获取结果矩阵
-    constexpr Option<Solution> solution() const {
+    constexpr Option<Solution> solution() const noexcept {
         if(not is_computed_) return None;
         return Some(Solution{U_, sigma_, V_});
     }
 
-    constexpr bool is_computed() const { return is_computed_; }
+    constexpr bool is_computed() const noexcept { return is_computed_; }
 private:
     /**
      * 计算2x2矩阵的SVD旋转参数

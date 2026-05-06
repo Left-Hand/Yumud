@@ -15,7 +15,7 @@ struct [[nodiscard]] PanId{
         return std::span<uint8_t, 2>(reinterpret_cast<uint8_t*>(this), 2);
     }
 
-    std::span<const uint8_t, 2> as_bytes() const {
+    std::span<const uint8_t, 2> as_bytes() const noexcept {
         return std::span<const uint8_t, 2>(reinterpret_cast<const uint8_t*>(this), 2);
     }
 
@@ -34,7 +34,7 @@ struct [[nodiscard]] ShortAddress{
         return std::span<uint8_t, 2>(reinterpret_cast<uint8_t*>(this), 2);
     }
 
-    std::span<const uint8_t, 2> as_bytes() const {
+    std::span<const uint8_t, 2> as_bytes() const noexcept {
         return std::span<const uint8_t, 2>(reinterpret_cast<const uint8_t*>(this), 2);
     }
 
@@ -53,7 +53,7 @@ struct [[nodiscard]] ExtendedAddress{
         return std::span<uint8_t, 8>(reinterpret_cast<uint8_t*>(this), 8);
     }
 
-    std::span<const uint8_t, 8> as_bytes() const {
+    std::span<const uint8_t, 8> as_bytes() const noexcept {
         return std::span<const uint8_t, 8>(reinterpret_cast<const uint8_t*>(this), 8);
     }
 

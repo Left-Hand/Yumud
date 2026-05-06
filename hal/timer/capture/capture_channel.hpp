@@ -82,11 +82,11 @@ public:
         cb_ = std::function<void(void)>(std::move(_cb));
     }
 
-    Microseconds get_pulse_us() const{
+    Microseconds get_pulse_us() const noexcept {
         return pulse_;
     }
 
-    Microseconds get_period_us() const{
+    Microseconds get_period_us() const noexcept {
         return period_;
     }
 private:

@@ -101,7 +101,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         );
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return state_.bytes_offset < params_.bytes.size();
     }
 

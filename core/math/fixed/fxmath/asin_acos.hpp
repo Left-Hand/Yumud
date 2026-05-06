@@ -38,7 +38,7 @@ namespace ymd::fxmath::details{
  * Acos is implemented using asin and identity (1).
  */
 
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize("-Ofast")))
 constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
     bool is_acos = false;
 
@@ -151,7 +151,7 @@ constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+__attribute__((always_inline, const, optimize("-Ofast"))) constexpr 
 math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
     static_assert(Q <= 32);
     uint32_t input_bits = std::bit_cast<uint32_t>(x.to_bits());
@@ -189,25 +189,25 @@ math::fixed<29, int32_t> asin32i(const math::fixed<Q, int32_t> x){
 namespace ymd::math{
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+__attribute__((const)) constexpr 
 fixed<29, int32_t> asin(const fixed<Q, int32_t> x){
     return fxmath::details::asin32i(x);
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+__attribute__((const)) constexpr 
 fixed<29, int32_t> acos(const fixed<Q, int32_t> x){
     return fixed<29, int32_t>(M_PI/2) - fxmath::details::asin32i(x);
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+__attribute__((const)) constexpr 
 fixed<32, uint32_t> asinpu(const fixed<Q, int32_t> x){
     return rad_to_uq32(asin(x));
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+__attribute__((const)) constexpr 
 fixed<32, uint32_t> acospu(const fixed<Q, int32_t> x){
     return rad_to_uq32(acos(x));
 }

@@ -37,7 +37,7 @@ public:
         hpf_.update(lpf_.get());
     }
 
-    T result() const{
+    T result() const noexcept {
         return hpf_.result();
     }
 
@@ -94,7 +94,7 @@ private:
 //         // wavegen_lpf_.update(abs_err);
 //     }
 
-//     T result() const {
+//     T result() const noexcept {
 //         // return wavegen_lpf_.result();
 //         // return baseline_lpf_.result();
 //         return result_;

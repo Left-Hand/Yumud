@@ -31,13 +31,13 @@ public:
         else __builtin_abort();
     }
 
-    constexpr const T & operator [](const E e) const {
+    constexpr const T & operator [](const E e) const noexcept {
         const auto rank_opt = Dump::enum_to_rank(e);
         if(rank_opt.has_value()) return arr_[rank_opt.value()];
         else __builtin_abort();
     }
 
-    constexpr Option<const T &> at(const E e) const {
+    constexpr Option<const T &> at(const E e) const noexcept {
         const auto rank_opt = Dump::enum_to_rank(e);
         if(rank_opt.has_value()) return Some(&arr_[rank_opt.value()]);
         else return None;
@@ -48,8 +48,8 @@ public:
 
     // Pair begin(){return {Dump::index_to_enum(1), arr_.front();}}
     // Pair end(){return {Dump::index_to_enum(COUNT - 1), arr_.back()};}
-    constexpr Pair begin() const {return {Dump::index_to_enum(1), arr_.front()};}
-    constexpr Pair end() const {return {Dump::index_to_enum(COUNT - 1), arr_.back()};}
+    constexpr Pair begin() const noexcept {return {Dump::index_to_enum(1), arr_.front()};}
+    constexpr Pair end() const noexcept {return {Dump::index_to_enum(COUNT - 1), arr_.back()};}
 
 private:
     std::array<T, COUNT> arr_;

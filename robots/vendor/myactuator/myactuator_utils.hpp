@@ -71,7 +71,7 @@ public:
     }
 
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return pos_ == CAPACITY;
     }
 private:

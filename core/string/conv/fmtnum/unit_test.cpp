@@ -1,7 +1,8 @@
-#include "common.hpp"
-#include "unsigned_fixed.hpp"
-#include "non10_radix.hpp"
-#include "scientific.hpp"
+#include "decimal.hpp"
+#include "fixedpoint.hpp"
+#include "nondecimal.hpp"
+#include "scientific_fixedpoint.hpp"
+#include "fmtnum.hpp"
 #include "core/utils/Result.hpp"
 
 using namespace ymd;
@@ -10,21 +11,105 @@ using namespace ymd::str;
 
 namespace {
 // 测试用例
-static_assert(_u32_num_digits_r10(0) == 1, "0 should return 1");
-static_assert(_u32_num_digits_r10(1) == 1, "1 should return 1");
-static_assert(_u32_num_digits_r10(9) == 1, "9 should return 1");
-static_assert(_u32_num_digits_r10(10) == 2, "10 should return 2");
-static_assert(_u32_num_digits_r10(99) == 2, "99 should return 2");
-static_assert(_u32_num_digits_r10(100) == 3, "100 should return 3");
-static_assert(_u32_num_digits_r10(100000) == 6, "100 should return 3");
+static_assert(_least_u32_num_digits_dec(0) == 1, "0 should return 1");
+static_assert(_least_u32_num_digits_dec(1) == 1, "1 should return 1");
+static_assert(_least_u32_num_digits_dec(9) == 1, "9 should return 1");
+static_assert(_least_u32_num_digits_dec(10) == 2, "10 should return 2");
+static_assert(_least_u32_num_digits_dec(99) == 2, "99 should return 2");
+static_assert(_least_u32_num_digits_dec(100) == 3, "100 should return 3");
+static_assert(_least_u32_num_digits_dec(100000) == 6, "100 should return 3");
+
+static_assert(div_10_maylossy(0) == 0);
+static_assert(div_10_maylossy(9) == 0);
+static_assert(div_10_maylossy(99) == 9);
+static_assert(div_10_maylossy(100) == 10);
+static_assert(div_10_maylossy(100000) == 10000);
+static_assert(div_10_maylossy(999999) == 99999);
+static_assert(div_10_maylossy(1000000) == 100000);
+static_assert(div_10_maylossy(9999999) == 999999);
+static_assert(div_10_maylossy(10000000) == 1000000);
+static_assert(div_10_maylossy(99999999) == 9999999);
+static_assert(div_10_maylossy(100000000) == 10000000);
+static_assert(div_10_maylossy(999999999) == 99999999);
+
 
 // 关键测试：0x80000000
-static_assert(_u32_num_digits_r10(0x80000000) == 10, "0x80000000 should return 10");
+static_assert(_least_u32_num_digits_dec(0x80000000) == 10, "0x80000000 should return 10");
 
 // 更大值的测试
-static_assert(_u32_num_digits_r10(0xFFFFFFFF) == 10, "0xFFFFFFFF should return 10");
-static_assert(_u32_num_digits_r10(0x3B9ACA00) == 10, "0x3B9ACA00 (1e9) should return 10");
-static_assert(_u32_num_digits_r10(0x3B9ACA01) == 10, "0x3B9ACA01 should return 10");
+static_assert(_least_u32_num_digits_dec(0xFFFFFFFF) == 10, "0xFFFFFFFF should return 10");
+static_assert(_least_u32_num_digits_dec(0x3B9ACA00) == 10, "0x3B9ACA00 (1e9) should return 10");
+static_assert(_least_u32_num_digits_dec(0x3B9ACA01) == 10, "0x3B9ACA01 should return 10");
+
+static constexpr auto _pow10 = [](size_t n) -> uint64_t {
+    size_t sum = 1;
+    for(size_t i = 0; i < n; i++){
+        sum *= 10;
+    }
+    return sum;
+};
+
+[[maybe_unused]] void test_num_digits_dec(){
+    constexpr auto u32_test_n = [&](size_t n) -> Result<void, void> {
+        if(not (_least_u32_num_digits_dec(_pow10(n-1)) == n)) return Err();
+        if(not (_least_u32_num_digits_dec(_pow10(n) - 1) == n)) return Err();
+        return Ok();
+    };
+
+    constexpr auto test_all = [&]<typename Fn>(Fn && fn, size_t n) -> Result<void, int>{
+        for(int i = 1; i <= int(n); i++){
+            if(const auto res = (fn)(i); res.is_err()){
+                return Err(i);
+            }
+        }
+        return Ok();
+    };
+
+    static constexpr auto u32_res = test_all(u32_test_n, 9);
+    static_assert(u32_res.is_ok(), "_least_u32_num_digits_dec failed");
+}
+
+static_assert(_div_3(0) == 0);
+static_assert(_div_3(3) == 1);
+static_assert(_div_3(34) == 11);
+static_assert(_div_3(33) == 11);
+
+
+
+static_assert(_least_u32_num_digits_hex(0xFFFFFFFF) == 8);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFF) == 7);
+static_assert(_least_u32_num_digits_hex(0xFFFFFF) == 6);
+static_assert(_least_u32_num_digits_hex(0xFFFFF) == 5);
+static_assert(_least_u32_num_digits_hex(0xFFFF) == 4);
+
+
+// 测试用例
+static_assert(_least_u32_num_digits_oct(0xFFFFFFFF) == 11);  // 37777777777 (32位全1，11位八进制)
+static_assert(_least_u32_num_digits_oct(077777777) == 8);    // 8位八进制
+static_assert(_least_u32_num_digits_oct(0777777) == 6);      // 6位八进制
+static_assert(_least_u32_num_digits_oct(07777) == 4);        // 4位八进制
+static_assert(_least_u32_num_digits_oct(077) == 2);          // 2位八进制
+static_assert(_least_u32_num_digits_oct(07) == 1);           // 1位八进制
+static_assert(_least_u32_num_digits_oct(0) == 1);            // 0特殊处理
+
+
+
+static_assert(_least_u32_num_digits_hex(0xFFFFFFFF) == 8);
+static_assert(_least_u32_num_digits_hex(0xFFFFFFF) == 7);
+static_assert(_least_u32_num_digits_hex(0xFFFFFF) == 6);
+static_assert(_least_u32_num_digits_hex(0xFFFFF) == 5);
+static_assert(_least_u32_num_digits_hex(0xFFFF) == 4);
+
+
+static_assert(_div_100000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 100000);
+static_assert(_div_100000(uint32_t(100000)) == 1);
+
+static_assert(sizeof(uint32_t) == 4);
+
+}
+
+
+
 
 #if 0
 static constexpr std::tuple<uint32_t, uint32_t> depart_hilo_18(const uint32_t hi, const uint32_t lo) {
@@ -78,197 +163,3 @@ static_assert(depart_hilo_18(4, 294967296) == std::make_tuple(18u, 294967296u), 
 static_assert(depart_hilo_18(0xFFFFFFFF, 0xFFFFFFFF) == 
               std::make_tuple(18446744073u, 554309260u), "0xFFFFFFFFFFFFFFFF should return known values");
 #endif
-
-
-static constexpr auto _pow10 = [](size_t n) -> uint64_t {
-    size_t sum = 1;
-    for(size_t i = 0; i < n; i++){
-        sum *= 10;
-    }
-    return sum;
-};
-
-[[maybe_unused]] void test_num_digits_r10(){
-    constexpr auto u32_test_n = [&](size_t n) -> Result<void, void> {
-        if(not (_u32_num_digits_r10(_pow10(n-1)) == n)) return Err();
-        if(not (_u32_num_digits_r10(_pow10(n) - 1) == n)) return Err();
-        return Ok();
-    };
-
-    constexpr auto test_all = [&]<typename Fn>(Fn && fn, size_t n) -> Result<void, int>{
-        for(int i = 1; i <= int(n); i++){
-            if(const auto res = (fn)(i); res.is_err()){
-                return Err(i);
-            }
-        }
-        return Ok();
-    };
-
-    static constexpr auto u32_res = test_all(u32_test_n, 9);
-    static_assert(u32_res.is_ok(), "_u32_num_digits_r10 failed");
-}
-
-static_assert(_div_3(0) == 0);
-static_assert(_div_3(3) == 1);
-static_assert(_div_3(34) == 11);
-static_assert(_div_3(33) == 11);
-
-
-
-static_assert(u32_num_digits_r16(0xFFFFFFFF) == 8);
-static_assert(u32_num_digits_r16(0xFFFFFFF) == 7);
-static_assert(u32_num_digits_r16(0xFFFFFF) == 6);
-static_assert(u32_num_digits_r16(0xFFFFF) == 5);
-static_assert(u32_num_digits_r16(0xFFFF) == 4);
-
-
-// 测试用例
-static_assert(_u32_num_digits_r8(0xFFFFFFFF) == 11);  // 37777777777 (32位全1，11位八进制)
-static_assert(_u32_num_digits_r8(077777777) == 8);    // 8位八进制
-static_assert(_u32_num_digits_r8(0777777) == 6);      // 6位八进制
-static_assert(_u32_num_digits_r8(07777) == 4);        // 4位八进制
-static_assert(_u32_num_digits_r8(077) == 2);          // 2位八进制
-static_assert(_u32_num_digits_r8(07) == 1);           // 1位八进制
-static_assert(_u32_num_digits_r8(0) == 1);            // 0特殊处理
-
-
-
-static_assert(u32_num_digits_r16(0xFFFFFFFF) == 8);
-static_assert(u32_num_digits_r16(0xFFFFFFF) == 7);
-static_assert(u32_num_digits_r16(0xFFFFFF) == 6);
-static_assert(u32_num_digits_r16(0xFFFFF) == 5);
-static_assert(u32_num_digits_r16(0xFFFF) == 4);
-
-
-static_assert(_div_100000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 100000);
-static_assert(_div_100000(uint32_t(100000)) == 1);
-
-static_assert(sizeof(uint32_t) == 4);
-
-static_assert(_dump_from_unsigned_fixed((114514) << 10, 4, 10).digit_part == 114514);
-static_assert(_dump_from_unsigned_fixed((114514) << 10, 4, 10).frac_part == 0);
-
-static_assert(_dump_from_unsigned_fixed((114514) << 1, 4, 1).digit_part == 114514);
-static_assert(_dump_from_unsigned_fixed((114514) << 1, 4, 1).frac_part == 0);
-
-static_assert(_dump_from_unsigned_fixed(0xffff0000, 4, 32).digit_part == 1);
-static_assert(_dump_from_unsigned_fixed(0xffff0000, 4, 32).frac_part == 0);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).digit_minor_number == 9);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).frac_part == 999);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).exponent == -1);
-
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).exponent == 0);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).digit_minor_number == 5);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).frac_part == 999);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).exponent == -1);
-
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).digit_minor_number == 6);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).exponent == -1);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).exponent == -1);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).exponent == 1);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).frac_part == 2500);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).exponent == -1);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).frac_part == 1250);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).exponent == 0);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).digit_minor_number == 9);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).frac_part == 1951);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).exponent == 2);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).frac_part == 1451);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).exponent == 4);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).frac_part == 1451);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).exponent == 2);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).frac_part == 14500);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).exponent == -2);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).frac_part == 1450);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).exponent == -2);
-
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).frac_part == 9190);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).exponent == -3);
-
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).digit_minor_number == 2);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).exponent == 0);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).exponent == 0);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).exponent == 1);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((2.5555555) * (1u << 24)), 3, 24).digit_minor_number == 2);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((2.5555555) * (1u << 24)), 3, 24).frac_part == 556);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).exponent == -2);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).digit_minor_number == 1);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).frac_part == 1452);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).exponent == 4);
-
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).digit_minor_number == 6);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).frac_part == 0);
-static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).exponent == -1);
-
-
-[[maybe_unused]] void test_fmt_u8(){
-    {
-        constexpr auto buf = []{
-            std::array<char, 32> ret;
-            (void)_fmtnum_u32_r16(ret.data(), 0x5a, 2);
-            return ret;
-        }();
-
-        static_assert(buf[0] == '5');
-        static_assert(buf[1] == 'A');
-    }
-
-    {
-        constexpr auto buf = []{
-            std::array<char, 32> ret;
-            (void)_fmtnum_u32_r2(ret.data(), 0x5a, 8);
-            return ret;
-        }();
-
-        static_assert(buf[0] == '0');
-        static_assert(buf[1] == '1');
-        static_assert(buf[2] == '0');
-        static_assert(buf[3] == '1');
-        static_assert(buf[4] == '1');
-        static_assert(buf[5] == '0');
-        static_assert(buf[6] == '1');
-        static_assert(buf[7] == '0');
-    }
-}
-}

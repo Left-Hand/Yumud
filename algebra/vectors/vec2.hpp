@@ -133,42 +133,42 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         return *(&this->x + idx);
     }
 
-    [[nodiscard]] constexpr const T & operator [](const size_t idx) const {
+    [[nodiscard]] constexpr const T & operator [](const size_t idx) const noexcept {
         return *(&this->x + idx);
     }
 
-    [[nodiscard]] constexpr UnitVec2<T> normalized() const{
+    [[nodiscard]] constexpr UnitVec2<T> normalized() const noexcept {
         static_assert(not std::is_integral_v<T>);
         const auto ilen = this->inv_length();
         return UnitVec2<T>(x * ilen, y * ilen);
     }
 
-    [[nodiscard]] constexpr T cross(const Vec2<T> & other) const{
+    [[nodiscard]] constexpr T cross(const Vec2<T> & other) const noexcept {
         return (x*other.y - y*other.x);
     }
 
     template<typename U>
     [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
-    is_clockwise_to(const Vec2<U> & other) const {
+    is_clockwise_to(const Vec2<U> & other) const noexcept {
         return (x*other.y > y*other.x);
     }
     
     template<typename U>
     [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
-    is_counter_clockwise_to(const Vec2<U> & other) const{
+    is_counter_clockwise_to(const Vec2<U> & other) const noexcept {
         return (x*other.y < y*other.x);
     }
 
-    [[nodiscard]] constexpr T dot(const Vec2<T> & other) const{
+    [[nodiscard]] constexpr T dot(const Vec2<T> & other) const noexcept {
         return (x*other.x + y*other.y);
     }
 
-    [[nodiscard]] constexpr T dot(const UnitVec2<T> & other) const{
+    [[nodiscard]] constexpr T dot(const UnitVec2<T> & other) const noexcept {
         return dot(Vec2<T>(other));
     }
 
     template<typename U>
-    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<U> & b) const{
+    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<U> & b) const noexcept {
         return Vec2<T>(
             static_cast<T>(x*b.x - y*b.y), 
             static_cast<T>(x*b.y + y*b.x)
@@ -176,7 +176,7 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angular<U> angle)const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angular<U> angle) const noexcept {
         static_assert(not std::is_integral_v<U>);
         const auto [_s,_c] = angle.sincos();
         const auto s = static_cast<T>(_s);
@@ -192,18 +192,18 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
 
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_x(const U & v) const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_x(const U & v) const noexcept {
         return {x + v, y};
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_y(const U & v) const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_y(const U & v) const noexcept {
         return {x, y + v};
     }
 
-    [[nodiscard]] constexpr Angular<T> angle() const {
+    [[nodiscard]] constexpr Angular<T> angle() const noexcept {
             return Angular<T>::from_turns(math::atan2pu(y, x));}
-	[[nodiscard]] constexpr Angular<T> angle_between(const Vec2<T> & b) const {
+	[[nodiscard]] constexpr Angular<T> angle_between(const Vec2<T> & b) const noexcept {
         const auto & a = *this;
 
         const T angle_a = math::atan2(a.y, a.x);
@@ -217,34 +217,34 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         return Angular<T>::from_radians(diff);
     }
 
-    [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
+    [[nodiscard]] constexpr T aspect() const noexcept {return (!!y) ? x/y : T(0);}
     [[nodiscard]] constexpr Vec2<T> bounce(const Vec2<T> & n) const;
 
     template<typename U = T>
-    [[nodiscard]] constexpr Vec2<U> ceil() const{
+    [[nodiscard]] constexpr Vec2<U> ceil() const noexcept {
         return Vec2<U>{math::ceil_cast<U>(x), math::ceil_cast<U>(y)};
     }
 
     template<typename U = T>
 
-    [[nodiscard]] constexpr Vec2<U> floor() const{
+    [[nodiscard]] constexpr Vec2<U> floor() const noexcept {
         return Vec2<U>{math::floor_cast<U>(x), math::floor_cast<U>(y)};
     }
 
     template<typename U = T>
-    [[nodiscard]] constexpr Vec2<U> round() const{
+    [[nodiscard]] constexpr Vec2<U> round() const noexcept {
         return Vec2<U>{round_cast<U>(x), round_cast<U>(y)};
     }
 
     template<typename U>
-    [[nodiscard]] constexpr Vec2<T> clampmin(const U & _length) const{
+    [[nodiscard]] constexpr Vec2<T> clampmin(const U & _length) const noexcept {
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
     }
 
     template<typename U>
-    [[nodiscard]] constexpr Vec2<T> clampmax(const U & _length) const{
+    [[nodiscard]] constexpr Vec2<T> clampmax(const U & _length) const noexcept {
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l >= length ? (this->normalized() * length) : *this);
@@ -256,16 +256,16 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     [[nodiscard]] constexpr T dist_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_squared_to(const Vec2<T> & b) const;
 
-    [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & other, const T epsilon) const{
+    [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & other, const T epsilon) const noexcept {
         return math::is_equal_approx(x, other.x, epsilon) && math::is_equal_approx(y, other.y, epsilon);
     }
-    [[nodiscard]] constexpr T manhattan_distance()const{
+    [[nodiscard]] constexpr T manhattan_distance() const noexcept {
         return ABS(x) + ABS(y);
     }
 
 
     template<typename U>
-    [[nodiscard]] constexpr bool has_point(const Vec2<U> & _v)const{
+    [[nodiscard]] constexpr bool has_point(const Vec2<U> & _v) const noexcept {
         bool ret = true;
         Vec2<T> v = _v;
 
@@ -276,17 +276,17 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
 
         return ret;
     }
-    [[nodiscard]] constexpr bool is_normalized() const {
+    [[nodiscard]] constexpr bool is_normalized() const noexcept {
             return (math::abs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
-    [[nodiscard]] constexpr T length() const {
+    [[nodiscard]] constexpr T length() const noexcept {
         return math::mag(x,y);
     }
 
-    [[nodiscard]] constexpr T inv_length() const {
+    [[nodiscard]] constexpr T inv_length() const noexcept {
         return math::inv_mag(x,y);
     }
     
-    [[nodiscard]] constexpr T length_squared() const {return (x*x + y*y);}
+    [[nodiscard]] constexpr T length_squared() const noexcept {return (x*x + y*y);}
     
     [[nodiscard]] __fast_inline constexpr Vec2<T> lerp(const Vec2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> move_toward(const Vec2<T> & to, const T delta) const;
@@ -303,20 +303,20 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> slerp(const Vec2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slide(const Vec2<T>  & n) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> snapped(const Vec2<T> & by) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> forward_90deg() const {return Vec2<T>(-y, x);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> backward_90deg() const {return Vec2<T>(y, -x);}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> forward_90deg() const noexcept {return Vec2<T>(-y, x);}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> backward_90deg() const noexcept {return Vec2<T>(y, -x);}
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const noexcept {
         static_assert(std::is_signed_v<T>);
         return {x,static_cast<T>(-y)};
     }
     
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const noexcept {
         static_assert(std::is_signed_v<T>);
         return {static_cast<T>(-x),y};
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> swap_xy() const {return {y,x};}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> swap_xy() const noexcept {return {y,x};}
 
     template<typename U>
     __fast_inline constexpr Vec2<T> & operator=(const Vec2<U> & b){
@@ -339,7 +339,7 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         return *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator-() const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator-() const noexcept {
         return Vec2<T> {-x, -y};
     }
 
@@ -365,13 +365,13 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const U n) const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const U n) const noexcept {
         Vec2<T> ret = *this;
         return ret *= n;
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const U n) const{
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const U n) const noexcept {
         Vec2<T> ret = *this;
         return ret /= n;
     }
@@ -386,24 +386,24 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
 
 
     [[nodiscard]]
-    constexpr math::Matrix<T, 1, 2> to_matrix() const{
+    constexpr math::Matrix<T, 1, 2> to_matrix() const noexcept {
         return Matrix<T, 1, 2>(x,y);
     }
 
 
-    [[nodiscard]] __fast_inline constexpr T x_mul_y() const {
+    [[nodiscard]] __fast_inline constexpr T x_mul_y() const noexcept {
         return x * y;
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> overlap_as_rect(const Vec2<T> & other) const {
+    [[nodiscard]] __fast_inline constexpr Rect2<T> overlap_as_rect(const Vec2<T> & other) const noexcept {
         return Rect2<T>({0,0}, {MIN(x, other.x), MIN(y, other.y)});
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> overlap_as_vec2(const Vec2<T> & other) const {
+    [[nodiscard]] __fast_inline constexpr Vec2<T> overlap_as_vec2(const Vec2<T> & other) const noexcept {
         return {MIN(x, other.x), MIN(y, other.y)};
     }
 
-    [[nodiscard]] __fast_inline constexpr std::array<T, 2> to_array() const {
+    [[nodiscard]] __fast_inline constexpr std::array<T, 2> to_array() const noexcept {
         return {x, y};
     }
 
@@ -432,14 +432,14 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     }
     
     template<std::size_t I>
-    constexpr const auto& get() const{
+    constexpr const auto& get() const noexcept {
         if constexpr (I == 0) return x;
         else if constexpr (I == 1) return y;
     }
 private:
 
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("x")(self.x) << os.splitter()
             << os.field("y")(self.y)
@@ -479,14 +479,14 @@ namespace ymd::math{
 
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::abs() const{
+constexpr Vec2<T> Vec2<T>::abs() const noexcept {
     return Vec2<T>(math::abs(x), math::abs(y));
 }
 
 
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {
+constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const noexcept {
     T min = static_cast<T>(_min);
     T max = static_cast<T>(_max);
     T l = this->length();
@@ -500,59 +500,59 @@ constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::dir_to(const Vec2<T> & b) const{
+constexpr Vec2<T> Vec2<T>::dir_to(const Vec2<T> & b) const noexcept {
     return (b - *this).normalized();
 }
 
 template<typename T>
-constexpr T Vec2<T>::dist_to(const Vec2<T> & b) const{
+constexpr T Vec2<T>::dist_to(const Vec2<T> & b) const noexcept {
     return (b - *this).length();
 }
 
 template<typename T>
-constexpr T Vec2<T>::dist_squared_to(const Vec2<T> & b) const{
+constexpr T Vec2<T>::dist_squared_to(const Vec2<T> & b) const noexcept {
     return (b - *this).length_squared();
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::reflect(const Vec2<T> & n) const {
+constexpr Vec2<T> Vec2<T>::reflect(const Vec2<T> & n) const noexcept {
     return 2 * n * this->dot(n) - *this;
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::bounce(const Vec2<T> & n) const {
+constexpr Vec2<T> Vec2<T>::bounce(const Vec2<T> & n) const noexcept {
     return -reflect(n);
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const{
+constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const noexcept {
     static_assert(not std::is_integral_v<T>);
     return *this * (static_cast<T>(1)-_t)+b * _t;
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::slerp(const Vec2<T> & b, const T _t) const{
+constexpr Vec2<T> Vec2<T>::slerp(const Vec2<T> & b, const T _t) const noexcept {
     static_assert(not std::is_integral_v<T>);
     return lerp(b, sin(static_cast<T>(M_PI / 2) * _t));
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::posmod(const T & mod) const{
+constexpr Vec2<T> Vec2<T>::posmod(const T & mod) const noexcept {
     return Vec2<T>( fmod(x, mod), fmod(y, mod));
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::posmodv(const Vec2<T> & b) const{
+constexpr Vec2<T> Vec2<T>::posmodv(const Vec2<T> & b) const noexcept {
     return Vec2<T>(fmod(x, b.x), fmod(y, b.y));
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::project(const Vec2<T> & b) const{
+constexpr Vec2<T> Vec2<T>::project(const Vec2<T> & b) const noexcept {
     return (this->dot(b)) * b / b.length_squared();
 }
 
 template<typename T>
-constexpr T Vec2<T>::project(const T & rad) const{
+constexpr T Vec2<T>::project(const T & rad) const noexcept {
     const auto [s,c] = sincos(rad);
     return (this->x) * c + (this->y) * s;
 
@@ -561,7 +561,7 @@ constexpr T Vec2<T>::project(const T & rad) const{
 
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
+constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const noexcept {
     if (!is_equal_approx(b, static_cast<T>(0.0001))){
         Vec2<T> d = b - *this;
         return *this + d.clampmax(delta);
@@ -570,17 +570,17 @@ constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::slide(const Vec2<T> & n) const {
+constexpr Vec2<T> Vec2<T>::slide(const Vec2<T> & n) const noexcept {
     return *this - n * this->dot(n);
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::sign() const{
+constexpr Vec2<T> Vec2<T>::sign() const noexcept {
     return Vec2<T>(sign(x), sign(y));
 }
 
 template<typename T>
-constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const{
+constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const noexcept {
     return Vec2<T>(snap(x, by.x), snap(y, by.y));
 }
 

@@ -83,17 +83,17 @@ struct [[nodiscard]] alignas(4) Packet final{
         return Packet::from_u8u16(0, 0);
     }
 
-    __inline constexpr IResult<> validate_fast() const {
+    __inline constexpr IResult<> validate_fast() const noexcept {
         return Ok();
     }
 
-    __inline constexpr IResult<> validate() const {
+    __inline constexpr IResult<> validate() const noexcept {
         if(is_crc_valid() == false) return Err(Error::InvalidCrc);
         return Ok();
     }
 
 private:
-    [[nodiscard]] constexpr bool is_crc_valid() const{
+    [[nodiscard]] constexpr bool is_crc_valid() const noexcept {
         //TODO 添加crc校验算法
         return true;
     }

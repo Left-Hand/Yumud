@@ -39,8 +39,8 @@ protected:
     MMC5603_Regset regs_ = {};  
 
 
-    IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
+    IResult<> read_bulk(const RegAddr addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -131,7 +131,7 @@ namespace policy{
 // }
 
 // template<typename NewUnit>
-// constexpr NewUnit convert() const {
+// constexpr NewUnit convert() const noexcept {
 //     static_assert(std::is_same_v<TPolicy, NewUnit::TPolicy>,
 //         "Cannot convert between different dimension units");
 //     using conv_ratio = std::ratio_divide<ratio, typename NewUnit::ratio>;
@@ -165,13 +165,13 @@ public:
 
     
     template<typename TPolicy2, typename TRatio2>
-    constexpr auto operator * (const Quantity<TPolicy2, T, TRatio2> & other) const{
+    constexpr auto operator * (const Quantity<TPolicy2, T, TRatio2> & other) const noexcept {
         using Ret = Quantity<typename TPolicy::mul_with<TPolicy2>, T, std::ratio_multiply<TRatio, TRatio2>>;
         return Ret(value_ * other.value_);
     }
 
     template<typename TPolicy2, typename TRatio2>
-    constexpr auto operator / (const Quantity<TPolicy2, T, TRatio2> & other) const{
+    constexpr auto operator / (const Quantity<TPolicy2, T, TRatio2> & other) const noexcept {
         using Ret = Quantity<typename TPolicy::div_with<TPolicy2>, T, std::ratio_divide<TRatio, TRatio2>>;
         return Ret(value_ / other.value_);
     }
@@ -186,24 +186,24 @@ public:
 
     
     template<typename TRatio2>
-    constexpr auto operator + (const Quantity<TPolicy, T, TRatio2> & other) const{
+    constexpr auto operator + (const Quantity<TPolicy, T, TRatio2> & other) const noexcept {
         return add_sub_impl([](auto v1, auto v2){return v1 + v2;},other);
     }
 
     template<typename TRatio2>
-    constexpr auto operator - (const Quantity<TPolicy, T, TRatio2> & other) const{
+    constexpr auto operator - (const Quantity<TPolicy, T, TRatio2> & other) const noexcept {
         return add_sub_impl([](auto v1, auto v2){return v1 - v2;},other);
     }
 
 
-    constexpr T count() const {return value_;}
+    constexpr T count() const noexcept {return value_;}
 
 public:
     T value_;
 
 private:
     template<typename Fn, typename TRatio2>
-    constexpr auto add_sub_impl(Fn && fn, const Quantity<TPolicy, T, TRatio2> & other) const{
+    constexpr auto add_sub_impl(Fn && fn, const Quantity<TPolicy, T, TRatio2> & other) const noexcept {
         using scaler = std::ratio_divide<TRatio2, TRatio>;
         using Ret = Quantity<TPolicy, T, TRatio>;
         constexpr auto scale = static_cast<T>(scaler::num) / scaler::den; 

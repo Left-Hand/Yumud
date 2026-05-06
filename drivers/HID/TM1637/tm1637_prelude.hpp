@@ -59,7 +59,7 @@ struct _TM1637_Prelude{
             else return Some(PulseWidth(duty2kind(dutycycle)));
         }
 
-        constexpr auto kind() const { return kind_; }
+        constexpr auto kind() const noexcept { return kind_; }
     private:
         Kind kind_;
 
@@ -87,7 +87,7 @@ struct _TM1637_Prelude{
         uint8_t addr_inc_disen:1;
         const uint8_t __resv2__:5 = 0b01000;
 
-        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const noexcept {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DataCommand) == 1);
@@ -96,7 +96,7 @@ struct _TM1637_Prelude{
         uint8_t addr:3;
         const uint8_t __resv2__:5 = 0b11000;
 
-        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const noexcept {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(AddressCommand) == 1);
@@ -106,7 +106,7 @@ struct _TM1637_Prelude{
         uint8_t display_en:1;
         const uint8_t __resv2__:4 = 0b1000;
 
-        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const noexcept {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
@@ -127,7 +127,7 @@ public:
     public:
         Iterator(DisplayBuf& owner, size_t index) : owner_(owner), index_(index) {}
 
-        Element operator*() const {
+        Element operator*() const noexcept {
             return {owner_.buf_[index_], owner_.buf_[index_] != owner_.last_buf_[index_]};
         }
 
@@ -136,7 +136,7 @@ public:
             return *this;
         }
 
-        bool operator!=(const Iterator& other) const {
+        bool operator!=(const Iterator& other) const noexcept {
             return index_ != other.index_;
         }
 
@@ -164,7 +164,7 @@ public:
         }
     }
 
-    T get(size_t index) const {
+    T get(size_t index) const noexcept {
         if (index < N) {
             return buf_[index];
         }
@@ -175,11 +175,11 @@ public:
         last_buf_ = buf_;
     }
 
-    bool changed() const {
+    bool changed() const noexcept {
         return last_buf_ != buf_;
     }
 
-    std::span<const T, N> to_span() const {
+    std::span<const T, N> to_span() const noexcept {
         return std::span<const T, N>(buf_);
     }
 private:

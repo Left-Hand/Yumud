@@ -14,6 +14,8 @@ namespace ymd::drivers::alx_aoa{
 static constexpr uint32_t DEFAULT_UART_BAUD = 115200;
 static constexpr uint16_t PROTOCOL_VERSION = 0x0100;
 static constexpr size_t HEADER_SIZE = 6; //4 bytes(header) + 2 bytes(len)
+
+
 enum class [[nodiscard]] Error:uint8_t{
     InvalidCommand,
     InvalidProtocolVersion,
@@ -39,7 +41,7 @@ struct [[nodiscard]] TargetDistanceCode final{
     uint32_t bits;
 
     template<typename T> 
-    [[nodiscard]] constexpr T to_meters() const{
+    [[nodiscard]] constexpr T to_meters() const noexcept {
         return T(bits) * static_cast<T>(1.0 / 100);
     }
     static constexpr Self from_bits(const uint32_t bits){
@@ -55,7 +57,7 @@ struct [[nodiscard]] TargetAngleCode final{
     int16_t bits;
 
     template<typename T>
-    [[nodiscard]] constexpr Angular<T> to_angle() const{
+    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
         return Angular<T>::from_degrees(bits);
     }
 
@@ -89,7 +91,7 @@ struct [[nodiscard]] Location final{
     TargetAngleCode elevation_code;
 
     template<typename T>
-    constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const{
+    constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const noexcept {
         return math::SphericalCoordinates<T>{
             distance_code.to_meters<T>(),
             azimuth_code.to_angle<T>(), 
@@ -124,52 +126,5 @@ struct [[nodiscard]] HeaderInfo final{
     uint16_t command;
 };
 
-class AlxAoa_ParseReceiver final{
-public:
-    enum class FsmState:uint8_t{
-        Header0,
-        Header1,
-        Header2,
-        Header3,
-        WaitingLen0,
-        WaitingLen1,
-        Remaining
-    };
-
-    explicit AlxAoa_ParseReceiver(Callback callback):
-        callback_(callback)
-    {
-        reset();
-    }
-
-    void push_bytes(const std::span<const uint8_t> bytes){
-        for(const auto byte : bytes){
-            push_byte(byte);
-        }
-    }
-
-    void push_byte(const uint8_t byte);
-    void flush();
-
-    void reset(){
-        payload_bytes_.clear();
-        fsm_state_ = FsmState::Header0;
-    }
-private:
-    static constexpr size_t MAX_PAYLOAD_SIZE = 32;
-
-
-    friend OutputStream & operator <<(OutputStream & os, const AlxAoa_ParseReceiver::FsmState & prog);
-
-    Result<Event, Error> parse();
-
-    HeaplessVector<uint8_t, MAX_PAYLOAD_SIZE> payload_bytes_ = {};
-    
-    volatile FsmState fsm_state_ = FsmState::Header0;
-    Callback callback_ = nullptr;
-
-    HeaderInfo header_info_ = {};
-
-};
 
 }

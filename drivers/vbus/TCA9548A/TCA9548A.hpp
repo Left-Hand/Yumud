@@ -53,7 +53,7 @@ public:
         return v_i2cs_[ch];
     }
 
-    auto which() const {return last_ch_;}
+    auto which() const noexcept {return last_ch_;}
 
     hal::HalResult validate() {
         return self_i2c_drv_.validate();

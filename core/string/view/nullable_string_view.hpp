@@ -44,25 +44,25 @@ struct NullableStringView{
         data_(other.data_),
         size_(other.size_){}
 
-    constexpr bool is_null() const{return size_==0;}
-    constexpr bool is_none() const{return size_==0;}
-    constexpr bool is_some() const{return size_!=0;}
+    constexpr bool is_null() const noexcept {return size_==0;}
+    constexpr bool is_none() const noexcept {return size_==0;}
+    constexpr bool is_some() const noexcept {return size_!=0;}
 
-    constexpr StringView unwrap_or(const StringView default_str) const{
+    constexpr StringView unwrap_or(const StringView default_str) const noexcept {
         if(unlikely(size_ == 0)) return default_str;
         return unwrap();
     }
 
-    constexpr StringView unwrap() const{
+    constexpr StringView unwrap() const noexcept {
         if(unlikely(size_ == 0)) __builtin_trap();
         return StringView(data_, size_);
     }
 
-    constexpr StringView unwrap_unchecked() const{
+    constexpr StringView unwrap_unchecked() const noexcept {
         return StringView(data_, size_);
     }
 
-    constexpr size_t length() const{
+    constexpr size_t length() const noexcept {
         return size_;
     }
 

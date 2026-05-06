@@ -21,7 +21,7 @@ class SecondOrderLPF  {
         zeta = zeta_;
     }
 
-    constexpr std::array<T,2> deriv(T x1_, T x2_, T u) const {
+    constexpr std::array<T,2> deriv(T x1_, T x2_, T u) const noexcept {
         const T dx1 = x2_;
         const T dx2 = -wc*wc*x1_ - 2.0*zeta*wc*x2_ + wc*wc*u;
         return {dx1, dx2};

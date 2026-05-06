@@ -13,7 +13,7 @@ struct [[nodiscard]] ExpeditedRequest{
     NodeId client_nodeid;
     SdoExpeditedContext context;
 
-    [[nodiscard]] constexpr CanFrame to_can_frame() const {
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
         return context.to_can_frame(client_nodeid.with_func_code(FunctionCode::ReqSdo));
     }
 };
@@ -22,7 +22,7 @@ struct [[nodiscard]] ExpeditedResponse{
     NodeId server_nodeid;
     SdoExpeditedContext context;
 
-    [[nodiscard]] constexpr CanFrame to_can_frame() const {
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
         return context.to_can_frame(server_nodeid.with_func_code(FunctionCode::RespSdo));
     }
 };
@@ -34,7 +34,7 @@ namespace ymd::canopen::msg_serde{
 template<>
 struct MsgSerde<sdo_msgs::ExpeditedResponse>{
     using Self = sdo_msgs::ExpeditedResponse;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
         return self.to_can_frame();
     }
 
@@ -60,7 +60,7 @@ struct MsgSerde<sdo_msgs::ExpeditedResponse>{
 template<>
 struct MsgSerde<sdo_msgs::ExpeditedRequest>{
     using Self = sdo_msgs::ExpeditedRequest;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
         return self.to_can_frame();
     }
 

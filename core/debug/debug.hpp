@@ -117,7 +117,7 @@ public:
             PANIC<Args ...>(std::forward<Args>(args)..., loc);
 		}
 	}
-	constexpr operator bool() const {return is_ok_;}
+	constexpr operator bool() const noexcept {return is_ok_;}
 };
 
 template <typename Texpr, typename... Args>

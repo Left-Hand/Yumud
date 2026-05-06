@@ -59,11 +59,11 @@ struct INA219_Prelude{
         //lsb is 4mv
         uint16_t bits;
 
-        constexpr uint32_t to_mv() const{
+        constexpr uint32_t to_mv() const noexcept {
             return bits * 4;
         }
 
-        constexpr uq16 to_volts() const{
+        constexpr uq16 to_volts() const noexcept {
             constexpr size_t SHIFTS = 25;
             constexpr uint32_t RATIO = (1u << SHIFTS) * 4 / 1000;
             static_assert(RATIO < (1u << (16 + 3)));
@@ -77,15 +77,15 @@ struct INA219_Prelude{
         //10uv lsb
         int16_t bits;
 
-        [[nodiscard]] constexpr int32_t to_uv() const{
+        [[nodiscard]] constexpr int32_t to_uv() const noexcept {
             return int32_t(bits) * 10;
         }
 
-        [[nodiscard]] constexpr int32_t to_mv() const{
+        [[nodiscard]] constexpr int32_t to_mv() const noexcept {
             return int32_t(bits) / 100;
         }
 
-        [[nodiscard]] constexpr iq31 to_volts() const{
+        [[nodiscard]] constexpr iq31 to_volts() const noexcept {
             constexpr uint32_t RATIO = (1ull << 48) * (10 * 1E-6);
             return iq31::from_bits((static_cast<int64_t>(bits) * RATIO) >> 17);
         }
@@ -139,7 +139,7 @@ struct INA219_Regs:public INA219_Prelude{
         uint16_t __resv__:1;
         uint16_t bd:13;
 
-        constexpr BusVoltageCode volt_code() const{
+        constexpr BusVoltageCode volt_code() const noexcept {
             return BusVoltageCode{bd};
         }
     }DEF_R16(bus_volt_reg)

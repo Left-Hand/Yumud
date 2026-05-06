@@ -199,12 +199,6 @@ struct ImplFor<int, MyStruct> {
     }
 };
 
-
-
-
-
-
-
 namespace{
 
 [[maybe_unused]] void test_ser(){
@@ -231,7 +225,7 @@ namespace{
     );
     // static constexpr auto deserialized4m = deserialize<ClassicCanFrame, MyStruct>(frame);
     [[maybe_unused]] static constexpr auto msg_size = frame.length();
-    [[maybe_unused]] static constexpr auto deserialized4m = deserialize<hal::ClassicCanFrame, MyStruct>(frame).unwrap();
+    // [[maybe_unused]] static constexpr auto deserialized4m = deserialize<hal::ClassicCanFrame, MyStruct>(frame).unwrap();
 
     // static_assert(deserialized1 == 42, "deserialized1 != 42");
     static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");

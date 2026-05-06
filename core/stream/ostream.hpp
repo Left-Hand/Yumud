@@ -19,7 +19,7 @@
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/fixed/fixed.hpp"
-
+#include "core/string/conv/fmtnum/prelude.hpp"
 
 namespace std{
 
@@ -101,11 +101,8 @@ public:
 
 class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
-    struct alignas(16) [[nodiscard]] Config{
-
-        using Self = Config;
-
-        struct Specifier{
+    struct alignas(4) [[nodiscard]] Config final{
+        struct [[nodiscard]] Specifier final{
             uint16_t boolalpha:1;
             uint16_t showpos:1;
             uint16_t showbase:1;
@@ -132,8 +129,8 @@ public:
             Specifier specifier;
         };
 
-        static constexpr Self from_default(){
-            return Self{
+        static constexpr Config from_default(){
+            return Config{
                 .splitter_chars = {',', ' ', '\0', '\0'},
                 .splitter_len = 2,
                 .radix = 10,
@@ -144,6 +141,63 @@ public:
                 .specifier_bits = 0
             };
         }
+
+        [[nodiscard]] std::span<const uint8_t> splitter_byte() const noexcept {
+            return {
+                reinterpret_cast<const uint8_t *>(this->splitter_chars), 
+                this->splitter_len
+            };
+        }
+
+
+        void set_splitter(const char * splitter){
+            std::fill_n(this->splitter_chars, 4, 0);
+
+            size_t i = 0;
+            for(;i < 4 && splitter[i] != '\0'; ++i) {
+                this->splitter_chars[i] = splitter[i];
+            }
+            this->splitter_len = static_cast<uint8_t>(i);
+        }
+
+        void set_splitter(const char splitter){
+            std::fill_n(this->splitter_chars, 4, 0);
+            this->splitter_chars[0] = splitter;
+            this->splitter_len = (splitter == '\0');
+        }
+
+        void set_radix(const uint8_t radix_){
+            this->radix = radix_;
+        }
+
+        void set_indent(const uint8_t indent_){
+            this->indent = indent_;
+        }
+
+        void set_eps(const uint8_t eps_){
+            this->eps = eps_;
+        }
+
+        void no_brackets(const Enable en){
+            this->specifier.no_brackets = bool(en == EN);
+        }
+
+        void no_scoped(const Enable en){
+            this->specifier.no_scoped = bool(en == EN);
+        }
+
+        void no_fieldname(const Enable en){
+            this->specifier.no_fieldname = bool(en == EN);
+        }
+
+        void force_sync(const Enable en){
+            this->specifier.force_sync = bool(en == EN);
+        }
+
+        void no_space(const Enable en){
+            this->specifier.no_space = bool(en == EN);
+        }
+
     };
 private:
 
@@ -166,70 +220,14 @@ public:
 
     void write_bytes(std::span<const uint8_t> bytes);
 
-    OutputStream & set_splitter(const char * splitter){
-        std::fill_n(config_.splitter_chars, 4, 0);
+    //write null-terminated chars
+    void write_nt_chars(const char * p_str);
 
-        size_t i = 0;
-        for(;i < 4 && splitter[i] != '\0'; ++i) {
-            config_.splitter_chars[i] = splitter[i];
-        }
-        config_.splitter_len = static_cast<uint8_t>(i);
-        return *this;
-    }
-
-    OutputStream & set_splitter(const char splitter){
-        std::fill_n(config_.splitter_chars, 4, 0);
-        config_.splitter_chars[0] = splitter;
-        config_.splitter_len = (splitter == '\0');
-        return *this;
-    }
-
-    OutputStream & set_radix(const uint8_t radix){
-        config_.radix = radix;
-        return *this;
-    }
-
-    OutputStream & set_indent(const uint8_t indent){
-        config_.indent = indent;
-        return *this;
-    }
-
-    [[nodiscard]] uint8_t indent() const{
+    [[nodiscard]] uint8_t indent() const noexcept {
         return config_.indent;
     }
 
-    OutputStream & set_eps(const uint8_t eps){
-        config_.eps = eps;
-        return *this;
-    }
-
-    OutputStream & no_brackets(const Enable en){
-        config_.specifier.no_brackets = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_scoped(const Enable en){
-        config_.specifier.no_scoped = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_fieldname(const Enable en){
-        config_.specifier.no_fieldname = bool(en == EN);
-        return *this;
-    }
-    OutputStream & force_sync(const Enable en){
-        config_.specifier.force_sync = bool(en == EN);
-        return *this;
-    }
-
-    OutputStream & no_space(const Enable en){
-        config_.specifier.no_space = bool(en == EN);
-        return *this;
-    }
-
-
     OutputStream & operator<<(const bool val);
-    OutputStream & operator<<(const uint8_t val);
 
     __inline OutputStream & operator<<(const char chr){
         write_byte(chr); return *this;}
@@ -351,11 +349,8 @@ public:
 
     //#region print integer
 private:
-    void print_u32(const uint32_t i_val);
-    void print_i32(const int32_t i_val);
-    void print_u64(const uint64_t i_val);
-    void print_i64(const int64_t i_val);
-
+    void print_int32(const uint32_t int_val, const str::IntTypeErased type);
+    void print_int64(const uint64_t int_val, const str::IntTypeErased type);
 
 
     void print_iq32(const int32_t bits, const uint32_t Q);
@@ -375,21 +370,14 @@ public:
         return *this;
     }
 
+
     template<typename T>
     requires (std::is_integral_v<T> and (sizeof(T) <= 8))
-    OutputStream & operator<<(const T val){
+    OutputStream & operator<<(const T int_val){
         if constexpr(sizeof(T) <= 4){
-            if constexpr (std::is_signed_v<T>){
-                print_i32(int32_t(val));
-            }else{
-                print_u32(uint32_t(val));
-            }
+            print_int32(static_cast<uint32_t>(int_val), str::IntTypeErased::from<T>());
         }else if constexpr(sizeof(T) <= 8){
-            if constexpr (std::is_signed_v<T>){
-                print_i64(int64_t(val));
-            }else{
-                print_u64(uint64_t(val));
-            }
+            print_int64(static_cast<uint64_t>(int_val), str::IntTypeErased::from<T>());
         }
         return *this;
     }
@@ -600,8 +588,8 @@ public:
         return *this;
     }
 
-    [[nodiscard]] __attribute__((const)) constexpr auto eps() const {return config_.eps;}
-    [[nodiscard]] __attribute__((const)) constexpr auto radix() const {return config_.radix;}
+    [[nodiscard]] __attribute__((const)) constexpr auto eps() const noexcept {return config_.eps;}
+    [[nodiscard]] __attribute__((const)) constexpr auto radix() const noexcept {return config_.radix;}
 
 
     [[nodiscard]] __attribute__((const))
@@ -684,15 +672,12 @@ public:
 
     OutputStream & flush();
 
-
-    
-    inline OutputStream & reconf(Config && config){
+    inline OutputStream & reconf(const Config & config){
         config_ = config;
         return *this;
     }
 
-    
-    inline const Config & config() const {return config_;}
+    inline const Config & config() const noexcept {return config_;}
 
     class [[nodiscard]] ConfigGuard{
         OutputStream & os_;
@@ -702,22 +687,94 @@ public:
         
         inline ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
 
-        inline constexpr const Config & config() const {return config_;}
+        inline constexpr const Config & config() const noexcept {return config_;}
         inline ~ConfigGuard(){
             os_.reconf(std::move(config_));
         }
     };
 
-    
+    struct [[nodiscard]] ConfigBuilder final{
+        OutputStream & self;
+        Config config;
+
+        inline ConfigBuilder(OutputStream & os) : self(os), config(os.config()){}
+
+        ConfigBuilder & set_splitter(const char * splitter){
+            std::fill_n(config.splitter_chars, 4, 0);
+
+            size_t i = 0;
+            for(;i < 4 && splitter[i] != '\0'; ++i) {
+                config.splitter_chars[i] = splitter[i];
+            }
+            config.splitter_len = static_cast<uint8_t>(i);
+            return *this;
+        }
+
+        ConfigBuilder & set_splitter(const char splitter){
+            std::fill_n(config.splitter_chars, 4, 0);
+            config.splitter_chars[0] = splitter;
+            config.splitter_len = (splitter == '\0');
+            return *this;
+        }
+
+        ConfigBuilder & set_radix(const uint8_t radix){
+            config.radix = radix;
+            return *this;
+        }
+
+        ConfigBuilder & set_indent(const uint8_t indent){
+            config.indent = indent;
+            return *this;
+        }
+
+        ConfigBuilder & set_eps(const uint8_t eps){
+            config.eps = eps;
+            return *this;
+        }
+
+        ConfigBuilder & no_brackets(const Enable en){
+            config.specifier.no_brackets = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_scoped(const Enable en){
+            config.specifier.no_scoped = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_fieldname(const Enable en){
+            config.specifier.no_fieldname = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & force_sync(const Enable en){
+            config.specifier.force_sync = bool(en == EN);
+            return *this;
+        }
+
+        ConfigBuilder & no_space(const Enable en){
+            config.specifier.no_space = bool(en == EN);
+            return *this;
+        }
+
+        void finalize(){
+            self.reconf(config);
+        }
+    };
+
     [[nodiscard]] inline ConfigGuard create_guard(){
         return ConfigGuard(*this);
+    }
+
+    [[nodiscard]] inline ConfigBuilder build_config(){
+        return ConfigBuilder(*this);
     }
 
 private:
     Config config_;
 
     __fast_inline void print_splt(){
-        write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter_chars), config_.splitter_len));
+        write_bytes(config_.splitter_byte());
     }
 
     template<typename T>
@@ -738,9 +795,6 @@ private:
 
     __fast_inline void print_end(){
         flush();
-        // if((config_.specifier.force_sync)) [[unlikely]] {
-        //     block_util_least_free_capacity(1u);
-        // }
     }
 
     __fast_inline void print_indent(){
@@ -769,6 +823,9 @@ private:
     #ifndef OSTREAM_BUF_SIZE
     static constexpr size_t OSTREAM_BUF_SIZE = 60;
     #endif
+
+
+    #if 0
 
     struct Buf{
         std::array<uint8_t, OSTREAM_BUF_SIZE> buf;
@@ -815,6 +872,7 @@ private:
     };
 
     // Buf buf_;
+    #endif
 };
 
 
@@ -832,7 +890,7 @@ public:
         p_route_(std::move(route)){;}
 
 
-    [[nodiscard]] size_t free_capacity() const {
+    [[nodiscard]] size_t free_capacity() const noexcept {
         if(p_route_ == nullptr) [[unlikely]]
             __builtin_trap();
         return p_route_->free_capacity();

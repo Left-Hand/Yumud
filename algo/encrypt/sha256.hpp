@@ -17,16 +17,16 @@
 
 namespace ymd::encrypt::sha256{
 
-namespace details{
+namespace utils{
 
-static constexpr void STORE32H(uint32_t x, std::span<uint8_t, 4> y){
+static constexpr void store32h(uint32_t x, std::span<uint8_t, 4> y){
     y[0] = static_cast<uint8_t>(((x)>>24) & 0xff);
     y[1] = static_cast<uint8_t>(((x)>>16) & 0xff);
     y[2] = static_cast<uint8_t>(((x)>>8) & 0xff);
     y[3] = static_cast<uint8_t>((x) & 0xff);
 }
 
-static constexpr uint32_t LOAD32H(std::span<const uint8_t, 4> y){
+static constexpr uint32_t load32h(std::span<const uint8_t, 4> y){
     return ((static_cast<uint32_t>((y)[0] & 0xff)<<24) |
             (static_cast<uint32_t>((y)[1] & 0xff)<<16) |
             (static_cast<uint32_t>((y)[2] & 0xff)<<8)  |
@@ -34,13 +34,13 @@ static constexpr uint32_t LOAD32H(std::span<const uint8_t, 4> y){
 
 }
 
-static constexpr void STORE64H(uint64_t x, std::span<uint8_t, 8> y){ 
-    STORE32H(static_cast<uint32_t>(x >> 32), y.subspan<0, 4>());
-    STORE32H(static_cast<uint32_t>(x), y.subspan<4, 4>());
+static constexpr void store64h(uint64_t x, std::span<uint8_t, 8> y){ 
+    store32h(static_cast<uint32_t>(x >> 32), y.subspan<0, 4>());
+    store32h(static_cast<uint32_t>(x), y.subspan<4, 4>());
 }
 
 // The K array
-static constexpr std::array<uint32_t, 64> K = {
+alignas(4) static constexpr std::array<uint32_t, 64> K_TABLE = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 
@@ -78,14 +78,14 @@ template<size_t n>
 [[nodiscard]] static constexpr uint32_t R(uint32_t x){
     return (((x)&0xFFFFFFFF)>>(n));}
 
-[[nodiscard]] static constexpr uint32_t Sigma0(uint32_t x ){
+[[nodiscard]] static constexpr uint32_t sigma0(uint32_t x ){
     return (S<2>(x) ^ S<13>(x) ^ S<22>(x));}
-[[nodiscard]] static constexpr uint32_t Sigma1(uint32_t x ){
+[[nodiscard]] static constexpr uint32_t sigma1(uint32_t x ){
     return (S<6>(x) ^ S<11>(x) ^ S<25>(x));}
 
-[[nodiscard]] static constexpr uint32_t Gamma0(uint32_t x ){
+[[nodiscard]] static constexpr uint32_t gamma0(uint32_t x ){
     return (S<7>(x) ^ S<18>(x) ^ R<3>(x));}
-[[nodiscard]] static constexpr uint32_t Gamma1(uint32_t x ){
+[[nodiscard]] static constexpr uint32_t gamma1(uint32_t x ){
     return (S<17>(x) ^ S<19>(x) ^ R<10>(x));}
 
 
@@ -95,7 +95,7 @@ static constexpr size_t SHA256_BYTES = ( 256 / 8 );
 static constexpr size_t BLOCK_SIZE = 64;
 
 struct Sha256Context{
-    static constexpr std::array<uint32_t, 8> INITIAL_STATE = {
+    alignas(4) static constexpr std::array<uint32_t, 8> INITIAL_STATE = {
         0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
         0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
     };
@@ -160,12 +160,12 @@ struct Sha256Context{
         }
 
         // Store length
-        details::STORE64H( length, std::span<uint8_t, 8>(buf.data()+56, 8));
+        utils::store64h( length, std::span<uint8_t, 8>(buf.data()+56, 8));
         transform(std::span(buf));
 
         // Copy output
         for(size_t i=0; i<8; i++ ){
-            details::STORE32H(state[i], std::span<uint8_t, 4>(digest.data() + (4*i), 4) );
+            utils::store32h(state[i], std::span<uint8_t, 4>(digest.data() + (4*i), 4) );
         }
     }
 
@@ -182,12 +182,12 @@ private:
 
             // Copy the state into 512-bits into W[0..15]
             for(size_t i=0; i < 16; i++ ){
-                ret[i] = details::LOAD32H(std::span<const uint8_t, 4>(block.data() + (4*i), 4) );
+                ret[i] = utils::load32h(std::span<const uint8_t, 4>(block.data() + (4*i), 4) );
             }
 
             // Fill W[16..63]
             for(size_t i=16; i < BLOCK_SIZE; i++ ){
-                ret[i] = details::Gamma1( ret[i-2]) + ret[i-7] + details::Gamma0( ret[i-15] ) + ret[i-16];
+                ret[i] = utils::gamma1( ret[i-2]) + ret[i-7] + utils::gamma0( ret[i-15] ) + ret[i-16];
             }
 
             return ret;
@@ -208,11 +208,11 @@ private:
 
         // Compress
         for (size_t i = 0; i < BLOCK_SIZE; i++) {
-            const uint32_t t0 = S[7] + details::Sigma1(S[4]) 
-                + details::Ch(S[4], S[5], S[6]) 
-                + details::K[i] + W[i]; 
-            const uint32_t t1 = details::Sigma0(S[0]) 
-                + details::Maj(S[0], S[1], S[2]); 
+            const uint32_t t0 = S[7] + utils::sigma1(S[4]) 
+                + utils::Ch(S[4], S[5], S[6]) 
+                + utils::K_TABLE[i] + W[i]; 
+            const uint32_t t1 = utils::sigma0(S[0]) 
+                + utils::Maj(S[0], S[1], S[2]); 
             S[3] += t0; 
             S[7] = t0 + t1;
 

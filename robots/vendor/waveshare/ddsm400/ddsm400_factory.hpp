@@ -13,30 +13,30 @@ struct [[nodiscard]] FrameFactory{
 
     MotorId motor_id;
 
-    constexpr Packet set_target(const req_msgs::SetTarget & msg) const {
+    constexpr Packet set_target(const req_msgs::SetTarget & msg) const noexcept {
         return serialize(msg);
     }
 
-    constexpr Packet get_journey() const {
+    constexpr Packet get_journey() const noexcept {
         return serialize(req_msgs::GetJourney{});
     }
 
-    constexpr Packet set_loop_mode(const req_msgs::SetLoopMode & msg) const {
+    constexpr Packet set_loop_mode(const req_msgs::SetLoopMode & msg) const noexcept {
         return serialize(msg);
     }
 
-    constexpr Packet set_motor_id(const req_msgs::SetMotorId & msg) const {
+    constexpr Packet set_motor_id(const req_msgs::SetMotorId & msg) const noexcept {
         return serialize(msg);
     }
 
-    constexpr Packet get_loop_mode() const {
+    constexpr Packet get_loop_mode() const noexcept {
         return serialize(req_msgs::GetLoopMode{});
     }
 
 private:
 
     template<typename T>
-    constexpr Packet serialize(T && msg) const {
+    constexpr Packet serialize(T && msg) const noexcept {
         return transport::serialize_request(motor_id, std::forward<T>(msg));
     }
 };

@@ -12,11 +12,11 @@ struct Blob{
     int area;
     int index;
 
-    constexpr operator int() const {
+    constexpr operator int() const noexcept {
         return area;
     }
 
-    constexpr operator bool() const {
+    constexpr operator bool() const noexcept {
         return area;
     }
 };
@@ -38,7 +38,7 @@ struct BlobFilter{
     //     return filter;
     // }
 
-    constexpr bool is_valid(const Blob & blob) const{ 
+    constexpr bool is_valid(const Blob & blob) const noexcept { 
         return true;
     }
 };
@@ -52,13 +52,13 @@ protected:
 
 public:
     Image<Gray> run(const Image<Binary> & src, const BlobFilter & filter = BlobFilter());
-    auto & blobs() const{return m_blobs;}
+    auto & blobs() const noexcept {return m_blobs;}
 };
 
 class SimilarRects{
 public:    
     SimilarRects(const iq16 _eps) : eps(_eps) {}
-    inline bool operator()(const math::Rect2u& r1, const math::Rect2u& r2) const{
+    inline bool operator()(const math::Rect2u& r1, const math::Rect2u& r2) const noexcept {
         iq16 delta = eps*(std::min(r1.w(), r2.w()) + std::min(r1.h(), r2.h()))*iq16(0.5);
         return ABS(r1.x() - r2.x()) <= delta &&
             ABS(r1.y() - r2.y()) <= delta &&

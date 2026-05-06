@@ -11,7 +11,7 @@ struct GridMap2{
     math::Vec2<T> padding;
     math::Vec2<uint8_t> count;
 
-    constexpr auto bounding_box() const {
+    constexpr auto bounding_box() const noexcept {
         const auto top_left = top_left_cell.top_left;
         const auto size = math::Vec2<T>{
                 static_cast<T>(top_left_cell.size.x * (count.x)), 
@@ -22,20 +22,20 @@ struct GridMap2{
         return math::Rect2<T>(top_left, size);
     }
 
-    constexpr bool contains_point(const math::Vec2<T> point) const{
+    constexpr bool contains_point(const math::Vec2<T> point) const noexcept {
         return contains_impl<0>(point.x) and contains_impl<1>(point.y);
     }
 
-    constexpr bool contains_x(const T point_x) const{
+    constexpr bool contains_x(const T point_x) const noexcept {
         return contains_impl<0>(point_x);
     }
-    constexpr bool contains_y(const T point_y) const{
+    constexpr bool contains_y(const T point_y) const noexcept {
         return contains_impl<1>(point_y);
     }
 
 private:
     template<size_t I>
-    constexpr bool contains_impl(const auto p) const {
+    constexpr bool contains_impl(const auto p) const noexcept {
         const auto offset = p - std::get<I>(top_left_cell.top_left);
         const auto cell_size = std::get<I>(top_left_cell.size);
         const auto gird_offset = [&]{
@@ -61,7 +61,7 @@ struct RasterizationIterator<GridMap2<T>> {
         {}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return y_ < y_stop_;
     }
 

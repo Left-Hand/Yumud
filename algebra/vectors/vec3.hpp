@@ -121,7 +121,7 @@ public:
 
     [[nodiscard]] constexpr T & operator [](const size_t idx) { return (&x)[idx];}
 
-    [[nodiscard]] constexpr const T & operator [](const size_t idx) const {return (&x)[idx];}
+    [[nodiscard]] constexpr const T & operator [](const size_t idx) const noexcept {return (&x)[idx];}
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr Vec3& operator=(const Vec3<U>& v) {
@@ -162,19 +162,19 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_x(const U v) const {
+    Vec3<T> increase_x(const U v) const noexcept {
         return {x + v, y, z};
     }
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_y(const U v) const {
+    Vec3<T> increase_y(const U v) const noexcept {
         return {x, y + v, z};
     }
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_z(const U v) const {
+    Vec3<T> increase_z(const U v) const noexcept {
         return {x, y, z + v};
     }
 
@@ -216,14 +216,14 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator *(const U _v) const{
+    Vec3 operator *(const U _v) const noexcept {
         Vec3 other = *this;
         other *= _v;
         return other;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator *(const Vec3<arithmetic auto> & _v) const{
+    Vec3 operator *(const Vec3<arithmetic auto> & _v) const noexcept {
         Vec3 other = *this;
         other *= _v;
         return other;
@@ -231,14 +231,14 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator /(const U _v) const{
+    Vec3 operator /(const U _v) const noexcept {
         Vec3 other = *this;
         other /= _v;
         return other;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator /(const Vec3<arithmetic auto> & _v) const{
+    Vec3 operator /(const Vec3<arithmetic auto> & _v) const noexcept {
         Vec3 other = *this;
         other /= _v;
         return other;
@@ -246,14 +246,14 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator +(const Vec3<U>& other) const {
+    Vec3 operator +(const Vec3<U>& other) const noexcept {
         Vec3 ret = other;
         return ret += *this;
     }
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator -(const Vec3<U> & other) const {
+    Vec3 operator -(const Vec3<U> & other) const noexcept {
         return Vec3{
             x - static_cast<T>(other.x),
             y - static_cast<T>(other.y),
@@ -262,14 +262,14 @@ public:
     }
     
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator -() const {
+    Vec3 operator -() const noexcept {
         return Vec3{-x,-y,-z};
     }
 
 
     template<arithmetic U>
     [[nodiscard]] constexpr 
-    Vec3<T> clampmin(const U _length) const{
+    Vec3<T> clampmin(const U _length) const noexcept {
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
@@ -277,24 +277,24 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] constexpr 
-    Vec3<T> clampmax(const U _length) const{
+    Vec3<T> clampmax(const U _length) const noexcept {
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l > length ? *this * length / l : *this);
     }
 
     [[nodiscard]] constexpr __fast_inline 
-    T dot(const Vec3<arithmetic auto > &v) const{
+    T dot(const Vec3<arithmetic auto > &v) const noexcept {
         return static_cast<T>(x * v.x + y * v.y + z * v.z);
     }
 
     [[nodiscard]] constexpr __fast_inline 
-    T dot(const UnitVec3<arithmetic auto > &v) const{
+    T dot(const UnitVec3<arithmetic auto > &v) const noexcept {
         return v.dot(*this);
     }
 
     [[nodiscard]] constexpr __fast_inline 
-    Vec3 max_with(const Vec3<arithmetic auto> &v) const{
+    Vec3 max_with(const Vec3<arithmetic auto> &v) const noexcept {
         return {
             std::max(x, static_cast<T>(v.x)),
             std::max(y, static_cast<T>(v.y)),
@@ -303,7 +303,7 @@ public:
     }
 
     [[nodiscard]] constexpr __fast_inline 
-    Vec3 min_with(const Vec3<arithmetic auto> &v) const{
+    Vec3 min_with(const Vec3<arithmetic auto> &v) const noexcept {
         return {
             std::min(x, static_cast<T>(v.x)),
             std::min(y, static_cast<T>(v.y)),
@@ -313,7 +313,7 @@ public:
 
     template<arithmetic U>
     __fast_inline constexpr 
-    Vec3 cross(const Vec3<U> &u) const{
+    Vec3 cross(const Vec3<U> &u) const noexcept {
         return Vec3(
             static_cast<T>(y * u.z - z * u.y),
             static_cast<T>(z * u.x - x * u.z), 
@@ -323,7 +323,7 @@ public:
 
     template<arithmetic U>
     __fast_inline constexpr 
-    Vec3 cross(const UnitVec3<U> &u) const{
+    Vec3 cross(const UnitVec3<U> &u) const noexcept {
         return Vec3(
             static_cast<T>(y * u.z - z * u.y),
             static_cast<T>(z * u.x - x * u.z), 
@@ -333,25 +333,25 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr 
-    T length() const{
+    T length() const noexcept {
         static_assert(not std::is_integral_v<T>);
         return math::mag(x, y, z);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    T inv_length() const{
+    T inv_length() const noexcept {
         static_assert(not std::is_integral_v<T>);
         return math::inv_mag(x, y, z);
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    T length_squared() const{
+    T length_squared() const noexcept {
         return x * x + y * y + z * z;
     }
 
 
     [[nodiscard]] constexpr 
-    UnitVec3<T> normalized() const {
+    UnitVec3<T> normalized() const noexcept {
         static_assert(not std::is_integral_v<T>);
         T inv_len = inv_length();
         return {
@@ -360,7 +360,7 @@ public:
             this->z * inv_len
         };
     }
-    [[nodiscard]] Vec3<T> get_any_perpendicular() const {
+    [[nodiscard]] Vec3<T> get_any_perpendicular() const noexcept {
         // Return the any perpendicular vector by cross product with the Vec3.RIGHT or Vec3.UP,
         // whichever has the greater angle to the current vector with the sign of each element positive.
         // The only essence is "to avoid being parallel to the current vector", and there is no mathematical basis for using Vec3.RIGHT and Vec3.UP,
@@ -372,7 +372,7 @@ public:
     }
     
     [[nodiscard]]
-    constexpr bool is_zero() const {
+    constexpr bool is_zero() const noexcept {
         if constexpr(std::is_integral<T>::value){
             return x == 0 and y == 0 and z == 0;
         }else{
@@ -383,7 +383,7 @@ public:
     }
 
     [[nodiscard]]
-    constexpr Matrix<T, 1, 3> to_matrix() const{
+    constexpr Matrix<T, 1, 3> to_matrix() const noexcept {
         return Matrix<T, 1, 3>(x,y,z);
     }
 
@@ -415,13 +415,13 @@ public:
     }
     
     template<std::size_t I>
-    constexpr const auto& get() const{
+    constexpr const auto& get() const noexcept {
         if constexpr (I == 0) return x;
         else if constexpr (I == 1) return y;
         else if constexpr (I == 2) return z;
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("x")(self.x) << os.splitter()
             << os.field("y")(self.y) << os.splitter()

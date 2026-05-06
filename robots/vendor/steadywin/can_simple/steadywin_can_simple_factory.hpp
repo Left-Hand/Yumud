@@ -52,7 +52,7 @@ struct [[nodiscard]] FrameFactory final{
 private:
 
     template<typename T>
-    constexpr hal::ClassicCanFrame ser_msg(T && msg) const {
+    constexpr hal::ClassicCanFrame ser_msg(T && msg) const noexcept {
         return can_simple::serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
     }
 };

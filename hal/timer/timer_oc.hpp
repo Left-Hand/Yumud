@@ -67,8 +67,8 @@ public:
     [[nodiscard]] __fast_inline volatile uint16_t & cvr() {return cvr_;}
     [[nodiscard]] __fast_inline volatile uint16_t & arr() {return arr_;}
 
-    [[nodiscard]] __fast_inline uint16_t cvr() const {return cvr_;}
-    [[nodiscard]] __fast_inline uint16_t arr() const {return arr_;}
+    [[nodiscard]] __fast_inline uint16_t cvr() const noexcept {return cvr_;}
+    [[nodiscard]] __fast_inline uint16_t arr() const noexcept {return arr_;}
 
     __fast_inline void set_dutycycle(const uq16 dutycycle){
         cvr_ = static_cast<uint16_t>(dutycycle * arr_);

@@ -231,8 +231,8 @@ public:
     IResult<> set_exposure_value(const uint16_t value);
     IResult<> set_gain(const iq16 gain);
 
-    [[nodiscard]] const auto & frame() const {return frame_;}
-    [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}
+    [[nodiscard]] const auto & frame() const noexcept {return frame_;}
+    [[nodiscard]] constexpr auto size() const noexcept {return FRAME_SIZE;}
 private:
     hal::SccbDrv sccb_drv_;
     Image<Gray> frame_ = Image<Gray>{FRAME_SIZE};

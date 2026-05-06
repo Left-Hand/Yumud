@@ -185,7 +185,7 @@ struct [[nodiscard]] SdoCommandSpecifier final{
         __builtin_trap();
     }
 
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
         switch(kind_){
             case Kind::ServerExpeditedRead1B: return 1;
             case Kind::ServerExpeditedRead2B: return 2;
@@ -202,10 +202,10 @@ struct [[nodiscard]] SdoCommandSpecifier final{
     }
 
 
-    [[nodiscard]] constexpr uint8_t to_bits() const{return static_cast<uint8_t>(kind_);}
-    [[nodiscard]] constexpr uint8_t to_u8() const{return to_bits();}
-    [[nodiscard]] constexpr Kind kind() const{return kind_;}
-    [[nodiscard]] constexpr bool operator ==(const Self & other) const{return kind_ == other.kind_;}
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {return static_cast<uint8_t>(kind_);}
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return to_bits();}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
+    [[nodiscard]] constexpr bool operator ==(const Self & other) const noexcept {return kind_ == other.kind_;}
 
     using enum Kind;
 private:
@@ -233,24 +233,24 @@ struct alignas(4) [[nodiscard]] SdoExpeditedHeader final{
         };
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const { return bits; }
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept { return bits; }
 
-    constexpr SdoCommandSpecifier cmd_spec() const {
+    constexpr SdoCommandSpecifier cmd_spec() const noexcept {
         return SdoCommandSpecifier::from_bits((bits >> 24) & 0xFF);  // 取高8位
     }
 
-    constexpr OdIndex od_idx() const {
+    constexpr OdIndex od_idx() const noexcept {
         return OdIndex{
             pre_idx().to_bits(),
             sub_idx().to_bits()
         };
     }
     
-    constexpr OdPreIndex pre_idx() const {
+    constexpr OdPreIndex pre_idx() const noexcept {
         return OdPreIndex::from_bits((bits >> 8) & 0xFFFF);  // 取中间16位
     }
     
-    constexpr OdSubIndex sub_idx() const {
+    constexpr OdSubIndex sub_idx() const noexcept {
         return OdSubIndex::from_bits(bits & 0xFF);  // 取低8位
     }
 
@@ -315,15 +315,15 @@ public:
         return Some(SdoAbortCode(static_cast<SdoAbortError>(bits)));
     }
 
-    [[nodiscard]] constexpr Option<SdoAbortError> err() const {
+    [[nodiscard]] constexpr Option<SdoAbortError> err() const noexcept {
         if(bits_ == 0) return None;
         return Some(std::bit_cast<SdoAbortError>(bits_));
     }
 
-    [[nodiscard]] constexpr uint32_t to_u32() const { return std::bit_cast<uint32_t>(bits_); }
-    [[nodiscard]] constexpr uint32_t to_bits() const { return to_u32();}
-    [[nodiscard]] constexpr bool is_ok() const { return bits_ == NO_ERROR; }
-    [[nodiscard]] constexpr bool is_err() const { return bits_ != NO_ERROR; }
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept { return std::bit_cast<uint32_t>(bits_); }
+    [[nodiscard]] constexpr uint32_t to_bits() const noexcept { return to_u32();}
+    [[nodiscard]] constexpr bool is_ok() const noexcept { return bits_ == NO_ERROR; }
+    [[nodiscard]] constexpr bool is_err() const noexcept { return bits_ != NO_ERROR; }
 
     //不要在外部使用这个函数 因为它有可能返回空指针
     static constexpr const char * err_to_str(const SdoAbortError err){
@@ -422,7 +422,7 @@ private:
 static_assert(sizeof(SdoAbortCode) == 4);
 
 
-struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
+struct alignas(4) [[nodiscard]] SdoExpeditedContext final{
     using Self = SdoExpeditedContext;
     using Header = SdoExpeditedHeader;
     using U8X4 = std::array<uint8_t, 4>;
@@ -557,16 +557,16 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
     }
 
     [[nodiscard]] __always_inline constexpr
-    uint32_t bytes_u32() const {
+    uint32_t bytes_u32() const noexcept {
         return std::bit_cast<uint32_t>(bytes);
     }
 
     [[nodiscard]] __always_inline constexpr 
-    uint64_t to_u64() const {
+    uint64_t to_u64() const noexcept {
         return std::bit_cast<uint64_t>(*this);
     }
 
-    [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const noexcept {
         static_assert(sizeof(SdoExpeditedContext) == 8);
         return std::span<const uint8_t, 8>(
             reinterpret_cast<const uint8_t*>(this),
@@ -575,7 +575,7 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
     }
 
     [[nodiscard]] constexpr 
-    CanFrame to_can_frame(const CobId cobid) const {
+    CanFrame to_can_frame(const CobId cobid) const noexcept {
         return CanFrame::from_parts(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
     }
 

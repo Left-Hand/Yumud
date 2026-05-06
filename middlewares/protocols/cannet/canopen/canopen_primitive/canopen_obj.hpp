@@ -48,11 +48,11 @@ public:
     constexpr EntryDataType(Kind kind) : kind_(kind) {}
 
     // 判断是否为整数类型
-    [[nodiscard]] constexpr bool is_int() const {return kind_ <= Kind::U32;}
-    [[nodiscard]] constexpr bool is_string() const {return kind_ >= Kind::VisibleString;}
+    [[nodiscard]] constexpr bool is_int() const noexcept {return kind_ <= Kind::U32;}
+    [[nodiscard]] constexpr bool is_string() const noexcept {return kind_ >= Kind::VisibleString;}
 
     // 获取数据类型的大小
-    constexpr Option<size_t> dsize() const {
+    constexpr Option<size_t> dsize() const noexcept {
         switch(kind_){
             case Kind::Bit:     return Some(1);
             case Kind::I8:      return Some(1);
@@ -102,7 +102,7 @@ struct [[nodiscard]] CoStringObj{
     } 
 
 
-    SdoAbortCode read(const std::span<uint8_t> bytes) const {
+    SdoAbortCode read(const std::span<uint8_t> bytes) const noexcept {
         if(str.length() != bytes.size()) [[unlikely]]
             return SdoAbortCode::MaxLessThanMin;
         return Ok();

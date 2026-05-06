@@ -46,7 +46,7 @@ public:
         lpf_.update(in * in);
     }
 
-    T result() const{
+    T result() const noexcept {
         return std::sqrt(lpf_.result());
     }
 
@@ -71,7 +71,7 @@ public:
         result_ = result;
     }
 
-    T result() const{
+    T result() const noexcept {
         return result_;
     }
 
@@ -125,7 +125,7 @@ public:
         lpf_.update(h * h);
     }
 
-    T result() const{
+    T result() const noexcept {
         return sqrt(lpf_.result());
     }
 
@@ -283,8 +283,14 @@ void dsp_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
+    
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
 
     // using T = float; 

@@ -34,11 +34,11 @@ public:
         angle += angular_velocity * dt;
     }
 
-    float get_angle() const {
+    float get_angle() const noexcept {
         return angle;
     }
 
-    std::pair<float, float> get_position() const {
+    std::pair<float, float> get_position() const noexcept {
         float x = length * std::cos(angle);
         float y = length * std::sin(angle);
         return std::make_pair(x, y);
@@ -58,9 +58,14 @@ void l1_adaptive_main(){
         });
 
         DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.set_eps(6);
-        DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets(EN);
+
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(EN)
+            .force_sync(EN)
+            .finalize();
     };
 
     init_debugger();

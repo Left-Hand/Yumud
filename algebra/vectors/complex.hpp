@@ -29,19 +29,19 @@ public:
     //     return {ret;
     // }
 
-    [[nodiscard]] __fast_inline constexpr T real_squared() const {return re * re;}
-    [[nodiscard]] __fast_inline constexpr T imag_squared() const {return im * im;}
+    [[nodiscard]] __fast_inline constexpr T real_squared() const noexcept {return re * re;}
+    [[nodiscard]] __fast_inline constexpr T imag_squared() const noexcept {return im * im;}
 
-    [[nodiscard]] __fast_inline constexpr T length() const {
+    [[nodiscard]] __fast_inline constexpr T length() const noexcept {
         return math::mag(re, im);
     }
 
-    [[nodiscard]] __fast_inline constexpr T inv_length() const {
+    [[nodiscard]] __fast_inline constexpr T inv_length() const noexcept {
         return math::inv_mag(re, im);
     }
 
 
-    [[nodiscard]] constexpr Angular<T> to_angle() const {
+    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
         return Angular<T>::from_turns(math::atan2pu(im, re));
     }
 
@@ -124,7 +124,7 @@ private:
         else if constexpr(I == 1){ return self.im; }
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("re")(self.re) << os.splitter()
             << os.field("im")(self.im)

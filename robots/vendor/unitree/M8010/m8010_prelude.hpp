@@ -16,15 +16,15 @@ namespace ymd::robots::unitree{
 struct [[nodiscard]] MotorId final{
     uint8_t bits;
 
-    [[nodiscard]] constexpr bool is_valid() const {
+    [[nodiscard]] constexpr bool is_valid() const noexcept {
         return (bits & 0xf0) == 0;
     }
 
-    [[nodiscard]] constexpr bool is_boardcast() const {
+    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
         return (bits & 0x0f) == 0x0f;
     }
 
-    [[nodiscard]] constexpr uint8_t count() const {
+    [[nodiscard]] constexpr uint8_t count() const noexcept {
         return bits & 0x0f;
     }
 };
@@ -51,15 +51,15 @@ struct [[nodiscard]] WorkingMode final{
         return Self{static_cast<uint8_t>(Kind::Default)};
     }
 
-    [[nodiscard]] constexpr bool is_calibrating() const{
+    [[nodiscard]] constexpr bool is_calibrating() const noexcept {
         return bits == static_cast<uint8_t>(Kind::Calibrating);
     }
 
-    [[nodiscard]] constexpr bool is_closeloop() const{
+    [[nodiscard]] constexpr bool is_closeloop() const noexcept {
         return bits == static_cast<uint8_t>(Kind::Closeloop);
     }
 
-    [[nodiscard]] constexpr bool is_default() const{
+    [[nodiscard]] constexpr bool is_default() const noexcept {
         return bits == static_cast<uint8_t>(Kind::Default);
     }
 };
@@ -68,15 +68,15 @@ struct [[nodiscard]] WorkingMode final{
 struct [[nodiscard]] ModeInfo final{
     uint8_t bits;
 
-    constexpr MotorId motor_id() const {
+    constexpr MotorId motor_id() const noexcept {
         return MotorId(bits & 0x0f);
     }
 
-    constexpr WorkingMode mode() const {
+    constexpr WorkingMode mode() const noexcept {
         return WorkingMode((bits >> 4) & 0x07);
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 1> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 1> bytes) const noexcept {
         bytes[0] = bits;
     }
 };
@@ -92,7 +92,7 @@ struct [[nodiscard]] TorqueCode final{
         return Ok(Self{round_cast<int16_t>(ret)});
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -111,7 +111,7 @@ struct [[nodiscard]] X2Code final{
         return Ok(Self{math::round_cast<int16_t>(ret)});
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -128,7 +128,7 @@ struct [[nodiscard]] X1Code final{
         return Ok(Self{math::round_cast<int32_t>(ret)});
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 4> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 4> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
         bytes[2] = static_cast<uint8_t>(bits >> 16);
@@ -150,7 +150,7 @@ struct [[nodiscard]] KpCode final{
         return Ok(Self{math::round_cast<uint16_t>(ret)});
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -168,7 +168,7 @@ struct [[nodiscard]] KdCode final{
         return Ok(Self{math::round_cast<uint16_t>(ret)});
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(bits);
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
@@ -190,7 +190,7 @@ struct [[nodiscard]] TxContext final{
     KpCode kp_code;
     KdCode kd_code;
 
-    constexpr void fill_bytes(const std::span<uint8_t, 13> bytes) const{
+    constexpr void fill_bytes(const std::span<uint8_t, 13> bytes) const noexcept {
         auto & self = *this;
         self.mode_settings.fill_bytes(bytes.subspan<2-2,1>());
         self.torque_code.fill_bytes(bytes.subspan<3-2,2>());
@@ -201,16 +201,18 @@ struct [[nodiscard]] TxContext final{
     }
     
     template<typename Serializer>
-    void sink_to(Serializer && serializer) const {
+    Result<void, typename Serializer::Error> 
+    serialize(Serializer && serializer) const noexcept {
         auto & self = *this;
         std::array<uint8_t, 17> buffer;
+
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
         self.fill_bytes(std::span(buffer).template subspan<2, 13>());
         const auto crc_code = encrypt::crc::crc16_ccitt(std::span(buffer).template subspan<0, 15>());
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
-        serializer.sink_bytes(std::span(buffer));
+        return serializer.push_bytes(std::span(buffer));
     } 
 };
 
@@ -228,15 +230,15 @@ struct [[nodiscard]] TempCode final{
 
     using Self = TempCode;
 
-    constexpr int8_t to_celeius() const {
+    constexpr int8_t to_celeius() const noexcept {
         return std::bit_cast<uint8_t>(bits);
     }
 
-    constexpr Self from_bits(uint8_t b) const {
+    constexpr Self from_bits(uint8_t b) const noexcept {
         return Self{.bits = std::bit_cast<uint8_t>(b)};
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 1> bytes) const{
+    constexpr void fill_bytes(std::span<uint8_t, 1> bytes) const noexcept {
         bytes[0] = std::bit_cast<uint8_t>(bits);
     }
 };
@@ -253,15 +255,15 @@ struct [[nodiscard]] ErrorCode final{
 
     uint8_t bits;
 
-    [[nodiscard]] constexpr bool is_ok() const {
+    [[nodiscard]] constexpr bool is_ok() const noexcept {
         return bits == 0;
     }
 
-    [[nodiscard]] constexpr bool is_err() const {return not is_ok();}
+    [[nodiscard]] constexpr bool is_err() const noexcept {return not is_ok();}
 
-    [[nodiscard]] constexpr bool is_invalid() const {return bits > 4;}
+    [[nodiscard]] constexpr bool is_invalid() const noexcept {return bits > 4;}
 
-    [[nodiscard]] constexpr Kind unwrap() const {
+    [[nodiscard]] constexpr Kind unwrap() const noexcept {
         if(is_ok()) [[unlikely]] __builtin_trap();
         return static_cast<Kind>(bits);
     }
@@ -288,7 +290,7 @@ struct [[nodiscard]] RxContext final{
             return std::bit_cast<Misc>(ret);
         }
 
-        constexpr void fill_bytes(std::span<uint8_t, 2> bytes) const {
+        constexpr void fill_bytes(std::span<uint8_t, 2> bytes) const noexcept {
             const auto b16 = std::bit_cast<uint16_t>(*this);
             bytes[0] = static_cast<uint8_t>(b16);
             bytes[1] = static_cast<uint8_t>(b16 >> 8);
@@ -308,7 +310,7 @@ struct [[nodiscard]] RxContext final{
         return self;
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 12> bytes) const{
+    constexpr void fill_bytes(const std::span<uint8_t, 12> bytes) const noexcept {
         auto & self = *this;
         self.mode_info.fill_bytes(bytes.subspan<0,1>());
         self.torque_code.fill_bytes(bytes.subspan<1,2>());
@@ -319,7 +321,7 @@ struct [[nodiscard]] RxContext final{
     }
 
     template<typename Serializer>
-    Result<void, typename Serializer::Error> serialize(Serializer && serializer) const {
+    Result<void, typename Serializer::Error> serialize(Serializer && serializer) const noexcept {
         auto & self = *this;
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());

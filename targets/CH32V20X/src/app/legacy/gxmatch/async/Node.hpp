@@ -31,7 +31,7 @@ public:
     Subscriber(const Callback callback)
         :callback_(callback) {}
 
-    Callback getCallback() const {
+    Callback getCallback() const noexcept {
         return callback_;
     }
 

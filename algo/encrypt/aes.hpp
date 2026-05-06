@@ -162,7 +162,7 @@ struct alignas(4) [[nodiscard]] Row final{
         return std::bit_cast<Row>(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const{
+    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const noexcept {
         if(idx >= 4) __builtin_unreachable();
         return bytes[idx];
     }
@@ -185,7 +185,7 @@ struct alignas(16) [[nodiscard]] State final{
         return ret;
     }
 
-    [[nodiscard]] constexpr const Row & operator [](const size_t idx) const { 
+    [[nodiscard]] constexpr const Row & operator [](const size_t idx) const noexcept { 
         if(idx >= 4) __builtin_unreachable();
         return rows[idx];
     }
@@ -269,7 +269,7 @@ struct [[nodiscard]] AesCipher final{
 
         }
 
-        constexpr bool has_remaing() const{
+        constexpr bool has_remaing() const noexcept {
             return false;
         }
     };
@@ -277,7 +277,7 @@ struct [[nodiscard]] AesCipher final{
     constexpr void cipher_block(
         std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
         std::span<uint8_t, BLOCK_BYTES_SIZE> output
-    ) const {
+    ) const noexcept {
         State state;
         for (size_t i = 0; i < (4 * 4); ++i){
             state[i % 4][i / 4] = input[i];
@@ -307,7 +307,7 @@ struct [[nodiscard]] AesCipher final{
     constexpr void inv_cipher_block(
         std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
         std::span<uint8_t, BLOCK_BYTES_SIZE> output
-    ) const {
+    ) const noexcept {
         State state;
 
         for (size_t i = 0; i < (4 * 4); ++i){
@@ -534,7 +534,7 @@ public:
         };
     }
     [[nodiscard]] constexpr __inline 
-    State add_round_key(const State state, const size_t round) const {
+    State add_round_key(const State state, const size_t round) const noexcept {
         State ret;
         for (size_t r = 0; r < 4; ++r){
             for (size_t c = 0; c < 4; ++c){

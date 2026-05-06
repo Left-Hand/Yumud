@@ -15,7 +15,7 @@ public:
         enum_ = e;
     }
 
-    constexpr auto to_fullscale() const {
+    constexpr auto to_fullscale() const noexcept {
         return mapping_[enum_];
     }
 

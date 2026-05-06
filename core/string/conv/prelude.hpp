@@ -2,10 +2,11 @@
 
 #include "core/utils/Errno.hpp"
 #include "core/stream/ostream.hpp"
+#include "fmtnum/prelude.hpp"
 
-namespace ymd::strconv2{
+namespace ymd::strconv{
 
-enum class DestringError:uint8_t{
+enum class [[nodiscard]] DeformatError:uint8_t{
     InvalidNumber,
     InvalidBooleanNum,         // 布尔值只能为0或1
     InvalidBooleanAlpha,       // 布尔值只能为true或false
@@ -43,14 +44,15 @@ enum class DestringError:uint8_t{
 	HexBaseOnly,
 	BinBaseOnly,
 	OctBaseOnly,
+	InvalidRadix,
 
-	NullTerminatorNotAllowed,//字符串中不能出现空结束符 这是c的糟粕
+	InvalidNullTerminator,//字符串中不能出现空结束符 这是c的糟粕
 	StrTooLong,
 	DigitExceedsBin,
 	DigitExceedsOct,
 };
 
-DEF_DERIVE_DEBUG(DestringError)
+DEF_DERIVE_DEBUG(DeformatError)
 
 enum class SerStringError:uint8_t{
 	OutOfMemory
@@ -59,7 +61,7 @@ enum class SerStringError:uint8_t{
 DEF_DERIVE_DEBUG(SerStringError)
 
 template<typename T = void>
-using DestringResult = Result<T,DestringError>;
+using DestringResult = Result<T,DeformatError>;
 
 template<typename T = void>
 using SerStringResult = Result<T,SerStringError>;
@@ -81,35 +83,35 @@ struct [[nodiscard]] Radix final{
 	[[nodiscard]] constexpr explicit Radix(const uint8_t count):
 		count_(count){;}
 
-	[[nodiscard]] constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const noexcept {
 		return count_;
 	}
 
-	[[nodiscard]] constexpr bool is_dec() const{
+	[[nodiscard]] constexpr bool is_dec() const noexcept {
 		return static_cast<Kind>(count_) == Dec;
 	}
 
-	[[nodiscard]] constexpr bool is_oct() const{
+	[[nodiscard]] constexpr bool is_oct() const noexcept {
 		return static_cast<Kind>(count_) == Oct;
 	}
 
-	[[nodiscard]] constexpr bool is_hex() const{
+	[[nodiscard]] constexpr bool is_hex() const noexcept {
 		return static_cast<Kind>(count_) == Hex;
 	}
 
-	[[nodiscard]] constexpr bool is_bin() const{
+	[[nodiscard]] constexpr bool is_bin() const noexcept {
 		return static_cast<Kind>(count_) == Bin;
 	}
 
-	[[nodiscard]] constexpr Kind kind() const{
+	[[nodiscard]] constexpr Kind kind() const noexcept {
 		return static_cast<Kind>(count_);
 	}
 
-    [[nodiscard]] constexpr bool operator ==(const Radix & rhs) const{
+    [[nodiscard]] constexpr bool operator ==(const Radix & rhs) const noexcept {
 		return count_ == rhs.count_;
 	}
 
-    [[nodiscard]] constexpr bool operator !=(const Radix & rhs) const{
+    [[nodiscard]] constexpr bool operator !=(const Radix & rhs) const noexcept {
 		return count_ == rhs.count_;
 	}
 
@@ -123,7 +125,7 @@ struct [[nodiscard]] Eps final{
 	constexpr explicit Eps(const uint8_t count):
 		count_(count){;}
 
-	[[nodiscard]] constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const noexcept {
 		return count_;
 	}
 
@@ -131,6 +133,9 @@ struct [[nodiscard]] Eps final{
 private:
 
 };
+
+
+#if 0
 
 namespace details{
 
@@ -191,4 +196,5 @@ template<typename T>
 	return details::chars_capacity_for_int<T>::value(eps); 
 }
 
+#endif
 }

@@ -10,7 +10,7 @@ struct Polygon final {
     std::span<const Vec2<T>, N> points;
     constexpr explicit Polygon(std::span<const Vec2<T>, N> points) : points(points) {}
 
-    constexpr bool is_convex() const{
+    constexpr bool is_convex() const noexcept {
         if (points.size() < 3) {
             return true; // Triangles and simpler shapes are always convex
         }
@@ -38,7 +38,7 @@ struct Polygon final {
         return true;
     }
 
-    constexpr bool is_clockwise() const{
+    constexpr bool is_clockwise() const noexcept {
         if (points.size() < 3) {
             return false; // Not enough points to determine orientation
         }
@@ -54,7 +54,7 @@ struct Polygon final {
         return area < T{0};
     }
 
-    constexpr Vec2<T> center() const {
+    constexpr Vec2<T> center() const noexcept {
         const T inv_s = T{1} / static_cast<T>(points.size());
 
         Vec2 sum = Vec2<T>::ZERO;
@@ -64,7 +64,7 @@ struct Polygon final {
         return sum;
     }
 
-    constexpr Rect2<T> bounding_box() const {
+    constexpr Rect2<T> bounding_box() const noexcept {
         return Rect2<T>::from_minimal_bounding_box(points);
 
     }

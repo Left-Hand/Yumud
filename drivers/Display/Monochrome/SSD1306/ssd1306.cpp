@@ -33,22 +33,22 @@ IResult<> SSD1306_Transport::write_data(const uint8_t data){
 }
 
 template<is_stdlayout T>
-IResult<> SSD1306_Transport::write_burst(const std::span<const T> pbuf){
+IResult<> SSD1306_Transport::write_bulk(const std::span<const T> pbuf){
     if(p_i2c_drv_.has_value()){
         if constexpr(sizeof(T) != 1){
-            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, std::endian::little);
+            if(const auto res = p_i2c_drv_->write_bulk<T>(DATA_TOKEN, pbuf, std::endian::little);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else {
-            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf);
+            if(const auto res = p_i2c_drv_->write_bulk<T>(DATA_TOKEN, pbuf);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }
     }else if(p_spi_drv_.has_value()){
         // if constexpr(sizeof(T) != 1){
-        //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
+        //     return IResult<>(p_spi_drv_->write_bulk<T>(pbuf));
         // }else {
-        //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
+        //     return IResult<>(p_spi_drv_->write_bulk<T>(pbuf));
         // }
         TODO();
     }
@@ -127,7 +127,7 @@ IResult<> SSD13XX::update(){
         const auto line = std::span<const uint8_t>(
             &frame[(y / 8) * size().x], size().x);
 
-        if(const auto res = transport_.write_burst(line);
+        if(const auto res = transport_.write_bulk(line);
             res.is_err()) return res;
     }
     return Ok();

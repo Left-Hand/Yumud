@@ -55,6 +55,27 @@ void can_configure_filter(
     const hal::CanFifoIndex fifo_idx,
     const hal::CanFilterConfig & filter_cfg
 ){
+    #if 0
+    CAN_FilterInitTypeDef CAN_FilterInitStructure;
+
+    CAN_FilterInitStructure.CAN_FilterNumber = 0;     // 过滤器组0
+    CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;    // 掩码模式
+    CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;   // 32位位宽
+
+    // 标识符寄存器（任意值均可，因为掩码为0）
+    CAN_FilterInitStructure.CAN_FilterIdHigh = 0;
+    CAN_FilterInitStructure.CAN_FilterIdLow = 0;
+
+    // 屏蔽寄存器设置为0 - 表示不关心任何位，接收所有ID
+    CAN_FilterInitStructure.CAN_FilterMaskIdHigh = 0;
+    CAN_FilterInitStructure.CAN_FilterMaskIdLow = 0;
+
+    CAN_FilterInitStructure.CAN_FilterFIFOAssignment = CAN_FIFO0;
+    CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
+    CAN_FilterInit(&CAN_FilterInitStructure);
+    return;
+    #endif
+
     auto * p_inst = ral::CAN_Filt;
     
     const uint32_t filter_pos_mask = 1u << filter_nth;
@@ -66,11 +87,9 @@ void can_configure_filter(
     uint32_t FR2;
 
     if (filter_cfg.is_32bit()) {
-        FR1 = (static_cast<uint32_t>(filter_cfg.id16[1]) << 16) |
-            static_cast<uint32_t>(filter_cfg.id16[0]);
+        FR1 = (static_cast<uint32_t>(filter_cfg.id32));
         
-        FR2 = (static_cast<uint32_t>(filter_cfg.mask16[1]) << 16) |
-            static_cast<uint32_t>(filter_cfg.mask16[0]);
+        FR2 = (static_cast<uint32_t>(filter_cfg.mask32));
     } else {
         FR1 = (static_cast<uint32_t>(filter_cfg.mask16[0]) << 16) |
             static_cast<uint32_t>(filter_cfg.id16[0]);
@@ -293,7 +312,7 @@ void can_transmit_nott(
     mailbox.TXMDTR = [&]{
         uint32_t temp_txmdtr = 0;
 
-        #if 0
+        #if 1
         temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
         #else
         //dlc 为4位以上被视为ub 不需要进行掩码操作
@@ -337,7 +356,7 @@ void can_transmit_ttcan(
         temp_txmdtr_ |= static_cast<uint32_t>(tick) << 16;
         temp_txmdtr_ |= static_cast<uint32_t>(1u) << 8;
 
-        #if 0
+        #if 1
         temp_txmdtr_ |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
         #else
         //dlc 为4位以上被视为ub 不需要进行掩码操作

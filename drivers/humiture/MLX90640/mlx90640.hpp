@@ -54,9 +54,9 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    IResult<> read_burst(uint16_t startAddress, std::span<uint16_t> pbuf){
+    IResult<> read_bulk(uint16_t startAddress, std::span<uint16_t> pbuf){
 
-        if(const auto res = i2c_drv_.read_burst<uint16_t>(startAddress, pbuf, std::endian::big);
+        if(const auto res = i2c_drv_.read_bulk<uint16_t>(startAddress, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

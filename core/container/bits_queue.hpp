@@ -37,15 +37,15 @@ struct BitQueue{
         return buf_;
     }
 
-    [[nodiscard]] constexpr uint64_t to_u64() const {
+    [[nodiscard]] constexpr uint64_t to_u64() const noexcept {
         return buf_;
     }
 
-    [[nodiscard]] constexpr size_t available() const {
+    [[nodiscard]] constexpr size_t available() const noexcept {
         return length_;
     }
 
-    [[nodiscard]] constexpr size_t free_capacity() const {
+    [[nodiscard]] constexpr size_t free_capacity() const noexcept {
         return 32 - length_;
     }
 private:

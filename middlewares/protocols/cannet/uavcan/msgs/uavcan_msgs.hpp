@@ -7,7 +7,7 @@
 // https://www.ckesc.com/wp-content/uploads/2025/03/CKESC-UAVCAN2.1-min.pdf
 
 namespace ymd::uavcan::msgs{
-struct StatusFlag{
+struct [[nodiscard]] StatusFlag final{
     enum class [[nodiscard]] Mode:uint8_t{
         Off = 0b000,
         Idle = 0b001,
@@ -22,21 +22,63 @@ struct StatusFlag{
     using Self = StatusFlag;
     uint32_t bits;
 
-    constexpr auto is_over_voltage() const {return make_bitfield_proxy<0, 1, bool>(bits);}
-    constexpr auto is_under_voltage() const {return make_bitfield_proxy<1, 2, bool>(bits);}
-    constexpr auto is_over_current() const {return make_bitfield_proxy<2, 3, bool>(bits);}
-    constexpr auto is_throttle_lost() const {return make_bitfield_proxy<3, 4, bool>(bits);}
 
-    constexpr auto is_throttle_abnormal() const {return make_bitfield_proxy<4, 5, bool>(bits);}
-    constexpr auto is_mos_over_temperature() const {return make_bitfield_proxy<5, 6, bool>(bits);}
-    constexpr auto is_capacitor_over_temperature() const {return make_bitfield_proxy<6, 7, bool>(bits);}
-    constexpr auto is_stall() const {return make_bitfield_proxy<7, 8, bool>(bits);}
-    constexpr auto is_opa_abnormal() const {return make_bitfield_proxy<8, 9, bool>(bits);}
-    constexpr auto is_upper_bridge_abnormal() const {return make_bitfield_proxy<9, 10, bool>(bits);}
-    constexpr auto is_lower_bridge_abnormal() const {return make_bitfield_proxy<10, 11, bool>(bits);}
-    constexpr auto is_encoder_abnormal() const {return make_bitfield_proxy<11, 12, bool>(bits);}
-    constexpr auto mode() const {return make_bitfield_proxy<12, 15, Mode>(bits);}
-    constexpr auto encoder_bits() const {return make_bitfield_proxy<16, 31, uint16_t>(bits);}
+    template<typename Self>
+    constexpr auto is_over_voltage(this Self && self) {
+        return make_bitfield_proxy<0, 1, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_under_voltage(this Self && self) {
+        return make_bitfield_proxy<1, 2, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_over_current(this Self && self) {
+        return make_bitfield_proxy<2, 3, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_throttle_lost(this Self && self) {
+        return make_bitfield_proxy<3, 4, bool>(&self.bits);}
+
+    
+    template<typename Self>
+    constexpr auto is_throttle_abnormal(this Self && self) {
+        return make_bitfield_proxy<4, 5, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_mos_over_temperature(this Self && self) {
+        return make_bitfield_proxy<5, 6, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_capacitor_over_temperature(this Self && self) {
+        return make_bitfield_proxy<6, 7, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_stall(this Self && self) {
+        return make_bitfield_proxy<7, 8, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_opa_abnormal(this Self && self) {
+        return make_bitfield_proxy<8, 9, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_upper_bridge_abnormal(this Self && self) {
+        return make_bitfield_proxy<9, 10, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_lower_bridge_abnormal(this Self && self) {
+        return make_bitfield_proxy<10, 11, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto is_encoder_abnormal(this Self && self) {
+        return make_bitfield_proxy<11, 12, bool>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto mode(this Self && self) {
+        return make_bitfield_proxy<12, 15, Mode>(&self.bits);}
+    
+    template<typename Self>
+    constexpr auto encoder_bits(this Self && self) {
+        return make_bitfield_proxy<16, 31, uint16_t>(&self.bits);}
 
 };
 
@@ -59,25 +101,67 @@ enum class [[nodiscard]] CanBaud:uint8_t{
 struct [[nodiscard]] LedSettings final{
     using Self = LedSettings;
 
-    uint16_t red_en:1;
-    uint16_t green_en:1;
-    uint16_t blue_en:1;
-    uint16_t blink_en:1;
-    uint16_t blink_freq_bits:12;
+    uint16_t bits;
 
-    constexpr uq16 blink_freq_hz() const {
-        return blink_freq_bits * 0.1_uq16;
-    }
 
-    void set_blink_freq_hz(const uq16 freq_hz){ 
-        blink_freq_bits = static_cast<uint16_t>(freq_hz * 10);
-    }
+    template<typename Self>
+    constexpr auto red_en(this Self && self) {
+        return make_bitfield_proxy<0, 1, bool>(&self.bits);}
+
+    template<typename Self>
+    constexpr auto green_en(this Self && self) {
+        return make_bitfield_proxy<1, 2, bool>(&self.bits);}
+
+
+    template<typename Self>
+    constexpr auto blue_en(this Self && self) {
+        return make_bitfield_proxy<2, 3, bool>(&self.bits);}
+
+
+    struct BlinkFreqCode{
+        uint16_t bits;
+
+        static constexpr BlinkFreqCode from_freq_hz(const uq16 freq_hz){ 
+            uint16_t bits = 0;
+            bits |= (static_cast<uint16_t>(freq_hz * 10)) << 0;
+            bits |= 1u << 0;
+            BlinkFreqCode self{bits};
+            return self;
+        }
+
+        static constexpr BlinkFreqCode from_slient(){
+            BlinkFreqCode self;
+            self.bits = 0;
+            return self;
+        }
+
+
+        template<typename Self>
+        constexpr auto blink_en(this Self && self) {
+            return make_bitfield_proxy<0, 0 + 1, bool>(&self.bits);
+        }
+
+
+        template<typename Self>
+        constexpr auto freq_bits(this Self && self) {
+            return make_bitfield_proxy<1, 1 + 12, uint16_t>(&self.bits);
+        }
+
+        constexpr uq16 to_hz() const noexcept{
+            return freq_bits().get() * 0.1_uq16;
+        }
+    };
+
+
+    template<typename Self>
+    constexpr auto blink_freq(this Self && self) {
+        return make_bitfield_proxy<3, 3 + 13, BlinkFreqCode>(&self.bits);}
 
     [[nodiscard]] static constexpr Self from_bits(const uint16_t bits){
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept{
         return std::bit_cast<uint16_t>(*this);
     }
 };
@@ -96,21 +180,23 @@ struct [[nodiscard]] ThrottleCode final{
 
     bs14 bits;
 
-    constexpr bool is_zero(){
+    static constexpr Self from_i16(const int16_t int_val) noexcept{
+        return Self{bs14::from_bits(int_val)};
+    }
+
+    constexpr bool is_zero() const noexcept{
         return bits.is_zero();
     }
 
-    constexpr bool is_negative(){
+    constexpr bool is_negative() const noexcept{
         return bits.highest_bit();
     }
 
-    constexpr int16_t to_i16(){
+    constexpr int16_t to_i16() const noexcept{
         return std::bit_cast<int16_t>(bits.to_bits());
     }
 
-    static constexpr Self from_i16(const int16_t int_val){
-        return Self{bs14::from_bits(int_val)};
-    }
+
 };
 
 
@@ -148,9 +234,9 @@ struct ParamCfg final{
 struct EscStatus final{
     static constexpr FrameId FRAME_ID = FrameId::EscStatus;
     StatusFlag status_flag;
-    f16 voltage_volts;
-    f16 current_amps;
-    f16 temperature_celsius;
+    math::fp16 voltage_volts;
+    math::fp16 current_amps;
+    math::fp16 temperature_celsius;
     bs18 rpm;
     bs7 throttle_percents;
     bs5 esc_id;
@@ -206,6 +292,6 @@ struct [[nodiscard]] ParamGet final{
     // 1字节（序号41）
     uint8_t save_option;
     // 32字节（序号42-73）
-    union{std::array<uint32_t, 8> __reserved__;};
+    union{std::array<uint32_t, 8> __reserved__ = {};};
 };
 }

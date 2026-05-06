@@ -58,17 +58,17 @@ struct UCharsView{
         };
     }
 
-    [[nodiscard]] constexpr uint8_t operator[](const size_t idx) const {
+    [[nodiscard]] constexpr uint8_t operator[](const size_t idx) const noexcept {
         if(idx >= length_)
             __builtin_trap();
         return p_uchars_[idx];
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> uchars() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> uchars() const noexcept {
         return {p_uchars_, length_};
     }
 
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
 
         if(p_uchars_ == nullptr) [[unlikely]]
             return 0;
@@ -79,7 +79,7 @@ struct UCharsView{
         return CAPACITY;
     }
 
-    [[nodiscard]] imconstexpr StringView as_str() const {
+    [[nodiscard]] imconstexpr StringView as_str() const noexcept {
         return StringView{
             reinterpret_cast<const char *>(p_uchars_), 
             length()

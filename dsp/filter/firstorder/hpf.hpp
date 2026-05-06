@@ -34,7 +34,7 @@ public:
         last_x = x;
     }
 
-    constexpr T result() const{
+    constexpr T result() const noexcept {
         return last;
     }
 

@@ -77,7 +77,6 @@ sys::abort(AbortInfo::from_reason(str));\
 
 #define UNREACHABLE() __builtin_trap();
 
-
 #endif
 
 namespace {
@@ -85,12 +84,6 @@ namespace {
 #define UNUSED(x) (void)(x) 
 
 #if 1
-template<typename T>
-static T clone_volatile(volatile T * p_reg){
-    static_assert(sizeof(T) == 4);
-    const uint32_t temp_u32 = *reinterpret_cast<volatile uint32_t *>(p_reg);
-    return std::bit_cast<T>(temp_u32);
-}
 
 template<typename T>
 static void notify_volatile_readed(volatile T * p_reg){
@@ -100,11 +93,6 @@ static void notify_volatile_readed(volatile T * p_reg){
     return;
 }
 
-template<typename T>
-static void store_volatile(volatile T * p_reg, const uint32_t x){
-    static_assert(sizeof(T) == 4);
-    *reinterpret_cast<volatile uint32_t *>(p_reg) = x;
-}
 
 
 #endif
@@ -359,7 +347,7 @@ void Uart::init(const Config & cfg){
     //清除中断标志位
     {
         //清除statr标志位
-        store_volatile(
+        intrinsics::store_volatile_with_u32(
             reinterpret_cast<volatile uint32_t*>(&RAL_INST(self.p_inst_)->STATR)
             ,  ~STATR_CLEARABLE_MASK
         );
@@ -809,7 +797,7 @@ void UartIrqHandler::isr_idle(Uart & self){
 
 
 void Uart::enable_rxne_interrupt(const Enable en){
-    lld::uart_enable_idle_interrupt(p_inst_, en);
+    lld::uart_enable_rxne_interrupt(p_inst_, en);
 }
 
 void Uart::enable_tx_interrupt(const Enable en){
@@ -851,8 +839,8 @@ struct alignas(4) [[nodiscard]] BareUartEvent final{
 
 void UartIrqHandler::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.p_inst_);
-    const auto temp_statr = clone_volatile(&ral_inst->STATR);
-    const auto temp_ctlr1 = clone_volatile(&ral_inst->CTLR1);
+    const auto temp_statr = intrinsics::load_volatile_to_u32(&ral_inst->STATR);
+    const auto temp_ctlr1 = intrinsics::load_volatile_to_u32(&ral_inst->CTLR1);
 
     // statr
     // |  3  |  2   |  1 |  0   |
@@ -950,7 +938,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
             UartIrqHandler::isr_rxne(self);
 
             // 也可以直接写 0 来清除该位
-            // store_volatile(&ral_inst->STATR, (~(1u << 5)));
+            // intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~(1u << 5)));
         }
 
         // txe
@@ -975,7 +963,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
             UartIrqHandler::isr_tc(self);
 
             // 也可以直接写 0 来清除此位
-            store_volatile(&ral_inst->STATR, (~CTLR1_TC_MASK));
+            intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~CTLR1_TC_MASK));
         }
 
         // idle
@@ -997,7 +985,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
 
     #if 0
     if(temp_statr.LBD) [[unlikely]]{
-        const auto temp_ctlr2 = clone_volatile(&ral_inst->CTLR2);
+        const auto temp_ctlr2 = intrinsics::load_volatile_to_u32(&ral_inst->CTLR2);
         // LIN Break 检测标志。当检测到 LIN Break 时，
         // 该位被硬件置位。由软件清零。如果 LBDIE 已
         // 经被置位，则将会产生中断。
@@ -1008,7 +996,7 @@ void UartIrqHandler::on_interrupt(Uart & self){
     }
 
     if(temp_statr.CTS) [[unlikely]]{
-        const auto temp_ctlr3 = clone_volatile(&ral_inst->CTLR3);
+        const auto temp_ctlr3 = intrinsics::load_volatile_to_u32(&ral_inst->CTLR3);
         
         // CTS 状态改变标志。如果设置了 CTSE 位，当
         // nCTS 输出状态改变时，该位将由硬件置高。由

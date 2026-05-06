@@ -47,6 +47,6 @@ private:
     
     IResult<> read_reg(const RegAddr addr, int16_t & data);
 
-    IResult<> read_burst(const RegAddr addr, std::span<uint16_t> pbuf);
+    IResult<> read_bulk(const RegAddr addr, std::span<uint16_t> pbuf);
 };
 }

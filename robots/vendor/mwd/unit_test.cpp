@@ -8,7 +8,7 @@ namespace{
 
 [[maybe_unused]] void test_crc(){
     {
-        constexpr uint8_t val = WrapAddAccumulator()
+        constexpr uint8_t val = WrapAddAccumulator::from_default()
             .push_byte(0x08)
             .finalize()
         ;
@@ -17,7 +17,7 @@ namespace{
 
     {
         constexpr uint8_t arr[] = {0x12, 0x34, 0x56};
-        constexpr uint8_t val = WrapAddAccumulator()
+        constexpr uint8_t val = WrapAddAccumulator::from_default()
             .push_bytes(std::span(arr))
             .finalize()
         ;

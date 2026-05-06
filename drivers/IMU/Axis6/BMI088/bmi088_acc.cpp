@@ -72,7 +72,7 @@ IResult<> BMI088_Acc::validate(){
 
 IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
-    return transport_.read_burst(
+    return transport_.read_bulk(
         reg.REG_ADDR, 
         std::span(
             reinterpret_cast<int16_t *>(&(reg.as_bits_mut())), 

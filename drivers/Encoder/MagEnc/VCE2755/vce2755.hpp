@@ -65,17 +65,17 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> bytes){
+    IResult<> read_bulk(const uint8_t reg_addr, std::span<uint8_t> bytes){
         const auto tx_u8 = static_cast<uint8_t>(0x80 | reg_addr);
         if(const auto res = spi_drv_.write_single<uint8_t>(tx_u8, CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_.read_burst<uint8_t>(bytes);
+        if(const auto res = spi_drv_.read_bulk<uint8_t>(bytes);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
-        return read_burst(reg_addr, std::span(&reg_val, 1));
+        return read_bulk(reg_addr, std::span(&reg_val, 1));
     }
 
     template<typename T>

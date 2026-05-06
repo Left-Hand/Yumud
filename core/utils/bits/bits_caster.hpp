@@ -17,7 +17,7 @@ struct [[nodiscard]] IntoBitsCtor{
     //no explicit
     template<typename T>
     requires (std::is_same_v<tmp::from_bits_t<T>, D>)
-    [[nodiscard]] constexpr operator T() const {
+    [[nodiscard]] constexpr operator T() const noexcept {
         return tmp::obj_from_bits<T>(bits);
     }
 };
@@ -39,7 +39,7 @@ struct [[nodiscard]] BytesCtorBits{
     //no explicit
     template<typename T, typename D = tmp::from_bits_t<T>>
     requires (Extent != std::dynamic_extent)
-    [[nodiscard]] constexpr operator T() const {
+    [[nodiscard]] constexpr operator T() const noexcept {
         static_assert(Extent == sizeof(D), "Extent != sizeof(D)");
         const auto bits = bytes_to_int<E, D>(bytes_);
         return T(IntoBitsCtor<D>(bits));
@@ -50,14 +50,14 @@ struct [[nodiscard]] BytesCtorBits{
     template<typename T, typename D = tmp::from_bits_t<T>>
     requires (Extent == std::dynamic_extent)
     [[deprecated("use try_into instead for better runtime safety")]]
-    [[nodiscard]] constexpr operator T() const {
+    [[nodiscard]] constexpr operator T() const noexcept {
         if(Extent != sizeof(D)) [[unlikely]] __builtin_abort();
         const auto bits = bytes_to_int<E, D>(bytes_.template subspan<0, sizeof(D)>());
         return T(IntoBitsCtor<D>(bits));
     }
 
     template<typename T, typename D = tmp::from_bits_t<T>>
-    [[nodiscard]] constexpr Option<T> try_into() const{
+    [[nodiscard]] constexpr Option<T> try_into() const noexcept {
         if constexpr (Extent == std::dynamic_extent){
             if(bytes_.size() != sizeof(D)) [[unlikely]] return None;
         }

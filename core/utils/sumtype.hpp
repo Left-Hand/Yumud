@@ -69,7 +69,7 @@ public:
 
     template<typename Raw, typename T = tmp::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
-    constexpr bool is() const{
+    constexpr bool is() const noexcept {
         return std::holds_alternative<T>(value_);
     }
 
@@ -80,13 +80,13 @@ public:
     }
 
     template<typename T>
-    constexpr const T & unwrap_as() const {
+    constexpr const T & unwrap_as() const noexcept {
         if(! this->is<T>()) __builtin_abort();
         return std::get<T>(value_); 
     }
 
     template<typename T>
-    constexpr Option<const T &> as() const {
+    constexpr Option<const T &> as() const noexcept {
         if(! this->is<T>()) return None;
         return Some<const T *>(&std::get<T>(value_)); 
     }
@@ -116,12 +116,12 @@ public:
 
     // Rust-style match functionality
     template<typename... Fns>
-    constexpr decltype(auto) match(Fns&&... fns) const {
+    constexpr decltype(auto) match(Fns&&... fns) const noexcept {
         return std::visit(overload(std::forward<Fns>(fns)...), value_);
     }
 
     template<typename Fn>
-    constexpr decltype(auto) visit(Fn&& fn) const {
+    constexpr decltype(auto) visit(Fn&& fn) const noexcept {
         return std::visit(std::forward<Fn>(fn), value_);
     }
     friend OutputStream & operator <<(OutputStream & os,const Sumtype & self){
@@ -136,7 +136,7 @@ private:
     std::variant<Ts...> value_;
 
 
-    constexpr size_t var_index() const {
+    constexpr size_t var_index() const noexcept {
         return value_.index();
     }
 

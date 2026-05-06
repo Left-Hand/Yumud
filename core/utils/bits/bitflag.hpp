@@ -50,7 +50,7 @@ struct [[nodiscard]] BitFlag final{
         clear_by_mask(enum_to_mask(e));
     }
 
-    [[nodiscard]] bool test(const Enum e) const {
+    [[nodiscard]] bool test(const Enum e) const noexcept {
         return test(enum_to_mask(e));
     }
 
@@ -58,7 +58,7 @@ struct [[nodiscard]] BitFlag final{
         toggle(enum_to_mask(e));
     }
 
-    [[nodiscard]] constexpr D load() const {
+    [[nodiscard]] constexpr D load() const noexcept {
         return bits_;
     }
 
@@ -82,7 +82,7 @@ struct [[nodiscard]] BitFlag final{
         explicit constexpr Iterator(D remaining) : 
             remaining_(remaining), rank_(0) {}
 
-        constexpr Enum operator*() const {
+        constexpr Enum operator*() const noexcept {
             return Policy::rank_to_enum(rank_);
         }
 
@@ -99,11 +99,11 @@ struct [[nodiscard]] BitFlag final{
 
         constexpr bool operator==(const Iterator& other) const = default;
         
-        constexpr bool operator==(Sentinel) const {
+        constexpr bool operator==(Sentinel) const noexcept {
             return remaining_ == 0;
         }
 
-        constexpr size_t count_ones() const {
+        constexpr size_t count_ones() const noexcept {
             return __builtin_popcount(remaining_);
         }
 
@@ -118,17 +118,17 @@ struct [[nodiscard]] BitFlag final{
     };
 
 
-    [[nodiscard]] size_t count_ones() const {
+    [[nodiscard]] size_t count_ones() const noexcept {
         return __builtin_popcount(bits_);
     }
 
-    Iterator begin() const {
+    Iterator begin() const noexcept {
         D value = bits_;
         Iterator it(value);
         return it;
     }
 
-    constexpr Sentinel end() const {
+    constexpr Sentinel end() const noexcept {
         return Sentinel{};
     }
 

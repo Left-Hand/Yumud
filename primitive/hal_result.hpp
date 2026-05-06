@@ -35,12 +35,12 @@ public:
     constexpr HalError & operator = (const HalError & other) = default;
     constexpr HalError & operator = (HalError && other) = default;
 
-    constexpr bool operator ==(const HalError other) const {return (kind_ == other.kind_);}
-    constexpr bool operator !=(const HalError other) const {return (kind_ != other.kind_);}
-    constexpr bool operator ==(const Kind kind) const {return (kind_ == kind);}
-    constexpr bool operator !=(const Kind kind) const {return (kind_ != kind);}
+    constexpr bool operator ==(const HalError other) const noexcept {return (kind_ == other.kind_);}
+    constexpr bool operator !=(const HalError other) const noexcept {return (kind_ != other.kind_);}
+    constexpr bool operator ==(const Kind kind) const noexcept {return (kind_ == kind);}
+    constexpr bool operator !=(const Kind kind) const noexcept {return (kind_ != kind);}
 
-    constexpr Kind kind() const {return kind_;}
+    constexpr Kind kind() const noexcept {return kind_;}
 private:
     Kind kind_;
 };
@@ -69,25 +69,25 @@ public:
     constexpr HalResult(HalResult && other):
         err_(other.err_){;}
 
-    constexpr bool operator ==(const HalResult & other) const {
+    constexpr bool operator ==(const HalResult & other) const noexcept {
         return err_ == other.err_;}
-    constexpr bool operator !=(const HalResult & other) const {
+    constexpr bool operator !=(const HalResult & other) const noexcept {
         return err_ != other.err_;}
 
 
-    __fast_inline constexpr bool is_err() const {
+    __fast_inline constexpr bool is_err() const noexcept {
         return not is_ok();
     }
 
 
-    __fast_inline constexpr bool is_ok() const {
+    __fast_inline constexpr bool is_ok() const noexcept {
         if(err_.has_value()) [[unlikely]] 
             return false;
         else [[likely]]
             return true;
     }
 
-    constexpr HalError unwrap_err() const {return err_.value();}
+    constexpr HalError unwrap_err() const noexcept {return err_.value();}
 
 private:
     std::optional<HalError> err_;

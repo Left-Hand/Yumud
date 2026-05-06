@@ -30,12 +30,12 @@ IResult<> AK8975::init(){
 
 
 IResult<> AK8975::update_adj(){
-    return transport_.read_burst(0x10, std::span(&x_adj, 3));
+    return transport_.read_bulk(0x10, std::span(&x_adj, 3));
 }
 
 
 IResult<> AK8975::update(){
-    return transport_.read_burst(0x03, std::span(&x, 2 * 3));
+    return transport_.read_bulk(0x03, std::span(&x, 2 * 3));
 }
 
 

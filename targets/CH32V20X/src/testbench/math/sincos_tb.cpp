@@ -590,11 +590,13 @@ void sincos_main(){
         .tx_strategy = CommStrategy::Dma,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets(EN);
-    // DEBUGGER.force_sync(EN);
-    // DEBUGGER.set_eps(4);
-    DEBUGGER.set_eps(6);
-
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     while(true){
         clock::delay(1ms);
         // DEBUGGER.println(clock::seconds());
@@ -645,8 +647,13 @@ void sincos_main(){
     auto formatter = BufStream (std::span(format_buf));
     // formatter.set_radix(8);
     // formatter.set_splitter(", ");
-    formatter.set_splitter(",");
-    formatter.set_eps(4);
+    formatter.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
 
     // for(size_t i = 0; i < 128; i++){

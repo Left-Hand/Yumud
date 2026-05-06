@@ -57,7 +57,7 @@ private:
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        IResult<Angular<uq32>> parse() const {
+        IResult<Angular<uq32>> parse() const noexcept {
             if(not is_pc_valid()) [[unlikely]]
                 return Err(EncoderError::InvalidPc);
 
@@ -65,7 +65,7 @@ private:
             return Ok(Angular<uq32>::from_turns(turns));
         }
 
-        [[nodiscard]] bool is_pc_valid() const {
+        [[nodiscard]] bool is_pc_valid() const noexcept {
             //TODO;
             return true;
         }

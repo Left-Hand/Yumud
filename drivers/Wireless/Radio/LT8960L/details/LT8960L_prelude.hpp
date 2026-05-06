@@ -103,7 +103,7 @@ struct LT8960L_Prelude{
             return *this;
         }
 
-        constexpr auto kind() const {return status_;}
+        constexpr auto kind() const noexcept {return status_;}
         constexpr auto & timeout() {return timeout_;}
 
         //暂时不能为constexpr 方便调试时显示状态
@@ -124,7 +124,7 @@ struct LT8960L_Prelude{
         constexpr Channel & operator = (const Channel & other) = default;
         constexpr Channel & operator = (Channel && other) = default;
 
-        constexpr auto to_u8() const {
+        constexpr auto to_u8() const noexcept {
             return ch_;
         }
     private:    
@@ -150,9 +150,9 @@ struct LT8960L_Transport final:public details::LT8960L_Prelude{
 
     IResult<> read_reg(uint8_t address, uint16_t & data);
 
-    IResult<size_t> read_burst(uint8_t address, std::span<uint8_t> pbuf);
+    IResult<size_t> read_bulk(uint8_t address, std::span<uint8_t> pbuf);
 
-    IResult<size_t> write_burst(uint8_t address, std::span<const uint8_t> pbuf);
+    IResult<size_t> write_bulk(uint8_t address, std::span<const uint8_t> pbuf);
 
     IResult<> start_hw_listen_pkt();
 

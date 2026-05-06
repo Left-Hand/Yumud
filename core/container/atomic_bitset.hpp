@@ -21,7 +21,7 @@ struct [[nodiscard]] AtomicBitset {
         bits_.fetch_or(1ULL << idx, std::memory_order_release);
     }
     
-    [[nodiscard]]  bool test(size_t idx) const {
+    [[nodiscard]]  bool test(size_t idx) const noexcept {
         return (bits_.load(std::memory_order_acquire) & (1ULL << idx)) != 0;
     }
     
@@ -33,11 +33,11 @@ struct [[nodiscard]] AtomicBitset {
         bits_.store(0, std::memory_order_release);
     }
     
-    [[nodiscard]] bool all() const {
+    [[nodiscard]] bool all() const noexcept {
         return bits_.load(std::memory_order_acquire) == ((1ULL << N) - 1);
     }
     
-    [[nodiscard]] size_t count() const {
+    [[nodiscard]] size_t count() const noexcept {
         return __builtin_popcountll(bits_.load(std::memory_order_acquire));
     }
     

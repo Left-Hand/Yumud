@@ -48,7 +48,7 @@ public:
     constexpr CrossKinematics(CrossKinematics<T> && other) = delete;
 
 
-    constexpr T forward(const Angular<T> angle) const {
+    constexpr T forward(const Angular<T> angle) const noexcept {
         auto base_pos = Vec2<T>{-config_.xoffs_length, 0};
         auto jpos = base_pos + Vec2<T>{config_.upperarm_length, 0}.rotated(angle);
 
@@ -56,7 +56,7 @@ public:
         return jpos.y + delta_h;
     }
 
-    T inverse(const T height) const {
+    T inverse(const T height) const noexcept {
         auto bevel = Vec2<T>{config_.xoffs_length, height};
         auto bevel_length = bevel.length();
 

@@ -19,9 +19,13 @@ void ma730_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto & spi = hal::spi1;
     spi.init({

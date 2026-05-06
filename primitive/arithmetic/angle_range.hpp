@@ -49,39 +49,39 @@ struct [[nodiscard]] AngularRange{
         return AngularRange{_start, _interval};
     }
 
-    constexpr std::tuple<Angular<T>, Angular<T>> start_and_stop() const {
+    constexpr std::tuple<Angular<T>, Angular<T>> start_and_stop() const noexcept {
         return {start, start + interval};
     }
 
-    constexpr Angular<T> stop() const {
+    constexpr Angular<T> stop() const noexcept {
         return start + interval;
     }
 
-    constexpr bool is_clockwise() const {
+    constexpr bool is_clockwise() const noexcept {
         return interval.is_positive();
     }
 
-    constexpr bool is_counter_clockwise() const {
+    constexpr bool is_counter_clockwise() const noexcept {
         return interval.is_negative();
     }
 
-    constexpr AngularRange<T> swapped() const {
+    constexpr AngularRange<T> swapped() const noexcept {
         return {start - interval, -interval};
     }
 
-    constexpr AngularRange<T> clockwised() const {
+    constexpr AngularRange<T> clockwised() const noexcept {
         if(is_clockwise()) return *this;
         return swapped();
     }
 
-    constexpr AngularRange<T> counter_clockwised() const {
+    constexpr AngularRange<T> counter_clockwised() const noexcept {
         if(is_counter_clockwise()) return *this;
         return swapped();
     }
 
 
     // 改进的包含性检查 - 考虑逆时针为正的约定
-    constexpr bool contains_angle(Angular<T> angle) const {
+    constexpr bool contains_angle(Angular<T> angle) const noexcept {
         // Normalize all angles to [0, 1) range for comparison
         const auto norm_start = start.unsigned_normalized();
         const auto norm_stop = stop().unsigned_normalized();
@@ -110,7 +110,7 @@ struct [[nodiscard]] AngularRange{
 
 
     #if 0
-    constexpr AngularRange<T> normalize_counter_clockwised() const {
+    constexpr AngularRange<T> normalize_counter_clockwised() const noexcept {
         if(is_counter_clockwise()) {
             // Already counter-clockwise, just normalize the start angle
             Angular<T> normalized_start = start.unsigned_normalized();
@@ -130,32 +130,32 @@ struct [[nodiscard]] AngularRange{
     }
 
 
-    [[nodiscard]] constexpr bool is_major() const {
+    [[nodiscard]] constexpr bool is_major() const noexcept {
         return interval.abs() > Angular<T>::HALF_LAP;
     }
 
-    [[nodiscard]] constexpr bool is_minor() const {
+    [[nodiscard]] constexpr bool is_minor() const noexcept {
         return interval.abs() < Angular<T>::HALF_LAP;
     }
 
-    [[nodiscard]] constexpr bool is_straight() const {
+    [[nodiscard]] constexpr bool is_straight() const noexcept {
         return interval.abs() == Angular<T>::HALF_LAP;
     }
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return interval.abs() >= Angular<T>::LAP;
     }
 
-    constexpr Angular<T> sweep() const {
+    constexpr Angular<T> sweep() const noexcept {
         return interval.abs();
     }
 
-    constexpr Angular<T> bisector() const {
+    constexpr Angular<T> bisector() const noexcept {
         return start + interval / T(2);
     }
 
     // 改进的包含性检查 - 考虑逆时针为正的约定
-    [[nodiscard]] constexpr bool contains_angle(Angular<T> angle) const {
+    [[nodiscard]] constexpr bool contains_angle(Angular<T> angle) const noexcept {
         // Normalize all angles to [0, 1) range for comparison
         Angular<T> norm_start = start.unsigned_normalized();
         Angular<T> norm_stop = stop().unsigned_normalized();
@@ -183,7 +183,7 @@ struct [[nodiscard]] AngularRange{
     }
 
     // 检查是否包含另一个范围
-    [[nodiscard]] constexpr bool contains_range(const AngularRange& other) const {
+    [[nodiscard]] constexpr bool contains_range(const AngularRange& other) const noexcept {
         auto norm_this = normalize_counter_clockwised();
         auto norm_other = other.normalize_counter_clockwised();
         
@@ -210,7 +210,7 @@ struct [[nodiscard]] AngularRange{
     }
 
     // 检查两个范围是否重叠
-    [[nodiscard]] constexpr bool overlaps_with(const AngularRange& other) const {
+    [[nodiscard]] constexpr bool overlaps_with(const AngularRange& other) const noexcept {
         auto norm_this = normalize_counter_clockwised();
         auto norm_other = other.normalize_counter_clockwised();
         
@@ -222,7 +222,7 @@ struct [[nodiscard]] AngularRange{
     }
 
     // 获取重叠部分（返回逆时针方向的范围）
-    constexpr Option<AngularRange> intersection_with(const AngularRange& other) const {
+    constexpr Option<AngularRange> intersection_with(const AngularRange& other) const noexcept {
         if (!overlaps(other)) {
             return None;
         }
@@ -242,7 +242,7 @@ struct [[nodiscard]] AngularRange{
     }
 
 
-    constexpr Angular<T> clamp(Angular<T> angle) const {
+    constexpr Angular<T> clamp(Angular<T> angle) const noexcept {
         if (contains_angle(angle)) return angle;
         
         auto norm_range = normalize_counter_clockwised();
@@ -258,11 +258,11 @@ struct [[nodiscard]] AngularRange{
     #endif
 
     // 运算符重载
-    [[nodiscard]] constexpr bool operator==(const AngularRange& other) const {
+    [[nodiscard]] constexpr bool operator==(const AngularRange& other) const noexcept {
         return start == other.start && interval == other.interval;
     }
 
-    [[nodiscard]] constexpr bool operator!=(const AngularRange& other) const {
+    [[nodiscard]] constexpr bool operator!=(const AngularRange& other) const noexcept {
         return !(*this == other);
     }
 

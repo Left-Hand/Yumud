@@ -60,7 +60,7 @@ struct SGP30_Prelude{
         }
 
     
-        constexpr ChecksumBuilder push_byte(const uint8_t byte) const {
+        constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
             ChecksumBuilder self = *this;
             self.checksum ^= byte;
             for (uint8_t b = 0; b < 8; b++) {
@@ -72,7 +72,7 @@ struct SGP30_Prelude{
             return self;
         }
 
-        constexpr ChecksumBuilder push_bytes(std::span<const uint8_t> bytes) const {
+        constexpr ChecksumBuilder push_bytes(std::span<const uint8_t> bytes) const noexcept {
             ChecksumBuilder self = *this;
             for(size_t i = 0; i < bytes.size(); i++){
                 self = self.push_byte(bytes[i]);
@@ -80,7 +80,7 @@ struct SGP30_Prelude{
             return self;
         }
 
-        [[nodiscard]] uint8_t finalize() const {
+        [[nodiscard]] uint8_t finalize() const noexcept {
             return checksum;
         }
     };

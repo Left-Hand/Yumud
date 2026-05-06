@@ -42,8 +42,8 @@ IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & bits){
     return res;
 }
 
-IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
-    auto res = transport_.read_burst(reg_addr, pbuf);
+IResult<> AK8963::read_bulk(const uint8_t reg_addr, std::span<int16_t> pbuf){
+    auto res = transport_.read_bulk(reg_addr, pbuf);
     return res;
 }
 
@@ -154,7 +154,7 @@ IResult<> AK8963::update(){
     // when any of measurement bits is read, be sure to read 
     // ST2 register at the end. 
     std::array<int16_t, 3> buf;
-    if(const auto res = this->read_burst(regs_.mag_x_reg.REG_ADDR, std::span(buf));
+    if(const auto res = this->read_bulk(regs_.mag_x_reg.REG_ADDR, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
 
     regs_.mag_x_reg.bits = buf[0];

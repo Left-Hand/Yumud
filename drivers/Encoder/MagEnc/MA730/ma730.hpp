@@ -39,11 +39,9 @@ public:
     IResult<> set_direction(const RotateDirection direction);
     IResult<EncoderFaultBitFields> get_fault();
 
-    IResult<> 
-    set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
+    IResult<> set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
 
-    IResult<> 
-    set_pulse_per_turn(const uint16_t ppt);
+    IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
     MA730_Regset regs_ = {};

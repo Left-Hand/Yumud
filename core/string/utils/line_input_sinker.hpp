@@ -47,7 +47,7 @@ struct [[nodiscard]] LineInputSinker final{
         return res;
     }
 
-    [[nodiscard]] constexpr size_t capacity() const{
+    [[nodiscard]] constexpr size_t capacity() const noexcept {
         return buf_.size();
     }
 

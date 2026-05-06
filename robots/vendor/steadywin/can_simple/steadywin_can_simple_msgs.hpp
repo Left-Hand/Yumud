@@ -25,7 +25,7 @@ struct [[nodiscard]] GetError final{
 
     ErrorSource source;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(source);
     }
 };
@@ -64,7 +64,7 @@ struct [[nodiscard]] SetAxisNodeId final{
 
     uint32_t axis_node_id;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_le_u32(axis_node_id);
     }
@@ -77,7 +77,7 @@ struct [[nodiscard]] SetAxisState final{
 
     AxisState axis_state;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(axis_state);
     }
 };
@@ -106,7 +106,7 @@ struct [[nodiscard]] MitControl final{
     }
 
     constexpr Result<Self, DeMsgError> 
-    try_from_bytes(std::span<const uint8_t, 8> bytes) const {
+    try_from_bytes(std::span<const uint8_t, 8> bytes) const noexcept {
         const uint16_t position_bits = 
             (bytes[0] << 8) | bytes[1];
         const uint16_t speed_bits = 
@@ -136,7 +136,7 @@ struct [[nodiscard]] GetMotorCurrent final{
     int32_t multilap_angle;
     int32_t count_n_cpr;
 
-    constexpr hal::ClassicCanPayload to_can_payload() const {
+    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
@@ -150,7 +150,7 @@ struct [[nodiscard]] SetControllerMode final{
     LoopMode loop_mode;
     InputMode input_mode;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         //stupid padding
         std::fill_n(bytes.begin(), 8, 0);
         bytes[0] = std::bit_cast<uint8_t>(loop_mode);
@@ -167,7 +167,7 @@ struct [[nodiscard]] SetInputPosition final{
     int16_t vel_ff;
     int16_t torque_ff;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(input_position);
         filler.push_le_i16(vel_ff);
@@ -183,7 +183,7 @@ struct [[nodiscard]] SetInputVelocity final{
     math::fp32 vel_ff;
     math::fp32 torque_ff;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(vel_ff);
         filler.push_fp32(torque_ff);
@@ -197,7 +197,7 @@ struct [[nodiscard]] SetInputTorque final{
 
     math::fp32 torque_ff;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(torque_ff);
     }
@@ -210,7 +210,7 @@ struct [[nodiscard]] SetLimits final{
 
     math::fp32 velocity_limit;
     math::fp32 current_limit;
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(velocity_limit);
         filler.push_fp32(current_limit);
@@ -230,7 +230,7 @@ struct [[nodiscard]] SetTrajVelLimit final{
 
     math::fp32 traj_vel_limit;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(traj_vel_limit);
     }
@@ -245,7 +245,7 @@ struct [[nodiscard]] SetTrajAccelLimit final{
     math::fp32 traj_decel_limit;
     
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(traj_accel_limit);
         filler.push_fp32(traj_decel_limit);
@@ -258,7 +258,7 @@ struct [[nodiscard]] SetTrajInertia final{
     static constexpr Command COMMAND = CommandKind{0x013};
     math::fp32 traj_inertia;//惯量
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(traj_inertia);
     }
@@ -271,7 +271,7 @@ struct [[nodiscard]] GetIq final{
     math::fp32 id_setpoint;
     math::fp32 iq_measured;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(id_setpoint);
         filler.push_fp32(iq_measured);
@@ -290,7 +290,7 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
     static constexpr Command COMMAND = CommandKind{0x017};
     math::fp32 bus_voltage;
     math::fp32 bus_current;
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(bus_voltage);
         filler.push_fp32(bus_current);
@@ -309,7 +309,7 @@ struct [[nodiscard]] SetMoveIncremental final{
     static constexpr Command COMMAND = CommandKind{0x019};
     math::fp32 displacement;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_le_i32(displacement.to_bits());
     }
@@ -322,7 +322,7 @@ struct [[nodiscard]] SetPosGain final{
 
     math::fp32 pos_gain;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(pos_gain);
     }
@@ -336,7 +336,7 @@ struct [[nodiscard]] SetVelGain final{
     math::fp32 vel_gain;
     math::fp32 vel_integrator_gain;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(vel_gain);
         filler.push_fp32(vel_integrator_gain);
@@ -350,7 +350,7 @@ struct [[nodiscard]] SetVelGain final{
 //     math::fp32 torque_setpoint;
 //     math::fp32 torque_measured;
 
-//     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+//     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
 //         BytesFiller filler(bytes);
 //         filler.push_fp32(torque_setpoint);
 //         filler.push_fp32(torque_measured);
@@ -365,7 +365,7 @@ struct [[nodiscard]] GetPowers final{
     math::fp32 electrical_power;
     math::fp32 mechanical_power;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const noexcept {
         BytesFiller filler(bytes);
         filler.push_fp32(electrical_power);
         filler.push_fp32(mechanical_power);

@@ -14,7 +14,7 @@ struct [[nodiscard]] SetMode final{
     
     Mode mode;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write, RegAddr::Mode}
             .fill_bytes_from_elements(bytes, mode);
     }
@@ -26,7 +26,7 @@ struct [[nodiscard]] ControlQCurrent final{
     
     CurrentCode q_current_code;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write, RegAddr{0x1c}}
             .fill_bytes_from_elements(bytes, q_current_code);
     }
@@ -38,7 +38,7 @@ struct [[nodiscard]] ControlPosition final{
     PositionCode position_code;
     TorqueCode torque_code;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write, RegAddr{0x07}}
             .fill_bytes_from_elements(bytes, position_code, NIL_U16, torque_code);
     }
@@ -49,7 +49,7 @@ struct [[nodiscard]] ControlTorque final{
     
     TorqueCode torque_code;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write,RegAddr{0x13}}
             .fill_bytes_from_elements(bytes, torque_code);
     }
@@ -64,7 +64,7 @@ struct [[nodiscard]] ControlPvt final{
     SpeedCode speed_code;
     TorqueCode torque_code;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write, RegAddr{0x35}}
             .fill_bytes_from_elements(bytes, position_code, speed_code, torque_code);
     }
@@ -77,7 +77,7 @@ struct [[nodiscard]] ControlTrapezoidal final{
     PositionCode position_code;
     SpeedCode speed_code;
     AccelerationCode accel_code;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const noexcept {
         SlotFiller{SlotCommand::Write, RegAddr{0x35}}
             .fill_bytes_from_elements(bytes, position_code, speed_code, accel_code);
     }

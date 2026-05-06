@@ -8,11 +8,11 @@
 namespace ymd::drivers{
 
 struct [[nodiscard]] KeyPlacement{
-    constexpr Option<uint8_t> row() const {
+    constexpr Option<uint8_t> row() const noexcept {
         if(may_row_ > 0) return Some(may_row_);
         else return None;
     }
-    constexpr Option<uint8_t> col() const {
+    constexpr Option<uint8_t> col() const noexcept {
         if(may_col_ > 0) return Some(may_col_);
         else return None;
     }
@@ -46,7 +46,7 @@ public:
 
 // class CharKeyEvent{
 // public:
-//     constexpr Option<char> key() const {
+//     constexpr Option<char> key() const noexcept {
 //         return key_;
 //     }
 
@@ -60,7 +60,7 @@ public:
 
 // class MouseEvent{
 // public:
-//     constexpr Option<Vec2i> pos() const {
+//     constexpr Option<Vec2i> pos() const noexcept {
 //         return pos_;
 //     }
 

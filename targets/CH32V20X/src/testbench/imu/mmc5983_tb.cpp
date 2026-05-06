@@ -115,9 +115,13 @@ void mmc5983_main(){
     });
 
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     // SoftI2c i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_pin_ = SCL_PIN;

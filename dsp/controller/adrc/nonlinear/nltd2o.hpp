@@ -36,7 +36,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         //原信号一阶导限幅
         iq16 x2_limit;
 
-        constexpr Result<Coeffs, StringView> try_into_precomputed() const {
+        constexpr Result<Coeffs, StringView> try_into_precomputed() const noexcept {
             const auto & self = *this;
             return Ok(Coeffs{
                 .dt = uq32::from_rcp(fs), 
@@ -59,7 +59,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
     constexpr void iterate(
         SecondOrderState<iq16> & state, 
         const std::array<iq16, 2> & ref 
-    ) const {
+    ) const noexcept {
         const iq16 x1_now = math::fixed_downcast<16>(state.x1);
         const iq16 x2_now = state.x2;
 

@@ -9,7 +9,7 @@ struct Triangle2{
     std::array<math::Vec2<T>, 3> points;
 
 
-    constexpr math::Vec2<T> top() const {
+    constexpr math::Vec2<T> top() const noexcept {
         const auto min_y = MIN(points[0].y, points[1].y, points[2].y);
         for (const auto& point : points) {
             if (point.y == min_y) {
@@ -19,7 +19,7 @@ struct Triangle2{
         return points[0]; // fallback
     }
 
-    constexpr math::Vec2<T> bottom() const {
+    constexpr math::Vec2<T> bottom() const noexcept {
         const auto max_y = MAX(points[0].y, points[1].y, points[2].y);
         for (const auto& point : points) {
             if (point.y == max_y) {
@@ -29,7 +29,7 @@ struct Triangle2{
         return points[0]; // fallback
     }
 
-    constexpr math::Vec2<T> middle() const {
+    constexpr math::Vec2<T> middle() const noexcept {
         const auto y0 = points[0].y, y1 = points[1].y, y2 = points[2].y;
         const auto min_y = MIN(y0, y1, y2);
         const auto max_y = MAX(y0, y1, y2);
@@ -44,19 +44,19 @@ struct Triangle2{
         return points[1];
     }
 
-    constexpr bool is_clockwise() const{
+    constexpr bool is_clockwise() const noexcept {
         return (points[1] - points[0]).cross(points[2] - points[0]) < 0;
     }
 
-    constexpr bool is_counter_clockwise() const {
+    constexpr bool is_counter_clockwise() const noexcept {
         return (points[1] - points[0]).cross(points[2] - points[0]) > 0;
     }
 
-    constexpr T area() const {
+    constexpr T area() const noexcept {
         return (points[1] - points[0]).cross(points[2] - points[0]) / 2;
     }
 
-    constexpr bool contains_point(const math::Vec2<T>& p) const {
+    constexpr bool contains_point(const math::Vec2<T>& p) const noexcept {
         const auto& a = points[0];
         const auto& b = points[1];
         const auto& c = points[2];
@@ -81,7 +81,7 @@ struct Triangle2{
         return (u >= 0) && (v >= 0) && (u + v <= 1);
     }
 
-    constexpr Triangle2<T> to_sorted_by_y() const {
+    constexpr Triangle2<T> to_sorted_by_y() const noexcept {
         Triangle2<T> result = *this;
         auto& p = result.points; // 引用别名提高可读性
         
@@ -93,11 +93,11 @@ struct Triangle2{
         return result;
     }
 
-    constexpr math::Rect2<T> bounding_box() const {
+    constexpr math::Rect2<T> bounding_box() const noexcept {
         return math::Rect2<T>::from_minimal_bounding_box(points);
     }
 
-    constexpr math::Vec2<T> operator[](const size_t index) const{
+    constexpr math::Vec2<T> operator[](const size_t index) const noexcept {
         return points[index];
     }
 
@@ -105,7 +105,7 @@ struct Triangle2{
         return points[index];
     }
 
-    constexpr math::Vec2<T> compute_centroid() const{
+    constexpr math::Vec2<T> compute_centroid() const noexcept {
         return (points[0] + points[1] + points[2]) / 3;
     }
 
@@ -159,11 +159,11 @@ public:
             x_step_((p1.y == p2.y) ? 0 : iq16(p2.x - p1.x) / (p2.y - p1.y)),
             current_x_(p1.x){;}
 
-        __fast_inline constexpr iq16 x() const {
+        __fast_inline constexpr iq16 x() const noexcept {
             return current_x_;
         }
 
-        __fast_inline constexpr math::Range2u16 x_range() const{
+        __fast_inline constexpr math::Range2u16 x_range() const noexcept {
             const iq16 a = x();
             const iq16 b = a + x_step();
             if(a < b){
@@ -183,7 +183,7 @@ public:
             current_x_ += x_step_;
         }
 
-        __fast_inline constexpr iq16 x_step() const {
+        __fast_inline constexpr iq16 x_step() const noexcept {
             return x_step_;
         }
     private:
@@ -210,11 +210,11 @@ public:
                 LineIterator(sorted_triangle_.points[2], sorted_triangle_.points[1]))
     {}
 
-    __fast_inline constexpr bool has_next() const {
+    __fast_inline constexpr bool has_next() const noexcept {
         return current_y_ < stop_y_;
     }
 
-    __fast_inline constexpr math::Range2u16 current_filled() const {
+    __fast_inline constexpr math::Range2u16 current_filled() const noexcept {
         auto & self = *this;
         return math::Range2u16::from_start_and_stop(
         // return math::Range2u16::from_start_and_stop_unchecked(
@@ -223,7 +223,7 @@ public:
         );
     }
 
-    __fast_inline constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
+    __fast_inline constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const noexcept {
         auto & self = *this;
         return {
             left_iter(self).x_range(),
@@ -240,7 +240,7 @@ public:
         right_iter(self).advance();
     }
 
-    constexpr bool is_mid_at_right() const{
+    constexpr bool is_mid_at_right() const noexcept {
         return is_mid_at_right_;
     }
 
@@ -306,7 +306,7 @@ struct RasterizationIterator<Triangle2<T>> {
         iter_(triangle.to_sorted_by_y()){;}
 
     // 检查是否还有下一行
-    constexpr bool has_next() const {
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 
@@ -337,7 +337,7 @@ struct RasterizationIterator<Triangle2<T>> {
         return Ok();
     }
 
-    constexpr bool is_mid_at_right() const{
+    constexpr bool is_mid_at_right() const noexcept {
         return iter_.is_mid_at_right();
     }
 private:

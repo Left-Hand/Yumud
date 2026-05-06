@@ -232,7 +232,7 @@ void Spi::set_remap(const SpiRemap remap){
 }
 
 
-uint32_t Spi::get_periph_clk_freq() const {
+uint32_t Spi::get_periph_clk_freq() const noexcept {
     return spi_get_periph_clk_freq(inst_nth_);
 }
 

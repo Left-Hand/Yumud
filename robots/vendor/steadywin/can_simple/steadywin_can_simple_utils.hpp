@@ -62,11 +62,11 @@ public:
 
 
 
-    [[nodiscard]] constexpr bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return pos_ == bytes_.size();
     }
 
-    size_t size() const {
+    size_t size() const noexcept {
         return pos_;
     }
 private:
@@ -132,7 +132,7 @@ private:
         return ret;
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
         return bytes_;
     }
 };

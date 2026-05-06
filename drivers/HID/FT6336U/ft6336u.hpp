@@ -101,21 +101,21 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(reg_addr, pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_bulk(reg_addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<uint16_t> read_u12(const uint8_t reg_addr){
         uint16_t ret;
-        if(const auto res = read_burst_u12(reg_addr, std::span(&ret, 1));
+        if(const auto res = read_bulk_u12(reg_addr, std::span(&ret, 1));
             res.is_err()) return Err(res.unwrap_err());
         return Ok(ret);
     }
 
-    IResult<> read_burst_u12(const uint8_t reg_addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(reg_addr, pbuf, std::endian::big);
+    IResult<> read_bulk_u12(const uint8_t reg_addr, std::span<uint16_t> pbuf){
+        if(const auto res = i2c_drv_.read_bulk(reg_addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         for(auto & item : pbuf){
             item = item & 0x0fff;

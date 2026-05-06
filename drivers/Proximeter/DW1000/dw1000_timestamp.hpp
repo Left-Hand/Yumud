@@ -34,14 +34,14 @@ public:
         return *this;
     }
 
-    constexpr bool is_valid() const {
+    constexpr bool is_valid() const noexcept {
         return (0 <= count && count <= TIME_MAX);
     }
-    constexpr float to_float() const {
+    constexpr float to_float() const noexcept {
         return (count%TIME_OVERFLOW)*TIME_RES;
     }
 
-    constexpr float to_meters() const {
+    constexpr float to_meters() const noexcept {
         return (count%TIME_OVERFLOW)*DISTANCE_OF_RADIO;
     }
 public:

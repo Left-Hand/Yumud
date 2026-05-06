@@ -9,13 +9,13 @@ struct [[nodiscard]] CanFilterConfig final{
 public:
 
     static constexpr CanFilterConfig accept_all(){
-        return from_pairs(
+        return from_std_pairs(
             CanStdIdMaskPair::accept_all(),
             CanStdIdMaskPair::accept_all()
         );
     }
 
-    static constexpr CanFilterConfig whitelist(
+    static constexpr CanFilterConfig from_whitelist(
         const std::initializer_list<details::SXX32_CanStdIdMask> & list
     ){
         CanFilterConfig ret;
@@ -44,13 +44,13 @@ public:
         return ret;
     }
 
-    static constexpr CanFilterConfig from_pair(
+    static constexpr CanFilterConfig from_std_pair(
         const CanStdIdMaskPair & pair
     ){
-        return from_pairs(pair, CanStdIdMaskPair::reject_all());
+        return from_std_pairs(pair, CanStdIdMaskPair::reject_all());
     }
 
-    static constexpr CanFilterConfig from_pairs(
+    static constexpr CanFilterConfig from_std_pairs(
         const CanStdIdMaskPair & pair1, 
         const CanStdIdMaskPair & pair2
     ){
@@ -67,7 +67,7 @@ public:
         return ret;
     }
 
-    static constexpr CanFilterConfig from_pair(
+    static constexpr CanFilterConfig from_ext_pair(
         const CanExtIdMaskPair & pair
     ){
         CanFilterConfig ret;
@@ -83,11 +83,11 @@ public:
 
     static Option<CanFilterConfig> from_str(const StringView str);
 
-    constexpr bool is_list_mode() const{
+    constexpr bool is_list_mode() const noexcept {
         return is_list_mode_;
     }
 
-    constexpr bool is_32bit() const{
+    constexpr bool is_32bit() const noexcept {
         return is_32bit_;
     }
 

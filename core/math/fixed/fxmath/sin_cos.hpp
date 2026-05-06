@@ -49,7 +49,6 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
     struct SinCosResult{
         math::fixed<31, int32_t> sin;
         math::fixed<31, int32_t> cos;
-
     };
 
     uint32_t uq32_x_offset;
@@ -60,8 +59,8 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
 
     template<typename Fn>
-    __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const {
+    __attribute__((always_inline, const, optimize( "-Ofast" ))) constexpr 
+    math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const noexcept {
         //获取查找表的校准值
         int32_t a, b;
         switch(sect_num){
@@ -104,8 +103,8 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
     }
 
     template<typename Fn>
-    __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const {
+    __attribute__((always_inline, const, optimize( "-Ofast" ))) constexpr 
+    math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const noexcept {
         int32_t a, b;
         switch(sect_num){
             case 0:
@@ -149,7 +148,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 
     template<typename Fn>
     __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
-    auto exact_sincos(Fn && taylor_law) const {
+    auto exact_sincos(Fn && taylor_law) const noexcept {
         return SinCosResult{
             exact_sin(std::forward<Fn>(taylor_law)),
             exact_cos(std::forward<Fn>(taylor_law))
@@ -168,6 +167,7 @@ static constexpr uint32_t ONE_BY_64_UQ32 = static_cast<uint32_t>(1u << (32 - 6))
 
 // uq32_offset ∈ [0, 1/64] 远远小于1/2 无论是mul32hsu还是mul32hss都能胜任 
 // 考虑到对arm的兼容性：arm架构不支持原生的mul32hsu 内部使用mul32hss实现
+__attribute__((const))
 static constexpr uint32_t _mul32hsu(const int32_t a, const uint32_t b){
     if(b >= ONE_BY_64_UQ32) __builtin_unreachable();
     return intrinsics::mul32hss(a, b);
@@ -193,7 +193,7 @@ static constexpr uint32_t _mul32hsu(const int32_t a, const uint32_t b){
 
 //通过分析发现 二阶泰勒公式能提供最低约20.73位的精度
 //通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 static constexpr int32_t 
 taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
     int32_t res_iq31_bits = 0;
@@ -221,7 +221,7 @@ taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff
 }
 
 
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 static constexpr int32_t 
 taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
     int32_t res_iq31_bits;
@@ -255,7 +255,7 @@ taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff
 
 };
 
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bits){
     constexpr uint32_t UQ32_QUAT_PI_BITS = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
@@ -295,7 +295,7 @@ constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bit
 namespace ymd::math{
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> sin(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -303,7 +303,7 @@ math::fixed<31, int32_t> sin(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> cos(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -311,7 +311,7 @@ math::fixed<31, int32_t> cos(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> sin_approx(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -319,7 +319,7 @@ math::fixed<31, int32_t> sin_approx(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> cos_approx(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -328,7 +328,7 @@ math::fixed<31, int32_t> cos_approx(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> sinpu(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -336,7 +336,7 @@ math::fixed<31, int32_t> sinpu(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> cospu(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -344,7 +344,7 @@ math::fixed<31, int32_t> cospu(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> sinpu_approx(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -352,7 +352,7 @@ math::fixed<31, int32_t> sinpu_approx(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 math::fixed<31, int32_t> cospu_approx(const math::fixed<Q, D> x){
     return fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -361,7 +361,7 @@ math::fixed<31, int32_t> cospu_approx(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 std::array<math::fixed<31, int32_t>, 2> sincos(const math::fixed<Q, D> x){
     const auto res = fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -370,7 +370,7 @@ std::array<math::fixed<31, int32_t>, 2> sincos(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 std::array<math::fixed<31, int32_t>, 2> sincospu(const math::fixed<Q, D> x){
     const auto res = fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
@@ -379,7 +379,7 @@ std::array<math::fixed<31, int32_t>, 2> sincospu(const math::fixed<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 std::array<math::fixed<31, int32_t>, 2> sincospu_approx(const math::fixed<Q, D> x){
     const auto res = fxmath::details::make_sincospu_intermdeiate(pu_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -388,7 +388,7 @@ std::array<math::fixed<31, int32_t>, 2> sincospu_approx(const math::fixed<Q, D> 
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-constexpr 
+constexpr __attribute__((const))
 std::array<math::fixed<31, int32_t>, 2> sincos_approx(const math::fixed<Q, D> x){
     const auto res = fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
@@ -396,7 +396,7 @@ std::array<math::fixed<31, int32_t>, 2> sincos_approx(const math::fixed<Q, D> x)
 }
 
 template<size_t Q, typename D>
-constexpr 
+constexpr __attribute__((const))
 fixed<16, int32_t> tan(const fixed<Q, D> x) {
     const auto [s, c] = sincos(x);
     return iq16(s) / iq16(c);
@@ -404,7 +404,7 @@ fixed<16, int32_t> tan(const fixed<Q, D> x) {
 
 
 template<size_t Q, typename D>
-constexpr 
+constexpr __attribute__((const))
 fixed<16, int32_t> tanpu(const fixed<Q, D> x) {
     const auto [s, c] = sincospu(x);
     return iq16(s) / iq16(c);
@@ -413,7 +413,7 @@ fixed<16, int32_t> tanpu(const fixed<Q, D> x) {
 
 //为了避免计算tan的倒数时调用了两次除法 提供cot函数
 template<size_t Q, typename D>
-constexpr 
+constexpr __attribute__((const))
 fixed<16, int32_t> cot(const fixed<Q, D> x) {
     const auto [s, c] = sincos(x);
     return iq16(c) / iq16(s);
@@ -423,7 +423,7 @@ fixed<16, int32_t> cot(const fixed<Q, D> x) {
 
 //为了避免计算tan的倒数时调用了两次除法 提供cot函数
 template<size_t Q, typename D>
-constexpr 
+constexpr __attribute__((const))
 fixed<16, int32_t> cotpu(const fixed<Q, D> x) {
     const auto [s, c] = sincospu(x);
     return iq16(c) / iq16(s);

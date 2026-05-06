@@ -12,7 +12,7 @@ static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101000
 struct [[nodiscard]] I2cAddrBuilder final{
     BoolLevel ad0_level;
 
-    constexpr hal::I2cSlaveAddr<7> to_i2c_addr() const {
+    constexpr hal::I2cSlaveAddr<7> to_i2c_addr() const noexcept {
         return hal::I2cSlaveAddr<7>::from_u7(0b1101000 | (ad0_level == HIGH));
     }
 };

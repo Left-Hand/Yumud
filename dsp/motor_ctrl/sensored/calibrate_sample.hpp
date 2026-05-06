@@ -17,16 +17,16 @@ struct CalibrateSample{
     constexpr CalibrateSample():
         expected_(0),
         measured_(0){;}
-    constexpr uq32 expected() const {
+    constexpr uq32 expected() const noexcept {
         return (expected_);
     }
 
-    constexpr uq32 measured() const {
+    constexpr uq32 measured() const noexcept {
         return (measured_);
     }
 
 
-    constexpr iq31 to_inaccuracy() const {
+    constexpr iq31 to_inaccuracy() const noexcept {
         return math::errmod(iq20(expected() - measured()), 0.02_iq20);
     }
 private:
@@ -67,15 +67,15 @@ public:
         ));
     }
 
-    constexpr iq31 expected() const {
+    constexpr iq31 expected() const noexcept {
         return packed_to_real(expected_packed_data_);
     }
 
-    constexpr iq31 measured() const {
+    constexpr iq31 measured() const noexcept {
         return packed_to_real(measured_packed_data_);
     }
 
-    constexpr iq31 to_inaccuracy() const {
+    constexpr iq31 to_inaccuracy() const noexcept {
         return math::errmod(iq20(expected() - measured()), 0.02_iq20);
     }
 
@@ -111,7 +111,7 @@ struct CompressedInaccuracy {
         return Some(CompressedInaccuracy(compress(inaccuracy)));
     }
 
-    constexpr iq16 to_real() const{
+    constexpr iq16 to_real() const noexcept {
         return decompress(bits_);
     }
 

@@ -35,7 +35,7 @@ struct ComplementaryGestureEstimator{
         omega_ = axis_omega_raw;
     }
 
-    auto theta_and_omega() const {
+    auto theta_and_omega() const noexcept {
         return std::make_pair(theta_, omega_);
     }
 

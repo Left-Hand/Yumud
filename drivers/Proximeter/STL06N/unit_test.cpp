@@ -1,4 +1,4 @@
-#include "stl06n.hpp"
+#include "stl06n_lidar.hpp"
 
 using namespace ymd::drivers::stl06n;
 

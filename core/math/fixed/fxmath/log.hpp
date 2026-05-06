@@ -6,7 +6,7 @@
 
 namespace ymd::fxmath::details{
 
-struct [[nodiscard]] IqLnIntermediate final{
+struct [[nodiscard]] alignas(4) IqLnIntermediate final{
 
     using Self = IqLnIntermediate;
 
@@ -16,7 +16,7 @@ struct [[nodiscard]] IqLnIntermediate final{
 
 
     template<size_t Q>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
+    __attribute__((always_inline, const, optimize( "-Ofast" )))
     static constexpr Self from(uint32_t uiqn_input){
 
         /*
@@ -66,8 +66,8 @@ struct [[nodiscard]] IqLnIntermediate final{
     }
 
     template<size_t Q>
-    __attribute__((always_inline,  optimize( "-Ofast" )))
-    constexpr int32_t into_bits() const{
+    __attribute__((always_inline, const, optimize( "-Ofast" )))
+    constexpr int32_t into_bits() const noexcept {
         int32_t iq_n_result = iq30_result >> (30 - Q);
         /*
         * Add exp * ln(2) to the iqN result. This will never saturate since we
@@ -89,7 +89,7 @@ struct [[nodiscard]] IqLnIntermediate final{
 
 
 template<size_t Q>
-__attribute__((always_inline,  optimize( "-Ofast" )))
+__attribute__((always_inline, const, optimize( "-Ofast" )))
 constexpr math::fixed<Q, int32_t> ln32u(const math::fixed<Q, uint32_t> x) {
     constexpr uint32_t IQN_MIN = ((Q >= 27) ? fxmath::details::IQNLOG_MIN[Q - 27] : 1);
     const uint32_t uiqn_input = x.to_bits();
@@ -114,13 +114,13 @@ namespace ymd::math{
 
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> ln(const fixed<Q, uint32_t> x) {
     return fxmath::details::ln32u<Q>(x);
 }
 
 template<size_t Q>
-constexpr 
+constexpr __attribute__((const))
 fixed<Q, int32_t> lg(const fixed<Q, uint32_t> x) {
     constexpr double LN10 = 2.30258509299;
     constexpr auto INV_LN10 = fixed<32, uint32_t>(1.0 / LN10);

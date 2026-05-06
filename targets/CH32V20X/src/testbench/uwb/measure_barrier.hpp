@@ -26,12 +26,12 @@ struct MeasurementBarrier {
     }
     
     // 检查是否所有传感器都有新数据
-    [[nodiscard]] __fast_inline bool is_ready() const {
+    [[nodiscard]] __fast_inline bool is_ready() const noexcept {
         return flag_.all();
     }
     
     // 检查时间同步性
-    [[nodiscard]] __fast_inline bool is_timestamp_synced(float tolerance) const {
+    [[nodiscard]] __fast_inline bool is_timestamp_synced(float tolerance) const noexcept {
         if (!is_ready()) __builtin_abort();
         
         float min_ts = std::numeric_limits<float>::max();
@@ -47,7 +47,7 @@ struct MeasurementBarrier {
     }
     
     // 获取所有数据的视图（不检查时间同步）
-    [[nodiscard]] __fast_inline std::span<const T, N> get_all() const {
+    [[nodiscard]] __fast_inline std::span<const T, N> get_all() const noexcept {
         if (!is_ready()) __builtin_abort();
         
         std::array<T, N> temp;
@@ -108,7 +108,7 @@ struct MeasurementBarrier {
     }
     
     // 安全版本：将数据复制到提供的数组中
-    __fast_inline void copy_all_to(std::array<T, N>& output) const {
+    __fast_inline void copy_all_to(std::array<T, N>& output) const noexcept {
         if (!is_ready()) __builtin_abort();
         
         for (size_t i = 0; i < N; ++i) {
@@ -133,8 +133,8 @@ struct MeasurementBarrier {
         return true;
     }
     // 获取当前数据状态信息（用于调试）
-    // [[nodiscard]] __fast_inline size_t ready_count() const { return flag_.count(); }
-    [[nodiscard]] __fast_inline float get_timestamp(size_t idx) const { 
+    // [[nodiscard]] __fast_inline size_t ready_count() const noexcept { return flag_.count(); }
+    [[nodiscard]] __fast_inline float get_timestamp(size_t idx) const noexcept { 
         if (idx >= N) __builtin_abort();
         return timestamps_[idx]; 
     }

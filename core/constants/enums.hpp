@@ -22,12 +22,12 @@ public:\
     [[nodiscard]] constexpr name(const bool & kind) = delete;\
     [[nodiscard]] constexpr name(bool && kind) = delete;\
     [[nodiscard]] static constexpr name from(const bool b){return b ? name(u) : name(l);}\
-    [[nodiscard]] constexpr name operator ~() const{return name(((kind_ == u ? l : u)));}\
-    [[nodiscard]] constexpr name operator !() const{return name(((kind_ == u ? l : u)));}\
+    [[nodiscard]] constexpr name operator ~() const noexcept {return name(((kind_ == u ? l : u)));}\
+    [[nodiscard]] constexpr name operator !() const noexcept {return name(((kind_ == u ? l : u)));}\
     [[nodiscard]] constexpr name operator = (const bool kind) = delete;\
-    [[nodiscard]] constexpr bool operator == (const name & other) const { return kind_ == other.kind_; }\
-    [[nodiscard]] constexpr bool operator != (const name & other) const { return kind_ == other.kind_; }\
-    [[nodiscard]] constexpr bool to_bool() const { return kind_ == u; }\
+    [[nodiscard]] constexpr bool operator == (const name & other) const noexcept { return kind_ == other.kind_; }\
+    [[nodiscard]] constexpr bool operator != (const name & other) const noexcept { return kind_ == other.kind_; }\
+    [[nodiscard]] constexpr bool to_bool() const noexcept { return kind_ == u; }\
 private:\
     Kind kind_;\
     constexpr name(){;}\

@@ -31,7 +31,7 @@ public:
     int_t & operator--(){ --value; return *this;}
 
     [[nodiscard]] __always_inline constexpr 
-    int_t operator+() const {return *this; }
+    int_t operator+() const noexcept {return *this; }
     [[nodiscard]] __always_inline constexpr 
     int_t operator-(){ value = -value; return *this;}
 
@@ -43,7 +43,7 @@ public:
 
     //#region compare
     #define INT_COMPARE_TEMPLATE(op)\
-    constexpr bool operator op(const int_t & v) const { return value op v.value;}\
+    constexpr bool operator op(const int_t & v) const noexcept { return value op v.value;}\
 
     INT_COMPARE_TEMPLATE(==)
     INT_COMPARE_TEMPLATE(!=)
@@ -58,7 +58,7 @@ public:
 
     //#region op
     #define INT_OP_TEMPLATE(op)\
-    [[nodiscard]] __inline constexpr int_t operator op(int_t other) const { return int_t(value op other.value);}\
+    [[nodiscard]] __inline constexpr int_t operator op(int_t other) const noexcept { return int_t(value op other.value);}\
 
     INT_OP_TEMPLATE(+)
     INT_OP_TEMPLATE(-)

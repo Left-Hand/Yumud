@@ -360,8 +360,8 @@ namespace matchit
             {
                 return static_cast<size_t>(std::distance(mBegin, mEnd));
             }
-            auto begin() const { return mBegin; }
-            auto end() const { return mEnd; }
+            auto begin() const noexcept { return mBegin; }
+            auto end() const noexcept { return mEnd; }
         };
 
         template <typename I, typename S>
@@ -649,7 +649,7 @@ namespace matchit
                 return matchPattern(std::forward<Value>(value), mPattern, /*depth*/ 0,
                                     context);
             }
-            constexpr auto execute() const { return mHandler(); }
+            constexpr auto execute() const noexcept { return mHandler(); }
 
         private:
             Pattern const mPattern;
@@ -781,7 +781,7 @@ namespace matchit
         {
         public:
             constexpr explicit Or(Patterns const &...patterns) : mPatterns{patterns...} {}
-            constexpr auto const &patterns() const { return mPatterns; }
+            constexpr auto const &patterns() const noexcept { return mPatterns; }
 
         private:
             std::tuple<InternalPatternT<Patterns>...> mPatterns;
@@ -870,8 +870,8 @@ namespace matchit
         public:
             constexpr App(Unary &&unary, Pattern const &pattern)
                 : mUnary{std::forward<Unary>(unary)}, mPattern{pattern} {}
-            constexpr auto const &unary() const { return mUnary; }
-            constexpr auto const &pattern() const { return mPattern; }
+            constexpr auto const &unary() const noexcept { return mUnary; }
+            constexpr auto const &pattern() const noexcept { return mPattern; }
 
         private:
             Unary const mUnary;
@@ -947,7 +947,7 @@ namespace matchit
         public:
             constexpr explicit And(Patterns const &...patterns)
                 : mPatterns{patterns...} {}
-            constexpr auto const &patterns() const { return mPatterns; }
+            constexpr auto const &patterns() const noexcept { return mPatterns; }
 
         private:
             std::tuple<InternalPatternT<Patterns>...> mPatterns;
@@ -1026,7 +1026,7 @@ namespace matchit
         {
         public:
             explicit Not(Pattern const &pattern) : mPattern{pattern} {}
-            auto const &pattern() const { return mPattern; }
+            auto const &pattern() const noexcept { return mPattern; }
 
         private:
             InternalPatternT<Pattern> mPattern;
@@ -1303,7 +1303,7 @@ namespace matchit
             using BlockVT = std::variant<BlockT, BlockT *>;
             BlockVT mBlock = BlockT{};
 
-            constexpr decltype(auto) internalValue() const { return block().get(); }
+            constexpr decltype(auto) internalValue() const noexcept { return block().get(); }
 
         public:
             constexpr Id() = default;
@@ -1341,9 +1341,9 @@ namespace matchit
                                    StorePointer<Type, Value>{});
                 return true;
             }
-            constexpr void reset(int32_t depth) const { return block().reset(depth); }
-            constexpr void confirm(int32_t depth) const { return block().confirm(depth); }
-            constexpr bool hasValue() const { return block().hasValue(); }
+            constexpr void reset(int32_t depth) const noexcept { return block().reset(depth); }
+            constexpr void confirm(int32_t depth) const noexcept { return block().confirm(depth); }
+            constexpr bool hasValue() const noexcept { return block().hasValue(); }
             // non-const to inform users not to mark Id as const.
             constexpr decltype(auto) get() { return block().get(); }
             // non-const to inform users not to mark Id as const.
@@ -1386,7 +1386,7 @@ namespace matchit
         {
         public:
             constexpr explicit Ds(Patterns const &...patterns) : mPatterns{patterns...} {}
-            constexpr auto const &patterns() const { return mPatterns; }
+            constexpr auto const &patterns() const noexcept { return mPatterns; }
 
             using Type = std::tuple<InternalPatternT<Patterns>...>;
 
@@ -1407,7 +1407,7 @@ namespace matchit
 
         public:
             OooBinder(Id<T> const &id) : mId{id} {}
-            decltype(auto) binder() const { return mId; }
+            decltype(auto) binder() const noexcept { return mId; }
         };
 
         class Ooo
@@ -1925,8 +1925,8 @@ namespace matchit
         public:
             constexpr explicit PostCheck(Pattern const &pattern, Pred const &pred)
                 : mPattern{pattern}, mPred{pred} {}
-            constexpr bool check() const { return mPred(); }
-            constexpr auto const &pattern() const { return mPattern; }
+            constexpr bool check() const noexcept { return mPred(); }
+            constexpr auto const &pattern() const noexcept { return mPattern; }
 
         private:
             Pattern const mPattern;

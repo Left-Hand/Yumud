@@ -34,7 +34,7 @@ IResult<> MP2980::set_feed_back_vref(const uq10 vref){
 
 IResult<> MP2980::set_feed_back_vref_mv(const uint32_t vref_mv){
     auto reg = RegCopy(regs_.ref_reg);
-    reg.set(vref_mv);
+    reg.code = VoltageCode::from_mv(vref_mv);
     return write_reg(reg);
 }
 
@@ -117,11 +117,6 @@ IResult<> MP2980::set_ovp_mode(const OvpMode mode){
     return write_reg(reg);
 }
 
-enum class OcpMode:uint8_t{
-    CycleByCycle,
-    Hiccup, // default
-    LatchOff
-};
 
 IResult<> MP2980::set_ocp_mode(const OcpMode mode){
     auto reg = RegCopy(regs_.ctrl2_reg);

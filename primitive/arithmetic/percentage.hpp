@@ -42,7 +42,7 @@ struct [[nodiscard]] Percentage{
 		return from_percents((percents * 100));
 	}
 
-	[[nodiscard]] constexpr T percents() const{
+	[[nodiscard]] constexpr T percents() const noexcept {
 		return percents_;
 	}
 

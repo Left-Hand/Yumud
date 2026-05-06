@@ -8,7 +8,7 @@ struct PdCtrlLaw final{
     iq16 kp;
     iq16 kd;
 
-    constexpr iq16 operator()(const iq16 p_err, const iq16 v_err) const {
+    constexpr iq16 operator()(const iq16 p_err, const iq16 v_err) const noexcept {
         return kp * p_err + kd * v_err;
     } 
 };
@@ -17,7 +17,7 @@ struct SqrtKpCtrlLaw final{
     iq16 kp;
     iq16 ks;
 
-    constexpr iq16 operator()(const iq16 p_err) const {
+    constexpr iq16 operator()(const iq16 p_err) const noexcept {
         const bool is_neg = p_err < 0;
         const auto abs_p_err = math::abs(p_err);
         const auto abs_ret = MIN(kp * abs_p_err, ks * math::sqrt(abs_p_err));
@@ -30,7 +30,7 @@ struct SqrtPdCtrlLaw final{
     iq16 ks;
     iq16 kd;
 
-    constexpr iq16 operator()(const iq16 p_err, const iq16 v_err) const {
+    constexpr iq16 operator()(const iq16 p_err, const iq16 v_err) const noexcept {
         return SqrtKpCtrlLaw{.kp = kp, .ks = ks}(p_err) + kd * v_err;
     } 
 };

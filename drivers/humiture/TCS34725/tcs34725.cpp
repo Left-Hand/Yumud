@@ -34,7 +34,7 @@ std::tuple<uq16, uq16, uq16, uq16> TCS34725::get_crgb(){
 }
 
 IResult<> TCS34725::update(){
-    return read_burst(RegAddr::ClearData, std::span(crgb_));
+    return read_bulk(RegAddr::ClearData, std::span(crgb_));
 }
 
 
@@ -156,12 +156,12 @@ IResult<> TCS34725::init(const Config & cfg){
     return Ok();
 }
 
-IResult<> TCS34725::read_burst(
+IResult<> TCS34725::read_bulk(
     const TCS34725::RegAddr reg_addr, 
     const std::span<uint16_t> pbuf
 ){
     uint8_t address = conv_reg_address_repeated(reg_addr);
-    if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
+    if(const auto res = i2c_drv_.read_bulk(address, pbuf, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

@@ -106,7 +106,7 @@ public:
         constexpr iterator(const Utf8String* str, size_t pos) 
             : parent_(str), current_pos_(pos) {}
         
-        constexpr CodePoint operator*() const {
+        constexpr CodePoint operator*() const noexcept {
             return parent_->code_point_at(current_pos_);
         }
         
@@ -121,11 +121,11 @@ public:
             return tmp;
         }
         
-        constexpr bool operator==(const iterator& other) const {
+        constexpr bool operator==(const iterator& other) const noexcept {
             return parent_ == other.parent_ && current_pos_ == other.current_pos_;
         }
         
-        constexpr bool operator!=(const iterator& other) const {
+        constexpr bool operator!=(const iterator& other) const noexcept {
             return !(*this == other);
         }
         
@@ -145,7 +145,7 @@ public:
         constexpr const_iterator(const Utf8String* str, size_t pos) 
             : parent_(str), current_pos_(pos) {}
         
-        constexpr CodePoint operator*() const {
+        constexpr CodePoint operator*() const noexcept {
             return parent_->code_point_at(current_pos_);
         }
         
@@ -160,11 +160,11 @@ public:
             return tmp;
         }
         
-        constexpr bool operator==(const const_iterator& other) const {
+        constexpr bool operator==(const const_iterator& other) const noexcept {
             return parent_ == other.parent_ && current_pos_ == other.current_pos_;
         }
         
-        constexpr bool operator!=(const const_iterator& other) const {
+        constexpr bool operator!=(const const_iterator& other) const noexcept {
             return !(*this == other);
         }
         
@@ -248,10 +248,10 @@ public:
     // 迭代器
     constexpr iterator begin() { return iterator(this, 0); }
     constexpr iterator end() { return iterator(this, ascii_str_.size()); }
-    constexpr const_iterator begin() const { return const_iterator(this, 0); }
-    constexpr const_iterator end() const { return const_iterator(this, ascii_str_.size()); }
-    constexpr const_iterator cbegin() const { return const_iterator(this, 0); }
-    constexpr const_iterator cend() const { return const_iterator(this, ascii_str_.size()); }
+    constexpr const_iterator begin() const noexcept { return const_iterator(this, 0); }
+    constexpr const_iterator end() const noexcept { return const_iterator(this, ascii_str_.size()); }
+    constexpr const_iterator cbegin() const noexcept { return const_iterator(this, 0); }
+    constexpr const_iterator cend() const noexcept { return const_iterator(this, ascii_str_.size()); }
 
 
     // 子字符串操作（返回Option确保安全）

@@ -70,11 +70,11 @@ private:
         return transport_.read_reg(addr, data);
     }
 
-    IResult<> read_burst(
+    IResult<> read_bulk(
         const uint8_t addr, 
         std::span<int16_t> pbuf
     ){
-        return transport_.read_burst(addr, pbuf);
+        return transport_.read_bulk(addr, pbuf);
     }
 
     template<typename T>

@@ -18,7 +18,7 @@ struct StringSplitIter {
         seek_next();
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return pos_ < str_.length();
     }
 

@@ -71,7 +71,7 @@ public:
     compute_shared_secret(
         std::span<const uint8_t, KEY_SIZE> their_public_key,
         std::span<const uint8_t, KEY_SIZE> private_key
-    ) const {
+    ) const noexcept {
         SharedSecret shared_secret{};
         generate_core(shared_secret, private_key, their_public_key);
         return Ok(shared_secret);

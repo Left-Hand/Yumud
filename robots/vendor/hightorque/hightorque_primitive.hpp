@@ -111,10 +111,10 @@ struct [[nodiscard]] FaultCode final{
         return Some(Self{b});
     }
 
-    [[nodiscard]] bool is_ok() const {return bits == 0;}
-    [[nodiscard]] bool is_err() const {return (bits > 0) and (bits <= MAX_NUM);}
+    [[nodiscard]] bool is_ok() const noexcept {return bits == 0;}
+    [[nodiscard]] bool is_err() const noexcept {return (bits > 0) and (bits <= MAX_NUM);}
 
-    [[nodiscard]] Fault unwrap_err() const {
+    [[nodiscard]] Fault unwrap_err() const noexcept {
         if(not is_err()) __builtin_abort();
         return static_cast<Fault>(bits);
     }
@@ -245,7 +245,7 @@ struct [[nodiscard]] SlotSpecifier final{
     ElementType element_type:2; 
     SlotCommand command:4;
 
-    constexpr uint8_t to_bits() const {
+    constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 };
@@ -297,7 +297,7 @@ struct [[nodiscard]] PositionCode final{
     }
     #endif
 
-    constexpr Angular<iq16> to_angle() const {
+    constexpr Angular<iq16> to_angle() const noexcept {
         const iq16 turns = iq16(bits) / 10000;
         return Angular<iq16>::from_turns(turns);
     }
@@ -312,7 +312,7 @@ struct [[nodiscard]] SpeedCode{
         return Self{static_cast<int16_t>(angular_speed.to_turns() * 4000)};
     }
 
-    constexpr Angular<iq16> to_angular_speed() const {
+    constexpr Angular<iq16> to_angular_speed() const noexcept {
         const iq16 turns = iq16(bits) / 4000;
         return Angular<iq16>::from_turns(turns);
     }
@@ -331,7 +331,7 @@ struct [[nodiscard]] AccelerationCode{
         return Self{static_cast<int16_t>(angular_acceleration.to_turns() * 100)};
     }
 
-    constexpr Angular<iq16> to_angular_acceleration() const {
+    constexpr Angular<iq16> to_angular_acceleration() const noexcept {
         const iq16 turns = iq16(bits) / 100;
         return Angular<iq16>::from_turns(turns);
     }
@@ -345,7 +345,7 @@ struct [[nodiscard]] TorqueCode{
     static constexpr Self from_nm(const iq16 torque){
         return Self{static_cast<int16_t>(torque * 100)};
     }
-    constexpr iq16 to_nm() const {
+    constexpr iq16 to_nm() const noexcept {
         return iq16(bits) / 100;
     }
 };
@@ -362,7 +362,7 @@ struct [[nodiscard]] PhaseVoltageCode{
         return Self{static_cast<int16_t>(voltage * 10)};
     }
 
-    constexpr iq16 to_voltage() const {
+    constexpr iq16 to_voltage() const noexcept {
         return iq16(bits) / 10;
     }
 };
@@ -377,7 +377,7 @@ struct [[nodiscard]] CurrentCode{
         return Self{static_cast<int16_t>(current * 10)};
     }
 
-    constexpr iq16 to_amps() const {
+    constexpr iq16 to_amps() const noexcept {
         return iq16(bits) / 10;
     }
 };

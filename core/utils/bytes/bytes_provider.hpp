@@ -49,7 +49,7 @@ struct [[nodiscard]] BytesProvider{
         return FetchLeadingBytesCtorBitsProxy<E>(*this);
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
         return remaining_bytes_;
     }
 private:
@@ -63,7 +63,7 @@ private:
 
 template<std::endian E>
 template<typename T>
-constexpr FetchLeadingBytesCtorBitsProxy<E>::operator T() const {
+constexpr FetchLeadingBytesCtorBitsProxy<E>::operator T() const noexcept {
     using D = tmp::from_bits_t<T>;
     static_assert(std::is_void_v<D> == false);
     static constexpr size_t Extents = sizeof(D);

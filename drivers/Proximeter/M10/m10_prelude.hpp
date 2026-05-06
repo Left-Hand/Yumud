@@ -37,7 +37,7 @@ public:
         return {bits};
     }
 
-    [[nodiscard]] constexpr uq16 to_tps() const{
+    [[nodiscard]] constexpr uq16 to_tps() const noexcept {
         const auto rpm = (2500000u / __bswap16(bits));
         return rpm * uq16(1.0 / 60);
     }
@@ -52,7 +52,7 @@ public:
         return {bits};
     }
 
-    [[nodiscard]] constexpr uq24 to_turns() const{
+    [[nodiscard]] constexpr uq24 to_turns() const noexcept {
         constexpr auto LSB_VALUE = uq24(1.0 / 360 * 0.01);
         return LSB_VALUE * __bswap16(bits);
     }
@@ -69,14 +69,14 @@ struct [[nodiscard]] LidarDistanceCode{
         return {bits};
     }
 
-    [[nodiscard]] constexpr uq24 to_meters() const{
+    [[nodiscard]] constexpr uq24 to_meters() const noexcept {
         constexpr auto LSB_VALUE = uq24(0.001);
         return LSB_VALUE * __bswap16(bits);
     }
 
     uint16_t bits;
 
-    friend OutputStream & operator << (OutputStream & os, const Self & self){
+    friend OutputStream & operator << (OutputStream & os, const Self & self) noexcept {
         return os << self.to_meters();
     }
 };
@@ -96,7 +96,7 @@ struct [[nodiscard]] LidarSector final{
             now_turns_ = sector_.start_angle.to_turns();
         }
 
-        [[nodiscard]] constexpr bool has_next() const{
+        [[nodiscard]] constexpr bool has_next() const noexcept {
             return index_ < sector_.distances.size();
         }
 
@@ -116,11 +116,11 @@ struct [[nodiscard]] LidarSector final{
         uq24 now_turns_ = 0;
     };
 
-    constexpr auto iter() const{
+    constexpr auto iter() const noexcept {
         return Iterator{*this};
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         return os << os.field("start_angle(n)")(self.start_angle.to_turns()) << os.splitter()
             << os.field("spin_speed(n/s)")(self.spin_speed.to_tps());
     };
@@ -134,7 +134,7 @@ struct [[nodiscard]] DataReady{
 
     const LidarSector & sector;
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("sector")(self.sector);
     }
 };
@@ -143,7 +143,7 @@ struct [[nodiscard]] InvalidCrc{
     uint8_t expected;
     uint8_t actual;
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("expected")(self.expected) << os.splitter()
             << os.field("actual")(self.actual);
     }
@@ -161,46 +161,6 @@ struct [[nodiscard]] Event:public Sumtype<
 using Callback = std::function<void(Event)>;
 
 
-class M10_ParseReceiver final{
-public:
-    explicit M10_ParseReceiver(Callback callback):
-        callback_(callback)
-    {
-        reset();
-    }
 
-    void push_byte(const uint8_t byte);
-
-    void push_bytes(const std::span<const uint8_t> bytes){
-        for(const auto byte : bytes){
-            push_byte(byte);
-        }
-    }
-
-    void flush();
-
-    void reset(){
-        state_ = FsmState::WaitingHeader1;
-        bytes_count_ = 0;
-    }
-private:
-    union{
-        LidarSector sector_;
-        alignas(4) std::array<uint8_t, sizeof(LidarSector)> bytes_;
-    };
-
-    Callback callback_;
-
-    size_t bytes_count_ = 0;
-
-    enum class FsmState:uint8_t{
-        WaitingHeader1,
-        WaitingHeader2,
-        Remaining
-    };
-
-    volatile FsmState state_ = FsmState::WaitingHeader1;
-
-};
 
 }

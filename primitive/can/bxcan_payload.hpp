@@ -207,7 +207,11 @@ public:
     const uint8_t * begin() const noexcept {return u8x8.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t size() const noexcept {return dlc.to_bits();}
+    uint8_t size() const noexcept {return length();}
+
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t length() const noexcept {return dlc.length();}
+
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint8_t operator[](uint8_t i) const noexcept {return u8x8[i];}
 
@@ -239,7 +243,7 @@ public:
     uint8_t & get() {return get_element<I>(*this);}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    std::array<uint32_t, 2> to_u32x2() const {
+    std::array<uint32_t, 2> to_u32x2() const noexcept {
         // return u8x8;
         if(std::is_constant_evaluated()){
             return std::bit_cast<std::array<uint32_t, 2>>(u8x8);
@@ -252,7 +256,7 @@ public:
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint64_t to_u64() const {
+    uint64_t to_u64() const noexcept {
         const auto [low32, high32] = to_u32x2();
         return static_cast<uint64_t>(low32) | (static_cast<uint64_t>(high32) << 32);
     }
@@ -277,6 +281,10 @@ public:
             p_dst[0] = p_src[0];
             p_dst[1] = p_src[1];
         }
+    }
+
+    constexpr ClassicCanPayload clone() const noexcept {
+        return ClassicCanPayload(*this);
     }
 
 private:
@@ -308,4 +316,9 @@ private:
 static_assert(sizeof(ClassicCanPayload) == 8 + 1);
 
 
+}
+
+namespace ymd{
+    class OutputStream;
+    OutputStream & operator<<(OutputStream & os, const hal::ClassicCanPayload & payload);
 }

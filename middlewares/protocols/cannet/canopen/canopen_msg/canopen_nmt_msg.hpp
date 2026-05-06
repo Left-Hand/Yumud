@@ -22,7 +22,7 @@ struct [[nodiscard]] NetManage{
     NmtCommand cmd;
     NodeId dest_nodeid;
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = std::bit_cast<uint8_t>(cmd);
         bytes[1] = dest_nodeid.to_u7();
     }
@@ -49,11 +49,11 @@ struct [[nodiscard]] Emergency {
     uint8_t error_register;
     std::array<uint8_t, 5> manufacturer_specific;
 
-    [[nodiscard]] constexpr CobId cobid() const {
+    [[nodiscard]] constexpr CobId cobid() const noexcept {
         return CobId::from_bits(0x080 | station_nodeid.to_u7());
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 8> bytes) const {
+    constexpr void fill_bytes(const std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(error_code.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(error_code.to_bits());
         bytes[2] = error_register;
@@ -77,7 +77,7 @@ struct [[nodiscard]] NodeGuardingRequest {
     using Self = NodeGuardingRequest;
     NodeId target_nodeid;
     
-    [[nodiscard]] constexpr CobId cobid() const {
+    [[nodiscard]] constexpr CobId cobid() const noexcept {
         return CobId::from_bits(0x700 | target_nodeid.to_u7());
     }
 };
@@ -88,7 +88,7 @@ struct [[nodiscard]] NodeGuardingResponse {
     NodeId station_nodeid;
     NodeState station_state;
     
-    [[nodiscard]] constexpr CobId cobid() const {
+    [[nodiscard]] constexpr CobId cobid() const noexcept {
         return CobId::from_bits(0x700 | station_nodeid.to_u7());
     }
 };
@@ -103,7 +103,7 @@ struct [[nodiscard]] Heartbeat{
             .station_state = NodeState::BootUp
         };
     }
-    [[nodiscard]] bool is_bootup() const {
+    [[nodiscard]] bool is_bootup() const noexcept {
         return station_state == NodeState::BootUp;
     }
 };
@@ -116,7 +116,7 @@ namespace ymd::canopen::msg_serde{
 template<>
 struct MsgSerde<nmt_msgs::NetManage>{
     using Self = nmt_msgs::NetManage;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
         std::array<uint8_t, 2> bytes;
         self.fill_bytes(bytes);
         return CanFrame::from_parts(
@@ -147,7 +147,7 @@ struct MsgSerde<nmt_msgs::NetManage>{
 template<>
 struct MsgSerde<nmt_msgs::Sync>{
     using Self = nmt_msgs::Sync;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
         return CanFrame::from_empty_data(Self::COBID.to_stdid());
     }
 
@@ -170,7 +170,7 @@ struct MsgSerde<nmt_msgs::Sync>{
 template<>
 struct MsgSerde<nmt_msgs::Heartbeat>{
     using Self = nmt_msgs::Heartbeat;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
         const auto can_id = hal::CanStdId::from_bits(0x700 | self.station_nodeid.to_u7());
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
         return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));

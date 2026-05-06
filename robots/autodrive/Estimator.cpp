@@ -9,7 +9,7 @@
 
 
 
-// iq16 Estimator::calculate_raw_dir(const math::Vec3 & mag) const {
+// iq16 Estimator::calculate_raw_dir(const math::Vec3 & mag) const noexcept {
 //     return -atan2(mag.y, mag.x);
 // }
 

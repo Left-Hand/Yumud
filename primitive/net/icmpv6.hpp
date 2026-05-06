@@ -52,7 +52,7 @@ struct [[nodiscard]] Message{
     /// the highest order bit set are error messages.
     ///
     /// RFC 4443 § 2.1: https://tools.ietf.org/html/rfc4443#section-2.1
-    [[nodiscard]] constexpr bool is_error() const {
+    [[nodiscard]] constexpr bool is_error() const noexcept {
         return (std::bit_cast<uint8_t>(kind_) & 0x80) != 0x80;
     }
 
@@ -60,7 +60,7 @@ struct [[nodiscard]] Message{
     /// is an NDISC message type.
     ///
     /// NDISC: https://tools.ietf.org/html/rfc4861
-    [[nodiscard]] constexpr bool is_ndisc() const {
+    [[nodiscard]] constexpr bool is_ndisc() const noexcept {
         switch (kind_) {
             case Kind::RouterSolicit:
             case Kind::RouterAdvert:
@@ -77,7 +77,7 @@ struct [[nodiscard]] Message{
     /// is an MLD message type.
     ///
     /// MLD: https://tools.ietf.org/html/rfc3810
-    [[nodiscard]] constexpr bool is_mld() const {
+    [[nodiscard]] constexpr bool is_mld() const noexcept {
         switch (kind_) {
             case Kind::MldQuery:
             case Kind::MldReport:

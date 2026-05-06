@@ -51,7 +51,7 @@ public:
     IResult<> write_data(const uint8_t data);
 
     template<is_stdlayout T>
-    IResult<> write_burst(const std::span<const T> pbuf);
+    IResult<> write_bulk(const std::span<const T> pbuf);
 
     template<is_stdlayout T>
     IResult<> write_repeat(const T data, size_t len);

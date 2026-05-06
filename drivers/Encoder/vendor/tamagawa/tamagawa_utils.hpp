@@ -14,7 +14,7 @@ struct [[nodiscard]] Crc8XorAccumulator final {
     uint8_t crc = 0;
 
 
-    constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const noexcept {
         auto self = *this;
 
 
@@ -24,7 +24,7 @@ struct [[nodiscard]] Crc8XorAccumulator final {
         return self;
     }
 
-    constexpr Self push_byte(uint8_t byte) const {
+    constexpr Self push_byte(uint8_t byte) const noexcept {
         auto self = *this;
         self.crc ^= byte;
         for (size_t i = 0; i < 8; ++i) {
@@ -37,7 +37,7 @@ struct [[nodiscard]] Crc8XorAccumulator final {
         return self;
     }
 
-    [[nodiscard]] constexpr uint8_t finalize() const {
+    [[nodiscard]] constexpr uint8_t finalize() const noexcept {
         return crc;
     }
 };

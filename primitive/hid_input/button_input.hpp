@@ -8,7 +8,7 @@ namespace ymd::hid{
 namespace details{
 
 struct [[nodiscard]] SingleKeyCodeStorage{
-    [[nodiscard]] constexpr bool has(const KeyCode code) const {
+    [[nodiscard]] constexpr bool has(const KeyCode code) const noexcept {
         return kind_ == code.kind();
     }
 
@@ -39,7 +39,7 @@ struct [[nodiscard]] SingleKeyCodeStorage{
         kind_ = std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE));
     }
 
-    constexpr Option<KeyCode> first_code() const{
+    constexpr Option<KeyCode> first_code() const noexcept {
         if(kind_ == std::bit_cast<KeyCode_Kind>(uint8_t(INVALID_CODE)))
             return None;
         else return Some(KeyCode(kind_));
@@ -113,15 +113,15 @@ public:
         pressed_.reset();
     }
 
-    [[nodiscard]] constexpr KeyCodes pressed() const {
+    [[nodiscard]] constexpr KeyCodes pressed() const noexcept {
         return pressed_;
     }
 
-    [[nodiscard]] constexpr KeyCodes just_pressed() const {
+    [[nodiscard]] constexpr KeyCodes just_pressed() const noexcept {
         return just_pressed_;
     }
 
-    [[nodiscard]] constexpr KeyCodes just_released() const {
+    [[nodiscard]] constexpr KeyCodes just_released() const noexcept {
         return just_released_;
     }
 

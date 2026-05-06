@@ -56,7 +56,13 @@ void at8222_tb(){
     });
 
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
 
     auto & timer = hal::timer3;

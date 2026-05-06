@@ -408,7 +408,13 @@ void light_tracking_main(void){
         hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.set_eps(4);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     // DEBUGGER.no_brackets();
 
 

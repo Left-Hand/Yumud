@@ -56,8 +56,13 @@ void myactuator_main(){
     });
 
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     DEBUG_PRINTLN(make_bytes1());
     DEBUG_PRINTLN(make_bytes2());

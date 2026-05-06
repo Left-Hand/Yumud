@@ -34,7 +34,7 @@ class BurrFilter{
 		}
 	}
 
-	T predict(const T x)const{
+	T predict(const T x) const noexcept {
 		return x * 2 - last;
 	}
 
@@ -49,7 +49,7 @@ private:
 	uint8_t misjudge_cnt = 0;
 	bool inited = false;
 
-	T certainty(const T x)const{
+	T certainty(const T x) const noexcept {
 		T ma = abs(x - current);
 		T mi = abs(current - last);
 		if(ma > mi){
@@ -61,7 +61,7 @@ private:
 			else return (ma ? T(0) : T(1));
 		}
 	}
-	T error(const T x)const{
+	T error(const T x) const noexcept {
 		return x - predict(x);
 	}
 };

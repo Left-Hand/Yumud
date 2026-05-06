@@ -13,11 +13,11 @@ struct [[nodiscard]] ReleaseVersion final{
     uint8_t major;
     uint8_t minor;
 
-    constexpr auto operator == (const ReleaseVersion & other) const {
+    constexpr auto operator == (const ReleaseVersion & other) const noexcept {
         return (major == other.major) and (minor == other.minor);
     }
 
-    constexpr auto operator<=>(const ReleaseVersion & other) const{
+    constexpr auto operator<=>(const ReleaseVersion & other) const noexcept {
         if(major != other.major) return major <=> other.major;
         else return minor <=> other.minor;
     }

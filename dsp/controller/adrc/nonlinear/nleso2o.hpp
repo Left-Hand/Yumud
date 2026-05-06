@@ -6,7 +6,7 @@ namespace ymd::dsp::adrc{
 template<>
 struct NonlinearExtendedStateObserver<iq16, 2>{
     using State = StateVector<iq20, 3>;
-    constexpr State iterate(State state, const iq16 u, const iq16 y) const {
+    constexpr State iterate(State state, const iq16 u, const iq16 y) const noexcept {
         const iq16 e = z1 - y;
 
 

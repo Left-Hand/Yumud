@@ -91,7 +91,7 @@ struct Lpf1o{
         uint32_t fs;
         uint32_t fc;
 
-        constexpr Result<Lpf1o, StringView> try_into_precomputed() const {
+        constexpr Result<Lpf1o, StringView> try_into_precomputed() const noexcept {
             // const ((fs) << (9 + 32u)) / ((fs << 9) + static_cast<uint32_t>(TAU * (1u << 9)) * fc);
             const uq16 num = static_cast<uq16>(fs);
             const uq16 den = static_cast<uq16>(fs) + static_cast<uq16>(TAU) * static_cast<uq16>(fc);

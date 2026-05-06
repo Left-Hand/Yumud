@@ -156,7 +156,7 @@ public:
         return Ok();
     }
 
-    bool is_subprogress_finished() const{
+    bool is_subprogress_finished() const noexcept {
         return is_subprogress_finished_;
     }
 
@@ -212,7 +212,7 @@ public:
 
     }
 
-    Result<void, void> print_vec() const {
+    Result<void, void> print_vec() const noexcept {
         [[maybe_unused]] auto print_view = [](auto view){
             for (const auto & item : view) {
                 const auto expected = item.expected();

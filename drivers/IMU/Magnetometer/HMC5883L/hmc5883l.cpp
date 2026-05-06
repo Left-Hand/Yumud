@@ -160,7 +160,7 @@ IResult<math::Vec3<iq24>> HMC5883L::read_mag(){
 
 IResult<> HMC5883L::validate(){
     std::array<uint8_t, 3> buf;
-    if(const auto res = read_burst(RegAddr::IDA, buf);
+    if(const auto res = read_bulk(RegAddr::IDA, buf);
         res.is_err()) return res;
 
     bool passed = (
@@ -175,7 +175,7 @@ IResult<> HMC5883L::validate(){
 }
 
 IResult<> HMC5883L::update(){
-    return read_burst(RegAddr::MagX, std::span(regs_.xyz));
+    return read_bulk(RegAddr::MagX, std::span(regs_.xyz));
 }
 
 

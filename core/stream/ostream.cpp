@@ -13,7 +13,6 @@ using namespace ymd;
 __attribute__((always_inline))
 static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
     switch(radix){
-        default:
         case 10:
             return p_str;
         case 2:
@@ -28,6 +27,16 @@ static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
             p_str[1] = 'x';
             return p_str + 2;
     }
+
+    //should unreachable
+    return p_str;
+}
+
+void OutputStream::write_nt_chars(const char * p_str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(p_str),
+        strlen(p_str))
+    );
 }
 
 void OutputStream::write_byte(const uint8_t byte){
@@ -57,18 +66,201 @@ void OutputStream::write_bytes(std::span<const uint8_t> bytes){
 }
 
 OutputStream & OutputStream::flush(){
-    // buf_.flush([this](const std::span<const uint8_t> pbuf){this->sendout(pbuf);});
     return *this;
 }
 
 OutputStream & OutputStream::operator<<(const wchar_t chr){
     write_byte(chr); return *this;}
 
+
+
+OutputStream & OutputStream::operator<<(const std::string & str){
+    *this << std::string_view(str);
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const std::endian endian){
+    auto & os = *this;
+    switch(endian){
+        case std::endian::little: return os << ("little");
+        case std::endian::big: return os << ("big");
+    }
+    __builtin_unreachable();
+}
+
+OutputStream & OutputStream::operator<<(const std::_Swallow_assign){
+    // this is std::ignore,dont print
+    // _GLIBCXX17_INLINE constexpr _Swallow_assign ignore{};
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const std::_Setw){
+    //TODO
+    return *this;
+}
+
+
+OutputStream & OutputStream::operator<<(const std::_Setfill<char> setfill){
+    //TODO
+
+    (void)setfill;
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const std::monostate){
+    return *this << ("monostate");
+}
+
+
+OutputStream & OutputStream::operator<<(const StringView str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str.data()),
+        str.length())
+    );
+    return * this;
+}
+
+OutputStream & OutputStream::operator<<(const MutStringView str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str.data()),
+        str.length())
+    );
+    return * this;
+}
+
+OutputStream & OutputStream::operator<<(const bool val){
+    if(config_.specifier.boolalpha == false){
+        write_byte('0' + val);
+        return *this;
+    }else{
+        return *this << ((val) ? "true" : "false");
+    }
+}
+
+
+size_t OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
+    if(!p_route_.has_value()) [[unlikely]]
+        __builtin_trap();
+    return p_route_->try_write_bytes(pbuf);
+}
+
+OutputStream & OutputStream::operator<<(const std::strong_ordering & ordering){
+    if (ordering == std::strong_ordering::greater) {
+        return *this << ("greater");
+    } else if (ordering == std::strong_ordering::less) {
+        return *this << ("less");
+    } else {
+        return *this << ("equal");
+    }
+}
+
+OutputStream & OutputStream::operator<<(const std::weak_ordering & ordering){
+    if (ordering == std::weak_ordering::greater) {
+        return *this << ("greater");
+    } else if (ordering == std::weak_ordering::less) {
+        return *this << ("less");
+    } else {
+        return *this << ("equivalent");
+    }
+}
+
+
+
+void OutputStream::print_source_loc(const std::source_location & loc){
+    const auto guard = this->create_guard();
+    this->println();
+
+    this->config_.set_splitter('\0');
+
+    this->println(loc.function_name());
+    this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
+}
+
+template<typename T>
+static constexpr bool is_positive(T val){
+    if constexpr(std::is_signed_v<T>) {
+        return val >= 0;
+    } else {
+        return true;
+    }
+} 
+
+#define PRINT_NUMERIC_BEGIN(cap)\
+    alignas(4) std::array<char, cap> buf;\
+    char * p_str = buf.data();\
+
+#define PRINT_NUMERIC_END(convfunc, ...)\
+    p_str = convfunc(p_str, val, ##__VA_ARGS__);\
+    size_t len = p_str - buf.data();\
+    this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
+
+
+
+#define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
+    PRINT_NUMERIC_BEGIN(cap)\
+    if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
+        p_str[0] = ('+');\
+        p_str++;}\
+    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
+
+
+#define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
+    PRINT_NUMERIC_BEGIN(cap)\
+    {\
+        if((config_.specifier.showbase)) [[unlikely]]{\
+            p_str = put_basealpha_lower(p_str, config_.radix);}\
+        else if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
+            p_str[0] = ('+');\
+            p_str++;\
+        }\
+    }\
+    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
+
+
+
+OutputStream & OutputStream::operator<<(const float val){
+    PRINT_NUMERIC_TEMPLATE(val, 64, str::fmtnum_f32, this->config_.eps)
+    return *this;
+}
+
+void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
+    const str::FixedTypeErased type = {
+        .is_signed = true,
+        .q_num = static_cast<uint8_t>(Q)
+    };
+
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
+}
+
+void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
+    const str::FixedTypeErased type = {
+        .is_signed = false,
+        .q_num = static_cast<uint8_t>(Q)
+    };
+
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
+}
+
+OutputStream & OutputStream::operator<<(const double val){
+    return (*this) << static_cast<float>(val);
+}
+
+
+void OutputStream::print_int32(const uint32_t val, const str::IntTypeErased type){
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_integral32, this->config_.radix, type);
+}
+
+void OutputStream::print_int64(const uint64_t val, const str::IntTypeErased type){
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_integral64, this->config_.radix, type);
+}
+
+
+
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
-        if (func == &std::oct) {set_radix(8);break;}
-        else if (func == &std::dec) {set_radix(10);break;}
-        else if (func == &std::hex) {set_radix(16);break;}
+        if (func == &std::oct) {config_.set_radix(8);break;}
+        else if (func == &std::dec) {config_.set_radix(10);break;}
+        else if (func == &std::hex) {config_.set_radix(16);break;}
         else if (func == &std::fixed) {
             //TODO
             break;
@@ -118,198 +310,14 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 }
 
 
-OutputStream & OutputStream::operator<<(const std::string & str){
-    *this << std::string_view(str);
-    return *this;
-}
-
-OutputStream & OutputStream::operator<<(const std::endian endian){
-    auto & os = *this;
-    switch(endian){
-        case std::endian::little: return os << StringView("little");
-        case std::endian::big: return os << StringView("big");
-    }
-    __builtin_unreachable();
-}
-
-OutputStream & OutputStream::operator<<(const std::_Swallow_assign){
-    // this is std::ignore,dont print
-    // _GLIBCXX17_INLINE constexpr _Swallow_assign ignore{};
-    return *this;
-}
-
-OutputStream & OutputStream::operator<<(const std::_Setw){
-    //TODO
-    return *this;
-}
-
-
-OutputStream & OutputStream::operator<<(const std::_Setfill<char> setfill){
-    //TODO
-
-    (void)setfill;
-    return *this;
-}
-
-OutputStream & OutputStream::operator<<(const std::monostate){
-    return *this << StringView("monostate");
-}
-
-
-OutputStream & OutputStream::operator<<(const StringView str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str.data()),
-        str.length())
-    );
-    return * this;
-}
-
-OutputStream & OutputStream::operator<<(const MutStringView str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str.data()),
-        str.length())
-    );
-    return * this;
-}
-
-OutputStream & OutputStream::operator<<(const bool val){
-    if(config_.specifier.boolalpha == false){
-        write_byte('0' + val);
-        return *this;
-    }else{
-        return *this << ((val) ? StringView("true") : StringView("false"));
-    }
-}
-
-
-size_t OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
-    if(!p_route_.has_value()) [[unlikely]]
-        __builtin_trap();
-    return p_route_->try_write_bytes(pbuf);
-}
-
-OutputStream & OutputStream::operator<<(const std::strong_ordering & ordering){
-    if (ordering == std::strong_ordering::greater) {
-        return *this << StringView("greater");
-    } else if (ordering == std::strong_ordering::less) {
-        return *this << StringView("less");
-    } else {
-        return *this << StringView("equal");
-    }
-}
-
-OutputStream & OutputStream::operator<<(const std::weak_ordering & ordering){
-    if (ordering == std::weak_ordering::greater) {
-        return *this << StringView("greater");
-    } else if (ordering == std::weak_ordering::less) {
-        return *this << StringView("less");
-    } else {
-        return *this << StringView("equivalent");
-    }
-}
-
-
-
-void OutputStream::print_source_loc(const std::source_location & loc){
-    const auto guard = this->create_guard();
-    this->println();
-
-    this->set_splitter('\0');
-    this->set_indent(this->indent());
-
-    this->println(loc.function_name());
-    this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
-}
-
-template<typename T>
-static constexpr bool is_positive(T val){
-    if constexpr(std::is_signed_v<T>) {
-        return val >= 0;
-    } else {
-        return true;
-    }
-} 
-
-#define PRINT_NUMERIC_BEGIN(cap)\
-    std::array<char, cap> buf;\
-    char * p_str = buf.data();\
-
-#define PRINT_NUMERIC_END(convfunc, ...)\
-    size_t len = convfunc(p_str, val, ##__VA_ARGS__) - p_str;\
-    this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
-
-
-
-#define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
-    PRINT_NUMERIC_BEGIN(cap)\
-    if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
-        p_str[0] = ('+');\
-        p_str++;}\
-    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
-
-#define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
-    PRINT_NUMERIC_BEGIN(cap)\
-    if((config_.specifier.showbase)) [[unlikely]]{\
-        p_str = put_basealpha_lower(p_str, config_.radix);}\
-    else {if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
-        p_str[0] = ('+');\
-        p_str++;}}\
-    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
-
-
-
-OutputStream & OutputStream::operator<<(const float val){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_f32, this->config_.eps)
-    return *this;
-}
-
-void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<int32_t>, this->config_.eps, Q)
-}
-
-void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<uint32_t>, this->config_.eps, Q)
-}
-
-OutputStream & OutputStream::operator<<(const double val){
-    return (*this) << static_cast<float>(val);
-}
-
-void OutputStream::print_u32(const uint32_t val){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_u32, this->config_.radix);
-}
-
-void OutputStream::print_i32(const int32_t val){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_i32, this->config_.radix);
-}
-
-void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_u64, this->config_.radix);
-}
-
-void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_i64, this->config_.radix);
-}
-
-OutputStream & OutputStream::operator<<(const uint8_t val){
-    PRINT_INT_TEMPLATE(val, (32), str::fmtnum_u8, this->config_.radix);
-    return *this;
-}
-
 // !warning, take care of your stupid null-terminated c-style string
 OutputStream & OutputStream::operator<<(char * str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str),
-        strlen(str))
-    );
+    write_nt_chars(str);
     return *this;
 }
 
 // !warning, take care of your stupid null-terminated c-style string
 OutputStream & OutputStream::operator<<(const char* str){
-    write_bytes(std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(str),
-        strlen(str))
-    );
+    write_nt_chars(str);
     return *this;
 }

@@ -22,7 +22,7 @@ public:
         return in;
     }
 
-    constexpr T get_phase_delay(T freq) const {
+    constexpr T get_phase_delay(T freq) const noexcept {
         const auto omega = twopi * freq / sampleRate_;
         const auto cpx = Complex<T>::from_polar(1.0f, omega);
         const auto up = b0_ * cpx * cpx + a1_ * cpx + b2_;
@@ -55,7 +55,7 @@ public:
         }
     }
 
-    constexpr Complex<T> get_response(T omega) const {
+    constexpr Complex<T> get_response(T omega) const noexcept {
         const auto z = Complex<T>::from_polar(omega);
         const auto up = a2_ * z * z + a1_ * z + 1.0f;
         const auto down = z * z + a1_ * z + a2_;

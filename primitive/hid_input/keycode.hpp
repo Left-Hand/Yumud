@@ -594,23 +594,23 @@ public:
         return from_char(C).unwrap();
     }
 
-    constexpr Option<char> to_char() const {
+    constexpr Option<char> to_char() const noexcept {
         return hid::to_char(kind_);
     }
 
-    constexpr Option<uint8_t> to_digit() const {
+    constexpr Option<uint8_t> to_digit() const noexcept {
         return hid::to_digit(kind_);
     }
 
-    constexpr Kind kind() const {
+    constexpr Kind kind() const noexcept {
         return kind_;
     }
 
-    [[nodiscard]] constexpr bool is_digit() const {
+    [[nodiscard]] constexpr bool is_digit() const noexcept {
         return to_digit().is_some();
     }
 
-    [[nodiscard]] constexpr bool is_arrow() const {
+    [[nodiscard]] constexpr bool is_arrow() const noexcept {
         switch(kind_){
             default:
                 return false;
@@ -622,15 +622,15 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr bool is_alpha() const {
+    [[nodiscard]] constexpr bool is_alpha() const noexcept {
         return to_digit().is_some();
     }
 
-    [[nodiscard]] constexpr bool operator ==(const KeyCode & rhs) const {
+    [[nodiscard]] constexpr bool operator ==(const KeyCode & rhs) const noexcept {
         return kind_ == rhs.kind_;
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Kind kind) const {
+    [[nodiscard]] constexpr bool operator ==(const Kind kind) const noexcept {
         return kind_ == kind;
     }
 

@@ -9,7 +9,7 @@ class Memory;
 
 struct [[nodiscard]] AddressDiff final{
     [[nodiscard]] constexpr explicit AddressDiff(const uint32_t diff):count_(diff){;}
-    [[nodiscard]] constexpr uint32_t to_u32() const {return count_;}
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {return count_;}
     [[nodiscard]] constexpr auto operator<=>(const AddressDiff &) const = default;
 private:
     uint32_t count_;
@@ -20,12 +20,12 @@ using Capacity = AddressDiff;
 
 struct [[nodiscard]] Address final{
     [[nodiscard]] constexpr explicit Address(const uint32_t addr):count_(addr){;}
-    [[nodiscard]] constexpr uint32_t to_u32() const {return count_;}
+    [[nodiscard]] constexpr uint32_t to_u32() const noexcept {return count_;}
 
     [[nodiscard]] constexpr auto operator<=>(const Address &) const = default;
-    [[nodiscard]] constexpr AddressDiff operator - (const Address &rhs) const {return AddressDiff(count_ - rhs.count_);}
-    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const {return Address(count_ - rhs.to_u32());}
-    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const {return Address(count_ + rhs.to_u32());}
+    [[nodiscard]] constexpr AddressDiff operator - (const Address &rhs) const noexcept {return AddressDiff(count_ - rhs.count_);}
+    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const noexcept {return Address(count_ - rhs.to_u32());}
+    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const noexcept {return Address(count_ + rhs.to_u32());}
 private:
     uint32_t count_;
 };
@@ -52,7 +52,7 @@ struct [[nodiscard]] AddressRange final{
     constexpr explicit AddressRange(const Address _addr, const AddressDiff _AddressDiff):
         from(_addr),to(_addr + _AddressDiff){;}
 
-    constexpr AddressDiff capacity() const{ return to - from; }
+    constexpr AddressDiff capacity() const noexcept { return to - from; }
 };
 
 

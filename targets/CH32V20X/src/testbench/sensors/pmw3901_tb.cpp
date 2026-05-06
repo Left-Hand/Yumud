@@ -19,7 +19,13 @@ void pmw3901_main(){
         .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = hal::spi1;

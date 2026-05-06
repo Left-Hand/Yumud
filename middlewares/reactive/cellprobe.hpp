@@ -30,7 +30,7 @@ struct [[nodiscard]] CellBase<T> {
         value_.store(val, std::memory_order_release);
     }
     
-    T get() const {
+    T get() const noexcept {
         return value_.load(std::memory_order_acquire);
     }
     
@@ -57,7 +57,7 @@ struct [[nodiscard]] CellBase<T> {
         value_.store(val, std::memory_order_release);
     }
     
-    T get() const {
+    T get() const noexcept {
         return value_.load(std::memory_order_acquire);
     }
     
@@ -107,7 +107,7 @@ struct [[nodiscard]] CellBase<math::fixed<Q, D>> {
         bits_.store(val.to_bits(), std::memory_order_release);
     }
     
-    math::fixed<Q, D> get() const {
+    math::fixed<Q, D> get() const noexcept {
         return math::fixed<Q, D>::from_bits(bits_.load(std::memory_order_acquire));
     }
     
@@ -151,7 +151,7 @@ struct [[nodiscard]] CellBase<Angular<T>> {
         inner_.set(val.to_turns());
     }
     
-    Angular<T> get() const {
+    Angular<T> get() const noexcept {
         return Angular<T>::from_turns(inner_.get());
     }
 
@@ -178,7 +178,7 @@ struct [[nodiscard]] CellBase<T>{
         inner_.set(std::bit_cast<D>(val));
     }
     
-    [[nodiscard]] T get() const {
+    [[nodiscard]] T get() const noexcept {
         return std::bit_cast<T>(inner_.get());
     }
     
@@ -214,16 +214,16 @@ struct [[nodiscard]] AtomicCell : public CellBase<T> {
     }
     
     // 隐式转换到 T（只读）
-    operator T() const {
+    operator T() const noexcept {
         return get();
     }
     #endif
 
-    Probe<T> probe() const {
+    Probe<T> probe() const noexcept {
         return Probe<T>(this);
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << self.get();
     }
 };
@@ -237,18 +237,18 @@ struct [[nodiscard]] Probe {
         return Self(nullptr);
     }
 
-    [[nodiscard]] T get() const {
+    [[nodiscard]] T get() const noexcept {
         if(cell_ == nullptr) [[unlikely]]
             PANIC{"try to get a null cell"};
         return cell_->get();
             // return Zero
     }
 
-    [[nodiscard]] Self clone() const {
+    [[nodiscard]] Self clone() const noexcept {
         return Self(cell_);
     }
 
-    [[nodiscard]] Self probe() const {
+    [[nodiscard]] Self probe() const noexcept {
         return Self(cell_);
     }
 
@@ -305,7 +305,7 @@ struct Mailbox{
         value_ = value;
     }
 
-    bool has_value() const{ 
+    bool has_value() const noexcept { 
         return has_value_;
     }
 

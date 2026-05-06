@@ -66,11 +66,11 @@ public:
             }
         };
 
-        constexpr Absolute to_absolute() const {
+        constexpr Absolute to_absolute() const noexcept {
             return {j1_abs_, j2_abs_};
         }
 
-        constexpr Relative to_relative() const {
+        constexpr Relative to_relative() const noexcept {
             return {j1_abs_, j2_abs_ - j1_abs_};
         }
 
@@ -181,7 +181,7 @@ public:
         reconf(cfg);
     }
 
-    constexpr Option<Solution> inverse(const Gesture & gest) const{
+    constexpr Option<Solution> inverse(const Gesture & gest) const noexcept {
         const auto vars_0 = inverse_single_axis(cfg_, norms_[0], gest);
         const auto vars_1 = inverse_single_axis(cfg_, norms_[1], gest);
         const auto vars_2 = inverse_single_axis(cfg_, norms_[2], gest);
@@ -197,7 +197,7 @@ public:
     }
 
     // 正解需要考虑yaw角错位 难度极高
-    // void forward(const Solution & solu) const {
+    // void forward(const Solution & solu) const noexcept {
     //     const auto p0 = forward_point(cfg_, norms_[0], solu[0]);
     //     const auto p1 = forward_point(cfg_, norms_[1], solu[1]);
     //     const auto p2 = forward_point(cfg_, norms_[2], solu[2]);

@@ -60,7 +60,7 @@ public:
         // 快速因子r 通过r的频率的信号响应减半
         uint32_t r;
 
-        constexpr Result<Precomputed, StringView> try_into_precomputed() const {
+        constexpr Result<Precomputed, StringView> try_into_precomputed() const noexcept {
             auto & self = *this;
 
             if(fs >= 65536) [[unlikely]]
@@ -93,7 +93,7 @@ public:
     constexpr void iterate(
         State & state, 
         const std::array<iq16, 2> ref
-    ) const {
+    ) const noexcept {
 
         auto & x1_now = state.x1;
         auto & x2_now = state.x2;

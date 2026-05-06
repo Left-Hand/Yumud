@@ -82,22 +82,22 @@ struct [[nodiscard]] EmcyErrorCode{
             return Some(Self(static_cast<EmcyError>(bits)));
         return None;
     }
-    constexpr Kind kind() const { return kind_; }
-    [[nodiscard]] constexpr bool operator ==(const Kind kind) const { return kind_ == kind; }
-    [[nodiscard]] constexpr bool is_ok() const {
+    constexpr Kind kind() const noexcept { return kind_; }
+    [[nodiscard]] constexpr bool operator ==(const Kind kind) const noexcept { return kind_ == kind; }
+    [[nodiscard]] constexpr bool is_ok() const noexcept {
         return kind_ == OK;
     }
 
-    [[nodiscard]] constexpr bool is_err() const {
+    [[nodiscard]] constexpr bool is_err() const noexcept {
         return !is_ok();
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 2> pbuf) const {
+    constexpr void fill_bytes(std::span<uint8_t, 2> pbuf) const noexcept {
         pbuf[0] = static_cast<uint8_t>(std::bit_cast<uint16_t>(kind_) & 0xff);
         pbuf[1] = static_cast<uint8_t>(std::bit_cast<uint16_t>(kind_) >> 8);
     }
 
-    [[nodiscard]] constexpr uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
         return std::bit_cast<uint16_t>(kind_);
     }
 

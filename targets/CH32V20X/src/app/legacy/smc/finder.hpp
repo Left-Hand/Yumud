@@ -54,11 +54,11 @@ namespace SMC{
         CoastItem orientation = CoastItem();//TODO
     public:
         Corner(const CornerType _type, const CoastItem & _point):type(_type), point(_point){;}
-        operator CoastItem () const { return point; }
-        operator Point () const { return point; }
+        operator CoastItem () const noexcept { return point; }
+        operator Point () const noexcept { return point; }
 
-        // auto type() const { return m_type; }
-        // auto point() const { return m_point; }
+        // auto type() const noexcept { return m_type; }
+        // auto point() const noexcept { return m_point; }
     };
 
 

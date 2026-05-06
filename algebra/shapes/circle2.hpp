@@ -19,31 +19,31 @@ struct [[nodiscard]] Circle2{
 
 	//判断点是否在圆内
 	[[nodiscard]] constexpr 
-	bool contains_point(const math::Vec2<T> & p) const {
+	bool contains_point(const math::Vec2<T> & p) const noexcept {
 		return 	(p - center).length_squared() < square(radius);
 	}
 	
 	//判断是否与另一个圆相交
 	[[nodiscard]] constexpr 
-	bool intersects(const Circle2<T> & other) const {
+	bool intersects(const Circle2<T> & other) const noexcept {
 		return (center - other.center).length_squared() <= square(radius + other.radius);
 	}
 
 	//判断是否与另一个圆相切
 	[[nodiscard]] constexpr 
-	bool tangent(const Circle2<T> & other) const {
+	bool tangent(const Circle2<T> & other) const noexcept {
 		return (center - other.center).length_squared() == square(radius + other.radius);		
 	}
 
 	[[nodiscard]] constexpr 
-	math::Rect2<T> bounding_box() const {
+	math::Rect2<T> bounding_box() const noexcept {
 		return math::Rect2<T>::from_center_and_halfsize(
 			center, math::Vec2<T>(radius, radius)
 		);
 	}
 
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("center")(self.center) << os.splitter()
             << os.field("radius")(self.radius)

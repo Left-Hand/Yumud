@@ -21,7 +21,7 @@ struct [[nodiscard]] SetTarget final{
     AccelerationTimeCode acceleration_time_code;
     Enable brake_en;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(setpoint_code.bits >> 8);
         bytes[1] = static_cast<uint8_t>(setpoint_code.bits);
         bytes[2] = 0;
@@ -45,7 +45,7 @@ struct [[nodiscard]] SetTarget final{
 
 struct [[nodiscard]] GetJourney final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetJourney;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
         std::fill(bytes.begin(), bytes.end(), 0);
     }
 };
@@ -60,7 +60,7 @@ struct [[nodiscard]] GetJourney final{
 struct [[nodiscard]] SetLoopMode final{
     static constexpr ReqCommand COMMAND = ReqCommand::SetLoopMode;
     LoopMode loop_mode;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(loop_mode);
         std::fill(bytes.begin() + 1, bytes.end(), 0);
     }
@@ -79,7 +79,7 @@ struct [[nodiscard]] SetLoopMode final{
 struct [[nodiscard]] SetMotorId final{
     static constexpr ReqCommand COMMAND = ReqCommand::SetMotorId;
     MotorId target_motor_id;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
         bytes[0] = target_motor_id.to_u8();
         std::fill(bytes.begin() + 1, bytes.end(), 0);
     }
@@ -90,7 +90,7 @@ struct [[nodiscard]] SetMotorId final{
 // 内容	ID	0x75	0	0	0	0	0	0	0	CRC8
 struct [[nodiscard]] GetLoopMode final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetLoopMode;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
         std::fill(bytes.begin(), bytes.end(), 0);
     }
 };

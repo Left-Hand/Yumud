@@ -55,7 +55,7 @@ IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
     std::array<uint8_t,4> buf;
 
     
-    if (const auto res = read_burst(start_reg, std::span(buf)); res.is_err()) {
+    if (const auto res = read_bulk(start_reg, std::span(buf)); res.is_err()) {
         return Err(res.unwrap_err());
     }
 
@@ -76,7 +76,7 @@ IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
 IResult<uint16_t> ST1615::get_sensor_count() {
     std::array<uint8_t,2> buf;
 
-    if (const auto res = read_burst(SENSING_COUNTER_L, std::span(buf)); res.is_err()) {
+    if (const auto res = read_bulk(SENSING_COUNTER_L, std::span(buf)); res.is_err()) {
         return Err(res.unwrap_err());
     }
 
@@ -99,7 +99,7 @@ IResult<ST1615::Capabilities> ST1615::get_capabilities() {
 
     std::array<uint8_t, 3> buf;
     
-    if (const auto res = read_burst(XY_RESOLUTION_H, std::span(buf));
+    if (const auto res = read_bulk(XY_RESOLUTION_H, std::span(buf));
         res.is_err()) {
         return Err(res.unwrap_err());
     }

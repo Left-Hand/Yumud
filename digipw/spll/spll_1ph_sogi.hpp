@@ -49,7 +49,7 @@ struct SPLL_1PH_SOGI{
         float lpf_b0;
         float lpf_b1;
 
-        [[nodiscard]] constexpr OsgCoeff to_coeff() const {
+        [[nodiscard]] constexpr OsgCoeff to_coeff() const noexcept {
             const float fn=acFreq;
             const float delta_t=((1.0f)/isrFrequency);
             OsgCoeff osg_coeff;
@@ -174,11 +174,11 @@ struct SPLL_1PH_SOGI{
         fo=fn+ylf[0];
 
         theta=theta + (fo*delta_t)*
-                        (float)(2.0*3.1415926f);
+                        (float)(2.0*M_PI);
 
-        if(theta>(float)(2.0*3.1415926f))
+        if(theta>(float)(2.0*M_PI))
         {
-            theta=theta - (float)(2.0*3.1415926f);
+            theta=theta - (float)(2.0*M_PI);
             //theta=0;
         }
 

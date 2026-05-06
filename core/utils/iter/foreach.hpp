@@ -6,7 +6,7 @@ struct ForeachIter{
     T iter_;
     Fn fn_;
 
-    constexpr bool has_next() const{
+    constexpr bool has_next() const noexcept {
         return iter_.has_next();
     }
 

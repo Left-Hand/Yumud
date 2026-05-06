@@ -203,7 +203,7 @@ namespace ymd::nvcv2::shape{
     struct Seed final{
         public:            
 
-            uint8_t warp_dir_index(const int8_t & _dir) const{
+            uint8_t warp_dir_index(const int8_t & _dir) const noexcept {
                 if(_dir > 7){
                     return 0;
                 }else if(_dir < 0){
@@ -222,11 +222,11 @@ namespace ymd::nvcv2::shape{
                 return now_position_ -= dirs[dir_index_];
             }
 
-            math::Vec2i drop() const{
+            math::Vec2i drop() const noexcept {
                 return now_position_ + dirs[warp_dir_index(dir_index_)];
             }
 
-            uint8_t jounrey() const{
+            uint8_t jounrey() const noexcept {
                 return jounrey_;
             }
 
@@ -247,7 +247,7 @@ namespace ymd::nvcv2::shape{
                 dir_index_ = warp_dir_index(dir_index_ + (is_cw_ ^ (!not_inverse) ? -1 : 1));
             }
 
-            bool is_cw()const{
+            bool is_cw() const noexcept {
                 return is_cw_;
             }
 
@@ -265,7 +265,7 @@ namespace ymd::nvcv2::shape{
                 return *this;
             }
 
-            operator math::Vec2i()const{
+            operator math::Vec2i() const noexcept {
                 return now_position_;
                 // jounrey_ = 0;
                 // return *this;

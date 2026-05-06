@@ -84,7 +84,7 @@ private:
 
     IResult<> write_reg(const uint8_t command, const uint8_t data);
     IResult<> read_reg(const uint8_t command, uint8_t & data);
-    IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);
+    IResult<> read_bulk(const uint8_t commnad, std::span<uint8_t> pbuf);
 
     IResult<> read_data_slow();
     IResult<> read_data_burst();

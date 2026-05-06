@@ -15,27 +15,27 @@ public:
 
     using enum Kind;
     constexpr PlaceName(const Kind kind): kind_(kind){}
-    constexpr bool PlaceName operator ==(const Kind kind) const {
+    constexpr bool PlaceName operator ==(const Kind kind) const noexcept {
         return kind_ == kind;
     }
 
-    constexpr bool operator ==(const PlaceName & rhs) const {
+    constexpr bool operator ==(const PlaceName & rhs) const noexcept {
         return kind_ == rhs.kind_;
     }
 
-    constexpr bool is_endpoint_of_a() const {
+    constexpr bool is_endpoint_of_a() const noexcept {
         return (kind_ == AL) || (kind_ == AR);
     }
 
-    constexpr bool is_endpoint_of_b() const {
+    constexpr bool is_endpoint_of_b() const noexcept {
         return (kind_ == BL) || (kind_ == BR);
     }
 
-    constexpr bool is_endpoint_of_c() const {
+    constexpr bool is_endpoint_of_c() const noexcept {
         return (kind_ == CUL) || (kind_ == CUR) || (kind_ == CDL) || (kind_ == CDR);
     }
 
-    constexpr bool is_endpoint() const {
+    constexpr bool is_endpoint() const noexcept {
         return is_endpoint_of_a() || is_endpoint_of_b() || is_endpoint_of_c();
     }
 private:
@@ -49,11 +49,11 @@ public:
             if(index > 9) __builtin_abort();
         }
 
-    constexpr uint8_t index() const{
+    constexpr uint8_t index() const noexcept {
         return index_;
     }
 
-    constexpr bool operator ==(const PlaceIndex other) const {
+    constexpr bool operator ==(const PlaceIndex other) const noexcept {
         return this.index_ == other.index_;
     }
 private:    

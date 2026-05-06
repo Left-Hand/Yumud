@@ -57,10 +57,10 @@ struct [[nodiscard]]FunctionCode final{
 
     uint8_t bits;
 
-    constexpr bool is_none() const {return bits == 0u;}
-    constexpr bool is_some() const {return bits != 0u;}
+    constexpr bool is_none() const noexcept {return bits == 0u;}
+    constexpr bool is_some() const noexcept {return bits != 0u;}
 
-    constexpr Kind unwrap() const{
+    constexpr Kind unwrap() const noexcept {
         if(is_none()) 
             __builtin_trap();
         return std::bit_cast<Kind>(bits);
@@ -107,11 +107,11 @@ struct [[nodiscard]]FunctionCode final{
 struct [[nodiscard]] ModbusError:public Sumtype<LibError,ExceptionCode>{
     using enum LibError;
     using enum ExceptionCode;
-    [[nodiscard]] bool is_exception() const{
+    [[nodiscard]] bool is_exception() const noexcept {
         return is<ExceptionCode>();
     }
 
-    [[nodiscard]] ExceptionCode unwrap_as_exception() const{
+    [[nodiscard]] ExceptionCode unwrap_as_exception() const noexcept {
         return unwrap_as<ExceptionCode>();
     }
 
@@ -132,15 +132,15 @@ struct [[nodiscard]] NodeId{
         return std::bit_cast<Self>(bits);
     } 
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits_;
     }
 
-    [[nodiscard]] constexpr bool is_boardcast() const{
+    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
         return bits_ == 0;
     }
 
-    [[nodiscard]] constexpr bool is_preserved() const {
+    [[nodiscard]] constexpr bool is_preserved() const noexcept {
         return bits_ >= 248;
     }
 private:

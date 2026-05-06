@@ -27,7 +27,7 @@ public:
         uint32_t fc;
         uq8 b0;
 
-        constexpr Result<Coeffs, const char *> try_into_precomputed() const{
+        constexpr Result<Coeffs, const char *> try_into_precomputed() const noexcept {
             auto & self = *this;
             const auto dt = uq32::from_rcp(self.fs);
             if(self.fs >= 65536) 
@@ -53,7 +53,7 @@ public:
     constexpr explicit MotorLeso(const Coeffs & coeffs):
         coeffs_(coeffs){;}
 
-    constexpr State iterate(const State & state, const iq16 y, const iq16 u) const {
+    constexpr State iterate(const State & state, const iq16 y, const iq16 u) const noexcept {
         // dx1=x2+b0*u+g1*(y-x1);
         // dx2=g2*(y-x1);
 

@@ -426,10 +426,10 @@ public:
   MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() { return mapping_type::is_always_exhaustive(); }
   MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() { return mapping_type::is_always_strided(); }
 
-  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const { return mapping_ref().is_unique(); }
-  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const { return mapping_ref().is_exhaustive(); }
-  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const { return mapping_ref().is_strided(); }
-  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const { return mapping_ref().stride(r); }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return mapping_ref().is_unique(); }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return mapping_ref().is_exhaustive(); }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return mapping_ref().is_strided(); }
+  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const noexcept { return mapping_ref().stride(r); }
 
 private:
 

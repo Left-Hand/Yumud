@@ -6,7 +6,7 @@
 #include "core/async/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/clock/time.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 #include "core/utils/combo_counter.hpp"
 #include "core/utils/default.hpp"
 #include "core/async/delayed_semphr.hpp"
@@ -66,11 +66,13 @@ void winter_mc_tutorial_main(){
         });
 
         DEBUGGER.retarget(&DEBUG_UART);
-        DEBUGGER.no_brackets(EN);
-        DEBUGGER.set_eps(3);
-        DEBUGGER.force_sync(EN);
-        // DEBUGGER.no_fieldname(EN);
-        DEBUGGER.no_fieldname(DISEN);
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(EN)
+            .force_sync(EN)
+            .finalize();
     };
 
     bsp_init_debug();
@@ -299,16 +301,16 @@ void winter_mc_tutorial_main(){
 
     while(true){
         repl_server.invoke(repl_list);
-
+        const auto now_secs = clock::seconds();
 
         DEBUG_PRINTLN(
-            target_rotor_x1,
-            target_rotor_x2,
-            meas_rotor_x1,
-            meas_rotor_x2,
-            pwm_dutycycle
+            // target_rotor_x1,
+            // target_rotor_x2,
+            // meas_rotor_x1,
+            // meas_rotor_x2,
+            // pwm_dutycycle,
+            iq16(math::sinpu(400 * now_secs)) + iq16(math::sinpu(4 * now_secs))
         );
 
-        clock::delay(1ms);
     }
 }

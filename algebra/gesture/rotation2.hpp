@@ -42,7 +42,7 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     [[nodiscard]] constexpr 
-    Matrix<T, 2, 2> to_matrix() const {
+    Matrix<T, 2, 2> to_matrix() const noexcept {
         return Matrix<T, 2, 2>(
             cosine_, -sine_,
             sine_,  cosine_
@@ -50,7 +50,7 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     [[nodiscard]] constexpr 
-    Vec2<T> operator*(const Vec2<T>& v) const {
+    Vec2<T> operator*(const Vec2<T>& v) const noexcept {
         return Vec2<T>(
             cosine_ * v.x - sine_ * v.y,
             sine_ * v.x + cosine_ * v.y
@@ -58,7 +58,7 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     [[nodiscard]] constexpr 
-    Rotation2 operator*(const Rotation2& other) const {
+    Rotation2 operator*(const Rotation2& other) const noexcept {
         // 三角函数公式：sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
         //             cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
         return Rotation2{
@@ -68,63 +68,63 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     // [[nodiscard]] constexpr 
-    // Rotation2 operator + (const Angular<T> & angle) const {
+    // Rotation2 operator + (const Angular<T> & angle) const noexcept {
     //     return *this * Rotation2::from_angle(angle);
     // }
 
     // [[nodiscard]] constexpr 
-    // Rotation2 operator - (const Angular<T> & angle) const {
+    // Rotation2 operator - (const Angular<T> & angle) const noexcept {
     //     return *this * (Rotation2::from_angle(angle).inverse());
     // }
 
     [[nodiscard]] constexpr 
-    Rotation2 operator -() const {
+    Rotation2 operator -() const noexcept {
         return this->inverse();
     }
 
     // 逆旋转（转置）
     [[nodiscard]] constexpr 
-    Rotation2 inverse() const {
+    Rotation2 inverse() const noexcept {
         return Rotation2{-sine_, cosine_}; // 角度取反
     }
 
     [[nodiscard]] constexpr 
-    Rotation2 transpose() const {
+    Rotation2 transpose() const noexcept {
         return inverse();
     }
 
     [[nodiscard]] constexpr 
-    Rotation2 forward_90deg() const {
+    Rotation2 forward_90deg() const noexcept {
         return Rotation2{cosine_, -sine_};
     }
 
     [[nodiscard]] constexpr
-    Rotation2 backward_90deg() const {
+    Rotation2 backward_90deg() const noexcept {
         return Rotation2{-cosine_, sine_};
     }
 
-    [[nodiscard]] constexpr T sine() const {return sine_;}
-    [[nodiscard]] constexpr T cosine() const {return cosine_;}
+    [[nodiscard]] constexpr T sine() const noexcept {return sine_;}
+    [[nodiscard]] constexpr T cosine() const noexcept {return cosine_;}
 
-    [[nodiscard]] constexpr std::array<T, 2> sincos() const {
+    [[nodiscard]] constexpr std::array<T, 2> sincos() const noexcept {
         return {sine_, cosine_};
     }
 
-    [[nodiscard]] constexpr Angular<T> to_angle() const {
+    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
         return Angular<T>::from_turns(atan2pu(sine_, cosine_));
     }
 
-    [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const {
+    [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const noexcept {
         return Vec2<T>(cosine_ * length, sine_ * length);
     }
 
-    [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const {
+    [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const noexcept {
         return Vec2<T>(cosine_, sine_);
     }
 
     #if 0
     // 插值：球面线性插值
-    constexpr Rotation2 slerp(const Rotation2& other, T t) const {
+    constexpr Rotation2 slerp(const Rotation2& other, T t) const noexcept {
         T cos_theta = cosine_ * other.cosine_ + sine_ * other.sine_;
         
         // 处理数值误差

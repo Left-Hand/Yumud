@@ -16,15 +16,15 @@ struct MA730_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class ZeroPulseWidth:uint8_t{
+    enum class [[nodiscard]] ZeroPulseWidth:uint8_t{
         _90deg, _180deg, _270deg, _360deg
     };
 
-    enum class ZeroPulsePhase:uint8_t{
+    enum class [[nodiscard]] ZeroPulsePhase:uint8_t{
         _0deg, _90deg, _180deg, _270deg
     };
 
-    enum class MagThreshold:uint8_t{
+    enum class [[nodiscard]] MagThreshold:uint8_t{
         _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
     };
 

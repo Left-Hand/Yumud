@@ -178,59 +178,59 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] 
-    constexpr bool is_pure_real() const {
+    constexpr bool is_pure_real() const noexcept {
         return w == 1 and x == 0 and y == 0 and z == 0;
     }
 
     [[nodiscard]]
-    constexpr bool is_pure_imaginary() const {
+    constexpr bool is_pure_imaginary() const noexcept {
         return w == 0 and x != 0 and y != 0 and z != 0;
     }
 
     [[nodiscard]]
-    consteval size_t size() const {return 4;}
+    consteval size_t size() const noexcept {return 4;}
 
     [[nodiscard]] __fast_inline constexpr 
     T * begin(){return &x;}
 
     [[nodiscard]] __fast_inline constexpr 
-    const T * begin() const {return &x;}
+    const T * begin() const noexcept {return &x;}
 
     [[nodiscard]] __fast_inline constexpr 
     T * end(){return &x + 4;}
 
     [[nodiscard]] __fast_inline constexpr 
-    const T * end() const {return &x + 4;}
+    const T * end() const noexcept {return &x + 4;}
 
     [[nodiscard]] __fast_inline constexpr 
     T & operator [](const size_t idx){return (&x)[idx];}
 
     [[nodiscard]] __fast_inline constexpr 
-    const T  operator [](const size_t idx) const {return (&x)[idx];}
+    const T  operator [](const size_t idx) const noexcept {return (&x)[idx];}
 
     [[nodiscard]]
-    constexpr Angular<T> angle_to(const Quat<T> &p_to) const {
+    constexpr Angular<T> angle_to(const Quat<T> &p_to) const noexcept {
         T d = math::abs(dot(p_to));
         return Angular<T>::from_radians(2 * math::acos(CLAMP(d, -1, 1)));
     }
 
     [[nodiscard]]
-    constexpr T dot(const Quat<T> &p_q) const {
+    constexpr T dot(const Quat<T> &p_q) const noexcept {
         return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
     }
 
     [[nodiscard]]
-    constexpr T length_squared() const{
+    constexpr T length_squared() const noexcept {
         return dot(*this);
     }
 
     [[nodiscard]]
-    constexpr T length() const {
+    constexpr T length() const noexcept {
         return T(math::mag(x, y, z, w));
     }
 
     [[nodiscard]]
-    constexpr T inv_length() const {
+    constexpr T inv_length() const noexcept {
         return T(math::inv_mag(x, y, z, w));
     }
 
@@ -244,20 +244,20 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
-    constexpr Quat<T> operator*(const Quat<T> & p_q) const {
+    constexpr Quat<T> operator*(const Quat<T> & p_q) const noexcept {
         Quat<T> r = *this;
         r *= p_q;
         return r;
     }
 
     [[nodiscard]]
-    constexpr Quat<T> operator*(Quat<T> && p_q) const {
+    constexpr Quat<T> operator*(Quat<T> && p_q) const noexcept {
         p_q *= *this;
         return p_q;
     }
 
     [[nodiscard]]
-    constexpr bool is_equal_approx(const Quat<T> & other) const {
+    constexpr bool is_equal_approx(const Quat<T> & other) const noexcept {
         return is_equal_approx(x, other.x) 
             and is_equal_approx(y, other.y) 
             and is_equal_approx(z, other.z) 
@@ -265,25 +265,25 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
-    constexpr Quat<T> normalized() const {
+    constexpr Quat<T> normalized() const noexcept {
         const auto ilen = inv_length();
         const auto ret = Quat<T>::from_xyzw(x * ilen, y * ilen, z * ilen, w * ilen);
         return ret;
     }
 
     [[nodiscard]]
-    constexpr bool is_normalized() const {
+    constexpr bool is_normalized() const noexcept {
         return is_equal_approx(length_squared(), T(1)); //use less epsilon
     }
 
     [[nodiscard]]
-    constexpr Quat<T> inverse() const {
+    constexpr Quat<T> inverse() const noexcept {
         return from_xyzw(-x, -y, -z, w);
     }
 
 
     [[nodiscard]]
-    constexpr Quat<T> slerp(const Quat<T> &p_to, const T p_weight) const {
+    constexpr Quat<T> slerp(const Quat<T> &p_to, const T p_weight) const noexcept {
         // Quat<T> to1 = ZERO;
         struct {
             T x;
@@ -339,7 +339,7 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
-    constexpr Quat<T> slerpni(const Quat<T> &p_to, const T p_weight) const {
+    constexpr Quat<T> slerpni(const Quat<T> &p_to, const T p_weight) const noexcept {
         const Quat<T> &from = *this;
 
         T dot = from.dot(p_to);
@@ -360,7 +360,7 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
-    constexpr Quat<T> cubic_slerp(const Quat<T> &p_b, const Quat<T> &p_pre_a, const Quat<T> &p_post_b, const T p_weight) const {
+    constexpr Quat<T> cubic_slerp(const Quat<T> &p_b, const Quat<T> &p_pre_a, const Quat<T> &p_post_b, const T p_weight) const noexcept {
 
         T t2 = (T(1) - p_weight) * p_weight * 2;
         Quat<T> sp = this->slerp(p_b, p_weight);
@@ -370,7 +370,7 @@ struct [[nodiscard]] Quat{
 
 
     [[nodiscard]]
-    constexpr Quat integral(const math::Vec3<T> & norm_dir, const T delta) const {
+    constexpr Quat integral(const math::Vec3<T> & norm_dir, const T delta) const noexcept {
         const auto k = delta / 2;
         return from_xyzw(
             x + k * (-y * norm_dir.z + z * norm_dir.y + w * norm_dir.x),
@@ -384,7 +384,7 @@ struct [[nodiscard]] Quat{
 
 
     [[nodiscard]] __fast_inline constexpr
-    math::Vec3<T> operator*(const math::Vec3<T> &v) const {
+    math::Vec3<T> operator*(const math::Vec3<T> &v) const noexcept {
         #if 1
         math::Vec3<T> u(x, y, z);
         math::Vec3<T> uv = u.cross(v);
@@ -403,14 +403,14 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    math::Vec3<T> xform(const math::Vec3<T> &v) const {
+    math::Vec3<T> xform(const math::Vec3<T> &v) const noexcept {
         math::Vec3<T> u(x, y, z);
         math::Vec3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    math::UnitVec3<T> xform_up() const {
+    math::UnitVec3<T> xform_up() const noexcept {
         return math::UnitVec3<T>(
             2 * (w * y + z * x),
             2 * (-w * x + z * y),
@@ -419,7 +419,7 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    math::Vec3<T> xform_top() const{
+    math::Vec3<T> xform_top() const noexcept {
         return math::Vec3<T>(
             T(2 * (x * z - w * y)),
             T(2 * (w * x + y * z)),
@@ -429,7 +429,7 @@ struct [[nodiscard]] Quat{
 
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
-    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const {
+    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const noexcept {
         auto & q = *this;
 
         EulerAngles<T, P> angles;
@@ -459,15 +459,15 @@ struct [[nodiscard]] Quat{
         return angles;
     }
 
-    [[nodiscard]] constexpr Quat<T> conj() const{
+    [[nodiscard]] constexpr Quat<T> conj() const noexcept {
         return Quat<T>(-x, -y, -z, w);
     }
 
-    [[nodiscard]] std::array<T, 4> to_xyzw_array() const {
+    [[nodiscard]] std::array<T, 4> to_xyzw_array() const noexcept {
         return {x, y, z, w};
     }
 
-    [[nodiscard]] Matrix3x3<T> to_mat3x3() const {
+    [[nodiscard]] Matrix3x3<T> to_mat3x3() const noexcept {
         return details::quat_to_mat3x3(*this);
     }
 
@@ -537,7 +537,7 @@ private:
         }
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("x")(self.x) << os.splitter()
             << os.field("y")(self.y) << os.splitter()

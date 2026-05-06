@@ -87,12 +87,12 @@ public:
 
 
     #define VAR_IMPLICIT_TO_TEMPLATE(typename)\
-    operator typename () const{\
+    operator typename () const noexcept {\
         return *reinterpret_cast<const typename *>(data_);\
     }\
 
     #define VAR_EXPLICIT_TO_TEMPLATE(typename)\
-    operator typename () const{\
+    operator typename () const noexcept {\
         return *reinterpret_cast<const typename *>(data_);\
     }\
 
@@ -104,15 +104,15 @@ public:
     #undef VAR_EXPLICIT_TO_TEMPLATE
 
 
-    Variant copy() const{
+    Variant copy() const noexcept {
         return *this;
     }
 
-    __inline constexpr VariantType type() const{
+    __inline constexpr VariantType type() const noexcept {
         return type_;
     }
 
-    __inline constexpr bool is(VariantType & type) const{
+    __inline constexpr bool is(VariantType & type) const noexcept {
         return type_ == type;
     }
 

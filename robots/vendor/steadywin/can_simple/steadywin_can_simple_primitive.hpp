@@ -23,7 +23,7 @@ struct [[nodiscard]] FrameId final{
         };
     }
 
-    constexpr hal::CanStdId to_stdid() const { 
+    constexpr hal::CanStdId to_stdid() const noexcept { 
         return hal::CanStdId::from_u11(
             axis_id.to_b6().connect(command.to_b5()).to_bits()
         );

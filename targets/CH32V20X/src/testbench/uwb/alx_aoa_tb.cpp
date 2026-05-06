@@ -11,7 +11,7 @@
 #include "core/container/atomic_bitset.hpp"
 #include "geometry.hpp"
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
-#include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
+#include "drivers/Proximeter/ALX_AOA/alx_aoa.hpp"
 
 #include "algebra/regions/ray2.hpp"
 
@@ -49,7 +49,7 @@ struct [[nodiscard]] Mk8Measurement{
         };
     }
 
-    friend OutputStream & operator << (OutputStream & os, const Self & self){
+    friend OutputStream & operator << (OutputStream & os, const Self & self) noexcept {
         return os
             << os.field("distance")(self.distance) << os.splitter()
             << os.field("strength")(self.strength)
@@ -120,8 +120,13 @@ void alx_aoa_main(){
 
 
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.no_brackets(DISEN);
-    DEBUGGER.no_fieldname(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(DISEN)
+        .no_fieldname(DISEN)
+        .force_sync(EN)
+        .finalize();
 
     // while(true){
     //     clock::delay(5ms);

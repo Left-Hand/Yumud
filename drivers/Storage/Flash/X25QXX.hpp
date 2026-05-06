@@ -62,7 +62,7 @@ class X25QXX_Transport final:public StorageCollections{
     }
 
     hal::HalResult write_bytes(const void * data, const size_t len){
-        return spi_drv_.write_burst<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
+        return spi_drv_.write_bulk<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
     hal::HalResult read_byte(uint8_t & data, const Continuous cont = DISC){
@@ -73,7 +73,7 @@ class X25QXX_Transport final:public StorageCollections{
         // DEBUGGER.print("nr");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("nr!");
-        return spi_drv_.read_burst<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
+        return spi_drv_.read_bulk<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.print("ar");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("ar!");

@@ -30,11 +30,11 @@ public:
         else grades_ = CLAMP(grades_ - 1, 0, 2 * threshold_);
     }
 
-    __fast_inline bool overflow() const{
+    __fast_inline bool overflow() const noexcept {
         return grades_ >= threshold_;
     }
 
-    __fast_inline auto grades() const{
+    __fast_inline auto grades() const noexcept {
         return grades_;
     }
 

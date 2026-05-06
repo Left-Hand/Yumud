@@ -53,7 +53,7 @@ public:
         setter_( curve_(time));
     }
 
-    iq16 period() const {
+    iq16 period() const noexcept {
         return curve_.period();
     }
 };

@@ -16,7 +16,7 @@ struct [[nodiscard]] ExtentsStorage final {
 template<std::size_t Extents = std::dynamic_extent>
 struct [[nodiscard]] ExtentsStorage final { 
     size_t length_;
-    constexpr size_t length() const { return length_; }
+    constexpr size_t length() const noexcept { return length_; }
 };
 
 template<typename Encoding, size_t Extents = std::dynamic_extent>

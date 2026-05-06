@@ -70,7 +70,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     struct [[nodiscard]] DataPacket final{
         static constexpr RegAddr BASE_ADDR = RegAddr{0};
 
-        constexpr math::Vec3<int32_t> to_vec3_bits() const{
+        constexpr math::Vec3<int32_t> to_vec3_bits() const noexcept {
             //每个数据18位
             const int32_t x_bits = static_cast<int32_t>(
                 (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6));
@@ -85,13 +85,13 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
             return {x_bits,y_bits,z_bits};
         }
 
-        constexpr iq16 to_temperature() const {
+        constexpr iq16 to_temperature() const noexcept {
             // Temperature output, unsigned format. The range is -75~125°C, about 0.8°C/LSB, 00000000 stands for -75°C
             return iq16(buf_[7] * 0.8_iq16 - 75);
             // return buf_[7];
         }
         constexpr std::span<uint8_t> as_bytes_mut() {return std::span(buf_);}
-        constexpr std::span<const uint8_t> as_bytes_mut() const {return std::span(buf_);}
+        constexpr std::span<const uint8_t> as_bytes_mut() const noexcept {return std::span(buf_);}
     private:
         using Buf = std::array<uint8_t, 8>;
 
@@ -161,7 +161,7 @@ public:
     IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
 
     IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
-    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, std::span<uint8_t> pbuf);
 
 
     IResult<> release(){

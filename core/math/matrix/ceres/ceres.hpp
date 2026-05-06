@@ -18,7 +18,7 @@ struct [[nodiscard]] Jet{
     return v.at(n, 0);
   }
 
-  constexpr const T & operator [](const size_t n) const {
+  constexpr const T & operator [](const size_t n) const noexcept {
     return v.at(n, 0);
   } 
 

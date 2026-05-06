@@ -13,11 +13,11 @@ struct [[nodiscard]] OptionalUCharPtr final{
         return Self(nullptr);
     }
 
-    [[nodiscard]] bool is_null() const{
+    [[nodiscard]] bool is_null() const noexcept {
         return ptr_ == nullptr;
     }
 
-    [[nodiscard]] const unsigned char * unwrap() const{
+    [[nodiscard]] const unsigned char * unwrap() const noexcept {
         if(is_null()) __builtin_trap();
         return ptr_;
     }

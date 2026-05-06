@@ -117,7 +117,7 @@ IResult<> ST7789::putrect_unchecked(const math::Rect2<uint16_t> rect, const RGB5
 IResult<> ST7789::put_texture_unchecked(const math::Rect2<uint16_t> rect, const RGB565 * color_ptr){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
-    if(const auto res = transport_.write_burst_pixels(
+    if(const auto res = transport_.write_bulk_pixels(
             std::span<const RGB565>(color_ptr, rect.area()));
         res.is_err()) return res;
     return Ok();

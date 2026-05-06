@@ -21,7 +21,7 @@ public:
         iq16 accerlation = 0;
     };
 
-    constexpr FlatPacket set_position(const PositionSetpoint msg) const {
+    constexpr FlatPacket set_position(const PositionSetpoint msg) const noexcept {
         return ser_msg(req_msgs::SetPositionMode3{
             .rpm = Rpm::from_tps(msg.speed),
             .acc_level = AcclerationLevel::from_tpss(msg.accerlation),
@@ -29,7 +29,7 @@ public:
         });
     }
 
-    constexpr FlatPacket set_speed(const SpeedSetpoint msg) const {
+    constexpr FlatPacket set_speed(const SpeedSetpoint msg) const noexcept {
         return ser_msg(req_msgs::SetSpeed{
             .rpm = iRpm::from_tps(msg.speed),
             .acc_level = AcclerationLevel::from_tpss(msg.accerlation)
@@ -37,40 +37,40 @@ public:
     }
 
     #if 0
-    constexpr FlatPacket brake() const {
+    constexpr FlatPacket brake() const noexcept {
         TODO();
 
     }
     #endif
 
-    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const {
+    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const noexcept {
         return ser_msg(req_msgs::SetSubdivides{
             .subdivides = uint8_t(subdivides & 0xff)
         });
     }
 
-    constexpr FlatPacket activate(const Enable en) const {
+    constexpr FlatPacket activate(const Enable en) const noexcept {
         return ser_msg(req_msgs::SetEnableStatus{
             .is_enabled = (en == EN)
         });
     }
 
     #if 0
-    constexpr FlatPacket trig_cali() const {
+    constexpr FlatPacket trig_cali() const noexcept {
         return ser_msg(req_msgs::SetEnableStatus{
             .is_enabled = (en == EN)
         });
 
     }
 
-    constexpr FlatPacket query_homming_paraments() const {
+    constexpr FlatPacket query_homming_paraments() const noexcept {
         return ser_msg(req_msgs::SetEnableStatus{
             .is_enabled = (en == EN)
         });
 
     }
 
-    constexpr FlatPacket trig_homming(const HommingMode mode) const {
+    constexpr FlatPacket trig_homming(const HommingMode mode) const noexcept {
         return ser_msg(req_msgs::SetEnableStatus{
             .is_enabled = (en == EN)
         });
@@ -79,7 +79,7 @@ public:
 
 private:
     template<typename Msg, typename T = std::decay_t<Msg>>
-    constexpr FlatPacket ser_msg(Msg && msg) const {
+    constexpr FlatPacket ser_msg(Msg && msg) const noexcept {
         return make_msg(node_id, std::forward<Msg>(msg));
     }
 

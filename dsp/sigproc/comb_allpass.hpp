@@ -42,9 +42,9 @@ public:
             return (T(1) - fractional_part) / (T(1) + fractional_part);
         }
     }
-    constexpr T delay() const { return delay_line_.delay(); }
-    constexpr T alpha() const { return alpha_; }
-    constexpr T output() const { return output_; }
+    constexpr T delay() const noexcept { return delay_line_.delay(); }
+    constexpr T alpha() const noexcept { return alpha_; }
+    constexpr T output() const noexcept { return output_; }
 private:
     DelayLine<T> delay_line_;
     T alpha_{0};

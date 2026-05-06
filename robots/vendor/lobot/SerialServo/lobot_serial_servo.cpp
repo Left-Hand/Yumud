@@ -79,23 +79,23 @@ public:
     constexpr FrameWapper(FrameWapper && other) = delete;
     
 
-    constexpr uint8_t operator[](const size_t idx) const {
+    constexpr uint8_t operator[](const size_t idx) const noexcept {
         return reinterpret_cast<const uint8_t *>(this)[idx];
     }
 
-    consteval size_t size() const {
+    consteval size_t size() const noexcept {
         return sizeof(FrameWapper<T>);
     }
 
-    constexpr const uint8_t * begin() const {
+    constexpr const uint8_t * begin() const noexcept {
         return reinterpret_cast<const uint8_t *>(this);
     }
 
-    constexpr const uint8_t * end() const{
+    constexpr const uint8_t * end() const noexcept {
         return begin() + size();
     }
 
-    auto to_arr() const {
+    auto to_arr() const noexcept {
         return std::array<uint8_t, size()>{this->begin(), this->end()};
     }
 };

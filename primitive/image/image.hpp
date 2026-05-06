@@ -75,11 +75,11 @@ public:
     Image & operator=(const Image& other) = delete;
     bool operator ==(const Image & other) const = delete;
 
-    [[nodiscard]] constexpr size_t position_to_index(const math::Vec2u16 pos) const {
+    [[nodiscard]] constexpr size_t position_to_index(const math::Vec2u16 pos) const noexcept {
         return pos.x + pos.y * this->size().x;
     }
 
-    [[nodiscard]] Image<T> clone() const {
+    [[nodiscard]] Image<T> clone() const noexcept {
         const auto img_size = this->size();
         auto temp = Image<T>(img_size);
 
@@ -89,7 +89,7 @@ public:
         return temp;
     }
 
-    [[nodiscard]] Image<T> clone(const math::Rect2u16 & view) const {
+    [[nodiscard]] Image<T> clone(const math::Rect2u16 & view) const noexcept {
         auto & self = *this;
         auto temp = Image<T>(view.size);
         for(uint16_t j = 0; j < view.h(); j++) {
@@ -112,7 +112,7 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] constexpr bool is_shared_with(const Image<U> & other) const {
+    [[nodiscard]] constexpr bool is_shared_with(const Image<U> & other) const noexcept {
         return resource_ == other.resource_;
     }
 
@@ -132,13 +132,13 @@ public:
     [[nodiscard]] T & operator[](const math::Vec2u16 pos) {
         return resource_[pos.x + pos.y * this->size().x]; }
 
-    [[nodiscard]] const T & operator[](const math::Vec2u16 pos) const {
+    [[nodiscard]] const T & operator[](const math::Vec2u16 pos) const noexcept {
         return resource_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] T & operator()(const size_t x, const size_t y) {
         return resource_[x + y * this->size().x]; }
 
-    [[nodiscard]] const T & operator()(const size_t x, const size_t y) const {
+    [[nodiscard]] const T & operator()(const size_t x, const size_t y) const noexcept {
         return resource_[x + y * this->size().x]; }
 
     [[nodiscard]] T & at(const math::Vec2u16 pos){
@@ -146,7 +146,7 @@ public:
         return resource_[pos.x + pos.y * this->size().x];
     }
 
-    [[nodiscard]] const T & at(const math::Vec2u16 pos) const {
+    [[nodiscard]] const T & at(const math::Vec2u16 pos) const noexcept {
         assert_position_is_inrange(pos);
         return resource_[pos.x + pos.y * this->size().x];
     }
@@ -163,8 +163,8 @@ public:
     void get_pixel_unchecked(const math::Vec2u16 pos, T & color) const 
         { color = resource_[this->size().x * pos.y + pos.x]; }
 
-    [[nodiscard]] constexpr size_t width() const { return size_.x; }
-    [[nodiscard]] constexpr size_t height() const { return size_.y; }
+    [[nodiscard]] constexpr size_t width() const noexcept { return size_.x; }
+    [[nodiscard]] constexpr size_t height() const noexcept { return size_.y; }
 
 
 private:
@@ -181,11 +181,11 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr math::Vec2u16 size() const { return size_; }
+    [[nodiscard]] constexpr math::Vec2u16 size() const noexcept { return size_; }
 
-    [[nodiscard]] constexpr const T * head_ptr() const {return this->resource_.get();}
+    [[nodiscard]] constexpr const T * head_ptr() const noexcept {return this->resource_.get();}
     [[nodiscard]] constexpr T * head_ptr() {return this->resource_.get();}
-    [[nodiscard]] constexpr std::shared_ptr<T[]> resource() const {return this->resource_;}
+    [[nodiscard]] constexpr std::shared_ptr<T[]> resource() const noexcept {return this->resource_;}
 };
 
 

@@ -22,7 +22,7 @@ public:
 
 
     // 在t处计算曲线上的点 (t ∈ [0, 1])
-    constexpr math::Vec2<T> evaluate(T t) const {
+    constexpr math::Vec2<T> evaluate(T t) const noexcept {
         T oneMinusT = 1 - t;
         return oneMinusT * oneMinusT * p0 + 
                2 * oneMinusT * t * p1 + 
@@ -30,12 +30,12 @@ public:
     }
 
     // 计算t处的切线向量（一阶导数）
-    constexpr math::Vec2<T> tangent(T t) const {
+    constexpr math::Vec2<T> tangent(T t) const noexcept {
         return 2 * (1 - t) * (p1 - p0) + 2 * t * (p2 - p1);
     }
 
     // 计算t处的曲率
-    constexpr T curvature(T t) const {
+    constexpr T curvature(T t) const noexcept {
         math::Vec2<T> d1 = tangent(t);
         math::Vec2<T> d2 = 2 * (p2 - 2 * p1 + p0);  // 二阶导数
         
@@ -46,7 +46,7 @@ public:
     }
 
     // 将曲线分割为两部分
-    constexpr std::pair<Bezier2<T>, Bezier2<T>> split(T t) const {
+    constexpr std::pair<Bezier2<T>, Bezier2<T>> split(T t) const noexcept {
         math::Vec2<T> _q0 = p0 + t * (p1 - p0);
         math::Vec2<T> _q1 = p1 + t * (p2 - p1);
         math::Vec2<T> r = _q0 + t * (_q1 - _q0);
@@ -58,7 +58,7 @@ public:
     }
 
     // 计算曲线的近似长度（通过采样）
-    constexpr T approximate_length(size_t samples) const {
+    constexpr T approximate_length(size_t samples) const noexcept {
         if (samples < 2) samples = 2;
         
         T length = 0;
@@ -75,7 +75,7 @@ public:
     }
 
     // 获取曲线的包围盒
-    constexpr math::Rect2<T> bounding_box() const {
+    constexpr math::Rect2<T> bounding_box() const noexcept {
         math::Vec2<T> min, max;
         min.x = std::min(std::min(p0.x, p1.x), p2.x);
         min.y = std::min(std::min(p0.y, p1.y), p2.y);
@@ -87,7 +87,7 @@ public:
 
 
     // 检查点是否在曲线上（带容差）
-    constexpr bool is_oncurve(const math::Vec2<T> point, T tolerance) const {
+    constexpr bool is_oncurve(const math::Vec2<T> point, T tolerance) const noexcept {
         // 简单实现：检查点与曲线上最近点的距离
         // 更精确的实现可能需要解方程
         const size_t samples = 20;
@@ -101,7 +101,7 @@ public:
     }
 
     // 与 lerp 函数保持兼容
-    constexpr math::Vec2<T> lerp(T t) const {
+    constexpr math::Vec2<T> lerp(T t) const noexcept {
         return evaluate(t);
     }
 };

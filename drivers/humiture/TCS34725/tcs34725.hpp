@@ -84,7 +84,7 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const RegAddr reg_addr, const std::span<uint16_t> pbuf);
+    IResult<> read_bulk(const RegAddr reg_addr, const std::span<uint16_t> pbuf);
 
     [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr reg_addr){
         return (std::bit_cast<uint8_t>(reg_addr) | 0x80);

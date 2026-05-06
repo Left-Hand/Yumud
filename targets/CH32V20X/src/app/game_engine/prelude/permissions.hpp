@@ -4,7 +4,7 @@ namespace ymd::fs{
 
 
 struct Permissions{
-    constexpr bool is_readonly() const{
+    constexpr bool is_readonly() const noexcept {
         return is_readonly_;
     }
 

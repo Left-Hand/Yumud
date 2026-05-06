@@ -107,8 +107,8 @@ struct [[nodiscard]] OutResponse final{
     using Self = OutResponse;
     static constexpr OutResponse from_accepted() { return OutResponse{true}; }
     static constexpr OutResponse from_rejected() { return OutResponse{false}; }
-    [[nodiscard]] constexpr bool is_accepted() const { return is_accepted_; }
-    [[nodiscard]] constexpr bool is_rejected() const { return !is_accepted_; }
+    [[nodiscard]] constexpr bool is_accepted() const noexcept { return is_accepted_; }
+    [[nodiscard]] constexpr bool is_rejected() const noexcept { return !is_accepted_; }
 private:
     bool is_accepted_;
 
@@ -127,11 +127,11 @@ struct [[nodiscard]] InResponse final{
         return InResponse{nullptr, 0};
     }
 
-    [[nodiscard]] constexpr size_t size() const { return length_; }
-    [[nodiscard]] constexpr std::span<const uint8_t> bytes() const {
+    [[nodiscard]] constexpr size_t size() const noexcept { return length_; }
+    [[nodiscard]] constexpr std::span<const uint8_t> bytes() const noexcept {
         return std::span(p_bytes_, length_); }
 
-    [[nodiscard]] constexpr bool is_accepted() const { return p_bytes_ != nullptr; }
+    [[nodiscard]] constexpr bool is_accepted() const noexcept { return p_bytes_ != nullptr; }
 private:
     const uint8_t * p_bytes_;
     size_t length_;

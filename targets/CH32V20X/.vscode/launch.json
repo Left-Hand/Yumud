@@ -12,8 +12,8 @@
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
       "device": "CH32V203",
-      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V203/NoneOS/CH32V203xx.svd",
-      "toolchainPrefix": "riscv-none-embed",
+      "svdFile": "D:/RV32/ch32_svd/CH32V203xx.svd",
+      "toolchainPrefix": "riscv32-wch-elf",
       "configFiles": [
         "${workspaceFolder}/tools/wch-interface.cfg",
         "${workspaceFolder}/tools/wch-target.cfg"
@@ -30,8 +30,8 @@
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
       "device": "CH32V203",
-      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V203/NoneOS/CH32V203xx.svd",
-      "toolchainPrefix": "riscv-none-embed",
+      "svdFile": "D:/RV32/ch32_svd/CH32V203xx.svd",
+      "toolchainPrefix": "riscv32-wch-elf",
       "configFiles": [
         "${workspaceFolder}/tools/wch-interface.cfg",
         "${workspaceFolder}/tools/wch-target.cfg"
@@ -48,8 +48,8 @@
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
       "device": "CH32V303",
-      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V307/NoneOS/CH32V303xx.svd",
-      "toolchainPrefix": "riscv-none-embed",
+      "svdFile": "D:/RV32/ch32_svd/CH32V303xx.svd",
+      "toolchainPrefix": "riscv32-wch-elf",
       "configFiles": [
         "${workspaceFolder}/tools/wch-interface.cfg",
         "${workspaceFolder}/tools/wch-target.cfg"
@@ -66,8 +66,8 @@
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
       "device": "CH32V307",
-      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V307/NoneOS/CH32V307xx.svd",
-      "toolchainPrefix": "riscv-none-embed",
+      "svdFile": "D:/RV32/ch32_svd/CH32V307xx.svd",
+      "toolchainPrefix": "riscv32-wch-elf",
       "configFiles": [
         "${workspaceFolder}/tools/wch-interface.cfg",
         "${workspaceFolder}/tools/wch-target.cfg"

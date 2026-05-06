@@ -26,7 +26,7 @@ using namespace ymd;
 #if 0
 
 
-#define RADIANS(x) ((3.1415926f / 180) * (x))
+#define RADIANS(x) ((M_PI / 180) * (x))
 
 static constexpr size_t LCD_W = 96*2;
 static constexpr size_t LCD_H = 112;

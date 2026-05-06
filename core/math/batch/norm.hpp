@@ -33,27 +33,27 @@ public:
     Norm & operator = (Norm<T> && other){value_ = other.value_; return*this;}
 
     constexpr
-    T operator + (const Norm<T> & other) const {
+    T operator + (const Norm<T> & other) const noexcept {
         return value_ + other.value_;
     }
 
     constexpr
-    T operator - (const Norm<T> & other) const {
+    T operator - (const Norm<T> & other) const noexcept {
         return value_ - other.value_;
     }
 
     constexpr
-    Norm<T> operator + () const{
+    Norm<T> operator + () const noexcept {
         return Norm(value_);
     }
 
     constexpr
-    Norm<T> operator - () const {
+    Norm<T> operator - () const noexcept {
         return Norm(- value_);
     }
 
     __fast_inline constexpr
-    operator T() const{
+    operator T() const noexcept {
         return value_;
     }
 private:    

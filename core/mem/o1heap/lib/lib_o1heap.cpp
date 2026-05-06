@@ -78,7 +78,7 @@ static constexpr size_t roundUpToPowerOf2(const size_t x)
 #define ASSUME_ALIGNED_FRAG_PTR(x) O1HEAP_ASSUME_ALIGNED(x, sizeof(Fragment*))
 
 
-Fragment * Fragment::GetNext() const{
+Fragment * Fragment::GetNext() const noexcept {
     Fragment* const out = ASSUME_ALIGNED_FRAG_PTR(this)->header.next;
     return ASSUME_ALIGNED_FRAG_PTR(out);
 }

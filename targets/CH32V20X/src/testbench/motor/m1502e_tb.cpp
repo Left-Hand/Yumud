@@ -10,7 +10,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "robots/vendor/bmkj/m1502e_highlayer.hpp"
+#include "robots/vendor/bmkj/m1502e_runtime.hpp"
 #include "robots/vendor/bmkj/m1502e_ser.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
@@ -43,7 +43,7 @@ public:
         uq16 fc;
         uq8 b0;
 
-        constexpr Coeffs to_coeffs() const{
+        constexpr Coeffs to_coeffs() const noexcept {
             auto & self = *this;
             return Coeffs{
                 .b0 = self.b0,
@@ -63,7 +63,7 @@ public:
     constexpr explicit MotorLeso(const Coeffs & coeffs):
         coeffs_(coeffs){;}
 
-    constexpr State forward(const State & state, const iq16 y, const iq16 u) const {
+    constexpr State forward(const State & state, const iq16 y, const iq16 u) const noexcept {
         return State{
             state.x1 + (state.x2 + coeffs_.b0 * u + coeffs_.g1 * (y - state.x1)) * coeffs_.dt,
             state.x2 + coeffs_.g2 * (y - state.x1) * coeffs_.dt
@@ -172,10 +172,13 @@ void m1502e_main(){
     });
 
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets(EN);
-
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     auto led = hal::PC<14>();
     led.outpp(HIGH);
 
@@ -416,7 +419,7 @@ void m1502e_main(){
         // right_torque.set(0.2_iq16);
 
         if(can.available()){
-            const auto frame = can.try_read().unwrap();
+            const auto frame = can.try_read().unwrap().clone();
             handle_received_frame(frame);
         }
         static auto report_timer = async::RepeatTimer::from_duration(2ms);

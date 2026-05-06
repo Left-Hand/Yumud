@@ -17,7 +17,7 @@ namespace {
 //         auto fn = []{
 //             std::array<uint8_t, 5> bytes{0xff, 0xff, 0xff, 0xff, 0xff};
 //             auto receiver = SerializeReceiver{std::span(bytes), 0};
-//             msg.sink_to(receiver).unwrap();
+//             msg.serialize(receiver).unwrap();
 //             return std::make_tuple(bytes, receiver);
 //         };
 

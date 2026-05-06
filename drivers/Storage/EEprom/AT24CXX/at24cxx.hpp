@@ -151,11 +151,11 @@ private:
             begin_ = now;
         }
 
-        constexpr bool is_expired(const Milliseconds now, const Milliseconds period) const {
+        constexpr bool is_expired(const Milliseconds now, const Milliseconds period) const noexcept {
             return now - begin_ > period;
         }
 
-        constexpr Milliseconds duration(const Milliseconds now) const {
+        constexpr Milliseconds duration(const Milliseconds now) const noexcept {
             return now - begin_;
         }
     private:
@@ -199,10 +199,10 @@ private:
             return Ok();
         }
 
-        constexpr bool is_oper_complete(const Milliseconds now) const{
+        constexpr bool is_oper_complete(const Milliseconds now) const noexcept {
             return now - last_time_ >= 6ms;
         }
-        constexpr bool is_task_complete(const Milliseconds now) const {
+        constexpr bool is_task_complete(const Milliseconds now) const noexcept {
             return no_next_block_ and is_oper_complete(now);
         }
     private:
@@ -250,10 +250,10 @@ private:
             return Ok();
         }
 
-        constexpr bool is_oper_complete(const Milliseconds now) const{
+        constexpr bool is_oper_complete(const Milliseconds now) const noexcept {
             return now - last_time_ >= 6ms;
         }
-        constexpr bool is_task_complete(const Milliseconds now) const {
+        constexpr bool is_task_complete(const Milliseconds now) const noexcept {
             return no_next_block_ and is_oper_complete(now);
         }
     private:
@@ -284,7 +284,7 @@ private:
             return res;
         }
 
-        bool is_idle(const Milliseconds now) const {
+        bool is_idle(const Milliseconds now) const noexcept {
             if(not may_tasks_.has_value())
                 return true;
             const auto & tasks = may_tasks_.value();
@@ -354,15 +354,15 @@ private:
 
     State state_;
 
-    constexpr AddressDiff pagesize() const {
+    constexpr AddressDiff pagesize() const noexcept {
         return pagesize_;
     }
 
     constexpr bool is_small_chip(){
         return capacity_ <= AddressDiff(256);
     }
-    IResult<> write_burst(const Address loc, const std::span<const uint8_t> pbuf);
-    IResult<> read_burst(const Address loc, const std::span<uint8_t> pbuf);
+    IResult<> write_bulk(const Address loc, const std::span<const uint8_t> pbuf);
+    IResult<> read_bulk(const Address loc, const std::span<uint8_t> pbuf);
 
     IResult<> store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf);
     IResult<> load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf);

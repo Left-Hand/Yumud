@@ -46,7 +46,6 @@ enum class [[nodiscard]] RegAddr:uint8_t{
     TEMPDATA = 0xF6,        // Temperature data register
     PRESSUREDATA_HIGH = 0xF6,    // Pressure data register
     PRESSUREDATA_LOW = 0xF8,    // Pressure data register
-
 };
 
 
@@ -59,7 +58,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-struct [[nodiscard]] CalibrateCoeffs final{
+struct [[nodiscard]] alignas(4) CalibrateCoeffs final{
     using Self = CalibrateCoeffs;
     int16_t ac1, ac2, ac3, b1, b2, mb, mc, md;
     uint16_t ac4, ac5, ac6;
@@ -80,7 +79,7 @@ struct [[nodiscard]] CalibrateCoeffs final{
         };
     }
 
-    constexpr int32_t compute_b5(int32_t raw_temperature) const {
+    constexpr int32_t compute_b5(int32_t raw_temperature) const noexcept {
         int32_t X1 = (raw_temperature - (int32_t)ac6) * ((int32_t)ac5) >> 15;
         int32_t X2 = ((int32_t)mc << 11) / (X1 + (int32_t)md);
         return X1 + X2;
@@ -89,21 +88,21 @@ struct [[nodiscard]] CalibrateCoeffs final{
     struct [[nodiscard]] SeaLevelPresure final{
         int32_t count;
 
-        constexpr float to_altitude(const float pressure) const{
+        constexpr float to_altitude(const float pressure) const noexcept {
             return 44330 * (1.0 - std::pow(pressure / count, 0.1903));
         }
     };
 
-    constexpr auto curried_to_sea_level_pressure(float altitude_meters) const {
+    constexpr auto curried_to_sea_level_pressure(float altitude_meters) const noexcept {
         return [=](const int32_t pressure) -> SeaLevelPresure{
             return SeaLevelPresure{(int32_t)(pressure / std::pow(1.0 - altitude_meters / 44330, 5.255))};
         };
     }
 
-    constexpr float requalify_temperature(const int32_t raw_temperature) const{
+    constexpr float requalify_temperature(const int32_t raw_temperature) const noexcept {
         float temp;
 
-        const auto b5 = compute_b5(raw_temperature);
+        const int32_t b5 = compute_b5(raw_temperature);
         temp = (b5 + 8) >> 4;
         temp /= 10;
 
@@ -114,7 +113,7 @@ struct [[nodiscard]] CalibrateCoeffs final{
         const int32_t raw_temperature, 
         const int32_t raw_pressure, 
         const Mode mode
-    ) const{
+    ) const noexcept {
         int32_t B3, B5, B6, X1, X2, X3, p;
         uint32_t B4, B7;
 

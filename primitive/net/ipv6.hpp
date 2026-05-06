@@ -35,7 +35,7 @@ struct [[nodiscard]] Ipv6 {
     #endif
 
     template<size_t I> requires(I < 16)
-    [[nodiscard]] constexpr uint8_t get_byte() const { 
+    [[nodiscard]] constexpr uint8_t get_byte() const noexcept { 
         return bytes_[I]; 
     }
 
@@ -45,7 +45,7 @@ struct [[nodiscard]] Ipv6 {
     }
 
     template<size_t I> requires(I < 8)
-    [[nodiscard]] constexpr uint16_t get_word() const { 
+    [[nodiscard]] constexpr uint16_t get_word() const noexcept { 
         return words_[I]; 
     }
 
@@ -54,7 +54,7 @@ struct [[nodiscard]] Ipv6 {
         return words_[I]; 
     }
 
-    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const {
+    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const noexcept {
         return bytes_[idx];
     }
 
@@ -62,7 +62,7 @@ struct [[nodiscard]] Ipv6 {
         return bytes_[idx];
     }
 
-    [[nodiscard]] constexpr uint8_t at(const size_t idx) const {
+    [[nodiscard]] constexpr uint8_t at(const size_t idx) const noexcept {
         if(idx >= 16) [[unlikely]] __builtin_trap();
         return bytes_[idx];
     }
@@ -72,7 +72,7 @@ struct [[nodiscard]] Ipv6 {
         return bytes_[idx];
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t, 16> bytes() const { 
+    [[nodiscard]] constexpr std::span<const uint8_t, 16> bytes() const noexcept { 
         return std::span(bytes_); 
     }
     
@@ -80,7 +80,7 @@ struct [[nodiscard]] Ipv6 {
         return std::span(bytes_); 
     }
 
-    [[nodiscard]] constexpr std::span<const uint16_t, 8> words() const { 
+    [[nodiscard]] constexpr std::span<const uint16_t, 8> words() const noexcept { 
         return std::span(words_); 
     }
     
@@ -88,7 +88,7 @@ struct [[nodiscard]] Ipv6 {
         return std::span(words_); 
     }
 
-    [[nodiscard]] constexpr std::array<uint64_t, 2> to_u128() const { 
+    [[nodiscard]] constexpr std::array<uint64_t, 2> to_u128() const noexcept { 
         std::array<uint64_t, 2> result;
         result[0] = (static_cast<uint64_t>(words_[0]) << 48) |
                 (static_cast<uint64_t>(words_[1]) << 32) |
@@ -101,13 +101,13 @@ struct [[nodiscard]] Ipv6 {
         return result;
     }
 
-    [[nodiscard]] constexpr bool operator ==(const Self& other) const {
+    [[nodiscard]] constexpr bool operator ==(const Self& other) const noexcept {
         return bytes_ == other.bytes_;
     }
 
 private:
     union {
-        alignas(8) std::array<uint8_t, 16> bytes_;
+        alignas(4) std::array<uint8_t, 16> bytes_;
         std::array<uint16_t, 8> words_;
     };
 

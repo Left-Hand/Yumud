@@ -62,7 +62,7 @@ private:
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    IResult<> read_burst(const uint8_t reg_addr, const std::span<int16_t> pbuf);
+    IResult<> read_bulk(const uint8_t reg_addr, const std::span<int16_t> pbuf);
 
 
 

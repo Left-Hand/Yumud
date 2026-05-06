@@ -25,7 +25,7 @@ struct [[nodiscard]] MotorId final{
     static constexpr MotorId from_u8(uint8_t bits) {
         return MotorId{bits};
     }
-    [[nodiscard]] constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return count;
     }
 };
@@ -126,7 +126,7 @@ struct FlatPacket{
     };
     std::array<uint8_t, NUM_PAYLOAD_BYTES> payload;
 
-    constexpr uint8_t calc_crc() const { 
+    constexpr uint8_t calc_crc() const noexcept { 
         return calc_crc8(std::span(&motor_id.count, NUM_PACKET_BYTES - 1));
     }
 };
@@ -152,11 +152,11 @@ struct [[nodiscard]] CurrentCode final{
         return Ok(Self{.bits = bits});
     }
 
-    constexpr iq16 to_amps() const {
+    constexpr iq16 to_amps() const noexcept {
         return iq16::from_bits(int32_t(bits) << 3);
     }
 
-    constexpr operator SetPointCode() const {
+    constexpr operator SetPointCode() const noexcept {
         return SetPointCode{.bits = bits};
     }
 };
@@ -180,15 +180,15 @@ struct [[nodiscard]] SpeedCode final{
         return try_from_rpm(rps * 60);
     }
 
-    constexpr iq16 to_rpm() const {
+    constexpr iq16 to_rpm() const noexcept {
         return iq16::from_bits(bits) / 10;
     }
 
-    constexpr iq16 to_rps() const {
+    constexpr iq16 to_rps() const noexcept {
         return iq16::from_bits(bits) / 600;
     }
 
-    constexpr operator SetPointCode() const {
+    constexpr operator SetPointCode() const noexcept {
         return SetPointCode{.bits = bits};
     }
 };
@@ -204,11 +204,11 @@ struct [[nodiscard]] LapAngleCode final{
         return LapAngleCode{.bits = static_cast<uint16_t>(angle.to_turns().to_bits() >> 16)};
     }
 
-    constexpr Angular<uq32> to_angle() const {
+    constexpr Angular<uq32> to_angle() const noexcept {
         return Angular<uq32>::from_turns(uq32::from_bits(static_cast<uint32_t>(bits) << 16));
     }
 
-    constexpr operator SetPointCode() const {
+    constexpr operator SetPointCode() const noexcept {
         return SetPointCode{.bits = std::bit_cast<int16_t>(bits)};
     }
 };

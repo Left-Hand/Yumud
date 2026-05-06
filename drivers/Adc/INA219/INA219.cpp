@@ -68,13 +68,13 @@ IResult<> INA219::read_reg(const RegAddr reg_addr, int16_t & reg_val){
     return Ok();
 }
 
-IResult<> INA219::read_burst(
+IResult<> INA219::read_bulk(
     const RegAddr reg_addr, 
     const std::span<uint16_t> pbuf
 ){
     (void)(reg_addr);
     (void)(pbuf);
-    // return i2c_drv_.read_burst(uint8_t(reg_addr), pbuf, std::endian::little);
+    // return i2c_drv_.read_bulk(uint8_t(reg_addr), pbuf, std::endian::little);
     TODO();
     return Ok();
 }

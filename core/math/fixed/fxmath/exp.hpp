@@ -7,7 +7,7 @@ namespace ymd::fxmath{
     
 namespace details{
 
-struct alignas(8) [[nodiscard]] ExpIntermediate final{
+struct alignas(4) [[nodiscard]] ExpIntermediate final{
 
     uint32_t uiq32_fractional;
     uint32_t uiqn_integer_result;
@@ -55,7 +55,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
 
 
     __attribute__((always_inline,  optimize( "-Ofast" )))
-    [[nodiscard]] constexpr uint32_t into_bits() const {
+    [[nodiscard]] constexpr uint32_t into_bits() const noexcept {
 
         /*
         * Initialize the coefficient pointer to the Taylor Series iq30 coefficients

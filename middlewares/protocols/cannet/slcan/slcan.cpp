@@ -144,7 +144,7 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     if(str.length() != dlc * 2) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
 
-    alignas(8) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
+    alignas(4) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
 
     #pragma GCC unroll 8
     for(size_t i = 0; i < dlc; i++){
@@ -275,10 +275,10 @@ uint32_t _chr_to_baud_unchecked(char chr){
 }
 
 auto _msg_to_operation = [](const hal::ClassicCanFrame & frame) { 
-    return Operation(SendCanFrame{frame}); };
+    return Operation(SendCanFrame{frame.clone()}); };
 
 
-IResult<Operation> SlcanParser::process_line(const StringView input_line) const {
+IResult<Operation> SlcanParser::process_line(const StringView input_line) const noexcept {
     static constexpr bool IS_EXTENDED = true;
     const StringView line = input_line.trim();
     if(line.size() == 0) RETURN_ERR(Error::NoInput);
@@ -403,19 +403,19 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
     __builtin_trap();
 }
 
-SendString SlcanParser::response_version() const{
+SendString SlcanParser::response_version() const noexcept {
     return SendString::from_str("V1013\r");
 }
 
-SendString SlcanParser::response_serial_number() const{
+SendString SlcanParser::response_serial_number() const noexcept {
     return SendString::from_str("NA123\r");
 }
 
-StatusFlag SlcanParser::get_flag() const {
+StatusFlag SlcanParser::get_flag() const noexcept {
     return StatusFlag::zero();
 }
 
-SendString SlcanParser::response_flag() const{
+SendString SlcanParser::response_flag() const noexcept {
     static constexpr size_t LEN = 4;
     std::array<char, LEN> chars;
     const auto flag = get_flag();

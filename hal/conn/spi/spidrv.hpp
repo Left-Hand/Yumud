@@ -71,29 +71,29 @@ public:
         Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult write_burst(
+    hal::HalResult write_bulk(
         const std::span<const is_stdlayout auto> pbuf, 
         Continuous cont = DISC);
 
     template<valid_spi_data T>
-    hal::HalResult read_burst(
+    hal::HalResult read_bulk(
         const std::span<is_stdlayout auto> pbuf, 
         const Continuous cont = DISC);
 
     template<valid_spi_data T, size_t N, is_stdlayout U>
-    hal::HalResult write_burst(
+    hal::HalResult write_bulk(
         const std::span<const U, N> pbuf, 
         Continuous cont = DISC
     ){
-        return this->write_burst<T>(std::span<const U>(pbuf), cont);
+        return this->write_bulk<T>(std::span<const U>(pbuf), cont);
     }
 
     template<valid_spi_data T, size_t N, is_stdlayout U>
-    hal::HalResult read_burst(
+    hal::HalResult read_bulk(
         const std::span<U, N> pbuf, 
         const Continuous cont = DISC
     ){
-        return this->read_burst<T>(std::span<U>(pbuf), cont);
+        return this->read_bulk<T>(std::span<U>(pbuf), cont);
     }
 
     template<valid_spi_data T>
@@ -164,7 +164,7 @@ hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t l
 
 
 template <valid_spi_data T, is_stdlayout U>
-hal::HalResult SpiDrv::write_burst(
+hal::HalResult SpiDrv::write_bulk(
         const std::span<const U> pbuf, 
         Continuous cont
 ) {
@@ -182,7 +182,7 @@ hal::HalResult SpiDrv::write_burst(
 
 
 template <valid_spi_data T, is_stdlayout U>
-hal::HalResult SpiDrv::read_burst(
+hal::HalResult SpiDrv::read_bulk(
         const std::span<U> pbuf, 
         const Continuous cont
 ) {

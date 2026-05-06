@@ -21,7 +21,19 @@ struct [[nodiscard]] RepeatTimer final {
         }
     }
 
-    [[nodiscard]] Milliseconds since_last_invoke() const {
+    bool try_if(){
+        bool ret = false;
+        const auto now = clock::millis();
+        if (now >= next_trigger_) {
+            ret = true;
+            prev_invoke_ = now;
+            // 计算下一个触发点，考虑可能已经错过多个周期的情况
+            next_trigger_ = now + duration_;
+        }
+        return ret;
+    }
+
+    [[nodiscard]] Milliseconds since_last_invoke() const noexcept {
         return clock::millis() - prev_invoke_;
     }
 
@@ -38,7 +50,7 @@ private:
         duration_(duration),
         next_trigger_(clock::millis() + duration) {}
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os << os.field("duration")(self.duration_) << os.splitter()
             << os.field("last_invoke")(self.prev_invoke_) << os.splitter()
             << os.field("next_trigger")(self.next_trigger_);
@@ -57,7 +69,7 @@ struct [[nodiscard]] OnceTimer final {
         }
     }
 
-    [[nodiscard]] bool has_been_expired() const {
+    [[nodiscard]] bool has_been_expired() const noexcept {
         if(prev_invoke_.is_none()) return false;
         return (clock::millis() - prev_invoke_.unwrap()) >= timeout_;
     }

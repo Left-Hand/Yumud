@@ -50,10 +50,10 @@ public:
 
     virtual void init(const Config & cfg) = 0;
 
-    [[nodiscard]] size_t available() const {return rx_queue_.length();}
+    [[nodiscard]] size_t available() const noexcept {return rx_queue_.length();}
 
 
-    [[nodiscard]] size_t free_capacity() const {
+    [[nodiscard]] size_t free_capacity() const noexcept {
         switch(tx_strategy_){
             case CommStrategy::Disabled: return 0;
             case CommStrategy::Blocking: return std::numeric_limits<size_t>::max();

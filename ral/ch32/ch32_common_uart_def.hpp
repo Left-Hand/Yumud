@@ -49,7 +49,7 @@ struct [[nodiscard]] R32_STATR final{
 
     uint32_t __RESV__:22;
 
-    constexpr bool any_fault() const {
+    constexpr bool any_fault() const noexcept {
         return bool(std::bit_cast<uint32_t>(*this) & 0x0f);
     }
 };   

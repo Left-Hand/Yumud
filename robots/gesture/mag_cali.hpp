@@ -207,12 +207,12 @@ public:
     }
 
 
-    constexpr auto dignosis() const {
+    constexpr auto dignosis() const noexcept {
         return calibrate_magfield(std::span(samples_));
     }
 
 
-    constexpr std::array<uint8_t, 8> get_progress() const {
+    constexpr std::array<uint8_t, 8> get_progress() const noexcept {
         std::array<uint8_t, 8> ret;
 
         for(size_t i = 0; i < 48; i+=6){
@@ -222,7 +222,7 @@ public:
         return ret;
     }
 
-    uint8_t get_percentage() const {
+    uint8_t get_percentage() const noexcept {
         const auto prog = get_progress();
         uint8_t sum = 0;
         for(auto v : prog) sum += v;
@@ -235,7 +235,7 @@ public:
         return flags_[i] == false;
     }
 
-    std::span<const math::Vec3<iq24>> samples() const {return samples_;}
+    std::span<const math::Vec3<iq24>> samples() const noexcept {return samples_;}
 private:
     Data samples_;
     Flags flags_;

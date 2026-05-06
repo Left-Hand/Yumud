@@ -8,15 +8,20 @@ namespace ymd::robots::mwd{
 
 struct [[nodiscard]] WrapAddAccumulator final{
     using Self = WrapAddAccumulator;
-    uint8_t val = 0;
+    uint8_t val;
 
-    constexpr Self push_byte(const uint8_t byte) const {
+    static constexpr WrapAddAccumulator from_default(){
+        return WrapAddAccumulator{.val = 0};
+    }
+
+
+    constexpr Self push_byte(const uint8_t byte) const noexcept {
         Self self = *this;
         self.val = static_cast<uint8_t>(self.val + byte);
         return self;
     }
 
-    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const {
+    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const noexcept {
         Self self = *this;
         for(const auto byte : bytes){
             self.val = static_cast<uint8_t>(self.val + byte);
@@ -24,7 +29,7 @@ struct [[nodiscard]] WrapAddAccumulator final{
         return self;
     }
 
-    [[nodiscard]] constexpr uint8_t finalize() const {
+    [[nodiscard]] constexpr uint8_t finalize() const noexcept {
         return val;
     }
 };

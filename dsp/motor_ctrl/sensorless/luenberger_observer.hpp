@@ -32,7 +32,7 @@ public:
             e = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angular<iq20> angle() const {
+        constexpr Angular<iq20> angle() const noexcept {
             return e.angle();
         }
     };
@@ -64,7 +64,7 @@ public:
         state_ = iterator_state(meas);
     }
 
-    constexpr const State & state() const {
+    constexpr const State & state() const noexcept {
         return state_;
     }
 
@@ -78,7 +78,7 @@ public:
     iq20 l2T  = 0;
 
 private:
-    constexpr State iterator_state(const State & meas) const {
+    constexpr State iterator_state(const State & meas) const noexcept {
         const auto err_i = state_.i - meas.i;
         const auto next_i = (1 + Tr_L) * state_.i + T_L * (meas.e - state_.e) + l1T * err_i; 
         const auto next_e = state_.e + l2T * err_i;

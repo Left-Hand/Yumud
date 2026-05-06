@@ -11,7 +11,7 @@ struct [[nodiscard]] BuckCurrentRegulatorConfig {
     q20 max_duty;                // 最大占空比 (通常为1.0或略小于1)
     q20 vin_nominal;             // 标称输入电压 (V)
 
-    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_duty;  // 输出为占空比
@@ -44,7 +44,7 @@ struct [[nodiscard]] BoostPfcVoltageRegulatorConfig {
     q20 vin_min;                 // 最小输入电压 (V)
     q20 max_current_ref;         // 最大电流参考值 (A)
     
-    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_current_ref;
@@ -80,7 +80,7 @@ struct [[nodiscard]] GridTieInverterConfig {
     q20 max_current;             // 最大并网电流 (A)
     
 
-    [[nodiscard]] constexpr digipw::PiController make_current_regulators() const {
+    [[nodiscard]] constexpr digipw::PiController make_current_regulators() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.dc_link_voltage / q20(2);  // 最大输出电压
@@ -95,7 +95,7 @@ struct [[nodiscard]] GridTieInverterConfig {
     }
     
     // 直流母线电压环
-    [[nodiscard]] constexpr digipw::PiController make_voltage_regulator() const {
+    [[nodiscard]] constexpr digipw::PiController make_voltage_regulator() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_current;  // 输出为d轴电流参考
@@ -117,7 +117,7 @@ struct [[nodiscard]] LlcFrequencyRegulatorConfig {
     q20 resonant_frequency;      // 谐振频率 (Hz)
     q20 max_voltage_gain;        // 最大电压增益
     
-    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_frequency;
@@ -147,7 +147,7 @@ struct [[nodiscard]] BatteryChargerConfig {
     q20 battery_capacity;        // 电池容量 (Ah)
     
     // 恒流模式控制器
-    [[nodiscard]] constexpr digipw::PiController make_cc_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_cc_controller() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_charge_voltage;  // 输出为电压限制
@@ -162,7 +162,7 @@ struct [[nodiscard]] BatteryChargerConfig {
     }
     
     // 恒压模式控制器  
-    [[nodiscard]] constexpr digipw::PiController make_cv_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_cv_controller() const noexcept {
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
         coeff.max_out = self.max_charge_current;  // 输出为电流限制

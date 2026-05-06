@@ -139,7 +139,7 @@ static float get_vdd(const uint16_t *frameData, const MLX90640_Coeffs *params){
 
 
 IResult<> MLX90640::dump_ee(uint16_t *eeData){
-    return read_burst(EEPROM_START_ADDRESS, std::span(eeData, MLX90640_EEPROM_DUMP_NUM));
+    return read_bulk(EEPROM_START_ADDRESS, std::span(eeData, MLX90640_EEPROM_DUMP_NUM));
 }
 
 static IResult<> CheckAdjacentPixels(uint16_t pix1, uint16_t pix2){
@@ -840,7 +840,7 @@ Result<uint16_t, Error> MLX90640::get_frame_data(uint16_t *frameData)
     uint16_t statusRegister;
     uint16_t data[64];
     
-    if(const auto res = read_burst(STATUS_REG, std::span(&statusRegister, 1));
+    if(const auto res = read_bulk(STATUS_REG, std::span(&statusRegister, 1));
         res.is_err()) return Err(res.unwrap_err());
     const auto dataReady = GET_DATA_READY(statusRegister); 
     if(not dataReady)
@@ -849,13 +849,13 @@ Result<uint16_t, Error> MLX90640::get_frame_data(uint16_t *frameData)
     if(const auto res = write_reg(STATUS_REG, INIT_STATUS_VALUE);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = read_burst(PIXEL_DATA_START_ADDRESS, std::span(frameData, MLX90640_PIXEL_NUM)); 
+    if(const auto res = read_bulk(PIXEL_DATA_START_ADDRESS, std::span(frameData, MLX90640_PIXEL_NUM)); 
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = read_burst(AUX_DATA_START_ADDRESS, std::span(data,MLX90640_AUX_NUM));   
+    if(const auto res = read_bulk(AUX_DATA_START_ADDRESS, std::span(data,MLX90640_AUX_NUM));   
         res.is_err()) return Err(res.unwrap_err());
         
-    if(const auto res = read_burst(CTRL_REG, std::span(&frameData[832], 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&frameData[832], 1));
         res.is_err()) return Err(res.unwrap_err());
     frameData[833] = GET_FRAME(statusRegister);
     
@@ -883,7 +883,7 @@ IResult<> MLX90640::set_resolution(uint8_t resolution)
     value = ((uint16_t)resolution << CTRL_RESOLUTION_SHIFT);
     value &= ~CTRL_RESOLUTION_MASK;
     
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     value = (controlRegister1 & CTRL_RESOLUTION_MASK) | value;
@@ -897,7 +897,7 @@ IResult<> MLX90640::set_resolution(uint8_t resolution)
 Result<void, Error> MLX90640::init(uint16_t EE[832], MLX90640_Coeffs & MLXPars){
     if(const auto res = set_refresh_rate(MLX90640::DataRate::_64Hz);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_burst(0x2400, std::span(EE, 832));                     //读取像素校正参数
+    if(const auto res = read_bulk(0x2400, std::span(EE, 832));                     //读取像素校正参数
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = extract_parameters(EE, &MLXPars);    //解析校正参数（计算温度时需要）
         res.is_err()) return Err(res.unwrap_err());
@@ -908,7 +908,7 @@ Result<uint16_t, Error> MLX90640::get_cur_resolution(){
     uint16_t controlRegister1;
     int resolutionRAM;
 
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
     resolutionRAM = (controlRegister1 & ~CTRL_RESOLUTION_MASK) >> CTRL_RESOLUTION_SHIFT;
     
@@ -924,7 +924,7 @@ IResult<> MLX90640::set_refresh_rate(DataRate datarate)
     value = ((uint16_t)datarate << CTRL_REFRESH_SHIFT);
     value &= ~CTRL_REFRESH_MASK;
     
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     value = (controlRegister1 & CTRL_REFRESH_MASK) | value;
@@ -940,7 +940,7 @@ Result<uint16_t, Error> MLX90640::get_refresh_rate(){
     uint16_t controlRegister1;
     int refreshRate;
     
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
     refreshRate = (controlRegister1 & ~CTRL_REFRESH_MASK) >> CTRL_REFRESH_SHIFT;
     
@@ -953,7 +953,7 @@ IResult<> MLX90640::set_interleaved_mode(){
     uint16_t value;
 
     
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());  
 
     value = (controlRegister1 & ~CTRL_MEAS_MODE_MASK);
@@ -969,7 +969,7 @@ IResult<> MLX90640::set_chess_mode(){
     uint16_t controlRegister1;
     uint16_t value;
         
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     value = (controlRegister1 | CTRL_MEAS_MODE_MASK);
@@ -986,7 +986,7 @@ Result<uint16_t, Error> MLX90640::get_cur_mode(){
     int modeRAM;
 
     
-    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
+    if(const auto res = read_bulk(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     modeRAM = (controlRegister1 & CTRL_MEAS_MODE_MASK) >> CTRL_MEAS_MODE_SHIFT;

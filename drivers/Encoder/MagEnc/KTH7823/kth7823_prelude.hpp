@@ -39,7 +39,7 @@ enum class [[nodiscard]] AbzFreqLimit:uint8_t{
 
 using RegAddr = uint8_t;
 
-struct Regset final{
+struct [[nodiscard]] Regset final{
 
 struct [[nodiscard]] R8_Zero_low:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x00};

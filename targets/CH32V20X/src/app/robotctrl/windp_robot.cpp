@@ -122,7 +122,7 @@ struct TaskBase{
 struct TaskCenter:public TaskBase<TaskCenter>{
     static constexpr iq16 Kp = 0.017_iq16;
     static constexpr iq16 Kd = 0.42_iq16;
-    constexpr Output calc(const Measurements meas) const {
+    constexpr Output calc(const Measurements meas) const noexcept {
         return Kp*(-meas.angular_accel)+ Kd*(-meas.omega);
     }
 };
@@ -134,7 +134,7 @@ struct TaskCircle:public TaskBase<TaskCircle>{
     static constexpr iq16 Kd_norm = 0.07_iq16;
 
     iq16 expected_iq16adius;
-    constexpr Output calc(const Measurements meas) const {
+    constexpr Output calc(const Measurements meas) const noexcept {
         using namespace PhysicalConstants;
 
         const auto vec_norm = math::Vec2<iq16>(meas.orientation.normalized());//计算当前摆杆姿态的法向量

@@ -53,7 +53,7 @@ private:
     iq16 thigh_length_;
     iq16 shank_length_;
 
-    Option<Vec2<iq16>> _forward(const Radian l_rad, const Radian r_rad) const{
+    Option<Vec2<iq16>> _forward(const Radian l_rad, const Radian r_rad) const noexcept {
         return Some(Vec2<iq16>(0,0));
     }
     

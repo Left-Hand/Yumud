@@ -86,7 +86,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq20 phase_resistance;        // 相电阻 (Ω)
     iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const noexcept {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -238,9 +238,13 @@ void myesc_main(){
     });
 
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     // DEBUGGER.force_sync(EN);
 
 

@@ -4,7 +4,7 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 #include "core/string/owned/heapless_string.hpp"
 
 #include "primitive/arithmetic/rescaler.hpp"
@@ -31,7 +31,7 @@
 
 using namespace ymd;
 
-namespace ymd::strconv2{
+namespace ymd::strconv{
 
 struct StringSplitSeeker{
     explicit constexpr StringSplitSeeker(const char delimiter):
@@ -46,13 +46,13 @@ struct StringSplitSeeker{
 private:
     char delimiter_;
 
-    constexpr bool is_delimiter(const char c) const{
+    constexpr bool is_delimiter(const char c) const noexcept {
         return (c == delimiter_) || (c == '\0');
     }
 };
 
 template<typename T>
-using DestringResult = strconv2::DestringResult<T>;
+using DestringResult = strconv::DestringResult<T>;
 
 
 #if 0
@@ -68,13 +68,13 @@ struct StringEntitySeeker{
     ){
         const size_t left = ({
             const auto may_left = beginner.find_intro(str);
-            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            if(may_left.is_none()) return Err(DeformatError::BeginnerNotFounded);
             may_left.unwrap();
         });
 
         const size_t right = ({
             const auto may_right = terminator.find_intro(str);
-            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            if(may_right.is_none()) return Err(DeformatError::TerminatorNotFounded);
             may_right.unwrap();
         });
 
@@ -92,13 +92,13 @@ struct StringEntitySeeker<StringView>{
     ){
         const size_t left = ({
             const auto may_left = beginner.find_intro(str);
-            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            if(may_left.is_none()) return Err(DeformatError::BeginnerNotFounded);
             may_left.unwrap();
         });
 
         const size_t right = ({
             const auto may_right = terminator.find_intro(str);
-            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            if(may_right.is_none()) return Err(DeformatError::TerminatorNotFounded);
             may_right.unwrap();
         });
 
@@ -110,7 +110,7 @@ struct StringEntitySeeker<StringView>{
 
 // struct StringDeformatIterator{
 //     template<typename T>
-//     using DestringResult = strconv2::DestringResult;
+//     using DestringResult = strconv::DestringResult;
 
 //     explicit constexpr StringDeformatIterator(StringView str):str_(str){}
 
@@ -185,8 +185,14 @@ void script_main(){
         });
 
         DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.set_eps(4);
-        DEBUGGER.set_splitter(",");
+
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(EN)
+            .force_sync(EN)
+            .finalize();
         // DEBUGGER.no_brackets(EN);
     };
 
@@ -225,9 +231,9 @@ void script_main(){
             // DBG_UART.rx_dma_buf_index_,
             // DBG_UART.rx_fifo().write_idx(),
             // DBG_UART.rx_fifo().read_idx(),
-            // strconv2::defmt_str<bool>("1")
+            // strconv::defmt_str<bool>("1")
 
-            // strconv2::defmt_str<uint8_t>("256")
+            // strconv::defmt_str<uint8_t>("256")
 
             // ,shape.points
             // ,render_iter.is_mid_at_right()

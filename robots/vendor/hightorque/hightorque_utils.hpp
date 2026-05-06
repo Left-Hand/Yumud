@@ -160,7 +160,7 @@ struct [[nodiscard]] SlotFiller final{
     RegAddr reg_addr;
 
     template<size_t N, typename ... Args>
-    constexpr void fill_bytes_from_elements(std::span<uint8_t, N> bytes, Args && ... args) const{
+    constexpr void fill_bytes_from_elements(std::span<uint8_t, N> bytes, Args && ... args) const noexcept {
         utils::fill_bytes(bytes, slot_command, reg_addr, std::forward<Args>(args)...);
     }
 };

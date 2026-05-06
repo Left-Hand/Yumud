@@ -10,7 +10,7 @@ public:
         self.value_ = (rad * T(180.0 / PI));
         return self;
     }
-    constexpr T to_radians() const { return value_ * T(PI / 180.0); }
+    constexpr T to_radians() const noexcept { return value_ * T(PI / 180.0); }
 
     friend OutputStream & operator<<(OutputStream & os, const Degrees<T>& self){
         // return os << self.value_ << "'C";

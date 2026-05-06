@@ -34,24 +34,17 @@ struct [[nodiscard]] Tq final{
         return std::bit_cast<Self>(static_cast<uint8_t>(bits));
     }
 
-    constexpr bool operator ==(const Self& other) const {return bits == other.bits;}
-    [[nodiscard]] constexpr uint8_t to_num() const {return bits + 1;}
+    constexpr bool operator ==(const Self& other) const noexcept {return bits == other.bits;}
+    [[nodiscard]] constexpr uint8_t to_num() const noexcept {return bits + 1;}
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {return bits;}
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {return bits;}
+
+    friend OutputStream & operator <<(OutputStream & os, const Tq & self){
+        return os << self.to_num() << "tq";
+    }
 private:
     uint8_t bits;
 };
-
-
-// /// @brief CAN Swj时间长度
-struct Swj{Tq tq;};
-
-/// @brief CAN Bs1时间长度
-struct Bs1{Tq tq;};
-
-
-/// @brief CAN Bs2时间长度
-struct Bs2{Tq tq;};
 
 
 // 标称比特率
@@ -82,23 +75,23 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
 
     using Self = NominalBitTimmingCoeffs;
     uint16_t prescale;
-    Swj swj;
-    Bs1 bs1;
-    Bs2 bs2;
+    Tq swj;
+    Tq bs1;
+    Tq bs2;
 
-
-    [[nodiscard]] constexpr uint32_t to_baudrate_hz(
+    // [[nodiscard]] constexpr bool operator ==(const NominalBitTimmingCoeffs &) = default;
+    [[nodiscard]] constexpr uint32_t calc_baudrate_hz(
         const uint32_t aligned_bus_clk_freq_hz
-    ) const {
-        uint32_t total_tq = 1 + bs1.tq.to_num() + bs2.tq.to_num();
+    ) const noexcept {
+        uint32_t total_tq = 1 + bs1.to_num() + bs2.to_num();
         return aligned_bus_clk_freq_hz / (prescale * total_tq);
     }
 
-    [[nodiscard]] constexpr Percentage<uint8_t> to_sample_point() const {
-        const uint8_t bs1_tq = bs1.tq.to_num();
-        const uint8_t bs2_tq = bs2.tq.to_num();
-        const uint8_t total_tq = 1 + bs1_tq + bs2_tq;
-        const uint8_t sample_tq = 1 + bs1_tq;  // 采样点位于同步段结束后
+    [[nodiscard]] constexpr Percentage<uint8_t> calc_sample_point() const noexcept {
+        const uint8_t bs1_num = bs1.to_num();
+        const uint8_t bs2_num = bs2.to_num();
+        const uint8_t total_tq = 1 + bs1_num + bs2_num;
+        const uint8_t sample_tq = 1 + bs1_num;  // 采样点位于同步段结束后
         // 四舍五入计算百分比
         const uint8_t percent = (sample_tq * 100 + total_tq / 2) / total_tq;
         return Percentage<uint8_t>::from_percents_unchecked(percent);
@@ -133,29 +126,36 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
             if(sample_tq <= sync_seg_tq || sample_tq >= ntq) continue;
 
             // 分配 BS1 和 BS2
-            const uint8_t bs1_tq = sample_tq - sync_seg_tq;     // BS1 = 采样点 - 同步段
-            const uint8_t bs2_tq = ntq - sample_tq;             // BS2 = NTQ - 采样点
+            const uint8_t bs1_num = sample_tq - sync_seg_tq;     // BS1 = 采样点 - 同步段
+            const uint8_t bs2_num = ntq - sample_tq;             // BS2 = NTQ - 采样点
 
             // 检查 BS1 和 BS2 是否在常见控制器允许的范围内
-            if(bs1_tq < 1 || bs1_tq > 16 || bs2_tq < 1 || bs2_tq > 8) continue;
+            if(bs1_num < 1 || bs1_num > 16 || bs2_num < 1 || bs2_num > 8) continue;
 
             // 确定同步跳转宽度（SJW）
             uint8_t swj_tq = (ntq >= 20) ? 2 : 1;
-            if (swj_tq > bs2_tq) {
-                swj_tq = bs2_tq;      // 不能超过 BS2
+            if (swj_tq > bs2_num) {
+                swj_tq = bs2_num;      // 不能超过 BS2
             }
 
             // 所有参数有效，返回结果
             return Some(NominalBitTimmingCoeffs{
                 .prescale = static_cast<uint16_t>(prescale_calc),
-                .swj = Swj(Tq::from_num(swj_tq)),
-                .bs1 = Bs1(Tq::from_num(bs1_tq)),
-                .bs2 = Bs2(Tq::from_num(bs2_tq)),
+                .swj = Tq::from_num(swj_tq),
+                .bs1 = Tq::from_num(bs1_num),
+                .bs2 = Tq::from_num(bs2_num),
             });
         }
 
         // 未找到可行配置
         return None;
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const NominalBitTimmingCoeffs & self){
+        return os << os.field("prescale")(self.prescale) << os.splitter()
+            << os.field("swj")(self.swj) << os.splitter()
+            << os.field("bs1")(self.bs1) << os.splitter()
+            << os.field("bs1")(self.bs2);
     }
 };
 
@@ -246,7 +246,7 @@ public:
     constexpr Option<NominalBitTimmingCoeffs> try_into_coeffs(
         const uint32_t aligned_bus_clk_freq_hz,
         const Percentage<uint8_t> _sample_point = DEFAULT_SAMPLE_POINT
-    ) const {
+    ) const noexcept {
         return NominalBitTimmingCoeffs::try_from(
             aligned_bus_clk_freq_hz, 
             bitrate_hz, 
@@ -254,15 +254,15 @@ public:
         );
     }
 
-    [[nodiscard]] constexpr bool has_same_freq(const Baudrate& rhs) const {
+    [[nodiscard]] constexpr bool has_same_freq(const Baudrate& rhs) const noexcept {
         return bitrate_hz == rhs.bitrate_hz;
     }
 
-    [[nodiscard]] constexpr bool has_same_freq(const Kind kind) const {
+    [[nodiscard]] constexpr bool has_same_freq(const Kind kind) const noexcept {
         return bitrate_hz == kind2freq(kind);
     }
 
-    [[nodiscard]] constexpr uint32_t freq() const {return bitrate_hz;}
+    [[nodiscard]] constexpr uint32_t freq() const noexcept {return bitrate_hz;}
 private:
 
     static constexpr uint32_t kind2freq(const Kind kind) {
@@ -315,9 +315,9 @@ struct [[nodiscard]] WiringMode final{
     };
 
     constexpr WiringMode(Kind kind):kind_(kind){}
-    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 
-    [[nodiscard]] constexpr bool is_loopback() const{
+    [[nodiscard]] constexpr bool is_loopback() const noexcept {
         switch(kind_){
             case Kind::Normal: return false;
             case Kind::Silent: return false;
@@ -326,7 +326,7 @@ struct [[nodiscard]] WiringMode final{
             default:__builtin_unreachable();
         }
     }
-    [[nodiscard]] constexpr bool is_slient() const {
+    [[nodiscard]] constexpr bool is_slient() const noexcept {
         switch(kind_){
             case Kind::Normal: return false;
             case Kind::Silent: return true;
@@ -361,7 +361,7 @@ struct [[nodiscard]] NominalBitTimming:
 };
 
 // https://docs.rs/embassy-stm32/latest/embassy_stm32/can/config/enum.TxBufferMode.html
-enum struct TxBufferMode:uint8_t {
+enum struct [[nodiscard]] TxBufferMode:uint8_t {
     // TX FIFO operation - In this mode CAN frames are trasmitted strictly in write order.
     Fifo,
     // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.
@@ -370,9 +370,6 @@ enum struct TxBufferMode:uint8_t {
 };
 
 namespace ymd::hal{
-using CanSwj = can::Swj;
-using CanBs1 = can::Bs1;
-using CanBs2 = can::Bs2;
 using CanBaudrate = can::Baudrate;
 using CanWiringMode = can::WiringMode;
 using CanError = can::Error;

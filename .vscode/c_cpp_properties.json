@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "riscv32-wch-none-elf",
+            "name": "riscv32-wch-elf",
             "includePath": [
                 "${workspaceFolder}/**"
             ],

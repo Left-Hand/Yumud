@@ -30,7 +30,7 @@ struct Matrix{
 		return row[x];
 	}
 
-	const T & operator [](const size_t x, const size_t y)const{
+	const T & operator [](const size_t x, const size_t y) const noexcept {
 		auto & row =  (data_[y]);
 		return row[x];
 	}
@@ -40,7 +40,7 @@ struct Matrix{
 		return self[x-1, y-1];
 	}
 
-	const T & element(const size_t x, const size_t y) const {
+	const T & element(const size_t x, const size_t y) const noexcept {
 		auto & self = *this;
 		return self[x-1, y-1];
 	}
@@ -61,7 +61,7 @@ struct Matrix{
 		}
 	}
 	
-	void plot() const{
+	void plot() const noexcept {
 		auto & self = *this;
 		for(size_t y = 0; y < h; y++){
 			DEBUGGER << '[';
@@ -98,7 +98,7 @@ struct Topology{
 		_edges.push_back({std::min(a, b), std::max(a,b),cost});
 	}
 	
-	bool connects(size_t a, size_t b) const {
+	bool connects(size_t a, size_t b) const noexcept {
 		if(b < a) std::swap(a,b);
 		for(const auto & [_a, _b, cost]: _edges){
 			if(_a == a and _b == b) return true;
@@ -106,7 +106,7 @@ struct Topology{
 		return false;
 	}
 	
-	void initR(MatrixR & mat) const {
+	void initR(MatrixR & mat) const noexcept {
 		mat.fill(INF);
 		mat.cross(0);
 		for(const auto & [a, b, cost]: _edges){
@@ -115,7 +115,7 @@ struct Topology{
 		}
 	}
 	
-	void initS(MatrixS & mat) const {
+	void initS(MatrixS & mat) const noexcept {
 		mat.fill(INF);
 		mat.cross(0);
 		for(const auto & [a, b, cost]: _edges){
@@ -124,7 +124,7 @@ struct Topology{
 		}
 	}
 	
-	void forward(MatrixR & r, MatrixS & s, const size_t prog) const{
+	void forward(MatrixR & r, MatrixS & s, const size_t prog) const noexcept {
 		for(size_t y = 0; y < H; y++){
 			if(y == prog) continue;
 			for(size_t x = 0; x < W; x++){
@@ -149,7 +149,7 @@ struct Topology{
 	
 
 	
-	void bestPath_impl(Path & path, const MatrixR & r, const size_t from, const size_t to) const{
+	void bestPath_impl(Path & path, const MatrixR & r, const size_t from, const size_t to) const noexcept {
 		auto hop = r[to - 1, from - 1];
 		
 		if(to == hop){
@@ -161,7 +161,7 @@ struct Topology{
 		}
 	}
 
-	void bestPath(Path & path, const MatrixR & r, const size_t from, const size_t to) const{
+	void bestPath(Path & path, const MatrixR & r, const size_t from, const size_t to) const noexcept {
 		path.push_back(to);
 
 		bestPath_impl(path, r, from, to);

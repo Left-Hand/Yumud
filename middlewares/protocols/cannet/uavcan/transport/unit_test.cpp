@@ -21,7 +21,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     while(iter.has_next()){
         auto result = iter.next();
         if(count == i){
-            return result;
+            return static_cast<decltype(result)>(result);
         }
         ++count;
     }

@@ -24,46 +24,46 @@ public:
     [[nodiscard]] static constexpr PinMask from_nth(const Nth nth){
         return PinMask::from_u16(uint16_t(1 << nth.count()));
     }
-    [[nodiscard]] constexpr uint16_t to_u16() const {return bits_;}
+    [[nodiscard]] constexpr uint16_t to_u16() const noexcept {return bits_;}
 
-    [[nodiscard]] constexpr bool test(Nth nth) const {
+    [[nodiscard]] constexpr bool test(Nth nth) const noexcept {
         return bits_ & (1 << nth.count());
     }
 
-    [[nodiscard]] constexpr PinMask modify(Nth nth, const BoolLevel level) const {
+    [[nodiscard]] constexpr PinMask modify(Nth nth, const BoolLevel level) const noexcept {
         if(level == HIGH) return PinMask(bits_ | (1 << nth.count()));
         else return PinMask(bits_ & (~(1 << nth.count())));
     }
 
-    [[nodiscard]] constexpr PinMask set_bit(Nth nth) const {
+    [[nodiscard]] constexpr PinMask set_bit(Nth nth) const noexcept {
         return PinMask(bits_ | (1 << nth.count()));
     }
 
-    [[nodiscard]] constexpr PinMask clr_bit(Nth nth) const {
+    [[nodiscard]] constexpr PinMask clr_bit(Nth nth) const noexcept {
         return PinMask(bits_ & (~(1 << nth.count())));
     }
 
-    [[nodiscard]] constexpr PinMask operator | (const PinMask other) const {
+    [[nodiscard]] constexpr PinMask operator | (const PinMask other) const noexcept {
         return PinMask(bits_ | other.bits_);
     }
 
-    [[nodiscard]] constexpr PinMask operator & (const PinMask other) const {
+    [[nodiscard]] constexpr PinMask operator & (const PinMask other) const noexcept {
         return PinMask(bits_ & other.bits_);
     }
 
-    [[nodiscard]] constexpr PinMask operator ~() const {
+    [[nodiscard]] constexpr PinMask operator ~() const noexcept {
         return PinMask(~bits_);
     }
 
-    [[nodiscard]] constexpr bool operator == (const PinMask & other) const{
+    [[nodiscard]] constexpr bool operator == (const PinMask & other) const noexcept {
         return  bits_ == other.bits_;
     }
 
-    [[nodiscard]] explicit constexpr operator bool() const {
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
         return bits_;
     }
 
-    [[nodiscard]] constexpr bool any() const {
+    [[nodiscard]] constexpr bool any() const noexcept {
         return bits_;
     }
 
@@ -72,14 +72,14 @@ public:
         constexpr Iterator(uint16_t mask) : 
             mask_(mask), 
             pos_(next_set_bit(mask_, 0)) {}
-        [[nodiscard]] constexpr bool has_next() const {return pos_ < 16;}
+        [[nodiscard]] constexpr bool has_next() const noexcept {return pos_ < 16;}
         constexpr hal::PinSource next(){
             const uint16_t ret = 1 << pos_;
             pos_ = next_set_bit(mask_, pos_ + 1);
             return std::bit_cast<hal::PinSource>(ret);
         }
 
-        [[nodiscard]] constexpr size_t index() const {
+        [[nodiscard]] constexpr size_t index() const noexcept {
             return pos_;
         }
     private:
@@ -94,7 +94,7 @@ public:
         }
     };
 
-    [[nodiscard]] constexpr Iterator iter() const {
+    [[nodiscard]] constexpr Iterator iter() const noexcept {
         return Iterator{bits_};
     }
 private:
@@ -168,31 +168,31 @@ public:
         {return kind_ == kind;}
     [[nodiscard]] constexpr bool operator ==(const GpioMode other) const
         {return kind_ == other.kind_;}
-    [[nodiscard]] constexpr bool is_input() const {
+    [[nodiscard]] constexpr bool is_input() const noexcept {
         return (kind_ == InAnalog) 
         || (kind_ == InFloating) 
         || (kind_ == InPullUP) 
         || (kind_ == InPullDN);
     }
 
-    [[nodiscard]] constexpr bool is_output() const {
+    [[nodiscard]] constexpr bool is_output() const noexcept {
         return (kind_ == OutPP)
         || (kind_ == OutOD)
         || (kind_ == OutAfPP)
         || (kind_ == OutAfOD);
     }
 
-    [[nodiscard]] constexpr bool is_outpp() const {
+    [[nodiscard]] constexpr bool is_outpp() const noexcept {
         return (kind_ == OutPP)
         || (kind_ == OutAfPP);
     }
 
-    [[nodiscard]] constexpr bool is_outod() const {
+    [[nodiscard]] constexpr bool is_outod() const noexcept {
         return (kind_ == OutOD)
         || (kind_ == OutAfOD);
     }
 
-    [[nodiscard]] constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(kind_);
     }
 private:

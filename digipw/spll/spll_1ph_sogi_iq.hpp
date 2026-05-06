@@ -28,7 +28,7 @@ public:
         iq16 b0_lpf ;
         iq16 b1_lpf ;
 
-        constexpr Coeff to_coeff() const {
+        constexpr Coeff to_coeff() const noexcept {
             const auto fn = ac_freq;
             const auto delta_t_x256=(iq16(256)/fs);
 
@@ -154,13 +154,13 @@ public:
         cosine = cos_val;
     }
 
-    iq16 freq() const{return this->fo;}
+    iq16 freq() const noexcept {return this->fo;}
 
-    Angular<iq16> angle() const{return Angular<iq16>::from_turns(static_cast<iq16>(turns_));}
+    Angular<iq16> angle() const noexcept {return Angular<iq16>::from_turns(static_cast<iq16>(turns_));}
 
-    iq16 ud() const{return this->u_D[0];}
+    iq16 ud() const noexcept {return this->u_D[0];}
 
-    iq16 uq() const{return this->u_Q[0];}
+    iq16 uq() const noexcept {return this->u_Q[0];}
 
 
 private:

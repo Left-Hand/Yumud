@@ -21,7 +21,6 @@
 #include "middlewares/nvcv2/shape/shape.hpp"
 #include "middlewares/nvcv2/pixels/pixels.hpp"
 
-#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
@@ -170,10 +169,13 @@ void smc2025_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
-    DEBUGGER.no_fieldname(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto & spi = hal::spi2;
 

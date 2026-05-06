@@ -32,7 +32,7 @@ public:
         output_ = CLAMP(temp_output, out_min_, out_max_);
     }
 
-    [[nodiscard]] constexpr iq20 output() const {
+    [[nodiscard]] constexpr iq20 output() const noexcept {
         return output_;
     }
 

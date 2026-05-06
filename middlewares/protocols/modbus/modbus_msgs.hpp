@@ -50,7 +50,7 @@ struct [[nodiscard]] ReadCoils final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -73,7 +73,7 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -95,7 +95,7 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(
             receiver, 
@@ -121,7 +121,7 @@ struct [[nodiscard]] ReadInputRegisters final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -142,7 +142,7 @@ struct [[nodiscard]] WriteSingleCoil final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, 
             self.coil_addr, 
@@ -165,7 +165,7 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.reg_addr, self.reg_value);
     }
@@ -180,12 +180,12 @@ struct [[nodiscard]] WriteMultipleCoils final{
     uint16_t base_addr;
     std::span<const uint8_t> coils_values;
 
-    constexpr size_t context_length() const {
+    constexpr size_t context_length() const noexcept {
         return 4 + coils_values.size();
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
 
         {
@@ -220,12 +220,12 @@ struct [[nodiscard]] WriteMultipleRegisters final{
     uint16_t base_addr;
     std::span<const uint16_t> reg_values;
 
-    constexpr size_t context_length() const {
+    constexpr size_t context_length() const noexcept {
         return 5 + reg_values.size() * 2;
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
 
         {
@@ -285,7 +285,7 @@ struct [[nodiscard]] MaskWriteRegister final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const{
+    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
         auto& self = *this;
 
         return serialize_u16_args(receiver, 

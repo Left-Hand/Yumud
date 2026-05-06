@@ -121,15 +121,15 @@ struct INA226_Prelude{
         using Self = ShuntVoltageCode;
         uint16_t bits;
 
-        constexpr int32_t to_uv() const {
+        constexpr int32_t to_uv() const noexcept {
             return sv_code_to_uv(bits);
         }
 
-        constexpr int32_t to_mv() const {
+        constexpr int32_t to_mv() const noexcept {
             return sv_code_to_mv(bits);
         }
 
-        constexpr iq16 to_volts() const {
+        constexpr iq16 to_volts() const noexcept {
             return sv_code_to_volts(bits);
         }
     };
@@ -139,15 +139,15 @@ struct INA226_Prelude{
         using Self = BusVoltageCode;
         uint16_t bits;
 
-        constexpr int32_t to_uv() const {
+        constexpr int32_t to_uv() const noexcept {
             return bv_code_to_uv(bits);
         }
 
-        constexpr int32_t to_mv() const {
+        constexpr int32_t to_mv() const noexcept {
             return bv_code_to_mv(bits);
         }
 
-        constexpr iq16 to_volts() const {
+        constexpr iq16 to_volts() const noexcept {
             return bv_code_to_volts(bits);
         }
     };

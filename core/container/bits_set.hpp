@@ -62,7 +62,7 @@ struct [[nodiscard]] BitsSet final{
     }
 
     template<size_t N2>
-    constexpr BitsSet<N + N2> connect(const BitsSet<N2> & other) const {
+    constexpr BitsSet<N + N2> connect(const BitsSet<N2> & other) const noexcept {
         using D_RET = typename BitsSet<N + N2>::D;
         return BitsSet<N + N2>::from_bits_unchecked(
             static_cast<D_RET>(bits_ << N2) | 
@@ -72,7 +72,7 @@ struct [[nodiscard]] BitsSet final{
 
     template<size_t I>
     requires (I < N and I > 0)
-    constexpr std::tuple<BitsSet<I>, BitsSet<N - I>> split() const {
+    constexpr std::tuple<BitsSet<I>, BitsSet<N - I>> split() const noexcept {
         return std::tuple<BitsSet<I>, BitsSet<N - I>>{
             BitsSet<I>::from_bits_unchecked(bits_ >> (N - I)),
             BitsSet<N - I>::from_bits_unchecked(bits_ & tmp::mask_calculator::lower_mask_of<typename BitsSet<N - I>::D>(N - I))
@@ -80,7 +80,7 @@ struct [[nodiscard]] BitsSet final{
     }
 
 
-    [[nodiscard]] constexpr bool highest_bit() const {
+    [[nodiscard]] constexpr bool highest_bit() const noexcept {
         return bool(bits_ & (static_cast<D>(1) << (N - 1)));
     }
 
@@ -94,26 +94,26 @@ struct [[nodiscard]] BitsSet final{
     // 主接口：支持可变数量的分割点
     template<size_t... Sizes>
     requires (sizeof...(Sizes) > 1 && ((Sizes > 0) && ...)) && ((Sizes + ...) <= N)
-    constexpr auto split() const {
+    constexpr auto split() const noexcept {
         return split_impl(std::index_sequence<Sizes...>{});
     }
     #endif
 
-    constexpr D to_bits() const {
+    constexpr D to_bits() const noexcept {
         return bits_;
     }
 
-    [[nodiscard]] constexpr bool operator[](const size_t i) const {
+    [[nodiscard]] constexpr bool operator[](const size_t i) const noexcept {
         return bool(bits_ & (static_cast<D>(1) << i));
     }
 
-    [[nodiscard]] constexpr bool test(const size_t i) const {
+    [[nodiscard]] constexpr bool test(const size_t i) const noexcept {
         if (i >= N) [[unlikely]]
             return false;
         return bool(bits_ & (static_cast<D>(1) << i));
     }
 
-    [[nodiscard]] constexpr size_t count_ones() const {
+    [[nodiscard]] constexpr size_t count_ones() const noexcept {
         return __builtin_popcount(bits_);
     }
 
@@ -123,48 +123,48 @@ struct [[nodiscard]] BitsSet final{
 
 
 
-    [[nodiscard]] constexpr bool is_zero() const {
+    [[nodiscard]] constexpr bool is_zero() const noexcept {
         return bits_ == 0;
     }
     
     // 添加一些有用的操作符
-    constexpr bool operator==(const Self& other) const {
+    constexpr bool operator==(const Self& other) const noexcept {
         return bits_ == other.bits_;
     }
     
-    constexpr bool operator!=(const Self& other) const {
+    constexpr bool operator!=(const Self& other) const noexcept {
         return bits_ != other.bits_;
     }
     
-    constexpr Self operator|(const Self& other) const {
+    constexpr Self operator|(const Self& other) const noexcept {
         return from_bits_unchecked(bits_ | other.bits_);
     }
     
-    constexpr Self operator&(const Self& other) const {
+    constexpr Self operator&(const Self& other) const noexcept {
         return from_bits_unchecked(bits_ & other.bits_);
     }
     
-    constexpr Self operator^(const Self& other) const {
+    constexpr Self operator^(const Self& other) const noexcept {
         return from_bits_unchecked(bits_ ^ other.bits_);
     }
     
-    constexpr Self operator~() const {
+    constexpr Self operator~() const noexcept {
         return from_bits_unchecked(~bits_ & BITS_MASK);
     }
 
-    constexpr Self bitwise_not() const {
+    constexpr Self bitwise_not() const noexcept {
         return ~*this;
     }
 
-    constexpr Self bitwise_and(const Self & other) const {
+    constexpr Self bitwise_and(const Self & other) const noexcept {
         return (*this) & other;
     }
 
-    constexpr Self bitwise_or(const Self & other) const {
+    constexpr Self bitwise_or(const Self & other) const noexcept {
         return (*this) | other;
     }
 
-    constexpr Self bitwise_xor(const Self & other) const {
+    constexpr Self bitwise_xor(const Self & other) const noexcept {
         return (*this) ^ other;
     }
 
@@ -179,7 +179,7 @@ private:
 
     // 修正后的 split_impl 实现
     template<size_t... Sizes>
-    constexpr auto split_impl(std::index_sequence<Sizes...>) const {
+    constexpr auto split_impl(std::index_sequence<Sizes...>) const noexcept {
         constexpr size_t total_specified_bits = (Sizes + ...);
         static_assert(total_specified_bits <= N, "Total specified bits exceed BitsSet size");
         

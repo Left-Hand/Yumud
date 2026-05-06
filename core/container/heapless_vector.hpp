@@ -12,7 +12,7 @@
 namespace ymd::heapless{
 
 template<typename T, size_t N>
-class alignas(8) [[nodiscard]] Vector {
+class alignas(4) [[nodiscard]] Vector {
 public:
     // 构造函数 - constexpr
     constexpr Vector() noexcept : size_(0) {}
@@ -97,7 +97,7 @@ public:
         return buf_[index];
     }
 
-    [[nodiscard]] constexpr const T& operator[](size_t index) const {
+    [[nodiscard]] constexpr const T& operator[](size_t index) const noexcept {
         return buf_[index];
     }
 
@@ -105,7 +105,7 @@ public:
         return buf_[0];
     }
 
-    [[nodiscard]] constexpr const T& front() const {
+    [[nodiscard]] constexpr const T& front() const noexcept {
         return buf_[0];
     }
 
@@ -113,7 +113,7 @@ public:
         return buf_[size_ - 1];
     }
 
-    [[nodiscard]] constexpr const T& back() const {
+    [[nodiscard]] constexpr const T& back() const noexcept {
         return buf_[size_ - 1];
     }
 
@@ -216,7 +216,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] constexpr std::span<const T> as_slice() const {
+    [[nodiscard]] constexpr std::span<const T> as_slice() const noexcept {
         return std::span(buf_, size_);
     }
 
@@ -263,7 +263,7 @@ public:
         return Some(&buf_[idx]);
     }
 
-    [[nodiscard]] constexpr std::span<const T> view() const {
+    [[nodiscard]] constexpr std::span<const T> view() const noexcept {
         return std::span(buf_, size_);
     }
 

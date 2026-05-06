@@ -45,7 +45,7 @@ struct ImagePieceUnit{
     uint8_t size_y;
     uint16_t data_index;
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 };

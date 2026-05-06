@@ -29,7 +29,7 @@ protected:
     bool peaked;
     bool inversed;
 
-    iq16 s_forward(const iq16 t) const{
+    iq16 s_forward(const iq16 t) const noexcept {
         if(peaked){
             if(t < t1){
                 return (abs_acc_ * math::square(t)) >> 1;

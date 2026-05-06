@@ -15,19 +15,19 @@ struct R16_Temp{
     // using Super = RegBase<uint16_t>;
     // constexpr R16_Temp(uint16_t val) : Super(val) {} 
     __inline constexpr
-    auto data1() const { return make_bitfield<8, 10>(data); };
+    auto data1() const noexcept { return make_bitfield<8, 10>(data); };
 
     __inline constexpr
     auto data2() { return make_bitfield<8, 10>(data); };
 
     __inline constexpr
-    auto enum1() const { return make_bitfield<8, 12, Num>(data); };
+    auto enum1() const noexcept { return make_bitfield<8, 12, Num>(data); };
 
     __inline constexpr
     auto enum2() { return make_bitfield<8, 12, Num>(data); };
 
     __inline constexpr
-    auto arr1() const { return make_bfarray<0,16,4>(data); };
+    auto arr1() const noexcept { return make_bfarray<0,16,4>(data); };
 };
 
 

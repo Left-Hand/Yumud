@@ -68,8 +68,13 @@ void enum_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&hal::usart2);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     Ball ball;
 

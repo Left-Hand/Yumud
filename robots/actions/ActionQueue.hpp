@@ -30,7 +30,7 @@ public:
         return *this;
     }
     
-    size_t pending() const {
+    size_t pending() const noexcept {
         return action_queue_.size();
     }
 

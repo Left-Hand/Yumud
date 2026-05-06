@@ -210,7 +210,7 @@ struct [[nodiscard]] StepPointIterator final{
         return now_coord_;
     }
 
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return may_end_coord_.is_some() and 
             (not now_coord_.is_equal_approx(may_end_coord_.unwrap(), 0.001_iq16));
     }
@@ -266,7 +266,7 @@ struct [[nodiscard]] PolarRobotCurveGenerator final{
         return coord_;
     }
 
-    constexpr math::Vec2<iq24> last_coord() const {
+    constexpr math::Vec2<iq24> last_coord() const noexcept {
         return coord_;
     }
 private:    
@@ -284,9 +284,13 @@ void polar_robot_main(){
         .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    // DEBUGGER.force_sync(EN);
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto & can = COMM_CAN;
     

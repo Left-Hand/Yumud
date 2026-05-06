@@ -47,7 +47,7 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
     }
 
     __attribute__((optimize("Ofast"), always_inline, hot, flatten))
-    constexpr UvwCoord<iq16> to_uvw_dutycycle() const{
+    constexpr UvwCoord<iq16> to_uvw_dutycycle() const noexcept {
         switch(sector){
             case Sector::_1:
             case Sector::_4:
@@ -93,7 +93,7 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
 };
 
 
-// 输入的幅值的临界模长不能超过sqrt(3)/2 此时恰好能使其中一路输入满占空比或零占空比
+// 输入的幅值的临界模长不能超过sqrt(3)/2 此时恰好能使其中一路到达最大内切圆
 static constexpr UvwCoord<iq16> SVM(
     const AlphaBetaCoord<iq16> alphabeta_dutycycle
 ){

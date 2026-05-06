@@ -79,9 +79,13 @@ void ak09911c_main(){
         hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;

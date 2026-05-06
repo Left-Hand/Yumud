@@ -46,7 +46,7 @@ struct SaveParamRegSet{
     } 
 
 
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
         //TODO
         // ReadStruct reg = ReadStruct{pbuf};
         return Ok();
@@ -100,7 +100,7 @@ struct LoadParamRegSet{
     } 
 
 
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
         //TODO
         // ReadStruct reg = ReadStruct{pbuf};
         return Ok();

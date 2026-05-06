@@ -40,12 +40,12 @@ public:
     constexpr I2cAddrWithRw(const I2cAddrWithRw<R> & other) = default;
     constexpr I2cAddrWithRw(I2cAddrWithRw<R> && other) = default;
 
-    [[nodiscard]] constexpr bool is_read() const {return is_read_;}
-    [[nodiscard]] constexpr bool is_write() const {return !is_read_;}
+    [[nodiscard]] constexpr bool is_read() const noexcept {return is_read_;}
+    [[nodiscard]] constexpr bool is_write() const noexcept {return !is_read_;}
 
-    [[nodiscard]] constexpr uint16_t addr_without_rw() const {return i2c_addr_;}
+    [[nodiscard]] constexpr uint16_t addr_without_rw() const noexcept {return i2c_addr_;}
 
-    [[nodiscard]] constexpr uint16_t as_unique_id() const {
+    [[nodiscard]] constexpr uint16_t as_unique_id() const noexcept {
         switch(width_){
             //正常情况使用rw位，i2c地址和宽度生成唯一码
             case 7:
@@ -59,7 +59,7 @@ public:
         }
     }
     
-    [[nodiscard]] constexpr size_t width() const {
+    [[nodiscard]] constexpr size_t width() const noexcept {
         return width_;
     }
 
@@ -87,15 +87,15 @@ public:
         return I2cAddr<7, R>{uint16_t(i2c_addr)};
     }
 
-    constexpr I2cAddrWithRw<R> with_read() const {
+    constexpr I2cAddrWithRw<R> with_read() const noexcept {
         return I2cAddrWithRw<R>::from_7bits_read(i2c_addr_);
     }
 
-    constexpr I2cAddrWithRw<R> with_write() const {
+    constexpr I2cAddrWithRw<R> with_write() const noexcept {
         return I2cAddrWithRw<R>::from_7bits_write(i2c_addr_);
     }
 
-    [[nodiscard]] constexpr uint16_t to_u7() const {return i2c_addr_;}
+    [[nodiscard]] constexpr uint16_t to_u7() const noexcept {return i2c_addr_;}
 
 
     constexpr I2cAddr(const I2cAddr<7, R> & other) = default;
@@ -114,7 +114,7 @@ public:
         return I2cAddr<10, R>{uint16_t(i2c_addr)};
     }
 
-    [[nodiscard]] constexpr uint16_t to_u10() const {return i2c_addr_;}
+    [[nodiscard]] constexpr uint16_t to_u10() const noexcept {return i2c_addr_;}
 
     constexpr I2cAddr(const I2cAddr<10, R> & other) = default;
     constexpr I2cAddr(I2cAddr<10, R> && other) = default;

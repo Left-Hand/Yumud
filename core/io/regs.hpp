@@ -19,7 +19,7 @@ public:
         self.as_bits_mut() = owner_.to_bits();
     }
 
-    constexpr void apply() const {
+    constexpr void apply() const noexcept {
         const T & self = *this;
         owner_.as_bits_mut() = self.to_bits();
     }
@@ -42,7 +42,7 @@ public:
         return std::span<uint8_t, sizeof(T)>(reinterpret_cast<uint8_t *>(this), sizeof(T));
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t, sizeof(T)> as_bytes() const {
+    [[nodiscard]] constexpr std::span<const uint8_t, sizeof(T)> as_bytes() const noexcept {
         return std::span<const uint8_t, sizeof(T)>(reinterpret_cast<const uint8_t *>(this), sizeof(T));
     }
     
@@ -113,7 +113,7 @@ public:
      * 
      * @return T 寄存器当前的位值
      */
-    [[nodiscard]] T to_bits() const {
+    [[nodiscard]] T to_bits() const noexcept {
         return reinterpret_cast<const T &>(*this);
     }
 
@@ -138,7 +138,7 @@ public:
 #define DEF_REG_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
 struct [[nodiscard]] name:public RegBase<T, D>{\
-constexpr T as_fn() const {return std::bit_cast<T>(this->to_bits());}\
+constexpr T as_fn() const noexcept {return std::bit_cast<T>(this->to_bits());}\
 };\
 
 DEF_REG_TEMPLATE(Reg8,  uint8_t,        to_u8)

@@ -11,11 +11,11 @@ struct [[nodiscard]] Dot{
     using Self = Dot;
 	T radius;
 
-	__fast_inline constexpr bool has_point(const Vec2<T> & p) const {
+	__fast_inline constexpr bool has_point(const Vec2<T> & p) const noexcept {
 		return 	(p).length_squared() < square(radius);
 	}
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+    friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os    
             << os.field("radius")(self.radius)
         ;

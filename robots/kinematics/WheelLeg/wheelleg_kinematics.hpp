@@ -25,13 +25,13 @@ protected:
 // public:
     const Config & cfg_;
 
-    constexpr auto d2_forward_leg(const T hip_rad, const T knee_rad) const {
+    constexpr auto d2_forward_leg(const T hip_rad, const T knee_rad) const noexcept {
         auto knee_position = math::Vec2<T>(cfg_.thigh_length, 0).rotated(-hip_rad);
         auto feet_position = knee_position + math::Vec2<T>(cfg_.shin_length_mster, 0).rotated(T(M_PI)-hip_rad - knee_rad);
         return std::make_tuple(knee_position, feet_position);
     }
 
-    constexpr auto d2_inverse_leg(const math::Vec2<T> & foot_position) const {
+    constexpr auto d2_inverse_leg(const math::Vec2<T> & foot_position) const noexcept {
         auto knee_temp = (square(cfg_.thigh_length) + square(cfg_.shin_length) - foot_position.length_squareared()) / 
             (2 * cfg_.thigh_length * cfg_.shin_length);
         if(ABS(knee_temp) > 1 + T(CMP_EPSILON)) return std::nullopt;
@@ -59,7 +59,7 @@ protected:
     struct [[nodiscard]] GroundViewer:public Viewer{
         constexpr GroundViewer(const WheelLegKinematics<T> & solver):Viewer{solver} {;}
         auto pelvis_transform(
-            const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const {
+            const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const noexcept {
             return Viewer::solver.transform_ground_to_pelvis(left_feet_position, right_feet_position, pitch_angle);
         }
     };
@@ -67,7 +67,7 @@ protected:
     struct [[nodiscard]] PelvisViewer:public Viewer{
         constexpr PelvisViewer(const WheelLegKinematics<T> & solver):Viewer{solver} {;}
         constexpr auto ground_transform(
-            const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const {
+            const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const noexcept {
             return Viewer::solver.transform_pelvis_to_ground(left_feet_position, right_feet_position, pitch_angle);
         }
     };
@@ -78,7 +78,7 @@ protected:
 public:
     constexpr WheelLegKinematics(const Config & cfg): cfg_(cfg){;}
 
-    [[nodiscard]] constexpr auto d3_forward_leg(const T hip_rad, const T knee_rad, bool is_right) const {
+    [[nodiscard]] constexpr auto d3_forward_leg(const T hip_rad, const T knee_rad, bool is_right) const noexcept {
         auto hip_position = math::Vec3<T>(is_right ? (cfg_.pelvis_length / 2) : (- cfg_.pelvis_length / 2), 0, 0);
         auto [d2_knee_position, d2_feet_position] = d2_forward_leg(hip_rad, knee_rad);
 
@@ -88,20 +88,20 @@ public:
         return std::make_tuple(knee_position, feet_position);
     }
 
-    [[nodiscard]] constexpr auto d3_inverse_leg(const math::Vec3<T> feet_position, bool is_right) const {
+    [[nodiscard]] constexpr auto d3_inverse_leg(const math::Vec3<T> feet_position, bool is_right) const noexcept {
         auto hip_position = math::Vec3<T>(is_right ? (cfg_.pelvis_length / 2) : (- cfg_.pelvis_length / 2), 0, 0);
         auto delta_position = feet_position - hip_position;
         auto transform_d3_to_d2 = [](const math::Vec3<T> & d3_position) -> math::Vec2<T> {return math::Vec2<T>(-d3_position.x, d3_position.y);};
         return d2_inverse_leg(transform_d3_to_d2(delta_position));
     }
 
-    [[nodiscard]] constexpr auto foot_plane(const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const {
+    [[nodiscard]] constexpr auto foot_plane(const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position, const Angular<T> pitch_angle) const noexcept {
         auto d2_helper_point = math::Vec2<T>(1,0).rotated(pitch_angle);
         auto helper_point = math::Vec3<T>(0, d2_helper_point.y, -d2_helper_point.x);
         return Plane<T>(left_feet_position, right_feet_position, left_feet_position + helper_point);
     }
 
-    [[nodiscard]] constexpr auto body_aabb(const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position) const {
+    [[nodiscard]] constexpr auto body_aabb(const math::Vec3<T> & left_feet_position, const math::Vec3<T> & right_feet_position) const noexcept {
         return AABB<T>(left_feet_position).expand(right_feet_position);
     }
 
@@ -109,7 +109,7 @@ public:
         const math::Vec3<T> & left_feet_position, 
         const math::Vec3<T> & right_feet_position, 
         const Angular<T> pitch_angle
-    ) const {
+    ) const noexcept {
         auto plane = foot_plane(left_feet_position, right_feet_position, pitch_angle);
         return Quat<T>(math::Vec3<T>(0, 1, 0), plane.normal);
     }
@@ -118,7 +118,7 @@ public:
         const math::Vec3<T> & left_feet_position, 
         const math::Vec3<T> & right_feet_position, 
         const Angular<T> pitch_angle
-    ) const {
+    ) const noexcept {
         auto midpoint_position = (left_feet_position + right_feet_position)/2;
         return Transform3D<T>(Basis<T>(quat_pelvis_to_ground(left_feet_position, right_feet_position, pitch_angle)), midpoint_position);
     }
@@ -127,7 +127,7 @@ public:
         const math::Vec3<T> & left_feet_position, 
         const math::Vec3<T> & right_feet_position, 
         const Angular<T> pitch_angle
-    ) const {
+    ) const noexcept {
         return quat_pelvis_to_ground(left_feet_position, right_feet_position, pitch_angle).inverse();
     }
 
@@ -135,15 +135,15 @@ public:
         const math::Vec3<T> & left_feet_position, 
         const math::Vec3<T> & right_feet_position, 
         const Angular<T> pitch_angle
-    ) const {
+    ) const noexcept {
         return transform_pelvis_to_ground(left_feet_position, right_feet_position, pitch_angle).inverse();
     }
 
-    [[nodiscard]] constexpr auto ground_viewer() const {
+    [[nodiscard]] constexpr auto ground_viewer() const noexcept {
         return GroundViewer(*this);
     }
 
-    [[nodiscard]] constexpr auto pelvis_viewer() const {
+    [[nodiscard]] constexpr auto pelvis_viewer() const noexcept {
         return PelvisViewer(*this);
     }
 };

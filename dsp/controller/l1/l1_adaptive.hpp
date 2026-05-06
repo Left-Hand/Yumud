@@ -35,11 +35,11 @@ struct [[nodiscard]]L1AdaptiveController final{
         float param_b;
         float param_tau;
 
-        constexpr float param_ts() const {
+        constexpr float param_ts() const noexcept {
             return 1.0f / static_cast<float>(fs);
         }
 
-        constexpr Precomputed to_precomputed() const {
+        constexpr Precomputed to_precomputed() const noexcept {
             float local_param_ts = param_ts();
             const auto k_u = local_param_ts / param_tau;
             const auto phi_ts = (1.0f - std::exp(-param_am * local_param_ts)) / param_am;
@@ -89,7 +89,7 @@ struct [[nodiscard]]L1AdaptiveController final{
 
 private:
     // 不确定性估计器，用于估计系统的不确定性
-    float estimator(float x_tilde) const {
+    float estimator(float x_tilde) const noexcept {
         // 计算状态误差的加权
         float muy = precomputed_.exp_factor * x_tilde;
         // 计算不确定性估计值

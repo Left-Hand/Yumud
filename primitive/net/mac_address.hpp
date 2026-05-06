@@ -44,7 +44,7 @@ public:
     }
 
     // ========== 安全的下标访问（添加越界断言） ==========
-    [[nodiscard]] constexpr uint8_t operator[](const size_t index) const {
+    [[nodiscard]] constexpr uint8_t operator[](const size_t index) const noexcept {
         if(index >= size())
             __builtin_trap();
         return bytes_[index];

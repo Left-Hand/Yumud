@@ -19,7 +19,7 @@ struct [[nodiscard]] BSpline final{
     // p: 基函数阶数(次数)
     // t: 参数值
     // knots: 节点向量
-    constexpr [[nodiscard]] T basis_function(size_t i, int p, T t, const std::span<const T> knots) const {
+    constexpr [[nodiscard]] T basis_function(size_t i, int p, T t, const std::span<const T> knots) const noexcept {
         // 0次基函数(递归基础情况)
         // 如果参数t在第i个节点区间内，返回1，否则返回0
         if (p == 0) {
@@ -68,7 +68,7 @@ struct [[nodiscard]] BSpline final{
         }
         
         // 检查是否还有下一个节点值
-        constexpr [[nodiscard]] bool has_next() const {
+        constexpr [[nodiscard]] bool has_next() const noexcept {
             if (is_empty) return false;
             return current_idx <= m;
         }
@@ -97,13 +97,13 @@ struct [[nodiscard]] BSpline final{
     };
     
     // 返回节点向量迭代器
-    constexpr UniformKnotsIterator uniform_knots_iter() const {
+    constexpr UniformKnotsIterator uniform_knots_iter() const noexcept {
         return UniformKnotsIterator(*this);
     }
     
     
     // 在参数t处计算曲线上的点 [t ∈ [0, 1]]
-    constexpr Vec evaluate(const T t) const {
+    constexpr Vec evaluate(const T t) const noexcept {
         if (t < 0) PANIC{};
         if (t > 1) PANIC{};
 
@@ -133,7 +133,7 @@ struct [[nodiscard]] BSpline final{
         size_t idx = 0;
 
         // 检查是否还有下一个点
-        [[nodiscard]] constexpr bool has_next() const {
+        [[nodiscard]] constexpr bool has_next() const noexcept {
             return idx <= num_segments;
         }
         
@@ -151,12 +151,12 @@ struct [[nodiscard]] BSpline final{
     
     // 返回迭代器，用于遍历细分点
     // num_segments: 细分段数
-    constexpr TessellationIterator tessellate_iter(size_t num_segments) const {
+    constexpr TessellationIterator tessellate_iter(size_t num_segments) const noexcept {
         return TessellationIterator(*this, num_segments, 0);
     }
     
     // 计算参数t处的导数(切线向量)
-    constexpr Vec derivative(T t) const {
+    constexpr Vec derivative(T t) const noexcept {
 
         // 将参数t限制在[0,1]范围内
         t = std::clamp(t, T(0), T(1));

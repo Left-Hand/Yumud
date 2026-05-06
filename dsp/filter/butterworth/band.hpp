@@ -82,7 +82,7 @@ public:
         s_ = 4 * a2+2;
     }
 
-    constexpr const T & output() const{ return this->output_; }
+    constexpr const T & output() const noexcept { return this->output_; }
 
     constexpr void reset(){
         for(auto & state:states_){
@@ -100,7 +100,7 @@ protected:
             w0 = w1 = w2 = w3 = w4 = 0;
         }
 
-        __fast_inline constexpr T conv(const T x) const {
+        __fast_inline constexpr T conv(const T x) const noexcept {
             return (
                 + d1 * w1 
                 + d2 * w2 
@@ -169,7 +169,7 @@ public:
         return this->output_;
     }
 
-    constexpr const T & output() const{ return this->output_; }
+    constexpr const T & output() const noexcept { return this->output_; }
 };
 
 template<arithmetic T, size_t N>
@@ -212,7 +212,7 @@ public:
         return this->output_;
     }
     
-    constexpr const T & output() const{ return this->output_; }
+    constexpr const T & output() const noexcept { return this->output_; }
 };
 
 }

@@ -50,7 +50,7 @@ public:
         output_ = CLAMP(output_ + delta, out_min_, out_max_);
     }
 
-    constexpr auto output() const {return output_;}
+    constexpr auto output() const noexcept {return output_;}
 
 private:
 

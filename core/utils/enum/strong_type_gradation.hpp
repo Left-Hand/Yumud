@@ -18,8 +18,8 @@ public:\
         auto bits = static_cast<D>((in - MIN_VALUE) / STEP_VALUE);\
         return Ok(name::from_bits(bits));\
     }\
-    [[nodiscard]] constexpr D to_bits() const { return bits_; }\
-    [[nodiscard]] constexpr T to_original() const {\
+    [[nodiscard]] constexpr D to_bits() const noexcept { return bits_; }\
+    [[nodiscard]] constexpr T to_original() const noexcept {\
         return MIN_VALUE + static_cast<T>(bits_) * STEP_VALUE;\
     }\
     static constexpr name from_bits(D bits) {\

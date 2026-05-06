@@ -207,7 +207,7 @@ template <class Extents>
 template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_left::mapping<Extents>::submdspan_mapping_impl(
-    SliceSpecifiers... slices) const {
+    SliceSpecifiers... slices) const noexcept {
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -270,7 +270,7 @@ template <class Extents>
 template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
-    SliceSpecifiers... slices) const {
+    SliceSpecifiers... slices) const noexcept {
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -435,7 +435,7 @@ template <class Extents>
 template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_right::mapping<Extents>::submdspan_mapping_impl(
-    SliceSpecifiers... slices) const {
+    SliceSpecifiers... slices) const noexcept {
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -500,7 +500,7 @@ template <class Extents>
 template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
-    SliceSpecifiers... slices) const {
+    SliceSpecifiers... slices) const noexcept {
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -576,7 +576,7 @@ template <class Extents>
 template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_stride::mapping<Extents>::submdspan_mapping_impl(
-    SliceSpecifiers... slices) const {
+    SliceSpecifiers... slices) const noexcept {
   auto dst_ext = submdspan_extents(extents(), slices...);
   using dst_ext_t = decltype(dst_ext);
   auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),

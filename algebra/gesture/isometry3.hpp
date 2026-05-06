@@ -13,7 +13,7 @@ struct [[nodiscard]] DhParameters{
     Angular<T> theta;
     T d;
 
-    constexpr Rotation3<T> to_rotation() const{
+    constexpr Rotation3<T> to_rotation() const noexcept {
         const auto & self = *this;
         const auto [s_theta, c_theta] = self.theta.sincos();
         const auto [s_alpha, c_alpha] = self.alpha.sincos();
@@ -25,7 +25,7 @@ struct [[nodiscard]] DhParameters{
         ));
     }
 
-    constexpr math::Vec3<T> to_translation() const {
+    constexpr math::Vec3<T> to_translation() const noexcept {
         const auto & self = *this;
         const auto [s_theta, c_theta] = self.theta.sincos();
 
@@ -88,7 +88,7 @@ struct [[nodiscard]] IsometryMatrix3 {
         };
     }
 
-    [[nodiscard]] constexpr Matrix<T, 4, 4> to_matrix() const { 
+    [[nodiscard]] constexpr Matrix<T, 4, 4> to_matrix() const noexcept { 
         return make_matrix_from_quad(
             rotation.to_matrix(), translation.to_matrix(),
             ZERO_1x3, ONE_1x1
@@ -96,14 +96,14 @@ struct [[nodiscard]] IsometryMatrix3 {
     }
 
     // 添加群运算
-    [[nodiscard]] constexpr IsometryMatrix3 operator*(const IsometryMatrix3& other) const {
+    [[nodiscard]] constexpr IsometryMatrix3 operator*(const IsometryMatrix3& other) const noexcept {
         return IsometryMatrix3{
             .rotation = rotation * other.rotation,
             .translation = rotation * other.translation + translation
         };
     }
     
-    [[nodiscard]] constexpr IsometryMatrix3 inverse() const {
+    [[nodiscard]] constexpr IsometryMatrix3 inverse() const noexcept {
         const auto inv_rot = rotation.inverse();
         return IsometryMatrix3{
             .rotation = inv_rot,
@@ -112,7 +112,7 @@ struct [[nodiscard]] IsometryMatrix3 {
     }
     
     // 点变换
-    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const {
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const noexcept {
         return rotation * point + translation;
     }
     
@@ -176,7 +176,7 @@ struct [[nodiscard]] Isometry3 {
         };
     }
 
-    [[nodiscard]] constexpr Matrix<T, 4, 4> to_matrix() const { 
+    [[nodiscard]] constexpr Matrix<T, 4, 4> to_matrix() const noexcept { 
         return make_matrix_from_quad(
             rotation.to_matrix(), translation.to_matrix(),
             ZERO_1x3, ONE_1x1
@@ -184,14 +184,14 @@ struct [[nodiscard]] Isometry3 {
     }
 
     // 添加群运算
-    [[nodiscard]] constexpr Isometry3 operator*(const Isometry3& other) const {
+    [[nodiscard]] constexpr Isometry3 operator*(const Isometry3& other) const noexcept {
         return Isometry3{
             .rotation = rotation * other.rotation,
             .translation = rotation * other.translation + translation
         };
     }
     
-    [[nodiscard]] constexpr Isometry3 inverse() const {
+    [[nodiscard]] constexpr Isometry3 inverse() const noexcept {
         const auto inv_rot = rotation.inverse();
         return Isometry3{
             .rotation = inv_rot,
@@ -200,7 +200,7 @@ struct [[nodiscard]] Isometry3 {
     }
     
     // 点变换
-    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const {
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const noexcept {
         return rotation * point + translation;
     }
     

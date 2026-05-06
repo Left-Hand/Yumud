@@ -51,7 +51,7 @@ public:
 		if(this->VmppOut > this->MaxVolt) this->VmppOut = this->MaxVolt;
 	}
 
-	[[nodiscard]] auto output() const {return this->VmppOut;}
+	[[nodiscard]] auto output() const noexcept {return this->VmppOut;}
 
 private:
 	iq16  Ipv;

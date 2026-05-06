@@ -5,7 +5,7 @@
 #include "core/debug/debug.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/sumtype.hpp"
-#include "core/string/conv/strconv2.hpp"
+#include "core/string/conv/strconv.hpp"
 #include "core/utils/combo_counter.hpp"
 #include "core/utils/default.hpp"
 #include "core/async/delayed_semphr.hpp"
@@ -117,9 +117,13 @@ void nuedc_2025e_joint_main(){
 
 
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets(EN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
     auto & spi = hal::spi1;
     auto & timer1 = hal::timer1;
@@ -182,7 +186,7 @@ void nuedc_2025e_joint_main(){
     can.configure_filter(
         0_nth, 
         hal::CanFifoIndex::_0,
-        hal::CanFilterConfig::from_pair(
+        hal::CanFilterConfig::from_std_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
                 hal::CanStdId::from_bits(0b1111'000'0000), 

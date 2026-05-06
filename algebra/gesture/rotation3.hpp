@@ -46,30 +46,30 @@ struct Rotation3{
         ));
     }
 
-    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& v) const {
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& v) const noexcept {
         return math::Vec3<T>(matrix_ * to_matrix(v));
     }
 
-    [[nodiscard]] constexpr Rotation3 inverse() const {
+    [[nodiscard]] constexpr Rotation3 inverse() const noexcept {
         return Rotation3(matrix_.transpose());
     }
 
-    [[nodiscard]] constexpr Rotation3 transpose() const { return inverse(); }
+    [[nodiscard]] constexpr Rotation3 transpose() const noexcept { return inverse(); }
 
-    [[nodiscard]] constexpr Rotation3 operator * (const Rotation3& other) const { 
+    [[nodiscard]] constexpr Rotation3 operator * (const Rotation3& other) const noexcept { 
         return Rotation3(matrix_ * other.matrix_);
     }
 
-    [[nodiscard]] constexpr Matrix<T, 3, 3> to_matrix() const {
+    [[nodiscard]] constexpr Matrix<T, 3, 3> to_matrix() const noexcept {
         return matrix_;
     }
 
-    [[nodiscard]] constexpr const Matrix<T, 3, 3> & matrix() const {
+    [[nodiscard]] constexpr const Matrix<T, 3, 3> & matrix() const noexcept {
         return matrix_;
     }
 
     template<EulerAnglePolicy P>
-    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const {
+    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const noexcept {
         // https://blog.csdn.net/weixin_41010198/article/details/115960331
         const Angular<T> theta_z = Angular<T>::from_atan2(
             - matrix_.template at<2, 0>(),

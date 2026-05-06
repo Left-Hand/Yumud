@@ -1,0 +1,144 @@
+#include "stl06n_lidar.hpp"
+#include <span>
+
+using namespace ymd;
+using namespace ymd::drivers::stl06n;
+
+using Self = STL06N_ParseReceiver;
+
+
+#define ASSUME(expr) ({\
+    const bool is_correct = bool(expr);\
+    if(!is_correct) __builtin_trap();\
+})\
+
+
+void STL06N_ParseReceiver::push_byte(const uint8_t byte){
+    if(is_emitting_){
+        PANIC{"racing condition is happening!!!"};
+        return;
+    }
+
+    auto set_fsm_state = [this](const FsmState new_state){ fsm_state_ = new_state; };
+
+    switch(fsm_state_){
+        case FsmState::AwaitingHeader:
+            if(byte != HEADER_TOKEN){
+                reset();
+                return;
+            }
+            set_fsm_state(FsmState::AwaitingVerlen);
+            return;
+
+        case FsmState::AwaitingVerlen:
+            may_command_ = Command::try_from_u8(byte);
+
+            if(may_command_.is_none()){
+                reset();
+                return;
+            }
+
+            set_fsm_state(FsmState::Payload);
+
+            return;
+
+        case FsmState::Payload:
+            bytes_[bytes_count_] = byte;
+            bytes_count_++;
+
+            may_command_.match([&](const Command command){
+                if(bytes_count_ > command.payload_length()){
+                    flush(command);
+                    reset();
+                }
+            }, [&]{
+                reset();
+            });
+            return;
+
+    }
+
+    __builtin_unreachable();
+}
+
+void STL06N_ParseReceiver::push_bytes(const std::span<const uint8_t> bytes){
+    for(const auto byte: bytes){
+        push_byte(byte);
+    }
+}
+
+
+
+STL06N_ParseReceiver::STL06N_ParseReceiver(Callback && callback):
+    callback_(std::move(callback))
+{
+    if(callback_ == nullptr)
+        PANIC{"callback cannot be nullptr"};
+
+    reset();
+}
+
+void STL06N_ParseReceiver::flush(const Command command){
+    auto guard = make_scope_guard([&]{
+        is_emitting_ = false;
+    });
+
+    is_emitting_ = true;
+
+    const size_t num_context_bytes = command.payload_length();
+
+    const std::span<const uint8_t> context_bytes = std::span(bytes_.data(), num_context_bytes);
+
+    //尾元素本身指向crc8校验 并不构成越界
+    const uint8_t actual_crc = context_bytes[num_context_bytes];
+    const uint8_t expected_crc = Crc8Builder()
+        .push_byte(HEADER_TOKEN)
+        .push_byte(command.to_u8())
+        .push_bytes(context_bytes)
+        .finalize();
+
+
+    if(expected_crc != actual_crc) [[unlikely]]{
+        const auto event = Event(Event::InvalidCrc{
+            .command = command,
+            .expected = expected_crc,
+            .actual = actual_crc
+        });
+        callback_(event);
+        return;
+    }
+
+    switch(command.kind()){
+        case Command::Sector:{
+            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(context_bytes.data());
+            const auto event = Event(Event::DataReady{.sector = sector});
+            callback_(event);
+        }
+        return;
+        case Command::Start:
+            callback_(Event(Event::Start{}));
+        return;
+        case Command::Stop:
+            callback_(Event(Event::Stop{}));
+        return;
+        case Command::SetSpeed:
+            callback_(Event(Event::SetSpeed{}));
+        return;
+        case Command::GetSpeed:{
+            //context_bytes[0] 为数据长度字段 固定为4
+            const auto speed = LidarSpinSpeedCode::from_bytes(
+                context_bytes[1], context_bytes[2]
+            );
+            callback_(Event(Event::GetSpeed{.speed = speed}));
+            return;
+        }
+    }
+    //unreachable
+    __builtin_trap();
+}
+
+void STL06N_ParseReceiver::reset(){
+    bytes_count_ = 0;
+    fsm_state_ = FsmState::AwaitingHeader;
+    may_command_ = None;
+}

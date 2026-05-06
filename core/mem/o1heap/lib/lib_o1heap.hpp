@@ -102,7 +102,7 @@ struct [[nodiscard]] O1HeapDiagnostics final{
         return Self{0U, 0U, 0U, 0U, 0U};
     }
 
-    constexpr Self clone() const {
+    constexpr Self clone() const noexcept {
         return *this;
     }
 } ;

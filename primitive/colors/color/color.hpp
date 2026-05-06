@@ -164,16 +164,16 @@ public:
 	constexpr RGBA &operator=(const RGBA &) = default;
 	constexpr RGBA &operator=(RGBA &&) = default;
     
-	[[nodiscard]] constexpr bool operator==(const RGBA & other) const {
+	[[nodiscard]] constexpr bool operator==(const RGBA & other) const noexcept {
         return (r == other.r && g == other.g && b == other.b && a == other.a);
     }
 
-	[[nodiscard]] constexpr bool operator!=(const RGBA & other) const {
+	[[nodiscard]] constexpr bool operator!=(const RGBA & other) const noexcept {
         return (r != other.r || g != other.g || b != other.b || a != other.a);
     }
 
     [[nodiscard]] constexpr 
-    T get_h() const {
+    T get_h() const noexcept {
         T min = MIN(r, g, b);
         T max = MAX(r, g, b);
 
@@ -201,7 +201,7 @@ public:
     }
 
     [[nodiscard]] constexpr 
-    T get_s() const {
+    T get_s() const noexcept {
         T min = MIN(r, g);
         min = MIN(min, b);
         T max = MAX(r, g);
@@ -213,7 +213,7 @@ public:
     }
 
     [[nodiscard]] constexpr 
-    T get_v() const {
+    T get_v() const noexcept {
         T max = MAX(r, g);
         max = MAX(max, b);
         return max;
@@ -225,7 +225,7 @@ public:
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
 
-	__fast_inline constexpr T &operator[](const uint8_t idx) const {
+	__fast_inline constexpr T &operator[](const uint8_t idx) const noexcept {
         static const T default_value = T();
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
@@ -280,7 +280,7 @@ public:
         return *this;
     };
 
-	constexpr bool is_equal_approx(const RGBA &other) const {
+	constexpr bool is_equal_approx(const RGBA &other) const noexcept {
         return is_equal_approx(r, other.r) 
             && is_equal_approx(g, other.g) 
             && is_equal_approx(b, other.b) 
@@ -300,20 +300,20 @@ public:
     }
 
     [[nodiscard]] constexpr 
-    RGBA<T> inverted() const {
+    RGBA<T> inverted() const noexcept {
         RGBA<T> c = *this;
         c.invert();
         return c;
     }
 
     [[nodiscard]] constexpr 
-    RGBA<T> contrasted() const {
+    RGBA<T> contrasted() const noexcept {
         RGBA<T> c = *this;
         c.contrast();
         return c;
     }
 
-	[[nodiscard]] __fast_inline constexpr RGBA lerp(const RGBA &p_to, T p_weight) const {
+	[[nodiscard]] __fast_inline constexpr RGBA lerp(const RGBA &p_to, T p_weight) const noexcept {
 		RGBA ret = *this;
 
 		ret.r += (p_weight * (p_to.r - r));
@@ -324,7 +324,7 @@ public:
 		return ret;
 	}
 
-	[[nodiscard]] __fast_inline constexpr RGBA darkened(T p_amount) const {
+	[[nodiscard]] __fast_inline constexpr RGBA darkened(T p_amount) const noexcept {
 		RGBA ret = *this;
 		ret.r = ret.r * (static_cast<T>(1) - p_amount);
 		ret.g = ret.g * (static_cast<T>(1) - p_amount);
@@ -332,7 +332,7 @@ public:
 		return ret;
 	}
 
-	[[nodiscard]] __fast_inline constexpr RGBA lightened(T p_amount) const {
+	[[nodiscard]] __fast_inline constexpr RGBA lightened(T p_amount) const noexcept {
 		RGBA ret = *this;
 		ret.r = ret.r + (static_cast<T>(1) - ret.r) * p_amount;
 		ret.g = ret.g + (static_cast<T>(1) - ret.g) * p_amount;
@@ -340,7 +340,7 @@ public:
 		return ret;
 	}
 
-	[[nodiscard]] __fast_inline constexpr RGBA blend(const RGBA &p_over) const {
+	[[nodiscard]] __fast_inline constexpr RGBA blend(const RGBA &p_over) const noexcept {
 		RGBA ret;
 		T sa = static_cast<T>(1.0) - p_over.a;
 		ret.a = a * sa + p_over.a;
@@ -368,11 +368,11 @@ public:
     }
 
 
-    [[nodiscard]] __fast_inline constexpr operator bool() const{
+    [[nodiscard]] __fast_inline constexpr operator bool() const noexcept {
         return !((a == T(0)) or (r == T(0) and g == T(0) and b == T(0)));
     }
 
-    [[nodiscard]] __fast_inline constexpr RGB565 to_rgb565() const {
+    [[nodiscard]] __fast_inline constexpr RGB565 to_rgb565() const noexcept {
         return RGB565::from_r5g6b5(
             static_cast<uint8_t>(r * a * 31),
             static_cast<uint8_t>(g * a * 63),
@@ -380,7 +380,7 @@ public:
         );
     }
 
-    [[nodiscard]] __fast_inline constexpr RGB888 to_rgb888() const {
+    [[nodiscard]] __fast_inline constexpr RGB888 to_rgb888() const noexcept {
         return RGB888::from_r8g8b8(
             static_cast<uint8_t>(r * a * 255),
             static_cast<uint8_t>(g * a * 255),
@@ -391,7 +391,7 @@ public:
 
 
 
-    constexpr RGBA operator-() const {
+    constexpr RGBA operator-() const noexcept {
         return RGBA<T>(
                 1.0 - r,
                 1.0 - g,
@@ -464,20 +464,20 @@ struct [[nodiscard]] RGB{
         return *this;
     }
 
-    [[nodiscard]] constexpr RGB operator * (const T val) const {
+    [[nodiscard]] constexpr RGB operator * (const T val) const noexcept {
         auto ret = *this;
         ret *= val;
         return ret;
     }
 
-    [[nodiscard]] constexpr RGB operator * (const RGB & val) const {
+    [[nodiscard]] constexpr RGB operator * (const RGB & val) const noexcept {
         auto ret = *this;
         ret *= val;
         return ret;
     }
 
 
-    [[nodiscard]] constexpr RGB operator / (const T val) const {
+    [[nodiscard]] constexpr RGB operator / (const T val) const noexcept {
         auto ret = *this;
         ret /= val;
         return ret;
@@ -491,7 +491,7 @@ struct [[nodiscard]] RGB{
         return *this;
     }
 
-    [[nodiscard]] constexpr RGB operator + (const RGB & val) const {
+    [[nodiscard]] constexpr RGB operator + (const RGB & val) const noexcept {
         auto ret = *this;
         ret += val;
         return ret;
@@ -505,13 +505,13 @@ struct [[nodiscard]] RGB{
         return *this;
     }
 
-    [[nodiscard]] constexpr RGB operator - (const RGB & val) const {
+    [[nodiscard]] constexpr RGB operator - (const RGB & val) const noexcept {
         auto ret = *this;
         ret -= val;
         return ret;
     }
 
-    [[nodiscard]] constexpr RGB operator - () const {
+    [[nodiscard]] constexpr RGB operator - () const noexcept {
         return RGB(-r,-g,-b);
     }
 
@@ -548,7 +548,7 @@ struct [[nodiscard]] sRGB{
         return ret;
     }
 
-    constexpr RGB<T> to_linear() const{
+    constexpr RGB<T> to_linear() const noexcept {
         auto ret = RGB<T>::from_uninitialized();
         details::srgb2rgb<T>(ret, *this);
         return ret;
@@ -556,11 +556,11 @@ struct [[nodiscard]] sRGB{
 
 
     // 在sRGB空间安全的操作
-    [[nodiscard]] constexpr sRGB<T> inverted() const {
+    [[nodiscard]] constexpr sRGB<T> inverted() const noexcept {
         return sRGB(T(1) - r, T(1) - g, T(1) - b);
     }
 
-    [[nodiscard]] constexpr T luminance() const {
+    [[nodiscard]] constexpr T luminance() const noexcept {
         // sRGB亮度公式 (使用sRGB分量)
         return T(0.2126) * r + T(0.7152) * g + T(0.0722) * b;
     }
@@ -572,7 +572,7 @@ struct [[nodiscard]] sRGB{
 
 
     template<size_t I>
-    [[nodiscard]] constexpr const T& get() const {
+    [[nodiscard]] constexpr const T& get() const noexcept {
         return get_element<I>(*this);
     }
 

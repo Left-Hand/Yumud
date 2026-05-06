@@ -140,7 +140,7 @@ public:
     IResult<> write_fifo(std::span<const uint8_t> bytes){
         if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(50), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_.write_burst<uint8_t>(bytes);
+        if(const auto res = spi_drv_.write_bulk<uint8_t>(bytes);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -148,7 +148,7 @@ public:
     IResult<> read_fifo(std::span<uint8_t> bytes){
         if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(50 | 0x80), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_.read_burst<uint8_t>(bytes);
+        if(const auto res = spi_drv_.read_bulk<uint8_t>(bytes);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -195,13 +195,13 @@ public:
     }
 
     IResult<> write_fifo(std::span<const uint8_t> bytes){
-        if(const auto res = i2c_drv_.write_burst(uint8_t(50) , bytes);
+        if(const auto res = i2c_drv_.write_bulk(uint8_t(50) , bytes);
             res.is_err()) return Err(res.unwrap_err());
         return Ok(); 
     }
 
     IResult<> read_fifo(std::span<uint8_t> bytes){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(50), bytes);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(50), bytes);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
 

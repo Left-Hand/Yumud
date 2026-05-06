@@ -46,7 +46,7 @@ struct BresenhamCache {
         }
     }
 private:
-    constexpr bool mirror_extra_points() const {
+    constexpr bool mirror_extra_points() const noexcept {
         if (position_step.major.x != 0) {
             return position_step.major.x == position_step.minor.y;
         } else {
@@ -54,7 +54,7 @@ private:
         }
     }
 
-    constexpr bool increase_error(int32_t & error) const {
+    constexpr bool increase_error(int32_t & error) const noexcept {
         error += error_step.major;
         if (error > error_threshold) {
             error -= error_step.minor;
@@ -63,7 +63,7 @@ private:
         return false;
     }
     
-    constexpr bool decrease_error(int32_t & error) const {
+    constexpr bool decrease_error(int32_t & error) const noexcept {
         error -= error_step.major;
         if (error <= -error_threshold) {
             error += error_step.minor;

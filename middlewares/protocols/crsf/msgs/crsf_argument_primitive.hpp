@@ -27,12 +27,12 @@ struct [[nodiscard]] TextSelectionContext final{
 struct [[nodiscard]] StringContext final{
     ustr<MAX_STR_LENGTH>     value;                      // 空终止字符串
 
-    [[nodiscard]] constexpr size_t bytes_length() const{
+    [[nodiscard]] constexpr size_t bytes_length() const noexcept{
         return value.length() + 1;
     }
 
     template<typename Receiver>
-    [[nodiscard]] constexpr void sink_to(Receiver & receiver) const{
+    [[nodiscard]] constexpr Result<void, typename Receiver::Error> serialize(Receiver & receiver) const noexcept{
         auto & self = *this;
         receiver.push_push_zero_terminated_uchars(self.value);
     }
@@ -41,7 +41,7 @@ struct [[nodiscard]] StringContext final{
 struct [[nodiscard]] FolderContext final{
     std::span<const uint8_t>      list_of_children;
 
-    [[nodiscard]] constexpr size_t bytes_length() const{
+    [[nodiscard]] constexpr size_t bytes_length() const noexcept{
         // 用0xFF条目标记列表末尾
         return list_of_children.size() + 1;
     }
@@ -50,7 +50,7 @@ struct [[nodiscard]] FolderContext final{
 struct [[nodiscard]] MessageContext final{
     ustr<MAX_STR_LENGTH>      info;
 
-    [[nodiscard]] constexpr size_t bytes_length() const{
+    [[nodiscard]] constexpr size_t bytes_length() const noexcept{
         return info.length() + 1;
     }
 };
@@ -60,7 +60,7 @@ struct [[nodiscard]] CommandContext final{
     uint8_t             timeout; //ms * 100
     ustr<MAX_STR_LENGTH>      info;    // 用0xFF条目标记列表末尾
 
-    [[nodiscard]] constexpr size_t bytes_length() const{
+    [[nodiscard]] constexpr size_t bytes_length() const noexcept{
         return 1 + 1 + info.length() + 1;
     }
 };

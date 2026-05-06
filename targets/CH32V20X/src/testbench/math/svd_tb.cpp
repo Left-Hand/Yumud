@@ -169,11 +169,11 @@ namespace experimental{
                 return Index{nth};
             }
 
-            constexpr bool is_valid(Index index) const{
+            constexpr bool is_valid(Index index) const noexcept {
                 return nth_ != INVALID_NTH;
             }
 
-            constexpr uint16_t unwrap() const {
+            constexpr uint16_t unwrap() const noexcept {
                 if(nth_ == INVALID_NTH){
                     PANIC();
                 }
@@ -345,9 +345,13 @@ void svd_main(){
         });
 
         DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.set_eps(4);
-        DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets(EN);
+        DEBUGGER.build_config()
+            .set_eps(4)
+            .set_splitter(",")
+            .no_brackets(EN)
+            .no_fieldname(EN)
+            .force_sync(EN)
+            .finalize();
     };
 
     init_debugger();

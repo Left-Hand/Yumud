@@ -9,7 +9,7 @@
 
 #include "core/string/view/string_view.hpp"
 
-namespace ymd::strconv2{
+namespace ymd::strconv{
 
 struct alignas(4) [[nodiscard]] FstrDump final{
 	//整数部分的数值 eg: "12.34" => 12
@@ -18,43 +18,32 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 	//小数部分的数值 eg: "12.34" => 34
 	uint32_t frac_part;
 	
-	//是否为负数
-	bool is_negative;
-
 	//小数部分的位数 eg: "12.34" => 2
 	uint8_t num_frac_digits;
 
+	//是否为负数
+	bool is_negative;
 
-	struct alignas(4) ParsingStatus{
+
+
+	struct [[nodiscard]] alignas(4) ParsingStatus final{
 		using Self = ParsingStatus;
 
-		#if 0
-		uint8_t has_dot:1;
-		uint8_t has_digit_part:1;
-		uint8_t has_frac_part:1;
-		uint8_t is_negative:1;
-
-		static constexpr Self from_default(){
-			return std::bit_cast<Self>(uint8_t(0));
-		}
-		#else
+		char existing_sign;
 		bool has_dot;
 		bool has_digit_part;
 		bool has_frac_part;
-		char existing_sign;
 
 		static constexpr Self from_default(){
 			return std::bit_cast<Self>(uint32_t(0));
 		}
-		#endif
-
 
 	};
 
 
 	static constexpr DestringResult<FstrDump> parse(const StringView str) {
 		if (str.length() == 0) {	
-			return Err(DestringError::EmptyString);
+			return Err(DeformatError::EmptyString);
 		}
 
 		uint64_t digit_part = 0;
@@ -68,7 +57,7 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 			
 			switch (chr) {
 				case '\0':
-					return Err(DestringError::NullTerminatorNotAllowed);
+					return Err(DeformatError::InvalidNullTerminator);
 				case '0' ... '9':{
 
 					const uint8_t digit = chr - '0';
@@ -84,20 +73,20 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 						digit_part = digit_part * 10u + digit;
 						// Check integer part overflow
 						if (digit_part > MAX_INT_NUM) {
-							return Err(DestringError::DigitOverflow);
+							return Err(DeformatError::DigitOverflow);
 						}
 					} else {
 						status.has_frac_part = true;
 						frac_part = frac_part * 10u + digit;
 						// Check fractional part overflow
 						if (frac_part > MAX_INT_NUM) {
-							return Err(DestringError::FracOverflow);
+							return Err(DeformatError::FracOverflow);
 						}
 
 						if(num_frac_digits < std::size(str::POW10_TABLE)){
 							num_frac_digits++;
 						}else{
-							return Err(DestringError::FracTooLong);
+							return Err(DeformatError::FracTooLong);
 						}
 					}
 					break;
@@ -106,25 +95,25 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 				case '+':
 				case '-':{
 					if(status.existing_sign != '\0'){
-						if(chr == '-') return Err(DestringError::MultiplyNegative);
-						else return Err(DestringError::MultiplyPositive);
+						if(chr == '-') return Err(DeformatError::MultiplyNegative);
+						else return Err(DeformatError::MultiplyPositive);
 					}
 					status.existing_sign = chr;
 					break;
 				}
 				case '.':  // Handle decimal dot
 					if (status.has_dot) [[unlikely]]
-						return Err(DestringError::MultipleDot);  // Multiple decimal dots
+						return Err(DeformatError::MultipleDot);  // Multiple decimal dots
 					status.has_dot = true;
 					break;
 				case 'a' ... 'z':
-					return Err(DestringError::UnexpectedAlpha);
+					return Err(DeformatError::UnexpectedAlpha);
 				case 'A' ... 'Z':
-					return Err(DestringError::UnexpectedAlpha);
+					return Err(DeformatError::UnexpectedAlpha);
 				case ' ':
-					return Err(DestringError::UnexpectedSpace);
+					return Err(DeformatError::UnexpectedSpace);
 				default:  // Invalid characters
-					return Err(DestringError::UnexpectedChar);
+					return Err(DeformatError::UnexpectedChar);
 			}
 
 		}
@@ -132,18 +121,18 @@ struct alignas(4) [[nodiscard]] FstrDump final{
 		if(status.has_dot){
 			//有小数点的情况不能没有小数部分
 			if((status.has_frac_part == false)) [[unlikely]]
-				return Err(DestringError::NoFracPart);
+				return Err(DeformatError::NoFracPart);
 		}else{
 			if (status.has_digit_part == false) [[unlikely]]
-				return Err(DestringError::NoDigitPart);  // 符号位和小数点之间没有有效数字
+				return Err(DeformatError::NoDigitPart);  // 符号位和小数点之间没有有效数字
 		}
 
 
 		return Ok(FstrDump{
 			.digit_part = static_cast<uint32_t>(digit_part),
 			.frac_part = static_cast<uint32_t>(frac_part),
-			.is_negative = bool(status.existing_sign == '-'),
-			.num_frac_digits = num_frac_digits
+			.num_frac_digits = num_frac_digits,
+			.is_negative = bool(status.existing_sign == '-')
 		});
 	}
 

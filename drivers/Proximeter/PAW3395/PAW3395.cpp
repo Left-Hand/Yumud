@@ -244,7 +244,7 @@ IResult<> Self::write_reg(const RegAddr addr, const uint8_t data){
 		data
 	};
 
-	if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(temp));
+	if(const auto res = spi_drv_.write_bulk<uint8_t>(std::span(temp));
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }

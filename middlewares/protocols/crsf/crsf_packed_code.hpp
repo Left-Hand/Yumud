@@ -34,15 +34,15 @@ struct [[nodiscard]] AltitudeCode final{
         return Some(Self{b});
     }
 
-    [[nodiscard]] constexpr bool is_represented_in_meters() const{
+    [[nodiscard]] constexpr bool is_represented_in_meters() const noexcept {
         return (bits & 0x8000) != 0;
     }
 
-    [[nodiscard]] constexpr bool is_invalid() const { 
+    [[nodiscard]] constexpr bool is_invalid() const noexcept { 
         return bits == INVALID_VALUE;
     }
 
-    [[nodiscard]] constexpr int32_t to_dm() const {
+    [[nodiscard]] constexpr int32_t to_dm() const noexcept {
         auto & self = *this;
         if(self.is_invalid()) __builtin_trap();
         if(self.is_represented_in_meters())
@@ -51,7 +51,7 @@ struct [[nodiscard]] AltitudeCode final{
             return static_cast<int32_t>(bits) - 10000;
     }
 
-    [[nodiscard]] constexpr int32_t to_meters() const {
+    [[nodiscard]] constexpr int32_t to_meters() const noexcept {
         auto & self = *this;
         if(self.is_invalid()) __builtin_trap();
         if(is_represented_in_meters())
@@ -127,7 +127,7 @@ struct [[nodiscard]] VerticalSpeedCode final{
             return static_cast<int16_t>(-u_result);
     }
 
-    [[nodiscard]] constexpr int16_t to_cm_per_second() const {
+    [[nodiscard]] constexpr int16_t to_cm_per_second() const noexcept {
         return bits_to_cm_per_seconds(bits);
     }
 
@@ -150,11 +150,11 @@ struct [[nodiscard]] VoltageCode final{
     int16_t bits;  // LSB = 10 µV
     static constexpr float MAX_VOLT = std::numeric_limits<int16_t>::max() * RATIO;
 
-    [[nodiscard]] constexpr float to_volts() const {
+    [[nodiscard]] constexpr float to_volts() const noexcept {
         return static_cast<float>(bits) * 0.00001f;  // Convert from 10µV units to volts
     }
 
-    [[nodiscard]] constexpr float to_mv() const {
+    [[nodiscard]] constexpr float to_mv() const noexcept {
         return bits / 100;  // Convert to millivolts
     }
 
@@ -181,11 +181,11 @@ struct [[nodiscard]] CurrentCode final{
     
     int16_t bits;  // LSB = 10 µA
 
-    [[nodiscard]] constexpr float to_amperes() const {
+    [[nodiscard]] constexpr float to_amperes() const noexcept {
         return static_cast<float>(bits) * 0.00001f;  // Convert from 10µA units to amperes
     }
 
-    [[nodiscard]] constexpr int16_t to_ma() const {
+    [[nodiscard]] constexpr int16_t to_ma() const noexcept {
         return bits / 100;  // Convert to milliamperes
     }
 
@@ -210,7 +210,7 @@ struct [[nodiscard]] RpmCode final{
     
     int24_t bits;
 
-    [[nodiscard]] constexpr int32_t to_rpm() const {
+    [[nodiscard]] constexpr int32_t to_rpm() const noexcept {
         return static_cast<int32_t>(bits);
     }
 
@@ -230,7 +230,7 @@ struct [[nodiscard]] TemperatureCode final{
     
     int16_t bits;  // deci-degree (tenths of a degree) Celsius
 
-    [[nodiscard]] constexpr iq16 to_celsius() const {
+    [[nodiscard]] constexpr iq16 to_celsius() const noexcept {
         return static_cast<iq16>(bits) * iq16(0.1);
     }
 
@@ -252,7 +252,7 @@ struct [[nodiscard]] GpsCoordinateCode final{
     int32_t bits;
 
     template<typename T>
-    [[nodiscard]] constexpr T to_degrees() const {
+    [[nodiscard]] constexpr T to_degrees() const noexcept {
         if constexpr(std::is_floating_point_v<T>){
             return static_cast<T>(bits) / 10000000.0;
         }
@@ -261,7 +261,7 @@ struct [[nodiscard]] GpsCoordinateCode final{
     }
 
     template<typename T>
-    [[nodiscard]] constexpr T to_turns() const {
+    [[nodiscard]] constexpr T to_turns() const noexcept {
         if constexpr(std::is_floating_point_v<T>){
             return static_cast<T>(bits) / 10000000.0;
         }else if constexpr(std::is_same_v<T, iq16>){ 
@@ -311,7 +311,7 @@ struct [[nodiscard]] GpsHeadingCode final{
     
     uint16_t bits;  // degree / 100
 
-    [[nodiscard]] constexpr float to_degrees() const {
+    [[nodiscard]] constexpr float to_degrees() const noexcept {
         return static_cast<float>(bits) * 0.01f;
     }
 
@@ -331,7 +331,7 @@ struct [[nodiscard]] GpsGroundSpeedCode final{
     
     uint16_t bits;  // km/h / 100
 
-    [[nodiscard]] constexpr float to_kmh() const {
+    [[nodiscard]] constexpr float to_kmh() const noexcept {
         return static_cast<float>(bits) * 0.01f;
     }
 
@@ -352,7 +352,7 @@ struct [[nodiscard]] AirspeedCode final{
     
     uint16_t bits;  // Airspeed in 0.1 * km/h (hectometers/h)
 
-    [[nodiscard]] constexpr float to_kmh() const {
+    [[nodiscard]] constexpr float to_kmh() const noexcept {
         return static_cast<float>(bits) * 0.1f;
     }
 
@@ -374,11 +374,11 @@ struct [[nodiscard]] AttitudeAngleCode final{
     
     int16_t bits;  // LSB = 100 µrad
 
-    [[nodiscard]] constexpr float to_radians() const {
+    [[nodiscard]] constexpr float to_radians() const noexcept {
         return static_cast<float>(bits) * 0.0001f;  // Convert from 100µrad to radians
     }
 
-    [[nodiscard]] constexpr float to_degrees() const {
+    [[nodiscard]] constexpr float to_degrees() const noexcept {
         return static_cast<float>(bits) * 0.0001f * RAD2DEG_RATIO;  // radians to degrees
     }
 
@@ -404,11 +404,11 @@ struct [[nodiscard]] RssiCode final{
     
     uint8_t bits;  // RSSI (dBm * -1)
 
-    [[nodiscard]] constexpr int8_t to_dbm() const {
+    [[nodiscard]] constexpr int8_t to_dbm() const noexcept {
         return static_cast<int8_t>(-bits);
     }
 
-    [[nodiscard]] constexpr uint8_t to_percent() const {
+    [[nodiscard]] constexpr uint8_t to_percent() const noexcept {
         // Convert RSSI to percentage (approximate mapping)
         if (bits >= 127) return 0;
         return static_cast<uint8_t>((127 - bits) * 100 / 127);
@@ -431,7 +431,7 @@ struct [[nodiscard]] LinkQualityCode final{
     
     uint8_t bits;  // Link quality (%)
 
-    [[nodiscard]] constexpr uint8_t to_percents() const {
+    [[nodiscard]] constexpr uint8_t to_percents() const noexcept {
         return bits;
     }
 
@@ -456,7 +456,7 @@ struct [[nodiscard]] SnrCode final{
     
     int8_t bits;  // SNR (dB)
 
-    [[nodiscard]] constexpr int8_t to_db() const {
+    [[nodiscard]] constexpr int8_t to_db() const noexcept {
         return bits;
     }
 
@@ -476,7 +476,7 @@ struct [[nodiscard]] RfPowerDbmCode final{
     
     uint8_t bits;  // rf power in dBm
 
-    [[nodiscard]] constexpr int8_t to_dbm() const {
+    [[nodiscard]] constexpr int8_t to_dbm() const noexcept {
         return static_cast<int8_t>(bits);
     }
 
@@ -536,7 +536,7 @@ struct [[nodiscard]] FpsCode final{
     
     uint8_t bits;  // rf frames per second (fps / 10)
 
-    [[nodiscard]] constexpr uint16_t to_fps() const {
+    [[nodiscard]] constexpr uint16_t to_fps() const noexcept {
         return static_cast<uint16_t>(bits) * 10;
     }
 
@@ -557,7 +557,7 @@ struct [[nodiscard]] PressureCode final{
     
     int32_t bits;  // Pascals
 
-    [[nodiscard]] constexpr float to_pa() const {
+    [[nodiscard]] constexpr float to_pa() const noexcept {
         return static_cast<float>(bits);
     }
 
@@ -578,7 +578,7 @@ struct [[nodiscard]] TemperatureCentidegreeCode final{
     
     int32_t bits;  // centidegrees
 
-    [[nodiscard]] constexpr float to_celsius() const {
+    [[nodiscard]] constexpr float to_celsius() const noexcept {
         return static_cast<float>(bits) * 0.01f;
     }
 

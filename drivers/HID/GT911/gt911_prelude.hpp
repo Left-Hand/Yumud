@@ -115,7 +115,7 @@ struct [[nodiscard]] GT9XX_Regs:public GT9XX_Prelude{
         static constexpr RegAddr NUM_ADDRESS = 0x8140;
         std::array<uint8_t, 4> id;
 
-        constexpr bool is_valid() const {
+        constexpr bool is_valid() const noexcept {
             return id[0] == '9' && id[1] == '1' && id[2] == '1' && id[3] == '\0';
         }
     };

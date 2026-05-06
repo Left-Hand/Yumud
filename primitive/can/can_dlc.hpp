@@ -51,12 +51,12 @@ struct [[nodiscard]] ClassicCanDlc final{
     }
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
         return bits_;
     };
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits_;
     }
 
@@ -158,7 +158,7 @@ struct [[nodiscard]] FdCanDlc final{
         return from_bits(static_cast<uint8_t>(0x0f));
     }
 
-    [[nodiscard]] constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const noexcept {
         if(bits_ <= 8) [[likely]] return bits_;
         switch(bits_){
             case 9:     return 12u;
@@ -172,7 +172,7 @@ struct [[nodiscard]] FdCanDlc final{
         __builtin_unreachable();
     };
 
-    [[nodiscard]] constexpr uint8_t to_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
         return bits_;
     }
 private:

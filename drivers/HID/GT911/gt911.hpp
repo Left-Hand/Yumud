@@ -54,7 +54,7 @@ private:
     };
 
     IResult<> read_reg(const uint16_t addr, const std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
+        if(const auto res = i2c_drv_.read_bulk(addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };

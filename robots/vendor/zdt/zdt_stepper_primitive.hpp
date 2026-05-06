@@ -13,6 +13,8 @@
 
 
 namespace ymd::robots::zdtmotor{
+
+
 static constexpr size_t MAX_CONTEXT_BYTES = 12;
 static constexpr size_t MAX_PACKET_BYTES = 16;
 
@@ -23,7 +25,7 @@ struct [[nodiscard]] NodeId final{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
         return count;
     }
 };
@@ -47,42 +49,7 @@ enum class [[nodiscard]] FuncCode:uint8_t{
     MultiAxisSync = 0xff
 };
 
-struct [[nodiscard]] Bytes2CanFrameIterator{
-    static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
-    explicit constexpr Bytes2CanFrameIterator(
-        const NodeId node_id,
-        const FuncCode func_code,
-        const std::span<const uint8_t> context
-    ):
-        node_id_(node_id),
-        func_code_(func_code),
-        bytes_(context){;}
-
-    [[nodiscard]] constexpr bool has_next() const {
-        return bytes_.size() > offset_;
-    }
-
-
-    [[nodiscard]] constexpr hal::ClassicCanFrame next(){
-
-        const auto frame_len = std::min(
-            size_t(bytes_.size() - offset_),
-            MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
-        );
-
-        const auto frame = make_can_frame(
-            node_id_, 
-            func_code_,
-            static_cast<uint8_t>(piece_cnt_),    
-            bytes_.subspan(offset_, frame_len)
-        );
-
-        offset_ += frame_len;
-        piece_cnt_++;
-
-        return frame;
-    }
-private:
+struct [[nodiscard]] CanFrameUtils{
     static constexpr hal::ClassicCanFrame make_can_frame(
         const NodeId node_id,
         const FuncCode func_code,
@@ -111,6 +78,50 @@ private:
             uint32_t(piece << 0)
         );
     }
+};
+
+
+struct [[nodiscard]] Bytes2CanFrameIterator final:public CanFrameUtils{
+    static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
+    explicit constexpr Bytes2CanFrameIterator(
+        const NodeId node_id,
+        const FuncCode func_code,
+        const std::span<const uint8_t> context
+    ):
+        node_id_(node_id),
+        func_code_(func_code),
+        bytes_(context){;}
+
+    [[nodiscard]] constexpr bool has_next() const noexcept {
+        return bytes_.size() > offset_;
+    }
+
+    [[nodiscard]] constexpr hal::ClassicCanFrame next(){
+        if(not has_next()){
+            #ifdef NDEBUG
+            __builtin_trap();
+            #else
+            __builtin_unreachable();
+            #endif
+        }
+
+        const auto frame_len = std::min<size_t>(
+            size_t(bytes_.size() - offset_),
+            MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
+        );
+
+        const auto frame = make_can_frame(
+            node_id_, 
+            func_code_,
+            static_cast<uint8_t>(piece_cnt_),    
+            bytes_.subspan(offset_, frame_len)
+        );
+
+        offset_ += frame_len;
+        piece_cnt_++;
+
+        return frame.clone();
+    }
 
 private:
     NodeId node_id_;
@@ -128,7 +139,7 @@ struct [[nodiscard]] FlatPacket final{
     uint8_t payload_len;
 
     template<typename Receiver>
-    Result<void, typename Receiver::Error> serialize(Receiver & receiver) const {
+    Result<void, typename Receiver::Error> serialize(Receiver & receiver) const noexcept {
         auto & self = *this;
         {
             const uint8_t buf[] = {
@@ -149,7 +160,11 @@ struct [[nodiscard]] FlatPacket final{
         return Ok();
     }
 
-    constexpr Bytes2CanFrameIterator to_canframe_iter() const {
+    [[nodiscard]] constexpr std::span<const uint8_t> transmittable_bytes() const noexcept {
+        return std::span<const uint8_t>(&node_id.count, static_cast<size_t>(payload_len));
+    }
+
+    constexpr Bytes2CanFrameIterator to_canframe_iter() const noexcept {
         auto & self = *this;
         return Bytes2CanFrameIterator(
             self.node_id,
@@ -223,7 +238,7 @@ struct [[nodiscard]] Rpm final{
         const uint16_t temp = uint16_t(iq16(tps) * 600);
         return {__builtin_bswap16(temp)};
     }
-    constexpr uint16_t to_u16() const {
+    constexpr uint16_t to_u16() const noexcept {
         return bits;
     }
 
@@ -246,7 +261,7 @@ struct [[nodiscard]] PulseCnt final{
         return Some(from_pulses(pulses));
     }
 
-    constexpr uint32_t to_u32() const {
+    constexpr uint32_t to_u32() const noexcept {
         return bits;
     }
 

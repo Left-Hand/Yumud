@@ -260,15 +260,15 @@ IResult<> Self::init(){
 	/* Download FW into VL53L5 */
 	if(const auto res = write_byte(0x7fff, 0x09); 
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0],0x8000); 
+	if(const auto res = write_bulk(0, &VL53L5CX_FIRMWARE[0],0x8000); 
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x0a); 
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0x8000],0x8000); 
+	if(const auto res = write_bulk(0, &VL53L5CX_FIRMWARE[0x8000],0x8000); 
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x0b); 
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0x10000],0x5000); 
+	if(const auto res = write_bulk(0, &VL53L5CX_FIRMWARE[0x10000],0x5000); 
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
 		res.is_err()) return Err(res.unwrap_err());
@@ -315,14 +315,14 @@ IResult<> Self::init(){
 		res.is_err()) return Err(res.unwrap_err());
 
 	/* Get offset NVM data and store them into the offset buffer */
-	if(const auto res = write_burst( 0x2fd8,
+	if(const auto res = write_bulk( 0x2fd8,
 		VL53L5CX_GET_NVM_CMD, sizeof(VL53L5CX_GET_NVM_CMD));
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 0, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 2);
 		res.is_err()) return Err(res.unwrap_err());
 
-	if(const auto res = read_burst( VL53L5CX_UI_CMD_START,
+	if(const auto res = read_bulk( VL53L5CX_UI_CMD_START,
 		temp_buffer, VL53L5CX_NVM_DATA_SIZE);
 		res.is_err()) return Err(res.unwrap_err());
 
@@ -338,7 +338,7 @@ IResult<> Self::init(){
 		res.is_err()) return Err(res.unwrap_err());
 
 	/* Send default configuration to Self firmware */
-	if(const auto res = write_burst( 0x2c34,
+	if(const auto res = write_bulk( 0x2c34,
 		VL53L5CX_DEFAULT_CONFIGURATION,
 		sizeof(VL53L5CX_DEFAULT_CONFIGURATION));
 		res.is_err()) return Err(res.unwrap_err());
@@ -454,7 +454,7 @@ IResult<> Self::send_offset_data(Resolution resolution)
 	}
 
 	(void)memcpy(&(temp_buffer[0x1E0]), footer, 8);
-	if(const auto res = write_burst(0x2e18, temp_buffer,
+	if(const auto res = write_bulk(0x2e18, temp_buffer,
 		VL53L5CX_OFFSET_BUFFER_SIZE);
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 1,
@@ -511,7 +511,7 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
 			4*sizeof(uint8_t));
 	}
 
-	if(const auto res = write_burst(0x2cf8,
+	if(const auto res = write_bulk(0x2cf8,
 		temp_buffer, VL53L5CX_XTALK_BUFFER_SIZE);
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 1,
@@ -735,7 +735,7 @@ IResult<> Self::start_ranging()
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/* Start ranging session */
-	if(const auto res = write_burst(
+	if(const auto res = write_bulk(
 		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1), 
 		cmd.data(), sizeof(cmd));
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
@@ -765,7 +765,7 @@ IResult<> Self::stop_ranging()
 	uint16_t timeout = 0;
 	uint32_t auto_stop_flag = 0;
 
-	if(const auto res = read_burst(
+	if(const auto res = read_bulk(
 		0x2FFC, ptr_cast<uint8_t *>(&auto_stop_flag), 4);
 		res.is_err()) return Err(res.unwrap_err());
 
@@ -827,7 +827,7 @@ IResult<> Self::stop_ranging()
 IResult<bool> Self::is_data_ready(){
 	// https://community.st.com/t5/imaging-sensors/vl53l5cx-check-data-ready-returns-c5-go2-error/td-p/86510
 
-	if(const auto res = read_burst(0x0, temp_buffer, 4);
+	if(const auto res = read_bulk(0x0, temp_buffer, 4);
 		res.is_err()) return Err(res.unwrap_err());
 
 	if((temp_buffer[0] != stream_count_)
@@ -854,7 +854,7 @@ IResult<> Self::reflash_ranging_data(
 		VL53L5CX_Frame		*p_results)
 {
 	size_t msize;
-	if(const auto res = read_burst(0x0,
+	if(const auto res = read_bulk(0x0,
 		temp_buffer, data_read_size_);
 		res.is_err()) return Err(res.unwrap_err());
 
@@ -1478,7 +1478,7 @@ IResult<> Self::poll_for_answer(
 	size_t timeout = 0;
 
 	do {
-		if(const auto res = read_burst(address, temp_buffer, size);
+		if(const auto res = read_bulk(address, temp_buffer, size);
 			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
 		
@@ -1670,7 +1670,7 @@ IResult<> Self::calibrate_xtalk(
 	(void)memcpy(temp_buffer, VL53L5CX_CALIBRATE_XTALK, 
 			sizeof(VL53L5CX_CALIBRATE_XTALK));
 
-	if(const auto res = write_burst(0x2c28,
+	if(const auto res = write_bulk(0x2c28,
 		temp_buffer, 
 		(uint16_t)sizeof(VL53L5CX_CALIBRATE_XTALK));
 		res.is_err()) return Err(res.unwrap_err());
@@ -1703,7 +1703,7 @@ IResult<> Self::calibrate_xtalk(
 		res.is_err()) return Err(res.unwrap_err());
 
 	/* Start ranging session */
-	if(const auto res = write_burst(
+	if(const auto res = write_bulk(
 		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1),
 		cmd, sizeof(cmd));
 		res.is_err()) return Err(res.unwrap_err());
@@ -1713,7 +1713,7 @@ IResult<> Self::calibrate_xtalk(
 
 	/* Wait for end of calibration */
 	do {
-		if(const auto res = read_burst(
+		if(const auto res = read_bulk(
 			0x0, temp_buffer, 4
 		);	res.is_err()) return Err(res.unwrap_err());
 
@@ -1744,14 +1744,14 @@ IResult<> Self::calibrate_xtalk(
 	/* Save Xtalk data into the Xtalk buffer */
 	(void)memcpy(temp_buffer, VL53L5CX_GET_XTALK_CMD, 
 		sizeof(VL53L5CX_GET_XTALK_CMD));
-	if(const auto res = write_burst(0x2fb8,
+	if(const auto res = write_bulk(0x2fb8,
 		temp_buffer, 
 		(uint16_t)sizeof(VL53L5CX_GET_XTALK_CMD));
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); 
 		res.is_err()) return Err(res.unwrap_err());
 
-	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
+	if(const auto res = read_bulk(VL53L5CX_UI_CMD_START,
 		temp_buffer, 
 		VL53L5CX_XTALK_BUFFER_SIZE + (uint16_t)4);
 		res.is_err()) return Err(res.unwrap_err());
@@ -1762,7 +1762,7 @@ IResult<> Self::calibrate_xtalk(
 			- (uint16_t)8]), footer, sizeof(footer));
 
 	/* Reset default buffer */
-	if(const auto res = write_burst(0x2c34,
+	if(const auto res = write_bulk(0x2c34,
 			VL53L5CX_DEFAULT_CONFIGURATION,
 			VL53L5CX_CONFIGURATION_SIZE);
         res.is_err()) return Err(res.unwrap_err());
@@ -1796,7 +1796,7 @@ IResult<> Self::_poll_for_answer(
 	uint8_t timeout = 0;
 
 	do {
-		if(const auto res = read_burst(address, temp_buffer, 4);
+		if(const auto res = read_bulk(address, temp_buffer, 4);
 			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
 		/* 2s timeout or FW error*/
@@ -1830,14 +1830,14 @@ IResult<> Self::get_caldata_xtalk(std::span<uint8_t, VL53L5CX_XTALK_BUFFER_SIZE>
 	(void)memcpy(temp_buffer, VL53L5CX_GET_XTALK_CMD, 
 		sizeof(VL53L5CX_GET_XTALK_CMD));
 
-	if(const auto res = write_burst(0x2fb8,
+	if(const auto res = write_bulk(0x2fb8,
 		temp_buffer,  sizeof(VL53L5CX_GET_XTALK_CMD));
 		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); 
 		res.is_err()) return Err(res.unwrap_err());
 
-	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
+	if(const auto res = read_bulk(VL53L5CX_UI_CMD_START,
 		temp_buffer, 
 		VL53L5CX_XTALK_BUFFER_SIZE + (uint16_t)4);
 		res.is_err()) return Err(res.unwrap_err());
@@ -1902,15 +1902,15 @@ IResult<> Self::set_xtalk_margin(uint32_t xtalk_margin){
 
 
 IResult<> Self::read_byte(const uint16_t addr, uint8_t *data){
-	return read_burst(addr, data, 1);
+	return read_bulk(addr, data, 1);
 }
 
 IResult<> Self::write_byte(const uint16_t addr, uint8_t data){
-	return write_burst(addr, &data, 1);
+	return write_bulk(addr, &data, 1);
 }
 
-IResult<> Self::read_burst(const uint16_t addr, uint8_t *data, uint16_t size){
-	if(const auto res = i2c_drv_.read_burst(
+IResult<> Self::read_bulk(const uint16_t addr, uint8_t *data, uint16_t size){
+	if(const auto res = i2c_drv_.read_bulk(
 		addr, 
 		std::span<uint8_t>(data, static_cast<size_t>(size)),
 		std::endian::big
@@ -1918,8 +1918,8 @@ IResult<> Self::read_burst(const uint16_t addr, uint8_t *data, uint16_t size){
 	return Ok();
 }
 
-IResult<> Self::write_burst(const uint16_t addr, const uint8_t *data, uint16_t size){
-	if(const auto res = i2c_drv_.write_burst(
+IResult<> Self::write_bulk(const uint16_t addr, const uint8_t *data, uint16_t size){
+	if(const auto res = i2c_drv_.write_bulk(
 		addr, 
 		std::span<const uint8_t>(data, static_cast<size_t>(size)),
 		std::endian::big
@@ -1950,7 +1950,7 @@ IResult<> Self::dci_read_data(
 
 
 /* Request data reading from FW */
-	if(const auto res = write_burst(
+	if(const auto res = write_bulk(
 		(VL53L5CX_UI_CMD_END-(uint16_t)11),
 		cmd.data(), sizeof(cmd)
 	);
@@ -1961,7 +1961,7 @@ IResult<> Self::dci_read_data(
 		res.is_err()) return Err(res.unwrap_err());
 
 /* Read new data sent (4 bytes header + data_size + 8 bytes footer) */
-	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
+	if(const auto res = read_bulk(VL53L5CX_UI_CMD_START,
 		temp_buffer, rd_size);
 		res.is_err()) return Err(res.unwrap_err());
 	SwapBuffer(temp_buffer, data_size + 12);
@@ -2012,7 +2012,7 @@ IResult<> Self::dci_write_data(
 		footer, sizeof(footer));
 
 	/* Send data to FW */
-	if(const auto res = write_burst(address,
+	if(const auto res = write_bulk(address,
 		temp_buffer,
 		data_size + 12
 	);	res.is_err()) return Err(res.unwrap_err());

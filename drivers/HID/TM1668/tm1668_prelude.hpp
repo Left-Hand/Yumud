@@ -56,7 +56,7 @@ public:
             return {uint8_t(0xC0 | idx)};
         }
 
-        constexpr uint8_t to_u8() const {return addr;}
+        constexpr uint8_t to_u8() const noexcept {return addr;}
         const uint8_t addr;
     };
 
@@ -67,15 +67,15 @@ public:
         uint8_t display_on:1;
         const uint8_t __resv2__:4 = 0b1000;
 
-        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const noexcept {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
 
     struct [[nodiscard]] KeyCode{
     public:
-        constexpr Option<uint8_t> row() const {return row_;}
-        constexpr Option<uint8_t> col() const {return col_;}
+        constexpr Option<uint8_t> row() const noexcept {return row_;}
+        constexpr Option<uint8_t> col() const noexcept {return col_;}
 
         static constexpr KeyCode from_u8(const uint8_t data){
             const uint8_t high = data >> 3;

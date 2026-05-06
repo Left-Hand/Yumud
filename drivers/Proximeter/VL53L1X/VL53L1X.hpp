@@ -159,7 +159,7 @@ public:
 
     VL53L1X_Error(Kind kind):kind_(kind){}
 
-    bool operator == (Kind kind) const {
+    bool operator == (Kind kind) const noexcept {
         return kind_ == kind;
     }
 private:
@@ -235,7 +235,7 @@ struct RangeStatus{
         }
     }
 
-    [[nodiscard]] constexpr bool operator ==(const RangeStatus & other) const{
+    [[nodiscard]] constexpr bool operator ==(const RangeStatus & other) const noexcept {
         return kind_ == other.kind_;
     }
 private:

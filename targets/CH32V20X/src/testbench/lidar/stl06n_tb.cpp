@@ -18,7 +18,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Proximeter/STL06N/stl06n.hpp"
+#include "drivers/Proximeter/STL06N/stl06n_lidar.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
@@ -68,11 +68,13 @@ void stl06n_main(){
 
 
     DEBUGGER.retarget(&DEBUG_UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(9);
-    DEBUGGER.force_sync(EN);
-    // DEBUGGER.no_fieldname(EN);
-    DEBUGGER.no_fieldname(DISEN);
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
 
 
     auto watch_pin_ = hal::PA<11>();
@@ -254,7 +256,7 @@ void stl06n_main(){
             script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),
             script::make_function("add3", [&](const float a, const float b){return a + b;}),
             script::make_function("ssm", [&](const StringView a, const StringView b){return str::ngram_similarity(a, b);}),
-            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
+            script::make_function("test", [&](const StringView a){return strconv::FstrDump::parse(a);}),
 
             script::make_list( "alct",
                 script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),

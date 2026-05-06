@@ -25,8 +25,8 @@ public:
     explicit constexpr SlaveRank(const uint8_t count):
         count_(count){}
 
-    [[nodiscard]] uint8_t count() const {return count_;}
-    [[nodiscard]] uint16_t as_unique_id() const {return static_cast<uint16_t>(count_);}
+    [[nodiscard]] uint8_t count() const noexcept {return count_;}
+    [[nodiscard]] uint16_t as_unique_id() const noexcept {return static_cast<uint16_t>(count_);}
 
 private:
     uint8_t count_;
@@ -70,7 +70,7 @@ struct [[nodiscard]] Prescaler{
     using enum HsKind;
     #endif
     constexpr Prescaler(const Kind kind):kind_(kind){;}
-    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 private:
     Kind kind_;
 };
@@ -95,7 +95,7 @@ struct [[nodiscard]] Mode{
                 (cpoa == ClockPhase::CaptureOnSecond ? 0b01 : 0b00))
             );
         }()){;}
-    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
 private:
     Kind kind_;
 };

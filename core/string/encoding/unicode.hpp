@@ -16,11 +16,11 @@ struct [[nodiscard]] UnicodeChar final{
     static constexpr Self zero() {
         return Self{0};
     }
-    constexpr bool operator==(const UnicodeChar & other) const {
+    constexpr bool operator==(const UnicodeChar & other) const noexcept {
         return bits == other.bits;
     }
 
-    constexpr uint32_t count() const {
+    constexpr uint32_t count() const noexcept {
         return bits;
     }
 };
@@ -30,7 +30,7 @@ struct [[nodiscard]] UnicodeIterator final{
 public:
     constexpr UnicodeIterator(const StringView str):
         str_(str){;}
-    [[nodiscard]] constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const noexcept {
         return offset_ < str_.length();
     }
 

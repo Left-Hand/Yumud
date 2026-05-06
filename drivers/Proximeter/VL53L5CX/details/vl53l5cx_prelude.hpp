@@ -439,7 +439,7 @@ struct [[nodiscard]] BlockHeader {
 	uint32_t size : 12;
 	uint32_t idx : 16;
 
-	[[nodiscard]] std::span<const uint8_t, 4> as_bytes() const {
+	[[nodiscard]] std::span<const uint8_t, 4> as_bytes() const noexcept {
 		return std::span<const uint8_t, 4>(reinterpret_cast<const uint8_t*>(this), 4);
 	} 
 

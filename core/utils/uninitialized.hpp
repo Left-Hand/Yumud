@@ -24,7 +24,7 @@ struct FromUninitializedDispatcher {
 
 struct _Uninitialized{
     template<typename T>
-    consteval operator T() const {
+    consteval operator T() const noexcept {
         return FromUninitializedDispatcher<T>::from_uninitialized();
     }
 };

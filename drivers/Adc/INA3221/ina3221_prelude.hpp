@@ -114,9 +114,9 @@ public:
             return {static_cast<Kind>(temp2)};
         }
 
-        constexpr uint8_t to_bits() const {
+        constexpr uint8_t to_bits() const noexcept {
             return static_cast<uint8_t>(kind_);}
-        constexpr Kind kind() const {return kind_;}
+        constexpr Kind kind() const noexcept {return kind_;}
     
     private:
         Kind kind_;
@@ -159,15 +159,15 @@ public:
             return Self{.bits = mv_to_sv_code(mv)};
         }
 
-        [[nodiscard]] constexpr int32_t to_mv() const { 
+        [[nodiscard]] constexpr int32_t to_mv() const noexcept { 
             return sv_code_to_mv(bits); 
         }
 
-        [[nodiscard]] constexpr int32_t to_uv() const { 
+        [[nodiscard]] constexpr int32_t to_uv() const noexcept { 
             return sv_code_to_uv(bits); 
         }
 
-        [[nodiscard]] constexpr iq16 to_volts() const { 
+        [[nodiscard]] constexpr iq16 to_volts() const noexcept { 
             return sv_code_to_volts(bits); 
         }
 
@@ -204,15 +204,15 @@ public:
             return Self{.bits = mv_to_svsum_code(mv)};
         }
 
-        [[nodiscard]] constexpr int32_t to_mv() const { 
+        [[nodiscard]] constexpr int32_t to_mv() const noexcept { 
             return svsum_code_to_mv(bits); 
         }
 
-        [[nodiscard]] constexpr int32_t to_uv() const { 
+        [[nodiscard]] constexpr int32_t to_uv() const noexcept { 
             return svsum_code_to_uv(bits); 
         }
 
-        [[nodiscard]] constexpr iq16 to_volts() const { 
+        [[nodiscard]] constexpr iq16 to_volts() const noexcept { 
             return svsum_code_to_volts(bits); 
         }
     private:
@@ -249,11 +249,11 @@ public:
             return Self{.bits = mv_to_bv_code(mv)};
         }
 
-        [[nodiscard]] constexpr int32_t to_mv() const { 
+        [[nodiscard]] constexpr int32_t to_mv() const noexcept { 
             return bv_code_to_mv(bits); 
         }
 
-        [[nodiscard]] constexpr iq16 to_volts() const { 
+        [[nodiscard]] constexpr iq16 to_volts() const noexcept { 
             return bv_code_to_volts(bits); 
         }
 
@@ -556,9 +556,9 @@ public:
         return Ok();
     }
 
-    IResult<> read_burst(
+    IResult<> read_bulk(
         const RegAddr addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

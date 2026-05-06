@@ -196,20 +196,20 @@ public:
 
 
     SD_Error ReadBlock(uint8_t *buf,uint64_t addr,uint16_t blksize);  
-    SD_Error read_burstBlocks(uint8_t *buf,uint64_t  addr,uint16_t blksize,uint32_t nblks);  
+    SD_Error read_bulkBlocks(uint8_t *buf,uint64_t  addr,uint16_t blksize,uint32_t nblks);  
     SD_Error WriteBlock(const uint8_t *buf,uint64_t addr,  uint16_t blksize);
-    SD_Error write_burstBlocks(const uint8_t *buf,uint64_t addr,uint16_t blksize,uint32_t nblks);
+    SD_Error write_bulkBlocks(const uint8_t *buf,uint64_t addr,uint16_t blksize,uint32_t nblks);
     SD_Error ProcessIRQSrc(void);
 
     SD_Error ReadDisk(uint8_t * buf,uint32_t sector,uint8_t cnt);
     SD_Error WriteDisk(const uint8_t*buf,uint32_t sector,uint8_t cnt);
 
-    auto type() const {return CardType;}
-    auto manufacturer() const {return cardinfo.SD_cid.ManufacturerID;}
-    auto rca() const {return cardinfo.RCA;}
+    auto type() const noexcept {return CardType;}
+    auto manufacturer() const noexcept {return cardinfo.SD_cid.ManufacturerID;}
+    auto rca() const noexcept {return cardinfo.RCA;}
 
-    auto blocksize() const{return cardinfo.CardBlockSize;}
-    auto capacity() const{return cardinfo.CardCapacity;}
+    auto blocksize() const noexcept {return cardinfo.CardBlockSize;}
+    auto capacity() const noexcept {return cardinfo.CardCapacity;}
 
 };
 
