@@ -9,8 +9,6 @@ struct FrameFactory{
 
     const NodeId motor_id;
 
-
-
     //4.2 mit 控制
     constexpr hal::ClassicCanFrame mit_control(const MitParams& mit_param) const noexcept {
         return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, mit_param.to_can_payload());
@@ -57,7 +55,7 @@ struct FrameFactory{
 
     //4.8 清除错误
     constexpr hal::ClassicCanFrame clear_error() const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFC));
+        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFB));
     }
 
     template<typename T>

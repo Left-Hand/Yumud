@@ -17,14 +17,17 @@ dfrobot:上海智位机器人
 
 dji:大疆
     - [x] c620
+    - [x] c610
     - [x] dr16
     - [x] vt13
+    - [ ] gm6020
     
 dynamixel: dynamixel
     - [ ] protocol2
 
 flyskytech:
     - [x] fsi6x
+
 gjw_dynamics:高精稳动力
     - [x] can_protocol
     - [ ] modbus

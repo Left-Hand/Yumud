@@ -6,7 +6,7 @@
 namespace ymd::robots::jvci{
 struct [[nodiscard]] CanRequestFrameFactory final{
 public:
-    NodeId node_id;
+    const NodeId node_id;
 
 /// ========== 读取方法 ==========
 
