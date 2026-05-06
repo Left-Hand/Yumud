@@ -9,7 +9,7 @@ FP8-E4M3 完整形式化验证
   ✓ 特性保证
 """
 
-from z3 import *
+from z3 import BitVec, Solver, And, Or, Not, Implies, BoolSort, sat, Extract, Concat, BitVecVal
 import struct
 from typing import Tuple, List
 

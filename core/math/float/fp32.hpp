@@ -38,12 +38,6 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return fp32(std::bit_cast<float>(bits));
 	}
 
-	static constexpr fp32 from_le_bytes(const std::span<const uint8_t, 4> bytes){
-		std::array<uint8_t, 4> bytes_arr;
-		std::copy(bytes.begin(), bytes.end(), bytes_arr.begin());
-		return fp32::from_bits(std::bit_cast<uint32_t>(bytes_arr));
-	}
-
 	[[nodiscard]] constexpr uint32_t to_bits() const {
 		return std::bit_cast<uint32_t>(*this);
 	}
