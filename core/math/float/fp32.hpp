@@ -13,7 +13,7 @@ namespace math{
 struct alignas(4) [[nodiscard]] fp32 final{
 	using Self = fp32;
 
-	uint32_t frac:23;
+	uint32_t mant:23;
 	uint32_t exp:8;
 	uint32_t sign:1;
 
@@ -22,9 +22,9 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		*this = std::bit_cast<fp32>(fv);
 	}
 
-	static constexpr fp32 from_parts(const uint32_t frac, const uint32_t exp, const uint32_t sign){
+	static constexpr fp32 from_parts(const uint32_t mant, const uint32_t exp, const uint32_t sign){
 		Self self;
-		self.frac = frac;
+		self.mant = mant;
 		self.exp = exp;
 		self.sign = sign;
 		return self;

@@ -11,7 +11,7 @@ namespace ymd::math{
 struct alignas(8) [[nodiscard]] fp64 final{
 	using Self = fp64;
 
-	uint64_t frac:52;
+	uint64_t mant:52;
 	uint64_t exp:11;
 	uint64_t sign:1;
 

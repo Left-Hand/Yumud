@@ -15,7 +15,7 @@ namespace math{
 
 
 struct alignas(2) [[nodiscard]] bf16 final{
-    uint16_t frac:7;
+    uint16_t mant:7;
     uint16_t exp:8;
     uint16_t sign:1;
 
@@ -79,11 +79,11 @@ struct alignas(2) [[nodiscard]] bf16 final{
     template<std::endian ENDIAN>
     constexpr void fill_bytes(std::span<uint8_t, 2> bytes){
         if constexpr(ENDIAN == std::endian::little){
-            bytes[0] = frac;
+            bytes[0] = mant;
             bytes[1] = exp | (sign << 7);
         }else{
             bytes[0] = exp | (sign << 7);
-            bytes[1] = frac;
+            bytes[1] = mant;
         }
     }
 
