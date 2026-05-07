@@ -1,5 +1,6 @@
 #include "myactuator_primitive.hpp"
 #include "myactuator_msgs.hpp"
+#include "myactuator_frame_factory.hpp"
 
 using namespace ymd;
 using namespace ymd::robots::myactuator;

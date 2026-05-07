@@ -651,3 +651,32 @@ void lazy_main() {
     // }
     while(true);
 }
+
+template <typename T>
+constexpr std::size_t const_context() {
+    return T{}.size();
+}
+
+template <typename T, std::size_t = const_context<T>()>
+constexpr bool is_constexpr_impl(T&&) {
+    return true;
+}
+constexpr bool is_constexpr_impl(...) { return false; }
+
+template <typename T>
+concept is_constexpr_size = is_constexpr_impl(T{});
+
+struct A {
+    size_t value;
+    // constexpr std::size_t size() { return 10; }
+    constexpr std::size_t size() { return value; }
+};
+
+struct B { std::size_t size() { return 10; }};
+struct C { static constexpr std::size_t size() { return 10; }};
+// static constexpr size_t a_size = std::declval<A>().size();
+// static constexpr size_t b_size = std::declval<B>().size();
+// static constexpr size_t c_size = std::declval<C>().size();
+
+static_assert(is_constexpr_size<A> == true); // true
+static_assert(is_constexpr_size<B> == false); // false

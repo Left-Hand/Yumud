@@ -3,10 +3,10 @@
 #include "core/math/real.hpp"
 #include "core/math/float/bf16.hpp"
 
-#include "robots/commands/joint_commands.hpp"
-#include "robots/commands/machine_commands.hpp"
-#include "robots/commands/nmt_commands.hpp"
-#include "robots/nodes/msg_factory.hpp"
+#include "commands/joint_commands.hpp"
+#include "commands/machine_commands.hpp"
+#include "commands/nmt_commands.hpp"
+#include "nodes/msg_factory.hpp"
 
 
 namespace ymd::nuedc_2025e{

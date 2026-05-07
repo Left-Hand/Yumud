@@ -179,7 +179,7 @@ public:
 
 
     template<size_t Extents>
-    constexpr Result<void, SerError> push_zero_terminated_uchars(
+    constexpr Result<void, Error> push_zero_terminated_uchars(
         const std::span<const uint8_t, Extents> obj
     ) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
@@ -190,7 +190,7 @@ public:
     }
 
     template<size_t Extents>
-    constexpr Result<void, SerError> push_0xff_terminated_uchars(
+    constexpr Result<void, Error> push_0xff_terminated_uchars(
         const std::span<const uint8_t, Extents> obj
     ) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
@@ -201,7 +201,7 @@ public:
     }
 
     template<typename D>
-    constexpr Result<void, SerError> push_be_int(
+    constexpr Result<void, Error> push_be_int(
         const auto int_val
     ) noexcept {
         if constexpr(std::is_same_v<D, uint24_t> || std::is_same_v<D, int24_t>){
@@ -221,24 +221,35 @@ public:
     }
 
     template<typename T>
-    constexpr Result<void, SerError> push_bits_intoable(const T obj) noexcept {
+    constexpr Result<void, Error> push_bits_intoable(const T obj) noexcept {
         return push_be_int<tmp::to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
     }
 
     template<typename E>
     requires (std::is_enum_v<E>)
-    constexpr Result<void, SerError> push_enum(const E obj) noexcept {
+    constexpr Result<void, Error> push_enum(const E obj) noexcept {
         static_assert(sizeof(E) == 1);
         return push_be_int<uint8_t>(static_cast<uint8_t>(obj));
     }
 
-    constexpr Result<void, SerError> push_fp32(const math::fp32 obj) noexcept{
+    constexpr Result<void, Error> push_fp32(const math::fp32 obj) noexcept{
         return push_be_int<uint32_t>(obj.to_bits());
     }
+
+    constexpr Result<void, Error> push_bytes(std::span<const uint8_t> bytes){
+        uint8_t * dst_ptr = uchars.data() + ind_;
+        const uint8_t * src_ptr = bytes.data();
+
+        for(size_t i = 0; i < bytes.size(); i++){
+            dst_ptr[i] = src_ptr[i];
+        }
+
+        return Ok();
+    }
 private:
-    constexpr Result<void, SerError> check_input_length(size_t length) noexcept {
+    constexpr Result<void, Error> check_input_length(size_t length) noexcept {
         if(ind_ + length > uchars.size()){
-            return Err(SerError::OutOfMemory);
+            return Err(Error::OutOfMemory);
         }
         return Ok();
     }

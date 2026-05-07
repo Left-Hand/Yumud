@@ -12,7 +12,6 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
     else return b - a;
 }
 
-static constexpr double SQRT3_F64 = std::sqrt(3.0);
 
 template<size_t Q, typename T>
 static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, T> b){
@@ -85,6 +84,7 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
     static_assert(err_f64(math::sinpu(iq31(0.25 *(11.0 / 3))), iq31(-0.5)) < 1E-7);
 
 
+    static constexpr double SQRT3_F64 = std::sqrt(3.0);
 
     static_assert(err_f64(math::sinpu(iq31(0.25 *(2.0 / 3))), iq31(SQRT3_F64 / 2)) < 1E-7);
     static_assert(err_f64(math::sinpu(iq31(0.25 *(4.0 / 3))), iq31(SQRT3_F64 / 2)) < 1E-7);
@@ -111,6 +111,8 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
     static_assert(std::abs((double)math::atanpu(iq16(1.0)) - 0.125) < 1E-7);
     static_assert(std::abs((double)math::atanpu(-iq16(1.0)) - 0.875) < 1E-7);
 
+    static constexpr double SQRT3_F64 = std::sqrt(3.0);
+    
     static_assert(err_f64(math::atanpu(iq29(1.0 / SQRT3_F64)), uq32(0.25 * (1.0 / 3))) < 1E-7);
     static_assert(err_f64(math::atanpu(iq29(SQRT3_F64)), uq32(0.25 * (2.0 / 3))) < 1E-7);
 

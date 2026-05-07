@@ -3,7 +3,7 @@
 #include "algebra/vectors/vec2.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::robots final{
+namespace ymd::robots{
     
 template<typename T>
 class CrossKinematics{

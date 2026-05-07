@@ -1,92 +1,172 @@
-acmemach:机致科技
+- acmemach:机致科技
     - [ ] 中空电机
 
-bmkj:本末科技
+- bmkj:本末科技
     - [x] m1502e
+        - [x] 静态冒烟测试
+        - [ ] 静态强类型测试(少量)
+        - [ ] 静态编解码测试(无)
+        - [x] 实物冒烟测试
+        - [x] 实物常规测试
+        - [ ] 实物全量测试
 
-briter: 布瑞特科技 https://www.buruiter.com/
+- briter: 布瑞特科技 https://www.buruiter.com/
     - [ ] briter_can
     - [ ] briter_modbus
 
-damiao:达妙
-    - [ ] dm4310
-    - [ ] dm9008
+- damiao:达妙
+    - [x] 达妙can协议
+        - [ ] 静态冒烟测试
+    - [ ] 达妙canopen
+        - [ ] 静态冒烟测试
 
-dfrobot:上海智位机器人
+- dfrobot:上海智位机器人
     - [ ] cds55xx
 
-dji:大疆
-    - [x] c620
-    - [x] c610
-    - [x] dr16
-    - [x] vt13
-    - [ ] gm6020
+- dji:大疆
+    - [x] c620/c610电调
+        - [x] 静态冒烟测试
+        - [x] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
+    - [x] dr16遥控
+        - [x] 静态冒烟测试
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
+    - [x] vt13遥控
+        - [x] 静态冒烟测试
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
+    - [ ] gm6020电机
     
-dynamixel: dynamixel
-    - [ ] protocol2
+- dynamixel: dynamixel
+    - [ ] protocol2协议
 
-flyskytech:
-    - [x] fsi6x
+- flyskytech:
+    - [x] fsi6x遥控器
+        - [ ] 静态冒烟测试
 
-gjw_dynamics:高精稳动力
-    - [x] can_protocol
-    - [ ] modbus
 
-hightorque:高擎
-    - [x] can驱动
+- gjw_dynamics:高精稳动力
+    - [x] can通信协议
+        - [ ] 静态冒烟测试
+    - [ ] modbus通信协议
 
-jvci:郑州俱瓷电子科技
+- hightorque:高擎
+    - [x] can通信协议
+        - [x] 静态冒烟测试
+
+
+- jvci:郑州俱瓷电子科技
     - [x] jvci_can
+        - [x] 静态冒烟测试
 
-ktech:瓴控科技
-    - [ ] mf9025
 
-lobot:乐动
+- lkmotor:瓴控科技
+    - [x] can(与慕维度电机极相似，建议复用)
+        - [ ] 静态冒烟测试
+    - [ ] rs485
 
-mit:mit机器狗
+- lobot:乐动
+
+- mit:mit机器狗
     - [x] mit格式码
+        - [ ] 静态冒烟测试
 
-mks:makerbase（广州谦辉信息科技）
+
+- mks:makerbase（广州谦辉信息科技）
     - [x] mks_stepper
 
-mwd:慕纬度科技
-    - [x] mwd_devices
-
-myactuator:苏州机械脉塔
-    - [x] myactuator_rs485
-
-robstride:灵足科技
-    - [x] robstride_can
-
-sito: 鑫拓智能
-
-steadywin:伺泰威赛博猛兽
-    - [x] can_simple
-    - [x] modbus
-
-unitree:宇树
-    - [x] M8010
-    - [x] IM6014
-
-vesc:vesc开源电机驱动控制器
+- mwd:慕纬度科技
     - [x] can协议
+        - [ ] 静态冒烟测试
+    - [ ] 485协议
 
-waveshare:微雪
+- myactuator:苏州机械脉塔
+    - [x] rs485/can
+        - [x] 静态冒烟测试
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
+
+- robstride:灵足科技
+    - [x] robstride_can
+        - [x] 静态冒烟测试
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
+
+
+- sito: 鑫拓智能
+
+- steadywin:伺泰威赛博猛兽
+    - [x] can_simple
+        - [x] 静态冒烟测试
+        - [x] 静态强类型测试
+        - [x] 静态编解码测试
+        - [x] 实物冒烟测试
+        - [x] 实物常规测试
+        - [ ] 实物全量测试
+    - [ ] modbus
+
+- unitree:宇树
+    - [x] M8010
+        - [x] 静态冒烟测试
+    - [x] IM6014
+        - [x] 静态冒烟测试
+
+
+- vesc:vesc开源电机驱动控制器
+    - [x] can协议
+        - [ ] 静态强类型测试(0)
+        - [x] 静态编解码测试(1 / 20+)
+
+
+- waveshare:微雪
     - [x] ddsm400
+        - [ ] 静态强类型测试(0)
+        - [x] 静态编解码测试(饱和)
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
     - [ ] st3215
 
 
-xdrive:金色巧克力蛋糕开源的电机驱动项目
+- xdrive:金色巧克力蛋糕开源的电机驱动项目
     - [ ] xdrive_can
 
-xiaomi:小米铁蛋
+- xiaomi:小米铁蛋
     - [x] cybergear
 
 
-xxj:鑫械技
+- xxj:鑫械技
 
-yahboom:亚博智能
+- - yahboom:亚博智能
     - [x] quat_motor
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试
 
-zdt:张大头
+
+
+- zdt:张大头
     - [x] zdt_stepper
+        - [ ] 静态强类型测试
+        - [ ] 静态编解码测试
+        - [ ] 实物冒烟测试
+        - [ ] 实物常规测试
+        - [ ] 实物全量测试

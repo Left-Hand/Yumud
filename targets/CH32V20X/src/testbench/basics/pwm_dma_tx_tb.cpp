@@ -126,7 +126,7 @@ void pwm_dma_tx_main(){
 
 
     // DShotChannel ch1{oc3};
-    drivers::DShotChannel ch2{oc4};
+    drivers::dshot::DShotChannel ch2{oc4};
 
     // ch1.init();
     ch2.init();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../kinematics_utils.hpp"
+#include "kinematics_utils.hpp"
 
 #include <cmath>
 #include <array>

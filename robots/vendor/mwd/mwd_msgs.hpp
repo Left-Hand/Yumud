@@ -12,135 +12,135 @@ using namespace mwd::primitive;
 
 namespace req_msgs{
 
-struct [[nodiscard]] Nop{
+struct [[nodiscard]] Nop final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::Nop;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] SetZeroToRom{
+struct [[nodiscard]] SetZeroToRom final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::SetZeroToRom;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] MotorStop{
+struct [[nodiscard]] MotorStop final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::MotorStop;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] MotorEStop{
+struct [[nodiscard]] MotorEStop final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::MotorEStop;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] BrakeControl{
+struct [[nodiscard]] BrakeControl final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::BrakeControl;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] MotorRun{
+struct [[nodiscard]] MotorRun final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::MotorRun;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] OpenLoopControl{
+struct [[nodiscard]] OpenLoopControl final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::OpenLoopControl;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] TorqueControl{
+struct [[nodiscard]] TorqueControl final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::TorqueControl;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] SpeedControl{
+struct [[nodiscard]] SpeedControl final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::SpeedControl;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionMultiLoop1{
+struct [[nodiscard]] PositionMultiLoop1 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionMultiLoop1;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionMultiLoop2{
+struct [[nodiscard]] PositionMultiLoop2 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionMultiLoop2;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionSingleLoop1{
+struct [[nodiscard]] PositionSingleLoop1 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionSingleLoop1;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionSingleLoop2{
+struct [[nodiscard]] PositionSingleLoop2 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionSingleLoop2;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionIncrement1{
+struct [[nodiscard]] PositionIncrement1 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionIncrement1;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] PositionIncrement2{
+struct [[nodiscard]] PositionIncrement2 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::PositionIncrement2;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
 
 // REQ[0x9a] 读取电机状态1和错误标志命令（1帧）
-struct [[nodiscard]] GetStatus1{
+struct [[nodiscard]] GetStatus1 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetStatus1;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
 // REQ[0x9b] 清除电机错误标志命令
-struct [[nodiscard]] ClearError{
+struct [[nodiscard]] ClearError final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::ClearError;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetStatus2{
+struct [[nodiscard]] GetStatus2 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetStatus2;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetStatus3{
+struct [[nodiscard]] GetStatus3 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetStatus3;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetEncoder{
+struct [[nodiscard]] GetEncoder final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetEncoder;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetAngleMulti{
+struct [[nodiscard]] GetAngleMulti final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetAngleMulti;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] ClearTurnCount{
+struct [[nodiscard]] ClearTurnCount final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::ClearTurnCount;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetAngleSingle{
+struct [[nodiscard]] GetAngleSingle final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetAngleSingle;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] SetAngleManual{
+struct [[nodiscard]] SetAngleManual final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::SetAngleManual;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] GetParam{
+struct [[nodiscard]] GetParam final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetParam;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] SetParamRam{
+struct [[nodiscard]] SetParamRam final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::SetParamRam;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
@@ -152,7 +152,7 @@ struct [[nodiscard]] SetParamRam{
 namespace resp{
 
 // RESP[0x9a] 读取电机状态1和错误标志命令（1帧）
-struct [[nodiscard]] GetStatus1{
+struct [[nodiscard]] GetStatus1 final{
     static constexpr CommandKind COMMAND_KIND = CommandKind::GetStatus1;
     static constexpr size_t PAYLOAD_LENGTH = 7;
     PackedStatus1 status;

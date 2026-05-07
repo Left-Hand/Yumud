@@ -9,10 +9,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
-
-
-
-static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
+using namespace ymd::drivers::dshot;
 
 void BurstDmaPwm::set_buf(std::span<const uint16_t> pbuf){
     pbuf_ = pbuf;
@@ -61,22 +58,8 @@ BurstDmaPwm::BurstDmaPwm(hal::TimerOC & timer_oc):
     dma_channel_(timer_oc.dma().unwrap()){;}
 
 
-static constexpr void dshot_fill_buf(const std::span<uint16_t, DSHOT_LEN> buf, const uint16_t bits){
-    constexpr uint16_t HIGH_CVR = (234 * 2 / 3);
-    constexpr uint16_t LOW_CVR = (234 * 1 / 3);
-    uint16_t mut_bits = bits;
-    for(size_t i = 0; i < 16; i++){
-        buf[i] = (mut_bits & 0x8000) ? HIGH_CVR : LOW_CVR;
-        mut_bits = mut_bits << 1;
-    }
-}
 
 
-static constexpr uint16_t add_crc(uint16_t bits_in){
-    const uint16_t speed_bits = bits_in << 5;
-    const uint16_t bits = bits_in << 1;
-    return speed_bits | static_cast<uint16_t>((bits ^ (bits >> 4) ^ (bits >> 8)) & 0x0f);
-}
 
 void DShotChannel::invoke(){
     burst_dma_pwm_.invoke();
@@ -87,13 +70,7 @@ void DShotChannel::init(){
     burst_dma_pwm_.install();
 }
 void DShotChannel::set_content(const uint16_t content_bits){
-    if(content_bits > 2048) __builtin_trap();
-    if(content_bits){
-        auto bits_with_crc = add_crc(content_bits);
-        dshot_fill_buf(std::span(buf_), bits_with_crc);
-    }else{
-        buf_.fill(0);
-    }
+    DshotContentBuilder::from_default().exact_to(std::span(buf_), content_bits);
 
     invoke();
 }

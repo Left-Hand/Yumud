@@ -22,9 +22,7 @@ static constexpr uq32 degree001_to_turns(const uint16_t bits){
     // 避免除法，使用乘法和移位
     // 公式：result ≈ (bits * M) >> S
     // 其中 M ≈ 2^S * 2^32 / 36000
-    
-    // 选择 S = 20 提供足够的精度（误差 < 0.5 LSB）
-    // 计算 M = ceil(2^(32+S) / 36000)
+
     constexpr uint32_t S = 20;
     constexpr uint64_t M = ((1ULL << (32 + S)) + 36000 - 1) / 36000;
     

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <span>
+#include <cstdint>
+
 struct [[nodiscard]] U8Sequence final{
     using Self = U8Sequence;
     static constexpr Self from_chars(std::span<const char> chars){

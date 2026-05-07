@@ -64,7 +64,7 @@ void dshot_main(){
     auto & oc4 = timer.oc<4>();
 
     // DShotChannel ch1{oc3};
-    DShotChannel ch2{oc4};
+    drivers::dshot::DShotChannel ch2{oc4};
 
     // ch1.init();
     ch2.init();

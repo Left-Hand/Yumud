@@ -56,7 +56,7 @@ enum class [[nodiscard]] CommandKind : uint8_t {
     SetParamRam = 0xC1,// 写入控制参数到RAM
 };
 
-struct [[nodiscard]] ErrorState{
+struct [[nodiscard]] ErrorState final{
     using Self = ErrorState;
     using Bits = uint8_t;
 
@@ -206,7 +206,7 @@ struct [[nodiscard]] PhaseCurrentCode final{
     }
 };
 
-struct [[nodiscard]] MotorState{
+struct [[nodiscard]] MotorState final{
     uint8_t bits;
 
     template <typename Self>
@@ -215,7 +215,7 @@ struct [[nodiscard]] MotorState{
 };
 
 
-struct EncoderSpeedCode{
+struct [[nodiscard]] EncoderSpeedCode final{
     using Self = EncoderSpeedCode;
     using Bits = int16_t;
 
@@ -239,7 +239,7 @@ struct EncoderSpeedCode{
     }
 };
 
-struct EncoderPositionCode{
+struct [[nodiscard]] EncoderPositionCode final{
     using Self = EncoderPositionCode;
 
     uint16_t bits;
@@ -256,7 +256,7 @@ struct EncoderPositionCode{
 };  
 
 
-struct PackedStatus1{
+struct [[nodiscard]] PackedStatus1 final{
     using Self = PackedStatus1;
     static constexpr size_t LENGTH = 7;
 
@@ -278,7 +278,7 @@ struct PackedStatus1{
     }
 };
 
-struct PackedStatus2{
+struct [[nodiscard]] PackedStatus2 final{
 
     using Self = PackedStatus2;
     static constexpr size_t LENGTH = 7;
@@ -299,7 +299,7 @@ struct PackedStatus2{
     }
 };
 
-struct PackedStatus3{
+struct [[nodiscard]] PackedStatus3 final{
 
     using Self = PackedStatus3;
     static constexpr size_t LENGTH = 7;

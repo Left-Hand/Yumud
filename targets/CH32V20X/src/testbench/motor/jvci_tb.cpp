@@ -23,8 +23,9 @@
 using namespace ymd;
 using namespace ymd::robots;
 
-static constexpr uint8_t LEFT_MOTOR_AXIS_ID = 0x01;
-static constexpr uint8_t RIGHT_MOTOR_AXIS_ID = 0x02;
+static constexpr uint8_t NUM_LEFT_MOTOR_AXIS_ID = 0x01;
+static constexpr uint8_t NUM_RIGHT_MOTOR_AXIS_ID = 0x02;
+
 
 
 void jvci_main(){
@@ -123,11 +124,11 @@ void jvci_main(){
 
 
     static constexpr jvci::CanRequestFrameFactory left_factory{
-        .node_id = jvci::NodeId::try_from_u8(LEFT_MOTOR_AXIS_ID).unwrap()
+        .node_id = jvci::NodeId::try_from_u8(NUM_LEFT_MOTOR_AXIS_ID).unwrap()
     };
 
     static constexpr jvci::CanRequestFrameFactory right_factory{
-        .node_id = jvci::NodeId::try_from_u8(RIGHT_MOTOR_AXIS_ID).unwrap()
+        .node_id = jvci::NodeId::try_from_u8(NUM_RIGHT_MOTOR_AXIS_ID).unwrap()
     };
 
 

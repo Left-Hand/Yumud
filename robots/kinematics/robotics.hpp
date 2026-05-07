@@ -75,36 +75,36 @@ struct [[nodiscard]] DH final{
     // math::Matrix<float, 4, 4> T;
 
     math::Matrix<float, 4, 4> fkine(){
-        math::Matrix<float, 4, 4> T;
+        auto mat = math::Matrix<float, 4, 4>::from_uninitialized();
         float ct = math::cos(theta), st = math::sin(theta);  // cosθ, sinθ
         float ca = math::cos(alpha), sa = math::sin(alpha);  // cosα, sinα
 
-        // T =
+        // mat =
         // | cθ  -sθcα   sθsα   acθ |
         // | sθ   cθcα  -cθsα   asθ |
         // |  0     sα     cα     d |
         // |  0      0      0     1 |
-        T[0][0] = ct;
-        T[0][1] = -st * ca;
-        T[0][2] = st * sa;
-        T[0][3] = a * ct;
+        mat[0][0] = ct;
+        mat[0][1] = -st * ca;
+        mat[0][2] = st * sa;
+        mat[0][3] = a * ct;
 
-        T[1][0] = st;
-        T[1][1] = ct * ca;
-        T[1][2] = -ct * sa;
-        T[1][3] = a * st;
+        mat[1][0] = st;
+        mat[1][1] = ct * ca;
+        mat[1][2] = -ct * sa;
+        mat[1][3] = a * st;
 
-        T[2][0] = 0;
-        T[2][1] = sa;
-        T[2][2] = ca;
-        T[2][3] = d;
+        mat[2][0] = 0;
+        mat[2][1] = sa;
+        mat[2][2] = ca;
+        mat[2][3] = d;
 
-        T[3][0] = 0;
-        T[3][1] = 0;
-        T[3][2] = 0;
-        T[3][3] = 1;
+        mat[3][0] = 0;
+        mat[3][1] = 0;
+        mat[3][2] = 0;
+        mat[3][3] = 1;
 
-        return T;
+        return mat;
 
     }
 
