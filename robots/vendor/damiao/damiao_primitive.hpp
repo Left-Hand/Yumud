@@ -116,10 +116,10 @@ private:
 };
 
 // Limit parameters structure for different motor types
-struct LimitParam {
-    Angular<uq16> x1_limit;  // Position limit (rad)
-    Angular<uq16> x2_limit;  // Velocity limit (rad/s)
-    iq16 torque_limit;  // Torque limit (Nm)
+struct [[nodiscard]] LimitParam final{
+    float x1_limit;  // Position limit (rad)
+    float x2_limit;  // Velocity limit (rad/s)
+    float torque_limit;  // Torque limit (Nm)
 };
 
 
@@ -130,7 +130,7 @@ struct LimitParamTable;
 #define DEF_DAMIAO_MOTOR_LIMIT_TABLE(K, pMax, vMax, tMax) \
 template<> \
 struct LimitParamTable<K> { \
-    static constexpr LimitParam table = {iq16(pMax), iq16(vMax), iq16(tMax)}; \
+    static constexpr LimitParam table = {static_cast<float>(pMax), static_cast<float>(vMax), static_cast<float>(tMax)}; \
 };
 
 DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM3507,         12.5, 50, 5)
