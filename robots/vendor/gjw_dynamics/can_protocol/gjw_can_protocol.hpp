@@ -26,20 +26,20 @@ struct [[nodiscard]] NodeId final{
 
 enum class [[nodiscard]] FuncCode : uint8_t {
     // 基础读写指令
-    ReadSingle       = 0x01,  // 单帧读指令
-    WriteSingle      = 0x02,  // 单帧写指令
-    LapTurn        = 0x03,  // 单圈控制指令
-    MultiTurns       = 0x04,  // 多圈控制指令
+    ReadSingle          = 0x01,  // 单帧读指令
+    WriteSingle         = 0x02,  // 单帧写指令
+    LapTurn             = 0x03,  // 单圈控制指令
+    MultiTurns          = 0x04,  // 多圈控制指令
 
     // 主动上报与同步控制指令
-    ActiveReport     = 0x05,  // 主动上报指令（心跳/周期性反馈）
-    LapTurnSync = 0x06,  // 单圈同步控制指令
-    MultiTurnsSync  = 0x07,  // 多圈同步控制指令
-    SyncExecute      = 0x08,  // 同步执行指令（触发同步动作）
+    ActiveReport        = 0x05,  // 主动上报指令（心跳/周期性反馈）
+    LapTurnSync         = 0x06,  // 单圈同步控制指令
+    MultiTurnsSync      = 0x07,  // 多圈同步控制指令
+    SyncExecute         = 0x08,  // 同步执行指令（触发同步动作）
 
     // 工具类指令
-    VersionQuery     = 0x09,  // 版本查询指令
-    AlertStatus      = 0x0A   // 警报/状态指令（状态上报/清除）
+    VersionQuery        = 0x09,  // 版本查询指令
+    AlertStatus         = 0x0A   // 警报/状态指令（状态上报/清除）
 };
 
 struct [[nodiscard]] FrameId final{

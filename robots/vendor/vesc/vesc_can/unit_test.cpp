@@ -5,7 +5,22 @@
 using namespace ymd;
 using namespace ymd::robots::vesc::can;
 
+
+template<typename T>
+static constexpr T abs_err(const T a ,const T b){
+    if(a > b) return (a - b);
+    return (b - a);
+}
+
+
 namespace{
+
+[[maybe_unused]] void test_strong_type(){
+
+    {
+        static_assert(Scaled<int16_t, 1000>::from_float_bounded(1.0).bits == 1000);
+    }
+}
 
 [[maybe_unused]] void test_ser(){
 

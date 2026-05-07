@@ -15,6 +15,7 @@ enum class [[nodiscard]] ConnectionCode:uint8_t{
 
 struct Channels{
     U11X16Owned elements;
+
 };
 
 struct [[nodiscard]] Packet final{

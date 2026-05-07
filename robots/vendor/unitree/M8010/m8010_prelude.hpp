@@ -321,7 +321,8 @@ struct [[nodiscard]] RxContext final{
     }
 
     template<typename Serializer>
-    Result<void, typename Serializer::Error> serialize(Serializer && serializer) const noexcept {
+    Result<void, typename Serializer::Error> 
+    serialize(Serializer && serializer) const noexcept {
         auto & self = *this;
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
