@@ -12,15 +12,15 @@ namespace ymd::robots{
 
 
 template<typename T>
-struct LeastSquaresSphere{
+struct [[nodiscard]] LeastSquaresSphere final{
 
-    struct FitResult{
+    struct [[nodiscard]] FitResult final{
         math::Vec3<T> center;
         T radius;
     };
 
 
-    struct Intermediate{
+    struct [[nodiscard]] alignas(4) Intermediate final{
         T x_sumplain ;
         T x_sumsq;
         T x_sumcube ;
@@ -45,6 +45,16 @@ struct LeastSquaresSphere{
         T z2y_sum ;
         
         size_t len;
+
+        constexpr Intermediate clone() const {
+            return *this;
+        }
+
+        static constexpr Intermediate zero(){
+            Intermediate self;
+            self.set_zero();
+            return self;
+        }
 
         constexpr void set_zero(){
             auto & self = *this;
@@ -76,8 +86,9 @@ struct LeastSquaresSphere{
         }
 
 
+        __attribute__((optimize("Ofast")))
         constexpr void push_point(
-            const Vec3<T> p
+            const math::Vec3<T> & p
         ){
             auto & self = *this;
 
@@ -124,7 +135,7 @@ struct LeastSquaresSphere{
         }
 
 
-        FitResult solve(
+        constexpr FitResult solve(
             size_t max_iterations, 
             T delta
         ) const {
