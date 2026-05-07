@@ -18,7 +18,7 @@
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_factory.hpp"
 #include "middlewares/reactive/cellprobe.hpp"
-#include "robots/kinematics/differential_drive/differential_drive_kinematics.hpp"
+#include "robots/kinematics/differential_drive_kinematics.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"

@@ -1,61 +1,42 @@
 #pragma once
 
-#include "rm6623_primitive.hpp"
+#include "rm6623_utils.hpp"
+#include "../rmmotor_primitive.hpp"
 
-namespace ymd::robots::dji::rm6623{
+namespace ymd::robots::dji{
 
-static constexpr hal::CanStdId HIGHER_QUAD_CANID = hal::CanStdId::from_u11(0x200);
-static constexpr hal::CanStdId LOWER_QUAD_CANID = hal::CanStdId::from_u11(0x1ff);
-
-struct alignas(4) [[nodiscard]] TxContext final{
-    using Self = TxContext;
-
-    std::array<CurrentCode, 4> current_codes; 
-
-    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
-        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
-    }
-
-    constexpr hal::ClassicCanFrame to_can_frame(const uint16_t can_id) const noexcept{
-        return hal::ClassicCanFrame::from_parts(
-            hal::CanStdId::from_u11(can_id),
-            to_can_payload()
-        );
-    }
-
-    constexpr Self from_can_payload(const hal::ClassicCanPayload& payload){
-        return std::bit_cast<Self>(payload.to_u64());
-    }
-};
-
-static_assert(sizeof(TxContext) == 8);
-
-struct alignas(4) [[nodiscard]] RxContext final{
-    using Self = RxContext;
+static constexpr float MAX_CURRENT_AMPS = 5.0;
 
 
-    AngleCode angle_code;
-    SpeedCode speed_code;
-    CurrentCode current_code;
+static constexpr hal::CanStdId RM6623_YAW_CANID = hal::CanStdId::from_u11(0x205);
+static constexpr hal::CanStdId RM6623_PITCH_CANID = hal::CanStdId::from_u11(0x206);
+static constexpr hal::CanStdId RM6623_ROLL_CANID = hal::CanStdId::from_u11(0x207);
+static constexpr hal::CanStdId RM6623_EX1_CANID = hal::CanStdId::from_u11(0x209);
+static constexpr hal::CanStdId RM6623_EX2_CANID = hal::CanStdId::from_u11(0x20a);
+static constexpr hal::CanStdId RM6623_EX3_CANID = hal::CanStdId::from_u11(0x20b);
+static constexpr hal::CanStdId RM6623_EX4_CANID = hal::CanStdId::from_u11(0x20c);
+
+static constexpr hal::CanStdId RM6623_CALIBRATE_CANID = hal::CanStdId::from_u11(0x3f0);
+static constexpr hal::ClassicCanFrame RM6623_CALIBRATE_CANFRAME = hal::ClassicCanFrame::from_parts(
+    RM6623_CALIBRATE_CANID, hal::ClassicCanPayload::from_u64(static_cast<uint64_t>('c'))
+);
 
 
-    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const noexcept {
-        return Self{
-            .angle_code = AngleCode{.bits = static_cast<uint16_t>(bytes[0] | (bytes[1] << 8))},
-            .speed_code = SpeedCode{static_cast<uint16_t>(bytes[2] | (bytes[3] << 8))},
-            .current_code = CurrentCode{.bits = static_cast<uint16_t>(bytes[4] | (bytes[5] << 8))},
+struct RM6623CurrentCodeInterpreter{
+    template<typename T>
+    static constexpr CurrentCode from_amps_bounded(const T amps){
+        const auto bits = rm6623::utils::scale_1000(amps);
+        return CurrentCode{
+            .bits = std::bit_cast<uint16_t>(__builtin_bswap16(bits))
         };
     }
 
-    constexpr Self from_can_payload(const hal::ClassicCanPayload& payload){
-        return std::bit_cast<Self>(payload.to_u64());
-    }
 
-    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
-        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    template<typename T>
+    static constexpr T to_amps(const CurrentCode code) noexcept {
+        return rm6623::utils::scale_1_by_1000<T>::calc(std::bit_cast<int16_t>(__builtin_bswap16(code.bits)));
     }
 };
 
-static_assert(sizeof(RxContext) == 8);
 
 }

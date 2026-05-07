@@ -1,71 +1,45 @@
 #pragma once
 
 
-#include "c620_primitive.hpp"
+#include "c620_utils.hpp"
+#include "../rmmotor_primitive.hpp"
 
-namespace ymd::robots::dji::c620{
-
-
-struct alignas(4) [[nodiscard]] TxContext final{
-    using Self = TxContext;
-
-    std::array<CurrentCode, 4> current_codes; 
-
-    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
-        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
-    }
-
-    constexpr hal::ClassicCanFrame to_can_frame(const hal::CanStdId can_id) const noexcept{
-        return hal::ClassicCanFrame::from_parts(
-            can_id,
-            to_can_payload()
-        );
-    }
-
-    constexpr Self from_can_payload(const hal::ClassicCanPayload& payload){
-        return std::bit_cast<Self>(payload.to_u64());
-    }
-};
-
-static_assert(sizeof(TxContext) == 8);
-
-struct alignas(4) [[nodiscard]] RxContext final{
-    using Self = RxContext;
+namespace ymd::robots::dji{
 
 
-    AngleCode angle_code;
-    SpeedCode speed_code;
-    CurrentCode current_code;
-    TemperatureCode temperature_code;
+static constexpr hal::CanStdId C6x0_HIGHER_QUAD_CANID = hal::CanStdId::from_u11(0x200);
+static constexpr hal::CanStdId C6x0_LOWER_QUAD_CANID = hal::CanStdId::from_u11(0x1ff);
+static constexpr size_t C6x0_NUM_MAX_MOTORS = 8;
 
-
-    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const noexcept {
-        return Self{
-            .angle_code = AngleCode{.bits = static_cast<uint16_t>(bytes[0] | (bytes[1] << 8))},
-            .speed_code = SpeedCode{static_cast<uint16_t>(bytes[2] | (bytes[3] << 8))},
-            .current_code = CurrentCode{.bits = static_cast<uint16_t>(bytes[4] | (bytes[5] << 8))},
-            .temperature_code = TemperatureCode{.bits = bytes[6]}
+struct C620CurrentCodeInterpreter{
+    template<typename T>
+    static constexpr CurrentCode from_amps_bounded(const T amps){
+        const auto bits = c620::utils::scale_16384_by_20(amps);
+        return CurrentCode{
+            .bits = std::bit_cast<uint16_t>(__builtin_bswap16(bits))
         };
     }
 
-    constexpr Self from_bytes_c610(std::span<const uint8_t, 8> bytes) const noexcept {
-        return Self{
-            .angle_code = AngleCode{.bits = static_cast<uint16_t>(bytes[0] | (bytes[1] << 8))},
-            .speed_code = SpeedCode{static_cast<uint16_t>(bytes[2] | (bytes[3] << 8))},
-            .current_code = CurrentCode{.bits = static_cast<uint16_t>(bytes[4] | (bytes[5] << 8))},
-            .temperature_code = TemperatureCode::zero()
-        };
-    }
-
-    constexpr Self from_can_payload(const hal::ClassicCanPayload& payload){
-        return std::bit_cast<Self>(payload.to_u64());
-    }
-
-    constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
-        return hal::ClassicCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    template<typename T>
+    static constexpr T to_amps(const CurrentCode code) noexcept {
+        return c620::utils::scale_20_by_16384<T>::calc(std::bit_cast<int16_t>(__builtin_bswap16(code.bits)));
     }
 };
 
-static_assert(sizeof(RxContext) == 8);
+struct C610CurrentCodeInterpreter{
+    template<typename T>
+    static constexpr CurrentCode from_amps_bounded(const T amps){
+        const auto bits = c620::utils::scale_16384_by_10(amps);
+        return CurrentCode{
+            .bits = std::bit_cast<uint16_t>(__builtin_bswap16(bits))
+        };
+    }
+
+
+    template<typename T>
+    static constexpr T to_amps(const CurrentCode code) noexcept {
+        return C620CurrentCodeInterpreter::to_amps<T>(code) * static_cast<T>(0.5);
+    }
+};
 
 }

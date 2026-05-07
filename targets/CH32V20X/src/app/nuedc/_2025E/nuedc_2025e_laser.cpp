@@ -12,8 +12,8 @@
 
 #include "hal/gpio/gpio_port.hpp"
 #include "middlewares/repl/repl_server.hpp"
-#include "robots/nodes/msg_factory.hpp"
-#include "robots/nodes/node_role.hpp"
+#include "nodes/msg_factory.hpp"
+#include "nodes/node_role.hpp"
 
 #include "algebra/vectors/vec2.hpp"
 

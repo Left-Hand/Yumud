@@ -72,16 +72,16 @@ void m3508_main(){
         const iq16 x1 = 3 * iq16(sin(2 * now_secs));
         // const iq16 x2 = 6 * iq16(cos(2 * now_secs));
 
-        const auto current_code = c620::CurrentCode::from_amps_bounded(x1);
+        const auto current_code = C620CurrentCodeInterpreter::from_amps_bounded(x1);
 
-        const auto can_frame = c620::TxContext{
+        const auto can_frame = TxPacket{
             .current_codes = {
                 current_code, 
                 Zero,
                 Zero,
                 Zero
             }
-        }.to_can_frame(c620::LOWER_QUAD_CANID);
+        }.to_can_frame(C6x0_LOWER_QUAD_CANID);
 
         write_can_frame(can_frame);
 

@@ -24,9 +24,9 @@
 #include "algebra/regions/perspective_rect.hpp"
 
 
-#include "robots/kinematics/Scara5/scara5_kinematics.hpp"
-#include "robots/kinematics/Mecanum4/mecanum4_kinematics.hpp"
-#include "robots/kinematics/WheelLeg/wheelleg_kinematics.hpp"
+#include "robots/kinematics/scara5_kinematics.hpp"
+#include "robots/kinematics/mecanum4_kinematics.hpp"
+#include "robots/kinematics/wheelleg_kinematics.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
 

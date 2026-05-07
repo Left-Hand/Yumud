@@ -11,7 +11,7 @@
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 #include "drivers/vio/PCA9685/pca9685.hpp"
 
-#include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
+#include "robots/kinematics/rrs3_kinematics.hpp"
 #include "middlewares/repl/repl_server.hpp"
 #include "algebra/transforms/euler.hpp"
 

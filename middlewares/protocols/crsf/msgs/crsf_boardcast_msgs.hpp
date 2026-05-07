@@ -174,7 +174,9 @@ static_assert(sizeof(SnrCode) == 1);
 struct [[nodiscard]] RcChannelsPacked final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x16);
 
-    U11X16Owned channels;
+
+    PackedChannels channels;
+
 };
 
 

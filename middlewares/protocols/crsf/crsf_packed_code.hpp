@@ -5,13 +5,6 @@
 namespace ymd::crsf{
 
 
-[[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
-    return (ticks - 992) * 5 / 8 + 1500;
-}
-
-[[nodiscard]] static constexpr uint16_t US_TO_TICKS(uint16_t us) {
-    return (us - 1500) * 8 / 5 + 992;
-}
 
 
 struct [[nodiscard]] AltitudeCode final{
@@ -521,6 +514,54 @@ struct [[nodiscard]] RfFps final{
 };
 
 static_assert(sizeof(RfFps) == 1);
+
+
+
+struct [[nodiscard]] ChannelDutyCode final{
+    uint16_t ticks;
+
+    static constexpr ChannelDutyCode from_us(const uint16_t us){
+        return ChannelDutyCode{.ticks = US_TO_TICKS(us)};
+    }
+
+    static constexpr ChannelDutyCode from_bits(const uint16_t bits){
+        return ChannelDutyCode{.ticks = bits};
+    }
+
+    [[nodiscard]] constexpr uint16_t to_us() const {
+        return TICKS_TO_US(ticks);
+    }
+
+private:
+
+    [[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
+        return (ticks - 992) * 5 / 8 + 1500;
+    }
+
+    [[nodiscard]] static constexpr uint16_t US_TO_TICKS(uint16_t us) {
+        return (us - 1500) * 8 / 5 + 992;
+    }
+
+};
+
+
+struct [[nodiscard]] PackedChannels final{
+    U11X16Owned packed_elements_array;
+
+    constexpr void set(const size_t idx, const ChannelDutyCode code){
+        packed_elements_array[idx] = code.ticks;
+    }
+
+    constexpr ChannelDutyCode get(const size_t idx) const {
+        return ChannelDutyCode::from_bits(static_cast<uint16_t>(packed_elements_array[idx]));
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize(Serializer & serializer) const noexcept{
+        return serializer.push_bytes(packed_elements_array.bytes);
+    }
+};
 
 struct [[nodiscard]] RfPower final{
     enum class [[nodiscard]] Kind:uint8_t{
