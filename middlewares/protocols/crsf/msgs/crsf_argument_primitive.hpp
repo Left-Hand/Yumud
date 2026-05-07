@@ -32,7 +32,8 @@ struct [[nodiscard]] StringContext final{
     }
 
     template<typename Receiver>
-    [[nodiscard]] constexpr Result<void, typename Receiver::Error> serialize(Receiver & receiver) const noexcept{
+    [[nodiscard]] constexpr Result<void, typename Receiver::Error> 
+    serialize(Receiver & receiver) const noexcept{
         auto & self = *this;
         receiver.push_push_zero_terminated_uchars(self.value);
     }

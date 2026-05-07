@@ -5,12 +5,16 @@
 #include "core/int/uint24_t.hpp"
 #include "core/math/realmath.hpp"
 #include "core/math/float/fp32.hpp"
-#include "core/string/view/string_view.hpp"
-#include "core/string/owned/char_array.hpp"
-#include "core/string/view/uchars_view.hpp"
+#include "core/utils/bits/u11x16.hpp"
+
 #include "core/string/utils/optional_uchar_ptr.hpp"
+#include "core/string/utils/c_style/strnlen.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/view/uchars_view.hpp"
+#include "core/string/owned/char_array.hpp"
 
 #include "crsf_utils.hpp"
+
 
 // https://github.com/tbs-fpv/tbs-crsf-spec/blob/main/crsf.md
 // https://github.com/elodin-sys/elodin/blob/1d1c42139e18fe6d5b425b64ca8b55b1d38741f2/fsw/sensor-fw/src/crsf.rs
@@ -18,9 +22,19 @@
 namespace ymd::crsf{
 
 static constexpr size_t MAX_PACKET_BYTES = 64;
+static constexpr size_t NUM_ESC_COUNT = 8;
+
 
 struct [[nodiscard]] DeviceAddress final{
     using Self = DeviceAddress;
+
+    uint8_t bits;
+
+    // _0x20-0x7F NAT动态地址空间_
+    static constexpr uint8_t NUM_NAT_ADDR_MIN = 0x20;
+    static constexpr uint8_t NUM_NAT_ADDR_MAX = 0x7f;
+    static constexpr uint8_t NUM_NAT_ADDR_COUNT = NUM_NAT_ADDR_MAX - NUM_NAT_ADDR_MIN;
+
 
     enum class [[nodiscard]] Kind:uint8_t{
         Broadcast = 0x00,
@@ -51,10 +65,67 @@ struct [[nodiscard]] DeviceAddress final{
 
     using enum Kind;
 
-    constexpr DeviceAddress(const Kind kind): kind_((kind)){;}
+    constexpr DeviceAddress(const Kind kind):
+        bits(std::bit_cast<uint8_t>(kind)){;}
 
-    static constexpr Option<Self> try_from_bits(const uint8_t b){ 
-        switch(std::bit_cast<Kind>(b)){
+
+    static constexpr DeviceAddress from_bits(const uint8_t bits){
+        return std::bit_cast<DeviceAddress>(bits);
+    }
+
+    [[nodiscard]] constexpr bool is_nat() const noexcept {
+        if(bits > NUM_NAT_ADDR_MAX) return false;
+        if(bits < NUM_NAT_ADDR_MIN) return false;
+        return true;
+    }
+
+
+
+    [[nodiscard]] constexpr bool is_esc() const noexcept {
+        switch(bits){
+            case static_cast<uint8_t>(Kind::Esc1) ... \
+                static_cast<uint8_t>(Kind::Esc8): return true;
+            default: return false;
+        }
+    }
+
+    //0~7
+    [[nodiscard]] constexpr Option<size_t> esc_index() const noexcept{
+        int32_t offset = static_cast<int32_t>(bits) - static_cast<int32_t>(Kind::Esc1);
+        if(offset < 0) return None;
+        if(offset > static_cast<int32_t>(NUM_ESC_COUNT)) return None;
+        return Some(static_cast<size_t>(offset));
+    }
+
+    [[nodiscard]] Option<size_t> nat_offset() const noexcept{
+        int32_t offset = static_cast<int32_t>(bits) - static_cast<int32_t>(NUM_NAT_ADDR_MIN);
+        if(offset < 0) return None;
+        if(offset > static_cast<int32_t>(NUM_NAT_ADDR_COUNT)) return None;
+        return Some(static_cast<size_t>(offset));
+    }
+
+    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
+        return bits == static_cast<uint8_t>(Kind::Broadcast);
+    }
+
+    [[nodiscard]] constexpr bool is_rc_receiver() const noexcept {
+        return bits == static_cast<uint8_t>(Kind::RcReceiver);
+    }
+
+    [[nodiscard]] constexpr bool is_rc_transmitter() const noexcept {
+        return bits == static_cast<uint8_t>(Kind::RcTransmitter);
+    }
+
+    [[nodiscard]] constexpr bool operator ==(const DeviceAddress & rhs) const noexcept {
+        return bits == rhs.bits;
+    }
+
+    [[nodiscard]] constexpr bool is(const Kind rhs_kind) const noexcept {
+        return bits == static_cast<uint8_t>(rhs_kind);
+    }
+
+    constexpr Option<Kind> try_into_kind() const{ 
+        switch(std::bit_cast<Kind>(bits)){
             case Broadcast:
                 [[fallthrough]];
             case Cloud:
@@ -102,55 +173,43 @@ struct [[nodiscard]] DeviceAddress final{
             case RcReceiver:
                 [[fallthrough]];
             case RcTransmitter:
-                return Some(Self{std::bit_cast<Kind>(b)});
+                return Some(std::bit_cast<Kind>(bits));
         }
         return None;
     }
 
-    [[nodiscard]] constexpr Kind kind() const noexcept {
-        return kind_;
-    }
-
-    [[nodiscard]] constexpr bool is_esc() const noexcept {
-        switch(kind()){
-            case Kind::Esc1 ... Kind::Esc8: return true;
-            default: return false;
-        }
-    }
-
-    [[nodiscard]] constexpr bool is_boardcast() const noexcept {
-        return kind() == Kind::Broadcast;
-    }
-
-    [[nodiscard]] constexpr bool is_rc_receiver() const noexcept {
-        return kind() == Kind::RcReceiver;
-    }
-
-    [[nodiscard]] constexpr bool is_rc_transmitter() const noexcept {
-        return kind() == Kind::RcTransmitter;
-    }
-
-    [[nodiscard]] constexpr bool operator ==(const DeviceAddress & rhs) const noexcept {
-        return kind() == rhs.kind();
-    }
-
-    [[nodiscard]] constexpr bool operator ==(const Kind rhs_kind) const noexcept {
-        return kind() == rhs_kind;
-    }
-private:
-    Kind kind_;
 };
 
 
-enum class [[nodiscard]] FrameType:uint8_t{
-    GpsFrame = 0x02,
-    BatteryFrame = 0x08,
-    LinkStatistics = 0x14,
-    RcChannelsPacked = 0x16,
-    SubsetRcChannelsPacked = 0x17,
-    LinkStatisticsRx = 0x1C,
-    LinkStatisticsTx = 0x1D,
-    Attitude = 0x1E,
+struct [[nodiscard]] FrameType final{
+    enum class [[nodiscard]] Kind:uint8_t{
+        GpsFrame = 0x02,
+        BatteryFrame = 0x08,
+        LinkStatistics = 0x14,
+        RcChannelsPacked = 0x16,
+        SubsetRcChannelsPacked = 0x17,
+        LinkStatisticsRx = 0x1C,
+        LinkStatisticsTx = 0x1D,
+        Attitude = 0x1E,
+    };
+
+    static constexpr uint8_t NUM_BOARDCAST_THRESHOLD = 0x27;
+
+    uint8_t bits;
+
+    using enum Kind;
+
+    constexpr FrameType(const Kind kind):
+        bits(std::bit_cast<uint8_t>(kind)){;}
+
+    static constexpr FrameType from_bits(const uint8_t b){
+        return std::bit_cast<FrameType>(b);
+    }
+
+
+    constexpr bool is_boardcast(){
+        return bits < NUM_BOARDCAST_THRESHOLD;
+    }
 };
 
 
@@ -236,9 +295,6 @@ enum class [[nodiscard]] CommandStatus:uint8_t{
 };
 
 
-}
-
-namespace ymd::crsf{
 using math::int24_t, math::uint24_t;
 
 template<size_t N>
@@ -247,5 +303,7 @@ using ustr = str::UCharsView<N>;
 template<typename T, size_t N>
 using xff_span = std::span<T, N>;
 
+template<size_t Extents>
+using CharsSlice = std::span<const uint8_t, Extents>;
 
 }

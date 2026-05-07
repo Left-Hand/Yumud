@@ -17,6 +17,14 @@ namespace{
 //     static_assert(seq.as_chars()[0] == 0x01);
 // }
 
+[[maybe_unused]] static void test_address(){
+    {
+        static_assert(DeviceAddress(DeviceAddress::RcReceiver).is_rc_receiver());
+        static_assert(DeviceAddress(DeviceAddress::Esc1).is_esc());
+        static_assert(DeviceAddress(DeviceAddress::Esc7).esc_index().unwrap() == 6);
+        static_assert(DeviceAddress(DeviceAddress::RcReceiver).esc_index().is_none() );
+    }
+}
 
 
 

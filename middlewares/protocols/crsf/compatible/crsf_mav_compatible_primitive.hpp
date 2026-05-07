@@ -4,14 +4,39 @@
 
 namespace ymd::mavlink{
 struct [[nodiscard]] MavModeFlagBitfields final{
-    uint8_t custom_mode_enabled:1;     ///< 0b00000001 特定系统的自定义模式已启用。当使用此标志启用自定义模式时，应忽略所有其他标志 / system-specific custom mode is enabled. When using this flag to enable a custom mode all other flags should be ignored.
-    uint8_t test_enabled:1;            ///< 0b00000010 系统已启用测试模式。此标志用于临时系统测试，不应在稳定版本中使用 / system has a test mode enabled. This flag is intended for temporary system tests and should not be used for stable implementations.
-    uint8_t auto_enabled:1;            ///< 0b00000100 自主模式已启用，系统自行寻找目标位置。引导标志可设置或不设置，取决于实际实现 / autonomous mode enabled, system finds its own goal positions. Guided flag can be set or not, depends on the actual implementation.
-    uint8_t guided_enabled:1;          ///< 0b00001000 引导模式已启用，系统飞行航路点/任务项目 / guided mode enabled, system flies waypoints / mission items.
-    uint8_t stabilize_enabled:1;       ///< 0b00010000 系统电子稳定其姿态（和可选位置）。然而它需要进一步的控制输入才能移动 / system stabilizes electronically its attitude (and optionally position). It needs however further control inputs to move around.
-    uint8_t hil_enabled:1;             ///< 0b00100000 硬件在环仿真。所有电机/执行器被阻塞，但内部软件完全运行 / hardware in the loop simulation. All motors / actuators are blocked, but internal software is full operational.
-    uint8_t manual_input_enabled:1;    ///< 0b01000000 启用遥控输入 / remote control input is enabled.
-    uint8_t safety_armed:1;            ///< 0b10000000 MAV安全设置为已解锁。电机已启用/运行/可以启动。准备飞行。附加说明：发送MAV_CMD_DO_SET_MODE命令时应忽略此标志，而应使用MAV_CMD_COMPONENT_ARM_DISARM。此标志仍可用于报告解锁状态 / MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. Additional note: this flag is to be ignore when sent in the command MAV_CMD_DO_SET_MODE and MAV_CMD_COMPONENT_ARM_DISARM shall be used instead. The flag can still be used to report the armed state.
+    //  特定系统的自定义模式已启用。当使用此标志启用自定义模式时，应忽略所有其他标志.
+    uint8_t custom_mode_enabled:1;     
+    
+    //  系统已启用测试模式。此标志用于临时系统测试，不应在稳定版本中使用
+    uint8_t test_enabled:1;            
+    
+    // 自主模式已启用，系统自行寻找目标位置。引导标志可设置或不设置，取决于实际实现
+    uint8_t auto_enabled:1;            
+    
+    // 引导模式已启用，系统飞行航路点/任务项目
+    uint8_t guided_enabled:1;          
+    
+    // 系统电子稳定其姿态（和可选位置）。然而它需要进一步的控制输入才能移动 
+    uint8_t stabilize_enabled:1;       
+    
+    // 硬件在环仿真。所有电机/执行器被阻塞，但内部软件完全运行
+    uint8_t hil_enabled:1;             
+    
+    // 启用遥控输入
+    uint8_t manual_input_enabled:1;    
+    
+    // MAV安全设置为已解锁。电机已启用/运行/可以启动。准备飞行。
+    // 附加说明：发送MAV_CMD_DO_SET_MODE命令时应忽略此标志，而应使用MAV_CMD_COMPONENT_ARM_DISARM。
+    // 此标志仍可用于报告解锁状态
+    uint8_t safety_armed:1;
+    
+    static constexpr MavModeFlagBitfields from_u8(const uint8_t bits){
+        return std::bit_cast<MavModeFlagBitfields>(bits);
+    }
+
+    [[nodiscard]] constexpr uint8_t to_u8() const{
+        return std::bit_cast<uint8_t>(*this);
+    }
 };
 
 // 微型飞行器/自动驾驶仪类别。这标识了单个型号。
@@ -40,27 +65,27 @@ enum class [[nodiscard]] MavAutopilot : uint8_t {
     Reflex = 20                            ///< Fusion Reflex - https://fusion.engineering
 };
 
-static constexpr MavAutopilot MAV_AUTOPILOT_GENERIC = MavAutopilot::Generic;
-static constexpr MavAutopilot MAV_AUTOPILOT_RESERVED = MavAutopilot::Reserved;
-static constexpr MavAutopilot MAV_AUTOPILOT_SLUGS = MavAutopilot::Slugs;
-static constexpr MavAutopilot MAV_AUTOPILOT_ARDUPILOTMEGA = MavAutopilot::Ardupilotmega;
-static constexpr MavAutopilot MAV_AUTOPILOT_OPENPILOT = MavAutopilot::Openpilot;
-static constexpr MavAutopilot MAV_AUTOPILOT_GENERIC_WAYPOINTS_ONLY = MavAutopilot::GenericWaypointsOnly;
-static constexpr MavAutopilot MAV_AUTOPILOT_GENERIC_WAYPOINTS_AND_SIMPLE_NAVIGATION_ONLY = MavAutopilot::GenericWaypointsAndSimpleNavigationOnly;
-static constexpr MavAutopilot MAV_AUTOPILOT_GENERIC_MISSION_FULL = MavAutopilot::GenericMissionFull;
-static constexpr MavAutopilot MAV_AUTOPILOT_INVALID = MavAutopilot::Invalid;
-static constexpr MavAutopilot MAV_AUTOPILOT_PPZ = MavAutopilot::Ppz;
-static constexpr MavAutopilot MAV_AUTOPILOT_UDB = MavAutopilot::Udb;
-static constexpr MavAutopilot MAV_AUTOPILOT_FP = MavAutopilot::Fp;
-static constexpr MavAutopilot MAV_AUTOPILOT_PX4 = MavAutopilot::Px4;
-static constexpr MavAutopilot MAV_AUTOPILOT_SMACCMPILOT = MavAutopilot::Smaccmpilot;
-static constexpr MavAutopilot MAV_AUTOPILOT_AUTOQUAD = MavAutopilot::Autoquad;
-static constexpr MavAutopilot MAV_AUTOPILOT_ARMAZILA = MavAutopilot::Armazila;
-static constexpr MavAutopilot MAV_AUTOPILOT_AEROB = MavAutopilot::Aerob;
-static constexpr MavAutopilot MAV_AUTOPILOT_ASLUAV = MavAutopilot::Asluav;
-static constexpr MavAutopilot MAV_AUTOPILOT_SMARTAP = MavAutopilot::Smartap;
-static constexpr MavAutopilot MAV_AUTOPILOT_AIRRALS = MavAutopilot::Airrails;
-static constexpr MavAutopilot MAV_AUTOPILOT_REFLEX = MavAutopilot::Reflex;
+static constexpr auto MAV_AUTOPILOT_GENERIC = MavAutopilot::Generic;
+static constexpr auto MAV_AUTOPILOT_RESERVED = MavAutopilot::Reserved;
+static constexpr auto MAV_AUTOPILOT_SLUGS = MavAutopilot::Slugs;
+static constexpr auto MAV_AUTOPILOT_ARDUPILOTMEGA = MavAutopilot::Ardupilotmega;
+static constexpr auto MAV_AUTOPILOT_OPENPILOT = MavAutopilot::Openpilot;
+static constexpr auto MAV_AUTOPILOT_GENERIC_WAYPOINTS_ONLY = MavAutopilot::GenericWaypointsOnly;
+static constexpr auto MAV_AUTOPILOT_GENERIC_WAYPOINTS_AND_SIMPLE_NAVIGATION_ONLY = MavAutopilot::GenericWaypointsAndSimpleNavigationOnly;
+static constexpr auto MAV_AUTOPILOT_GENERIC_MISSION_FULL = MavAutopilot::GenericMissionFull;
+static constexpr auto MAV_AUTOPILOT_INVALID = MavAutopilot::Invalid;
+static constexpr auto MAV_AUTOPILOT_PPZ = MavAutopilot::Ppz;
+static constexpr auto MAV_AUTOPILOT_UDB = MavAutopilot::Udb;
+static constexpr auto MAV_AUTOPILOT_FP = MavAutopilot::Fp;
+static constexpr auto MAV_AUTOPILOT_PX4 = MavAutopilot::Px4;
+static constexpr auto MAV_AUTOPILOT_SMACCMPILOT = MavAutopilot::Smaccmpilot;
+static constexpr auto MAV_AUTOPILOT_AUTOQUAD = MavAutopilot::Autoquad;
+static constexpr auto MAV_AUTOPILOT_ARMAZILA = MavAutopilot::Armazila;
+static constexpr auto MAV_AUTOPILOT_AEROB = MavAutopilot::Aerob;
+static constexpr auto MAV_AUTOPILOT_ASLUAV = MavAutopilot::Asluav;
+static constexpr auto MAV_AUTOPILOT_SMARTAP = MavAutopilot::Smartap;
+static constexpr auto MAV_AUTOPILOT_AIRRALS = MavAutopilot::Airrails;
+static constexpr auto MAV_AUTOPILOT_REFLEX = MavAutopilot::Reflex;
 
 // MAVLINK心跳消息中报告的组件类型。飞控必须报告其安装的飞行器类型（例如MAV_TYPE_OCTOROTOR）。
 // 所有其他组件必须报告适合其类型的值（例如相机必须使用MAV_TYPE_CAMERA）。
@@ -121,54 +146,54 @@ enum class [[nodiscard]] MavComponentType : uint8_t {
 };
 
 
-static constexpr MavComponentType MAV_TYPE_GENERIC = MavComponentType::Generic;
-static constexpr MavComponentType MAV_TYPE_FIXED_WING = MavComponentType::FixedWing;
-static constexpr MavComponentType MAV_TYPE_QUADROTOR = MavComponentType::Quadrotor;
-static constexpr MavComponentType MAV_TYPE_COAXIAL = MavComponentType::Coaxial;
-static constexpr MavComponentType MAV_TYPE_HELICOPTER = MavComponentType::Helicopter;
-static constexpr MavComponentType MAV_TYPE_ANTENNA_TRACKER = MavComponentType::AntennaTracker;
-static constexpr MavComponentType MAV_TYPE_GCS = MavComponentType::Gcs;
-static constexpr MavComponentType MAV_TYPE_AIRSHIP = MavComponentType::Airship;
-static constexpr MavComponentType MAV_TYPE_FREE_BALLOON = MavComponentType::FreeBalloon;
-static constexpr MavComponentType MAV_TYPE_ROCKET = MavComponentType::Rocket;
-static constexpr MavComponentType MAV_TYPE_GROUND_ROVER = MavComponentType::GroundRover;
-static constexpr MavComponentType MAV_TYPE_SURFACE_BOAT = MavComponentType::SurfaceBoat;
-static constexpr MavComponentType MAV_TYPE_SUBMARINE = MavComponentType::Submarine;
-static constexpr MavComponentType MAV_TYPE_HEXAROTOR = MavComponentType::Hexarotor;
-static constexpr MavComponentType MAV_TYPE_OCTOROTOR = MavComponentType::Octocopter;  // Note: renamed from Octocopter
-static constexpr MavComponentType MAV_TYPE_TRICOPTER = MavComponentType::Tricopter;
-static constexpr MavComponentType MAV_TYPE_FLAPPING_WING = MavComponentType::FlappingWing;
-static constexpr MavComponentType MAV_TYPE_KITE = MavComponentType::Kite;
-static constexpr MavComponentType MAV_TYPE_ONBOARD_CONTROLLER = MavComponentType::OnboardController;
-static constexpr MavComponentType MAV_TYPE_VTOL_TAILSITTER_DUOROTOR = MavComponentType::VtolTailsitterDuorotor;
-static constexpr MavComponentType MAV_TYPE_VTOL_TAILSITTER_QUADROTOR = MavComponentType::VtolTailsitterQuadrotor;
-static constexpr MavComponentType MAV_TYPE_VTOL_TILTROTOR = MavComponentType::VtolTiltrotor;
-static constexpr MavComponentType MAV_TYPE_VTOL_FIXEDROTOR = MavComponentType::VtolFixedrotor;
-static constexpr MavComponentType MAV_TYPE_VTOL_TAILSITTER = MavComponentType::VtolTailsitter;
-static constexpr MavComponentType MAV_TYPE_VTOL_TILTWING = MavComponentType::VtolTiltwing;
-static constexpr MavComponentType MAV_TYPE_VTOL_RESERVED5 = MavComponentType::VtolReserved5;
-static constexpr MavComponentType MAV_TYPE_GIMBAL = MavComponentType::Gimbal;
-static constexpr MavComponentType MAV_TYPE_ADSB = MavComponentType::Adsb;
-static constexpr MavComponentType MAV_TYPE_PARAFOIL = MavComponentType::Parafoil;
-static constexpr MavComponentType MAV_TYPE_DODECAROTOR = MavComponentType::Dodecarotor;
-static constexpr MavComponentType MAV_TYPE_CAMERA = MavComponentType::Camera;
-static constexpr MavComponentType MAV_TYPE_CHARGING_STATION = MavComponentType::ChargingStation;
-static constexpr MavComponentType MAV_TYPE_FLARM = MavComponentType::Flarm;
-static constexpr MavComponentType MAV_TYPE_SERVO = MavComponentType::Servo;
-static constexpr MavComponentType MAV_TYPE_ODID = MavComponentType::Odid;
-static constexpr MavComponentType MAV_TYPE_DECAROTOR = MavComponentType::Decarotor;
-static constexpr MavComponentType MAV_TYPE_BATTERY = MavComponentType::Battery;
-static constexpr MavComponentType MAV_TYPE_PARACHUTE = MavComponentType::Parachute;
-static constexpr MavComponentType MAV_TYPE_LOG = MavComponentType::Log;
-static constexpr MavComponentType MAV_TYPE_OSD = MavComponentType::Osd;
-static constexpr MavComponentType MAV_TYPE_IMU = MavComponentType::Imu;
-static constexpr MavComponentType MAV_TYPE_GPS = MavComponentType::Gps;
-static constexpr MavComponentType MAV_TYPE_WINCH = MavComponentType::Winch;
-static constexpr MavComponentType MAV_TYPE_GENERIC_MULTIROTOR = MavComponentType::GenericMulticopter;
-static constexpr MavComponentType MAV_TYPE_ILLUMINATOR = MavComponentType::Illuminator;
-static constexpr MavComponentType MAV_TYPE_SPACECRAFT_ORBITER = MavComponentType::SpacecraftOrbiter;
-static constexpr MavComponentType MAV_TYPE_GROUND_QUADRUPED = MavComponentType::GroundQuadruped;
-static constexpr MavComponentType MAV_TYPE_VTOL_GYRODYNE = MavComponentType::VtolGyrodyn;
-static constexpr MavComponentType MAV_TYPE_GRIPPER = MavComponentType::Gripper;
-static constexpr MavComponentType MAV_TYPE_RADIO = MavComponentType::Radio;
+static constexpr auto MAV_TYPE_GENERIC = MavComponentType::Generic;
+static constexpr auto MAV_TYPE_FIXED_WING = MavComponentType::FixedWing;
+static constexpr auto MAV_TYPE_QUADROTOR = MavComponentType::Quadrotor;
+static constexpr auto MAV_TYPE_COAXIAL = MavComponentType::Coaxial;
+static constexpr auto MAV_TYPE_HELICOPTER = MavComponentType::Helicopter;
+static constexpr auto MAV_TYPE_ANTENNA_TRACKER = MavComponentType::AntennaTracker;
+static constexpr auto MAV_TYPE_GCS = MavComponentType::Gcs;
+static constexpr auto MAV_TYPE_AIRSHIP = MavComponentType::Airship;
+static constexpr auto MAV_TYPE_FREE_BALLOON = MavComponentType::FreeBalloon;
+static constexpr auto MAV_TYPE_ROCKET = MavComponentType::Rocket;
+static constexpr auto MAV_TYPE_GROUND_ROVER = MavComponentType::GroundRover;
+static constexpr auto MAV_TYPE_SURFACE_BOAT = MavComponentType::SurfaceBoat;
+static constexpr auto MAV_TYPE_SUBMARINE = MavComponentType::Submarine;
+static constexpr auto MAV_TYPE_HEXAROTOR = MavComponentType::Hexarotor;
+static constexpr auto MAV_TYPE_OCTOROTOR = MavComponentType::Octocopter;  // Note: renamed from Octocopter
+static constexpr auto MAV_TYPE_TRICOPTER = MavComponentType::Tricopter;
+static constexpr auto MAV_TYPE_FLAPPING_WING = MavComponentType::FlappingWing;
+static constexpr auto MAV_TYPE_KITE = MavComponentType::Kite;
+static constexpr auto MAV_TYPE_ONBOARD_CONTROLLER = MavComponentType::OnboardController;
+static constexpr auto MAV_TYPE_VTOL_TAILSITTER_DUOROTOR = MavComponentType::VtolTailsitterDuorotor;
+static constexpr auto MAV_TYPE_VTOL_TAILSITTER_QUADROTOR = MavComponentType::VtolTailsitterQuadrotor;
+static constexpr auto MAV_TYPE_VTOL_TILTROTOR = MavComponentType::VtolTiltrotor;
+static constexpr auto MAV_TYPE_VTOL_FIXEDROTOR = MavComponentType::VtolFixedrotor;
+static constexpr auto MAV_TYPE_VTOL_TAILSITTER = MavComponentType::VtolTailsitter;
+static constexpr auto MAV_TYPE_VTOL_TILTWING = MavComponentType::VtolTiltwing;
+static constexpr auto MAV_TYPE_VTOL_RESERVED5 = MavComponentType::VtolReserved5;
+static constexpr auto MAV_TYPE_GIMBAL = MavComponentType::Gimbal;
+static constexpr auto MAV_TYPE_ADSB = MavComponentType::Adsb;
+static constexpr auto MAV_TYPE_PARAFOIL = MavComponentType::Parafoil;
+static constexpr auto MAV_TYPE_DODECAROTOR = MavComponentType::Dodecarotor;
+static constexpr auto MAV_TYPE_CAMERA = MavComponentType::Camera;
+static constexpr auto MAV_TYPE_CHARGING_STATION = MavComponentType::ChargingStation;
+static constexpr auto MAV_TYPE_FLARM = MavComponentType::Flarm;
+static constexpr auto MAV_TYPE_SERVO = MavComponentType::Servo;
+static constexpr auto MAV_TYPE_ODID = MavComponentType::Odid;
+static constexpr auto MAV_TYPE_DECAROTOR = MavComponentType::Decarotor;
+static constexpr auto MAV_TYPE_BATTERY = MavComponentType::Battery;
+static constexpr auto MAV_TYPE_PARACHUTE = MavComponentType::Parachute;
+static constexpr auto MAV_TYPE_LOG = MavComponentType::Log;
+static constexpr auto MAV_TYPE_OSD = MavComponentType::Osd;
+static constexpr auto MAV_TYPE_IMU = MavComponentType::Imu;
+static constexpr auto MAV_TYPE_GPS = MavComponentType::Gps;
+static constexpr auto MAV_TYPE_WINCH = MavComponentType::Winch;
+static constexpr auto MAV_TYPE_GENERIC_MULTIROTOR = MavComponentType::GenericMulticopter;
+static constexpr auto MAV_TYPE_ILLUMINATOR = MavComponentType::Illuminator;
+static constexpr auto MAV_TYPE_SPACECRAFT_ORBITER = MavComponentType::SpacecraftOrbiter;
+static constexpr auto MAV_TYPE_GROUND_QUADRUPED = MavComponentType::GroundQuadruped;
+static constexpr auto MAV_TYPE_VTOL_GYRODYNE = MavComponentType::VtolGyrodyn;
+static constexpr auto MAV_TYPE_GRIPPER = MavComponentType::Gripper;
+static constexpr auto MAV_TYPE_RADIO = MavComponentType::Radio;
 }

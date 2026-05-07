@@ -18,6 +18,7 @@ namespace {
         [[maybe_unused]] static constexpr auto v4 = v2 + v1;
 
         static_assert(l1 == l2);
+        static_assert(sizeof(l1) == sizeof(float));
     }
 
     {

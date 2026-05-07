@@ -11,13 +11,13 @@ namespace ymd::crsf::msgs{
 
 // 0x28
 struct [[nodiscard]] ParameterPingDevices final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x28};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x28);
     // The frame has no payload
 };
 
 // 0x29
 struct [[nodiscard]] ParameterDeviceInfo final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x29};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x29);
     ustr<MAX_STR_LENGTH>        device_name;        // Null-terminated string
     uint32_t    serial_number;
     uint32_t    hardware_id;
@@ -29,7 +29,7 @@ struct [[nodiscard]] ParameterDeviceInfo final{
 
 // 0x2B
 struct [[nodiscard]] ParameterSettingsEntry final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x2B};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x2B);
     uint8_t         parameter_number;           // starting from 0
     uint8_t         parameter_chunks_remaining; // Chunks remaining count
     std::span<const uint8_t>         data_type_payload_chunk;  // Part of Parameter settings payload, up to 56 bytes
@@ -37,29 +37,35 @@ struct [[nodiscard]] ParameterSettingsEntry final{
 
 // 0x2C
 struct [[nodiscard]] ParameterSettingsRead final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x2C};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x2C);
     uint8_t parameter_number;
     uint8_t parameter_chunk_number; // Chunk number to request, starts with 0
 
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer) const {
+        auto & self = *this;
+        uint8_t buf[] = {self.parameter_number, self.parameter_chunk_number};
+        return serializer.push_bytes(buf);
+    }
 };
 
 // 0x2D
 struct [[nodiscard]] ParameterValueWrite final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x2D};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x2D);
     uint8_t parameter_number;
     std::span<const uint8_t> data;  // New value payload; size depends on data type
 };
 
 // 0x32 Command frame
 struct [[nodiscard]] DirectCommand final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x32};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x32);
     uint8_t     command_id;
     std::span<const uint8_t>     payload;        // depending on Command ID
 };
 
 // 0x3A.0x10 Timing Correction
 struct [[nodiscard]] TimingCorrection final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x03A};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x03A);
     uint32_t    update_interval;    // LSB = 100ns
     int32_t     offset;             // LSB = 100ns, positive values = data came too early,
                                     // negative = late.
@@ -67,7 +73,7 @@ struct [[nodiscard]] TimingCorrection final{
 
 // 0x34 Logging
 struct [[nodiscard]] Logging final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x34};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x34);
     uint16_t logtype;
     uint32_t timestamp;
     std::span<const uint32_t> params;
@@ -75,7 +81,7 @@ struct [[nodiscard]] Logging final{
 
 // 0x7A MSP Request
 struct [[nodiscard]] MspRequest final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x7A};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x7A);
     uint8_t status_byte;
     std::span<const uint8_t> msp_payload;  // MSP frame body without header and CRC
 
@@ -83,14 +89,14 @@ struct [[nodiscard]] MspRequest final{
 
 // 0x7B MSP Response
 struct [[nodiscard]] MspResponse final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x7B};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x7B);
     uint8_t status_byte;
     std::span<const uint8_t> msp_payload;  // MSP frame body without header and CRC
 };
 
 // 0x80 ArduPilot Passthrough Frame (Single packet)
 struct [[nodiscard]] ArduPilotPassthroughSingle final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0x80};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x80);
     uint8_t sub_type = 0xF0;  // Always 0xF0 for single packet
     uint16_t appid;
     uint32_t data;
@@ -98,7 +104,7 @@ struct [[nodiscard]] ArduPilotPassthroughSingle final{
 
 // 0x80 ArduPilot Passthrough Frame (Multi-packet)
 struct [[nodiscard]] ArduPilotPassthroughMulti final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0X80};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0X80);
     uint8_t sub_type;  // Always 0xF2 for multi-packet
     uint8_t size;
     std::span<const PassthroughTelemetryPacket> packets;
@@ -106,7 +112,7 @@ struct [[nodiscard]] ArduPilotPassthroughMulti final{
 
 // 0x80 ArduPilot Passthrough Frame (Status text)
 struct [[nodiscard]] ArduPilotPassthroughStatus final{
-    static constexpr FrameType FRAME_TYPE = FrameType{0X80};
+    static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0X80);
     uint8_t sub_type;  // Always 0xF1 for status text
     uint8_t severity;
     CharsSlice<50> text;  // (Null-terminated string)
