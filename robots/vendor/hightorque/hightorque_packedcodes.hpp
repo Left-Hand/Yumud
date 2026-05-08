@@ -27,7 +27,9 @@ struct [[nodiscard]] PositionCode final{
 
     int16_t bits;
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
     
     static constexpr Option<Self> try_from_turns(const iq16 turns){
@@ -45,7 +47,8 @@ struct [[nodiscard]] PositionCode final{
     }
 
     constexpr Angular<iq16> to_angle() const noexcept {
-        const iq16 turns = iq16(bits) / 10000;
+        constexpr auto FACTOR = uq32(1.0 / 10000);
+        const iq16 turns = iq16(bits) * FACTOR;
         return Angular<iq16>::from_turns(turns);
     }
 };
@@ -58,7 +61,9 @@ struct [[nodiscard]] SpeedCode{
 
     int16_t bits;
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
 
     static constexpr Self from_angular_speed(const Angular<iq16> angular_speed){
@@ -67,7 +72,8 @@ struct [[nodiscard]] SpeedCode{
     }
 
     constexpr Angular<iq16> to_angular_speed() const noexcept {
-        const iq16 turns = iq16(bits) / 4000;
+        constexpr auto FACTOR = uq32(1.0 / 4000);
+        const iq16 turns = iq16(bits) * FACTOR;
         return Angular<iq16>::from_turns(turns);
     }
 };
@@ -83,7 +89,9 @@ struct [[nodiscard]] AccelerationCode{
 
     int16_t bits;
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
 
     static constexpr Self from_angular_acceleration(const Angular<iq16> angular_acceleration){
@@ -92,7 +100,8 @@ struct [[nodiscard]] AccelerationCode{
     }
 
     constexpr Angular<iq16> to_angular_acceleration() const noexcept {
-        const iq16 turns = iq16(bits) / 100;
+        constexpr auto FACTOR = uq32(1.0 / 100);
+        const iq16 turns = iq16(bits) * FACTOR;
         return Angular<iq16>::from_turns(turns);
     }
 };
@@ -106,7 +115,9 @@ struct [[nodiscard]] TorqueCode{
 
     int16_t bits;
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
 
     static constexpr Self from_nm(const iq16 torque){
@@ -114,7 +125,8 @@ struct [[nodiscard]] TorqueCode{
         return Self{clamp_bits(bits)};
     }
     constexpr iq16 to_nm() const noexcept {
-        return iq16(bits) / 100;
+        constexpr auto FACTOR = uq32(1.0 / 100);
+        return iq16(bits) * FACTOR;
     }
 };
 
@@ -130,7 +142,9 @@ struct [[nodiscard]] PhaseVoltageCode{
     int16_t bits;
 
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
 
     static constexpr Self from_volts(const iq16 volts){
@@ -139,19 +153,22 @@ struct [[nodiscard]] PhaseVoltageCode{
     }
 
     constexpr iq16 to_volts() const noexcept {
-        return iq16(bits) / 10;
+        constexpr auto FACTOR = uq32(1.0 / 10);
+        return iq16(bits) * FACTOR;
     }
 };
 
 struct [[nodiscard]] CurrentCode{
-    // 电流：单位 0.1 A，如 val = 10 1 A
+    // 电流：单位 0.1 A，如 10 => 1 A
     using Self = CurrentCode;
 
     static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
 
     int16_t bits;
 
-    static consteval Self nil(){return Self{NIL_BITS};}
+    static constexpr Self nil(){return Self{NIL_BITS};}
+    static constexpr Self zero(){return Self{0};}
+
     [[nodiscard]] constexpr bool is_nil() const {return bits == NIL_BITS;}
 
     static constexpr Self from_amps(const iq16 current){
@@ -160,7 +177,8 @@ struct [[nodiscard]] CurrentCode{
     }
 
     constexpr iq16 to_amps() const noexcept {
-        return iq16(bits) / 10;
+        constexpr auto FACTOR = uq32(1.0 / 10);
+        return iq16(bits) * FACTOR;
     }
 };
 

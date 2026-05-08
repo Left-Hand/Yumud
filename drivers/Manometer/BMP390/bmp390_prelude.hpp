@@ -111,7 +111,7 @@ struct R8_FifoConfig2:public Reg8<>{
 };
 
 //0x18
-struct R8_FifoConfig2:public Reg8<>{
+struct R8_FifoConfig3:public Reg8<>{
     uint8_t fifo_subsampling:3;
     uint8_t data_select:2;
     uint8_t :3;
@@ -154,17 +154,17 @@ struct R8_Osr:public Reg8<>{
 };
 
 //0x1d
-struct R8_Osr:public Reg8<>{
-    uint8_t odr_sel:5;
-    uint8_t :3;
-};
+// struct R8_Osr:public Reg8<>{
+//     uint8_t odr_sel:5;
+//     uint8_t :3;
+// };
 
 //0x1f
-struct R8_Config:public Reg8<>{
-    uint8_t short_in:1;
-    uint8_t iir_filter:3;
-    uint8_t iir_filter:4;
-};
+// struct R8_Config:public Reg8<>{
+//     uint8_t short_in:1;
+//     uint8_t iir_filter:3;
+//     uint8_t iir_filter:4;
+// };
 
 
 };

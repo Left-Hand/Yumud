@@ -257,7 +257,7 @@ struct [[nodiscard]] alignas(4) Ping final{
 struct [[nodiscard]] alignas(4) Pong final{
     using Self = Pong;
 
-    enum class HwType:uint8_t { 
+    enum class [[nodiscard]] HwType:uint8_t { 
         VESC = 0,
         VESC_BMS,
         CUSTOM_MODULE
@@ -280,6 +280,7 @@ struct [[nodiscard]] alignas(4) Pong final{
 // Purpose: Detect and apply all FOC
 struct [[nodiscard]] alignas(4) DetectApplyAllFoc final{
     using Self = DetectApplyAllFoc;
+
     static constexpr PacketId PACKET_ID = PacketId::DetectApplyAllFoc;
 
     static constexpr size_t PAYLOAD_LENGTH = 6;
@@ -512,11 +513,12 @@ struct [[nodiscard]] alignas(4) IoBoardSetOutputDigital final{
     static constexpr size_t PAYLOAD_LENGTH = 3;
 
     uint8_t channel;
+    bool enabled;
     uint8_t on_state;
 
     constexpr void fill_bytes(const std::span<uint8_t, PAYLOAD_LENGTH> bytes) const noexcept {
         bytes[0] = channel;
-        bytes[1] = 1;
+        bytes[1] = enabled;
         bytes[2] = on_state;
     }
 };
@@ -537,7 +539,7 @@ struct [[nodiscard]] alignas(4) IoBoardSetOutputPwm final{
 
 // [38]
 // Purpose: BMS total voltage
-struct [[nodiscard]] alignas(4) BmsVTot final{
+                                                                    struct [[nodiscard]] alignas(4) BmsVTot final{
     using Self = BmsVTot;
     static constexpr PacketId PACKET_ID = PacketId::BmsVTot;
     static constexpr size_t PAYLOAD_LENGTH = 8;

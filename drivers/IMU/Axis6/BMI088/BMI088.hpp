@@ -12,7 +12,9 @@
 #include "bmi088_prelude.hpp"
 
 namespace ymd::drivers{
-class BMI088_Acc final: 
+
+
+class [[nodiscard]] BMI088_Acc final: 
     public BMI088_Prelude{
 public:
     explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):

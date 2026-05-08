@@ -3,8 +3,10 @@
 #include "core/stream/ostream.hpp"
 
 namespace ymd{
+
+
 template<typename T>
-struct [[nodiscard]] Fraction {
+struct [[nodiscard]] Fraction final{
     using Self = Fraction<T>;
     using num_t = decltype([] {
         if constexpr (std::is_arithmetic_v<T>) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 // MIT license
 // https://github.com/orcahand/orca_core/blob/main/orca_core/hardware/dynamixel_client.py

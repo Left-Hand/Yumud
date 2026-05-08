@@ -17,6 +17,9 @@ static_assert(depart_abs_fixedpoint((114514) << 10, 4, 10).frac_part == 0);
 static_assert(depart_abs_fixedpoint((114514) << 1, 4, 1).digit_part == 114514);
 static_assert(depart_abs_fixedpoint((114514) << 1, 4, 1).frac_part == 0);
 
+static_assert(depart_abs_fixedpoint((114514) << 0, 4, 0).digit_part == 114514);
+static_assert(depart_abs_fixedpoint((114514) << 0, 4, 0).frac_part == 0);
+
 static_assert(depart_abs_fixedpoint(0xffff0000, 4, 32).digit_part == 1);
 static_assert(depart_abs_fixedpoint(0xffff0000, 4, 32).frac_part == 0);
 

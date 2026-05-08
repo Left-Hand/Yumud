@@ -16,7 +16,7 @@
 namespace ymd::drivers::dps368{
 
 
-enum class Mode:uint8_t{
+enum class [[nodiscard]] Mode:uint8_t{
     IDLE = 0x00,
     CMD_PRS = 0x01,
     CMD_TEMP = 0x02,
@@ -27,7 +27,7 @@ enum class Mode:uint8_t{
 };
 
 
-enum class ConfigRegisters:uint8_t{
+enum class [[nodiscard]] ConfigRegisters:uint8_t{
     TEMP_MR = 0, // temperature measure rate
     TEMP_OSR,    // temperature measurement resolution
     PRS_MR,      // pressure measure rate
@@ -88,6 +88,6 @@ struct [[nodiscard]] alignas(4) CalibrateCoeffs final{
         c30 = ((uint32_t)bytes[16] << 8) | (uint32_t)bytes[17];
         get_twos_complement(&c30, 16);
     }
-}
+};
 
 }

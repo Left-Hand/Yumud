@@ -45,11 +45,14 @@ struct common_element_type<T, U> {
     static_assert(element_type_v<T> == element_type_v<U>, "Element types must be the same");
 };
 
+
 template<typename T, typename U, typename... Rest>
 struct common_element_type<T, U, Rest...> {
     static constexpr ElementType value = [] {
-        static_assert(element_type_v<T> == element_type_v<U>, "Element types must be the same");
-        static_assert(element_type_v<T> == common_element_type<U, Rest...>::value, "Element types must be the same");
+        static_assert(element_type_v<T> == element_type_v<U>, 
+            "Element types must be the same");
+        static_assert(element_type_v<T> == common_element_type<U, Rest...>::value, 
+            "Element types must be the same");
         return element_type_v<T>;
     }();
 };
@@ -84,6 +87,7 @@ static constexpr SlotSpecifier make_slot_specifier(
 
 
 template<std::endian E, typename T>
+__attribute__((optimize("Ofast")))
 static constexpr void u8ptr_push_bytes(uint8_t * ptr, const T value){
     static_assert(sizeof(T) <= 4);
     
@@ -106,10 +110,14 @@ static constexpr void u8ptr_push_bytes(uint8_t * ptr, const T value){
 
 template<ElementType element_type, typename T>
 static constexpr auto element_to_bits(const T element){
-    if constexpr(element_type == ElementType::B1) return std::bit_cast<uint8_t>(element);
-    else if constexpr(element_type == ElementType::B2) return std::bit_cast<uint16_t>(element);
-    else if constexpr(element_type == ElementType::B4) return std::bit_cast<uint32_t>(element);
-    else if constexpr(element_type == ElementType::Float) return std::bit_cast<uint32_t>(element);
+    if constexpr(element_type == ElementType::B1) 
+        return std::bit_cast<uint8_t>(element);
+    else if constexpr(element_type == ElementType::B2) 
+        return std::bit_cast<uint16_t>(element);
+    else if constexpr(element_type == ElementType::B4) 
+        return std::bit_cast<uint32_t>(element);
+    else if constexpr(element_type == ElementType::Float) 
+        return std::bit_cast<uint32_t>(element);
     else __builtin_unreachable();
 }
 
@@ -121,7 +129,9 @@ static constexpr void fill_bytes(
     Args && ... args 
 ){
     constexpr auto common_element_type = common_element_type_v<std::decay_t<Args> ...>;
-    constexpr size_t total_elements_size = sizeof...(Args) * element_type_to_size(common_element_type);
+    constexpr size_t total_elements_size = 
+        sizeof...(Args) * element_type_to_size(common_element_type);
+
     constexpr size_t required_size = (
         1 + // Slot specifier 
         1 + // Reg addr
@@ -169,7 +179,9 @@ struct [[nodiscard]] SlotFiller final{
     }
 
     template<size_t N, typename ... Args>
-    constexpr void fill_bytes_from_elements(std::span<uint8_t, N> bytes, Args && ... args) const noexcept {
+    constexpr void fill_bytes_from_elements(
+        std::span<uint8_t, N> bytes, Args && ... args
+    ) const noexcept {
         utils::fill_bytes(bytes, slot_command, reg_addr, std::forward<Args>(args)...);
     }
 };

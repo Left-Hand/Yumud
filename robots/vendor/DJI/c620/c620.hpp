@@ -11,7 +11,7 @@ static constexpr hal::CanStdId C6x0_HIGHER_QUAD_CANID = hal::CanStdId::from_u11(
 static constexpr hal::CanStdId C6x0_LOWER_QUAD_CANID = hal::CanStdId::from_u11(0x1ff);
 static constexpr size_t C6x0_NUM_MAX_MOTORS = 8;
 
-struct C620CurrentCodeInterpreter{
+struct [[nodiscard]] C620CurrentCodeInterpreter final{
     template<typename T>
     static constexpr CurrentCode from_amps_bounded(const T amps){
         const auto bits = c620::utils::scale_16384_by_20(amps);
@@ -26,7 +26,7 @@ struct C620CurrentCodeInterpreter{
     }
 };
 
-struct C610CurrentCodeInterpreter{
+struct [[nodiscard]] C610CurrentCodeInterpreter final{
     template<typename T>
     static constexpr CurrentCode from_amps_bounded(const T amps){
         const auto bits = c620::utils::scale_16384_by_10(amps);
@@ -38,7 +38,8 @@ struct C610CurrentCodeInterpreter{
 
     template<typename T>
     static constexpr T to_amps(const CurrentCode code) noexcept {
-        return C620CurrentCodeInterpreter::to_amps<T>(code) * static_cast<T>(0.5);
+        const uint16_t bits = std::bit_cast<int16_t>(__builtin_bswap16(code.bits));
+        return c620::utils::scale_20_by_16384<T>::calc(bits) * static_cast<T>(0.5);
     }
 };
 
