@@ -7,7 +7,6 @@
 namespace ymd::robots::hightorque{
 
 namespace utils{
-using namespace primitive;
 
 template<typename T>
 static constexpr ElementType element_type_v = [] -> ElementType{
@@ -85,21 +84,21 @@ static constexpr SlotSpecifier make_slot_specifier(
 
 
 template<std::endian E, typename T>
-static constexpr void int_fill_bytes(std::span<uint8_t, sizeof(T)> bytes, const T value){
+static constexpr void u8ptr_push_bytes(uint8_t * ptr, const T value){
     static_assert(sizeof(T) <= 4);
     
     if constexpr (E == std::endian::little) {
-        // Native endianness - fill bytes directly
+        // Native endianness - fill ptr directly
         T temp_value = value;
         for (size_t i = 0; i < sizeof(T); ++i) {
-            bytes[i] = static_cast<uint8_t>(temp_value & 0xFF);
+            ptr[i] = static_cast<uint8_t>(temp_value & 0xFF);
             temp_value >>= 8;
         }
     } else {
         // Opposite endianness - reverse the byte order
         T temp_value = value;
         for (size_t i = 0; i < sizeof(T); ++i) {
-            bytes[sizeof(T) - 1 - i] = static_cast<uint8_t>(temp_value & 0xFF);
+            ptr[sizeof(T) - 1 - i] = static_cast<uint8_t>(temp_value & 0xFF);
             temp_value >>= 8;
         }
     }
@@ -116,7 +115,7 @@ static constexpr auto element_to_bits(const T element){
 
 template<size_t N, typename ... Args>
 static constexpr void fill_bytes(
-    const std::span<uint8_t, N> bytes,
+    std::span<uint8_t, N> bytes,
     const SlotCommand slot_command,
     const RegAddr reg_addr,
     Args && ... args 
@@ -133,37 +132,45 @@ static constexpr void fill_bytes(
     );
 
     const auto slot_specifier = make_slot_specifier<Args ...>(slot_command);
-    bytes[0] = slot_specifier.to_bits();
-    bytes[1] = static_cast<uint8_t>(reg_addr);
 
-    size_t offset = 2;
+    uint8_t * ptr = bytes.data();
+    ptr[0] = slot_specifier.to_bits();
+    ptr[1] = static_cast<uint8_t>(reg_addr);
 
-    auto fill_element = [&]<typename T>(const T element) {
+    ptr += 2;
+
+    auto push_element = [&]<typename T>(const T element) {
         constexpr auto element_type = common_element_type;
         constexpr size_t element_size = element_type_to_size(element_type);
 
         const auto bits = utils::element_to_bits<element_type>(element);
         // Fill bytes
-        int_fill_bytes<std::endian::little>(
-            std::span<uint8_t, element_size>(bytes.data() + offset, element_size), 
+        u8ptr_push_bytes<std::endian::little>(
+            ptr, 
             bits
         );
-        offset += element_size;
+        ptr += element_size;
     };
 
-    (fill_element(std::forward<Args>(args)), ...);
+    (push_element(std::forward<Args>(args)), ...);
 }
 
+}
 
 struct [[nodiscard]] SlotFiller final{
     SlotCommand slot_command;
     RegAddr reg_addr;
+
+    static constexpr SlotFiller from_write(const RegAddr reg_addr){
+        return SlotFiller{
+            .slot_command = SlotCommand::Write,
+            .reg_addr = reg_addr
+        };
+    }
 
     template<size_t N, typename ... Args>
     constexpr void fill_bytes_from_elements(std::span<uint8_t, N> bytes, Args && ... args) const noexcept {
         utils::fill_bytes(bytes, slot_command, reg_addr, std::forward<Args>(args)...);
     }
 };
-
-}
 }

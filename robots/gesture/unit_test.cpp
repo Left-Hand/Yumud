@@ -22,6 +22,8 @@ void test_sphere(){
             inter.push_points(points);
             return inter.solve(100, 0.1);
         }();
+
+        static_assert(std::abs(result.radius - 1.414f) < 0.01f ); 
     }
 
 }

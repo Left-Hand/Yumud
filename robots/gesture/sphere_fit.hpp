@@ -85,6 +85,31 @@ struct [[nodiscard]] LeastSquaresSphere final{
             self.len = 0;
         }
 
+        constexpr Intermediate & operator +=(const Intermediate & other){
+            auto & self = *this;
+
+            self.x_sumplain += other.x_sumplain;
+            self.x_sumsq += other.x_sumsq;
+            self.x_sumcube += other.x_sumcube;
+            self.y_sumplain += other.y_sumplain;
+            self.y_sumsq += other.y_sumsq;
+            self.y_sumcube += other.y_sumcube;
+            self.z_sumplain += other.z_sumplain;
+            self.z_sumsq += other.z_sumsq;
+            self.z_sumcube += other.z_sumcube;
+            self.xy_sum += other.xy_sum;
+            self.xz_sum += other.xz_sum;
+            self.yz_sum += other.yz_sum;
+            self.x2y_sum += other.x2y_sum;
+            self.x2z_sum += other.x2z_sum;
+            self.y2x_sum += other.y2x_sum;
+            self.y2z_sum += other.y2z_sum;
+            self.z2x_sum += other.z2x_sum;
+            self.z2y_sum += other.z2y_sum;
+
+            self.len += other.len;  
+        }
+
 
         __attribute__((optimize("Ofast")))
         constexpr void push_point(
@@ -121,6 +146,7 @@ struct [[nodiscard]] LeastSquaresSphere final{
             self.z2x_sum += z2 * p.x;
             self.z2y_sum += z2 * p.y;
 
+            self.len++;
         }
 
 
@@ -128,10 +154,12 @@ struct [[nodiscard]] LeastSquaresSphere final{
             std::span<const math::Vec3<T>> points
         ){
             auto & self = *this;
-            self.len = points.size();
-            for (size_t i = 0; i < self.len; i++) {
-                push_point(points[i]);
+
+            for(const auto & p : points){
+                push_point(p);
             }
+
+            self.len = points.size();
         }
 
 
