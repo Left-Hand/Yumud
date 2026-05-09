@@ -8,6 +8,8 @@
 namespace ymd{
 
 
+    
+
 enum class [[nodiscard]] ColorEnum:uint32_t{
     // 基础颜色
     WHITE       = 0xFFFFFF,    // 白色
@@ -720,33 +722,33 @@ struct [[nodiscard]] ColorCaster<RGB888, HSV888> {
         // the output more visually linear.
 
         // Apply dimming curves
-        uint8_t value = ( hsv.v);
-        uint8_t saturation = hsv.s;
+        const uint8_t value = ( hsv.v);
+        const uint8_t saturation = hsv.s;
 
         // The brightness floor is minimum number that all of
         // R, G, and B will be set to.
-        uint8_t invsat = ( 255 - saturation);
-        uint8_t brightness_floor = (value * invsat) >> 8;
+        const uint8_t invsat = ( 255 - saturation);
+        const uint8_t brightness_floor = (value * invsat) >> 8;
 
         // The color amplitude is the maximum amount of R, G, and B
         // that will be added on top of the brightness_floor to
         // create the specific hue desired.
-        uint8_t color_amplitude = value - brightness_floor;
+        const uint8_t color_amplitude = value - brightness_floor;
 
         // Figure out which section of the hue wheel we're in,
         // and how far offset we are withing that section
-        uint8_t section = hsv.h / HSV_SECTION_3; // 0..2
-        uint8_t offset = hsv.h % HSV_SECTION_3;  // 0..63
+        const uint8_t section = hsv.h / HSV_SECTION_3; // 0..2
+        const uint8_t offset = hsv.h % HSV_SECTION_3;  // 0..63
 
-        uint8_t rampup = offset; // 0..63
-        uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
+        const uint8_t rampup = offset; // 0..63
+        const uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
 
-        uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
-        uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
+        const uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
+        const uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
 
         // add brightness_floor offset to everything
-        uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
-        uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
+        const uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
+        const uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
         
         uint8_t r, g, b;
         if(section) {

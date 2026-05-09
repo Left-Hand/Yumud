@@ -201,26 +201,6 @@ static_assert([]{
     return frame.at(0) == 5 && frame.at(1) == 10 && frame.at(2) == 15;
 }());
 
-// Test try_at() with valid indices
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({7, 14, 21}));
-    constexpr auto val0 = frame.try_at(0);
-    constexpr auto val1 = frame.try_at(1);
-    return val0.is_some() && val0.unwrap() == 7 && val1.is_some() && val1.unwrap() == 14;
-}());
-
-// Test try_at() with invalid index (should return None)
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({1, 2, 3}));
-    constexpr auto result = frame.try_at(5); // Index out of bounds
-    return result.is_none();
-}());
-
-
 
 // Test frame type identification
 static_assert([]{
@@ -345,10 +325,10 @@ static_assert(sizeof(hal::CanEvent) == 8);
             iter.next();
         });
 
-        static_assert(result.coeffs.unwrap().swj.to_bits() == hal::CanTq::from_num(2).to_bits());
-        static_assert(result.coeffs.unwrap().bs1.to_bits() == hal::CanTq::from_num(15).to_bits());
-        static_assert(result.coeffs.unwrap().bs2.to_bits() == hal::CanTq::from_num(2).to_bits());
-        static_assert(result.coeffs.unwrap().prescale == 8);
+        static_assert(result.coeffs.swj.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.bs1.to_bits() == hal::CanTq::from_num(15).to_bits());
+        static_assert(result.coeffs.bs2.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.prescale == 8);
         static_assert(result.percents.percents() == 89);  // 实际采样点可能因四舍五入略有偏差
     }
 }

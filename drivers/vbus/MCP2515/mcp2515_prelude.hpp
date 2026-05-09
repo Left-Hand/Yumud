@@ -112,7 +112,7 @@ enum class [[nodiscard]] RegAddr : uint8_t {
     RXB1DATA = 0x76
 };
 
-enum class Error {
+enum class [[nodiscard]] Error {
     AllTxBusy,
     FailInit,
     FailTx,

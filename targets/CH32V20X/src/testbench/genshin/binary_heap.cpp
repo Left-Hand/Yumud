@@ -68,13 +68,13 @@ void binary_heap_tb(){
     DEBUGGER << "是否已满: " << max_heap.is_full() << std::endl;
     
 
-    DEBUGGER << "\n=== 测试 try_push 和 pop ===" << std::endl;
+    DEBUGGER << "\n=== 测试 push 和 pop ===" << std::endl;
     BinaryHeap<std::string, 3> string_heap;
     
-    DEBUGGER << "插入 'hello': " << string_heap.try_push("hello") << std::endl;
-    DEBUGGER << "插入 'world': " << string_heap.try_push("world") << std::endl;
-    DEBUGGER << "插入 'foo': " << string_heap.try_push("foo") << std::endl;
-    DEBUGGER << "插入 'bar' (应该失败): " << string_heap.try_push("bar") << std::endl;
+    DEBUGGER << "插入 'hello': " << string_heap.push("hello") << std::endl;
+    DEBUGGER << "插入 'world': " << string_heap.push("world") << std::endl;
+    DEBUGGER << "插入 'foo': " << string_heap.push("foo") << std::endl;
+    DEBUGGER << "插入 'bar' (应该失败): " << string_heap.push("bar") << std::endl;
     
     // std::string value;
     // while (string_heap.pop(value)) {

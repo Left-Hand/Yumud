@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "core/utils/Result.hpp"
 #include "can_dlc.hpp"
 
 namespace ymd::hal{
@@ -14,8 +13,6 @@ public:
     using U8X8 = std::array<uint8_t, 8>;
 
 
-    //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
-    static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
     //从给定的id和连续数据切片创建一个数据帧 当数据超长时立即终止程序
     template<std::ranges::input_range R>
@@ -35,7 +32,7 @@ public:
             if (std::ranges::size(bytes) > 8) [[unlikely]]
                 __builtin_trap();
         }
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         std::ranges::copy(bytes, buf.begin());
         return Self(
             buf, 
@@ -61,7 +58,7 @@ public:
             if (std::ranges::size(bytes) > 8) [[unlikely]]
                 return None;
         }
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         std::ranges::copy(bytes, buf.begin());
         return Some(Self(
             buf, 
@@ -84,14 +81,14 @@ public:
     }
 
     __attribute__((always_inline)) static constexpr Self from_empty(){
-        return Self(ZERO_U8X8, ClassicCanDlc::zero());
+        return Self(std::bit_cast<U8X8>(uint64_t(0)), ClassicCanDlc::zero());
     }
 
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
     template<typename Iter>
     requires (is_next_based_iter_v<Iter>)
     __attribute__((always_inline)) static constexpr Self from_iter(Iter iter) {
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         size_t len = 0;
         
         for(;len < 8; len++) {
@@ -117,7 +114,7 @@ public:
     template<typename Iter>
     requires (is_next_based_iter_v<Iter>)
     static constexpr Option<Self> try_from_iter(Iter iter) {
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         size_t len = 0;
         #pragma GCC unroll 8
         for(;len < 8; len++) {
@@ -144,7 +141,7 @@ public:
     ){
         if(bytes.size() > 8) [[unlikely]]
             __builtin_trap();
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Self(
             buf, 
@@ -158,7 +155,7 @@ public:
     ){
         if(bytes.size() > 8) [[unlikely]]
             return None;
-        U8X8 buf = ZERO_U8X8;
+        U8X8 buf = std::bit_cast<U8X8>(uint64_t(0));
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Some(Self(
             buf, 
@@ -192,7 +189,7 @@ public:
     /// \brief 零
     __attribute__((always_inline)) static constexpr Self zero(
     ){
-        return Self(ZERO_U8X8, ClassicCanDlc::zero());
+        return Self(std::bit_cast<U8X8>(uint64_t(0)), ClassicCanDlc::zero());
     }
 
 
@@ -290,7 +287,7 @@ public:
 private:
     __attribute__((always_inline)) constexpr explicit
     ClassicCanPayload(const U8X8 _u8x8, const ClassicCanDlc _dlc):
-        u8x8(_u8x8), dlc(_dlc){
+        dlc(_dlc){
             if(std::is_constant_evaluated()){
                 u8x8 = _u8x8;
             }else{

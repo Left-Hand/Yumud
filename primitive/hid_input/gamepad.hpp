@@ -3,6 +3,8 @@
 #include <cstdint>
 
 namespace ymd::hid{
+
+
 enum class [[nodiscard]] GamepadAxis:uint8_t{
     LeftStickX,
     LeftStickY,

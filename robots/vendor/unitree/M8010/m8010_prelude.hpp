@@ -5,6 +5,9 @@
 #include "core/container/bits_set.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 
+#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+
 #include "primitive/can/bxcan_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
 

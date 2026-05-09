@@ -9,16 +9,16 @@ OutputStream & operator << (OutputStream & os, const hal::CanFilterConfig & self
         if(self.is_32bit()){
             return os << os.field("ext_list")(std::span(&self.id32, 2));
         }else{
-            return os << os.field("std_list")(std::span(self.id16.data(), 4));
+            return os << os.field("std_list")(std::span(self.id16x2.data(), 4));
         }
     }else{
         if(self.is_32bit()){
             return os << os.field("ext_gated")(std::array{self.id32, self.mask32});
         }else{
             return os << os.field("std_gated")(
-                std::array{self.id16[0], self.mask16[0]},
+                std::array{self.id16x2[0], self.mask16x2[0]},
                 os.splitter(),
-                std::array{self.id16[1], self.mask16[2]}
+                std::array{self.id16x2[1], self.mask16x2[2]}
             );
         }
     }

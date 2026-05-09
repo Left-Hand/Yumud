@@ -110,9 +110,9 @@ struct [[nodiscard]] StateFeedback{
     static constexpr size_t NUM_CANID_BASE = NUM_GENERIC_FEEDBACK_CANID_BASE;
 
     MotorId motor_id;
-    SpeedCode speed;
-    CurrentCode current;
-    PositionCode lap_position;
+    SpeedCode speed_code;
+    CurrentCode current_code;
+    PositionCode lap_position_code;
     ExceptionCode exception_code;
     LoopMode loop_mode;
 
@@ -122,9 +122,9 @@ struct [[nodiscard]] StateFeedback{
         );
         std::array<uint8_t, 8> buf;
         BytesFiller filler(buf);
-        filler.push_be_u16(speed.bits);
-        filler.push_be_u16(current.bits);
-        filler.push_be_u16(lap_position.bits);
+        filler.push_be_u16(speed_code.bits);
+        filler.push_be_u16(current_code.bits);
+        filler.push_be_u16(lap_position_code.bits);
         filler.push_u8(std::bit_cast<uint8_t>(exception_code));
         filler.push_u8(std::bit_cast<uint8_t>(loop_mode));
         return CanFrame::from_parts(
@@ -149,9 +149,9 @@ struct [[nodiscard]] StateFeedback{
         const auto bytes = frame.payload_bytes();
         const auto motor_id = MotorId::from_bits(id_u32 - 0x96);
 
-        const auto speed = SpeedCode::from_be_bytes(bytes[0], bytes[1]);
-        const auto current = CurrentCode::from_be_bytes(bytes[2], bytes[3]);
-        const auto lap_position = PositionCode::from_be_bytes(bytes[4], bytes[5]);
+        const auto speed_code = SpeedCode::from_be_bytes(bytes[0], bytes[1]);
+        const auto current_code = CurrentCode::from_be_bytes(bytes[2], bytes[3]);
+        const auto lap_position_code = PositionCode::from_be_bytes(bytes[4], bytes[5]);
 
         //TODO use try_from instead
         const auto exception_code = std::bit_cast<ExceptionCode>(bytes[6]);
@@ -159,9 +159,9 @@ struct [[nodiscard]] StateFeedback{
 
         return Ok(StateFeedback {
             .motor_id = motor_id,
-            .speed = speed,
-            .current = current,
-            .lap_position = lap_position,
+            .speed_code = speed_code,
+            .current_code = current_code,
+            .lap_position_code = lap_position_code,
             .exception_code = exception_code,
             .loop_mode = loop_mode,
         });
@@ -170,9 +170,9 @@ struct [[nodiscard]] StateFeedback{
     friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {
         return os 
             << os.field("motor_id")(self.motor_id) << os.splitter()
-            << os.field("speed(rpm)")(self.speed.to_rpm()) << os.splitter()
-            << os.field("current(A)")(self.current.to_amps()) << os.splitter()
-            << os.field("lap_position(rad)")(self.lap_position.to_angle().cast_inner<uq16>().to_radians()) << os.splitter()
+            << os.field("speed_code(rpm)")(self.speed_code.to_rpm()) << os.splitter()
+            << os.field("current_code(A)")(self.current_code.to_amps()) << os.splitter()
+            << os.field("lap_position_code(rad)")(self.lap_position_code.to_angle().cast_inner<uq16>().to_radians()) << os.splitter()
             << os.field("exception_code")(self.exception_code) << os.splitter()
             << os.field("loop_mode")(self.loop_mode)
         ;

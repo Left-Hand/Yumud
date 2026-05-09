@@ -6,6 +6,10 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/nth.hpp"
 
+#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+
+
 
 namespace ymd::robots::bmkj::m1502e{
 namespace primitive{
@@ -23,15 +27,15 @@ static constexpr uint8_t CUSTOM_MAGIC_KEY = 0xaa;
 
 
 //请求的CANID       响应的CANID
-//  0x32             0x96   +MOTOR_ID           设置低四个电机的参数
-//  0x33             0x96   +MOTOR_ID           设置高四个电机的参数
-//  0x105            0x200  +MOTOR_ID           设置环路模式
-//  0x106            0x264  +MOTOR_ID           设置反馈策略
-//  0x107            0x96   +MOTOR_ID           查询三项内容
-//  0x108            0x96   +MOTOR_ID           设置MOTOR_ID
-//  0x109            0x390  +MOTOR_ID           设置CAN终端电阻
-//  0x10A            0x2C8  +MOTOR_ID           设置通信超时读写操作
-//  0x10A            0x32C  +MOTOR_ID           查询固件版本
+//  0x32             0x96   + MOTOR_ID           设置低四个电机的参数
+//  0x33             0x96   + MOTOR_ID           设置高四个电机的参数
+//  0x105            0x200  + MOTOR_ID           设置环路模式
+//  0x106            0x264  + MOTOR_ID           设置反馈策略
+//  0x107            0x96   + MOTOR_ID           查询三项内容
+//  0x108            0x96   + MOTOR_ID           设置MOTOR_ID
+//  0x109            0x390  + MOTOR_ID           设置CAN终端电阻
+//  0x10A            0x2C8  + MOTOR_ID           设置通信超时读写操作
+//  0x10A            0x32C  + MOTOR_ID           查询固件版本
 
 //可用的ID为(0, 8]分布 
 struct [[nodiscard]] MotorId final{
@@ -204,7 +208,7 @@ struct [[nodiscard]] SpeedCode final{
     }
 
     constexpr iq16 to_rpm() const noexcept {
-        return iq16(std::bit_cast<int16_t>(bits)) * uq16(0.01);
+        return iq16(std::bit_cast<int16_t>(bits)) * uq32(0.01);
     }
 
     constexpr iq16 to_rps() const noexcept {
@@ -225,16 +229,6 @@ struct [[nodiscard]] PositionCode final{
         const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
         return Self::from_bits(bits);
     }
-
-    // static constexpr Result<Self, std::weak_ordering> from_angle(const Angular<uq32> angle){
-    //     const uint16_t bits = std::bit_cast<uint16_t>(int16_t(angle.to_turns().to_bits() >> (16u + 1u)));
-    //     return Ok(from_bits(bits));
-    // }
-
-    // constexpr Angular<uq32> to_angle() const noexcept {
-    //     const auto turns = uq32::from_bits(bits << 1);
-    //     return Angular<uq32>::from_turns(turns);
-    // }
 
     // Fixed conversion from angle to position code
     static constexpr Result<Self, std::weak_ordering> from_angle(const Angular<uq32> angle){

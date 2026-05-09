@@ -1,10 +1,13 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "primitive/can/bxcan_frame.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/utils/bytes/bytes_caster.hpp"
+#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+
+#include "primitive/can/bxcan_frame.hpp"
 
 namespace ymd::xdrive::can_protocol{
 
@@ -66,9 +69,9 @@ using CanFrame = hal::ClassicCanFrame;
 using CanPayload = hal::ClassicCanPayload;
 
 
-struct [[nodiscard]] BytesReader{
+struct [[nodiscard]] BytesReader final{
     explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-        bytes_(bytes) {}
+        cursor_(bytes.data()), end_(bytes.data() + bytes.size()) {}
 
     template<typename T>
     [[nodiscard]] constexpr Option<T> try_fetch(){
@@ -85,22 +88,25 @@ struct [[nodiscard]] BytesReader{
     }
 
 private:
-    std::span<const uint8_t> bytes_;
+    // std::span<const uint8_t> bytes_;
+    const uint8_t * cursor_;
+    const uint8_t * end_;
 
     template<size_t N>
     [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+        const auto ret = std::span<const uint8_t, N>(cursor_, N);
+        // bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+        cursor_ += N;
         return ret;
     }
 
     [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
-        return bytes_;
+        return {cursor_, end_};
     }
 };
 
 namespace req_msgs{
-struct EnableMotor{
+struct [[nodiscard]] EnableMotor final{
     using Self = EnableMotor;
     static constexpr CommandKind COMMAND = CommandKind::EnableMotor;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -121,11 +127,11 @@ struct EnableMotor{
 };
 
 
-struct DoCalibration{
+struct [[nodiscard]] DoCalibration final{
     static constexpr CommandKind COMMAND = CommandKind::DoCalibration;
 };
 
-struct SetCurrentSetPoint{
+struct [[nodiscard]] SetCurrentSetPoint final{
     using Self = SetCurrentSetPoint;
     static constexpr CommandKind COMMAND = CommandKind::SetCurrentSetPoint;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -142,7 +148,7 @@ struct SetCurrentSetPoint{
 
 };
 
-struct SetVelocitySetPoint{
+struct [[nodiscard]] SetVelocitySetPoint final{
     using Self = SetVelocitySetPoint;
     static constexpr CommandKind COMMAND = CommandKind::SetCurrentSetPoint;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -159,7 +165,7 @@ struct SetVelocitySetPoint{
 };
 
 
-// struct SetPositionSetPoint{
+// struct [[nodiscard]] SetPositionSetPoint final{
 //     using Self = SetPositionSetPoint;
 //     static constexpr CommandKind COMMAND = CommandKind::SetPositionSetPoint;
 //     fp32 position;

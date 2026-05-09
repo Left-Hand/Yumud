@@ -6,9 +6,6 @@
 #include "can_identifier.hpp"
 #include "bxcan_payload.hpp"
 
-#include "core/utils/Option.hpp"
-#include "core/utils/Result.hpp"
-
 
 //这个文件描述了ClassicCanFrame类 表示标准Can2.0(bxcan)的消息
 
@@ -24,12 +21,12 @@ public:
 
     using Self = ClassicCanFrame;
 
-
+    __attribute__((always_inline)) 
     constexpr explicit ClassicCanFrame(const ClassicCanFrame & other):
         identifier_(other.identifier_), 
         payload_(other.payload_){}
 
-
+    __attribute__((always_inline)) 
     constexpr ClassicCanFrame(ClassicCanFrame && other):
         identifier_(other.identifier_), 
         payload_(other.payload_){}
@@ -37,13 +34,15 @@ public:
 
     /// \brief 从创建一个未初始化的帧
 
-    __attribute__((always_inline)) static constexpr Self from_uninitialized() noexcept{
+    __attribute__((always_inline)) static constexpr 
+    Self from_uninitialized() noexcept{
         return Self{};
     }
 
 
     /// \brief 从给定的id创建一个远程帧
-    __attribute__((always_inline)) static constexpr Self from_remote(
+    __attribute__((always_inline)) static constexpr 
+    Self from_remote(
         details::is_canid auto id
     ) noexcept{
         return Self(
@@ -54,14 +53,16 @@ public:
 
     /// \brief 从给定的id创建一个空的数据帧
 
-    __attribute__((always_inline)) static constexpr Self from_empty_data(
+    __attribute__((always_inline)) static constexpr 
+    Self from_empty_data(
         details::is_canid auto id
     ) noexcept{
         return Self(CanIdentifier::from_parts(id, CanRtr::Data), Payload::zero());
     }
 
     /// \brief 从id和载荷创建一个数据帧
-    __attribute__((always_inline)) static constexpr Self from_parts(
+    __attribute__((always_inline)) static constexpr 
+    Self from_parts(
         details::is_canid auto id,
         const Payload payload
     ) noexcept{
@@ -70,7 +71,8 @@ public:
 
 
     /// \brief (SXX32专属)从寄存器值构造报文 不对比特做任何检查
-    __attribute__((always_inline)) static constexpr Self from_sxx32_regs(
+    __attribute__((always_inline)) static constexpr 
+    Self from_sxx32_regs(
         uint32_t id_bits, 
         uint64_t payload_bits, 
         uint8_t dlc_bits
@@ -82,17 +84,16 @@ public:
     }
 
     /// \brief 获取载荷的数据长度
-    [[nodiscard]] __attribute__((always_inline)) constexpr size_t length() const noexcept{
-        return dlc().length();
-    }
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    size_t length() const noexcept{ return dlc().length(); }
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __attribute__((always_inline)) constexpr  ClassicCanDlc dlc() 
-    const noexcept{return payload_.dlc;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    ClassicCanDlc dlc() const noexcept{return payload_.dlc;}
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __attribute__((always_inline)) constexpr const Payload & 
-    payload() const noexcept{return payload_;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    const Payload & payload() const noexcept{return payload_;}
 
     [[nodiscard]] constexpr Self clone() const noexcept{
         return Self(*this);
@@ -126,6 +127,7 @@ public:
         return payload_[idx];
     }
 
+    #if 0
     /// \brief 获取载荷的数据 如超界则返回空
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     Option<uint8_t> try_at(size_t idx) const noexcept{
@@ -141,6 +143,7 @@ public:
             return None;
         return Some(payload_.begin() + idx);
     }
+    #endif
 
     /// \brief 获取载荷的可变数据 如超界则使使用备选值
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -184,6 +187,7 @@ public:
         payload_ = payload_.from_bytes(bytes);
     }
 
+    #if 0
     /// @brief 设置载荷数据，同时修改报文长度。如果数据超长返回错误
     template<size_t Extents>
     requires (Extents <= 8 || Extents == std::dynamic_extent)
@@ -197,6 +201,7 @@ public:
         payload_ = payload_.from_bytes(bytes);
         return Ok();
     }
+    #endif
 
 
     /// @brief 是否为标准帧 

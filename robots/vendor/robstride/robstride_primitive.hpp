@@ -4,9 +4,12 @@
 #include "core/utils/sumtype.hpp"
 #include "core/container/bits_set.hpp"
 #include "core/utils/bits/bits_caster.hpp"
+#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
 
 #include "primitive/can/bxcan_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
+
 
 
 //参考文件 
@@ -77,6 +80,22 @@ enum class [[nodiscard]] DictKey:uint16_t{
     ZeroSta = 0x7029,
     ZeroOffset = 0x702b
 };
+
+
+
+enum class [[nodiscard]] Mode:uint8_t{
+    Reset = 0,
+    Cali  = 1,
+    Run = 2
+};
+
+enum class [[nodiscard]] CanBaudrate:uint8_t{
+    _1MHz = 0x01,
+    _500KHz = 0x02,
+    _250KHz = 0x03,
+    _125KHz = 0x04,
+};
+
 
 
 struct [[nodiscard]] DictVal final{
@@ -230,14 +249,14 @@ struct [[nodiscard]] KpCode final{
     static constexpr Result<KpCode, std::partial_ordering> try_from_val(const uq16 val){ 
         if(val > 500) return Err(std::partial_ordering::greater);
         const uint16_t bits = static_cast<uint16_t>(
-            (val * uq16(65535/500))
+            (val * uq16(65535.0 / 500))
         );
 
         return Ok(KpCode::from_bits(bits));
     }
 
     constexpr uq16 to_val() const noexcept {
-        return uq16::from_bits(static_cast<uint32_t>(bits)) * 500 / 65535;
+        return uq16(bits) * uq32(500.0 / 65535);
     }
 };
 
@@ -253,14 +272,14 @@ struct [[nodiscard]] KdCode final{
     static constexpr Result<KdCode, std::partial_ordering> try_from_val(const uq16 val){ 
         if(val > 5) return Err(std::partial_ordering::greater);
         const uint16_t bits = static_cast<uint16_t>(
-            (val * uq16(65535/5))
+            (val * uq16(65535.0 / 5))
         );
 
         return Ok(KdCode::from_bits(bits));
     }
 
     constexpr uq16 to_val() const noexcept {
-        return uq16::from_bits(static_cast<uint32_t>(bits)) * 5 / 65535;
+        return uq16(bits) * uq32(5.0 / 65535);
     }
 };
 
@@ -277,19 +296,6 @@ struct [[nodiscard]] TemperatureCode final{
     }
 };
 
-enum class [[nodiscard]] Mode:uint8_t{
-    Reset = 0,
-    Cali  = 1,
-    Run = 2
-};
-
-enum class [[nodiscard]] CanBaudrate:uint8_t{
-    _1MHz = 0x01,
-    _500KHz = 0x02,
-    _250KHz = 0x03,
-    _125KHz = 0x04,
-};
-
 struct [[nodiscard]] FaultFlags final{
     using Self = FaultFlags;
     uint8_t under_voltage:1;
@@ -301,13 +307,15 @@ struct [[nodiscard]] FaultFlags final{
     uint8_t uncalibrated:1;
     Mode mode:2;
 
+
+    static constexpr Self from_u8(const uint8_t u8){
+        return std::bit_cast<Self>(u8);
+    }
+
     constexpr uint8_t to_u8() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
 
-    constexpr Self from_u8(const uint8_t u8){
-        return std::bit_cast<Self>(u8);
-    }
 };
 
 }

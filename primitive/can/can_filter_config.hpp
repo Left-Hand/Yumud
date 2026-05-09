@@ -22,16 +22,16 @@ public:
 
         switch(list.size()){
             case 4:
-                ret.mask16[1] =     std::next(list.begin(), 3) -> to_bits();
+                ret.mask16x2[1] =     std::next(list.begin(), 3) -> to_bits();
                 [[fallthrough]];
             case 3:
-                ret.mask16[0] =     std::next(list.begin(), 2) -> to_bits();
+                ret.mask16x2[0] =     std::next(list.begin(), 2) -> to_bits();
                 [[fallthrough]];
             case 2:
-                ret.id16[1] =       std::next(list.begin(), 1) -> to_bits();
+                ret.id16x2[1] =       std::next(list.begin(), 1) -> to_bits();
                 [[fallthrough]];
             case 1:
-                ret.id16[0] =       std::next(list.begin(), 0) -> to_bits();
+                ret.id16x2[0] =       std::next(list.begin(), 0) -> to_bits();
                 [[fallthrough]];
                 break;
             default:
@@ -56,10 +56,10 @@ public:
     ){
         CanFilterConfig ret;
 
-        ret.id16[0] = pair1.id.to_bits();
-        ret.id16[1] = pair2.id.to_bits();
-        ret.mask16[0] = pair1.mask.to_bits();
-        ret.mask16[1] = pair2.mask.to_bits();
+        ret.id16x2[0] = pair1.id.to_bits();
+        ret.id16x2[1] = pair2.id.to_bits();
+        ret.mask16x2[0] = pair1.mask.to_bits();
+        ret.mask16x2[1] = pair2.mask.to_bits();
 
         ret.is_32bit_ = false;
         ret.is_list_mode_ = false;
@@ -93,12 +93,12 @@ public:
 
 // private:
     union{
-        std::array<uint16_t, 2> id16;
+        std::array<uint16_t, 2> id16x2;
         uint32_t id32;
     };
 
     union{
-        std::array<uint16_t, 2> mask16;
+        std::array<uint16_t, 2> mask16x2;
         uint32_t mask32;
     };
 // public:
