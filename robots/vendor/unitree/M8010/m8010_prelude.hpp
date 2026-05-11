@@ -8,7 +8,7 @@
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
 
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
 #include "algo/encrypt/crc_common.hpp"

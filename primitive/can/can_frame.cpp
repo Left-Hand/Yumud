@@ -1,5 +1,5 @@
-#include "bxcan_frame.hpp"
-#include "bxcan_payload.hpp"
+#include "can_frame.hpp"
+#include "can_payload.hpp"
 #include "core/stream/ostream.hpp"
 #include "core/string/view/string_view.hpp"
 

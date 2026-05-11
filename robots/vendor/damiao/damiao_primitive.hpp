@@ -3,7 +3,7 @@
 #include "core/math/realmath.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 // Apache-2.0 license
 // https://github.com/enactic/openarm_can/tree/main/include/openarm/damiao_motor

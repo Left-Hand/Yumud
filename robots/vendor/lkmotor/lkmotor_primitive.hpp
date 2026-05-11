@@ -3,7 +3,7 @@
 #include "core/math/float/fp32.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 
 namespace ymd::robots::lkmotor{

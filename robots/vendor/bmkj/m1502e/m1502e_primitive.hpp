@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "core/math/realmath.hpp"
 #include "core/utils/nth.hpp"

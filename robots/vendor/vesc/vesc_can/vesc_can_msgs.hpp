@@ -6,7 +6,7 @@
 #include "core/math/float/fp32.hpp"
 
 #include "core/utils/bits/bits_caster.hpp"
-#include "primitive/can/bxcan_payload.hpp"
+#include "primitive/can/can_payload.hpp"
 
 
 namespace ymd::robots::vesc::can{

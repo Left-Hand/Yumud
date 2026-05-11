@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node_role.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "core/utils/serde/serde.hpp"
 
 

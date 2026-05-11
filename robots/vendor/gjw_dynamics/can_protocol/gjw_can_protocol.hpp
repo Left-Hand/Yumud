@@ -3,7 +3,7 @@
 #include "core/math/realmath.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 namespace ymd::robots::gjw::can_protocol{
 

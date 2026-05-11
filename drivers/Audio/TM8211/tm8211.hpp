@@ -70,9 +70,6 @@ public:
         write(((left_data << 16) | right_data) & distort_mask);
     }
 
-    // void setChDuty(const iq16 dutycycle{
-
-    // }
 };
 
 }

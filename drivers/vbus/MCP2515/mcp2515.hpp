@@ -2,7 +2,7 @@
 
 
 #include "mcp2515_prelude.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"

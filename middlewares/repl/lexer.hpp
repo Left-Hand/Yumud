@@ -27,7 +27,7 @@ class [[nodiscard]] Lexer final{
 public:
     constexpr explicit Lexer(std::string_view input) : 
         cursor_(input.data()), 
-        end_(input.data() + input.size()) {}
+        end_(input.end()) {}
 
     // 修复：has_next 应在 cursor_ < end_ 时返回 true
     constexpr bool has_next() const {
@@ -47,7 +47,7 @@ public:
             while (cursor_ < end_ && !is_whitespace() && *cursor_ != '=' && *cursor_ != ':') {
                 ++cursor_;
             }
-            return Token{TokenKind::Specific, std::string_view(start, cursor_ - start)};
+            return Token{TokenKind::Specific, std::string_view(start, cursor_)};
         }
 
         // 等号和冒号
@@ -68,7 +68,7 @@ public:
             while (cursor_ < end_ && *cursor_ != '"') {
                 ++cursor_;
             }
-            std::string_view lexeme(start, cursor_ - start);
+            std::string_view lexeme(start, cursor_);
             if (cursor_ < end_) {
                 ++cursor_;
             }
@@ -80,7 +80,7 @@ public:
         while (cursor_ < end_ && !is_whitespace() && *cursor_ != '=' && *cursor_ != ':') {
             ++cursor_;
         }
-        return Token{TokenKind::String, std::string_view(start, cursor_ - start)};
+        return Token{TokenKind::String, std::string_view(start, cursor_)};
     }
 
 private:

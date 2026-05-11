@@ -6,7 +6,7 @@
 
 #include "core/math/fixed/fixed.hpp"
 #include "primitive/arithmetic/angular.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "rmmotor_utils.hpp"
 
 namespace ymd::robots::dji{

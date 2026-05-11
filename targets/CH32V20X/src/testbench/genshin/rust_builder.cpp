@@ -4,7 +4,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 #include "core/tmp/bits/width.hpp"
 #include "core/tmp/functor.hpp"

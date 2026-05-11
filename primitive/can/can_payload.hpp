@@ -186,6 +186,23 @@ public:
         return Self(arr,dlc);
     }
 
+    template<typename T>
+    __attribute__((always_inline)) 
+    static constexpr Self from_memcpy_trivial(const T & pod){
+        constexpr size_t N = sizeof(T);
+        constexpr auto DLC = ClassicCanDlc::from_length(N);
+
+        static_assert(sizeof(N) <= 8);
+
+        const auto buf = std::bit_cast<std::array<uint8_t, N>>(pod);
+        U8X8 arr;
+        for(size_t i = 0; i < N; i++){
+            arr[i] = buf[i];
+        }
+
+        return Self(arr, DLC);
+    }
+
     /// \brief 零
     __attribute__((always_inline)) static constexpr Self zero(
     ){

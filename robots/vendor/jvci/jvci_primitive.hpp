@@ -4,7 +4,7 @@
 #include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 
 namespace ymd::robots::jvci{

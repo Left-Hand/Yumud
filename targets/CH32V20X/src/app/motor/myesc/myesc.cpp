@@ -10,7 +10,6 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/conn/can/can.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/dma/dma.hpp"

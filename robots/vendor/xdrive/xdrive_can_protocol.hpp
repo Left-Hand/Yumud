@@ -7,7 +7,7 @@
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
 
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 namespace ymd::xdrive::can_protocol{
 

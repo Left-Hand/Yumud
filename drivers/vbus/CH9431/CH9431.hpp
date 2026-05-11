@@ -7,7 +7,7 @@
 // 可为主机设备扩展CAN功能，连接到外部CAN总线。 
 
 #include "details/ch9431_transport.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 namespace ymd::drivers{
 

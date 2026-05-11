@@ -3,7 +3,7 @@
 #include "mwd_primitive.hpp"
 #include "core/utils/bytes/bytes_caster.hpp"
 #include "primitive/can/can_id.hpp"
-#include "primitive/can/bxcan_payload.hpp"
+#include "primitive/can/can_payload.hpp"
 #include "mwd_utils.hpp"
 #include <utility>
 

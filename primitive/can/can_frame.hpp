@@ -4,7 +4,7 @@
 #include "can_id.hpp"
 #include "can_dlc.hpp"
 #include "can_identifier.hpp"
-#include "bxcan_payload.hpp"
+#include "can_payload.hpp"
 
 
 //这个文件描述了ClassicCanFrame类 表示标准Can2.0(bxcan)的消息

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "primitive/can/can_id.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
 
 // https://blog.csdn.net/geek_liyang/article/details/148498704

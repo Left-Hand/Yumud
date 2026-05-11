@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ral/can.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "primitive/can/can_event.hpp"
 #include "primitive/can/can_filter_config.hpp"
 

@@ -7,7 +7,7 @@
 #include "core/tmp/reflect/enum.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 #include "algebra/regions/range2.hpp"
 

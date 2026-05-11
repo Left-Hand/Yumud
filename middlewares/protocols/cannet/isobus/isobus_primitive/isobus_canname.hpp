@@ -5,7 +5,7 @@
 
 #include "core/utils/bits/bitfield_proxy.hpp"
 #include "core/stream/ostream.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 // https://github.com/Open-Agriculture/AgIsoStack-plus-plus/blob/main/isobus/include/isobus/isobus/can_NAME.hpp
 

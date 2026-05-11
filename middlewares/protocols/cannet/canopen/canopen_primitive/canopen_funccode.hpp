@@ -1,7 +1,7 @@
 #pragma once
 
 #include "primitive/can/can_id.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 
 namespace ymd::canopen{

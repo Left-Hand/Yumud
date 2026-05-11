@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "primitive/can/bxcan_frame.hpp" 
+#include "primitive/can/can_frame.hpp" 
 #include "hal/conn/uart/hw_singleton.hpp" 
 
 #include "core/tmp/bits/width.hpp"
