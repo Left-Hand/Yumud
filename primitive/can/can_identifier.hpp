@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(CH32V20X) || defined(CH32V30X) || defined(CH32L10X)\
-    || defined(STM32F10X) 
+    || defined(STM32F10X) || (1)
 #include "platform_spec/sxx32_can_identifier.hpp"
 namespace ymd::hal{
 using CanIdentifier = details::SXX32_CanIdentifier;
