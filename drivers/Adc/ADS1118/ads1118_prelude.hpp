@@ -16,7 +16,7 @@ namespace ymd::drivers{
 
 struct ADS111X_Prelude{
 
-    enum class Error_Kind:uint8_t{
+    enum class [[nodiscard]] Error_Kind:uint8_t{
 
     };
 
@@ -35,22 +35,22 @@ struct ADS111X_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Package:uint8_t{
+    enum class [[nodiscard]] Package:uint8_t{
         ADS1113,
         ADS1114,
         ADS1115
     };
 
-    enum class DataRate:uint8_t{
+    enum class [[nodiscard]] DataRate:uint8_t{
         _8 = 0b000,
         _16, _32, _64, _128, _250, _475, _860
     };
 
-    enum class MUX:uint8_t{
+    enum class [[nodiscard]] MUX:uint8_t{
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
-    enum class PGA:uint8_t{
+    enum class [[nodiscard]] PGA:uint8_t{
         _6_144V = 0, _4_096V, _2_048V, _1_024V, _0_512V, _0_256V
     };
 

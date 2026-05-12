@@ -15,7 +15,7 @@ template<typename T>
 static constexpr T GRAVITY_ACC = T(9.80665);
 
 namespace details{
-enum class ImuError_Kind:uint8_t{
+enum class [[nodiscard]] ImuError_Kind:uint8_t{
     PackageNotMatch,
     UnknownDevice,
     InvalidChipId,

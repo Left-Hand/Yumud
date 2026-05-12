@@ -110,7 +110,10 @@ IResult<Self::BusVoltCode> INA3221::get_bus_volt_code(const ChannelSelection ch_
 }
 
 
-IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code){
+IResult<> INA3221::set_instant_ovc_threshold(
+    const ChannelSelection ch_sel, 
+    const ShuntVoltCode volt_code
+){
     const RegAddr reg_addr = [&]{
         switch(ch_sel){
             case ChannelSelection::CH1: return Regs::R16_InstantOVC1::REG_ADDR; 
@@ -124,7 +127,10 @@ IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection ch_sel, cons
 }
 
 
-IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code){
+IResult<> INA3221::set_constant_ovc_threshold(
+    const ChannelSelection ch_sel, 
+    const ShuntVoltCode volt_code
+){
     const RegAddr reg_addr = [&]{
         switch(ch_sel){
             case ChannelSelection::CH1: return Regs::R16_ConstantOVC1::REG_ADDR; 

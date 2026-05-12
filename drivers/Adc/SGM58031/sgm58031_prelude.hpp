@@ -14,7 +14,7 @@ namespace ymd::drivers{
 
 struct SGM58031_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0100000 >> 1);
-    enum class Error_Kind{
+    enum class [[nodiscard]] Error_Kind:uint8_t{
         ChipIdMismatch
     };
 

@@ -17,6 +17,8 @@ public:
         transport_(i2c_drv){;}
     explicit LIS2DW12(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
+
+
     explicit LIS2DW12(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
     explicit LIS2DW12(hal::SpiDrv && spi_drv):
