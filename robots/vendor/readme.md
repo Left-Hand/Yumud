@@ -51,6 +51,9 @@
     
 - dynamixel: dynamixel
     - [ ] protocol2协议
+    
+- evo: evo电机
+    - [ ] can协议
 
 - flyskytech:
     - [x] fsi6x遥控器
