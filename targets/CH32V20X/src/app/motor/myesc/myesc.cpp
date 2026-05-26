@@ -780,6 +780,7 @@ void myesc_main(){
             // const Angular<uq32> elec_angle = Angular<iq16>::ZERO;
             // const Angular<uq32> elec_angle = ZERO_ELEC_ANGLE;
             elec_angle = openloop_elec_angle;
+            // elec_angle = spin_pll_.iterate(mag_encoder_.read_lap_angle().examine().to_turns());
         }
 
 
@@ -1033,9 +1034,9 @@ void myesc_main(){
             // u_current_sense_ch_.read_u12(),
             // v_current_sense_ch_.read_u12(),
             // w_current_sense_ch_.read_u12(),
-            // pwm_u_.cvr(),
-            // pwm_v_.cvr(),
-            // pwm_w_.cvr(),
+            pwm_u_.cvr(),
+            pwm_v_.cvr(),
+            pwm_w_.cvr(),
             // uvw_current_.u,
             // uvw_current_.v,
             // uvw_current_.w,
@@ -1048,8 +1049,9 @@ void myesc_main(){
             // flux_sensorless_ob.state().flux_state_mf[1],
             // flux_sensorless_ob.state().v_alphabeta_last[0],
             // flux_sensorless_ob.state().v_alphabeta_last[1],
-            // dq_current_.d,
-            // dq_current_.q,
+            current_cmd_,
+            dq_current_.d,
+            dq_current_.q,
             alphabeta_current_[0],
             alphabeta_current_[1],
             // busbar_current_,

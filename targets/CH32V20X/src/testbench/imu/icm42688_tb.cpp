@@ -30,79 +30,14 @@ static constexpr auto INV_FS = (1.0_uq16 / ISR_FREQ);
 // #define PHY_SEL PHY_SEL_I2C
 #define PHY_SEL PHY_SEL_SPI
 
-[[maybe_unused]]
-static void icm42688_tb(icm42688::ICM42688 & imu){
-
-    DEBUG_PRINTLN("init started");
-
-
-    imu.init({
-        .acc_odr = icm42688::AccOdr::_500Hz,
-        .acc_fs = icm42688::AccFs::_4G,
-        // .gyr_odr = icm42688::GyrOdr::_500Hz,
-        .gyr_odr = icm42688::GyrOdr::_200Hz,
-        .gyr_fs = icm42688::GyrFs::_1000deg
-    }).examine();
-
-    iq24 z_radians = 0;
-    Microseconds exe_us_ = 0us;
-
-    math::Vec3<iq24> gyr_ = math::Vec3<iq24>::ZERO;
-    math::Vec3<iq24> acc_ = math::Vec3<iq24>::ZERO;
-
-    auto & timer = hal::timer1;
-    timer.init({
-        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
-        .count_freq = hal::NearestFreq(ISR_FREQ),
-        .count_mode = hal::TimerCountMode::Up
-    })        .unwrap()
-        .alter_to_pins({
-            hal::TimerChannelSelection::CH1,
-            hal::TimerChannelSelection::CH2,
-            hal::TimerChannelSelection::CH3,
-        })
-        .unwrap();
-
-    timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
-    timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
-        switch(ev){
-        case hal::TimerEvent::Update:{
-            const auto u0 = clock::micros();
-            imu.update().examine();
-            const auto gyr = imu.read_gyr().examine();
-            const auto acc = imu.read_acc().examine();
-
-            z_radians = z_radians + gyr.z * INV_FS;
-            // mahony.myupdate_v2(gyr, acc);
-            exe_us_ = clock::micros() - u0;
-
-            gyr_ = gyr;
-            acc_ = acc;
-            break;
-        }
-        default: break;
-        }
-    });
-
-    timer.start();
-
-    while(true){
-        DEBUG_PRINTLN(
-            gyr_, 
-            acc_,
-            z_radians
-        );
-        clock::delay(5ms);
-
-    }
-}
-
 void icm42688_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
+        .tx_strategy = CommStrategy::Blocking 
     });
+
+    
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.build_config()
         .set_eps(4)
@@ -132,15 +67,11 @@ void icm42688_main(){
     };
     #elif PHY_SEL == PHY_SEL_SPI
 
-    // SPI1_MOSI_GPIO pb5
-    // SPI1_MISO_GPIO pb4
-    // SPI1_CS_GPIO pa15
-    // SPI1_SCLK_GPIO pb3
-
     auto cs_gpio = hal::PA<15>();
     auto & spi = hal::spi1;
     spi.init({
-        .remap = hal::SPI1_REMAP_PB3_PB4_PB5_PA15,
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        // .remap = hal::SPI2_REMAP_PB13_PB14_PB15_PB12,
         .baudrate = hal::NearestFreq(2_MHz)
     });
 
@@ -153,5 +84,68 @@ void icm42688_main(){
 
     #endif
     
-    icm42688_tb(imu);
+    DEBUG_PRINTLN("init started");
+
+    #if 1
+    imu.init({
+        .acc_odr = icm42688::AccOdr::_500Hz,
+        .acc_fs = icm42688::AccFs::_4G,
+        // .gyr_odr = icm42688::GyrOdr::_500Hz,
+        .gyr_odr = icm42688::GyrOdr::_200Hz,
+        .gyr_fs = icm42688::GyrFs::_1000deg
+    }).examine();
+    #endif
+
+    iq24 z_radians = 0;
+    Microseconds exe_us_ = 0us;
+
+    math::Vec3<iq24> gyr_ = math::Vec3<iq24>::ZERO;
+    math::Vec3<iq24> acc_ = math::Vec3<iq24>::ZERO;
+
+    // auto & timer = hal::timer1;
+    // timer.init({
+    //     .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
+    //     .count_freq = hal::NearestFreq(ISR_FREQ),
+    //     .count_mode = hal::TimerCountMode::Up
+    // })        .unwrap()
+    //     .alter_to_pins({
+    //         hal::TimerChannelSelection::CH1,
+    //         hal::TimerChannelSelection::CH2,
+    //         hal::TimerChannelSelection::CH3,
+    //     })
+    //     .unwrap();
+
+    // timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
+    // timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    // timer.set_event_callback([&](hal::TimerEvent ev){
+    //     switch(ev){
+    //     case hal::TimerEvent::Update:{
+    //         const auto u0 = clock::micros();
+    //         imu.update().examine();
+    //         const auto gyr = imu.read_gyr().examine();
+    //         const auto acc = imu.read_acc().examine();
+
+    //         z_radians = z_radians + gyr.z * INV_FS;
+    //         // mahony.myupdate_v2(gyr, acc);
+    //         exe_us_ = clock::micros() - u0;
+
+    //         gyr_ = gyr;
+    //         acc_ = acc;
+    //         break;
+    //     }
+    //     default: break;
+    //     }
+    // });
+
+    // timer.start();
+
+    while(true){
+        DEBUG_PRINTLN(
+            gyr_, 
+            acc_,
+            z_radians
+        );
+        clock::delay(5ms);
+
+    }
 }

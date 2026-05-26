@@ -34,7 +34,7 @@ void jvci_main(){
 
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576000),
+        .baudrate = hal::NearestFreq(115200),
         .tx_strategy = CommStrategy::Blocking 
     });
 

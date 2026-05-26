@@ -57,19 +57,6 @@ public:
         // dx1=x2+b0*u+g1*(y-x1);
         // dx2=g2*(y-x1);
 
-        #if 0
-        uq16 g1t = coeffs_.dt * coeffs_.g1;
-        uq16 g2t = coeffs_.dt * coeffs_.g2;
-        const auto e = (y - state.x1);
-        const auto delta_x1 =  ((state.x2 + u * coeffs_.b0 ) * coeffs_.dt) + (e * g1t);
-        const auto delta_x2 = (e * g2t);
-        return State{
-            state.x1 + delta_x1, 
-            state.x2 + delta_x2
-        };
-        #else
-
-        #if 1
         const auto e = (y - math::fixed_downcast<16>(state.x1));
         const auto delta_x1 = extended_mul((state.x2 + (u * coeffs_.b0)), coeffs_.dt)
             + extended_mul(e, coeffs_.g1t);
@@ -78,17 +65,7 @@ public:
             state.x1 + delta_x1,
             state.x2 + delta_x2
         };
-        #else
-        const auto e = (y - state.x1);
-        const auto delta_x1 = (state.x2 + u * coeffs_.b0 + e * coeffs_.g1) * coeffs_.dt;
-        const auto delta_x2 = (e * coeffs_.g2) * coeffs_.dt;
-        return State{
-            state.x1 + delta_x1,
-            state.x2 + delta_x2
-        };
-        #endif
 
-        #endif
     }
 
 private:

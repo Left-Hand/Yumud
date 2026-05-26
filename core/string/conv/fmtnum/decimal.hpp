@@ -16,8 +16,11 @@ struct [[nodiscard]] MutStrSpan final{
     }
     __attribute__((optimize( "-Ofast" )))
     constexpr void fill(const char chr){
-        for(char * p_chr = begin; p_chr < end; p_chr++){
-            *p_chr = chr;
+        // for(char * p_chr = begin; p_chr < end; p_chr++){
+        //     *p_chr = chr;
+        // }
+        for(size_t i = 0; i < length(); i++){
+            begin[i] = chr;
         }
     }
 };

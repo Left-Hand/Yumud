@@ -8,18 +8,7 @@
 
 namespace ymd::uavcan{
 
-[[nodiscard]] static constexpr 
-uint8_t * u8ptr_push_be_u16(uint8_t * ptr, uint16_t val){
-    ptr[0] = uint8_t(val >> 8);
-    ptr[1] = uint8_t(val & 0xff);
-    return ptr + 2;
-}
 
-[[nodiscard]] static constexpr 
-uint8_t * u8ptr_push_u8(uint8_t * ptr, uint8_t val){
-    ptr[0] = uint8_t(val & 0xff);
-    return ptr + 1;
-}
 
 struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
 
@@ -125,6 +114,19 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
 private:
     const Parameters params_;
     State state_ = State::zero();
+
+    [[nodiscard]] static constexpr 
+    uint8_t * u8ptr_push_be_u16(uint8_t * ptr, uint16_t val){
+        ptr[0] = uint8_t(val >> 8);
+        ptr[1] = uint8_t(val & 0xff);
+        return ptr + 2;
+    }
+
+    [[nodiscard]] static constexpr 
+    uint8_t * u8ptr_push_u8(uint8_t * ptr, uint8_t val){
+        ptr[0] = uint8_t(val & 0xff);
+        return ptr + 1;
+    }
 };
 
 struct [[nodiscard]] SlicingIteratorSpawner final{

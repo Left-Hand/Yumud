@@ -153,15 +153,8 @@ void digipw_main(){
     
     // INA226 ina226{SoftI2c};
     // // ina226.init(10, 5);
-    // ina226.init(100, 5);
 
-    // auto & curr_ch = ina226.get_curr_channel();
-    // auto & volt_ch = ina226.get_bus_volt_channel();
-    // auto & power_ch = ina226.get_power_channel();
-
-    /*-----------------------*/
-
-    constexpr auto CHOPPER_FREQ = 100'000;
+    constexpr size_t CHOPPER_FREQ = 100'000;
     auto & timer = hal::timer1;
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
@@ -209,7 +202,7 @@ void digipw_main(){
         switch(ev){
             case hal::TimerEvent::Update:{
                 static iq20 mt = 0;
-                static constexpr iq20 dt = 1_iq20 / CHOPPER_FREQ;
+                static constexpr auto dt = static_cast<iq20>(uq32::from_rcp(CHOPPER_FREQ));
                 mt += dt;
                 // mp1907 = iq16(0.5) + 0.1_r * math::sinpu(50 * time());
                 pwm.set_dutycycle(iq16(0.5) + 0.1_r * math::sinpu(50 * iq16(mt)));
@@ -222,27 +215,7 @@ void digipw_main(){
     });
 
     while(true){
-        
-        // ina226.update();
-        
-        // const auto t = 6 * time();
-        // const auto s = sinpu<31>(t);
-        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch));
-        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), math::sin(t), sqrt(t), atan2(cos(t), math::sin(t)));
 
-        // const auto curr_meas = fixed<24>(iq16(curr_ch));
-        // const auto curr_targ = 0.04_q24;
-        // const auto curr_err = curr_targ - curr_meas;
-        // const auto delta = (curr_err * 0.007_r);
-        // duty = duty + delta;
-        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), iq16(power_ch), duty, pwm.cvr());
-        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), iq16(power_ch));
-        // DEBUG_PRINTLN_IDLE(iq16(volt_ch), iq16(curr_ch));
-
-        // mp1907 = iq16(0.5) + iq16(0.4) * math::sin(t);
-
-        //  + iq16(0.4) * math::sin(t);
-        // mp1907 = duty;
         led.write(~led.read());
     }
 }
