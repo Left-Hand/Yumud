@@ -164,6 +164,8 @@
 
 - xxj:鑫械技
 
+- xynova:杭州曦诺未来科技有限公司
+
 - - yahboom:亚博智能
     - [x] quat_motor
         - [ ] 静态强类型测试

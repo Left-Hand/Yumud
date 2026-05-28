@@ -11,6 +11,8 @@
 // https://www.waveshare.net/wiki/DDSM400
 
 namespace ymd::robots::waveshare::ddsm400::primitive{
+
+
 static constexpr size_t DEFAULT_BAUDRATE = 38400;
 
 // head command payload crc
@@ -76,10 +78,6 @@ enum class [[nodiscard]] SerMsgError:uint8_t{
 };
 
 static constexpr Option<ReqCommand> try_into_req_command(const uint8_t b){
-    // return tmp::enum_match<ReqCommand>(b, [](auto cmd){
-    //     return Option<ReqCommand>::some(cmd);
-    // });
-
     switch(std::bit_cast<ReqCommand>(b)){
         case ReqCommand::SetTarget: return Some(ReqCommand::SetTarget);
         case ReqCommand::GetJourney: return Some(ReqCommand::GetJourney);
@@ -102,23 +100,20 @@ static constexpr uint8_t calc_crc8(std::span<const uint8_t> bytes){
     uint8_t crc, i;
     crc = 0x00;
 
-    while(len--)
-    {
+    while(len--){
         crc ^= *data++;
-        for(i = 0;i < 8;i++)
-        {
+        for(i = 0;i < 8;i++){
             if(crc & 0x01)
-            {
                 crc = (crc >> 1) ^ 0x8c;
-            }
-                else crc >>= 1;
+            else 
+                crc >>= 1;
         }
     }
     return crc;
 }
 
 #pragma pack(push, 1)
-struct FlatPacket{
+struct [[nodiscard]] FlatPacket final{
     MotorId motor_id;
     union{
         ReqCommand req_command;
@@ -181,11 +176,11 @@ struct [[nodiscard]] SpeedCode final{
     }
 
     constexpr iq16 to_rpm() const noexcept {
-        return iq16::from_bits(bits) / 10;
+        return iq16::from_bits(bits) * uq32(1.0 / 10);
     }
 
     constexpr iq16 to_rps() const noexcept {
-        return iq16::from_bits(bits) / 600;
+        return iq16::from_bits(bits) * uq32(1.0 / 600);
     }
 
     constexpr operator SetPointCode() const noexcept {
@@ -243,9 +238,8 @@ struct [[nodiscard]] FaultFlags final{
 };
 
 
-
-
 static_assert(sizeof(FaultFlags) == 1);
+
 }
 
 

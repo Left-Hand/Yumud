@@ -3,6 +3,9 @@
 
 namespace ymd::robots::waveshare::ddsm400::transport{
 using namespace primitive;
+
+
+
 template<typename T>
 static constexpr std::array<uint8_t, NUM_PACKET_BYTES> 
 serialize_request(const MotorId motor_id, const T & msg){
@@ -18,7 +21,7 @@ serialize_request(const MotorId motor_id, const T & msg){
 
 // 传输层解析器
 struct RecvTransportParser final{
-    enum class PacketRecvState:uint8_t {
+    enum class [[nodiscard]] PacketRecvState:uint8_t {
         MotorId = 0,
         Command = 1,
         Payload = 2,
