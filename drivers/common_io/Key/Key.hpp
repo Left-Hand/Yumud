@@ -1,6 +1,5 @@
 #pragma once
 
-#include "KeyTrait.hpp"
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 
 namespace ymd::drivers{
