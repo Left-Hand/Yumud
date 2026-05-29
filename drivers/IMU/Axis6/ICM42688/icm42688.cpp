@@ -13,11 +13,6 @@
 #define ICM42688_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
 #define RAISE_ERR(x, ...) ({\
@@ -32,7 +27,7 @@
 #define ICM42688_PANIC(...)  PANIC_NSRC()
 #define ICM42688_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
+
 #define RAISE_ERR(x, ...) (x)
 #endif
 

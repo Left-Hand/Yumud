@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "../crsf_packed_code.hpp"
 
 namespace ymd::crsf{
 
@@ -127,11 +127,7 @@ struct [[nodiscard]] Vtx final{
 //   - 7位S (0-100%)
 //   - 8位V (0-100%)
 
-struct [[nodiscard]] H9S7V8 final{
-    uint16_t h:9;
-    uint16_t s:7;
-    uint16_t v:8;
-};
+
 
 struct [[nodiscard]] Led final{ 
     enum class [[nodiscard]] SubCommand:uint8_t{
@@ -146,19 +142,19 @@ struct [[nodiscard]] Led final{
 
     struct [[nodiscard]] OverwritePulse final{
         uint16_t duration;
-        H9S7V8 start_color;
-        H9S7V8 stop_color;
+        HSV978 start_color;
+        HSV978 stop_color;
     };
 
     struct [[nodiscard]] OverwriteFlash final{
         uint16_t interval;
-        H9S7V8 start_color;
-        H9S7V8 stop_color;
+        HSV978 start_color;
+        HSV978 stop_color;
     };
 
     struct [[nodiscard]] OverwriteOffset final{
         uint16_t interval;
-        H9S7V8 color;
+        HSV978 color;
     };
 };
 

@@ -30,7 +30,7 @@ using IResult = Self::IResult<T>;
 
 #else
 
-#define CHECK_RES(x, ...) (x)
+
 #define RAISE_ERR(x, ...) (x)
 #endif
 

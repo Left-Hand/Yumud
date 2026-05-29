@@ -9,11 +9,6 @@
 #define AK09911C_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
 #define RAISE_ERR(x, ...) ({\
@@ -28,7 +23,7 @@
 #define AK09911C_PANIC(...)  PANIC_NSRC()
 #define AK09911C_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
+
 #define RAISE_ERR(x, ...) (x)
 #endif
 
@@ -205,16 +200,14 @@ IResult<> Self::validate(){
         auto wia2_reg = Regs::R8_WIA2{};
         
         if(const auto res = read_reg(wia1_reg);
-            res.is_err()) return CHECK_RES(
-                res, 
-                "failed to read reg when validate, check RSTN pin is HIGH",
-                "error is", res.unwrap_err());
+            res.is_err()) return RAISE_ERR(
+                Err(res.unwrap_err()),
+                "failed to read reg when validate, check RSTN pin is HIGH");
 
         if(const auto res = read_reg(wia2_reg);
-            res.is_err()) return CHECK_RES(
-                res, 
-                "failed to read reg when validate, check RSTN pin is HIGH",
-                "error is", res.unwrap_err());
+            res.is_err()) return RAISE_ERR(
+                Err(res.unwrap_err()),
+                "failed to read reg when validate, check RSTN pin is HIGH");
 
         if(wia1_reg.to_bits() != wia1_reg.KEY) return RAISE_ERR(Err(Error::CompanyIdMisMatch),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.to_bits());
@@ -228,8 +221,8 @@ IResult<> Self::validate(){
     if(const auto res = retry(2, [&]{return check_vendor();}, []{clock::delay(2ms);});
         res.is_err()) return res;
 
-    if(const auto res = selftest(); res.is_err())
-        return res;
+    if(const auto res = selftest(); 
+        res.is_err()) return res;
     return Ok();
 }
 

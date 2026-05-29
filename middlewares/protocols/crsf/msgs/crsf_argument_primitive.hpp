@@ -25,17 +25,17 @@ struct [[nodiscard]] TextSelectionContext final{
 };
 
 struct [[nodiscard]] StringContext final{
-    ustr<MAX_STR_LENGTH>     value;                      // 空终止字符串
+    ustr<MAX_STR_LENGTH>     str;                      // 空终止字符串
 
     [[nodiscard]] constexpr size_t bytes_length() const noexcept{
-        return value.length() + 1;
+        return str.length() + 1;
     }
 
     template<typename Receiver>
     [[nodiscard]] constexpr Result<void, typename Receiver::Error> 
     serialize(Receiver & receiver) const noexcept{
         auto & self = *this;
-        receiver.push_push_zero_terminated_uchars(self.value);
+        receiver.push_push_zero_terminated_uchars(self.str);
     }
 };
 

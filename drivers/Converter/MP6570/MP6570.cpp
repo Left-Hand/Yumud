@@ -15,11 +15,6 @@
 #define MP6570_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
 #define RAISE_ERR(x, ...) ({\

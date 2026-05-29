@@ -12,17 +12,19 @@ namespace ymd::crsf::msgs{
 // 0x02
 struct [[nodiscard]] Gps final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x02);
-    GpsCoordinateCode latitude;       // degree / 10`000`000
-    GpsCoordinateCode longitude;      // degree / 10`000`000
-    GpsGroundSpeedCode groundspeed;   // km/h / 100
-    GpsHeadingCode heading;           // degree / 100
-    uint16_t altitude;            // meter - 1000m offset
+
+    GpsCoordinateCode latitude_code;       // degree / 10`000`000
+    GpsCoordinateCode longitude_code;      // degree / 10`000`000
+    GpsGroundSpeedCode groundspeed_code;   // km/h / 100
+    GpsHeadingCode heading_code;           // degree / 100
+    GpsAltitudeCode altitude_code;            // meter - 1000m offset
     uint8_t satellites;           // # of sats in view
 };
 
 // 0x03
 struct [[nodiscard]] GpsTime final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x03);
+
     int16_t year;
     uint8_t month;
     uint8_t day;
@@ -35,6 +37,7 @@ struct [[nodiscard]] GpsTime final{
 // 0x06
 struct [[nodiscard]] GpsExtended final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x06);
+
     uint8_t fix_type;       // Current GPS fix quality
     int16_t n_speed;        // Northward (north = positive) Speed [cm/sec]
     int16_t e_speed;        // Eastward (east = positive) Speed [cm/sec]
@@ -52,21 +55,27 @@ struct [[nodiscard]] GpsExtended final{
 // 0x07
 struct [[nodiscard]] VariometerSensor final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x07);
+
    int16_t v_speed;        // Vertical speed cm/s
 };
+
+
+
 
 // 0x08
 struct [[nodiscard]] BatterySensor final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x08);
+
     VoltageCode voltage;        // Voltage (LSB = 10 µV)
     CurrentCode current;        // Current (LSB = 10 µA)
-    uint24_t capacity_used;      // Capacity used (mAh)
-    uint8_t remaining;           // Battery remaining (percent)
+    BatteryCapacityCode capacity_code;      // Capacity used (mAh)
+    uint8_t remaining_percents;           // Battery remaining (percent)
 };
 
 // 0x09
 struct [[nodiscard]] BarometricAltitude final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x09);
+
     AltitudeCode altitude_code;       // Altitude above start (calibration) point
                                     // See description below.
     VerticalSpeedCode   vertical_speed_code; // vertical speed. See description below.
@@ -75,18 +84,21 @@ struct [[nodiscard]] BarometricAltitude final{
 //0x0A
 struct [[nodiscard]] Airspeed final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x0a);
+
     AirspeedCode speed;             // Airspeed in 0.1 * km/h (hectometers/h)
 };
 
 // 0x0B
 struct [[nodiscard]] HeartBeat final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x0b);
+
     int16_t origin_address;             // Origin Device address
 };
 
 //0x0c
 struct [[nodiscard]] Rpm final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x0c);
+
     uint8_t     rpm_source_id;  // Identifies the source of the RPM data (e.g., 0 = Motor 1, 1 = Motor 2, etc.)
     std::span<const RpmCode>    rpm_value;    // 1 - 19 RPM values with negative ones representing the motor spinning in reverse
 };
@@ -94,6 +106,7 @@ struct [[nodiscard]] Rpm final{
 //0x0d
 struct [[nodiscard]] Temperature final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x0d);
+
     uint8_t         temp_source_id;       // Identifies the source of the temperature data (e.g., 0 = FC including all ESCs, 1 = Ambient, etc.)
     std::span<const TemperatureCode> temperature;        // up to 20 temperature values in deci-degree (tenths of a degree) Celsius (e.g., 250 = 25.0°C, -50 = -5.0°C)
 };
@@ -101,13 +114,21 @@ struct [[nodiscard]] Temperature final{
 // 0x0E
 struct [[nodiscard]] Voltages final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x0e);
+
     uint8_t     voltage_source_id;  // source of the voltages
     std::span<const uint16_t>    voltage_values;   // Up to 29 voltages in millivolts (e.g. 3.850V = 3850)
+};
+
+
+//0x0f unstable
+struct [[nodiscard]] Vtx final{
+    //TODO
 };
 
 // 0x10
 struct [[nodiscard]] VtxTelemetry final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x10);
+
     uint8_t     origin_address;
     uint8_t     power_dBm;          // VTX power in dBm
     uint16_t    frequency_MHz;      // VTX frequency in MHz
@@ -119,6 +140,7 @@ struct [[nodiscard]] VtxTelemetry final{
 // 0x11
 struct [[nodiscard]] Barometer final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x11);
+
     PressureCode pressure_pa;        // Pascals
     TemperatureCentidegreeCode baro_temp; // centidegrees
 };
@@ -126,6 +148,7 @@ struct [[nodiscard]] Barometer final{
 // 0x12
 struct [[nodiscard]] Magnetometer final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x12);
+
     int16_t     field_x;            // milligauss * 3
     int16_t     field_y;            // milligauss * 3
     int16_t     field_z;            // milligauss * 3
@@ -137,6 +160,7 @@ struct [[nodiscard]] Magnetometer final{
 // 加速度计：+X轴 = 前进 +Y轴 = 右 +Z轴 = 上 陀螺仪： +X轴 = 左滚 +Y轴 = 俯仰向上 +Z轴 = 顺时针偏航
 struct [[nodiscard]] AccelGyro final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x13);
+
     uint32_t sample_time;       // Timestamp of the sample in us
     int16_t gyr_x;             // LSB = INT16_MAX/2000 DPS
     int16_t gyr_y;             // LSB = INT16_MAX/2000 DPS
@@ -151,6 +175,7 @@ struct [[nodiscard]] AccelGyro final{
 // 上行链路是从地面到无人机的连接，下行链路则是相反方向
 struct [[nodiscard]] LinkStatistics final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x14);
+
     RssiCode            up_rssi_ant1;       // Uplink RSSI Antenna 1 (dBm * -1)
     RssiCode            up_rssi_ant2;       // Uplink RSSI Antenna 2 (dBm * -1)
     LinkQualityCode     up_link_quality; // Uplink Package success rate / Link quality (%)
@@ -175,6 +200,7 @@ struct [[nodiscard]] RcChannelsPacked final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x16);
 
 
+
     PackedChannels channels;
 
 };
@@ -191,6 +217,7 @@ struct [[nodiscard]] RcChannelsPacked final{
 // 0x1C
 struct [[nodiscard]] LinkStatisticsRx final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x1c);
+
     RssiCode            rssi_dbm;        // RSSI (dBm * -1)
     uint8_t             rssi_percent;   // RSSI in percent
     LinkQualityCode     link_quality; // Package success rate / Link quality (%)
@@ -201,6 +228,7 @@ struct [[nodiscard]] LinkStatisticsRx final{
 // 0x1D
 struct [[nodiscard]] LinkStatisticsTx final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x1d);
+
     RssiCode            rssi_dbm;        // RSSI (dBm * -1)
     uint8_t             rssi_percent;   // RSSI in percent
     LinkQualityCode     link_quality; // Package success rate / Link quality (%)
@@ -212,6 +240,7 @@ struct [[nodiscard]] LinkStatisticsTx final{
 // 0x1E
 struct [[nodiscard]] Attitude final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x1e);
+
     AttitudeAngleCode pitch;  // Pitch angle (LSB = 100 µrad)
     AttitudeAngleCode roll;   // Roll angle  (LSB = 100 µrad)
     AttitudeAngleCode yaw;    // Yaw angle   (LSB = 100 µrad)
@@ -220,6 +249,7 @@ struct [[nodiscard]] Attitude final{
 // 0x1F
 struct [[nodiscard]] MavlinkFc final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x1f);
+
     int16_t                         airspeed;
     mavlink::MavModeFlagBitfields   base_mode;      // vehicle mode flags, defined in MAV_MODE_FLAG enum
     uint32_t                        custom_mode;    // autopilot-specific flags
@@ -230,12 +260,14 @@ struct [[nodiscard]] MavlinkFc final{
 // 0x21
 struct [[nodiscard]] FlightMode final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x21);
+
     ustr<MAX_STR_LENGTH> flight_mode;  // Null-terminated string
 };
 
 // 0x22
 struct [[nodiscard]] EspNowMessages final{
     static constexpr FrameType FRAME_TYPE = FrameType::from_bits(0x22);
+
     uint8_t arg1;           // Used for Seat Position of the Pilot
     uint8_t arg2;           // Used for the Current Pilots Lap
     CharsSlice<15>    arg3;       // 15 characters for the lap time current/split
