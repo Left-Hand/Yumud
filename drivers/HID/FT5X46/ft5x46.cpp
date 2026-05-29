@@ -15,7 +15,7 @@
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -28,5 +28,5 @@
 #define FT5X46_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
 #define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+#define RAISE_ERR(x, ...) (x)
 #endif

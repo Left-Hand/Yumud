@@ -17,7 +17,7 @@ using namespace ymd::drivers;
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -30,7 +30,7 @@ using namespace ymd::drivers;
 #define MMC5603_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
 #define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 

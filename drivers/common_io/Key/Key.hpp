@@ -17,7 +17,7 @@ public:
     explicit Key(
         const Config & cfg
     ):
-        gpio_(cfg.gpio), 
+        gpio_(cfg.gpio),  
         act_level_(cfg.act_level),
         filter_(typename dsp::DebounceFilter::Config{
             .flip_threshold = cfg.flip_threshold,

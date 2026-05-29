@@ -22,7 +22,7 @@ using namespace ymd::drivers;
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\

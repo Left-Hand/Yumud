@@ -20,7 +20,7 @@ using IResult = Result<T, Error>;
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -28,7 +28,7 @@ using IResult = Result<T, Error>;
 
 #else
 #define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 static constexpr uint8_t KEY0_REGADDR = 0x40;
