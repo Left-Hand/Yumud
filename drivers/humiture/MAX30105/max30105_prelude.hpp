@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-struct MAX30100_Prelude{
+struct MAX30105_Prelude{
 
 };
 
