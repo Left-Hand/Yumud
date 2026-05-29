@@ -25,15 +25,15 @@ struct Receiver{
             ser_just_float(ret, 1.0, 2.0, 3, 4.0);
             return ret;
         }();
-        static_assert(receiver.bytes[0] == std::bit_cast<std::array<uint8_t, 4>>(1.0)[0]);
-        static_assert(receiver.bytes[1] == std::bit_cast<std::array<uint8_t, 4>>(1.0)[1]);
-        static_assert(receiver.bytes[2] == std::bit_cast<std::array<uint8_t, 4>>(1.0)[2]);
-        static_assert(receiver.bytes[3] == std::bit_cast<std::array<uint8_t, 4>>(1.0)[3]);
+        static_assert(receiver.bytes[0] == std::bit_cast<std::array<uint8_t, 4>>(1.0f)[0]);
+        static_assert(receiver.bytes[1] == std::bit_cast<std::array<uint8_t, 4>>(1.0f)[1]);
+        static_assert(receiver.bytes[2] == std::bit_cast<std::array<uint8_t, 4>>(1.0f)[2]);
+        static_assert(receiver.bytes[3] == std::bit_cast<std::array<uint8_t, 4>>(1.0f)[3]);
 
-        static_assert(receiver.bytes[8 + 0] == std::bit_cast<std::array<uint8_t, 4>>(3.0)[0]);
-        static_assert(receiver.bytes[8 + 1] == std::bit_cast<std::array<uint8_t, 4>>(3.0)[1]);
-        static_assert(receiver.bytes[8 + 2] == std::bit_cast<std::array<uint8_t, 4>>(3.0)[2]);
-        static_assert(receiver.bytes[8 + 3] == std::bit_cast<std::array<uint8_t, 4>>(3.0)[3]);
+        static_assert(receiver.bytes[8 + 0] == std::bit_cast<std::array<uint8_t, 4>>(3.0f)[0]);
+        static_assert(receiver.bytes[8 + 1] == std::bit_cast<std::array<uint8_t, 4>>(3.0f)[1]);
+        static_assert(receiver.bytes[8 + 2] == std::bit_cast<std::array<uint8_t, 4>>(3.0f)[2]);
+        static_assert(receiver.bytes[8 + 3] == std::bit_cast<std::array<uint8_t, 4>>(3.0f)[3]);
 
         static_assert(receiver.bytes[16 + 0] == 0x00);
         static_assert(receiver.bytes[16 + 1] == 0x00);
