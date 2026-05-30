@@ -3,8 +3,16 @@
 #include <cstdint>
 #include "core/math/float/fp32.hpp"
 
+// https://mavlink.io/en/messages/common.html
+
 namespace ymd::mavlink::msgs{
-    
+
+
+// HEARTBEAT (0)
+// The heartbeat message shows that a system or component is present and responding. The type and 
+// autopilot fields (along with the message component id), allow the receiving system to treat 
+// further messages from this system appropriately (e.g. by laying out the user interface based 
+// on the autopilot)
 struct [[nodiscard]] Heartbeat final {
     uint8_t type;
     uint8_t autopilot;
@@ -51,7 +59,7 @@ struct [[nodiscard]] SetAttitudeTarget final {
     uint8_t target_system;
     uint8_t target_component;
     uint8_t type_mask;
-    math::fp32 q[4]; // Quaternion
+    std::array<math::fp32, 4> q; // Quaternion
     math::fp32 body_roll_rate;
     math::fp32 body_pitch_rate;
     math::fp32 body_yaw_rate;

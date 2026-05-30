@@ -58,6 +58,10 @@ public:
 
     struct [[nodiscard]] Crgb16 final{
         std::array<uint16_t, 4> elements;
+
+        friend OutputStream & operator <<(OutputStream & os, const Crgb16 & self){
+            return os << self.elements;
+        }
     };
 
     [[nodiscard]] IResult<Crgb16> get_crgb();

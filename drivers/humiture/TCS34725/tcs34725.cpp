@@ -42,7 +42,7 @@ IResult<TCS34725::Package> TCS34725::validate(){
         case Package::TCS34723:
             return Ok(std::bit_cast<Package>(reg.id));
     }
-    return Err(Error::ChipIdMismatch);
+    return Err(Error::InvalidChipId);
 }
 
 IResult<> TCS34725::set_int_persistence(const uint8_t times){

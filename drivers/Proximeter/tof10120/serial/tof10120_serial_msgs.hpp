@@ -1,11 +1,17 @@
 #include "../tof10120_prelude.hpp"
 #include "core/container/heapless_vector.hpp"
+
+
 namespace ymd::drivers::tof10120{
 
 struct req_msgs{
 
 
 };
+
+
+#define CPP_CONTRACTS_PRE(...) 
+#define CPP_CONTRACTS_POST(...)
 
 static constexpr size_t MAX_REQ_CHARS = 8;
 
@@ -19,7 +25,9 @@ struct alignas(4) [[nodiscard]] FlatRequest final{
         return std::span(bytes.begin(), bytes.end());
     } 
 
-    static constexpr Self from_bare_id(const uint8_t id){
+    static constexpr Self from_bare_id(const uint8_t id)
+        CPP_CONTRACTS_PRE(id < 9)
+    {
         Self self;
         self.bytes.push_back('r');
         self.bytes.push_back(id + '0');

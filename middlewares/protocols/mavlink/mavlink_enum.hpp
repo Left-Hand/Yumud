@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+// https://mavlink.io/en/messages/common.html
+
 namespace ymd::mavlink {
 
 
