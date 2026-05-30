@@ -26,7 +26,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
         ++count;
     }
     // 如果索引超出范围，可以返回默认值或触发错误
-    __builtin_trap(); // 或者抛出异常
+    __builtin_trap();
 }
 
 
