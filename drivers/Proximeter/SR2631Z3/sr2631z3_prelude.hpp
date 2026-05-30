@@ -4,6 +4,9 @@
 #include "core/string/owned/char_array.hpp"
 #include "core/string/owned/heapless_string.hpp"
 #include "core/string/utils/split_iter.hpp"
+#include "core/string/conv/strconv.hpp"
+
+
 #include "core/utils/Result.hpp"
 #include "core/polymorphism/reflect.hpp"
 
@@ -91,6 +94,7 @@ parse_dec_str(const StringView str){
 }
 
 static constexpr Result<std::tuple<uint32_t, uint32_t>, DeMsgErrorKind> 
+// static constexpr Result<strconv::FstrDump, DeMsgErrorKind> 
 parse_floating_num(const StringView str){
     if(str.length() == 0) return Err(DeMsgErrorKind::EmptyString);
 

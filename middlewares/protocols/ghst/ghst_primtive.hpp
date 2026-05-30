@@ -79,7 +79,7 @@ struct U12X4{
 static_assert(sizeof(U12X4) == 6);
 
 /* Pulses payload (channel data), for 4x 8-bit channels */
-struct PayloadChannels_s {
+struct PayloadChannels{
     uint8_t cha;
     uint8_t chb;
     uint8_t chc;
@@ -87,11 +87,11 @@ struct PayloadChannels_s {
 } ;
 
 /* Pulses payload (channel data), with RSSI/LQ, and other related data */
-struct PayloadPulsesRssi_s {
+struct PayloadPulsesRssi{
     uint8_t lq;                 // 0-100
     uint8_t rssi;               // 0 - 128 sign inverted, dBm
-    uint8_t rfProtocol;
-    int8_t  txPwrdBm;           // tx power in dBm, use lookup table to map to published mW values
+    uint8_t rf_protocol;
+    int8_t  tx_pwrdBm;           // tx power in dBm, use lookup table to map to published mW values
 } ;
 
 
@@ -120,7 +120,7 @@ struct RcFrame_s {
 
 #endif
 
-struct TlmDl_s {
+struct TlmDl {
     uint16_t voltage;  // mv * 100
     uint16_t current;  // ma * 100
     uint16_t capacity; // mah * 100
@@ -131,12 +131,12 @@ struct TlmDl_s {
 };
 
 /* This is just to keep other code compatible */
-struct Linkstatistics_s {
-    uint8_t uplink_RSSI_1;
-    uint8_t uplink_RSSI_2;
-    uint8_t uplink_Link_quality;
-    int8_t  uplink_SNR;
-    uint8_t rf_Mode;
+struct Linkstatistics {
+    uint8_t uplink_rssi_1;
+    uint8_t uplink_rssi_2;
+    uint8_t uplink_link_quality;
+    int8_t  uplink_snr;
+    uint8_t rf_mode;
 };
 
 

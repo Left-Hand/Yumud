@@ -31,40 +31,6 @@ static constexpr uint8_t CRC8_TABLE[256] = {
     0x84, 0x51, 0xFB, 0x2E, 0x7A, 0xAF, 0x05, 0xD0, 0xAD, 0x78, 0xD2, 0x07, 0x53, 0x86, 0x2C, 0xF9
 };
 
-#if 0
-uint8_t 
-CalcCRClen(uint8_t const *data, uint16_t length, uint8_t crc)
-{
-    while (length--) {
-        crc = CRC8_TABLE[crc ^ *data++];
-    }
-    return crc;
-}
-
-
-uint8_t 
-CalcCRC8(uint8_t const data, uint8_t crc, uint8_t const poly)
-{
-    crc ^= data;
-    for (int ii = 0; ii < 8; ++ii) {
-        if (crc & 0x80)
-            crc = (crc << 1) ^ poly;
-        else
-            crc = crc << 1;
-    }
-    return crc;
-}
-
-uint8_t 
-CalcCRC8len(uint8_t const *data, uint16_t length,
-            uint8_t crc, uint8_t const poly)
-{
-    while (length--)
-        crc = CalcCRC8(*data++, crc, poly);
-    return crc;
-}
-
-#endif
 
 
 struct [[nodiscard]] ChecksumBuilder final{
