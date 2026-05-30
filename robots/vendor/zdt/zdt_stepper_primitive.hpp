@@ -138,6 +138,7 @@ struct [[nodiscard]] FlatPacket final{
     std::array<uint8_t, MAX_CONTEXT_BYTES> context;
     uint8_t payload_len;
 
+
     template<typename Receiver>
     Result<void, typename Receiver::Error> serialize(Receiver & receiver) const noexcept {
         auto & self = *this;
@@ -270,6 +271,8 @@ struct [[nodiscard]] PulseCnt final{
 
 struct [[nodiscard]] AcclerationLevel final{
     using Self = AcclerationLevel;
+
+
     static constexpr Self from_tpss(const iq16 acc_per_second){
         // TODO
         (void)acc_per_second;

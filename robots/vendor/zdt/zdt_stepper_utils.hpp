@@ -9,21 +9,18 @@ public:
     constexpr explicit BytesFiller(std::span<uint8_t> bytes):
         bytes_(bytes){;}
 
-    constexpr ~BytesFiller(){
-    }
-
     constexpr __inline 
     void push_byte(const uint8_t byte){
-        if(idx_ >= bytes_.size()) [[unlikely]] 
+        if(offset_ >= bytes_.size()) [[unlikely]] 
             on_overflow();
-        bytes_[idx_++] = byte;
+        bytes_[offset_++] = byte;
     }
 
 
     template<size_t Extents>
     constexpr __inline 
     void push_bytes(const std::span<const uint8_t, Extents> bytes){
-        if(idx_ + bytes.size() > bytes_.size()) [[unlikely]]
+        if(offset_ + bytes.size() > bytes_.size()) [[unlikely]]
             on_overflow();
         push_bytes_unchecked(bytes);
     }
@@ -47,19 +44,19 @@ public:
     }
 
     [[nodiscard]] constexpr bool is_full() const noexcept {
-        return idx_ == bytes_.size();
+        return offset_ == bytes_.size();
     }
 
     size_t size() const noexcept {
-        return idx_;
+        return offset_;
     }
 private:
     std::span<uint8_t> bytes_;
-    size_t idx_ = 0;
+    size_t offset_ = 0;
 
     constexpr __inline 
     void push_byte_unchecked(const uint8_t byte){ 
-        bytes_[idx_++] = byte;
+        bytes_[offset_++] = byte;
     }
 
     template<size_t Extents>
@@ -84,9 +81,60 @@ private:
 };
 
 
+template<VerifyMethod METHOD>
+
+struct [[nodiscard]] ChecksumBuilder;
+
+template<>
+struct [[nodiscard]] ChecksumBuilder<VerifyMethod::XOR> final{
+    uint8_t checksum;
+
+    static constexpr ChecksumBuilder from_default(){
+        return ChecksumBuilder{.checksum = 0};
+    }
+
+
+    constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
+        ChecksumBuilder self = *this;
+        self.checksum = static_cast<uint8_t>(self.checksum ^ byte);
+        return self;
+    }
+
+    [[nodiscard]] uint8_t finalize() const noexcept {
+        return checksum;
+    }
+};
+
+template<>
+struct [[nodiscard]] ChecksumBuilder<VerifyMethod::CRC8> final{
+    uint16_t checksum;
+
+    static constexpr ChecksumBuilder from_default(){
+        return ChecksumBuilder{.checksum = 0};
+    }
+
+
+    constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
+        ChecksumBuilder self = *this;
+
+        self.checksum ^= uint16_t(byte) << 8;
+        for(uint8_t j = 0; j < 8; j++){
+            if(self.checksum & 0x8000) self.checksum ^= 0x1021;
+            self.checksum <<= 1;
+        }
+
+        return self;
+    }
+
+
+    [[nodiscard]] uint8_t finalize() const noexcept {
+        return static_cast<uint8_t>(checksum >> 8);
+    }
+};
+
 
 struct [[nodiscard]] VerifyUtils final{
-    static constexpr uint8_t get_verify_code(
+    static constexpr uint8_t calc_checksum(
         const VerifyMethod method, 
         const FuncCode func_code,
         std::span<const uint8_t> bytes 
@@ -95,45 +143,32 @@ struct [[nodiscard]] VerifyUtils final{
             case VerifyMethod::X6B:
                 return uint8_t{0x6b};
             case VerifyMethod::XOR:
-                return VerifyUtils::by_xor(func_code, bytes);
+                return calc_checksum_tmp<VerifyMethod::XOR>(func_code, bytes);
+
             case VerifyMethod::CRC8:
-                // TODO();
-                // __builtin_unreachable();
-                return VerifyUtils::by_crc8(func_code, bytes);
+                return calc_checksum_tmp<VerifyMethod::CRC8>(func_code, bytes);
         }
         __builtin_unreachable();
     }
 
 private:
-    static constexpr uint8_t by_xor(
+
+    template<VerifyMethod METHOD>
+    static constexpr uint8_t calc_checksum_tmp(
         const FuncCode func_code,
-        const std::span<const uint8_t> bytes
+        std::span<const uint8_t> bytes 
     ){
-        uint8_t code = std::bit_cast<uint8_t>(VerifyMethod::XOR);
-        code ^= std::bit_cast<uint8_t>(func_code);
-        for(size_t i = 0; i < bytes.size(); i++){
-            code ^= bytes[i];
-        };
-        return code;
+        auto bd = ChecksumBuilder<METHOD>::from_default();
+
+        bd = bd.push_byte(static_cast<uint8_t>(func_code));
+        for(size_t i = 0; i < bytes.size(); i ++){
+            bd = bd.push_byte(bytes[i]);
+        }
+        return bd.finalize();
     }
 
-    static constexpr uint8_t by_crc8(
-        const FuncCode func_code,
-        const std::span<const uint8_t> bytes
-    ){
-        // TODO
-        //examine with func code;
-        (void) func_code;
-        uint16_t crc = 0xffff;
-        for(size_t i = 0; i < bytes.size(); i++){
-            crc ^= uint16_t(bytes[i]) << 8;
-            for(uint8_t j = 0; j < 8; j++){
-                if(crc & 0x8000) crc ^= 0x1021;
-                crc <<= 1;
-            }
-        }
-        return uint8_t(crc >> 8);
-    }
+
+
 
 };
 
