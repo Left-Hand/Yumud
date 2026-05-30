@@ -65,7 +65,7 @@ IResult<> DRV8301::enable_pwm3(const Enable en){
 }
 
 namespace {
-struct Packet{
+struct [[nodiscard]] Packet final{
     uint16_t data:11;
     uint16_t reg_addr:4;
     uint16_t is_write:1;
@@ -84,19 +84,19 @@ struct Packet{
 
 static_assert(sizeof(Packet) == 2);
 
-IResult<> DRV8301::_write_reg(const RegAddr reg_addr, const uint16_t reg_val){
-    const Packet payload = {
+IResult<> DRV8301::write_reg(const RegAddr reg_addr, const uint16_t reg_val){
+    const Packet packet = {
         .data = reg_val,
         .reg_addr = uint16_t(reg_addr),
         .is_write = 0
     };
 
-    if(const auto res = spi_drv_.write_single<uint16_t>((payload));
+    if(const auto res = spi_drv_.write_single<uint16_t>((packet));
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> DRV8301::_read_reg(const RegAddr reg_addr, uint16_t & reg_val){
+IResult<> DRV8301::read_reg(const RegAddr reg_addr, uint16_t & reg_val){
     Packet tx = {
         .data = 0,
         .reg_addr = uint16_t(reg_addr),

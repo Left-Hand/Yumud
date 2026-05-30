@@ -9,7 +9,6 @@ namespace ymd::drivers{
 class DRV8301 final:
     public DRV8301_Prelude{
 public:
-    static constexpr auto NAME = "DRV8301";
     explicit DRV8301(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
     explicit DRV8301(hal::SpiDrv && spi_drv):
@@ -29,8 +28,8 @@ private:
     hal::SpiDrv spi_drv_;
     DRV8301_Regset regs_ = {};
 
-    IResult<> _write_reg(const RegAddr addr, const uint16_t reg);
-    IResult<> _read_reg(const RegAddr addr, uint16_t & reg);
+    IResult<> write_reg(const RegAddr addr, const uint16_t reg);
+    IResult<> read_reg(const RegAddr addr, uint16_t & reg);
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

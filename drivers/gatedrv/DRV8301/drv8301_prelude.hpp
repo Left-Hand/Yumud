@@ -15,7 +15,10 @@ namespace ymd::drivers{
 
 struct DRV8301_Prelude{
     enum class Error_Kind:uint8_t{
-
+        Status1 = 0x00,
+        Status2 = 0x01,
+        Ctrl1 = 0x02,
+        Ctrl2 = 0x03
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -25,33 +28,33 @@ struct DRV8301_Prelude{
 
     using RegAddr = uint8_t;
 
-    enum class PeakCurrent:uint16_t{
+    enum class [[nodiscard]] PeakCurrent:uint16_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
     };
 
-    enum class OcpMode:uint16_t{
+    enum class [[nodiscard]] OcpMode:uint16_t{
         CurrentLimit = 0,
         OClatchShutdown = 1,
         ReportOnly = 2,
         OCdisabled = 3
     };
 
-    enum class OctwMode:uint16_t{
+    enum class [[nodiscard]] OctwMode:uint16_t{
         OTandOC = 0,
         OTonly = 1,
         OConly = 2,
     };
 
-    enum class Gain:uint16_t{
+    enum class [[nodiscard]] Gain:uint16_t{
         X10 = 0,
         X20 = 1,
         X40 = 2,
         X80 = 3
     };
 
-    enum class OcAdTable:uint16_t{
+    enum class [[nodiscard]] OcAdTable:uint16_t{
         _060mA = 0,
         _068mA,
         _076mA,

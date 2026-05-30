@@ -11,6 +11,8 @@ public:
     // _1x = HiZ,
     // Independent = VDD,
     virtual void set_pwm_mode(const PwmMode mode) = 0;
+
+
     virtual void set_idrive(const IDriveP drive) = 0;
 };
 
@@ -18,7 +20,6 @@ public:
 class DRV8323H final:
     public DRV832X_Prelude{
 public:
-    static constexpr auto name = "DRV8323H";
     using Transport = DRV8323H_TransportIntf;
     explicit DRV8323H(Transport & transport):
         transport_(transport){;}
