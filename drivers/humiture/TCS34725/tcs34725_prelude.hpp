@@ -56,6 +56,13 @@ struct TCS34725_Prelude{
     };
 
 
+    enum class [[nodiscard]] Package:uint8_t{
+        // 0x44 = TCS34721 and TCS34725
+        TCS34725 = 0x44,
+        // 0x4D = TCS34723 and TCS34727
+        TCS34723 = 0x4d
+    };
+
 };
 
 struct TCS34725_Regset final:public TCS34725_Prelude{
@@ -127,8 +134,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
         static constexpr uint8_t KEY = 0x44;
         uint8_t id;
-    }DEF_R8(device_id_reg)
-
+    };
 
 };
 

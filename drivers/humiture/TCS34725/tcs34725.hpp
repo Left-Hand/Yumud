@@ -8,6 +8,17 @@ namespace ymd::drivers{
 class TCS34725 final:
     public TCS34725_Prelude{
 public:
+    struct [[nodiscard]] Config final{
+        Milliseconds integration_time;
+        Gain gain;
+
+        static constexpr Config from_default() noexcept {
+            return Config{
+                .integration_time = 240ms,
+                .gain = Gain::_1x,
+            };
+        }
+    };
 
     explicit TCS34725(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -22,22 +33,10 @@ public:
     TCS34725(TCS34725 &&) = delete;
     ~TCS34725() = default;
 
-    struct [[nodiscard]] Config final{
-        Milliseconds integration_time;
-        Gain gain;
-
-        static constexpr Config from_default() noexcept {
-            return Config{
-                .integration_time = 240ms,
-                .gain = Gain::_1x,
-            };
-        }
-    };
-
 
     IResult<> init(const Config & cfg);
 
-    IResult<> validate();
+    IResult<Package> validate();
 
     IResult<> set_integration_time(const Milliseconds ms);
 
@@ -56,15 +55,19 @@ public:
 
     IResult<> set_power(const bool on);
     IResult<> start_conv();
-    IResult<> update();
 
-    [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
+    struct [[nodiscard]] Crgb16 final{
+        std::array<uint16_t, 4> elements;
+    };
+
+    [[nodiscard]] IResult<Crgb16> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;
-    TCS34725_Regset regs_ = {};
 
-    std::array<uint16_t, 4> crgb_ = {0};
+    using Regs = TCS34725_Regset;
+    Regs regs_ = {};
+
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
