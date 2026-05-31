@@ -658,6 +658,8 @@ enum class [[nodiscard]] MavlinkSystemId : uint8_t {
 
 
 
+
+
 template<size_t N>
 struct OwnedNtstr{
     std::array<char, N> str;

@@ -1,4 +1,4 @@
-#include "mavlink_msgs.hpp"
+#include "mavlink_common_msgs.hpp"
 
 namespace{
     

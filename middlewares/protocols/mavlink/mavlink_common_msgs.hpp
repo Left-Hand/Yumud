@@ -3,6 +3,7 @@
 #include "mavlink_primitive.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "core/utils/unit/unit.hpp"
+#include "mavlink_packed_code.hpp"
 
 // https://mavlink.io/en/messages/common.html
 
@@ -17,6 +18,9 @@ struct [[nodiscard]] msg_typename final {\
 
 #define DEF_MAVMSG_MEMBER(member_name, type)\
     type member_name;
+
+#define DEF_MAVMSG_MEMBER_STRING(member_name, len)\
+    OwnedNtstr<len> member_name;
 
 #define DEF_MAVMSG_MEMBER_ARRAY(member_name, type, arr_size)\
     std::array<type, arr_size> member_name;
@@ -50,23 +54,7 @@ DEF_MAVMSG_BEGIN(Heartbeat, 0)
 DEF_MAVMSG_END
 
 
-struct LoadPercents{
-    uint16_t count;
-};
 
-struct VoltageCode{
-    //mv
-    uint16_t count;
-};
-
-struct CurrentCode{
-    //cA
-    int16_t count;
-
-    constexpr bool is_invalid(){
-        return count == -1;
-    }
-};
 
 // SYS_STATUS (1)
 // 系统核心状态（传感器、电池、负载、通信）。
@@ -160,7 +148,7 @@ DEF_MAVMSG_BEGIN(ChangeOperatorControl, 5)
     DEF_MAVMSG_MEMBER(version, uint8_t);
 
     // 密码/密钥，25个字符以内，NULL结尾
-    DEF_MAVMSG_MEMBER(passkey, OwnedNtstr<25>);
+    DEF_MAVMSG_MEMBER_STRING(passkey, 25);
 
 DEF_MAVMSG_END
 
@@ -186,7 +174,7 @@ DEF_MAVMSG_END
 DEF_MAVMSG_BEGIN(AuthKey, 7)
 
     // 加密密钥
-    DEF_MAVMSG_MEMBER(key, OwnedNtstr<32>);
+    DEF_MAVMSG_MEMBER_STRING(key, 32);
 
 DEF_MAVMSG_END
 
@@ -202,7 +190,7 @@ DEF_MAVMSG_BEGIN(ParamRequestRead, 20)
     DEF_MAVMSG_MEMBER(target_component, uint8_t);
 
     // 参数ID字符串，以NULL结尾（若小于16字符）或无NULL终止符（若恰好16字符）
-    DEF_MAVMSG_MEMBER(param_id, OwnedNtstr<16>);
+    DEF_MAVMSG_MEMBER_STRING(param_id, 16);
 
     // 参数索引，设为-1表示使用参数ID作为标识符
     DEF_MAVMSG_MEMBER(param_index, int16_t);
@@ -228,7 +216,7 @@ DEF_MAVMSG_END
 DEF_MAVMSG_BEGIN(ParamValue, 22)
 
     // 参数ID字符串
-    DEF_MAVMSG_MEMBER(param_id, OwnedNtstr<16>);
+    DEF_MAVMSG_MEMBER_STRING(param_id, 16);
 
     // 	机载参数值
     DEF_MAVMSG_MEMBER(param_value, fp32);
@@ -255,7 +243,7 @@ DEF_MAVMSG_BEGIN(ParamSet, 23)
     DEF_MAVMSG_MEMBER(target_component, uint8_t);
 
     // 参数ID字符串
-    DEF_MAVMSG_MEMBER(param_id, OwnedNtstr<16>);
+    DEF_MAVMSG_MEMBER_STRING(param_id, 16);
 
     // 参数值
     DEF_MAVMSG_MEMBER(param_value, fp32);
@@ -805,10 +793,7 @@ DEF_MAVMSG_BEGIN(CommandAck, 77)
 
 DEF_MAVMSG_END
 
-template<typename T>
-struct Radians{
-    T count;
-};
+
 
 // SET_POSITION_TARGET_LOCAL_NED (84)
 // 在本地东北下坐标系中设定目标车辆位置。由外部控制器用于指挥车辆（手动控制器或其他系统）。

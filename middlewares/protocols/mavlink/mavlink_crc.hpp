@@ -51,4 +51,46 @@ private:
     uint16_t checksum;
 };
 
+
+
+struct [[nodiscard]] ChecksumBuilderMcrf4xx final{
+    using Self = ChecksumBuilderMcrf4xx;
+
+    static constexpr Self from_default(){
+        Self self;
+        self.checksum = 0xffff;
+        return self;
+    }
+    
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const noexcept {
+        Self self = *this;
+
+        #pragma GCC unroll 4
+        for(size_t i = 0; i < bytes.size(); i++) {
+            self = self.push_byte(bytes[i]);
+        }
+
+        return self;
+    }
+
+
+    __attribute__((always_inline))
+    constexpr Self push_byte(const uint8_t byte) const noexcept {
+        Self self = *this;
+
+        uint8_t tmp = byte ^ (self.checksum & 0xFF);
+        tmp ^= tmp << 4;
+        self.checksum = (self.checksum >> 8) ^ (tmp << 8) ^ (tmp << 3) ^ (tmp >> 4);
+
+        return self;
+    }
+
+    [[nodiscard]] constexpr uint16_t finalize() const noexcept {
+        return checksum;
+    }
+
+private:
+    uint16_t checksum;
+};
+
 }
