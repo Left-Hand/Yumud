@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "core/utils/serde.hpp"
+#include <array>
+#include <span>
 
 // https://emanual.robotis.com/docs/en/dxl/protocol2/#status-packet
 
@@ -105,17 +106,29 @@ static constexpr std::array<uint16_t, 256> CRC_TABLE = {
 };
 
 // https://emanual.robotis.com/docs/en/dxl/crc/
-static constexpr uint16_t calc_crc(std::span<const uint16_t> pdata, uint16_t crc_accum = 0){
-    // Polynomial : x16 + x15 + x2 + 1 (polynomial representation : 0x8005)
-    // Initial Value : 0
 
-    for(size_t j = 0; j < pdata.size(); j++){
-        const uint16_t i = ((uint16_t)(crc_accum >> 8) ^ pdata[j]) & 0xFF;
-        crc_accum = (crc_accum << 8) ^ CRC_TABLE[i];
+struct [[nodiscard]] ChecksumBuilder final{
+    uint16_t checksum;
+
+    static constexpr ChecksumBuilder from_default(){
+        return ChecksumBuilder{.checksum = 0};
     }
 
-    return crc_accum;
-}
+
+    constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
+        ChecksumBuilder self = *this;
+
+        const uint8_t i = uint8_t(((self.checksum >> 8) ^ byte) & 0xFF);
+        self.checksum = (self.checksum << 8) ^ CRC_TABLE[i];
+
+        return self;
+    }
+
+
+    [[nodiscard]] uint8_t finalize() const noexcept {
+        return static_cast<uint8_t>(checksum >> 8);
+    }
+};
 
 
 }
