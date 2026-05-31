@@ -73,6 +73,38 @@ OutputStream & operator<<(OutputStream & os, const ModbusError & err){
 }
 
 
+OutputStream & operator<<(OutputStream & os, const FunctionCode::Kind kind){
+    using Kind = FunctionCode::Kind;
+    switch(kind) {
+        case Kind::ReadCoils:
+            return os << "ReadCoils";
+        case Kind::ReadDiscreteInputs:
+            return os << "ReadDiscreteInputs";
+        case Kind::ReadHoldingRegisters:
+            return os << "ReadHoldingRegisters";
+        case Kind::ReadInputRegisters:
+            return os << "ReadInputRegisters";
+        case Kind::WriteSingleCoil:
+            return os << "WriteSingleCoil";
+        case Kind::WriteSingleRegister:
+            return os << "WriteSingleRegister";
+        case Kind::WriteMultipleCoils:
+            return os << "WriteMultipleCoils";
+        case Kind::WriteMultipleRegisters:
+            return os << "WriteMultipleRegisters";
+        case Kind::ReadFileRecord:
+            return os << "ReadFileRecord";
+        case Kind::WriteFileRecord:
+            return os << "WriteFileRecord";
+        case Kind::ReadWriteMultipleRegisters:
+            return os << "ReadWriteMultipleRegisters";
+        case Kind::ReadDeviceIdentification:
+            return os << "ReadDeviceIdentification";
+    }
+    return os << os.field("Unknown")(static_cast<uint8_t>(kind));
+}
+
+
 }
 
 [[nodiscard]] static constexpr uint16_t crc16(std::span<const uint8_t> bytes) {

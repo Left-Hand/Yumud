@@ -7,7 +7,7 @@ using namespace ymd::modbus;
 
 namespace{
 
-struct Receiver{
+struct [[nodiscard]] Receiver final{
     using Error = Infallible;
 
     std::array<uint8_t, 20> bytes;
@@ -33,6 +33,8 @@ struct Receiver{
             }.serialize_context(ret).unwrap();
             return ret;
         }();
+
+
         static_assert(receiver.bytes[0] == 0x12);
         static_assert(receiver.bytes[1] == 0x34);
         static_assert(receiver.bytes[2] == 0x56);

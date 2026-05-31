@@ -35,7 +35,7 @@ enum class [[nodiscard]] ExceptionCode:uint8_t{
     GatewayTargetDevice,
 };
 
-struct [[nodiscard]]FunctionCode final{
+struct [[nodiscard]] FunctionCode final{
 
     enum class [[nodiscard]] Kind:uint8_t{
         ReadCoils = 1,
@@ -66,36 +66,8 @@ struct [[nodiscard]]FunctionCode final{
         return std::bit_cast<Kind>(bits);
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const Kind kind){
+    friend OutputStream & operator<<(OutputStream & os, const Kind kind);
 
-        switch(kind) {
-            case Kind::ReadCoils:
-                return os << "ReadCoils";
-            case Kind::ReadDiscreteInputs:
-                return os << "ReadDiscreteInputs";
-            case Kind::ReadHoldingRegisters:
-                return os << "ReadHoldingRegisters";
-            case Kind::ReadInputRegisters:
-                return os << "ReadInputRegisters";
-            case Kind::WriteSingleCoil:
-                return os << "WriteSingleCoil";
-            case Kind::WriteSingleRegister:
-                return os << "WriteSingleRegister";
-            case Kind::WriteMultipleCoils:
-                return os << "WriteMultipleCoils";
-            case Kind::WriteMultipleRegisters:
-                return os << "WriteMultipleRegisters";
-            case Kind::ReadFileRecord:
-                return os << "ReadFileRecord";
-            case Kind::WriteFileRecord:
-                return os << "WriteFileRecord";
-            case Kind::ReadWriteMultipleRegisters:
-                return os << "ReadWriteMultipleRegisters";
-            case Kind::ReadDeviceIdentification:
-                return os << "ReadDeviceIdentification";
-        }
-        return os << os.field("Unknown")(static_cast<uint8_t>(kind));
-    }
     friend OutputStream & operator<<(OutputStream & os, const FunctionCode & self){
         if(self.is_none()) return os << "None";
         return os << self.unwrap();
@@ -108,11 +80,11 @@ struct [[nodiscard]] ModbusError:public Sumtype<LibError,ExceptionCode>{
     using enum LibError;
     using enum ExceptionCode;
     [[nodiscard]] bool is_exception() const noexcept {
-        return is<ExceptionCode>();
+        return this->is<ExceptionCode>();
     }
 
     [[nodiscard]] ExceptionCode unwrap_as_exception() const noexcept {
-        return unwrap_as<ExceptionCode>();
+        return this->unwrap_as<ExceptionCode>();
     }
 
     friend OutputStream & operator<<(OutputStream & os, const LibError & err);
@@ -125,26 +97,23 @@ static constexpr Err<ModbusError> make_err(auto err){
     return Err<ModbusError>(err);
 }
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
     using Self = NodeId;
 
-    static constexpr Self from_bits(const uint8_t bits){
-        return std::bit_cast<Self>(bits);
-    } 
+    uint8_t count;
 
-    [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
-        return bits_;
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
+        return count;
     }
 
     [[nodiscard]] constexpr bool is_boardcast() const noexcept {
-        return bits_ == 0;
+        return count == 0;
     }
 
     [[nodiscard]] constexpr bool is_preserved() const noexcept {
-        return bits_ >= 248;
+        return count >= 248;
     }
-private:
-    uint8_t bits_;
+
 };  
 
 

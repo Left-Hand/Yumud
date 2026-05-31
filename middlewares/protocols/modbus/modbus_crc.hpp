@@ -67,17 +67,14 @@ static constexpr uint8_t CRC_HIGH_TABLE[] = {
 
 };
 
-struct [[nodiscard]] Crc16ModbusAccumulator final{
-    using Self = Crc16ModbusAccumulator;
-
-    uint8_t crc_low = 0xFF;
-    uint8_t crc_high = 0xFF;
+struct [[nodiscard]] ChecksumBuilder final{
+    using Self = ChecksumBuilder;
 
     static constexpr Self from_default(){
-        return Self{
-            .crc_low = 0xff,
-            .crc_high = 0xff
-        };
+        Self self;
+        self.crc_low = 0xff;
+        self.crc_high = 0xff;
+        return self;
     }
     
     constexpr Self push_bytes(std::span<const uint8_t> bytes) const noexcept {
@@ -105,5 +102,12 @@ struct [[nodiscard]] Crc16ModbusAccumulator final{
     [[nodiscard]] constexpr uint16_t finalize() const noexcept {
         return (crc_high << 8) | crc_low;
     }
+
+private:
+    uint8_t crc_low;
+    uint8_t crc_high;
 };
+
+
+
 }

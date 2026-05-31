@@ -13,7 +13,7 @@ namespace ymd::modbus{
 // 0x49~0x77	非法功能
 // 0x78~0x7F	保留
 // 0x80~0xFF	保留
-enum class FunctionCode : uint8_t {
+enum class [[nodiscard]] FunctionCode : uint8_t {
     None = 0,
     ReadCoils = 1,
     ReadDiscreteInputs = 2,
@@ -50,7 +50,8 @@ struct [[nodiscard]] ReadCoils final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -73,7 +74,8 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -95,7 +97,8 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(
             receiver, 
@@ -121,7 +124,8 @@ struct [[nodiscard]] ReadInputRegisters final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.base_addr, self.quantity);
     }
@@ -142,7 +146,8 @@ struct [[nodiscard]] WriteSingleCoil final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, 
             self.coil_addr, 
@@ -165,7 +170,8 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
         return serialize_u16x2(receiver, self.reg_addr, self.reg_value);
     }
@@ -185,7 +191,8 @@ struct [[nodiscard]] WriteMultipleCoils final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
 
         {
@@ -225,7 +232,8 @@ struct [[nodiscard]] WriteMultipleRegisters final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto & self = *this;
 
         {
@@ -285,7 +293,8 @@ struct [[nodiscard]] MaskWriteRegister final{
     }
 
     template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> serialize_context(Receiver & receiver) const noexcept {
+    constexpr Result<void, typename Receiver::Error> 
+    serialize_context(Receiver & receiver) const noexcept {
         auto& self = *this;
 
         return serialize_u16_args(receiver, 
