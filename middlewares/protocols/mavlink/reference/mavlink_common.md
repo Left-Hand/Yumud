@@ -1194,3 +1194,34 @@
 | 3 | MAVLINK_DATA_STREAM_IMG_RAW32U | 32位原始图像 |
 | 4 | MAVLINK_DATA_STREAM_IMG_PGM | PGM图像 |
 | 5 | MAVLINK_DATA_STREAM_IMG_PNG | PNG图像 |
+
+
+# POSITION_TARGET_TYPEMASK
+**(Bitmask)** Bitmap to indicate which dimensions should be ignored by the vehicle: a value of `0b0000000000000000` or `0b0000001000000000` indicates that none of the setpoint dimensions should be ignored. If bit 9 is set the floats afx afy afz should be interpreted as force instead of acceleration.
+
+| Value | Name | Description |
+| ----- | ---- | ----------- |
+| 1 | POSITION_TARGET_TYPEMASK_X_IGNORE | Ignore position x |
+| 2 | POSITION_TARGET_TYPEMASK_Y_IGNORE | Ignore position y |
+| 4 | POSITION_TARGET_TYPEMASK_Z_IGNORE | Ignore position z |
+| 8 | POSITION_TARGET_TYPEMASK_VX_IGNORE | Ignore velocity x |
+| 16 | POSITION_TARGET_TYPEMASK_VY_IGNORE | Ignore velocity y |
+| 32 | POSITION_TARGET_TYPEMASK_VZ_IGNORE | Ignore velocity z |
+| 64 | POSITION_TARGET_TYPEMASK_AX_IGNORE | Ignore acceleration x |
+| 128 | POSITION_TARGET_TYPEMASK_AY_IGNORE | Ignore acceleration y |
+| 256 | POSITION_TARGET_TYPEMASK_AZ_IGNORE | Ignore acceleration z |
+| 512 | POSITION_TARGET_TYPEMASK_FORCE_SET | Use force instead of acceleration |
+| 1024 | POSITION_TARGET_TYPEMASK_YAW_IGNORE | Ignore yaw |
+| 2048 | POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE | Ignore yaw rate |
+
+# ATTITUDE_TARGET_TYPEMASK
+**(Bitmask)** Bitmap to indicate which dimensions should be ignored by the vehicle: a value of `0b00000000` indicates that none of the setpoint dimensions should be ignored.
+
+| Value | Name | Description |
+| ----- | ---- | ----------- |
+| 1 | ATTITUDE_TARGET_TYPEMASK_BODY_ROLL_RATE_IGNORE | Ignore body roll rate |
+| 2 | ATTITUDE_TARGET_TYPEMASK_BODY_PITCH_RATE_IGNORE | Ignore body pitch rate |
+| 4 | ATTITUDE_TARGET_TYPEMASK_BODY_YAW_RATE_IGNORE | Ignore body yaw rate |
+| 32 | ATTITUDE_TARGET_TYPEMASK_THRUST_BODY_SET | Use 3D body thrust setpoint instead of throttle |
+| 64 | ATTITUDE_TARGET_TYPEMASK_THROTTLE_IGNORE | Ignore throttle |
+| 128 | ATTITUDE_TARGET_TYPEMASK_ATTITUDE_IGNORE | Ignore attitude |

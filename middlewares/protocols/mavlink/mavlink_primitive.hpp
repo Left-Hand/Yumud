@@ -409,6 +409,22 @@ enum class [[nodiscard]] MavlinkDataStreamType : uint8_t {
     ImgPng = 5,     // PNG图像
 };
 
+struct [[nodiscard]] PositionTargetTypemask final{
+    uint16_t bits;
+    
+    DEF_PROPERTY_BIT(x_ignore, 0, &self.bits)
+    DEF_PROPERTY_BIT(y_ignore, 1, &self.bits)
+    DEF_PROPERTY_BIT(z_ignore, 2, &self.bits)
+    DEF_PROPERTY_BIT(vx_ignore, 3, &self.bits)
+    DEF_PROPERTY_BIT(vy_ignore, 4, &self.bits)
+    DEF_PROPERTY_BIT(vz_ignore, 5, &self.bits)
+    DEF_PROPERTY_BIT(ax_ignore, 6, &self.bits)
+    DEF_PROPERTY_BIT(ay_ignore, 7, &self.bits)
+    DEF_PROPERTY_BIT(az_ignore, 8, &self.bits)
+    DEF_PROPERTY_BIT(force_set, 9, &self.bits)
+    DEF_PROPERTY_BIT(yaw_ignore, 10, &self.bits)
+    DEF_PROPERTY_BIT(yaw_rate_ignore, 11, &self.bits)
+};
 
 
 
@@ -471,8 +487,9 @@ enum class [[nodiscard]] MavComponentType : uint8_t {
 };
 
 
+using MavCmd = uint16_t;
 
-enum class [[nodiscard]] MavMessageId : uint8_t {
+enum class [[nodiscard]] MavMessageId : uint16_t {
     Heartbeat = 0,
     SysStatus = 1,
     SystemTime = 2,
