@@ -52,6 +52,7 @@ public:
         AsyncWrite = 0x04,
         InvokeAsync = 0x05,
         Reset = 0x06,
+        SyncRead = 0x82,
         SyncWrite = 0x83
     };
 
@@ -133,10 +134,6 @@ struct [[nodiscard]] SyncWrite final{
 
 
 }
-
-
-
-
 
 
 #undef DEF_PROPERTY_BFPROXY

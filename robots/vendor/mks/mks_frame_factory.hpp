@@ -5,10 +5,10 @@
 
 namespace ymd::robots::mksmotor{
 
-class MksFrameFactory final{
+struct [[nodiscard]] MksFrameFactory final{
 public:
 
-    NodeId node_id;
+    const NodeId node_id;
 
     struct PositionSetpoint{
         iq16 position;

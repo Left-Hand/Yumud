@@ -3,7 +3,6 @@
 #include "core/utils/Result.hpp"
 
 #include "core/math/realmath.hpp"
-#include "core/container/heapless_vector.hpp"
 #include "core/tmp/reflect/enum.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
@@ -49,39 +48,8 @@ enum class [[nodiscard]] FuncCode:uint8_t{
     MultiAxisSync = 0xff
 };
 
-struct [[nodiscard]] CanFrameUtils{
-    static constexpr hal::ClassicCanFrame make_can_frame(
-        const NodeId node_id,
-        const FuncCode func_code,
-        const uint8_t piece_cnt,
-        const std::span<const uint8_t> bytes
-    ){
-        constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
 
-        auto buf = HeaplessVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
-        buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
-        buf.append_unchecked(bytes);
-
-        return hal::ClassicCanFrame::from_parts(
-            nodeid_and_piececnt_to_canid(node_id, piece_cnt),
-            hal::ClassicCanPayload::from_bytes(buf.as_slice())
-        );
-    }
-
-    //固定为拓展帧
-    static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
-        const NodeId node_id,
-        const uint8_t piece
-    ){
-        return hal::CanExtId::from_bits(
-            uint32_t(node_id.to_u8() << 8) |
-            uint32_t(piece << 0)
-        );
-    }
-};
-
-
-struct [[nodiscard]] Bytes2CanFrameIterator final:public CanFrameUtils{
+struct [[nodiscard]] Bytes2CanFrameIterator final{
     static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
     explicit constexpr Bytes2CanFrameIterator(
         const NodeId node_id,
@@ -93,7 +61,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator final:public CanFrameUtils{
         bytes_(context){;}
 
     [[nodiscard]] constexpr bool has_next() const noexcept {
-        return bytes_.size() > offset_;
+        return offset_ < bytes_.size();
     }
 
     [[nodiscard]] constexpr hal::ClassicCanFrame next(){
@@ -129,6 +97,34 @@ private:
     std::span<const uint8_t> bytes_;
     size_t offset_ = 0;
     size_t piece_cnt_ = 0;
+
+
+    static constexpr hal::ClassicCanFrame make_can_frame(
+        const NodeId node_id,
+        const FuncCode func_code,
+        const uint8_t piece_cnt,
+        const std::span<const uint8_t> bytes
+    ){
+        std::array<uint8_t, 8> buf;
+        buf[0] = static_cast<uint8_t>(func_code);
+        std::copy(bytes.begin(), bytes.end(), std::next(buf.begin()));
+
+        return hal::ClassicCanFrame::from_parts(
+            nodeid_and_piececnt_to_canid(node_id, piece_cnt),
+            hal::ClassicCanPayload::from_u8x8(buf)
+        );
+    }
+
+    //固定为拓展帧
+    static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
+        const NodeId node_id,
+        const uint8_t piece
+    ){
+        return hal::CanExtId::from_bits(
+            uint32_t(node_id.to_u8() << 8) |
+            uint32_t(piece << 0)
+        );
+    }
 };
 
 
@@ -138,31 +134,11 @@ struct [[nodiscard]] FlatPacket final{
     std::array<uint8_t, MAX_CONTEXT_BYTES> context;
     uint8_t payload_len;
 
-
-    template<typename Receiver>
-    Result<void, typename Receiver::Error> serialize(Receiver & receiver) const noexcept {
-        auto & self = *this;
-        {
-            const uint8_t buf[] = {
-                static_cast<uint8_t>(node_id.count),
-                static_cast<uint8_t>(func_code)
-            };
-
-            if(const auto res = receiver.push_bytes(std::span(buf));
-                res.is_err()) return Err(res.unwrap_err());
-        }
-
-        {
-            const auto bytes = std::span<const uint8_t>(self.context.data(), self.payload_len);
-            if(const auto res = receiver.push_bytes(bytes);
-                res.is_err()) return Err(res.unwrap_err());
-        }
-
-        return Ok();
-    }
-
     [[nodiscard]] constexpr std::span<const uint8_t> transmittable_bytes() const noexcept {
-        return std::span<const uint8_t>(&node_id.count, static_cast<size_t>(payload_len));
+        return std::span<const uint8_t>(
+            &node_id.count, 
+            static_cast<size_t>(payload_len)
+        );
     }
 
     constexpr Bytes2CanFrameIterator to_canframe_iter() const noexcept {
@@ -250,16 +226,16 @@ struct [[nodiscard]] PulseCnt final{
     using Self = PulseCnt;
     static constexpr uint32_t SCALE = 3200 * (256/16);
 
-    static constexpr Self from_pulses(const uint32_t pulses){
-        return {__builtin_bswap32(pulses)};
+    static constexpr Self from_pulses(const uint32_t num_pulses){
+        return {__builtin_bswap32(num_pulses)};
     }
 
     static constexpr Option<Self> from_angle(const Angular<uq16> angle){
         const uq16 turns = (angle.to_turns());
         const uint32_t frac_part = uint32_t(math::frac(turns) * SCALE);
         const uint32_t digit_part  = uint32_t(uint32_t(turns) * SCALE);
-        const uint32_t pulses = uint32_t(frac_part + digit_part);
-        return Some(from_pulses(pulses));
+        const uint32_t num_pulses = uint32_t(frac_part + digit_part);
+        return Some(from_pulses(num_pulses));
     }
 
     constexpr uint32_t to_u32() const noexcept {
@@ -283,8 +259,8 @@ struct [[nodiscard]] AcclerationLevel final{
         return Self{0};
     }
 
-    static constexpr Self from_u8(const uint8_t raw){
-        return Self{raw};
+    static constexpr Self from_u8(const uint8_t b){
+        return Self{b};
     }
     uint8_t bits;
 };

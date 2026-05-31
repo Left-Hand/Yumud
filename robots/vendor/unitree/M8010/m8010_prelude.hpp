@@ -11,8 +11,6 @@
 #include "primitive/can/can_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-#include "algo/encrypt/crc_common.hpp"
-
 
 namespace ymd::robots::unitree{
 
@@ -88,10 +86,13 @@ struct [[nodiscard]] TorqueCode final{
     using Self = TorqueCode;
     int16_t bits;
 
-    static constexpr Result<Self, std::strong_ordering> try_from_nm(const iq16 torque_nm){
+    static constexpr Result<Self, std::strong_ordering> 
+    try_from_nm(const iq16 torque_nm){
         const auto ret = torque_nm << 8;
-        if(ret > std::numeric_limits<int16_t>::max()) return Err(std::strong_ordering::greater);
-        if(ret < std::numeric_limits<int16_t>::min()) return Err(std::strong_ordering::less);
+        if(ret > std::numeric_limits<int16_t>::max()) 
+            return Err(std::strong_ordering::greater);
+        if(ret < std::numeric_limits<int16_t>::min()) 
+            return Err(std::strong_ordering::less);
         return Ok(Self{round_cast<int16_t>(ret)});
     }
 
@@ -107,10 +108,13 @@ struct [[nodiscard]] X2Code final{
     using Self = X2Code;
     int16_t bits;
 
-    static constexpr Result<Self, std::strong_ordering> try_from_speed(const Angular<iq16> speed){
+    static constexpr Result<Self, std::strong_ordering> 
+    try_from_speed(const Angular<iq16> speed){
         const auto ret = speed.to_turns() << 8;
-        if(ret > std::numeric_limits<int16_t>::max()) return Err(std::strong_ordering::greater);
-        if(ret < std::numeric_limits<int16_t>::min()) return Err(std::strong_ordering::less);
+        if(ret > std::numeric_limits<int16_t>::max()) 
+            return Err(std::strong_ordering::greater);
+        if(ret < std::numeric_limits<int16_t>::min()) 
+            return Err(std::strong_ordering::less);
         return Ok(Self{math::round_cast<int16_t>(ret)});
     }
 
@@ -185,6 +189,27 @@ struct [[nodiscard]] TxHeader final{
     }
 };
 
+
+[[nodiscard]] static constexpr uint16_t crc16_ccitt(std::span<const uint8_t> bytes)
+{
+    const uint8_t *data = bytes.data();
+    size_t length = bytes.size();
+    uint8_t i;
+    uint16_t crc = 0;        // Initial value
+    while(length--)
+    {
+        crc ^= *data++;        // crc ^= *data; data++;
+        for (i = 0; i < 8; ++i)
+        {
+            if (crc & 1)
+                crc = (crc >> 1) ^ 0x8408;        // 0x8408 = reverse 0x1021
+            else
+                crc = (crc >> 1);
+        }
+    }
+    return crc;
+}
+
 struct [[nodiscard]] TxContext final{
     ModeInfo mode_settings;
     TorqueCode torque_code;
@@ -211,7 +236,7 @@ struct [[nodiscard]] TxContext final{
 
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
         self.fill_bytes(std::span(buffer).template subspan<2, 13>());
-        const auto crc_code = encrypt::crc::crc16_ccitt(std::span(buffer).template subspan<0, 15>());
+        const auto crc_code = crc16_ccitt(std::span(buffer).template subspan<0, 15>());
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
@@ -330,7 +355,7 @@ struct [[nodiscard]] RxContext final{
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
         self.fill_bytes(std::span(buffer).template subspan<2, 12>());
-        const auto crc_code = encrypt::crc::crc16_ccitt(std::span(buffer).template subspan<0, 14>());
+        const auto crc_code = crc16_ccitt(std::span(buffer).template subspan<0, 14>());
         buffer[14] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[15] = static_cast<uint8_t>(crc_code >> 8);
 
