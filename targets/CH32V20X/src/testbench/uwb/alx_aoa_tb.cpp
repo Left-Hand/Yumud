@@ -379,7 +379,7 @@ void alx_aoa_main(){
         // blink_activity_.resume();
         poll_led();
         // times++;
-        const auto now_secs = clock::seconds();
+        // const auto now_secs = clock::seconds();
 
         // const auto sine = (iq16)math::sin(now_secs);
         // const auto cosine = (iq16)math::cos(now_secs);
