@@ -53,7 +53,13 @@ struct [[nodiscard]] ReadCoils final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(serializer, self.base_addr, self.quantity);
+
+        std::array<uint16_t, 2> buf{
+            self.base_addr,
+            self.quantity
+        };
+
+        return serialize_u16_args(serializer, buf.data(), 2);
     }
 };
 
@@ -77,7 +83,13 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(serializer, self.base_addr, self.quantity);
+
+        std::array<uint16_t, 2> buf{
+            self.base_addr,
+            self.quantity
+        };
+
+        return serialize_u16_args(serializer, buf.data(), 2);
     }
 };
 
@@ -100,10 +112,15 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(
-            serializer, 
-            self.base_addr, 
+
+        std::array<uint16_t, 2> buf{
+            self.base_addr,
             self.quantity
+        };
+
+        return serialize_u16_args(
+            serializer, 
+            buf.data(), 2
         );
     }
 };
@@ -127,7 +144,15 @@ struct [[nodiscard]] ReadInputRegisters final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(serializer, self.base_addr, self.quantity);
+
+
+        std::array<uint16_t, 2> buf{
+            self.base_addr,
+            self.quantity
+        };
+
+        return serialize_u16_args(
+            serializer, buf.data(), 2);
     }
 };
 
@@ -149,9 +174,15 @@ struct [[nodiscard]] WriteSingleCoil final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(serializer, 
-            self.coil_addr, 
-            (self.coil_enabled == EN) ? 0xFF00 : 0x0000
+
+        std::array<uint16_t, 2> buf = {
+            self.coil_addr,
+            (self.coil_enabled == EN) ? uint16_t(0xFF00) : uint16_t(0x0000)
+        };
+
+        return serialize_u16_args(
+            serializer, 
+            buf.data(), 2
         );
     }
 };
@@ -173,7 +204,14 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     constexpr Result<void, typename Serializer::Error> 
     serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(serializer, self.reg_addr, self.reg_value);
+
+
+        std::array<uint16_t, 2> buf{
+            self.reg_addr,
+            self.reg_value
+        };
+
+        return serialize_u16_args(serializer, buf.data(), 2);
     }
 };
 
@@ -297,13 +335,81 @@ struct [[nodiscard]] MaskWriteRegister final{
     serialize_context(Serializer & serializer) const noexcept {
         auto& self = *this;
 
-        return serialize_u16_args(serializer, 
-            self.reg_addr, 
-            self.and_mask, 
+
+        std::array<uint16_t, 3> buf{
+            self.reg_addr,
+            self.and_mask,
             self.or_mask
-        );
+        };
+
+        return serialize_u16_args(serializer, buf.data(), 3);
     }
 };
+
+
+// REQ[0x17/23] 读写多个寄存器
+struct [[nodiscard]] ReadWriteRegisters final{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadWriteRegisters;
+    //length not constant
+
+    uint16_t read_start_addr;      // 读起始地址高位/低位
+    uint16_t read_quantity;        // 读数量高位/低位
+    uint16_t write_start_addr;     // 写起始地址高位/低位
+    uint16_t write_quantity;       // 写数量高位/低位
+    std::span<const uint16_t> write_reg_values; // 写入的寄存器值
+
+    constexpr size_t context_length() const noexcept {
+        return 9 + write_reg_values.size() * 2;
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 首先发送读参数（起始地址和数量）
+        {
+            const std::array<uint8_t, 8> read_params = {
+                static_cast<uint8_t>(self.read_start_addr >> 8),
+                static_cast<uint8_t>(self.read_start_addr & 0xFF),
+                static_cast<uint8_t>(self.read_quantity >> 8),
+                static_cast<uint8_t>(self.read_quantity & 0xFF),
+                static_cast<uint8_t>(self.write_start_addr >> 8),
+                static_cast<uint8_t>(self.write_start_addr & 0xFF),
+                static_cast<uint8_t>(self.write_quantity >> 8),
+                static_cast<uint8_t>(self.write_quantity & 0xFF)
+            };
+
+            if(const auto res = serializer.push_bytes(std::span(read_params)); 
+                res.is_err()) return Err(res.unwrap_err());
+        }
+
+        // 然后发送写字节数
+        {
+            const uint8_t write_byte_count = static_cast<uint8_t>(self.write_quantity * 2);
+            const std::array<uint8_t, 1> byte_count = {write_byte_count};
+
+            if(const auto res = serializer.push_bytes(std::span(byte_count)); 
+                res.is_err()) return Err(res.unwrap_err());
+        }
+
+        // 最后发送写入的寄存器数据
+        {
+            for(size_t i = 0; i < self.write_reg_values.size(); i++){
+                const std::array<uint8_t, 2> buffer = {
+                    static_cast<uint8_t>(self.write_reg_values[i] >> 8),
+                    static_cast<uint8_t>(self.write_reg_values[i] & 0xFF)
+                };
+
+                if(const auto res = serializer.push_bytes(std::span(buffer)); 
+                    res.is_err()) return Err(res.unwrap_err());
+            }
+        }
+
+        return Ok();
+    }
+};
+
 
 // REQ[0x29/41] 重启指定从机
 struct [[nodiscard]] ResetSlave final{
@@ -314,16 +420,50 @@ struct [[nodiscard]] ResetSlave final{
 };
 
 
-
 }
 
 namespace resp_msg{
 
 
+// RESP[1] 读取线圈
+struct ReadCoils{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadCoils;
+
+    std::span<const uint8_t> coil_values; // 按字节打包的线圈状态
+};
+
+
+// RESP[2] 读取离散输入
+struct ReadDiscreteInputs{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadDiscreteInputs;
+
+    std::span<const uint8_t> discrete_input_values; // 按字节打包的离散输入状态
+};
+
+
 // RESP[3] 读保持寄存器
 struct ReadHoldingRegisters{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadHoldingRegisters;
+
     std::span<const uint16_t> reg_values;
+};
+
+
+// RESP[4] 读输入寄存器
+struct ReadInputRegisters{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadInputRegisters;
+
+    std::span<const uint16_t> reg_values;
+};
+
+
+// RESP[5] 写单个线圈
+// 应答帧与发送帧完全一致，表明写入成功
+struct WriteSingleCoil{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleCoil;
+
+    uint16_t coil_addr;
+    uint16_t coil_value;  // 0xFF00 或 0x0000
 };
 
 
@@ -331,10 +471,58 @@ struct ReadHoldingRegisters{
 // 应答帧与发送帧完全一致，表明写入成功
 struct WriteSingleHoldingRegister{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleHoldingRegister;
+
     uint16_t reg_addr;
     uint16_t reg_value;
 };
 
+
+// RESP[0x0f/15] 写多个线圈
+// 应答帧返回写入的起始地址和线圈数量
+struct WriteMultipleCoils{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleCoils;
+
+    uint16_t start_addr;
+    uint16_t quantity;
+};
+
+
+// RESP[0x10/16] 写多个寄存器
+// 应答帧返回写入的起始地址和寄存器数量
+struct WriteMultipleRegisters{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleRegisters;
+
+    uint16_t start_addr;
+    uint16_t quantity;
+};
+
+
+// RESP[0x11/17] 报告从机Id
+struct ReportSlaveId{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReportSlaveId;
+
+    uint8_t byte_count;
+    std::span<const uint8_t> slave_id_data;  // 包含运行状态、厂商ID、设备型号等信息
+};
+
+
+// RESP[0x16/22] 掩码写寄存器
+// 应答帧与发送帧完全一致，表明写入成功
+struct MaskWriteRegister{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::MaskWriteRegister;
+
+    uint16_t reg_addr;
+    uint16_t and_mask;
+    uint16_t or_mask;
+};
+
+
+// RESP[0x17/23] 读写多个寄存器
+struct ReadWriteRegisters{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadWriteRegisters;
+
+    std::span<const uint16_t> read_reg_values;  // 读取的寄存器值
+};
 
 }
 

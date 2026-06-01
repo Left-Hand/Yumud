@@ -176,99 +176,99 @@ noheadtail(std::span<const uint8_t, N> in){
 [[maybe_unused]] void test_ser_response(){
     // Test GetAbs response: 02 00 10 78 14 7E
     {
-        constexpr uint8_t raw_data[] = {0x02, 0x00, 0x10, 0x78, 0x14, 0x7e};
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
-        constexpr auto parsed = resp_msgs::GetAbs::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.sf.is_none());
+        constexpr uint8_t received_bytes[] = {0x02, 0x00, 0x10, 0x78, 0x14, 0x7e};
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
+        constexpr auto msg = resp_msgs::GetAbs::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.sf.is_none());
         // Check the ABS values: 0x10, 0x78, 0x14 -> little endian: 0x147810
-        static_assert(parsed.abs.bytes[0] == 0x10);
-        static_assert(parsed.abs.bytes[1] == 0x78);
-        static_assert(parsed.abs.bytes[2] == 0x14);
+        static_assert(msg.abs.bytes[0] == 0x10);
+        static_assert(msg.abs.bytes[1] == 0x78);
+        static_assert(msg.abs.bytes[2] == 0x14);
     }
 
     // Test GetAbm response: 8A 00 00 00 00 8A
     {
-        constexpr uint8_t raw_data[] = {0x8a, 0x00, 0x00, 0x00, 0x00, 0x8a};
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
-        constexpr auto parsed = resp_msgs::GetAbm::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.sf.is_none());
+        constexpr uint8_t received_bytes[] = {0x8a, 0x00, 0x00, 0x00, 0x00, 0x8a};
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
+        constexpr auto msg = resp_msgs::GetAbm::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.sf.is_none());
         // Check the ABM values: 0x00, 0x00, 0x00 -> all zeros
-        static_assert(parsed.abm.bytes[0] == 0x00);
-        static_assert(parsed.abm.bytes[1] == 0x00);
-        static_assert(parsed.abm.bytes[2] == 0x00);
+        static_assert(msg.abm.bytes[0] == 0x00);
+        static_assert(msg.abm.bytes[1] == 0x00);
+        static_assert(msg.abm.bytes[2] == 0x00);
     }
 
     // Test GetAllInfo response: 1A 00 7A 6D 0F 0A 00 00 00 00 08
     {
-        constexpr uint8_t raw_data[] = {
+        constexpr uint8_t received_bytes[] = {
             0x1a, 0x00, 0x7a, 0x6d, 0x0f, 
             0x0a, 0x00, 0x00, 0x00, 0x00,
             0x08
         };
 
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
-        constexpr auto parsed = resp_msgs::GetAllInfo::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.sf.is_none());
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
+        constexpr auto msg = resp_msgs::GetAllInfo::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.sf.is_none());
         // Check the ABS values: 0x7a, 0x6d, 0x0f -> little endian: 0x0f6d7a
-        static_assert(parsed.abs.bytes[0] == 0x7a);
-        static_assert(parsed.abs.bytes[1] == 0x6d);
-        static_assert(parsed.abs.bytes[2] == 0x0f);
+        static_assert(msg.abs.bytes[0] == 0x7a);
+        static_assert(msg.abs.bytes[1] == 0x6d);
+        static_assert(msg.abs.bytes[2] == 0x0f);
         // Check ENC_ID: 0x0a
-        static_assert(parsed.enc_id == 0x0a);
+        static_assert(msg.enc_id == 0x0a);
         // Check ABM values: 0x00, 0x00, 0x00 -> all zeros
-        static_assert(parsed.abm.bytes[0] == 0x00);
-        static_assert(parsed.abm.bytes[1] == 0x00);
-        static_assert(parsed.abm.bytes[2] == 0x00);
+        static_assert(msg.abm.bytes[0] == 0x00);
+        static_assert(msg.abm.bytes[1] == 0x00);
+        static_assert(msg.abm.bytes[2] == 0x00);
         // Check ALMC: 0x00
-        static_assert(std::bit_cast<uint8_t>(parsed.almc) == 0x00);
+        static_assert(std::bit_cast<uint8_t>(msg.almc) == 0x00);
     }
 
     // Test GetVersion response: 92 89 13 31 75 96 2A 9D 13 7E
     {
-        constexpr uint8_t raw_data[] = {
+        constexpr uint8_t received_bytes[] = {
             0x92, 0x89, 0x13, 0x31, 0x75, 
             0x96, 0x2A, 0x9D, 0x13, 0x7e
         };
 
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
-        constexpr auto parsed = resp_msgs::GetVersion::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.encoder_product_code.low == 0x1389);
-        static_assert(parsed.encoder_product_code.high == 0x7531);
-        static_assert(parsed.firmware_version.low == 0x2a96);
-        static_assert(parsed.firmware_version.high == 0x139d);
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
+        constexpr auto msg = resp_msgs::GetVersion::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.encoder_product_code.low == 0x1389);
+        static_assert(msg.encoder_product_code.high == 0x7531);
+        static_assert(msg.firmware_version.low == 0x2a96);
+        static_assert(msg.firmware_version.high == 0x139d);
     }
 
     // Test ReadEEprom response: EA 01 69 82
     {
-        constexpr uint8_t raw_data[] = {0xea, 0x01, 0x69, 0x82};
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
+        constexpr uint8_t received_bytes[] = {0xea, 0x01, 0x69, 0x82};
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto parsed = resp_msgs::ReadEEprom::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.address == 0x01);
-        static_assert(parsed.val == 0x69);
+        constexpr auto msg = resp_msgs::ReadEEprom::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.address == 0x01);
+        static_assert(msg.val == 0x69);
     }
 
     // Test ClearAbmAndFault response: 62 00 A9 99 18 4A
     {
-        constexpr uint8_t raw_data[] = {0x62, 0x00, 0xa9, 0x99, 0x18, 0x4a};
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
+        constexpr uint8_t received_bytes[] = {0x62, 0x00, 0xa9, 0x99, 0x18, 0x4a};
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto parsed = resp_msgs::ClearAbmAndFault::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.sf.is_none());
+        constexpr auto msg = resp_msgs::ClearAbmAndFault::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.sf.is_none());
         // Check the ABS values: 0xa9, 0x99, 0x18 -> little endian: 0x1899a9
-        static_assert(parsed.abs.bytes[0] == 0xa9);
-        static_assert(parsed.abs.bytes[1] == 0x99);
-        static_assert(parsed.abs.bytes[2] == 0x18);
+        static_assert(msg.abs.bytes[0] == 0xa9);
+        static_assert(msg.abs.bytes[1] == 0x99);
+        static_assert(msg.abs.bytes[2] == 0x18);
     }
 
     // Test WriteEEprom response: 32 01 69 5A
     {
-        constexpr uint8_t raw_data[] = {0x32, 0x01, 0x69, 0x5a};
-        static_assert(verify_checksum(std::span(raw_data)).is_ok());
+        constexpr uint8_t received_bytes[] = {0x32, 0x01, 0x69, 0x5a};
+        static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto parsed = resp_msgs::WriteEEprom::from_bytes(noheadtail(std::span{raw_data}));
-        static_assert(parsed.address == 0x01);
-        static_assert(parsed.val == 0x69);
+        constexpr auto msg = resp_msgs::WriteEEprom::from_bytes(noheadtail(std::span{received_bytes}));
+        static_assert(msg.address == 0x01);
+        static_assert(msg.val == 0x69);
     }
 }
 
