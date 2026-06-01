@@ -48,7 +48,7 @@ struct [[nodiscard]] KeySpecifiers final {
 
 
 
-struct __attribute__((packed)) [[nodiscard]]Packet final{
+struct __attribute__((packed)) [[nodiscard]] Packet final{
     uint16_t right_horizen : 11; 
     uint16_t right_vertical : 11; 
     uint16_t left_veritcal : 11; 

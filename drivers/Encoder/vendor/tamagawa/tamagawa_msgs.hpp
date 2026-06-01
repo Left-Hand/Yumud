@@ -73,17 +73,16 @@ struct [[nodiscard]] WriteEEprom final {
     uint8_t address;
     uint8_t val;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
     }
-
 
     static constexpr Self from_bytes(
         std::span<const uint8_t, CONTEXT_LENGTH> bytes
@@ -104,12 +103,12 @@ struct [[nodiscard]] ReadEEprom final {
 
     uint8_t address;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {self.address};
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -146,9 +145,9 @@ struct [[nodiscard]] GetAllInfo final {
     Abm24 abm;
     Almc almc;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
@@ -157,7 +156,7 @@ struct [[nodiscard]] GetAllInfo final {
             self.abm.bytes[0], self.abm.bytes[1], self.abm.bytes[2],
             std::bit_cast<uint8_t>(self.almc)
         };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -187,15 +186,15 @@ struct [[nodiscard]] GetAbs final{
     StatusField sf;
     Abs24 abs;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -221,15 +220,15 @@ struct [[nodiscard]] GetAbm final {
     StatusField sf;
     Abm24 abm;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abm.bytes[0], self.abm.bytes[1], self.abm.bytes[2]
         };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -252,24 +251,22 @@ struct [[nodiscard]] GetVersion final {
     static constexpr CfCode CF_CODE = CfCode::GetVersion;
     static constexpr size_t CONTEXT_LENGTH = 8;
 
-    uint32_t encoder_product_code;
-    uint32_t firmware_version;
+    struct{
+        uint16_t low;
+        uint16_t high;
+    }encoder_product_code;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    struct{
+        uint16_t low;
+        uint16_t high;
+    } firmware_version;
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
-        const uint8_t buffer[] = {
-            static_cast<uint8_t>(self.encoder_product_code & 0xFF),
-            static_cast<uint8_t>((self.encoder_product_code >> 8) & 0xFF),
-            static_cast<uint8_t>((self.encoder_product_code >> 16) & 0xFF),
-            static_cast<uint8_t>((self.encoder_product_code >> 24) & 0xFF),
-            static_cast<uint8_t>(self.firmware_version & 0xFF),
-            static_cast<uint8_t>((self.firmware_version >> 8) & 0xFF),
-            static_cast<uint8_t>((self.firmware_version >> 16) & 0xFF),
-            static_cast<uint8_t>((self.firmware_version >> 24) & 0xFF)
-        };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        const auto buffer = std::bit_cast<std::array<uint8_t, 8>>(self);
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -278,21 +275,9 @@ struct [[nodiscard]] GetVersion final {
     static constexpr GetVersion from_bytes(
         std::span<const uint8_t, CONTEXT_LENGTH> bytes
     ) noexcept {
-
-        return GetVersion{
-            .encoder_product_code = static_cast<uint32_t>(
-                bytes[0] 
-                | (bytes[1] << 8)
-                | (bytes[2] << 16)
-                | (bytes[3] << 24)
-            ),
-            .firmware_version = static_cast<uint32_t>(
-                bytes[4] 
-                | (bytes[5] << 8)
-                | (bytes[6] << 16)
-                | (bytes[7] << 24)
-            ),
-        };
+        std::array<uint8_t, 8> buffer;
+        std::copy(bytes.begin(), bytes.end(), buffer.data());
+        return std::bit_cast<GetVersion>(buffer);
     }
 };
 
@@ -307,15 +292,15 @@ struct [[nodiscard]] ClearAbmAndFault final {
     StatusField sf;
     Abs24 abs;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -342,15 +327,15 @@ struct [[nodiscard]] ClearAbs final {
     StatusField sf;
     Abs24 abs;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -376,12 +361,12 @@ struct [[nodiscard]] WriteEEprom final {
     uint8_t address;
     uint8_t val;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -407,12 +392,12 @@ struct [[nodiscard]] ReadEEprom final {
     uint8_t address;
     uint8_t val;
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept{
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = receiver.push_bytes(std::span(buffer));
+        if(const auto res = serializer.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();

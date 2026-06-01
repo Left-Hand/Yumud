@@ -4,12 +4,11 @@
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/utils/bytes/bytes_caster.hpp"
-#include "core/utils/Option.hpp"
+#include "xdrive_can_utils.hpp"
 #include "core/utils/Result.hpp"
 
 #include "primitive/can/can_frame.hpp"
-
-namespace ymd::xdrive::can_protocol{
+namespace ymd::robots::xdrive{
 
 enum class [[nodiscard]] Mode:uint32_t{
     Stop = 0,
@@ -69,41 +68,6 @@ using CanFrame = hal::ClassicCanFrame;
 using CanPayload = hal::ClassicCanPayload;
 
 
-struct [[nodiscard]] BytesReader final{
-    explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-        cursor_(bytes.data()), end_(bytes.data() + bytes.size()) {}
-
-    template<typename T>
-    [[nodiscard]] constexpr Option<T> try_fetch(){
-        if(remaining().size() < sizeof(T))
-            return None;
-        return Some(le_bytes_to_int<T>(fetch_bytes<sizeof(T)>()));
-    }
-
-    template<typename T>
-    [[nodiscard]] constexpr T fetch(){
-        if(remaining().size() < sizeof(T))
-            __builtin_trap();
-        return le_bytes_to_int<T>(fetch_bytes<sizeof(T)>());
-    }
-
-private:
-    // std::span<const uint8_t> bytes_;
-    const uint8_t * cursor_;
-    const uint8_t * end_;
-
-    template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-        const auto ret = std::span<const uint8_t, N>(cursor_, N);
-        // bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-        cursor_ += N;
-        return ret;
-    }
-
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
-        return {cursor_, end_};
-    }
-};
 
 namespace req_msgs{
 struct [[nodiscard]] EnableMotor final{
@@ -139,7 +103,6 @@ struct [[nodiscard]] SetCurrentSetPoint final{
 
     static constexpr Result<Self, DeserialzeError> 
     from_bytes(std::span<const uint8_t, FIXED_LENGTH> bytes){ 
-            return Err(DeserialzeError::DlcTooLong);
         BytesReader reader(bytes);
         return Ok(Self{
             .current = math::fp32::from_bits(reader.fetch<uint32_t>())

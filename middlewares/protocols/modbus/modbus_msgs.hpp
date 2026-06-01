@@ -49,11 +49,11 @@ struct [[nodiscard]] ReadCoils final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(receiver, self.base_addr, self.quantity);
+        return serialize_u16x2(serializer, self.base_addr, self.quantity);
     }
 };
 
@@ -73,11 +73,11 @@ struct [[nodiscard]] ReadDiscreteInputs final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(receiver, self.base_addr, self.quantity);
+        return serialize_u16x2(serializer, self.base_addr, self.quantity);
     }
 };
 
@@ -96,12 +96,12 @@ struct [[nodiscard]] ReadHoldingRegisters final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
         return serialize_u16x2(
-            receiver, 
+            serializer, 
             self.base_addr, 
             self.quantity
         );
@@ -123,11 +123,11 @@ struct [[nodiscard]] ReadInputRegisters final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(receiver, self.base_addr, self.quantity);
+        return serialize_u16x2(serializer, self.base_addr, self.quantity);
     }
 };
 
@@ -145,11 +145,11 @@ struct [[nodiscard]] WriteSingleCoil final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(receiver, 
+        return serialize_u16x2(serializer, 
             self.coil_addr, 
             (self.coil_enabled == EN) ? 0xFF00 : 0x0000
         );
@@ -169,11 +169,11 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
-        return serialize_u16x2(receiver, self.reg_addr, self.reg_value);
+        return serialize_u16x2(serializer, self.reg_addr, self.reg_value);
     }
 };
 
@@ -190,9 +190,9 @@ struct [[nodiscard]] WriteMultipleCoils final{
         return 4 + coils_values.size();
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
 
         {
@@ -205,12 +205,12 @@ struct [[nodiscard]] WriteMultipleCoils final{
                 static_cast<uint8_t>(quantity & 0xFF)
             };
 
-            if(const auto res = receiver.push_bytes(std::span(buffer)); 
+            if(const auto res = serializer.push_bytes(std::span(buffer)); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
         {
-            if(const auto res = receiver.push_bytes(coils_values); 
+            if(const auto res = serializer.push_bytes(coils_values); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -231,9 +231,9 @@ struct [[nodiscard]] WriteMultipleRegisters final{
         return 5 + reg_values.size() * 2;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto & self = *this;
 
         {
@@ -248,7 +248,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
                 static_cast<uint8_t>(num_bytes)
             };
 
-            if(const auto res = receiver.push_bytes(std::span(buffer)); 
+            if(const auto res = serializer.push_bytes(std::span(buffer)); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -259,7 +259,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
                     static_cast<uint8_t>(reg_values[i] & 0xFF)
                 };
 
-                if(const auto res = receiver.push_bytes(std::span(buffer)); 
+                if(const auto res = serializer.push_bytes(std::span(buffer)); 
                     res.is_err()) return Err(res.unwrap_err());
             }
         }
@@ -292,12 +292,12 @@ struct [[nodiscard]] MaskWriteRegister final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Receiver>
-    constexpr Result<void, typename Receiver::Error> 
-    serialize_context(Receiver & receiver) const noexcept {
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
         auto& self = *this;
 
-        return serialize_u16_args(receiver, 
+        return serialize_u16_args(serializer, 
             self.reg_addr, 
             self.and_mask, 
             self.or_mask

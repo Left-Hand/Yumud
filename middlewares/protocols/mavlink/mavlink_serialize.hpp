@@ -2,14 +2,15 @@
 
 
 #include "mavlink_crc.hpp"
+#include "core/utils/Result.hpp"
 
 // https://mavlink.io/en/guide/serialization.html
 
 
 namespace ymd::mavlink{
 
-static constexpr MAVLINK_V1_HEADER = 0xfe;
-static constexpr MAVLINK_V2_HEADER = 0xfd;
+static constexpr uint8_t MAVLINK_V1_HEADER = 0xfe;
+static constexpr uint8_t MAVLINK_V2_HEADER = 0xfd;
 
 struct [[nodiscard]] MavlinkHeaderV1{
     const uint8_t header = MAVLINK_V1_HEADER;
