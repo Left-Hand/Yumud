@@ -10,6 +10,8 @@ static constexpr Result<void, typename Serializer::Error> serialize_u16_args(
     __restrict const uint16_t * ptr, 
     const size_t len 
 ) {
+    if(ptr == nullptr) return Ok();
+
     for(size_t i = 0; i < len; i++){
         const std::array<uint8_t, 2> buf = {
             static_cast<uint8_t>(ptr[i] >> 8),
@@ -44,7 +46,8 @@ static constexpr Result<void, typename Serializer::Error> serialize_rtu_header(
 
 
 template<typename Serializer>
-static constexpr Result<void, typename Serializer::Error> serialize_rtu_tailer(
+static constexpr Result<void, typename Serializer::Error> 
+serialize_rtu_tailer(
     Serializer & serializer
 ) requires requires(Serializer& s) {
     { s.collected_bytes() } -> std::convertible_to<std::span<const uint8_t>>;
@@ -67,24 +70,52 @@ static constexpr Result<void, typename Serializer::Error> serialize_rtu_tailer(
     return Ok();
 }
 
+template<typename Serializer, typename Msg>
+static constexpr Result<void, typename Serializer::Error> 
+serialize_msg_context(
+    Serializer & serializer,
+    const Msg & msg
+){
+    #if 1
+    // context
+    if(const auto res = msg.serialize_context(serializer); 
+        res.is_err()) return Err(res.unwrap_err());
+    #else
+
+    // 有序列化方法/有常量长度且非0
+    if constexpr(requires { msg.serialize_context(); }){
+        // context
+        if(const auto res = msg.serialize_context(serializer); 
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    if constexpr(requires { Msg::CONSTANT_LENGTH; } ){   
+        if constexpr(Msg::CONSTANT_LENGTH != 0){
+            // context
+            if(const auto res = msg.serialize_context(serializer); 
+                res.is_err()) return Err(res.unwrap_err());
+        }
+    }
+    #endif
+    return Ok();
+}
+
 
 template<typename Serializer, typename Msg>
-static constexpr Result<void, typename Serializer::Error> serialize_rtu_msg(
+static constexpr Result<void, typename Serializer::Error> 
+serialize_rtu_msg(
     Serializer & serializer,
     const Msg & msg,
     const uint8_t node_id
-)requires requires {
-    // 类型要求
-    // { Msg::FUNC_CODE } -> std::convertible_to<uint8_t>;
-    { msg.serialize_context(serializer) } -> std::same_as<Result<void, typename Serializer::Error>>;}
-{
+){
     if(const auto res = serialize_rtu_header(
         serializer, node_id, uint8_t(Msg::FUNC_CODE)
     ); res.is_err()) return Err(res.unwrap_err());
 
-    //context
-    if(const auto res = msg.serialize_context(serializer); 
-        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = serialize_msg_context(
+        serializer, msg
+    ); res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = serialize_rtu_tailer(serializer);
         res.is_err()) return Err(res.unwrap_err());
@@ -127,12 +158,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
 
     // 这是一个随机或递增的值，用于匹配请求和响应。在这里，我们使用0000作为示例，但在实际应用中，应该使用一个唯一的值。
     const uint16_t transaction_id
-) requires requires {
-    // 类型要求
-    // { Msg::FUNC_CODE } -> std::convertible_to<uint8_t>;
-    { msg.context_length() } -> std::convertible_to<uint16_t>;
-    { msg.serialize_context(serializer) } -> std::same_as<Result<void, typename Serializer::Error>>;} 
-{
+) {
     {
         //  预计算PDU长度 
         const uint16_t mbap_length = 2 + msg.context_length();
@@ -164,10 +190,10 @@ static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
         }
     }
 
-    //  写入PDU数据段 
-    if (const auto res = msg.serialize_context(serializer); res.is_err()) {
-        return Err(res.unwrap_err());
-    }
+    if(const auto res = serialize_msg_context(
+        serializer, msg
+    ); res.is_err()) return Err(res.unwrap_err());
+
 
     return Ok();
 }

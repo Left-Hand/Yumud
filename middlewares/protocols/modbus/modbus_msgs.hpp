@@ -1,12 +1,31 @@
 #pragma once
 
 #include "modbus_primitive.hpp"
-
 #include "modbus_serialize.hpp"
+#include "core/utils/marco_utils.hpp"
 
 // 参考资料：
 // https://blog.csdn.net/qq_21805743/article/details/120560226
 
+
+
+#define DEF_MODBUS_NOFIELDS\
+    static constexpr size_t CONSTANT_LENGTH = 0;\
+    static constexpr size_t context_length(){return 0;}\
+    template<typename Serializer>\
+    constexpr Result<void, typename Serializer::Error> \
+    serialize_context(Serializer & serializer) const noexcept {return Ok();}\
+
+
+
+#define DEF_MODBUS_U16FIELDS_SERFN(...)\
+    template<typename Serializer>\
+    constexpr Result<void, typename Serializer::Error> \
+    serialize_context(Serializer & serializer) const noexcept {\
+        static constexpr size_t buf_len = PP_NARG(__VA_ARGS__);\
+        std::array<uint16_t, buf_len> buf{__VA_ARGS__};\
+        return serialize_u16_args(serializer, buf.data(), buf_len);\
+    }\
 
 namespace ymd::modbus{
 
@@ -49,18 +68,7 @@ struct [[nodiscard]] ReadCoils final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto & self = *this;
-
-        std::array<uint16_t, 2> buf{
-            self.base_addr,
-            self.quantity
-        };
-
-        return serialize_u16_args(serializer, buf.data(), 2);
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(base_addr, quantity)
 };
 
 // REQ[2] 读取离散输入
@@ -79,18 +87,7 @@ struct [[nodiscard]] ReadDiscreteInputs final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto & self = *this;
-
-        std::array<uint16_t, 2> buf{
-            self.base_addr,
-            self.quantity
-        };
-
-        return serialize_u16_args(serializer, buf.data(), 2);
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(base_addr, quantity)
 };
 
 // REQ[3] 读取保持寄存器
@@ -108,21 +105,7 @@ struct [[nodiscard]] ReadHoldingRegisters final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto & self = *this;
-
-        std::array<uint16_t, 2> buf{
-            self.base_addr,
-            self.quantity
-        };
-
-        return serialize_u16_args(
-            serializer, 
-            buf.data(), 2
-        );
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(base_addr, quantity)
 };
 
 // REQ[4] 读取输入寄存器
@@ -140,20 +123,7 @@ struct [[nodiscard]] ReadInputRegisters final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto & self = *this;
-
-
-        std::array<uint16_t, 2> buf{
-            self.base_addr,
-            self.quantity
-        };
-
-        return serialize_u16_args(
-            serializer, buf.data(), 2);
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(base_addr, quantity)
 };
 
 // REQ[5] 写入单个线圈
@@ -200,19 +170,7 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto & self = *this;
-
-
-        std::array<uint16_t, 2> buf{
-            self.reg_addr,
-            self.reg_value
-        };
-
-        return serialize_u16_args(serializer, buf.data(), 2);
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(reg_addr, reg_value)
 };
 
 
@@ -266,7 +224,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
     std::span<const uint16_t> reg_values;
 
     constexpr size_t context_length() const noexcept {
-        return 5 + reg_values.size() * 2;
+        return 5 + (reg_values.size() * 2);
     }
 
     template<typename Serializer>
@@ -290,17 +248,8 @@ struct [[nodiscard]] WriteMultipleRegisters final{
                 res.is_err()) return Err(res.unwrap_err());
         }
 
-        {
-            for(size_t i = 0; i < reg_values.size(); i++){
-                const std::array<uint8_t, 2> buffer = {
-                    static_cast<uint8_t>(reg_values[i] >> 8),
-                    static_cast<uint8_t>(reg_values[i] & 0xFF)
-                };
-
-                if(const auto res = serializer.push_bytes(std::span(buffer)); 
-                    res.is_err()) return Err(res.unwrap_err());
-            }
-        }
+        if(const auto res = serialize_u16_args(serializer, reg_values.data(), reg_values.size());
+            res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
     }
@@ -311,9 +260,8 @@ struct [[nodiscard]] WriteMultipleRegisters final{
 // REQ[0x11/17] 报告从机Id
 struct [[nodiscard]] ReportSlaveId final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReportSlaveId;
-    static constexpr size_t CONSTANT_LENGTH = 0;
 
-    //0长报文不需要序列化方法
+    DEF_MODBUS_NOFIELDS
 };
 
 
@@ -330,20 +278,7 @@ struct [[nodiscard]] MaskWriteRegister final{
         return CONSTANT_LENGTH;
     }
 
-    template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept {
-        auto& self = *this;
-
-
-        std::array<uint16_t, 3> buf{
-            self.reg_addr,
-            self.and_mask,
-            self.or_mask
-        };
-
-        return serialize_u16_args(serializer, buf.data(), 3);
-    }
+    DEF_MODBUS_U16FIELDS_SERFN(reg_addr, and_mask, or_mask)
 };
 
 
@@ -369,7 +304,7 @@ struct [[nodiscard]] ReadWriteRegisters final{
 
         // 首先发送读参数（起始地址和数量）
         {
-            const std::array<uint8_t, 8> read_params = {
+            const std::array<uint8_t, 9> read_params = {
                 static_cast<uint8_t>(self.read_start_addr >> 8),
                 static_cast<uint8_t>(self.read_start_addr & 0xFF),
                 static_cast<uint8_t>(self.read_quantity >> 8),
@@ -377,46 +312,29 @@ struct [[nodiscard]] ReadWriteRegisters final{
                 static_cast<uint8_t>(self.write_start_addr >> 8),
                 static_cast<uint8_t>(self.write_start_addr & 0xFF),
                 static_cast<uint8_t>(self.write_quantity >> 8),
-                static_cast<uint8_t>(self.write_quantity & 0xFF)
+                static_cast<uint8_t>(self.write_quantity & 0xFF),
+                static_cast<uint8_t>(self.write_quantity * 2)
             };
 
             if(const auto res = serializer.push_bytes(std::span(read_params)); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
-        // 然后发送写字节数
-        {
-            const uint8_t write_byte_count = static_cast<uint8_t>(self.write_quantity * 2);
-            const std::array<uint8_t, 1> byte_count = {write_byte_count};
+        if(const auto res = serialize_u16_args(serializer, write_reg_values.data(), write_reg_values.size());
+            res.is_err()) return Err(res.unwrap_err());
 
-            if(const auto res = serializer.push_bytes(std::span(byte_count)); 
-                res.is_err()) return Err(res.unwrap_err());
-        }
-
-        // 最后发送写入的寄存器数据
-        {
-            for(size_t i = 0; i < self.write_reg_values.size(); i++){
-                const std::array<uint8_t, 2> buffer = {
-                    static_cast<uint8_t>(self.write_reg_values[i] >> 8),
-                    static_cast<uint8_t>(self.write_reg_values[i] & 0xFF)
-                };
-
-                if(const auto res = serializer.push_bytes(std::span(buffer)); 
-                    res.is_err()) return Err(res.unwrap_err());
-            }
-        }
 
         return Ok();
     }
 };
 
 
+
 // REQ[0x29/41] 重启指定从机
 struct [[nodiscard]] ResetSlave final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ResetSlave;
-    static constexpr size_t CONSTANT_LENGTH = 0;
 
-    //0长报文不需要序列化方法
+    DEF_MODBUS_NOFIELDS
 };
 
 
@@ -474,6 +392,8 @@ struct WriteSingleHoldingRegister{
 
     uint16_t reg_addr;
     uint16_t reg_value;
+
+    DEF_MODBUS_U16FIELDS_SERFN(reg_addr, reg_value)
 };
 
 
@@ -484,6 +404,8 @@ struct WriteMultipleCoils{
 
     uint16_t start_addr;
     uint16_t quantity;
+
+    DEF_MODBUS_U16FIELDS_SERFN(start_addr, quantity)
 };
 
 
@@ -494,6 +416,8 @@ struct WriteMultipleRegisters{
 
     uint16_t start_addr;
     uint16_t quantity;
+
+    DEF_MODBUS_U16FIELDS_SERFN(start_addr, quantity)
 };
 
 
@@ -514,6 +438,8 @@ struct MaskWriteRegister{
     uint16_t reg_addr;
     uint16_t and_mask;
     uint16_t or_mask;
+
+    DEF_MODBUS_U16FIELDS_SERFN(reg_addr, and_mask, or_mask)
 };
 
 
