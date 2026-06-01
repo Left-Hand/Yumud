@@ -104,8 +104,6 @@ _61,_62,_63,N,...) N
 
 #define _TRAIT_NAMED_ARGS2_(...) _TRAIT_NAMED_ARGS2_RUN_(__VA_ARGS__)
 
-#define MAVREF_PROXY(_NAME, _RET, ...) (_RET, _NAME, __VA_ARGS__)
-
 #define __TRAIT_METHOD_PICK_RET(_ret, ...) _ret
 #define _TRAIT_METHOD_PICK_RET(_trait_tuple_) __TRAIT_METHOD_PICK_RET _trait_tuple_
 

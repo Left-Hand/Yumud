@@ -2,10 +2,10 @@
 
 #include "primitive/can/can_id.hpp"
 
-namespace ymd::cyphal::primitive{
+namespace ymd::cyphal{
 
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
     using Self = NodeId;
 
     uint8_t bits;
@@ -28,7 +28,7 @@ struct [[nodiscard]] NodeId{
 };
 
 enum class [[nodiscard]] TransferPriority:uint8_t{
-    Exceptional,
+    Exceptional = 0,
     Immediate,
     Fast,
     High,
