@@ -25,11 +25,19 @@ struct [[nodiscard]] Serializer final{
         return std::span(bytes.data(), ind);
     }
 
+    constexpr Result<void, Error> compatible_with_length(size_t n) const {
+        return Ok();
+    }
+
+    constexpr uint8_t * take_cursor_and_inc(const size_t n) {
+        const size_t next_ind = ind + n;
+        auto ptr = bytes.data() + ind;
+        ind = next_ind;
+        return ptr;
+    }
+
     constexpr size_t length() const {return ind;}
-
-    static constexpr Error make_length_exceed_error(){return Error{};}
 };
-
 
 
 [[maybe_unused]] static void test_ser0x01(){

@@ -6,7 +6,7 @@ namespace ymd::modbus{
 
 template<typename Serializer>
 static constexpr Result<void, typename Serializer::Error> serialize_u16_args(
-    Serializer & serializer, 
+    Serializer & srz, 
     __restrict const uint16_t * ptr, 
     const size_t len 
 ) {
@@ -18,7 +18,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_u16_args(
             static_cast<uint8_t>(ptr[i] & 0xFF)
         };
 
-        if(const auto res = serializer.push_bytes(buf); 
+        if(const auto res = srz.push_bytes(buf); 
             res.is_err()) return Err(res.unwrap_err());
     }
 
@@ -29,7 +29,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_u16_args(
 
 template<typename Serializer>
 static constexpr Result<void, typename Serializer::Error> serialize_rtu_header(
-    Serializer & serializer,
+    Serializer & srz,
     const uint8_t node_id,
     const uint8_t func_code
 ){
@@ -38,7 +38,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_rtu_header(
         func_code
     };
 
-    if(const auto res = serializer.push_bytes(buf); 
+    if(const auto res = srz.push_bytes(buf); 
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -48,7 +48,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_rtu_header(
 template<typename Serializer>
 static constexpr Result<void, typename Serializer::Error> 
 serialize_rtu_tailer(
-    Serializer & serializer
+    Serializer & srz
 ) requires requires(Serializer& s) {
     { s.collected_bytes() } -> std::convertible_to<std::span<const uint8_t>>;
     { s.push_bytes(std::declval<std::span<const uint8_t>>()) } 
@@ -56,11 +56,11 @@ serialize_rtu_tailer(
 }{
     //crc字段为小端序
     const auto buf = ChecksumBuilder::from_default()
-        .push_bytes(serializer.collected_bytes())
+        .push_bytes(srz.collected_bytes())
         .finalize_to_u8x2()
     ;
 
-    if(const auto res = serializer.push_bytes(buf); 
+    if(const auto res = srz.push_bytes(buf); 
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -69,26 +69,26 @@ serialize_rtu_tailer(
 template<typename Serializer, typename Msg>
 static constexpr Result<void, typename Serializer::Error> 
 serialize_msg_context(
-    Serializer & serializer,
+    Serializer & srz,
     const Msg & msg
 ){
     #if 1
     // context
-    if(const auto res = msg.serialize_context(serializer); 
+    if(const auto res = msg.serialize(srz); 
         res.is_err()) return Err(res.unwrap_err());
     #else
 
     // 有序列化方法/有常量长度且非0
-    if constexpr(requires { msg.serialize_context(); }){
+    if constexpr(requires { msg.serialize(); }){
         // context
-        if(const auto res = msg.serialize_context(serializer); 
+        if(const auto res = msg.serialize(srz); 
             res.is_err()) return Err(res.unwrap_err());
     }
 
     if constexpr(requires { Msg::CONSTANT_LENGTH; } ){   
         if constexpr(Msg::CONSTANT_LENGTH != 0){
             // context
-            if(const auto res = msg.serialize_context(serializer); 
+            if(const auto res = msg.serialize(srz); 
                 res.is_err()) return Err(res.unwrap_err());
         }
     }
@@ -100,20 +100,20 @@ serialize_msg_context(
 template<typename Serializer, typename Msg>
 static constexpr Result<void, typename Serializer::Error> 
 serialize_rtu_msg(
-    Serializer & serializer,
+    Serializer & srz,
     const Msg & msg,
     const uint8_t node_id
 ){
     if(const auto res = serialize_rtu_header(
-        serializer, node_id, std::bit_cast<uint8_t>(Msg::FUNC_CODE)
+        srz, node_id, std::bit_cast<uint8_t>(Msg::FUNC_CODE)
     ); res.is_err()) return Err(res.unwrap_err());
 
 
     if(const auto res = serialize_msg_context(
-        serializer, msg
+        srz, msg
     ); res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = serialize_rtu_tailer(serializer);
+    if(const auto res = serialize_rtu_tailer(srz);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -135,7 +135,7 @@ struct [[nodiscard]] TcpHeader final{
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> serialize(
-        Serializer & serializer
+        Serializer & srz
     ) const {
 
     }
@@ -146,7 +146,7 @@ struct [[nodiscard]] TcpHeader final{
 
 template<typename Serializer, typename Msg>
 static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
-    Serializer& serializer,
+    Serializer& srz,
     const Msg& msg,
 
     //  这是MODBUS服务器地址，通常为01，但如果网络上有多台服务器，则可能不同。
@@ -162,9 +162,8 @@ static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
 
         // 长度字段不能超过 Modbus-TCP 限制（理论最大 253）
 
-        if (mbap_length > 253) {
-            return Err(Serializer::make_length_exceed_error());
-        }
+        if(const auto res = srz.compatible_with_length(253);
+            res.is_err()) return Err(res.unwrap_err());
 
         const std::array<uint8_t, 8> buf = {
             // 事务标识符 - 大端序
@@ -181,13 +180,13 @@ static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
             func_code
         };
 
-        if (const auto res = serializer.push_bytes(buf); res.is_err()) {
+        if (const auto res = srz.push_bytes(buf); res.is_err()) {
             return Err(res.unwrap_err());
         }
     }
 
     if(const auto res = serialize_msg_context(
-        serializer, msg
+        srz, msg
     ); res.is_err()) return Err(res.unwrap_err());
 
 

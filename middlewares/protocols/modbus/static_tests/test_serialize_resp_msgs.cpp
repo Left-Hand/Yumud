@@ -9,11 +9,10 @@ namespace{
 struct [[nodiscard]] Serializer final{
     using Error = Infallible;
 
-    std::array<uint8_t, 32> bytes;
+    std::array<uint8_t, 20> bytes;
     size_t ind = 0;
 
     constexpr Result<void, Error> push_bytes(std::span<const uint8_t> input_bytes){
-        // std::copy_n(input_bytes.begin(), input_bytes.end(), bytes.begin());
         for(size_t i = 0; i < input_bytes.size(); i++){
             bytes[ind + i] = input_bytes[i];
         }
@@ -25,12 +24,21 @@ struct [[nodiscard]] Serializer final{
         return std::span(bytes.data(), ind);
     }
 
+    constexpr Result<void, Error> compatible_with_length(size_t n) const {
+        return Ok();
+    }
+
+    constexpr uint8_t * take_cursor_and_inc(const size_t n) {
+        const size_t next_ind = ind + n;
+        auto ptr = bytes.data() + ind;
+        ind = next_ind;
+        return ptr;
+    }
+
     constexpr size_t length() const {return ind;}
 
-    static constexpr Error make_length_exceed_error(){return Error{};}
+    static constexpr Error make_oom_error(){return Error{};}
 };
-
-
 
 
 [[maybe_unused]] static void test_ser_resp_0x01(){
@@ -419,7 +427,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleCoils{
-                .start_addr = 0x0004,
+                .base_addr = 0x0004,
                 .quantity = 0x000A,  // 10个线圈
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -441,7 +449,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleCoils{
-                .start_addr = 0x0000,
+                .base_addr = 0x0000,
                 .quantity = 0x0008,  // 8个线圈
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0269).unwrap();
@@ -474,7 +482,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleRegisters{
-                .start_addr = 0x0004,
+                .base_addr = 0x0004,
                 .quantity = 0x0002,  // 2个寄存器
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -496,7 +504,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleRegisters{
-                .start_addr = 0x0000,
+                .base_addr = 0x0000,
                 .quantity = 0x0002,  // 2个寄存器
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0268).unwrap();

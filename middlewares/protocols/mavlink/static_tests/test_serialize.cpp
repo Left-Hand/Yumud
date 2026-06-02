@@ -27,8 +27,6 @@ struct [[nodiscard]] Serializer final{
     }
 
     constexpr size_t length() const {return ind;}
-
-    static constexpr Error make_length_exceed_error(){return Error{};}
 };
 
 

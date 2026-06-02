@@ -13,7 +13,6 @@ struct [[nodiscard]] Serializer final{
     size_t ind = 0;
 
     constexpr Result<void, Error> push_bytes(std::span<const uint8_t> input_bytes){
-        // std::copy_n(input_bytes.begin(), input_bytes.end(), bytes.begin());
         for(size_t i = 0; i < input_bytes.size(); i++){
             bytes[ind + i] = input_bytes[i];
         }
@@ -25,9 +24,19 @@ struct [[nodiscard]] Serializer final{
         return std::span(bytes.data(), ind);
     }
 
+    constexpr Result<void, Error> compatible_with_length(size_t n) const {
+        return Ok();
+    }
+
+    constexpr uint8_t * take_cursor_and_inc(const size_t n) {
+        const size_t next_ind = ind + n;
+        auto ptr = bytes.data() + ind;
+        ind = next_ind;
+        return ptr;
+    }
+
     constexpr size_t length() const {return ind;}
 
-    static constexpr Error make_length_exceed_error(){return Error{};}
 };
 
 
