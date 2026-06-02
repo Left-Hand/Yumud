@@ -24,7 +24,7 @@ struct [[nodiscard]] ErasedFrame{
     uint8_t node_id;
     OpCode op_code;
     uint16_t item_id;
-    std::array<uint16_t, 2> args;
+    uint32_t arg;
 
     static constexpr ErasedFrame 
     from_write0(const uint8_t node_id, uint16_t item_id) {
@@ -32,17 +32,17 @@ struct [[nodiscard]] ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write0,
             .item_id = static_cast<uint16_t>(item_id),
-            .args = {0, 0}
+            .arg = 0
         };
     }
 
     static constexpr ErasedFrame 
-    from_write16(const uint8_t node_id, uint16_t item_id, const uint16_t reg_val) {
+    from_write16(const uint8_t node_id, uint16_t item_id, const uint16_t value) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write16,
             .item_id = static_cast<uint16_t>(item_id),
-            .args = {reg_val, 0}
+            .arg = value
         };
     }
 
@@ -52,21 +52,18 @@ struct [[nodiscard]] ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Read16,
             .item_id = static_cast<uint16_t>(item_id),
-            .args = {0, 0}
+            .arg = 0
         };
     }
 
 
     static constexpr ErasedFrame 
-    from_write32(const uint8_t node_id, uint16_t item_id, const uint32_t reg_val) {
+    from_write32(const uint8_t node_id, uint16_t item_id, const uint32_t value) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write32,
             .item_id = static_cast<uint16_t>(item_id),
-            .args = {
-                static_cast<uint16_t>(reg_val >> 16),
-                static_cast<uint16_t>(reg_val),
-            }
+            .arg = value
         };
     }
 
@@ -76,7 +73,7 @@ struct [[nodiscard]] ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Read32,
             .item_id = static_cast<uint16_t>(item_id),
-            .args = {0, 0}
+            .arg = 0
         };
     }
 
@@ -99,14 +96,19 @@ struct [[nodiscard]] ErasedFrame{
             case OpCode::Write16:{
                 const auto msg = modbus::req_msgs::WriteSingleHoldingRegister{
                     .reg_addr = item_id,
-                    .reg_value = static_cast<uint16_t>(args[0])
+                    .reg_value = static_cast<uint16_t>(arg)
                 };
                 return modbus::serialize_rtu_msg(serializer, msg, node_id);
             }
             case OpCode::Write32:{
+                std::array<uint16_t, 2> buf{
+                    uint16_t(arg >> 16),
+                    uint16_t(arg)
+                };
+
                 const auto msg = modbus::req_msgs::WriteMultipleRegisters{
                     .base_addr = item_id,
-                    .reg_values = std::span(args)
+                    .reg_values = std::span(buf)
                 };
                 return modbus::serialize_rtu_msg(serializer, msg, node_id);
             }
@@ -140,16 +142,16 @@ struct [[nodiscard]] ErasedFrame{
             }
             case OpCode::Write16:{
                 *cursor++ = static_cast<uint8_t>(item_id);
-                *cursor++ = static_cast<uint8_t>(args[0] >> 8);
-                *cursor++ = static_cast<uint8_t>(args[0]);
+                *cursor++ = static_cast<uint8_t>(arg >> 8);
+                *cursor++ = static_cast<uint8_t>(arg);
                 break;
             }
             case OpCode::Write32:{
                 *cursor++ = static_cast<uint8_t>(item_id);
-                *cursor++ = static_cast<uint8_t>(args[0] >> 8);
-                *cursor++ = static_cast<uint8_t>(args[0]);
-                *cursor++ = static_cast<uint8_t>(args[1] >> 8);
-                *cursor++ = static_cast<uint8_t>(args[1]);
+                *cursor++ = static_cast<uint8_t>(arg >> 24);
+                *cursor++ = static_cast<uint8_t>(arg >> 16);
+                *cursor++ = static_cast<uint8_t>(arg >> 8);
+                *cursor++ = static_cast<uint8_t>(arg);
                 break;
             }
             case OpCode::Read16:{

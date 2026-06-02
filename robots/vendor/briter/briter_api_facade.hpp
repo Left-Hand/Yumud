@@ -5,6 +5,7 @@
 
 namespace ymd::robots::briter{
 
+//TODO 添加所有支持的方法
 template<typename Backend>
 struct [[nodiscard]] ClientApiFacade final{
 
@@ -12,7 +13,6 @@ struct [[nodiscard]] ClientApiFacade final{
     using ItemId = typename Backend::ItemId;
 
     State state;
-
 
     constexpr auto heartbeat_modbus(uint16_t rolling_counter_value) const {
         return state.write16(ItemId::Heartbeat, rolling_counter_value);

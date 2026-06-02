@@ -326,6 +326,27 @@ struct ReadCoils{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadCoils;
 
     std::span<const uint8_t> coil_values; // 按字节打包的线圈状态
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + coil_values.size();  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        const uint8_t byte_count = static_cast<uint8_t>(self.coil_values.size());
+        if(const auto res = serializer.push_bytes(std::span(&byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入线圈值
+        if(const auto res = serializer.push_bytes(self.coil_values); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 
@@ -334,6 +355,27 @@ struct ReadDiscreteInputs{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadDiscreteInputs;
 
     std::span<const uint8_t> discrete_input_values; // 按字节打包的离散输入状态
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + discrete_input_values.size();  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        const uint8_t byte_count = static_cast<uint8_t>(self.discrete_input_values.size());
+        if(const auto res = serializer.push_bytes(std::span(&byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入离散输入值
+        if(const auto res = serializer.push_bytes(self.discrete_input_values); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 
@@ -342,6 +384,27 @@ struct ReadHoldingRegisters{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadHoldingRegisters;
 
     std::span<const uint16_t> reg_values;
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + reg_values.size() * 2;  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        const uint8_t byte_count = static_cast<uint8_t>(self.reg_values.size() * 2);
+        if(const auto res = serializer.push_bytes(std::span(&byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入寄存器值
+        if(const auto res = serialize_u16_args(serializer, self.reg_values.data(), self.reg_values.size()); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 
@@ -350,6 +413,27 @@ struct ReadInputRegisters{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadInputRegisters;
 
     std::span<const uint16_t> reg_values;
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + reg_values.size() * 2;  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        const uint8_t byte_count = static_cast<uint8_t>(self.reg_values.size() * 2);
+        if(const auto res = serializer.push_bytes(std::span(&byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入寄存器值
+        if(const auto res = serialize_u16_args(serializer, self.reg_values.data(), self.reg_values.size()); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 
@@ -360,6 +444,14 @@ struct WriteSingleCoil{
 
     uint16_t coil_addr;
     uint16_t coil_value;  // 0xFF00 或 0x0000
+
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
+    static constexpr size_t context_length(){
+        return CONSTANT_LENGTH;
+    }
+
+    DEF_MODBUS_U16FIELDS_SERFN(coil_addr, coil_value)
 };
 
 
@@ -370,6 +462,14 @@ struct WriteSingleHoldingRegister{
 
     uint16_t reg_addr;
     uint16_t reg_value;
+
+
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
+    static constexpr size_t context_length(){
+        return CONSTANT_LENGTH;
+    }
+
 
     DEF_MODBUS_U16FIELDS_SERFN(reg_addr, reg_value)
 };
@@ -383,6 +483,12 @@ struct WriteMultipleCoils{
     uint16_t start_addr;
     uint16_t quantity;
 
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
+    static constexpr size_t context_length(){
+        return CONSTANT_LENGTH;
+    }
+
     DEF_MODBUS_U16FIELDS_SERFN(start_addr, quantity)
 };
 
@@ -395,6 +501,12 @@ struct WriteMultipleRegisters{
     uint16_t start_addr;
     uint16_t quantity;
 
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
+    static constexpr size_t context_length(){
+        return CONSTANT_LENGTH;
+    }
+
     DEF_MODBUS_U16FIELDS_SERFN(start_addr, quantity)
 };
 
@@ -405,6 +517,26 @@ struct ReportSlaveId{
 
     uint8_t byte_count;
     std::span<const uint8_t> slave_id_data;  // 包含运行状态、厂商ID、设备型号等信息
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + slave_id_data.size();  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        if(const auto res = serializer.push_bytes(std::span(&self.byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入从机ID数据
+        if(const auto res = serializer.push_bytes(self.slave_id_data); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 
@@ -417,6 +549,12 @@ struct MaskWriteRegister{
     uint16_t and_mask;
     uint16_t or_mask;
 
+    static constexpr size_t CONSTANT_LENGTH = 6;
+
+    static constexpr size_t context_length(){
+        return CONSTANT_LENGTH;
+    }
+
     DEF_MODBUS_U16FIELDS_SERFN(reg_addr, and_mask, or_mask)
 };
 
@@ -426,6 +564,27 @@ struct ReadWriteRegisters{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadWriteRegisters;
 
     std::span<const uint16_t> read_reg_values;  // 读取的寄存器值
+
+    constexpr size_t context_length() const noexcept {
+        return 1 + read_reg_values.size() * 2;  // 字节计数 + 数据字节数
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize_context(Serializer & serializer) const noexcept {
+        auto & self = *this;
+
+        // 写入字节计数
+        const uint8_t byte_count = static_cast<uint8_t>(self.read_reg_values.size() * 2);
+        if(const auto res = serializer.push_bytes(std::span(&byte_count, 1)); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        // 写入读取的寄存器值
+        if(const auto res = serialize_u16_args(serializer, self.read_reg_values.data(), self.read_reg_values.size()); 
+            res.is_err()) return Err(res.unwrap_err());
+
+        return Ok();
+    }
 };
 
 }
