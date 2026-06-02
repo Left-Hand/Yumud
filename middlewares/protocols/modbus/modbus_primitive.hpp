@@ -10,7 +10,6 @@
 
 namespace ymd::modbus{
 
-namespace primitive{
 
 enum class [[nodiscard]] LibError:uint8_t{
     InvalidRequst,
@@ -35,22 +34,32 @@ enum class [[nodiscard]] ExceptionCode:uint8_t{
     GatewayTargetDevice,
 };
 
+
+// 0x49~0x77	非法功能
+// 0x78~0x7F	保留
+// 0x80~0xFF	保留
 struct [[nodiscard]] FunctionCode final{
 
     enum class [[nodiscard]] Kind:uint8_t{
+        None = 0,
         ReadCoils = 1,
         ReadDiscreteInputs = 2,
         ReadHoldingRegisters = 3,
         ReadInputRegisters = 4,
         WriteSingleCoil = 5,
-        WriteSingleRegister = 6,
+        WriteSingleHoldingRegister = 6,
         WriteMultipleCoils = 15,
         WriteMultipleRegisters = 16,
+        ReportSlaveId = 17,
         ReadFileRecord = 20,
         WriteFileRecord = 21,
-        ReadWriteMultipleRegisters = 23,
+        MaskWriteRegister = 22,
+        ReadWriteRegisters = 23,
+        ResetSlave = 41,
         ReadDeviceIdentification = 43
     };
+
+    using enum Kind;
 
     constexpr FunctionCode(const Kind kind): bits(static_cast<uint8_t>(kind)){;}
     constexpr FunctionCode(const _None_t): bits(0){;}
@@ -127,6 +136,4 @@ enum class [[nodiscard]] Transport:uint8_t{
 };
 
 
-
-}
 }

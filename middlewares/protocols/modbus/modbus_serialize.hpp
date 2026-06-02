@@ -54,15 +54,10 @@ serialize_rtu_tailer(
     { s.push_bytes(std::declval<std::span<const uint8_t>>()) } -> std::same_as<Result<void, typename Serializer::Error>>;
 }{
     //crc字段为小端序
-    const uint16_t checksum =  ChecksumBuilder::from_default()
+    const auto buf = ChecksumBuilder::from_default()
         .push_bytes(serializer.collected_bytes())
-        .finalize()
+        .finalize_to_u8x2()
     ;
-
-    const std::array<uint8_t, 2> buf = {
-        static_cast<uint8_t>(checksum & 0xff),
-        static_cast<uint8_t>(checksum >> 8)
-    };
 
     if(const auto res = serializer.push_bytes(buf); 
         res.is_err()) return Err(res.unwrap_err());
@@ -109,7 +104,7 @@ serialize_rtu_msg(
     const uint8_t node_id
 ){
     if(const auto res = serialize_rtu_header(
-        serializer, node_id, uint8_t(Msg::FUNC_CODE)
+        serializer, node_id, std::bit_cast<uint8_t>(Msg::FUNC_CODE)
     ); res.is_err()) return Err(res.unwrap_err());
 
 
@@ -162,7 +157,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_tcp_msg(
     {
         //  预计算PDU长度 
         const uint16_t mbap_length = 2 + msg.context_length();
-        const uint8_t func_code = uint8_t(Msg::FUNC_CODE);
+        const uint8_t func_code = std::bit_cast<uint8_t>(Msg::FUNC_CODE);
 
         // 长度字段不能超过 Modbus-TCP 限制（理论最大 253）
 

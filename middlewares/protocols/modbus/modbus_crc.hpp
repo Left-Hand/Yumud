@@ -103,6 +103,11 @@ struct [[nodiscard]] ChecksumBuilder final{
         return (crc_high << 8) | crc_low;
     }
 
+    [[nodiscard]] constexpr std::array<uint8_t, 2> 
+    finalize_to_u8x2() const noexcept {
+        return {crc_low, crc_high};
+    }
+
 private:
     uint8_t crc_low;
     uint8_t crc_high;

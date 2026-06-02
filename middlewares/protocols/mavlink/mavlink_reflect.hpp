@@ -84,10 +84,14 @@ struct MavBytesOp<void>{
 template<>
 struct MavBytesOp<uint8_t>{
     static constexpr size_t ELEMENT_SIZE = 1;
+
+
+    __attribute__((always_inline))
     static constexpr uint8_t load(const uint8_t * ptr){
         return static_cast<uint8_t>(*ptr);
     }
 
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const uint8_t obj){
         *ptr = static_cast<uint8_t>(obj);
     }
@@ -96,6 +100,9 @@ struct MavBytesOp<uint8_t>{
 template<>
 struct MavBytesOp<uint16_t>{
     static constexpr size_t ELEMENT_SIZE = 2;
+
+
+    __attribute__((always_inline))
     static constexpr uint16_t load(const uint8_t * ptr){
         uint16_t sum = 0;
         sum |= ptr[0];
@@ -103,6 +110,8 @@ struct MavBytesOp<uint16_t>{
         return sum;
     }
 
+
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const uint16_t obj){
         ptr[0] = static_cast<uint8_t>(obj);
         ptr[1] = static_cast<uint8_t>(obj >> 8);
@@ -112,6 +121,8 @@ struct MavBytesOp<uint16_t>{
 template<>
 struct MavBytesOp<uint32_t>{
     static constexpr size_t ELEMENT_SIZE = 4;
+
+    __attribute__((always_inline))
     static constexpr uint32_t load(const uint8_t * ptr){
         uint32_t sum = 0;
         sum |= ptr[0];
@@ -121,6 +132,7 @@ struct MavBytesOp<uint32_t>{
         return sum;
     }
 
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const uint32_t obj){
         ptr[0] = static_cast<uint8_t>(obj);
         ptr[1] = static_cast<uint8_t>(obj >> 8);
@@ -134,10 +146,13 @@ requires(std::is_integral_v<T> and std::is_signed_v<T>)
 struct MavBytesOp<T>{
     static constexpr size_t ELEMENT_SIZE = sizeof(T);
     using U = std::make_unsigned_t<T>;
+
+    __attribute__((always_inline))
     static constexpr T load(const uint8_t * ptr){
         return std::bit_cast<T>(MavBytesOp<U>::load(ptr));
     }
 
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const T obj){
         MavBytesOp<U>::store(ptr, std::bit_cast<U>(obj));
     }
@@ -148,10 +163,14 @@ requires(not std::is_same_v<bits_type_t<T>, void>)
 struct MavBytesOp<T>{
     using U = bits_type_t<T>;
     static constexpr size_t ELEMENT_SIZE = sizeof(U);
+
+    __attribute__((always_inline))
     static constexpr T load(const uint8_t * ptr){
         return std::bit_cast<T>(MavBytesOp<U>::load(ptr));
     }
 
+
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const T obj){
         MavBytesOp<U>::store(ptr, std::bit_cast<U>(obj));
     }
@@ -163,10 +182,12 @@ struct MavBytesOp<T>{
     using D = std::underlying_type_t<T>;
     static constexpr size_t ELEMENT_SIZE = sizeof(D);
 
+    __attribute__((always_inline))
     static constexpr T load(const uint8_t * ptr){
         return std::bit_cast<T>(MavBytesOp<D>::load(ptr));
     }
 
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const T obj){
         MavBytesOp<D>::store(ptr, std::bit_cast<D>(obj));
     }
@@ -176,10 +197,13 @@ struct MavBytesOp<T>{
 template<>
 struct MavBytesOp<MavModeFlag>{
     static constexpr size_t ELEMENT_SIZE = 1;
+
+    __attribute__((always_inline))
     static constexpr MavModeFlag load(const uint8_t * ptr){
         return static_cast<MavModeFlag>(*ptr);
     }
 
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const MavModeFlag obj){
         *ptr = static_cast<uint8_t>(obj.bits);
     }
@@ -190,10 +214,14 @@ struct MavBytesOp<MavModeFlag>{
 template<>
 struct MavBytesOp<math::fp32>{
     static constexpr size_t ELEMENT_SIZE = 4;
+
+    __attribute__((always_inline))
     static constexpr fp32 load(const uint8_t * ptr){
         return fp32::from_bits(MavBytesOp<uint32_t>::load(ptr));
     }
 
+
+    __attribute__((always_inline))
     static constexpr void store(uint8_t * ptr, const math::fp32 obj){
         MavBytesOp<uint32_t>::store(ptr, obj.to_bits());
     }
@@ -234,10 +262,13 @@ struct MemberBytesProxy{
 
     ptr_type ptr;
 
+    __attribute__((always_inline))
     constexpr U get() const {
         return MavBytesOp<U>::load(ptr);
     }
 
+
+    __attribute__((always_inline))
     constexpr void set(U obj) requires(not std::is_const_v<T>) {
         return MavBytesOp<U>::store(ptr, obj);
     }

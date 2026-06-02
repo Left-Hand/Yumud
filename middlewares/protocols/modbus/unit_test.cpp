@@ -40,7 +40,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadCoils{
+            const auto msg = req_msgs::ReadCoils{
                 .base_addr = 0x0000,
                 .quantity = 0x08,
             };
@@ -73,7 +73,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadHoldingRegisters{
+            const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_addr = 0x0000,
                 .quantity = 0x02,
             };
@@ -97,7 +97,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadHoldingRegisters{
+            const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_addr = 100,
                 .quantity = 0x01,
             };
@@ -122,7 +122,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadHoldingRegisters{
+            const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_addr = 0x0000,
                 .quantity = 0x02,
             };
@@ -150,7 +150,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadHoldingRegisters{
+            const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_addr = 0x0000,
                 .quantity = 0x02,
             };
@@ -178,7 +178,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadHoldingRegisters{
+            const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_addr = 100,
                 .quantity = 0x01,
             };
@@ -214,7 +214,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadInputRegisters{
+            const auto msg = req_msgs::ReadInputRegisters{
                 .base_addr = 0x0000,
                 .quantity = 0x02,
             };
@@ -248,7 +248,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::WriteSingleCoil{
+            const auto msg = req_msgs::WriteSingleCoil{
                 .coil_addr = 0x0000,
                 .coil_enabled = EN,  // ON
             };
@@ -276,7 +276,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::WriteSingleCoil{
+            const auto msg = req_msgs::WriteSingleCoil{
                 .coil_addr = 0x0000,
                 .coil_enabled = DISEN,  // OFF
             };
@@ -306,7 +306,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::WriteSingleHoldingRegister{
+            const auto msg = req_msgs::WriteSingleHoldingRegister{
                 .reg_addr = 0x0002,
                 .reg_value = 0x00FF,
             };
@@ -329,7 +329,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::WriteSingleHoldingRegister{
+            const auto msg = req_msgs::WriteSingleHoldingRegister{
                 .reg_addr = 0x0002,
                 .reg_value = 0x00FF,
             };
@@ -362,7 +362,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
-            const auto msg = req_msg::WriteMultipleRegisters{
+            const auto msg = req_msgs::WriteMultipleRegisters{
                 .base_addr = 0x0004,
                 .reg_values = std::span(values),
             };
@@ -394,7 +394,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
-            const auto msg = req_msg::WriteMultipleRegisters{
+            const auto msg = req_msgs::WriteMultipleRegisters{
                 .base_addr = 0x0000,
                 .reg_values = std::span(values),
             };
@@ -430,7 +430,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 5;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReportSlaveId{};
+            const auto msg = req_msgs::ReportSlaveId{};
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
             return ret;
         }();
@@ -446,7 +446,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 10;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReportSlaveId{};
+            const auto msg = req_msgs::ReportSlaveId{};
             serialize_tcp_msg(ret, msg, unitid, 0x0001).unwrap();
             return ret;
         }();
@@ -470,7 +470,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::MaskWriteRegister{
+            const auto msg = req_msgs::MaskWriteRegister{
                 .reg_addr = 0x0004,
                 .and_mask = 0xFF00,
                 .or_mask = 0x00FF
@@ -496,7 +496,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 2;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::MaskWriteRegister{
+            const auto msg = req_msgs::MaskWriteRegister{
                 .reg_addr = 0x0010,
                 .and_mask = 0x0F0F,
                 .or_mask = 0xF0F0
@@ -531,7 +531,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0xAAAA, 0xBBBB};
-            const auto msg = req_msg::ReadWriteRegisters{
+            const auto msg = req_msgs::ReadWriteRegisters{
                 .read_start_addr = 0x1000,
                 .read_quantity = 0x0000,  // 读0个寄存器
                 .write_start_addr = 0x2000,
@@ -550,7 +550,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 1;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ReadWriteRegisters{
+            const auto msg = req_msgs::ReadWriteRegisters{
                 .read_start_addr = 0x3000,
                 .read_quantity = 0x0005,
                 .write_start_addr = 0x4000,
@@ -572,7 +572,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t nodeid = 8;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ResetSlave{};
+            const auto msg = req_msgs::ResetSlave{};
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
             return ret;
         }();
@@ -587,7 +587,7 @@ struct [[nodiscard]] Serializer final{
         constexpr uint8_t unitid = 3;
         constexpr auto serializer = []{
             auto ret = Serializer{};
-            const auto msg = req_msg::ResetSlave{};
+            const auto msg = req_msgs::ResetSlave{};
             serialize_tcp_msg(ret, msg, unitid, 0x5678).unwrap();
             return ret;
         }();

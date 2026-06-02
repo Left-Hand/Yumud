@@ -2,7 +2,7 @@
 
 using namespace ymd;
 
-namespace ymd::modbus::primitive{
+namespace ymd::modbus{
 
 static constexpr const char * liberr_to_str(const LibError err){
     switch(err){
@@ -75,52 +75,9 @@ OutputStream & operator<<(OutputStream & os, const ModbusError & err){
 
 OutputStream & operator<<(OutputStream & os, const FunctionCode::Kind kind){
     using Kind = FunctionCode::Kind;
-    switch(kind) {
-        case Kind::ReadCoils:
-            return os << "ReadCoils";
-        case Kind::ReadDiscreteInputs:
-            return os << "ReadDiscreteInputs";
-        case Kind::ReadHoldingRegisters:
-            return os << "ReadHoldingRegisters";
-        case Kind::ReadInputRegisters:
-            return os << "ReadInputRegisters";
-        case Kind::WriteSingleCoil:
-            return os << "WriteSingleCoil";
-        case Kind::WriteSingleRegister:
-            return os << "WriteSingleRegister";
-        case Kind::WriteMultipleCoils:
-            return os << "WriteMultipleCoils";
-        case Kind::WriteMultipleRegisters:
-            return os << "WriteMultipleRegisters";
-        case Kind::ReadFileRecord:
-            return os << "ReadFileRecord";
-        case Kind::WriteFileRecord:
-            return os << "WriteFileRecord";
-        case Kind::ReadWriteMultipleRegisters:
-            return os << "ReadWriteMultipleRegisters";
-        case Kind::ReadDeviceIdentification:
-            return os << "ReadDeviceIdentification";
-    }
+    DeriveDebugDispatcher<Kind>::call(os, kind);
     return os << os.field("Unknown")(static_cast<uint8_t>(kind));
 }
 
 
 }
-
-[[nodiscard]] static constexpr uint16_t crc16(std::span<const uint8_t> bytes) {
-    uint16_t crc = 0xFFFF;
-    for (size_t i = 0; i < bytes.size(); i++) {
-        crc ^= (uint16_t) bytes[i];
-        for (int j = 8; j != 0; j--) {
-            if ((crc & 0x0001) != 0) {
-                crc >>= 1;
-                crc ^= 0xA001;
-            }
-            else
-                crc >>= 1;
-        }
-    }
-
-    return (uint16_t) (crc << 8) | (uint16_t) (crc >> 8);
-}
-

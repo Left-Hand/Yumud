@@ -8,54 +8,57 @@ namespace ymd::robots::steadywin::can_simple{
 using namespace primitive;
 
 
+struct [[nodiscard]] FrameFactoryBackend final{
+    template<typename T>
+    using proceed_type_t = hal::ClassicCanFrame;
 
+    template<typename F, typename T>
+    static constexpr hal::ClassicCanFrame convert(const F & self, T && msg) noexcept {
+        return can_simple::serialize_msg_to_can_frame(self.axis_id, std::forward<T>(msg));
+    }
+};
 
-struct [[nodiscard]] FrameFactory final{
+template<typename Backend>
+struct [[nodiscard]] ApiFacade final{
 
     can_simple::AxisId axis_id;
 
-
-    constexpr hal::ClassicCanFrame clear_errors()  const {
-        return ser_msg(req_msgs::ClearErrors{});
+    constexpr auto clear_errors()  const {
+        return Backend::convert(*this, req_msgs::ClearErrors{});
     }
 
-    constexpr hal::ClassicCanFrame set_axis_state(
+    constexpr auto set_axis_state(
         const req_msgs::SetAxisState & msg
     )  const {
-        return ser_msg(msg);
+        return Backend::convert(*this, msg);
     }
 
-    constexpr hal::ClassicCanFrame set_controller_mode(
+    constexpr auto set_controller_mode(
         const req_msgs::SetControllerMode & msg
     )  const {
-        return ser_msg(msg);
+        return Backend::convert(*this, msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_velocity(
+    constexpr auto set_input_velocity(
         const req_msgs::SetInputVelocity & msg
     )  const {
-        return ser_msg(msg);
+        return Backend::convert(*this, msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_torque(
+    constexpr auto set_input_torque(
         const req_msgs::SetInputTorque & msg
     )  const {
-        return ser_msg(msg);
+        return Backend::convert(*this, msg);
     }
 
-    constexpr hal::ClassicCanFrame set_input_position(
+    constexpr auto set_input_position(
         const req_msgs::SetInputPosition & msg
     )  const {
-        return ser_msg(msg);
-    }
-
-private:
-
-    template<typename T>
-    constexpr hal::ClassicCanFrame ser_msg(T && msg) const noexcept {
-        return can_simple::serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
+        return Backend::convert(*this, msg);
     }
 };
+
+using FrameFactory = ApiFacade<FrameFactoryBackend>;
 
 
 }
