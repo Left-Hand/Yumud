@@ -76,7 +76,7 @@ static constexpr void bytes_fill_u16be_args(__restrict const uint8_t * buf, Args
         offset += 2), ...);
 }
 
-struct UncheckedBytesSpawner{
+struct [[nodiscard]] UncheckedBytesSpawner final{
     const uint8_t * buf;
 
     constexpr uint16_t spawn_u16be() {
@@ -194,7 +194,15 @@ struct [[nodiscard]] WriteSingleCoil final{
         );
     }
 
-    // DEF_MODBUS_DESERIALIZE_PATTERN
+    constexpr void set_by_buf_unchecked(__restrict const uint8_t * buf){
+        auto & self = *this;
+        auto spn = UncheckedBytesSpawner{buf};
+        self.coil_addr = spn.spawn_u16be();
+        self.coil_enabled = spn.spawn_u8() ? EN : DISEN;
+    }
+
+
+    DEF_MODBUS_DESERIALIZE_PATTERN
 };
 
 
@@ -249,6 +257,25 @@ struct [[nodiscard]] WriteMultipleCoils final{
 
         return Ok();
     }
+
+    template<typename Deserializer>
+    [[nodiscard]] static constexpr Result<Self, typename Deserializer::Error> 
+    deserialize_from(Deserializer & dsrz){
+        if(const auto res = dsrz.compatible_with_length(4);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        uint16_t base_addr;
+        uint16_t quantity;
+        bytes_fill_u16be_args(dsrz.take_cursor_and_inc(4), base_addr, quantity);
+
+        if(const auto res = dsrz.compatible_with_length(quantity);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        return Ok(Self{
+            .base_addr = base_addr,
+            .coils_values = std::span(dsrz.take_cursor_and_inc(quantity), quantity)
+        });
+    }
 };
 
 
@@ -291,6 +318,8 @@ struct [[nodiscard]] WriteMultipleRegisters final{
 
         return Ok();
     }
+
+
 };
 
 
@@ -308,17 +337,12 @@ struct [[nodiscard]] ReportSlaveId final{
 struct [[nodiscard]] MaskWriteRegister final{
     using Self = MaskWriteRegister;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::MaskWriteRegister;
-    static constexpr size_t CONSTANT_LENGTH = 6;
 
     uint16_t reg_addr;
     uint16_t and_mask;
     uint16_t or_mask;
 
-    [[nodiscard]] static consteval size_t context_length(){
-        return CONSTANT_LENGTH;
-    }
-
-    DEF_MODBUS_U16FIELDS_SERIALZE_FN(reg_addr, and_mask, or_mask)
+    DEF_MODBUS_SERDE_U16FIELDS(reg_addr, and_mask, or_mask)
 };
 
 
@@ -442,6 +466,23 @@ struct [[nodiscard]] ReadDiscreteInputs final{
 
         return Ok();
     }
+
+
+    template<typename Deserializer>
+    [[nodiscard]] static constexpr Result<Self, typename Deserializer::Error> 
+    deserialize_from(Deserializer & dsrz){
+        if(const auto res = dsrz.compatible_with_length(1);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        uint16_t num_byte = *dsrz.take_cursor_and_inc(1);
+
+        if(const auto res = dsrz.compatible_with_length(num_byte);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        return Ok(Self{
+            .discrete_input_values = std::span(dsrz.take_cursor_and_inc(num_byte), num_byte)
+        });
+    }
 };
 
 
@@ -564,28 +605,36 @@ struct [[nodiscard]] ReportSlaveId final{
     using Self = ReportSlaveId;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReportSlaveId;
 
-    uint8_t byte_count;
     std::span<const uint8_t> slave_id_data;  // 包含运行状态、厂商ID、设备型号等信息
 
     constexpr size_t context_length() const noexcept {
-        return 1 + slave_id_data.size();  // 字节计数 + 数据字节数
+        return slave_id_data.size();  // 字节计数 + 数据字节数
     }
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
     serialize(Serializer & srz) const noexcept {
         auto & self = *this;
-
-        // 写入字节计数
-        if(const auto res = srz.push_bytes(std::span(&self.byte_count, 1)); 
-            res.is_err()) return Err(res.unwrap_err());
-
-        // 写入从机ID数据
-        if(const auto res = srz.push_bytes(self.slave_id_data); 
-            res.is_err()) return Err(res.unwrap_err());
-
-        return Ok();
+        return srz.push_bytes(self.slave_id_data); 
     }
+
+
+    template<typename Deserializer>
+    [[nodiscard]] static constexpr Result<Self, typename Deserializer::Error> 
+    deserialize_from(Deserializer & dsrz){
+        if(const auto res = dsrz.compatible_with_length(1);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        uint16_t num_byte = *dsrz.take_cursor_and_inc(1);
+
+        if(const auto res = dsrz.compatible_with_length(num_byte);
+            res.is_err()) return Err(res.unwrap_err());
+        
+        return Ok(Self{
+            .slave_id_data = std::span(dsrz.take_cursor_and_inc(num_byte), num_byte)
+        });
+    }
+
 };
 
 

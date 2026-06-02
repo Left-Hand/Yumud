@@ -538,22 +538,22 @@ struct [[nodiscard]] Serializer final{
             auto ret = Serializer{};
             static constexpr uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
             const auto msg = resp_msgs::ReportSlaveId{
-                .byte_count = 5,
                 .slave_id_data = std::span(data),
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
             return ret;
         }();
-        // 预期: 05 11 05 01 02 03 04 05 CRC
-        static_assert(serializer.length() == 10);
+        // 预期: 05 11 01 02 03 04 05 CRC
+        static_assert(serializer.length() == 9);
         static_assert(serializer.bytes[0] == 0x05);  // 设备地址
         static_assert(serializer.bytes[1] == 0x11);  // 功能码 0x11
-        static_assert(serializer.bytes[2] == 0x05);  // 字节数
-        static_assert(serializer.bytes[3] == 0x01);  // 从机ID数据
-        static_assert(serializer.bytes[4] == 0x02);
-        static_assert(serializer.bytes[5] == 0x03);
-        static_assert(serializer.bytes[6] == 0x04);
-        static_assert(serializer.bytes[7] == 0x05);
+        static_assert(serializer.bytes[2] == 0x01);  // 从机ID数据
+        static_assert(serializer.bytes[3] == 0x02);
+        static_assert(serializer.bytes[4] == 0x03);
+        static_assert(serializer.bytes[5] == 0x04);
+        static_assert(serializer.bytes[6] == 0x05);
+        static_assert(serializer.bytes[7] == 67);
+        static_assert(serializer.bytes[8] == 250);
     }
 
     {
@@ -563,26 +563,24 @@ struct [[nodiscard]] Serializer final{
             auto ret = Serializer{};
             static constexpr uint8_t data[] = {0x01, 0x02, 0x03};
             const auto msg = resp_msgs::ReportSlaveId{
-                .byte_count = 3,
                 .slave_id_data = std::span(data),
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0001).unwrap();
             return ret;
         }();
-        // 预期: 00 01 00 00 00 06 0A 11 03 01 02 03
-        static_assert(serializer.length() == 12);
+        // 预期: 00 01 00 00 00 05 0A 11 01 02 03
+        static_assert(serializer.length() == 11);
         static_assert(serializer.bytes[0] == 0x00);
         static_assert(serializer.bytes[1] == 0x01);  // 事务ID
         static_assert(serializer.bytes[2] == 0x00);
         static_assert(serializer.bytes[3] == 0x00);
         static_assert(serializer.bytes[4] == 0x00);
-        static_assert(serializer.bytes[5] == 0x06);  // 长度 (1+1+1+3=6)
+        static_assert(serializer.bytes[5] == 0x05);  // 长度 (1+1+3=5)
         static_assert(serializer.bytes[6] == 0x0A);  // 单元标识符
         static_assert(serializer.bytes[7] == 0x11);  // 功能码
-        static_assert(serializer.bytes[8] == 0x03);  // 字节数
-        static_assert(serializer.bytes[9] == 0x01);  // 数据
-        static_assert(serializer.bytes[10] == 0x02);
-        static_assert(serializer.bytes[11] == 0x03);
+        static_assert(serializer.bytes[8] == 0x01);  // 数据
+        static_assert(serializer.bytes[9] == 0x02);
+        static_assert(serializer.bytes[10] == 0x03);
     }
 }
 
