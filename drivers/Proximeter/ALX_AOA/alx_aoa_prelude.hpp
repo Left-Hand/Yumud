@@ -40,6 +40,12 @@ struct [[nodiscard]] TargetDistanceCode final{
     using Self = TargetDistanceCode;
     uint32_t bits;
 
+
+    template<typename T>
+    [[nodiscard]] static constexpr Self from_meters(const T meters) noexcept {
+        return Self{static_cast<uint32_t>(meters * 100)};
+    }
+
     template<typename T> 
     [[nodiscard]] constexpr T to_meters() const noexcept {
         return T(bits) * static_cast<T>(1.0 / 100);
@@ -55,6 +61,11 @@ struct [[nodiscard]] TargetDistanceCode final{
 struct [[nodiscard]] TargetAngleCode final{
     using Self = TargetAngleCode;
     int16_t bits;
+
+    template<typename T>
+    [[nodiscard]] static constexpr Self from_radians(const T radians) noexcept {
+        return Self{static_cast<int16_t>(Angular<T>::from_radians(radians).to_degrees())};
+    }
 
     template<typename T>
     [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {

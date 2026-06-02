@@ -9,7 +9,7 @@ public:
     JQ8900_Transport(hal::GpioIntf & ser):pin_(ser){}
     void tick();
     bool pending();
-    void write_byte(const uint8_t data);
+    void blocking_write_byte(const uint8_t data);
 
     void init(){
         pin_.outpp();

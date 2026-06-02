@@ -17,12 +17,14 @@ static constexpr hal::CanStdId RM6623_EX3_CANID = hal::CanStdId::from_u11(0x20b)
 static constexpr hal::CanStdId RM6623_EX4_CANID = hal::CanStdId::from_u11(0x20c);
 
 static constexpr hal::CanStdId RM6623_CALIBRATE_CANID = hal::CanStdId::from_u11(0x3f0);
-static constexpr hal::ClassicCanFrame RM6623_CALIBRATE_CANFRAME = hal::ClassicCanFrame::from_parts(
-    RM6623_CALIBRATE_CANID, hal::ClassicCanPayload::from_u64(static_cast<uint64_t>('c'))
-);
+static constexpr hal::ClassicCanFrame RM6623_CALIBRATE_CANFRAME = 
+    hal::ClassicCanFrame::from_parts(
+        RM6623_CALIBRATE_CANID, 
+        hal::ClassicCanPayload::from_u8x8({'c', 0, 0, 0, 0, 0, 0, 0})
+    );
 
 
-struct RM6623CurrentCodeInterpreter{
+struct [[nodiscard]] RM6623CurrentCodeInterpreter final{
     template<typename T>
     static constexpr CurrentCode from_amps_bounded(const T amps){
         const auto bits = rm6623::utils::scale_1000(amps);

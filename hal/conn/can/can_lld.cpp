@@ -91,11 +91,11 @@ void can_configure_filter(
         
         FR2 = (static_cast<uint32_t>(filter_cfg.mask32));
     } else {
-        FR1 = (static_cast<uint32_t>(filter_cfg.mask16[0]) << 16) |
-            static_cast<uint32_t>(filter_cfg.id16[0]);
+        FR1 = (static_cast<uint32_t>(filter_cfg.mask16x2[0]) << 16) |
+            static_cast<uint32_t>(filter_cfg.id16x2[0]);
         
-        FR2 = (static_cast<uint32_t>(filter_cfg.mask16[1]) << 16) |
-            static_cast<uint32_t>(filter_cfg.id16[1]);
+        FR2 = (static_cast<uint32_t>(filter_cfg.mask16x2[1]) << 16) |
+            static_cast<uint32_t>(filter_cfg.id16x2[1]);
     }
 
     p_inst->FILTER_PAIR[filter_nth].FR1.BITS = FR1;

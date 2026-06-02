@@ -6,7 +6,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
 
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 #include <variant>
 

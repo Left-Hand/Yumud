@@ -15,7 +15,7 @@ namespace ymd::drivers{
 
 struct L3GD20_Prelude{
 
-enum class RegAddr:uint8_t{
+enum class [[nodiscard]] RegAddr:uint8_t{
     WHO_AM_I = 0x0F,
     CTRL_REG1 = 0x20,
     CTRL_REG2 = 0x21,
@@ -44,13 +44,13 @@ enum class RegAddr:uint8_t{
     INT1_DURATION = 0x38,
 };
 
-enum class Scale :uint8_t{
+enum class [[nodiscard]] Scale :uint8_t{
     /// 250 Degrees Per Second
-    Dps250 = 0x00,
+    _250dps = 0x00,
     /// 500 Degrees Per Second
-    Dps500 = 0x01,
+    _500dps = 0x01,
     /// 2000 Degrees Per Second
-    Dps2000 = 0x03,
+    _2000dps = 0x03,
 };
 
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "primitive/can/can_enum.hpp"
-#include "primitive/can/can_id.hpp"
+#include "../can_enum.hpp"
+#include "../can_id.hpp"
 
 namespace ymd::hal{
 

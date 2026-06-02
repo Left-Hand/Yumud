@@ -5,7 +5,7 @@
 namespace ymd::drivers{
 
 
-class FDC2X1X final:public FDC1X2X_Regs{
+class FDC2X1X final:public FDC2X1X_Prelude{
 public:
     explicit FDC2X1X(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -29,6 +29,8 @@ public:
     IResult<uint32_t> get_data(uint8_t idx);
 
 private:
+    using Regset = FDC1X2X_Regs;
+    Regset regs_;
     hal::I2cDrv i2c_drv_;
 
     IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val){

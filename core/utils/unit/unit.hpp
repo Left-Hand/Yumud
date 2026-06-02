@@ -218,6 +218,9 @@ template<typename T>\
 #define DEF_RATIO(num, den) std::ratio<num, den>
 
 DEF_META_TEMPLATE(MetersPerSecond,  policy::speed,          identity_ratio,     m_s)
+DEF_META_TEMPLATE(CentiMetersPerSecond,  policy::speed,          DEF_RATIO(1, 100),     cm_s)
+DEF_META_TEMPLATE(MetersPerSecondSquared,  policy::acceleration,   identity_ratio,     m_s2)
+
 
 DEF_META_TEMPLATE(Seconds,          policy::time,           identity_ratio,     s)
 DEF_META_TEMPLATE(MilliSeconds,     policy::time,           std::milli,         ms)
@@ -232,7 +235,7 @@ DEF_META_TEMPLATE(MegaHertz,        policy::frequency,      std::mega,          
 DEF_META_TEMPLATE(GigaHertz,        policy::frequency,      std::giga,          ghz)
 
 DEF_META_TEMPLATE(Revolutions,           policy::spin,                      identity_ratio,     r)
-DEF_META_TEMPLATE(RevolutionsPerSecond,  policy::spin::div_with_t<policy::time>,   identity_ratio,     rps)
+// DEF_META_TEMPLATE(RevolutionsPerSecond,  policy::spin::div_with_t<policy::time>,   identity_ratio,     rps)
 DEF_META_TEMPLATE(RevolutionsPerMinute,  policy::spin::div_with_t<policy::time>,   DEF_RATIO(1,60),    rpm)
 
 DEF_META_TEMPLATE(Meter,            policy::length,         identity_ratio,     m)
@@ -283,6 +286,7 @@ DEF_META_TEMPLATE(JoulePerKelvin,   policy::entropy,        identity_ratio,     
 
 DEF_META_TEMPLATE(NewtonMeter,      policy::torque,         identity_ratio,     Nm)
 DEF_META_TEMPLATE(Joule,            policy::energy,         identity_ratio,     J)
+
 
 #undef DEF_META_TEMPLATE
 #undef DEF_RATIO

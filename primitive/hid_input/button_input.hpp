@@ -124,6 +124,10 @@ public:
     [[nodiscard]] constexpr KeyCodes just_released() const noexcept {
         return just_released_;
     }
+private:
+    KeyCodes pressed_;
+    KeyCodes just_pressed_;
+    KeyCodes just_released_;
 
     friend OutputStream & operator << (
         OutputStream & os, const ButtonInput<KeyCode> & self
@@ -140,10 +144,6 @@ public:
 
         return os;
     }
-private:
-    KeyCodes pressed_;
-    KeyCodes just_pressed_;
-    KeyCodes just_released_;
 };
 
 }

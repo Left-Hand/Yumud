@@ -69,7 +69,7 @@ class BinaryHeap {
 private:
     T data_[N];
     size_t len_;
-    Compare cmp_;
+    [[no_unique_address]] Compare cmp_;
     
     // 获取父节点索引
     constexpr size_t parent(size_t i) const noexcept { return (i - 1) / 2; }
@@ -265,15 +265,6 @@ public:
         if (is_empty())
             return None;
         return Some(pop_unchecked());
-    }
-    
-    
-    bool try_push(const T& value) noexcept(std::is_nothrow_copy_constructible<T>::value) {
-        return push(value).is_ok();
-    }
-    
-    bool try_push(T&& value) noexcept(std::is_nothrow_move_constructible<T>::value) {
-        return push(std::move(value)).is_ok();
     }
     
     // 清空堆

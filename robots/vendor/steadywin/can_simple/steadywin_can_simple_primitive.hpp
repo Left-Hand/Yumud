@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../steadywin_primitive.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 // 伺泰威对Odrive通讯消息进行了魔改 不能直接等效于Odrive
 // 参考Odrive的源码，所有Can报文的数据载荷都是8字节

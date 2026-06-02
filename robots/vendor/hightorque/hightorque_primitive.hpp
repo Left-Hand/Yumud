@@ -7,9 +7,40 @@
 #include "primitive/arithmetic/angular.hpp"
 
 
+// 高擎电机文档资料库：内含电机的各种资料文件，并且实时更新
+// https://lingdongfangcheng.feishu.cn/wiki/space/7539498339620913154?ccm_open_type=lark_wiki_spaceLink&open_tab_from=wiki_home
+
+// 1. CAN 波特率：
+//   - 仲裁段：1 Mbps
+//   - 数据段： 1Mbps
+// 2. ID：由 16 位构成，其中 0x7F 是广播地址。
+//   - 高 8 位：表示源地址：
+//     - 最高位为 1 ：需要回复，相当于一个总开关，开启但不发送查询指令会返回一个数据段长度为 0 的帧。
+//     - 最高位位 0：无需回复。
+//     - 其余 7 位：信号源地址。
+//   - 低 8 位：表示目的地址：
+//     - 最高为 0。
+//     - 其余 7 位表示目的地址。
+//     例如：
+//     - ID：0x8001
+//       - 信号源地址为 0。
+//       - 目的地址为 1。
+//       - 最高位为 1，表示需要回复，即打开回复总开关。
+//     - ID：0x100
+//       - 信号源地址为 1。
+//       - 目的地址为 0。
+//       - 最高位为 0，表示无需回复，即关闭回复总开关。
+// 3. 扩展帧和标准帧
+//   - 发送
+//     - 电机控制都可使用
+//     - 读取电机状态需要使用扩展帧
+//   - 电机反馈
+//     - id在1-7的电机反馈状态使用标准帧
+//     - id在8及以上的电机反馈状态使用扩展帧
+
+
 namespace ymd::robots::hightorque{
 
-namespace primitive{
 
 
 enum class Mode:uint8_t{
@@ -224,17 +255,15 @@ enum class [[nodiscard]] RegAddr:uint8_t{
 
 static_assert(sizeof(RegAddr) == 1);
 
-enum class ElementType:uint8_t{
-    B1,
-    B2,
-    B4,
-    Float
+enum class [[nodiscard]] ElementType:uint8_t{
+    B1 = 0b00,
+    B2 = 0b01,
+    B4 = 0b10,
+    Float = 0b11
 };
 
 
-
-
-enum class SlotCommand:uint8_t{
+enum class [[nodiscard]] SlotCommand:uint8_t{
     Write = 0x00,
     Read = 0x01,
     Response = 0x02
@@ -245,6 +274,10 @@ struct [[nodiscard]] SlotSpecifier final{
     ElementType element_type:2; 
     SlotCommand command:4;
 
+    static constexpr SlotSpecifier from_bits(const uint8_t b){
+        return std::bit_cast<SlotSpecifier>(b);
+    }
+
     constexpr uint8_t to_bits() const noexcept {
         return std::bit_cast<uint8_t>(*this);
     }
@@ -252,138 +285,4 @@ struct [[nodiscard]] SlotSpecifier final{
 
 static_assert(sizeof(SlotSpecifier) == 1);
 
-struct [[nodiscard]] PositionCode final{
-    // 单位 0.0001 圈，如 pos = 5000 表示转到 0.5 圈的位置。
-    using Self = PositionCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-
-    static constexpr uint32_t LSB_PER_TURN = 10000;
-    static constexpr double MAX_TURNS = std::numeric_limits<int16_t>::max() / double(LSB_PER_TURN);
-    static constexpr double MIN_TURNS = std::numeric_limits<int16_t>::min() / double(LSB_PER_TURN);
-
-    #if 0
-    // template<typename T>
-    static constexpr Result<Self, std::strong_ording> try_from_turns(const iq16 turns){
-        constexpr iq16 MAX_TURNS_T = static_cast<iq16>(MAX_TURNS);
-        constexpr iq16 MIN_TURNS_T = static_cast<iq16>(MIN_TURNS);
-        // return Self{static_cast<int16_t>(turns * 10000)};
-        if(turns >= MAX_TURNS_T) return Err(std::strong_ordering::greater);
-        else if(turns <= MAX_TURNS_T) return Err(std::strong_ordering::less);
-        const int16_t bits = static_cast<int16_t>(turns * 10000);
-        return Ok(Self{bits});
-    }
-
-
-
-    // template<typename iq16>
-    static constexpr Result<Self, std::strong_ording> try_from_angle(const Angular<iq16> angle){
-        return try_from_turns(angle.to_turns());
-    }
-    #else
-
-    static constexpr Option<Self> try_from_turns(const iq16 turns){
-        constexpr iq16 MAX_TURNS_T = static_cast<iq16>(MAX_TURNS);
-        constexpr iq16 MIN_TURNS_T = static_cast<iq16>(MIN_TURNS);
-        // return Self{static_cast<int16_t>(turns * 10000)};
-        if(turns >= MAX_TURNS_T) return None;
-        else if(turns <= MIN_TURNS_T) return None;
-        const int16_t bits = static_cast<int16_t>(turns * 10000);
-        return Some(Self{bits});
-    }
-
-    static constexpr Option<Self> try_from_angle(const Angular<iq16> angle){
-        return try_from_turns(angle.to_turns());
-    }
-    #endif
-
-    constexpr Angular<iq16> to_angle() const noexcept {
-        const iq16 turns = iq16(bits) / 10000;
-        return Angular<iq16>::from_turns(turns);
-    }
-};
-
-struct [[nodiscard]] SpeedCode{
-    // 速度：单位 0.00025 转/秒，如 val = 1000 表示 0.25 转/秒
-    using Self = SpeedCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-    static constexpr Self from_angular_speed(const Angular<iq16> angular_speed){
-        return Self{static_cast<int16_t>(angular_speed.to_turns() * 4000)};
-    }
-
-    constexpr Angular<iq16> to_angular_speed() const noexcept {
-        const iq16 turns = iq16(bits) / 4000;
-        return Angular<iq16>::from_turns(turns);
-    }
-};
-
-static_assert(sizeof(PositionCode) == 2);
-
-
-struct [[nodiscard]] AccelerationCode{
-    // 加速度：单位 0.01 转/秒^2，如 acc = 40 表示 0.4 转/秒^2
-    using Self = AccelerationCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-
-    static constexpr Self from_angular_acceleration(const Angular<iq16> angular_acceleration){
-        return Self{static_cast<int16_t>(angular_acceleration.to_turns() * 100)};
-    }
-
-    constexpr Angular<iq16> to_angular_acceleration() const noexcept {
-        const iq16 turns = iq16(bits) / 100;
-        return Angular<iq16>::from_turns(turns);
-    }
-};
-
-struct [[nodiscard]] TorqueCode{
-    // 单位：0.01 NM，如 torque = 110 表示最大力矩为 1.1NM
-    using Self = TorqueCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-    static constexpr Self from_nm(const iq16 torque){
-        return Self{static_cast<int16_t>(torque * 100)};
-    }
-    constexpr iq16 to_nm() const noexcept {
-        return iq16(bits) / 100;
-    }
-};
-
-static_assert(sizeof(AccelerationCode) == 2);
-
-struct [[nodiscard]] PhaseVoltageCode{
-    // 电压：单位 0.1 V，如 val = 10 1 V
-    using Self = PhaseVoltageCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-
-    static constexpr Self from_voltage(const iq16 voltage){
-        return Self{static_cast<int16_t>(voltage * 10)};
-    }
-
-    constexpr iq16 to_voltage() const noexcept {
-        return iq16(bits) / 10;
-    }
-};
-
-struct [[nodiscard]] CurrentCode{
-    // 电流：单位 0.1 A，如 val = 10 1 A
-    using Self = CurrentCode;
-    int16_t bits;
-    static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
-
-    static constexpr Self from_amps(const iq16 current){
-        return Self{static_cast<int16_t>(current * 10)};
-    }
-
-    constexpr iq16 to_amps() const noexcept {
-        return iq16(bits) / 10;
-    }
-};
-
-
-
-
-};
 }

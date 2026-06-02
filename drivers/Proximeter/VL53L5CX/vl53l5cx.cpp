@@ -24,14 +24,9 @@ using IResult = Result<T, Error>;
 #define VL53L5CX_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -43,8 +38,8 @@ using IResult = Result<T, Error>;
 #define VL53L5CX_PANIC(...)  PANIC_NSRC()
 #define VL53L5CX_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 
@@ -110,23 +105,23 @@ IResult<> Self::validate(){
 	static constexpr uint8_t CORRECT_REVISION_ID = 0x02;
 
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 	// VL53L5CX_PANIC("first_ok");
 	if(const auto res = read_byte(0, &device_id);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 	if(const auto res = read_byte(1, &revision_id);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	// VL53L5CX_DEBUG("device_id:", std::hex, device_id);
 	// VL53L5CX_DEBUG("revision_id:", std::hex, revision_id);
 	if(device_id != CORRECT_DEVICE_ID)
-		return CHECK_ERR(Err(Error::InvalidDeviceId), "invalid device id:", 
+		return RAISE_ERR(Err(Error::InvalidDeviceId), "invalid device id:", 
 			std::showbase, std::hex, device_id);
 		
 	if(revision_id != CORRECT_REVISION_ID)
-		return CHECK_ERR(Err(Error::InvalidRevisionId), "invalid revision id:", 
+		return RAISE_ERR(Err(Error::InvalidRevisionId), "invalid revision id:", 
 			std::showbase, std::hex, revision_id);
 		
 	// VL53L5CX_DEBUG("validate ok");
@@ -612,7 +607,7 @@ IResult<> Self::start_ranging()
 
 	const auto resolution = ({
 		const auto res = get_resolution();
-		if(res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		if(res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 		res.unwrap();
 	});
 	
@@ -709,7 +704,7 @@ IResult<> Self::start_ranging()
 		ptr_cast<const uint8_t *>(output.data()), 
 		VL53L5CX_DCI_OUTPUT_LIST,
 		(uint16_t)sizeof(output));
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	const uint32_t header_config[2] = {
 		data_read_size_,
@@ -719,40 +714,40 @@ IResult<> Self::start_ranging()
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(header_config)), VL53L5CX_DCI_OUTPUT_CONFIG,
 		(uint16_t)sizeof(header_config));
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(output_bh_enable)), VL53L5CX_DCI_OUTPUT_ENABLES,
 		(uint16_t)sizeof(output_bh_enable));
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	/* Start xshut bypass (interrupt mode) */
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 	if(const auto res = write_byte(0x09, 0x05);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	/* Start ranging session */
 	if(const auto res = write_bulk(
 		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1), 
 		cmd.data(), sizeof(cmd));
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	/* Read ui range data content and compare if data size is the correct one */
 	if(const auto res = dci_read_data(
 		temp_buffer, 0x5440, 12);
-		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+		res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
 	(void)memcpy(&tmp, &(temp_buffer[0x8]), sizeof(tmp));
 
 	if(tmp != data_read_size_){
-		return CHECK_ERR(Err(Error::Status), tmp, "is not", data_read_size_);
+		return RAISE_ERR(Err(Error::Status), tmp, "is not", data_read_size_);
 	}
 
     return Ok();
@@ -842,7 +837,7 @@ IResult<bool> Self::is_data_ready(){
 	}else{
         if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
 			const auto bits = temp_buffer[2];
-			return CHECK_ERR(Err(map_status_to_error(bits)), 
+			return RAISE_ERR(Err(map_status_to_error(bits)), 
 				std::hex, std::showbase, bits);	/* Return GO2 error status */
         }
 

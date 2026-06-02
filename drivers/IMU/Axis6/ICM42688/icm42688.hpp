@@ -1,6 +1,6 @@
 #pragma once
 
-#include "details/ICM42688_Prelude.hpp"
+#include "icm42688_prelude.hpp"
 #include "core/utils/enum/enum_array.hpp"
 #include "primitive/arithmetic/angular.hpp"
 

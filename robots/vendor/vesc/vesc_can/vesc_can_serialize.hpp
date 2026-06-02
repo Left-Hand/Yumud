@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vesc_can_primitive.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 namespace ymd::robots::vesc::can { 
 

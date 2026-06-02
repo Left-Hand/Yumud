@@ -11,14 +11,9 @@
 #define MPU6050_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -30,8 +25,8 @@
 #define MPU6050_PANIC(...)  PANIC_NSRC()
 #define MPU6050_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 

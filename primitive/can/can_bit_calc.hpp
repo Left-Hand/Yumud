@@ -1,7 +1,6 @@
 #pragma once
 
 #include "can_enum.hpp"
-#include "core/utils/Option.hpp"
 
 namespace ymd::hal::can{
 
@@ -21,7 +20,7 @@ struct BitTimmingCalculateIterator {
     };
 
     struct Output {
-        Option<NominalBitTimmingCoeffs> coeffs;  // 始终为 Some（迭代器保证）
+        NominalBitTimmingCoeffs coeffs;
         Percentage<uint8_t> percents;            // 实际采样点百分比（四舍五入）
     };
 
@@ -70,12 +69,12 @@ struct BitTimmingCalculateIterator {
         Percentage<uint8_t> percents = Percentage<uint8_t>::from_percents_unchecked(actual_percent);
 
         Output res{
-            .coeffs = Some(NominalBitTimmingCoeffs{
+            .coeffs = NominalBitTimmingCoeffs{
                 .prescale = state.prescale,
                 .swj = hal::CanTq::from_num(state.current_sjw),
                 .bs1 = hal::CanTq::from_num(state.bs1_tq),
                 .bs2 = hal::CanTq::from_num(state.bs2_tq)
-            }),
+            },
             .percents = percents
         };
 

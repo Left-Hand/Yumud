@@ -63,10 +63,10 @@ IResult<math::Vec3<iq24>> ADXL345::read_acc(){
     ));
 }
 
-IResult<> ADXL345::write_reg(const RegAddr reg_address, const uint8_t reg_data){
-    return transport_.write_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
+IResult<> ADXL345::write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+    return transport_.write_reg(std::bit_cast<uint8_t>(reg_addr), reg_val);
 }
 
-IResult<> ADXL345::read_reg(const RegAddr reg_address, uint8_t & reg_data){
-    return transport_.read_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
+IResult<> ADXL345::read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+    return transport_.read_reg(std::bit_cast<uint8_t>(reg_addr), reg_val);
 }

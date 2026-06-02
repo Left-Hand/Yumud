@@ -22,7 +22,7 @@ using IResult = Self::IResult<T>;
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, __LINE__, ##__VA_ARGS__};\
     __err_check_err;\
@@ -30,8 +30,8 @@ using IResult = Self::IResult<T>;
 
 #else
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 
@@ -59,7 +59,7 @@ IResult<> Self::init(const Config & cfg) {
         if(const auto res = this->read_lap_angle();
             res.is_err()){
             if(i == MAX_INIT_RETRY_TIMES)
-                return CHECK_ERR(Err(res.unwrap_err()));
+                return RAISE_ERR(Err(res.unwrap_err()));
             clock::delay(1ms);
         }else{
             return Ok();
@@ -80,7 +80,7 @@ IResult<Self::Packet> Self::get_packet(){
 
     if(const auto res = spi_drv_.transceive_burst(
             std::span(rx), std::span(tx));
-        res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     const uint16_t packet_underlying = 
         (static_cast<uint16_t>(rx[1] & 0x00FF) << 8) | 
@@ -91,7 +91,7 @@ IResult<Self::Packet> Self::get_packet(){
 IResult<> Self::update(){
     last_packet_ = ({
         const auto res = get_packet();
-        if(res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+        if(res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
         res.unwrap();
     });
 

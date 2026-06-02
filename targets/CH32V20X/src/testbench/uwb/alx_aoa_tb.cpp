@@ -5,17 +5,21 @@
 #include "hal/dma/dma.hpp"
 
 #include "core/clock/clock.hpp"
+#include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/zero.hpp"
+#include "core/string/view/string_view.hpp"
+
+#include "core/utils/result.hpp"
 #include "core/container/atomic_bitset.hpp"
 #include "geometry.hpp"
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa.hpp"
 
 #include "algebra/regions/ray2.hpp"
-
-
+#include "digipw/SVPWM/svpwm3.hpp"
+#include <random>
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -88,264 +92,321 @@ struct AlxActivity{
 using namespace alx_aoa_tb;
 
 
-void alx_aoa_main(){
-
-    #if defined(CH32V30X)
-
-
-
-    auto blue_led_pin_ = hal::PC<13>();
-
-    blue_led_pin_.outpp();
-
-    BlinkActivity blink_activity_{
-        .blue_led_pin_ = blue_led_pin_
+class MarkovNoiseGen {
+public:
+    struct Config {
+        float a;     // 转移系数
+        float sigma; // 高斯噪声标准差
     };
 
+    explicit MarkovNoiseGen(const Config& cfg, uint32_t seed = 123456789u)
+        : a_(cfg.a)
+        , sigma_(cfg.sigma)
+        , last_(0.0f)
+        , seed_(seed)
+        , spare_has_(false)
+        , spare_(0.0f)
+    {}
+
+    // 生成下一个马尔可夫噪声值
+    float get_next() {
+        float w = gaussian() * sigma_;   // N(0, sigma^2)
+        last_ = a_ * last_ + w;
+        return last_;
+    }
+
+private:
+    // ------------------- 均匀随机数生成器 (LCG) -------------------
+    uint32_t lcg() {
+        // 参数采用 glibc 使用的 LCG:  a=1103515245, c=12345, m=2^31
+        seed_ = seed_ * 1103515245u + 12345u;
+        return seed_ & 0x7fffffff;       // 返回 [0, 2^31-1]
+    }
+
+    // 生成 [0, 1) 范围内的均匀浮点数
+    float uniform() {
+        return static_cast<float>(lcg()) / 2147483648.0f; // 2^31
+    }
+
+    // ------------------- Box-Muller 生成标准正态分布 -------------------
+    float gaussian() {
+        // 使用缓存机制，一次生成两个独立样本，存储一个供下次使用
+        if (spare_has_) {
+            spare_has_ = false;
+            return spare_;
+        } else {
+            float u1, u2, r, theta;
+            do {
+                u1 = uniform(); // (0,1)
+                u2 = uniform(); // (0,1)
+            } while (u1 == 0.0f); // 避免 log(0)
+
+            r = std::sqrt(-2.0f * std::log(u1));
+            theta = 2.0f * 3.14159265358979323846f * u2;
+            float z1 = r * std::cos(theta);
+            float z2 = r * std::sin(theta);
+            spare_ = z2;
+            spare_has_ = true;
+            return z1;
+        }
+    }
+
+private:
+    float a_;
+    float sigma_;
+    float last_;
+    uint32_t seed_;
+    bool spare_has_;
+    float spare_;
+};
+// struct MarkovNoiseGen {
+//     struct Config {
+//         float a;
+//         float sigma;
+//     };
+
+//     explicit MarkovNoiseGen(const Config& cfg)
+//         : a_(cfg.a)
+//         , sigma_(cfg.sigma)
+//         , rd_()
+//         , gen_(rd_())
+//         , norm_(0.0f, sigma_)
+//         , last_(0.0f)   // 初始噪声值，可根据需要调整
+//     {}
+
+//     [[nodiscard]] float get_next() {
+//         float w = norm_(gen_);
+//         last_ = a_ * last_ + w;
+//         return last_;
+//     }
+
+// private:
+//     float a_;
+//     float sigma_;
+//     std::random_device rd_;
+//     std::mt19937 gen_;
+//     std::normal_distribution<float> norm_;
+//     float last_;
+// };
+
+
+static constexpr Result<math::fixed<32, uint32_t>, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
+    constexpr size_t SHIFT_BITS = 9;
+    constexpr size_t MAX_FREQ = (1u << (32u - SHIFT_BITS)) / 8;  // div 8 for margin
+    
+    // 参数检查
+    if(fs == 0) return Err(StringView("fs cannot be zero"));
+    if(fs >= MAX_FREQ) return Err(StringView("fs overflow")); 
+    if(fc >= MAX_FREQ) return Err(StringView("fc overflow"));
+    if(fc * 2 >= fs) return Err(StringView("nyquist failed"));
+
+    // 使用安全的乘法，防止中间溢出
+    const uint64_t pow2_32_SHIFT = static_cast<uint64_t>(1) << (32 + SHIFT_BITS);
+    const uint64_t pow2_SHIFT = static_cast<uint64_t>(1) << SHIFT_BITS;
+    
+    // 计算分子：fs * 2^(32+SHIFT_BITS)
+    const uint64_t num = static_cast<uint64_t>(fs) * pow2_32_SHIFT;
+    
+    // 计算分母：fs * 2^SHIFT_BITS + fc * TAU * 2^SHIFT_BITS
+    const uint64_t fs_term = static_cast<uint64_t>(fs) * pow2_SHIFT;
+    
+    // 确保 TAU 有足够的精度和适当的缩放
+    constexpr uint64_t TAU_SCALED = static_cast<uint64_t>(TAU * (1ull << SHIFT_BITS) + 0.5);
+    const uint64_t fc_term = static_cast<uint64_t>(fc) * TAU_SCALED;
+    
+    const uint64_t den = fs_term + fc_term;
+    
+    // 防止除零
+    if(den == 0) return Err(StringView("denominator is zero"));
+    
+    return Ok(math::fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>(num / den)));
+}
+
+static constexpr size_t FOC_FREQ = 50;
+
+
+//y[n] = alpha * x[n] + beta * y[n-1]
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_1o(
+    const math::fixed<Q, int32_t> x_state, 
+    const math::fixed<Q, int32_t> x_new, 
+    const uq32 alpha
+){
+    const uq32 beta = uq32::from_bits(~alpha.to_bits());
+    using acc_t = std::conditional_t<std::is_signed_v<int32_t>, int64_t, uint64_t>;
+    return math::fixed<Q, int32_t>::from_bits(
+        int32_t((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
+        + int32_t((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
+    );
+}
+
+
+
+template<size_t FC, size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
+    const math::fixed<Q, int32_t> x_state,
+    const math::fixed<Q, int32_t> x_new
+){
+    constexpr auto ALPHA = calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
+    return lpf_1o(x_state, x_new, ALPHA);
+}
+
+
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_10hz(
+    math::fixed<Q, int32_t> x_state,
+    const math::fixed<Q, int32_t> x_new
+){
+    return lpf_specified_fc<1>(x_state, x_new);
+}
+
+
+void alx_aoa_main(){
+
+
+    auto & DBG_UART = hal::usart2;
 
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(115200 * 2),
+        .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking
-        // 115200
     });
 
-    // hal::uart.init({
-    //     .remap = hal::UART5_REMAP_PC12_PD2,
-    //     .baudrate = hal::NearestFreq(115200 * 2),
-    //     .tx_strategy = CommStrategy::Blocking
-    //     // 115200
-    // });
-
-
-
-    DEBUGGER.retarget(&hal::usart2);
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.build_config()
-        .set_eps(4)
+        .set_eps(5)
         .set_splitter(",")
-        .no_brackets(DISEN)
-        .no_fieldname(DISEN)
+        .no_brackets(EN) 
+        .no_fieldname(EN)
         .force_sync(EN)
         .finalize();
 
-    // while(true){
-    //     clock::delay(5ms);
-    //     DEBUG_PRINTLN_IDLE(0);
-    // }
+    auto blue_led_pin_ = hal::PC<13>();
+    blue_led_pin_.outpp();
 
-    using AlxMeasurements = std::array<AlxMeasurement, 2>;
-    AlxMeasurements alx_measurements_ = {Zero, Zero};
+    hal::usart1.init({
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
+    });
 
-    using Mk8Measurements = std::array<Mk8Measurement, 2>;
+    [[maybe_unused]] auto & uwb_uart_ = hal::usart1;
+    
+    iq16 azimuth_radians = 0;
+    iq16 azimuth_radians_polluted = 0;
+    iq16 distance_meters = 0;
+    iq16 distance_meters_polluted = 0;
+    int times = 0;
 
-    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){
 
-        if(res.is_ok()){
-            const auto & ev = res.unwrap();
-            if(ev.is<AlxLocation>()){
-                const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
-                auto measurement = loc.to_spherical_coordinates<float>();
-                measurement.azimuth = -measurement.azimuth;
-                measurement.elevation = -measurement.elevation;
-                alx_measurements_.at(idx) = measurement;
-                // if(idx == 1)PANIC{idx};
-            }else if(ev.is<AlxHeartBeat>()){
-            }
-        }else{
-            [[maybe_unused]] const auto & err = res.unwrap_err();
-            // PANIC{uint8_t(err)};
+    MarkovNoiseGen azi_noise_gen({
+        0.97f,
+        0.2f
+    });
+
+    MarkovNoiseGen dis_noise_gen({
+        0.97f,
+        0.2f
+    }, 8);
+
+    //处理uwb模块事件
+
+
+    auto uwb_ev_handler = [&](const Result<AlxEvent, AlxError> & res){ 
+        if(res.is_err()){
+            [[maybe_unused]] const auto err = res.unwrap_err();
+            (void)err;
+            return;
         }
+
+        const auto now_millis = clock::millis();
+        const auto ev = res.examine();
+
+
+
+        if(ev.is<AlxLocation>()){
+            //处理定位事件
+            const AlxLocation loc = ev.unwrap_as<AlxLocation>();
+            // const auto addict = iq16::from(azi_noise_gen.get_next());
+            azimuth_radians = lpf_10hz(azimuth_radians, loc.azimuth_code.to_angle<iq16>().to_radians());
+            azimuth_radians_polluted = azimuth_radians + iq16::from(0.02f * azi_noise_gen.get_next());
+            distance_meters = lpf_10hz(distance_meters, loc.distance_code.to_meters<iq16>());
+            distance_meters_polluted = distance_meters + iq16::from(0.02f * dis_noise_gen.get_next());
+
+        }else if(ev.is<AlxHeartBeat>()){
+            //处理心跳事件
+        }
+
     };
 
-    auto alx_1_parser_ = AlxAoa_ParseReceiver(
+    auto uwb_parse_receiver_ = AlxAoa_ParseReceiver(
         [&](const Result<AlxEvent, AlxError> & res){
-
-            alx_ev_handler(res, 0);
+            uwb_ev_handler(res);
         }
     );
 
-    auto alx_2_parser_ = AlxAoa_ParseReceiver(
-        [&](const Result<AlxEvent, AlxError> & res){
-            alx_ev_handler(res, 1);
-        }
-    );
+    uwb_uart_.set_event_callback([&](const hal::UartEvent & ev){
+        auto poll_parser = [&](){
+            times ++;
+            const auto quantity = uwb_uart_.rx_queue()
+                .consume_each([&](const uint8_t byte){
+                    uwb_parse_receiver_.push_byte(static_cast<uint8_t>(byte));
+                });
 
-
-    hal::usart3.init({
-        .remap = hal::USART3_REMAP_PB10_PB11,
-        .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
-        .tx_strategy = CommStrategy::Blocking
-    });
-
-    hal::uart4.init({
-        .remap = hal::UART4_REMAP_PC10_PC11,
-        .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
-    });
-
-
-    [[maybe_unused]] auto & alx_1_uart_ = hal::usart3;
-    [[maybe_unused]] auto & alx_2_uart_ = hal::uart4;
-
-    alx_1_uart_.set_event_callback([&](const hal::UartEvent & ev){
-
+            (void)quantity;
+        };
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
-
-                while(alx_1_uart_.available()){
-                    uint8_t byte;
-                    const auto read_len = alx_1_uart_.try_read_byte(byte);
-                    if(read_len == 0) break;
-                    alx_1_parser_.push_byte(static_cast<uint8_t>(byte));
-                }
+                poll_parser();
+                uwb_parse_receiver_.reset();
                 break;
-            default:
+            case hal::UartEvent::RxBulk:
+                poll_parser();
+                break;
+            default: 
                 break;
         }
     });
 
 
-    alx_2_uart_.set_event_callback([&](const hal::UartEvent & ev){
-        switch(ev.kind()){
-            case hal::UartEvent::RxIdle:
-                while(alx_2_uart_.available()){
-                    uint8_t byte;
-                    const auto read_len = alx_2_uart_.try_read_byte(byte);
-                    if(read_len == 0) break;
-                    alx_2_parser_.push_byte(static_cast<uint8_t>(byte));
-                }
-                break;
-            default:
-                break;
-        }
-    });
-
-
+    auto poll_led = [&]{
+        const uint32_t now_millis = static_cast<uint32_t>(clock::millis().count());
+        blue_led_pin_.write(BoolLevel::from(now_millis % 200 > 100));
+    };
 
 
     while(true){
 
-        blink_activity_.resume();
+        // blink_activity_.resume();
+        poll_led();
+        // times++;
+        // const auto now_secs = clock::seconds();
 
-        static auto report_timer = async::RepeatTimer::from_duration(3ms);
+        // const auto sine = (iq16)math::sin(now_secs);
+        // const auto cosine = (iq16)math::cos(now_secs);
+        // const auto ab = digipw::AlphaBetaCoord<iq16>(sine, cosine) * 0.5_iq16;
 
-        report_timer.invoke_if([&]{
-
-            [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
-            const auto & left_raw_meas = alx_measurements_[1];
-            const auto & right_raw_meas = alx_measurements_[0];
-
-            const auto left_meas = std::get<0>(left_raw_meas.to_polar_and_height());
-            const auto right_meas = std::get<0>(right_raw_meas.to_polar_and_height());
-            // const auto left_offset_vec3 = left_raw_meas.to_vec3();
-            // const auto right_offset_vec3 = right_raw_meas.to_vec3();
-
-            // static constexpr float NEAR_JUDEGE_RADIUS = 0.6f;
-            // static constexpr float FAR_JUDEGE_RADIUS = 1.6f;
-            // [[maybe_unused]] const auto left_offset_vec2 = math::Vec2f(left_offset_vec3.x, left_offset_vec3.y);
-            // [[maybe_unused]] const auto right_offset_vec2 = math::Vec2f(right_offset_vec3.x, right_offset_vec3.y);
-
-            [[maybe_unused]] const auto LEFT_ANGLE_BASE = Angular<float>::from_degrees(135);
-            [[maybe_unused]] const auto LEFT_BASE = math::Vec2f(-0.30f, 0.0f);
-            [[maybe_unused]] const auto RIGHT_ANGLE_BASE = Angular<float>::from_degrees(45);
-            [[maybe_unused]] const auto RIGHT_BASE = math::Vec2f(0.30f, -0.0f);
-
-            [[maybe_unused]] const auto left_circle = math::Circle2<float>{LEFT_BASE, left_raw_meas.distance};
-            [[maybe_unused]] const auto right_circle = math::Circle2<float>{RIGHT_BASE, right_raw_meas.distance};
-
-
-            // const auto points = geometry::compute_intersection_points(left_circle, right_circle);
-            // const auto may_p = points.at_or(0, math::Vec2f::ZERO);
-
-            // const bool is_right_near = ABS(left_raw_meas.distance - right_raw_meas.distance) < 0.5f;
-            // [[maybe_unused]] const bool is_left_near = left_meas.amplitude < NEAR_JUDEGE_RADIUS;
-            // [[maybe_unused]] const bool is_right_near = right_meas.amplitude < NEAR_JUDEGE_RADIUS;
-
-            // [[maybe_unused]] const bool is_left_far = left_meas.amplitude < FAR_JUDEGE_RADIUS;
-            // [[maybe_unused]] const bool is_right_far = right_meas.amplitude < FAR_JUDEGE_RADIUS;
-
-            // [[maybe_unused]] const bool is_near =
-            //     (is_left_near ) or (is_right_near);
-
-            // [[maybe_unused]] const bool is_far =
-            //     (is_left_far) and (is_right_far);
-
-            // const auto may_dual_p = geometry::compute_intersection_points(left_circle, right_circle);
-            // const auto p = may_dual_p.size() ? may_dual_p[0] : math::Vec2f::ZERO;
-            const auto left_ray = math::Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
-            const auto right_ray = math::Ray2<float>(RIGHT_BASE, RIGHT_ANGLE_BASE + right_meas.phase);
-
-            // const auto p = geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(math::Vec2f::ZERO);
-
-            [[maybe_unused]] const auto left_est_point = left_ray.endpoint_at_length(left_meas.amplitude);
-            [[maybe_unused]] const auto right_est_point = right_ray.endpoint_at_length(right_meas.amplitude);
-            // const auto may_p = left_ray.intersection(right_ray, 0.0001f);
-            // const auto cp = may_p.unwrap_or(math::Vec2f::ZERO);
-            // return;
-            DEBUG_PRINTLN_IDLE(
-                // alx_measurement.distance,
-                // is_right_near,
-                // left_meas.distance,
-                // ,
-
-                // left_meas.distance,
-                // right_meas.distance,
-                // left_meas.phase.to_degrees(),
-                // left_est_err,
-                // right_est_err,
-                // left_meas.phase.to_radians(),
-                // right_meas.phase.to_radians(),
-                // cp.x,
-                // cp.y,
-                // (cp - LEFT_BASE.org).length(),
-                // (cp - RIGHT_BASE.org).length(),
-                // left_meas.distance,
-                // right_meas.distance,
-                // left_est_point,
-                // right_est_point,
-                // p
-                // geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(math::Vec2f::ZERO),
-                // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(math::Vec2f::ZERO),
-                hal::usart2.available(),
-                hal::usart3.tx_dma_buf_index_,
-                hal::usart3.tx_queue_.length(),
-                // hal::usart3.try_write_bytes("1234567890", 10),
-                USART3_TX_DMA_CH.pending_count()
-                // 0
-                // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
-
-                // ((left_est_point - RIGHT_BASE).angle() - (right_meas.phase + RIGHT_ANGLE_BASE)).to_turns(),
-                // ((right_est_point - LEFT_BASE).angle() - (left_meas.phase + LEFT_ANGLE_BASE)).to_turns(),
-                // left_est_point.x,
-                // left_est_point.y,
-                // (right_est_point - left_est_point).length(),
-                // ((cp - LEFT_BASE.org).length() - left_meas.distance),
-                // ((cp - RIGHT_BASE.org).length() - right_meas.distance),
-                // 0
-                // is_left_near,
-                // is_in_right_disjudge_region,
-                // is_near,
-                // left_meas.azimuth.to_turns(),
-                // right_meas.distance < NEAR_JUDEGE_RADIUS
-                // left_meas.azimuth.to_turns()
-                // alx_measurement.azimuth.to_radians()
-                // points.at_or(0, math::Vec2f::ZERO),
-                // may_p.x,
-                // may_p.y
-                // left_meas.distance,
-                // left_meas.azimuth.to_degrees(),
-                // right_meas.distance,
-                // left_offset_vec2,
-                // right_offset_vec2
-                // left_vec2,
-                // right_vec2
-                // alx_measurements_[1]
-            );
-    });
+        // const iq16 polluted = azimuth_radians 
+        //     + 
+        //     ;
+        DEBUG_PRINTLN(
+            // digipw::SVM(ab),
+            // times,
+            azimuth_radians,
+            // alx_aoa::TargetAngleCode::from_radians(azimuth_radians_polluted).to_angle<iq16>().to_radians(),
+            azimuth_radians_polluted,
+            distance_meters,
+            distance_meters_polluted,
+            // azimuth_radians
+            // int(iq10(azimuth_radians) * 1000),
+            // int(iq10(distance_meters) * 1000)
+            // azimuth_radians.to_bits()
+            0
+        );
     }
 
-    #else
+    // #else
 
-    PANIC{"not supported"};
+    // PANIC{"not supported"};
 
-    #endif
+    // #endif
 }

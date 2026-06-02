@@ -1,0 +1,202 @@
+#include <cstdint>
+#include "core/utils/bits/bitfield_proxy.hpp"
+
+
+
+namespace ymd::msp{
+
+
+struct Flag{
+    uint8_t bits;
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto dont_reply(this Self && self) {
+        return make_bitfield_proxy<0, 1, bool>(self.bits);
+    }
+
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto inav8(this Self && self) {
+        return make_bitfield_proxy<1, 2, bool>(self.bits);
+    }
+};
+
+enum class [[nodiscard]] CommandId:uint8_t{
+    ApiVersion = 0x01,               // [Out] 获取api版本
+    FlightControllerVariant = 0x02,  // [Out]
+    FlightControllerVersion = 0x03,  // [Out]
+    BoardInfo = 0x04,                // [Out]
+    BuildInfo = 0x05,                // [Out]
+
+    GetBoardName = 10,               // [Out]
+    SetBoardName = 11,               // [In]
+
+    GetBatteryConfig = 32,           // [Out]
+    SetBatteryConfig = 33,           // [In]
+    GetModeRanges = 34,              // [Out]
+    SetModeRange = 35,               // [In]
+    GetFeatureConfig = 36,           // [Out]
+    SetFeatureConfig = 37,           // [In]
+    GetBoardAlignmentConfig = 38,    // [Out]
+    SetBoardAlignmentConfig = 39,    // [In]
+    GetCurrentMeterConfig = 40,      // [Out]
+    SetCurrentMeterConfig = 41,      // [In]
+    GetMixerConfig = 42,             // [Out]
+    SetMixerConfig = 43,             // [In]
+    GetRxConfig = 44,                // [Out]
+    SetRxConfig = 45,                // [In]
+    GetLedColors = 46,               // [Out]
+    SetLedColors = 47,               // [In]
+    GetLedStripConfig = 48,          // [Out]
+    SetLedStripConfig = 49,          // [In]
+    GetRssiConfig = 50,              // [Out]
+    SetRssiConfig = 51,              // [In]
+    GetAdjustmentRanges = 52,        // [Out]
+    SetAdjustmentRange = 53,         // [In]
+    GetCfSerialConfig = 54,          // [Out]
+    SetCfSerialConfig = 55,          // [In]
+    GetVoltageMeterConfig = 56,      // [Out]
+    SetVoltageMeterConfig = 57,      // [In]
+    SonarAltitude = 58,              // [Out]
+    GetPidController = 59,           // [Out]
+    SetPidController = 60,           // [In]
+    GetArmingConfig = 61,            // [Out]
+    SetArmingConfig = 62,            // [In]
+
+    GetRxMap = 64,                   // [Out]
+    SetRxMap = 65,                   // [In]
+    Reboot = 68,                     // [In]
+    GetDataflashSummary = 70,        // [Out]
+    GetDataflashRead = 71,           // [Out]
+    DataflashErase = 72,             // [In]
+    GetFailsafeConfig = 75,          // [Out]
+    SetFailsafeConfig = 76,          // [In]
+    GetRxfailConfig = 77,            // [Out]
+    SetRxfailConfig = 78,            // [In]
+    GetSdcardSummary = 79,           // [Out]
+    GetBlackboxConfig = 80,          // [Out]
+    SetBlackboxConfig = 81,          // [In]
+    GetTransponderConfig = 82,       // [Out]
+    SetTransponderConfig = 83,       // [In]
+    GetOsdConfig = 84,               // [Out]
+    SetOsdConfig = 85,               // [In]
+    GetOsdCharRead = 86,             // [Out]
+    SetOsdCharWrite = 87,            // [In]
+    GetVtxConfig = 88,               // [Out]
+    SetVtxConfig = 89,               // [In]
+
+    GetAdvancedConfig = 90,          // [Out]
+    SetAdvancedConfig = 91,          // [In]
+    GetFilterConfig = 92,            // [Out]
+    SetFilterConfig = 93,            // [In]
+    GetPidAdvanced = 94,             // [Out]
+    SetPidAdvanced = 95,             // [In]
+    GetSensorConfig = 96,            // [Out]
+    SetSensorConfig = 97,            // [In]
+    CameraControl = 98,              // [In/Out]
+    SetArmingDisabled = 99,          // [In]
+
+    Status = 101,                    // [Out]
+    RawImu = 102,                    // [Out]
+    Servo = 103,                     // [Out]
+    Motor = 104,                     // [Out]
+    Rc = 105,                        // [Out]
+    RawGps = 106,                    // [Out]
+    CompGps = 107,                   // [Out]
+    Attitude = 108,                  // [Out]
+    Altitude = 109,                  // [Out]
+    Analog = 110,                    // [Out]
+    RcTuning = 111,                  // [Out]
+    Pid = 112,                       // [Out]
+    Boxnames = 116,                  // [Out]
+    Pidnames = 117,                  // [Out]
+    Wp = 118,                        // [Out]
+    Boxids = 119,                    // [Out]
+    ServoConfigurations = 120,       // [Out]
+    NavStatus = 121,                 // [Out]
+    NavConfig = 122,                 // [Out]
+    Motor3dConfig = 124,             // [Out]
+    RcDeadband = 125,                // [Out]
+    SensorAlignment = 126,           // [Out]
+    LedStripModecolor = 127,         // [Out]
+    VoltageMeters = 128,             // [Out]
+    CurrentMeters = 129,             // [Out]
+    BatteryState = 130,              // [Out]
+    MotorConfig = 131,               // [Out]
+    GpsConfig = 132,                 // [Out]
+    CompassConfig = 133,             // [Out]
+    EscSensorData = 134,             // [Out]
+    GpsRescue = 135,                 // [Out]
+    GpsRescuePids = 136,             // [Out]
+    VtxtableBand = 137,              // [Out]
+    VtxtablePowerlevel = 138,        // [Out]
+    MotorTelemetry = 139,            // [Out],
+
+    GetSimplifiedTuning = 140,       // [Out]
+    SetSimplifiedTuning = 141,       // [In]
+    CalculateSimplifiedPid = 142,    // [Out]
+    CalculateSimplifiedGyro = 143,   // [Out]
+    CalculateSimplifiedDterm = 144,  // [Out]
+    ValidateSimplifiedTuning = 145,  // [Out]
+
+    StatusEx = 150,                  // [Out]
+    Uid = 160,                       // [Out]
+    Gpssvinfo = 164,                 // [Out]
+    Gpsstatistics = 166,             // [Out]
+    AttitudeQuaternion = 167,        // [Out]
+
+    GetOsdVideoConfig = 180,         // [Out]
+    SetOsdVideoConfig = 181,         // [In]
+    Displayport = 182,               // [Out]
+    CopyProfile = 183,               // [In]
+    GetBeeperConfig = 184,           // [Out]
+    SetBeeperConfig = 185,           // [In]
+    SetTxInfo = 186,                 // [In]
+    TxInfo = 187,                    // [Out]
+    SetOsdCanvas = 188,              // [In]
+    OsdCanvas = 189,                 // [Out]
+
+    SetRawRc = 200,                  // [In]
+    SetRawGps = 201,                 // [In]
+    SetPid = 202,                    // [In]
+    SetRcTuning = 204,               // [In]
+    AccCalibration = 205,            // [In]
+    MagCalibration = 206,            // [In]
+    ResetConf = 208,                 // [In]
+    SetWp = 209,                     // [In]
+    SelectSetting = 210,             // [In]
+    SetHeading = 211,                // [In]
+    SetServoConfiguration = 212,     // [In]
+    SetMotor = 214,                  // [In]
+    SetNavConfig = 215,              // [In]
+    SetMotor3dConfig = 217,          // [In]
+    SetRcDeadband = 218,             // [In]
+    SetResetCurrPid = 219,           // [In]
+    SetSensorAlignment = 220,        // [In]
+    SetLedStripModecolor = 221,      // [In]
+    SetMotorConfig = 222,            // [In]
+    SetGpsConfig = 223,              // [In]
+    SetCompassConfig = 224,          // [In]
+    SetGpsRescue = 225,              // [In]
+    SetGpsRescuePids = 226,          // [In]
+    SetVtxtableBand = 227,           // [In]
+    SetVtxtablePowerlevel = 228,     // [In]
+
+    MultipleMsp = 230,               // [Out]
+    ModeRangesExtra = 238,           // [Out]
+    SetAccTrim = 239,                // [In]
+    AccTrim = 240,                   // [Out]
+    ServoMixRules = 241,             // [Out]
+    SetServoMixRule = 242,           // [In]
+    SetPassthrough = 245,            // [In]
+    SetRtc = 246,                    // [In]
+    Rtc = 247,                       // [Out]
+    SetBoardInfo = 248,              // [In]
+    SetSignature = 249,              // [In]
+    EepromWrite = 250,               // [In]
+    Reserve1 = 251,                  // reserved
+    Reserve2 = 252,                  // reserved
+    Debugmsg = 253,                  // [Out]
+    Debug = 254                      // [Out]
+};
+}

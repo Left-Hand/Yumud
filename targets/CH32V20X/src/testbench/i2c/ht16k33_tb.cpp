@@ -450,7 +450,7 @@ static void HT16K33_tb(HT16K33 & ht16){
 
         auto display_str = [&](const StringView str) {
             for(size_t i = 0; i < str.size(); i++){
-                display_segcode(i, hid::SegCode::from_char(str[i]).examine());
+                display_segcode(i, hid::SegCode::try_from_char(str[i]).examine());
             }
             ht16.update_displayer(example_pattern).examine();
         };

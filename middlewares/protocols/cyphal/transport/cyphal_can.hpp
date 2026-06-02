@@ -4,8 +4,6 @@
 
 namespace ymd::cyphal::transport::can{
 
-using namespace cyphal::primitive;
-
 struct [[nodiscard]] MessageHeader final{
 public:
     using Self = MessageHeader;
@@ -100,9 +98,6 @@ struct [[nodiscard]] TailByte final{
     uint8_t is_end_of_transfer:1;
     uint8_t is_start_of_transfer:1;
 
-    static constexpr TailByte from_bits(uint8_t bits) {
-        return std::bit_cast<TailByte>(bits);
-    }
     [[nodiscard]] static constexpr Self from_bits(const uint8_t bits){
         return std::bit_cast<Self>(bits);
     }

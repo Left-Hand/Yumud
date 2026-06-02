@@ -7,9 +7,10 @@ namespace ymd::drivers::tamagawa{
 
 using namespace primitive;
 
-template<typename Receiver, typename Msg>
-static constexpr Result<void, typename Receiver::Error> serialize_msg(
-    Receiver & receiver,
+
+template<typename Serializer, typename Msg>
+static constexpr Result<void, typename Serializer::Error> serialize_msg(
+    Serializer & serializer,
     const Msg & msg
 ){
 
@@ -22,14 +23,14 @@ static constexpr Result<void, typename Receiver::Error> serialize_msg(
             static_cast<uint8_t>(CF_CODE),
         };
 
-        if(const auto res = receiver.push_bytes(buffer); 
+        if(const auto res = serializer.push_bytes(buffer); 
             res.is_err()) return Err(res.unwrap_err());
     }
 
     if constexpr(CONTEXT_LENGTH != 0){
         //context
         {
-            if(const auto res = msg.serialize_context(receiver); 
+            if(const auto res = msg.serialize_context(serializer); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -37,16 +38,16 @@ static constexpr Result<void, typename Receiver::Error> serialize_msg(
     
         {
             //crc字段为小端序
-            const uint8_t crc =  Crc8XorAccumulator{}
-                .push_bytes(receiver.collected_bytes())
+            const uint8_t checksum = ChecksumBuilder::from_default()
+                .push_bytes(serializer.collected_bytes())
                 .finalize()
             ;
     
             const std::array<uint8_t, 1> buffer = {
-                static_cast<uint8_t>(crc),
+                static_cast<uint8_t>(checksum),
             };
     
-            if(const auto res = receiver.push_bytes(buffer); 
+            if(const auto res = serializer.push_bytes(buffer); 
                 res.is_err()) return Err(res.unwrap_err());
         }
     }
@@ -54,20 +55,39 @@ static constexpr Result<void, typename Receiver::Error> serialize_msg(
     return Ok();
 }
 
-template<typename Receiver, typename Request>
-static constexpr Result<void, typename Receiver::Error> serialize_request(
-    Receiver & receiver,
+template<typename Serializer, typename Request>
+static constexpr Result<void, typename Serializer::Error> serialize_request(
+    Serializer & serializer,
     const Request & request
 ){
-    return serialize_msg(receiver, request);
+    return serialize_msg(serializer, request);
 }
 
-template<typename Receiver, typename Response>
-static constexpr Result<void, typename Receiver::Error> serialize_response(
-    Receiver & receiver,
+template<typename Serializer, typename Response>
+static constexpr Result<void, typename Serializer::Error> serialize_response(
+    Serializer & serializer,
     const Response & response
 ){
-    return serialize_msg(receiver, response);
+    return serialize_msg(serializer, response);
+}
+
+
+static constexpr Result<void, void>
+verify_checksum(std::span<const uint8_t> in){
+    if(in.size() < 2){
+        #ifdef _NDEBUG
+        return Err();
+        #else
+        __builtin_trap();
+        #endif
+    } 
+
+    const auto bytes = std::span<const uint8_t>(in.begin(), std::prev(in.end()));
+    const auto recv_checksum = *std::prev(in.end());
+    const auto calc_checksum = ChecksumBuilder::from_default()
+        .push_bytes(bytes).finalize();
+    if(calc_checksum != recv_checksum) return Err();
+    return Ok();
 }
 
 

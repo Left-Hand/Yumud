@@ -1,7 +1,7 @@
 #pragma once
 
 #include "flex_assert.hpp"
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 
 namespace ymd::canopen::msg_serde{
 using namespace primitive;

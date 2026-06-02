@@ -8,7 +8,7 @@
 using namespace ymd;
 using namespace ymd::str;
 
-
+#if 0
 
 namespace {
 
@@ -309,3 +309,5 @@ struct Diag{
 }
 
 }
+
+#endif

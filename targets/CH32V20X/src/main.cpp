@@ -7,16 +7,17 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    // myesc_main();
+    myesc_main();
     // steadywin_main();
     // sincos_main();
-    sincospll_main();
+    // jvci_main();
+    // alx_aoa_main();
+    // sincospll_main();
     // pwm_main();
     // cap_main();
     // stl06n_main();
     // nuedc_2025e_joint_main();
     // nuedc_2025e_laser_main();
-    // jvci_main();
     // winter_mc_tutorial_main();
     // lz77_main();
     // o1heap_main();
@@ -178,7 +179,10 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
-    jvci_main();
+    icm42688_main();
+    // jvci_main();
+    // alx_aoa_main();
+    // sincospll_main();
     // winter_mc_tutorial_main();
     // stl06n_main();
     // render_main();

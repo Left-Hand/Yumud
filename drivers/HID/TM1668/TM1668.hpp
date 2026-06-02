@@ -16,7 +16,6 @@ public:
     using DisplayCommand = TM1668_Transport::DisplayCommand;
     using KeyCode = TM1668_Transport::KeyCode;
 
-    static constexpr auto NAME = "TM1668";
 
     explicit TM1668(TM1668_Transport && phy):
         transport_(std::move(phy)){;}

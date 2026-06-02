@@ -12,9 +12,9 @@ struct [[nodiscard]] ZdtFrameFactory final{
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
 
-    NodeId node_id;
-    VerifyMethod verify_method;
-    bool is_multi_axis_sync;
+    const NodeId node_id;
+    const VerifyMethod verify_method;
+    const bool is_multi_axis_sync;
 
     static constexpr Self from_default() {
         return Self{
@@ -44,10 +44,10 @@ struct [[nodiscard]] ZdtFrameFactory final{
         });
     }
 
-    constexpr FlatPacket set_speed(iq16 speed) const noexcept {
+    constexpr FlatPacket set_speed(iq16 tps) const noexcept {
         return ser_req(req_msgs::SetSpeed{
-            .is_ccw = speed < 0,
-            .rpm = Rpm::from_tps(math::abs(speed)),
+            .is_ccw = tps < 0,
+            .rpm = Rpm::from_tps(math::abs(tps)),
             .acc_level = AcclerationLevel::from_tpss(0),
             .is_absolute = true,
             .is_sync = is_multi_axis_sync
@@ -92,7 +92,7 @@ struct [[nodiscard]] ZdtFrameFactory final{
 
 
 private:
-template<typename T>
+    template<typename T>
     [[nodiscard]] constexpr FlatPacket ser_req(const T & req) const noexcept {
         return make_req(node_id, verify_method, req);
     }
@@ -121,7 +121,7 @@ template<typename T>
         if constexpr (PAYLOAD_LENGTH > 0){
             req_msg.fill_bytes(payload_bytes);
         }
-        flat_packet.context[PAYLOAD_LENGTH] = VerifyUtils::get_verify_code(
+        flat_packet.context[PAYLOAD_LENGTH] = VerifyUtils::calc_checksum(
             verify_method,
             FUNC_CODE,
             payload_bytes

@@ -16,14 +16,9 @@ using namespace ymd;
 #define INA226_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -34,8 +29,8 @@ using namespace ymd;
 #define INA226_PANIC(...)  PANIC_NSRC()
 #define INA226_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 using Self = INA226;
@@ -189,7 +184,7 @@ IResult<> INA226::enable_alert_latch(const Enable en){
 
 IResult<> INA226::validate(){
     if(const auto res = i2c_drv_.validate(); res.is_err()){
-        return CHECK_ERR(Err(res.unwrap_err()), "INA226 i2c lost");
+        return RAISE_ERR(Err(res.unwrap_err()), "INA226 i2c lost");
     }
 
     auto & chip_id_reg = regs_.chip_id_reg;
@@ -201,9 +196,9 @@ IResult<> INA226::validate(){
         res.is_err()) return res;
 
     if((chip_id_reg.to_bits() != VALID_CHIP_ID)) 
-        return CHECK_ERR(Err(Error::ChipIdVerifyFailed));
+        return RAISE_ERR(Err(Error::ChipIdVerifyFailed));
     if((manufacture_reg.to_bits() != VALID_MANU_ID)) 
-        return CHECK_ERR(Err(Error::ManuIdVerifyFailed));
+        return RAISE_ERR(Err(Error::ManuIdVerifyFailed));
 
     return Ok();
 }

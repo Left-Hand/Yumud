@@ -16,7 +16,7 @@ struct MPU6050_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Package:uint8_t{
+    enum class [[nodiscard]] Package:uint8_t{
         MPU6050 = 0x68,
         MPU6500 = 0x70,
         MPU9250 = 0x71
@@ -27,14 +27,14 @@ struct MPU6050_Prelude{
         hal::I2cSlaveAddr<7>::from_u7(0b1101000);
 
 
-    enum class AccFs:uint8_t{
+    enum class [[nodiscard]] AccFs:uint8_t{
         _2G     =   0,
         _4G     =   1,
         _8G     =   2,
         _16G    =   3
     };
 
-    enum class GyrFs:uint8_t{
+    enum class [[nodiscard]] GyrFs:uint8_t{
         _250deg     =   0,
         _500deg     =   1,
         _1000deg    =   2,
@@ -43,7 +43,7 @@ struct MPU6050_Prelude{
 
     using RegAddr = uint8_t;   
 
-    struct [[nodiscard]] Config{
+    struct [[nodiscard]] Config final{
         Package packge;
         AccFs acc_fs;
         GyrFs gyr_fs;

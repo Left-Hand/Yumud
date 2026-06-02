@@ -28,7 +28,7 @@ struct INA226_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class AverageTimes:uint16_t{
+    enum class [[nodiscard]] AverageTimes:uint16_t{
         _1 = 0,
         _4 = 1,
         _16 = 2,
@@ -39,7 +39,7 @@ struct INA226_Prelude{
         _1024 = 7
     };
 
-    enum class ConversionTime:uint16_t{
+    enum class [[nodiscard]] ConversionTime:uint16_t{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 

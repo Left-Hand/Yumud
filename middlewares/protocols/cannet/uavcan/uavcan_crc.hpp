@@ -90,22 +90,29 @@ struct [[nodiscard]] CrcBuilder final{
     using Self = CrcBuilder;
     uint16_t crc_val;
 
-    constexpr Self push_byte(const uint8_t byte){
-        crc_val = crc::crc16_push_byte(crc_val, byte);
-        return *this;
+    static constexpr CrcBuilder from_default(){
+        return CrcBuilder{0xffff};
     }
 
-    constexpr Self push_bytes(const std::span<const uint8_t> bytes){
-        crc_val = crc::crc16_push_bytes(crc_val, bytes);
-        return *this;
+    constexpr Self push_byte(const uint8_t byte) const {
+        Self self = *this;
+        self.crc_val = crc::crc16_push_byte(self.crc_val, byte);
+        return self;
     }
 
-    constexpr Self push_signature(const Signature signature){
-        crc_val = crc::crc16_push_signature(crc_val, signature.bits);
-        return *this;
+    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const {
+        Self self = *this;
+        self.crc_val = crc::crc16_push_bytes(self.crc_val, bytes);
+        return self;
     }
 
-    [[nodiscard]] constexpr uint16_t get() const noexcept {
+    constexpr Self push_signature(const Signature signature) const {
+        Self self = *this;
+        self.crc_val = crc::crc16_push_signature(self.crc_val, signature.bits);
+        return self;
+    }
+
+    [[nodiscard]] constexpr uint16_t finalize() const noexcept {
         return crc_val;
     }
 };

@@ -15,14 +15,9 @@ using namespace ymd::drivers::bmi160;
 #define BMI160_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -34,8 +29,8 @@ using namespace ymd::drivers::bmi160;
 #define BMI160_PANIC(...)  PANIC_NSRC()
 #define BMI160_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 static constexpr size_t MAX_PMU_SETUP_RETRY_TIMES = 60;
@@ -270,7 +265,7 @@ IResult<> BMI160::validate(){
         res.is_err()) return Err(res.unwrap_err());
 
     if(reg.bits != reg.CORRECT_ID)
-        return CHECK_ERR(Err(Error::InvalidChipId), "read id is", reg.bits);
+        return RAISE_ERR(Err(Error::InvalidChipId), "read id is", reg.bits);
 
     BMI160_DEBUG("validate_ok");
     return Ok();

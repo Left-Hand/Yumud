@@ -8,7 +8,6 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 #include "drivers/vio/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/rrs3_kinematics.hpp"

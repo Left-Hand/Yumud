@@ -27,36 +27,6 @@ static_assert(CodeFactory::make_x1code_from_turns(2_iq16).bits == 32768 * 2);
 static_assert(CodeFactory::make_kpcode(1_iq16).bits == 12800);
 static_assert(CodeFactory::make_kdcode(1_iq16).bits == 51200);
 
-
-template<size_t NUM_STEP = 0>
-struct DemoBuilder{
-    int count;
-    constexpr DemoBuilder<NUM_STEP + 1> add_1() const requires(NUM_STEP == 0) {
-        return {count + 1};
-    }
-    constexpr DemoBuilder<NUM_STEP + 1> mul_3() const requires(NUM_STEP == 1) {
-        return {count * 3};
-    }
-    constexpr DemoBuilder<NUM_STEP + 1> sub_5() const requires(NUM_STEP == 2) {
-        return {count - 5};
-    }
-
-    constexpr int finalize() const requires(NUM_STEP == 3) {
-        return count;
-    }
-};
-
-[[maybe_unused]] void test_builder(){
-
-    static_assert(DemoBuilder<0>(0).add_1().mul_3().sub_5().count == -2);
-    // static_assert(DemoBuilder<1>(0).add_1().mul_3().sub_5().count == -2);
-}
-
-
-
-
-
-
 [[maybe_unused]] void test_build_cmd_packet(){
     {
         static constexpr auto buffer = []{

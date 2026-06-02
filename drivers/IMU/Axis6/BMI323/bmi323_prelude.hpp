@@ -70,7 +70,7 @@ enum class ErrorStatus:uint16_t{
     // TC-sync ODR.
 };
 
-enum class FeatureState:uint16_t{
+enum class [[nodiscard]] FeatureState:uint16_t{
     FeatureMode = 0x0,
     SelfCalibration,
     SelfTest,
@@ -79,7 +79,7 @@ enum class FeatureState:uint16_t{
 
 
 
-enum class DataRate{
+enum class [[nodiscard]] DataRate{
     _0_78125Hz  = 0x1,
     _1_5625Hz  = 0x2,
     _3_125Hz   = 0x3,
@@ -96,19 +96,19 @@ enum class DataRate{
     _6400Hz     = 0xd
 };
 
-enum class AccFs:uint16_t{
+enum class [[nodiscard]] AccFs:uint16_t{
     _2G = 0x0,
     _4G = 0x1,
     _8G = 0x2,
     _16G = 0x3
 };
 
-enum class Bw:uint16_t{
+enum class [[nodiscard]] Bw:uint16_t{
     By2,
     By4
 };
 
-enum class AverageTimes:uint16_t{
+enum class [[nodiscard]] AverageTimes:uint16_t{
     NoAvg = 0x0,
     _2 = 0x1,
     _4 = 0x2,
@@ -118,7 +118,7 @@ enum class AverageTimes:uint16_t{
     _64 = 0x6
 };
 
-enum class AccMode:uint16_t {
+enum class [[nodiscard]] AccMode:uint16_t {
 // 0b000 (0x0) Disables the accelerometer
 Diable = 0x0,
 
@@ -133,7 +133,7 @@ Continuous = 0x4,
 HighPerformance = 0x7
 };
 
-enum class GyrMode:uint16_t{
+enum class [[nodiscard]] GyrMode:uint16_t{
 // 0b000 (0x0) Disables the gyroscope
 // 0b001 (0x1) Disables the gyroscope but keep the gyroscope drive enabled
 // 0b011 (0x3) Enables the gyroscope with sensing operated in duty-cycling
@@ -141,7 +141,7 @@ enum class GyrMode:uint16_t{
 // 0b111 (0x7) Enables the gyroscope in high performance mode
 };
 
-enum class GyrFs:uint16_t{
+enum class [[nodiscard]] GyrFs:uint16_t{
     _125Dps = 0x0,
     _250Dps = 0x1,
     _500Dps = 0x2,

@@ -13,7 +13,7 @@ namespace ymd::drivers{
 
 class HX711 final{
 public:
-    enum class ConvType{
+    enum class [[nodiscard]] ConvType:uint8_t{
         A128 = 1, B32 = 2, A64 = 3
     };
     static constexpr iq16 GRAVITY_G = iq16(9.8);

@@ -6,7 +6,7 @@
 #include "ral/can.hpp"
 #include "can_layout.hpp"
 
-#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/can/can_frame.hpp"
 #include "primitive/can/can_event.hpp"
 
 #include "can_filter.hpp"

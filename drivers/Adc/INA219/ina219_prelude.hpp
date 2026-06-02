@@ -15,7 +15,7 @@ struct INA219_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0x80 >> 1);
 
-    enum class Error_Kind:uint8_t{
+    enum class [[nodiscard]] Error_Kind:uint8_t{
 
     };
 
@@ -24,7 +24,7 @@ struct INA219_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class AverageTimes:uint8_t{
+    enum class [[nodiscard]] AverageTimes:uint8_t{
         _1 = 0,
         _4 = 1,
         _16 = 2,
@@ -35,11 +35,11 @@ struct INA219_Prelude{
         _1024 = 7
     };
 
-    enum class ConversionTime:uint8_t{
+    enum class [[nodiscard]] ConversionTime:uint8_t{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 
-    enum class HalfScale:uint8_t{
+    enum class [[nodiscard]] HalfScale:uint8_t{
         // _1= 0,
         // _1By2= 1,
         // _1By4= 2,

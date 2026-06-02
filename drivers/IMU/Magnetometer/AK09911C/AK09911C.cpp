@@ -9,14 +9,9 @@
 #define AK09911C_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -28,8 +23,8 @@
 #define AK09911C_PANIC(...)  PANIC_NSRC()
 #define AK09911C_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 
@@ -88,7 +83,7 @@ IResult<> Self::update(){
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
 
-    if(reg.hofl) return CHECK_ERR(Err(Error::MagOverflow));
+    if(reg.hofl) return RAISE_ERR(Err(Error::MagOverflow));
 
     return Ok();
 }
@@ -116,7 +111,7 @@ IResult<> Self::blocking_update(){
 
     while(clock::millis() - begin_ms < READ_TIMEOUT_MS) {
         if(const auto res = is_data_ready(); res.is_err()){
-            return CHECK_ERR(Err(res.unwrap_err()));
+            return RAISE_ERR(Err(res.unwrap_err()));
         }else {
             if(res.unwrap() == true) break;
         }
@@ -139,7 +134,7 @@ IResult<> Self::blocking_update(){
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
 
-    if(reg.hofl) return CHECK_ERR(Err(Error::MagOverflow));
+    if(reg.hofl) return RAISE_ERR(Err(Error::MagOverflow));
 
     return Ok();
 }
@@ -185,9 +180,9 @@ IResult<> Self::selftest(){
         const auto y = regs_.mag_y_reg.to_bits();
         const auto z = regs_.mag_z_reg.to_bits();
 
-        if(not IN_RANGE(x, -30, 30)) return CHECK_ERR(Err(Error::AxisXOverflow), x,);
-        if(not IN_RANGE(y, -30, 30)) return CHECK_ERR(Err(Error::AxisYOverflow), y);
-        if(not IN_RANGE(z, -400, 50)) return CHECK_ERR(Err(Error::AxisZOverflow), z);
+        if(not IN_RANGE(x, -30, 30)) return RAISE_ERR(Err(Error::AxisXOverflow), x,);
+        if(not IN_RANGE(y, -30, 30)) return RAISE_ERR(Err(Error::AxisYOverflow), y);
+        if(not IN_RANGE(z, -400, 50)) return RAISE_ERR(Err(Error::AxisZOverflow), z);
 
         return Ok();
     };
@@ -205,21 +200,19 @@ IResult<> Self::validate(){
         auto wia2_reg = Regs::R8_WIA2{};
         
         if(const auto res = read_reg(wia1_reg);
-            res.is_err()) return CHECK_RES(
-                res, 
-                "failed to read reg when validate, check RSTN pin is HIGH",
-                "error is", res.unwrap_err());
+            res.is_err()) return RAISE_ERR(
+                Err(res.unwrap_err()),
+                "failed to read reg when validate, check RSTN pin is HIGH");
 
         if(const auto res = read_reg(wia2_reg);
-            res.is_err()) return CHECK_RES(
-                res, 
-                "failed to read reg when validate, check RSTN pin is HIGH",
-                "error is", res.unwrap_err());
+            res.is_err()) return RAISE_ERR(
+                Err(res.unwrap_err()),
+                "failed to read reg when validate, check RSTN pin is HIGH");
 
-        if(wia1_reg.to_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::CompanyIdMisMatch),  
+        if(wia1_reg.to_bits() != wia1_reg.KEY) return RAISE_ERR(Err(Error::CompanyIdMisMatch),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.to_bits());
 
-        if(wia2_reg.to_bits() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 
+        if(wia2_reg.to_bits() != wia2_reg.KEY) return RAISE_ERR(Err(Error::InvalidChipId), 
             "wrong device id, correct is", wia2_reg.KEY, "but read is", wia2_reg.to_bits());
 
         return Ok();
@@ -228,8 +221,8 @@ IResult<> Self::validate(){
     if(const auto res = retry(2, [&]{return check_vendor();}, []{clock::delay(2ms);});
         res.is_err()) return res;
 
-    if(const auto res = selftest(); res.is_err())
-        return res;
+    if(const auto res = selftest(); 
+        res.is_err()) return res;
     return Ok();
 }
 
@@ -282,13 +275,13 @@ IResult<math::Vec3<iq24>> Self::read_mag(){
     const int16_t z_bits = std::bit_cast<int16_t>(regs_.mag_z_reg.to_bits());
 
     if(not IN_RANGE(x_bits, MIN_VALUE, MAX_VALUE)) 
-        return CHECK_ERR(Err(Error::AxisXOverflow));
+        return RAISE_ERR(Err(Error::AxisXOverflow));
 
     if(not IN_RANGE(y_bits, MIN_VALUE, MAX_VALUE))
-        return CHECK_ERR(Err(Error::AxisYOverflow));
+        return RAISE_ERR(Err(Error::AxisYOverflow));
     
     if(not IN_RANGE(z_bits, MIN_VALUE, MAX_VALUE))
-        return CHECK_ERR(Err(Error::AxisZOverflow));
+        return RAISE_ERR(Err(Error::AxisZOverflow));
     
     static constexpr iq24 VALUE_LSB = iq24(6E-5);
     return Ok(math::Vec3<iq24>{

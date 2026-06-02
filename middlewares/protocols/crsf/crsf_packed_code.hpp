@@ -4,9 +4,6 @@
 
 namespace ymd::crsf{
 
-
-
-
 struct [[nodiscard]] AltitudeCode final{
     using Self = AltitudeCode;
     // 高度值取决于MSB（第15位）：
@@ -200,6 +197,53 @@ struct [[nodiscard]] CurrentCode final{
     }
 };
 
+struct [[nodiscard]] BatteryCapacityCode final{
+    std::array<uint8_t, 3> bytes;
+
+    [[nodiscard]] constexpr uint32_t to_mah() const {
+        uint32_t mah = 0;
+        mah |= uint32_t(bytes[0]);
+        mah |= uint32_t(bytes[1] << 8);
+        mah |= uint32_t(bytes[2] << 16);
+        return mah;
+    }
+};
+
+struct [[nodiscard]] HSV978 final{
+    // uint16_t h:9;
+    // uint16_t s:7;
+    // uint16_t v:8;
+    uint32_t bits;
+    
+    template <typename Self>
+    [[nodiscard]] constexpr auto hue(this Self && self) {
+        return make_bitfield_proxy<0, 9, uint16_t>(self.bits);
+    }
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto sat(this Self && self) {
+        return make_bitfield_proxy<9, 16, uint16_t>(self.bits);
+    }
+
+    template <typename Self>
+    [[nodiscard]] constexpr auto val(this Self && self) {
+        return make_bitfield_proxy<16, 24, uint16_t>(self.bits);
+    }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize(Serializer & serializer) const noexcept{
+        std::array<uint8_t, 3> buf = {
+            static_cast<uint8_t>(bits & 0xff),
+            static_cast<uint8_t>((bits >> 8) & 0xff),
+            static_cast<uint8_t>((bits >> 16) & 0xff)
+        };
+
+        return serializer.push_bytes(buf);
+    }
+};
+
+
 struct [[nodiscard]] RpmCode final{
     using Self = RpmCode;
     
@@ -250,8 +294,11 @@ struct [[nodiscard]] GpsCoordinateCode final{
 
     template<typename T>
     [[nodiscard]] constexpr T to_degrees() const noexcept {
+        static_assert(not std::is_integral_v<T>);
+
         if constexpr(std::is_floating_point_v<T>){
-            return static_cast<T>(bits) / 10000000.0;
+            constexpr T FACTOR = static_cast<T>(1.0 / 10000000.0);
+            return bits * FACTOR;
         }
 
         __builtin_unreachable();
@@ -259,14 +306,18 @@ struct [[nodiscard]] GpsCoordinateCode final{
 
     template<typename T>
     [[nodiscard]] constexpr T to_turns() const noexcept {
+        static_assert(not std::is_integral_v<T>);
+
         if constexpr(std::is_floating_point_v<T>){
-            return static_cast<T>(bits) / 10000000.0;
-        }else if constexpr(std::is_same_v<T, iq16>){ 
-            static constexpr uint64_t FACTOR = 
-                static_cast<float>(1ull << (16 + 32)) / (1E7 * 360);
+            constexpr T FACTOR = static_cast<T>(1.0 / 10000000.0 / 360);
+            return bits * FACTOR;
+        }else if constexpr(tmp::is_fixed_point_v<T>){ 
+            static constexpr uint32_t FACTOR = 
+                static_cast<uint32_t>(1ull << (tmp::fixed_point_qnum_v<T> + 32)) / (1E7 * 360);
+
             const auto ret_bits = 
                 static_cast<int32_t>((static_cast<int64_t>(bits) * FACTOR) >> 32);
-            return iq16::from_bits(ret_bits);
+            return T::from_bits(ret_bits);
         }
 
         __builtin_unreachable();
@@ -317,6 +368,17 @@ struct [[nodiscard]] GpsHeadingCode final{
         const auto bits = static_cast<uint16_t>(degrees * 100.0f);
         return Self{bits};
     }
+
+    template<typename Serializer>
+    constexpr Result<void, typename Serializer::Error> 
+    serialize(Serializer & serializer) const noexcept{
+        return serializer.push_be_u16(bits);
+    }
+};
+
+struct [[nodiscard]] GpsAltitudeCode final{
+    uint16_t bits;
+
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 

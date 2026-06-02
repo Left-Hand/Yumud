@@ -7,15 +7,14 @@ using namespace ymd::drivers;
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
-using Self = SGM58031;
 
-using Error = Self::Error;
+using Error = SGM58031::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-[[nodiscard]] static constexpr Self::PGA ratio2pga(const uq16 ratio){
-    using PGA = Self::PGA;
+[[nodiscard]] static constexpr SGM58031::PGA pga_from_ratio(const uq16 ratio){
+    using PGA = SGM58031::PGA;
     if(ratio >= 3){
         return PGA::_2_3;
     }else if(ratio >= 2){
@@ -32,7 +31,7 @@ using IResult = Result<T, Error>;
 }
 
 
-IResult<> Self::init(){
+IResult<> SGM58031::init(){
     if(const auto res = validate();
         res.is_err()) return res;
     if(const auto res = read_reg(regs_.config_reg);
@@ -46,7 +45,7 @@ IResult<> Self::init(){
     return Ok();
 }
 
-IResult<> Self::validate(){
+IResult<> SGM58031::validate(){
     // auto & reg = regs_.device_id_reg;
     auto reg = Regs::R16_DeviceId{};
     if(const auto res = read_reg(reg);
@@ -55,7 +54,7 @@ IResult<> Self::validate(){
         return Err(Error::ChipIdMismatch);
     return Ok();
 }
-IResult<> Self::set_datarate(const DataRate dr){
+IResult<> SGM58031::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(regs_.config_reg);
         reg.datarate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
@@ -70,7 +69,7 @@ IResult<> Self::set_datarate(const DataRate dr){
     }
 }
 
-IResult<> Self::set_fs(const FS fs){
+IResult<> SGM58031::set_fs(const FS fs){
     full_scale_ = fs.to_real();
 
     auto reg = RegCopy(regs_.config_reg);
@@ -80,15 +79,15 @@ IResult<> Self::set_fs(const FS fs){
 
 
 
-IResult<> Self::set_fs(const uq16 _fs, const uq16 _vref){
+IResult<> SGM58031::set_fs(const uq16 _fs, const uq16 _vref){
     const auto ratio = math::abs(_fs) / _vref;
     auto reg = RegCopy(regs_.config_reg);
-    reg.pga = ratio2pga(ratio);
+    reg.pga = pga_from_ratio(ratio);
     return write_reg(reg);
 }
 
 
-IResult<> Self::set_trim(const iq16 _trim){
+IResult<> SGM58031::set_trim(const iq16 _trim){
     const iq16 trim = _trim * iq16(4.0f / 3.0f);
     const iq16 offset = trim - iq16(1.30225f);
     auto reg = RegCopy(regs_.trim_reg);
@@ -97,14 +96,14 @@ IResult<> Self::set_trim(const iq16 _trim){
 }
 
 
-IResult<bool> Self::is_idle(){
+IResult<bool> SGM58031::is_idle(){
     auto & reg = regs_.config_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.os));
 }
 
-IResult<> Self::start_conv(){
+IResult<> SGM58031::start_conv(){
     {
         auto reg = RegCopy(regs_.config1_reg);
         reg.pd = true;
@@ -119,34 +118,34 @@ IResult<> Self::start_conv(){
     }
 }
 
-IResult<int16_t> Self::get_conv_data(){
+IResult<int16_t> SGM58031::get_conv_data(){
     auto & reg = regs_.conv_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(reg.to_bits());
 }
 
-IResult<iq16> Self::get_conv_voltage(){
+IResult<iq16> SGM58031::get_conv_voltage(){
     const auto res = get_conv_data();
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok((res.unwrap() * full_scale_) >> 15);
 }
 
 
-IResult<> Self::enable_cont_mode(const Enable en){
+IResult<> SGM58031::enable_cont_mode(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
     reg.mode = (en == EN);
     return write_reg(reg);
 }
 
-IResult<> Self::set_mux(const MUX _mux){
+IResult<> SGM58031::set_mux(const MUX _mux){
     auto reg = RegCopy(regs_.config_reg);
     reg.mux = _mux;
     return write_reg(reg);
 }
 
 
-IResult<> Self::enable_ch3_as_bits_mut(const Enable en){
+IResult<> SGM58031::enable_ch3_as_bits_mut(const Enable en){
     auto reg = RegCopy(regs_.config1_reg);
     reg.ext_ref = (en == EN);
     return write_reg(reg);

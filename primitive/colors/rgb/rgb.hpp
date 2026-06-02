@@ -6,6 +6,10 @@
 #include <tuple>
 
 namespace ymd{
+
+
+    
+
 enum class [[nodiscard]] ColorEnum:uint32_t{
     // 基础颜色
     WHITE       = 0xFFFFFF,    // 白色
@@ -105,15 +109,17 @@ struct [[nodiscard]] RGB888 final{
         };
     }
 
-    static constexpr RGB888 from_u32(const uint32_t _data){
+    static constexpr RGB888 from_u32(const uint32_t b){
         return RGB888{
-            .b = (static_cast<uint8_t>(_data & 0xff)),
-            .g = (static_cast<uint8_t>(_data >> 8)),
-            .r = (static_cast<uint8_t>(_data >> 16))
+            .b = (static_cast<uint8_t>(b & 0xff)),
+            .g = (static_cast<uint8_t>(b >> 8)),
+            .r = (static_cast<uint8_t>(b >> 16))
         };
     }
 
-    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {return math::uint24_t(r | (g << 8) | (b << 16));}
+    [[nodiscard]] constexpr math::uint24_t to_u24() const noexcept {
+        return math::uint24_t(r | (g << 8) | (b << 16));
+    }
 };
 
 static_assert(sizeof(RGB888) == 3);
@@ -123,16 +129,13 @@ struct [[nodiscard]] LAB888 final{
     int8_t a;
     int8_t b;
 
-public:
-
-    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {return math::uint24_t(l | (a << 8) | (b << 16));}
+    [[nodiscard]] constexpr math::uint24_t to_u24() const noexcept {
+        return math::uint24_t(l | (a << 8) | (b << 16));
+    }
 
     static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
         return LAB888(l, a, b);
     } 
-private:
-    constexpr explicit LAB888(const uint8_t _l, const int8_t _a, const int8_t _b):
-        l(_l), a(_a), b(_b){;}
 };
 
 
@@ -140,31 +143,23 @@ static_assert(sizeof(RGB888) == 3);
 
 struct [[nodiscard]] RGB332 final{
     using Self = RGB332;
-    union{
-        struct{
-            uint8_t b : 2;
-            uint8_t g : 3;
-            uint8_t r : 3;
-        };
-        uint8_t bits;
-    };
 
+    uint8_t b : 2;
+    uint8_t g : 3;
+    uint8_t r : 3;
 
-    constexpr explicit RGB332(){;}
-
-    static constexpr Self from_bits(const uint8_t bits){
-        return std::bit_cast<Self>(bits);
+    static constexpr Self from_u8(const uint8_t b){
+        return std::bit_cast<Self>(b);
     }
 
     static constexpr Self from_r3g3b2(uint8_t r, uint8_t g, uint8_t b){
         return Self(r,g,b);
     } 
 
-    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return bits;}
+    [[nodiscard]] constexpr uint8_t to_u8() const noexcept {
+        return std::bit_cast<uint8_t>(*this);
+    }
 
-private:
-    constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
-        b(_b), g(_g), r(_r){;}
 };
 
 static_assert(sizeof(RGB332) == 1);
@@ -184,19 +179,22 @@ struct alignas(2) [[nodiscard]] RGB565 final{
     }
 
     static constexpr 
-    RGB565 from_u16(const uint16_t raw){
-        return std::bit_cast<RGB565>(raw);
+    RGB565 from_u16(const uint16_t bits){
+        return std::bit_cast<RGB565>(bits);
     }
+
     [[nodiscard]] constexpr uint16_t to_u16() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 private:
     static constexpr std::tuple<uint8_t, uint8_t, uint8_t>
     seprate(const uint16_t bits){
-        return {(bits >> 11) & 0x1f, (bits >> 5) & 0x3f, bits & 0x1f};}
-    static constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){
-        return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
+        return {(bits >> 11) & 0x1f, (bits >> 5) & 0x3f, bits & 0x1f};
+    }
 
+    static constexpr uint16_t uni(const uint8_t r, const uint8_t g, const uint8_t b){
+        return ((r & 0x1f) << 11) | ((g & 0x3f) << 5) | (b & 0x1f);
+    }
 };
 
 static_assert(sizeof(RGB565) == 2);
@@ -210,16 +208,16 @@ struct [[nodiscard]] HSV888 final{
 
 
     static constexpr HSV888 from_h8s8v8(
-        const uint8_t _h, const uint8_t _s, const uint8_t _v
+        const uint8_t h, const uint8_t s, const uint8_t v
     ){
         return HSV888{
-            .h = _h,
-            .s = _s,
-            .v = _v
+            .h = h,
+            .s = s,
+            .v = v
         };
     }
 
-    [[nodiscard]] constexpr math::uint24_t as_u24() const noexcept {
+    [[nodiscard]] constexpr math::uint24_t to_u24() const noexcept {
         return math::uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
     }
 
@@ -235,15 +233,23 @@ struct alignas(4) [[nodiscard]] ARGB32 final{
     uint8_t a;
 
 
-    [[nodiscard]] constexpr ARGB32 from_a8r8g8b8(
-        const uint8_t _a, const uint8_t _r, const uint8_t _g, const uint8_t _b){
-            return ARGB32{
-                .b = _b,
-                .g = _g, 
-                .r = _r, 
-                .a = _a
-            };
-        }
+    [[nodiscard]] static constexpr ARGB32 from_a8r8g8b8(
+        const uint8_t a, 
+        const uint8_t r, 
+        const uint8_t g, 
+        const uint8_t b
+    ){
+        return ARGB32{
+            .b = b,
+            .g = g, 
+            .r = r, 
+            .a = a
+        };
+    }
+
+    [[nodiscard]] static constexpr ARGB32 from_u32(const uint32_t b){
+        return std::bit_cast<ARGB32>(b);
+    }
 
     [[nodiscard]] constexpr uint32_t to_u32() const noexcept {
         return std::bit_cast<uint32_t>(*this);
@@ -254,14 +260,13 @@ struct alignas(4) [[nodiscard]] ARGB32 final{
 static_assert(sizeof(ARGB32) == 4);
 
 struct [[nodiscard]] Binary final{
+    uint8_t bits;
 
     enum Kind:uint8_t{
         WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
 
-
-    constexpr explicit Binary(){;}
     
     [[nodiscard]] static constexpr Binary from_bool(const bool b){
         return Binary(b ? 0xff : 0x00);
@@ -293,6 +298,7 @@ struct [[nodiscard]] Binary final{
     [[nodiscard]] constexpr Binary bitwise_and(const Binary & other) const noexcept { 
         return Binary(bits & other.bits);
     }
+
     [[nodiscard]] constexpr bool is_white() const noexcept {return bits == WHITE;}
 
     [[nodiscard]] constexpr bool is_black() const noexcept {return bits == BLACK;}
@@ -304,11 +310,6 @@ struct [[nodiscard]] Binary final{
 
     [[nodiscard]] constexpr uint8_t to_u8() const noexcept {return bits;}
 
-
-private:
-    uint8_t bits;
-
-    constexpr explicit Binary(const uint8_t cu8) : bits(cu8){;}
 };
 
 static_assert(sizeof(Binary) == 1);
@@ -320,10 +321,11 @@ struct [[nodiscard]] Gray final{
         BLACK   = 0x00   // Black color
     };
 
-    constexpr explicit Gray(){;}
 
-    [[nodiscard]] static constexpr Gray from_u8(const uint8_t _data){
-        return Gray{_data};
+    uint8_t bits;
+
+    [[nodiscard]] static constexpr Gray from_u8(const uint8_t b){
+        return Gray{b};
     }
 
     [[nodiscard]] static consteval Gray black(){
@@ -358,8 +360,6 @@ struct [[nodiscard]] Gray final{
     [[nodiscard]] constexpr Binary to_binary(const Gray threshold) const 
         {return Binary::from_bool(bits > threshold.to_u8());}
 
-    uint8_t bits;
-    [[nodiscard]] constexpr explicit Gray(const uint8_t cu8) : bits(cu8){;}
 };
 
 static_assert(sizeof(Gray) == 1);
@@ -370,6 +370,8 @@ struct [[nodiscard]] IGray final{
         BLACK   = 0x00   // Black color
     };
 
+    int8_t bits;
+    
     [[nodiscard]] static constexpr IGray from_i8(const int8_t value) {
         return IGray(value);
     }
@@ -391,9 +393,8 @@ struct [[nodiscard]] IGray final{
     [[nodiscard]] constexpr Binary to_binary_signed(const IGray threshold){
         return Binary::from_bool(bits > threshold.as_i8());}
 
-private:
-    constexpr IGray(int8_t _data) : bits(_data){}
-    int8_t bits;
+
+
 };
 
 static_assert(sizeof(IGray) == 1);
@@ -721,33 +722,33 @@ struct [[nodiscard]] ColorCaster<RGB888, HSV888> {
         // the output more visually linear.
 
         // Apply dimming curves
-        uint8_t value = ( hsv.v);
-        uint8_t saturation = hsv.s;
+        const uint8_t value = ( hsv.v);
+        const uint8_t saturation = hsv.s;
 
         // The brightness floor is minimum number that all of
         // R, G, and B will be set to.
-        uint8_t invsat = ( 255 - saturation);
-        uint8_t brightness_floor = (value * invsat) >> 8;
+        const uint8_t invsat = ( 255 - saturation);
+        const uint8_t brightness_floor = (value * invsat) >> 8;
 
         // The color amplitude is the maximum amount of R, G, and B
         // that will be added on top of the brightness_floor to
         // create the specific hue desired.
-        uint8_t color_amplitude = value - brightness_floor;
+        const uint8_t color_amplitude = value - brightness_floor;
 
         // Figure out which section of the hue wheel we're in,
         // and how far offset we are withing that section
-        uint8_t section = hsv.h / HSV_SECTION_3; // 0..2
-        uint8_t offset = hsv.h % HSV_SECTION_3;  // 0..63
+        const uint8_t section = hsv.h / HSV_SECTION_3; // 0..2
+        const uint8_t offset = hsv.h % HSV_SECTION_3;  // 0..63
 
-        uint8_t rampup = offset; // 0..63
-        uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
+        const uint8_t rampup = offset; // 0..63
+        const uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
 
-        uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
-        uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
+        const uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
+        const uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
 
         // add brightness_floor offset to everything
-        uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
-        uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
+        const uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
+        const uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
         
         uint8_t r, g, b;
         if(section) {

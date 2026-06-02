@@ -11,14 +11,14 @@ using namespace ymd::drivers;
 #define MMC5983_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
+#define RAISE_ERR(Err(res.unwrap_err()), ...) ({\
     const auto __res_check_res = (x);\
     ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -30,8 +30,8 @@ using namespace ymd::drivers;
 #define MMC5983_PANIC(...)  PANIC_NSRC()
 #define MMC5983_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+#define RAISE_ERR(x, ...) (x)
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 
@@ -112,33 +112,33 @@ IResult<> MMC5983::init(const Config & cfg){
 
 
     if(const auto res = enable_mag_meas(EN);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = enable_temp_meas(EN);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = set_prd_mag_set(cfg.prd_set);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = set_bandwidth(cfg.bandwidth);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = set_odr(cfg.datarate);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     return Ok();
 }
 
 IResult<> MMC5983::validate(){
     if(const auto res = transport_.release(); 
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
     
     auto & reg = regs_.product_id_reg;
     if(const auto res = read_reg(reg); 
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
     
     if(reg.product_id != reg.KEY)
-        return CHECK_ERR(Err(Error::InvalidChipId), reg.product_id);
+        return RAISE_ERR(Err(Error::InvalidChipId), reg.product_id);
 
     return Ok();
 }

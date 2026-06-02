@@ -16,8 +16,11 @@ struct [[nodiscard]] MutStrSpan final{
     }
     __attribute__((optimize( "-Ofast" )))
     constexpr void fill(const char chr){
-        for(char * p_chr = begin; p_chr < end; p_chr++){
-            *p_chr = chr;
+        // for(char * p_chr = begin; p_chr < end; p_chr++){
+        //     *p_chr = chr;
+        // }
+        for(size_t i = 0; i < length(); i++){
+            begin[i] = chr;
         }
     }
 };
@@ -104,14 +107,14 @@ __attribute__((optimize( "-Ofast" )))
 
 __attribute__((optimize( "-Ofast" )))
 static constexpr void _fmtnum_u32_dec_padded(MutStrSpan s, uint32_t unsigned_val){
-    // 即使数据为0也不做卫语句 会产生不必要的分支开销 对于小数位而言为0的可能性很小
-    // 即使数据为0 也需要先填充所有位置为'0'
-
+    // 先填充所有位置为'0'
     s.fill('0');
+
+    // 即使数据为0也不做卫语句 会产生不必要的分支开销 对于小数位而言为0的可能性很小
     details::_fmtnum_u32_dec_inner(s, unsigned_val);
 }
 
-
+#if 0
 //TODO replace impl
 static constexpr char * _stupid_fmtnum_u64_dec(char* p_str, uint64_t unsigned_val) {
 
@@ -126,7 +129,7 @@ static constexpr char * _stupid_fmtnum_u64_dec(char* p_str, uint64_t unsigned_va
 
     return p_str + len;
 }
-
+#endif
 
 
 }

@@ -19,11 +19,11 @@ static constexpr size_t UART_BUFFERED_QUEUE_SIZE = 256;
 #endif
 
 #ifndef UART_TX_DMA_BUF_SIZE
-static constexpr size_t UART_TX_DMA_BUF_SIZE = 128;
+static constexpr size_t UART_TX_DMA_BUF_SIZE = 256;
 #endif
 
 #ifndef UART_RX_DMA_BUF_SIZE
-static constexpr size_t UART_RX_DMA_BUF_SIZE = 128;
+static constexpr size_t UART_RX_DMA_BUF_SIZE = 256;
 #endif
 
 

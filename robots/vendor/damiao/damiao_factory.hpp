@@ -5,7 +5,7 @@
 namespace ymd::robots::damiao{
 
 
-struct FrameFactory{
+struct [[nodiscard]] FrameFactory final{
 
     const NodeId motor_id;
 

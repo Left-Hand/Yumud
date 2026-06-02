@@ -1,6 +1,5 @@
 #pragma once
 
-#include "KeyTrait.hpp"
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 
 namespace ymd::drivers{
@@ -11,24 +10,24 @@ public:
     struct Config{
         hal::Gpio & gpio;
         BoolLevel act_level;
-		uint8_t threshold = 2;
+		uint8_t flip_threshold = 2;
 		uint8_t pipe_length = 8;
     };
 
     explicit Key(
         const Config & cfg
     ):
-        gpio_(cfg.gpio), 
-        level_(cfg.act_level),
+        gpio_(cfg.gpio),  
+        act_level_(cfg.act_level),
         filter_(typename dsp::DebounceFilter::Config{
+            .flip_threshold = cfg.flip_threshold,
             .pipe_length = cfg.pipe_length,
-            .threshold = cfg.threshold
         }){;}
 
 
     void update() {
         last_state = now_state;
-        filter_.update(gpio_.read() == level_);
+        filter_.update(gpio_.read() == act_level_);
         now_state = filter_.is_active();
     }
 
@@ -46,7 +45,7 @@ public:
 
 private:
     hal::Gpio & gpio_;
-    BoolLevel level_;
+    BoolLevel act_level_;
     dsp::DebounceFilter filter_;
 
     bool last_state = false;

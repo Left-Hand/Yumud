@@ -55,8 +55,8 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
 };
 
 
-struct [[nodiscard]] DifferentialDriveKinematicsF final { 
-    using Self = DifferentialDriveKinematicsF;
+struct [[nodiscard]] DifferentialDriveKinematicsFloat final { 
+    using Self = DifferentialDriveKinematicsFloat;
 
     struct [[nodiscard]] Config final{
         float wheel_radius;

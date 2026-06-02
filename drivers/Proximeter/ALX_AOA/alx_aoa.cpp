@@ -16,14 +16,9 @@ using Self = AlxAoa_ParseReceiver;
 #define ALXAOA_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 
 
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
@@ -35,8 +30,8 @@ using Self = AlxAoa_ParseReceiver;
 #define ALXAOA_PANIC(...)  PANIC_NSRC()
 #define ALXAOA_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 
@@ -280,27 +275,27 @@ void Self::push_byte(const uint8_t byte){
 
 struct [[nodiscard]] CrcAccumulator final{
     using Self = CrcAccumulator;
-    uint8_t crc;
+    uint8_t checksum;
 
     static constexpr CrcAccumulator from_default(){
-        return {.crc = 0};
+        return {.checksum = 0};
     }
 
     constexpr Self push_byte(const uint8_t byte) const noexcept { 
         auto self = *this;
-        self.crc ^= byte;
+        self.checksum ^= byte;
         return self;
     }
 
     constexpr Self push_bytes(const std::span<const uint8_t> bytes) const noexcept { 
         auto self = *this;
         for(const auto byte : bytes){
-            self.crc ^= byte;
+            self.checksum ^= byte;
         }
         return self;
     }
 
-    [[nodiscard]] constexpr uint8_t finalize(){ return crc; }
+    [[nodiscard]] constexpr uint8_t finalize() const { return checksum; }
 };
 
 

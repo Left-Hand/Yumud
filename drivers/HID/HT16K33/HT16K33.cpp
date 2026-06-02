@@ -13,22 +13,17 @@ using IResult = Result<T, Error>;
 
 
 #if HT16K33_DEBUG_EN
-#define CHECK_RES(x, ...) ({\
-    const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
-    __res_check_res;\
-})\
 
 
-#define CHECK_ERR(x, ...) ({\
+#define RAISE_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
     ASSERT{false, #x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
-#define CHECK_RES(x, ...) (x)
-#define CHECK_ERR(x, ...) (x)
+
+#define RAISE_ERR(x, ...) (x)
 #endif
 
 static constexpr uint8_t KEY0_REGADDR = 0x40;
@@ -83,22 +78,22 @@ IResult<BoolLevel> HT16K33::get_intreg_status(){
 
 IResult<> HT16K33::init(const Config & cfg){
     if(const auto res = validate(); 
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = setup_system(EN);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = set_int_pin_func(cfg.int_pin_func);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = clear_displayer();
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = set_pulse_duty(cfg.pulse_duty);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     if(const auto res = setup_displayer(cfg.blink_freq, EN);
-        res.is_err()) return CHECK_RES(res);
+        res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
     return Ok();
 }

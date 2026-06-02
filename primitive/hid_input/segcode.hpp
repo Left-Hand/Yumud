@@ -39,7 +39,7 @@ struct [[nodiscard]] SegCode{
 
     constexpr SegCode(Kind kind):kind_(kind){}
 
-    static constexpr Option<SegCode> from_char(char chr){
+    static constexpr Option<SegCode> try_from_char(char chr){
         switch(chr){
             default: return None;
             case '0': return Some(_0);
@@ -64,6 +64,8 @@ struct [[nodiscard]] SegCode{
 
             case 0: return Some(Off);
         }
+
+        return None;
     }
 
     [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}

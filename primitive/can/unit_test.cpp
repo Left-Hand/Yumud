@@ -1,9 +1,13 @@
-#include "bxcan_frame.hpp"
+#include "can_frame.hpp"
 #include "can_event.hpp"
 #include "can_enum.hpp"
 #include "can_bit_calc.hpp"
 
 using namespace ymd;
+
+
+namespace {
+
 
 // Test hal::CanStdId
 static_assert(sizeof(hal::CanStdId) == 2, "hal::CanStdId should be 2 bytes");
@@ -123,67 +127,82 @@ static_assert([]{
     return (!frame.is_remote()) && frame.length() == 0;
 }());
 
+[[maybe_unused]] void test_payload(){
+    {
+        struct Data{
+            uint32_t d1;
+            uint16_t d2;
+            uint8_t d3;
+        } __packed;
+        
+        constexpr Data data = {
+            .d1 = 0x12345678,
+            .d2 = 0x1234,
+            .d3 = 0x12
+        };
 
+        static_assert(sizeof(Data) == 7);
 
-// Test byte array construction with sized range
-static_assert([]{
-    constexpr std::array<uint8_t, 3> data{1, 2, 3};
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_bytes(data));
-    return frame.length() == 3 && frame[0] == 1 && frame[1] == 2 && frame[2] == 3;
-}());
+        constexpr auto frame = hal::ClassicCanFrame::from_parts(
+            hal::CanStdId::from_bits(0x123U), 
+            hal::ClassicCanPayload::from_memcpy_trivial(data));
 
-// Test try_from_bytes with valid sized range
-static_assert([]{
-    constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        static_cast<hal::ClassicCanPayload>(hal::ClassicCanPayload::try_from_bytes(data).unwrap())
-    );
-    return frame.length() == 5;
-}());
+        static_assert(frame.length() == 7);
+    }
 
-// Test initializer list construction
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({1, 2, 3, 4})
-    );
-    return frame.length() == 4 && frame[0] == 1 && frame[3] == 4;
-}());
+    {
+        constexpr std::array<uint8_t, 3> data{1, 2, 3};
+        constexpr auto frame = hal::ClassicCanFrame::from_parts(
+            hal::CanStdId::from_bits(0x123U), 
+            hal::ClassicCanPayload::from_bytes(data));
+        static_assert(frame.length() == 3 );
+        static_assert(frame[0] == 1 );
+        static_assert(frame[1] == 2 );
+        static_assert(frame[2] == 3);
+    }
 
+    {
+        constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
+        constexpr auto frame = hal::ClassicCanFrame::from_parts(
+            hal::CanStdId::from_bits(0x123U), 
+            static_cast<hal::ClassicCanPayload>(hal::ClassicCanPayload::try_from_bytes(data).unwrap())
+        );
+        static_assert(frame.length() == 5);
+    }
 
-// Test try_from_list with oversized data (should return None)
-static_assert([]{
-    constexpr auto may_payload = hal::ClassicCanPayload::try_from_list({1, 2, 3, 4, 5, 6, 7, 8, 9});
-    return may_payload.is_none();
-}());
+    {
+            constexpr auto frame = hal::ClassicCanFrame::from_parts(
+            hal::CanStdId::from_bits(0x123U), 
+            hal::ClassicCanPayload::from_list({1, 2, 3, 4})
+        );
+        static_assert(frame.length() == 4 && frame[0] == 1 && frame[3] == 4);
+    }
 
+    {
+        constexpr auto may_payload = hal::ClassicCanPayload::try_from_list({1, 2, 3, 4, 5, 6, 7, 8, 9});
+        static_assert(may_payload.is_none());
+    }
 
+    {
+        constexpr auto frame = hal::ClassicCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
+        static_assert(frame.identifier().id_u32() == 0x123U);
+    }
 
-// Test accessors
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
-    return frame.identifier().id_u32() == 0x123U;
-}());
+    {
+        constexpr auto frame = hal::ClassicCanFrame::from_parts(
+            hal::CanStdId::from_bits(0x123U), 
+            hal::ClassicCanPayload::from_list({1, 2, 3})
+        );
+        constexpr auto payload_bits = frame.payload_u64();
+        static_assert(frame.dlc().length() == 3);   
+        static_assert(payload_bits == 0x0000000000030201ULL);
+        static_assert(frame[0] == 1);
+        static_assert(frame[1] == 2);
+        static_assert(frame[2] == 3);
+        static_assert(frame.at_or(3,9) == 9);
+    }
+}
 
-
-// Test span-based payload access
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({1, 2, 3})
-    );
-    constexpr auto payload_bits = frame.payload_u64();
-    static_assert(frame.dlc().length() == 3);   
-    static_assert(payload_bits == 0x0000000000030201ULL);
-    static_assert(frame[0] == 1);
-    static_assert(frame[1] == 2);
-    static_assert(frame[2] == 3);
-    static_assert(frame.at_or(3,9) == 9);
-    return true;
-}());
 
 // Test direct array access operators
 static_assert([]{
@@ -200,26 +219,6 @@ static_assert([]{
         hal::ClassicCanPayload::from_list({5, 10, 15}));
     return frame.at(0) == 5 && frame.at(1) == 10 && frame.at(2) == 15;
 }());
-
-// Test try_at() with valid indices
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({7, 14, 21}));
-    constexpr auto val0 = frame.try_at(0);
-    constexpr auto val1 = frame.try_at(1);
-    return val0.is_some() && val0.unwrap() == 7 && val1.is_some() && val1.unwrap() == 14;
-}());
-
-// Test try_at() with invalid index (should return None)
-static_assert([]{
-    constexpr auto frame = hal::ClassicCanFrame::from_parts(
-        hal::CanStdId::from_bits(0x123U), 
-        hal::ClassicCanPayload::from_list({1, 2, 3}));
-    constexpr auto result = frame.try_at(5); // Index out of bounds
-    return result.is_none();
-}());
-
 
 
 // Test frame type identification
@@ -238,7 +237,6 @@ static_assert([]{
 }());
 
 
-namespace {
 
 [[maybe_unused]] void test_event(){
     // {
@@ -345,10 +343,10 @@ static_assert(sizeof(hal::CanEvent) == 8);
             iter.next();
         });
 
-        static_assert(result.coeffs.unwrap().swj.to_bits() == hal::CanTq::from_num(2).to_bits());
-        static_assert(result.coeffs.unwrap().bs1.to_bits() == hal::CanTq::from_num(15).to_bits());
-        static_assert(result.coeffs.unwrap().bs2.to_bits() == hal::CanTq::from_num(2).to_bits());
-        static_assert(result.coeffs.unwrap().prescale == 8);
+        static_assert(result.coeffs.swj.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.bs1.to_bits() == hal::CanTq::from_num(15).to_bits());
+        static_assert(result.coeffs.bs2.to_bits() == hal::CanTq::from_num(2).to_bits());
+        static_assert(result.coeffs.prescale == 8);
         static_assert(result.percents.percents() == 89);  // 实际采样点可能因四舍五入略有偏差
     }
 }
@@ -434,4 +432,3 @@ static_assert(sizeof(hal::CanEvent) == 8);
 }
 
 }
-

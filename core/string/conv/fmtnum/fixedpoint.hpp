@@ -28,39 +28,46 @@ struct [[nodiscard]] DigitFracPair final{
     }
 };
 
-// 0 < Q <= 32
+// 0 < q_num <= 32
 __attribute__((optimize("Ofast")))
 [[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint(
     uint32_t abs_value_bits, 
     uint8_t precision,
-    uint8_t Q
+    uint8_t q_num
 ){
 
-    if(Q > 32) __builtin_unreachable();
+    if(q_num > 32) __builtin_unreachable();
 
-    if(Q == 32) [[unlikely]]{
-        Q = 31;
+    if(q_num == 32) [[unlikely]]{
+        q_num = 31;
         abs_value_bits >>= 1;
     }
-
-    const uint32_t lower_mask = (1u << Q) - 1;
-
-    const uint32_t pow10_scale = POW10_TABLE[precision];
-    // 使用64位整数进行计算，避免溢出
-    const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
-
-    // 右移Q位提取小数部分（注意处理Q=0的情况）
-    uint32_t frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (Q - 1)) + 1) >> 1;
-    uint32_t digit_part = (uint32_t(abs_value_bits) >> Q);
-
-
-    // 检查是否需要进位到整数部分
-    if(frac_part >= pow10_scale){
-        digit_part += 1;
     
-        // 如果发生进位，调整小数部分
-        frac_part -= pow10_scale;
+    uint32_t digit_part = (uint32_t(abs_value_bits) >> q_num);
+    
+    uint32_t frac_part;
+    
+    // 右移Q位提取小数部分（注意处理Q=0的情况）
+    if(q_num != 0) [[likely]] {
+        const uint32_t pow10_scale = POW10_TABLE[precision];
+        const uint32_t lower_mask = (1u << q_num) - 1;
+        
+        // 使用64位整数进行计算，避免溢出
+        const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
+    
+        frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (q_num - 1)) + 1) >> 1;
+
+        // 检查是否需要进位到整数部分
+        if(frac_part >= pow10_scale){
+            digit_part += 1;
+        
+            // 如果发生进位，调整小数部分
+            frac_part -= pow10_scale;
+        }
+    }else{
+        frac_part = 0;
     }
+
 
     return {
         .digit_part = digit_part, 
@@ -69,19 +76,19 @@ __attribute__((optimize("Ofast")))
 }
 
 
-// 0 < Q <= 32
+// 0 < q_num <= 32
 [[nodiscard]] static constexpr char * _fmtnum_abs_fixedpoint(
     char * p_str, 
     uint32_t abs_value_bits, 
     uint8_t precision, 
-    uint8_t Q
+    uint8_t q_num
 ){
     // 安全限制precision，确保不超出表格范围
     constexpr size_t MAX_PRECSION = POW10_TABLE.size() - 1;
     if(precision > MAX_PRECSION) precision = MAX_PRECSION;
 
 
-    const auto parts = depart_abs_fixedpoint(abs_value_bits, precision, Q);
+    const auto parts = depart_abs_fixedpoint(abs_value_bits, precision, q_num);
 
     p_str = parts.fmt_str(p_str, precision);
     return p_str;

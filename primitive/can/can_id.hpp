@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <compare>
 #include "core/utils/Option.hpp"
-#include "core/container/bits_set.hpp"
+// #include "core/container/bits_set.hpp"
 
 namespace ymd{
 class OutputStream;
@@ -49,9 +49,11 @@ struct [[nodiscard]] CanStdId{
         return bits_;
     }
 
+    #if 0
     [[nodiscard]] constexpr literals::bs11 to_b11() const noexcept {
         return literals::bs11::from_bits_unchecked(bits_);
     }
+    #endif
 
     [[nodiscard]] constexpr uint16_t to_bits() const noexcept {return bits_;}
 
@@ -94,6 +96,12 @@ struct [[nodiscard]] CanExtId{
     [[nodiscard]] constexpr bool is_senior_than(const Self & other) const noexcept {
         //less id means higher priority
         return bits_ < other.bits_;
+    }
+
+    //是否比另一个canid要更优先
+    [[nodiscard]] constexpr bool is_senior_than(const hal::CanStdId & other) const noexcept {
+        //less id means higher priority
+        return (bits_ >> 18) < other.to_u11();
     }
 
     [[nodiscard]] constexpr uint32_t to_u29() const noexcept {

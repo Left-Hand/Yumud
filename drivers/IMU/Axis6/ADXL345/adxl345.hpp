@@ -57,9 +57,9 @@ private:
         return transport_.read_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.as_bits_mut());
     };
 
-    IResult<> write_reg(const RegAddr reg_address, const uint8_t reg_data);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
 
-    IResult<> read_reg(const RegAddr reg_address, uint8_t & reg_data);
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
 };
 
 };

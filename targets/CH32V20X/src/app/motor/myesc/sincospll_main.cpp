@@ -105,6 +105,7 @@ void sincospll_main(){
     Angular<uq32> computed_angle_ = Zero;
 
     iq16 err_filtered_ = Zero;
+    iq16 angular_speed = 0;
     Microseconds isr_elapsed_us_ = 0us;
     [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
     [[maybe_unused]] static constexpr auto LPF_ALPHA_F = float(LPF_ALPHA);
@@ -116,7 +117,8 @@ void sincospll_main(){
             // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 14 * iq16(math::sinpu(32 * now_secs));
             // const iq16 angular_speed = 45;
             // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(32 * now_secs));
-            const iq16 angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(10 * now_secs));
+            // angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(10 * now_secs));
+            angular_speed = 645 * iq16(math::sinpu(now_secs)) + 16 * iq16(math::sinpu(10 * now_secs));
             // const iq16 angular_speed = 45 * iq16(math::sinpu(now_secs));
             // const iq16 angular_speed = 4;
             // const iq16 angular_speed = 2;
@@ -207,12 +209,14 @@ void sincospll_main(){
 
     while(true){
         DEBUG_PRINTLN(
-            clock::seconds(),
+            // clock::seconds(),
             // uq32::from_bits(clock::seconds().to_bits()),
             // uq32::from_bits(clock::seconds().to_bits() >> 32),
             // static_cast<uint32_t>(clock::seconds().to_bits()),
 
             simulated_angle_.to_turns(),
+            angular_speed,
+
             computed_angle_.to_turns(),
             computed_angluar_speed_.to_turns(),
 
@@ -222,14 +226,14 @@ void sincospll_main(){
             // math::pu_to_uq32(math::atan2pu(measured_sine_, measured_cosine_))
             // (computed_angle_ + Angular<uq32>::from_turns(0.125_uq32)).unsigned_normalized().to_turns()
             // math::atan2pu(normalized_sine_, normalized_cosine_)
-            (computed_angle_ + dsp::calc_lpf_phaseshift_uq32(PLL_LPF_FC, computed_angluar_speed_.to_turns())).unsigned_normalized().to_turns(),
+            // (computed_angle_ + dsp::calc_lpf_phaseshift_uq32(PLL_LPF_FC, computed_angluar_speed_.to_turns())).unsigned_normalized().to_turns(),
             // (computed_angle_ + Angular<uq32>::from_turns(uq32::from_bits(static_cast<int32_t>(static_cast<int64_t>(computed_angluar_speed_.to_turns().to_bits() << 16) / 800)))).unsigned_normalized().to_turns()
 
 
             // normalized_sine_, 
             // normalized_cosine_,
-            measured_sine_, 
-            measured_cosine_,
+            // measured_sine_, 
+            // measured_cosine_,
             isr_elapsed_us_.count()
 
         );

@@ -10,8 +10,8 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "robots/vendor/bmkj/m1502e_runtime.hpp"
-#include "robots/vendor/bmkj/m1502e_ser.hpp"
+#include "robots/vendor/bmkj/m1502e/m1502e_runtime.hpp"
+#include "robots/vendor/bmkj/m1502e/m1502e_ser.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 
@@ -275,17 +275,17 @@ void m1502e_main(){
         switch(motor_id.nth().count()){
             case 1:
                 left_motor_state_observe.iterate({
-                    .lap_angle = msg.lap_position.to_angle(),
-                    .speed_rps = msg.speed.to_rps(),
-                    .current_amps = msg.current.to_amps()
+                    .lap_angle = msg.lap_position_code.to_angle(),
+                    .speed_rps = msg.speed_code.to_rps(),
+                    .current_amps = msg.current_code.to_amps()
                 });
                 loop_modes[0] = Some(msg.loop_mode);
                 break;
             case 2:
                 right_motor_state_observe.iterate({
-                    .lap_angle = msg.lap_position.to_angle(),
-                    .speed_rps = msg.speed.to_rps(),
-                    .current_amps = msg.current.to_amps()
+                    .lap_angle = msg.lap_position_code.to_angle(),
+                    .speed_rps = msg.speed_code.to_rps(),
+                    .current_amps = msg.current_code.to_amps()
                 });
                 loop_modes[1] = Some(msg.loop_mode);
                 break;

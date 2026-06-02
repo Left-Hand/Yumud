@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "primitive/can/bxcan_frame.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/utils/bytes/bytes_caster.hpp"
+#include "xdrive_can_utils.hpp"
+#include "core/utils/Result.hpp"
 
-namespace ymd::xdrive::can_protocol{
+#include "primitive/can/can_frame.hpp"
+namespace ymd::robots::xdrive{
 
 enum class [[nodiscard]] Mode:uint32_t{
     Stop = 0,
@@ -66,41 +68,9 @@ using CanFrame = hal::ClassicCanFrame;
 using CanPayload = hal::ClassicCanPayload;
 
 
-struct [[nodiscard]] BytesReader{
-    explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-        bytes_(bytes) {}
-
-    template<typename T>
-    [[nodiscard]] constexpr Option<T> try_fetch(){
-        if(remaining().size() < sizeof(T))
-            return None;
-        return Some(le_bytes_to_int<T>(fetch_bytes<sizeof(T)>()));
-    }
-
-    template<typename T>
-    [[nodiscard]] constexpr T fetch(){
-        if(remaining().size() < sizeof(T))
-            __builtin_trap();
-        return le_bytes_to_int<T>(fetch_bytes<sizeof(T)>());
-    }
-
-private:
-    std::span<const uint8_t> bytes_;
-
-    template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-        return ret;
-    }
-
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const noexcept {
-        return bytes_;
-    }
-};
 
 namespace req_msgs{
-struct EnableMotor{
+struct [[nodiscard]] EnableMotor final{
     using Self = EnableMotor;
     static constexpr CommandKind COMMAND = CommandKind::EnableMotor;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -121,11 +91,11 @@ struct EnableMotor{
 };
 
 
-struct DoCalibration{
+struct [[nodiscard]] DoCalibration final{
     static constexpr CommandKind COMMAND = CommandKind::DoCalibration;
 };
 
-struct SetCurrentSetPoint{
+struct [[nodiscard]] SetCurrentSetPoint final{
     using Self = SetCurrentSetPoint;
     static constexpr CommandKind COMMAND = CommandKind::SetCurrentSetPoint;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -133,7 +103,6 @@ struct SetCurrentSetPoint{
 
     static constexpr Result<Self, DeserialzeError> 
     from_bytes(std::span<const uint8_t, FIXED_LENGTH> bytes){ 
-            return Err(DeserialzeError::DlcTooLong);
         BytesReader reader(bytes);
         return Ok(Self{
             .current = math::fp32::from_bits(reader.fetch<uint32_t>())
@@ -142,7 +111,7 @@ struct SetCurrentSetPoint{
 
 };
 
-struct SetVelocitySetPoint{
+struct [[nodiscard]] SetVelocitySetPoint final{
     using Self = SetVelocitySetPoint;
     static constexpr CommandKind COMMAND = CommandKind::SetCurrentSetPoint;
     static constexpr size_t FIXED_LENGTH = 4;
@@ -159,7 +128,7 @@ struct SetVelocitySetPoint{
 };
 
 
-// struct SetPositionSetPoint{
+// struct [[nodiscard]] SetPositionSetPoint final{
 //     using Self = SetPositionSetPoint;
 //     static constexpr CommandKind COMMAND = CommandKind::SetPositionSetPoint;
 //     fp32 position;
