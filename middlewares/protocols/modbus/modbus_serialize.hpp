@@ -51,7 +51,8 @@ serialize_rtu_tailer(
     Serializer & serializer
 ) requires requires(Serializer& s) {
     { s.collected_bytes() } -> std::convertible_to<std::span<const uint8_t>>;
-    { s.push_bytes(std::declval<std::span<const uint8_t>>()) } -> std::same_as<Result<void, typename Serializer::Error>>;
+    { s.push_bytes(std::declval<std::span<const uint8_t>>()) } 
+        -> std::same_as<Result<void, typename Serializer::Error>>;
 }{
     //crc字段为小端序
     const auto buf = ChecksumBuilder::from_default()

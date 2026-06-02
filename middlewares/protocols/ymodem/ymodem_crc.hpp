@@ -1,9 +1,11 @@
+
 #pragma once
 
 #include <cstdint>
 #include <span>
+#include "algo/encrypt/crc_common.hpp"
 
-namespace ymd::srxl2{
+namespace ymd::ymodem{
 
 struct [[nodiscard]] ChecksumBuilder final{
     static constexpr ChecksumBuilder from_default(){
@@ -12,15 +14,15 @@ struct [[nodiscard]] ChecksumBuilder final{
         return self;
     }
 
-
     constexpr ChecksumBuilder push_byte(const uint8_t byte) const noexcept {
         ChecksumBuilder self = *this;
-        self.checksum = self.checksum ^ ((uint16_t)byte << 8); 
-        for(int i = 0; i < 8; ++i) 
-            if(self.checksum & 0x8000) 
-                self.checksum = (self.checksum << 1) ^ 0x1021; 
-            else 
-                self.checksum = self.checksum << 1; 
+        self.checksum ^= byte;        // self.checksum ^= *data; data++;
+        for (size_t i = 0; i < 8; ++i){
+            if (self.checksum & 1)
+                self.checksum = (self.checksum >> 1) ^ 0x8408;        // 0x8408 = reverse 0x1021
+            else
+                self.checksum = (self.checksum >> 1);
+        }
         return self;
     }
 
