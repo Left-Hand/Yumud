@@ -1,0 +1,102 @@
+#include "../mavlink_serialize.hpp"
+
+using namespace ymd;
+using namespace ymd::mavlink;
+
+
+namespace{
+
+
+
+struct [[nodiscard]] Serializer final{
+    using Error = Infallible;
+
+    std::array<uint8_t, 20> bytes;
+    size_t ind = 0;
+
+    constexpr Result<void, Error> push_bytes(std::span<const uint8_t> input_bytes){
+        for(size_t i = 0; i < input_bytes.size(); i++){
+            bytes[ind + i] = input_bytes[i];
+        }
+        ind += input_bytes.size();
+        return Ok();
+    }
+
+    constexpr std::span<const uint8_t> collected_bytes() const {
+        return std::span(bytes.data(), ind);
+    }
+
+    constexpr size_t length() const {return ind;}
+
+    static constexpr Error make_length_exceed_error(){return Error{};}
+};
+
+
+[[maybe_unused]] static void test_serialze_header(){
+    {
+        //header v1
+
+        static constexpr auto header = MavlinkHeaderV1{
+            .len = 2,
+            .seq = 3,
+            .sysid = 4,
+            .compid = 5,
+            .msgid = 6
+        };
+
+
+        constexpr auto serializer = []{
+            auto ret = Serializer{};
+
+            serialize_header_v1(ret, header).unwrap();
+            return ret;
+        }();
+
+
+        // 预期: fe 02 03 04 05 06
+        static_assert(serializer.length() == 6);
+        static_assert(serializer.bytes[0]  == 0xfe);
+        static_assert(serializer.bytes[1]  == 0x02);
+        static_assert(serializer.bytes[2]  == 0x03);
+        static_assert(serializer.bytes[3]  == 0x04);
+        static_assert(serializer.bytes[4]  == 0x05);
+        static_assert(serializer.bytes[5]  == 0x06);
+
+    }
+
+}
+
+// https://blog.csdn.net/qq_51566076/article/details/149910138
+
+
+[[maybe_unused]] static void test_serialze_tailer(){
+
+    {
+        //header v1
+
+        static constexpr uint8_t buf[] = {
+            0x09, 0x00, 0x00, 0x38, 0x01,
+            0x01, 
+            0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x02, 0x03, 0x51, 0x03, 0x03,
+        };
+
+        static constexpr uint8_t crc_extra = 50;
+
+        constexpr auto serializer = []{
+            auto ret = Serializer{};
+
+            serialize_tailer(ret, std::span(buf), crc_extra).unwrap();
+            return ret;
+        }();
+
+
+        static_assert(serializer.length() == 2);
+        static_assert(serializer.bytes[0]  == 0xaf);
+        static_assert(serializer.bytes[1]  == 0x28);
+
+    }
+}
+
+
+}
