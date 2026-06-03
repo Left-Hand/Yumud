@@ -4,39 +4,40 @@
 #include <span>
 
 
+
 namespace ymd::robots::pdstepper{
 
 static constexpr uint8_t FRAME_HEAD_TOEKN             = 0xC5;        /* 帧头 */
 static constexpr uint8_t FRAME_TAIL_TOEKN             = 0x5C;        /* 帧尾 */
 
-enum class [[nodiscard]] FuncionCode:uint8_t{
+enum class [[nodiscard]] Command:uint8_t{
     /* 系统指令：(0x00~0x0F) */
     Idle                    = 0x00,      /* 空闲功能码 */
-    CalEncoder             = 0x01,      /* 校准编码器 */
-    Restart                 = 0x02,      /* 复位重启 */
-    ResetFactory           = 0x03,      /* 恢复出厂设置 */
-    ParamSave              = 0x04,      /* 参数保存 */
+    CalibrateEncoder        = 0x01,      /* 校准编码器 */
+    Reset                 = 0x02,      /* 复位重启 */
+    RestoreFactory           = 0x03,      /* 恢复出厂设置 */
+    SaveParam              = 0x04,      /* 参数保存 */
 
     /* 读参数指令：(0x20~0x3F) */
-    ReadSoftHardVer      = 0x20,      /* 读取软硬件版本信息 */
-    ReadPsi                = 0x21,      /* 读取电机磁链 */
-    ReadPhaseResInd      = 0x22,      /* 读取相电阻和相电感 */
-    ReadPhaseMa           = 0x23,      /* 读取相电流 */
-    ReadVol                = 0x24,      /* 读取总线电压 */
-    ReadMaPid             = 0x25,      /* 读取电流环PID参数 */
-    ReadSpeedPid          = 0x26,      /* 读取速度环PID参数 */
-    ReadPosPid            = 0x27,      /* 读取位置环PID参数 */
-    ReadTotalPulse        = 0x28,      /* 读取输入累计脉冲数 */
-    ReadRotateSpeed       = 0x29,      /* 读电机实时转速 */
-    ReadPos                = 0x2A,      /* 读取电机实时位置 */
-    ReadPosError          = 0x2B,      /* 读取电机位置误差 */
-    ReadMotorSta          = 0x2C,      /* 读取电机运行状态 */
-    ReadClogFlag          = 0x2D,      /* 读取堵转标志 */
-    ReadClogCur           = 0x2E,      /* 读取堵转电流 */
-    ReadEnableSta         = 0x2F,      /* 读使能状态 */
-    ReadArrivedSta        = 0x30,      /* 读取到位状态 */
-    ReadSysParam          = 0x31,      /* 读取系统参数 */
-    ReadDriveParams       = 0x32,      /* 读取驱动参数 */
+    GetSoftHardVer      = 0x20,      /* 读取软硬件版本信息 */
+    GetFlux                = 0x21,      /* 读取电机磁链 */
+    GetPhaseResInd      = 0x22,      /* 读取相电阻和相电感 */
+    GetPhaseCurrent           = 0x23,      /* 读取相电流 */
+    GetVoltage                = 0x24,      /* 读取总线电压 */
+    GetCurrentPidParaments             = 0x25,      /* 读取电流环PID参数 */
+    GetSpeedPidParaments          = 0x26,      /* 读取速度环PID参数 */
+    GetPositionPidParaments            = 0x27,      /* 读取位置环PID参数 */
+    GetTotalPulse        = 0x28,      /* 读取输入累计脉冲数 */
+    GetRotateSpeed       = 0x29,      /* 读电机实时转速 */
+    GetPos                = 0x2A,      /* 读取电机实时位置 */
+    GetPosError          = 0x2B,      /* 读取电机位置误差 */
+    GetMotorSta          = 0x2C,      /* 读取电机运行状态 */
+    GetClogFlag          = 0x2D,      /* 读取堵转标志 */
+    GetClogCur           = 0x2E,      /* 读取堵转电流 */
+    GetEnableSta         = 0x2F,      /* 读使能状态 */
+    GetArrivedSta        = 0x30,      /* 读取到位状态 */
+    GetSysParam          = 0x31,      /* 读取系统参数 */
+    GetDriveParams       = 0x32,      /* 读取驱动参数 */
 
     /* 设置参数指令：(0x60~0x7F) */
     SetSlaveAdd           = 0x60,      /* 设置从机地址 */
@@ -73,10 +74,10 @@ enum class [[nodiscard]] FuncionCode:uint8_t{
     OriginSwitch           = 0x99,      /* 左右限位开关 */
     
     /* 运动控制相关指令：(0xE0~0xFF) */
-    OlSpeedMode           = 0xE0,      /* 开环速度模式控制 */
-    OlPosMode             = 0xE1,      /* 开环绝对位置模式控制 */
-    OlPosRelMode         = 0xE2,      /* 开环相对位置模式控制 */
-    OlPulsesMode          = 0xE3,      /* 开环脉冲模式 */
+    OpenloopSpeedMode           = 0xE0,      /* 开环速度模式控制 */
+    OpenloopPosMode             = 0xE1,      /* 开环绝对位置模式控制 */
+    OpenloopPosRelMode         = 0xE2,      /* 开环相对位置模式控制 */
+    OpenloopPulsesMode          = 0xE3,      /* 开环脉冲模式 */
     
     IoRunMode             = 0xE4,      /* IO启停模式 */
     
@@ -90,11 +91,24 @@ enum class [[nodiscard]] FuncionCode:uint8_t{
     PulseWidthSpeedMode  = 0xF7,      /* 脉宽速度模式 */
     AngleZero              = 0xF8,      /* 将当前的位置清零 */
     ClearClogPro          = 0xF9,      /* 解除堵转状态 */
-    MotorEnable            = 0xFA,      /* 电机使能控制 */
+    Enable            = 0xFA,      /* 电机使能控制 */
     ClearState             = 0xFB,      /* 清除状态（堵转、刹车，失能） */
-    StopNow                = 0xFC,      /* 立即停止（刹车） */
+    QuickStop                = 0xFC,      /* 立即停止（刹车） */
 };
 
+enum class [[nodiscard]] OperateErrc:uint8_t{
+    Ok = 0x01,
+    FrameTooShort = 0xe1,
+    InvalidHeader = 0xe2,
+    Inva
+};
+
+enum class [[nodiscard]] CalibrateState:uint8_t{
+    Idle = 0x00,
+    Progressing,
+    Failed,
+    Succeed
+};
 
 
 }

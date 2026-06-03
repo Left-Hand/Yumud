@@ -1,3 +1,5 @@
+#pragma once
+
 #include "modbus_primitive.hpp"
 #include "modbus_crc.hpp"
 

@@ -8,9 +8,9 @@ namespace ymd::robots::pdstepper{
 
 
 
-template<typename Receiver>
-Result<void, typename Receiver::Error> push_begin(
-    Receiver & receiver,
+template<typename Serialize>
+Result<void, typename Serialize::Error> serialize_header(
+    Serialize & srz,
     const uint8_t motor_id, 
     const FuncionCode fc
 ){
@@ -20,22 +20,22 @@ Result<void, typename Receiver::Error> push_begin(
         static_cast<uint8_t>(fc)
     };
 
-    return receiver.push_bytes(buf);
+    return srz.push_bytes(buf);
 }
 
 
-template<typename Receiver>
-Result<void, typename Receiver::Error> push_end(
-    Receiver & receiver
+template<typename Serialize>
+Result<void, typename Serialize::Error> serialize_trailer(
+    Serialize & srz
 ){
-    const auto bytes = receiver.collected_byte();
+    const auto bytes = srz.collected_byte();
     const uint8_t checksum = ChecksumBuilder::from_default().push_bytes(bytes).finalize();
 
     const uint8_t buf[] = {
         checksum, FRAME_TAIL_TOKEN
     };
 
-    return receiver.push_bytes(buf);
+    return srz.push_bytes(buf);
 }
 
 }
