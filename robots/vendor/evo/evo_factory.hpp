@@ -10,27 +10,19 @@ struct [[nodiscard]] FrameFactory final{
 
     const NodeId motor_id;
 
-    constexpr hal::ClassicCanFrame enable() const noexcept {
-        return pack_0xff_command(Command::Enable);
+    constexpr hal::ClassicCanFrame enable(this auto && self) noexcept {
+        return pack_0xff_command(self.motor_id, Command::Enable);
     }
 
-    constexpr hal::ClassicCanFrame reflash_status() const noexcept {
-        return enable();
+    constexpr hal::ClassicCanFrame disable(this auto && self) noexcept {
+        return pack_0xff_command(self.motor_id, Command::Disable);
     }
 
-    constexpr hal::ClassicCanFrame disable() const noexcept {
-        return pack_0xff_command(Command::Disable);
+    constexpr hal::ClassicCanFrame set_zero(this auto && self) noexcept {
+        return pack_0xff_command(self.motor_id, Command::SetZero);
     }
 
-    constexpr hal::ClassicCanFrame clear_error() const noexcept {
-        return disable();
-    }
-
-    constexpr hal::ClassicCanFrame set_zero() const noexcept {
-        return pack_0xff_command(Command::SetZero);
-    }
-
-    constexpr hal::ClassicCanFrame get_param(const FlashParamId id) const noexcept {
+    constexpr hal::ClassicCanFrame get_param(this auto && self, const FlashParamId id) noexcept {
         const std::array<uint8_t, 8> u8x8 = {
             uint8_t(Command::StartFlash),
             uint8_t(id),
@@ -40,12 +32,12 @@ struct [[nodiscard]] FrameFactory final{
         };
 
         return hal::ClassicCanFrame::from_parts(
-            PARAM_BASE + motor_id, 
+            PARAM_BASE + self.motor_id, 
             hal::ClassicCanPayload::from_u8x8(u8x8)
         );
     }
 
-    constexpr hal::ClassicCanFrame save_flash() const noexcept {
+    constexpr hal::ClassicCanFrame save_flash(this auto && self) noexcept {
         const std::array<uint8_t, 8> u8x8 = {
             uint8_t(Command::StartFlash),
             0,
@@ -55,7 +47,7 @@ struct [[nodiscard]] FrameFactory final{
         };
 
         return hal::ClassicCanFrame::from_parts(
-            PARAM_BASE + motor_id, 
+            PARAM_BASE + self.motor_id, 
             hal::ClassicCanPayload::from_u8x8(u8x8)
         );
     }
@@ -63,9 +55,12 @@ struct [[nodiscard]] FrameFactory final{
 
     template<typename T>
     requires (sizeof(T) == 4)
-    constexpr hal::ClassicCanFrame write_reg(const uint8_t reg_addr, const T param){
+    constexpr hal::ClassicCanFrame write_reg(this auto && self, 
+        const uint8_t reg_addr, 
+        const T param
+    ){
         const auto && param_bytes = std::bit_cast<std::array<uint8_t, 4>>(param);
-        return pack_write_param(motor_id, reg_addr, param_bytes); 
+        return pack_write_param(self.motor_id, reg_addr, param_bytes); 
     }
 
 
@@ -83,7 +78,7 @@ private:
 
     static constexpr hal::CanStdId NMT_CAN_FRAME_ID = hal::CanStdId::from_u11(0x7FF);
 
-    static constexpr hal::ClassicCanPayload pack_0xff_and_tail(const uint8_t b) {
+    static constexpr hal::ClassicCanPayload pack_0xff_and_tail(const uint8_t b) noexcept {
         const auto arr = std::array<uint8_t, 8>{
             0xff, 0xff, 0xff, 0xff, 
             0xff, 0xff, 0xff, b
@@ -93,9 +88,10 @@ private:
     }
 
 
-    constexpr hal::ClassicCanFrame pack_0xff_command(
+    static constexpr hal::ClassicCanFrame pack_0xff_command(
+        const NodeId motor_id,
         const Command command
-    ) const {
+    ) noexcept {
         return hal::ClassicCanFrame::from_parts(
             NO_BASE + motor_id, 
             pack_0xff_and_tail(static_cast<uint8_t>(command))
@@ -107,7 +103,7 @@ private:
         const NodeId motor_id, 
         const uint8_t reg_addr, 
         std::array<uint8_t, 4> bytes
-    ) {
+    ) noexcept {
         const auto arr = std::array<uint8_t, 8>{
             uint8_t(Command::StartFlash),
             uint8_t(reg_addr),

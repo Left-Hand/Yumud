@@ -1,4 +1,4 @@
-#include "damiao_factory.hpp"
+#include "../damiao_factory.hpp"
 
 
 using namespace ymd::robots::damiao;

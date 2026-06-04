@@ -1,6 +1,9 @@
+#pragma once
+
 #include "damiao_primitive.hpp"
 #include "core/math/float/fp32.hpp"
 #include "robots/vendor/mit/mit_primitive.hpp"
+#include "damiao_utils.hpp"
 
 namespace ymd::robots::damiao{
 
@@ -11,20 +14,13 @@ struct [[nodiscard]] PosVelParam final{
     constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
-        const auto pos_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.q);
+        std::array<uint8_t, 8> u8x8;
+        uint8_t * cursor = u8x8.data();
+        
+        cursor = utils::ptr_push_fp32(cursor, self.q);
+        cursor = utils::ptr_push_fp32(cursor, self.dq);
 
-        const auto vel_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.dq);
-
-        return hal::ClassicCanPayload::from_u8x8({
-            pos_bytes[0],
-            pos_bytes[1],
-            pos_bytes[2],
-            pos_bytes[3],
-            vel_bytes[0],
-            vel_bytes[1],
-            vel_bytes[2],
-            vel_bytes[3]
-        });
+        return hal::ClassicCanPayload::from_u8x8(u8x8);
     }
 };  
 
@@ -54,12 +50,8 @@ struct [[nodiscard]] QdCode final{
         return Self{std::bit_cast<uint16_t>(uint16_t(rps * 100.0f))};
     }
 
-    constexpr std::array<uint8_t, 2> to_bytes() const noexcept { 
-        return {uint8_t(bits & 0xFF), uint8_t(bits >> 8)};
-    }
-
     constexpr float to_rps() const noexcept {
-        return float(bits) / 100.0f;
+        return float(bits) * float(1.0f / 100.0f);
     }
 };
 
@@ -74,13 +66,8 @@ struct [[nodiscard]] TorqueCurrentLimitCode final{
         return Self{static_cast<uint16_t>(x * 10000.0f)};
     }
 
-    constexpr std::array<uint8_t, 2> to_bytes() const noexcept { 
-        return {uint8_t(bits & 0xFF), uint8_t(bits >> 8)};
-    }
-
-
     constexpr float to_perunit() const noexcept {
-        return float(bits) / 10000.0f;
+        return float(bits) * float(1.0f / 10000.0f);
     }
 };
 
@@ -94,19 +81,14 @@ struct PosForceParam{
     constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
-        const auto pos_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.q);
+        std::array<uint8_t, 8> u8x8;
+        uint8_t * cursor = u8x8.data();
+        
+        cursor = utils::ptr_push_fp32(cursor, self.q);
+        cursor = utils::ptr_push_u16le(cursor, std::bit_cast<uint16_t>(qd_code));
+        cursor = utils::ptr_push_u16le(cursor, std::bit_cast<uint16_t>(torque_current_limit_code));
 
-        const auto vel_bytes = self.qd_code.to_bytes();
-        const auto torque_bytes = self.torque_current_limit_code.to_bytes();
-
-        return hal::ClassicCanPayload::from_u8x8({
-            pos_bytes[0],
-            pos_bytes[1],
-            pos_bytes[2],
-            pos_bytes[3],
-            vel_bytes[0], vel_bytes[1],
-            torque_bytes[0], torque_bytes[1]
-        });
+        return hal::ClassicCanPayload::from_u8x8(u8x8);
     }
 };
 
@@ -137,9 +119,9 @@ struct [[nodiscard]] MitParams final{
 };
 
 
-template<typename T>
+template<typename Storage>
 struct [[nodiscard]] FeedbackPacketInterpreter final{
-    alignas(4) T bytes;
+    alignas(4) Storage bytes;
 
     // 获取状态
     [[nodiscard]] constexpr NodeId motor_id() const {
