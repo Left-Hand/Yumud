@@ -17,7 +17,7 @@ static constexpr auto turns = float(PositionCode_i32(0x7fffffff).to_angle().to_t
         static constexpr resp_msgs::SetTorque obj = resp_msgs::SetTorque::try_from_bytes(std::span(bytes)).unwrap();
         static_assert(obj.motor_temperature.bits == 0x12);
 
-    }
+    }  
 }
 #endif
 

@@ -19,59 +19,59 @@ namespace{
 
 using math::fp32;
 
-MAVLINK_REFLECT_DEFMSG(
+MAVLINK_CODEGEN_DEFMSG(
     Heartbeat, 0,
-    MAVLINK_REFLECT_PROXY(type,              MavType),
-    MAVLINK_REFLECT_PROXY(autopilot,         MavAutopilot),
-    MAVLINK_REFLECT_PROXY(base_mode,         MavModeFlag),
-    MAVLINK_REFLECT_PROXY(custom_mode,       uint32_t),
-    MAVLINK_REFLECT_PROXY(system_status,     MavState )
+    MAVLINK_CODEGEN_PROXY(type,              MavType),
+    MAVLINK_CODEGEN_PROXY(autopilot,         MavAutopilot),
+    MAVLINK_CODEGEN_PROXY(base_mode,         MavModeFlag),
+    MAVLINK_CODEGEN_PROXY(custom_mode,       uint32_t),
+    MAVLINK_CODEGEN_PROXY(system_status,     MavState )
 )
 
 
 // SYS_STATUS (1)
 // 系统核心状态（传感器、电池、负载、通信）。
-MAVLINK_REFLECT_DEFMSG(
+MAVLINK_CODEGEN_DEFMSG(
     SysStatus, 1,
 
     // 传感器在位掩码（0=不存在，1=存在）
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_present, MavSysStatusSensor),
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_present, MavSysStatusSensor),
     
     // 传感器使能掩码（0=关闭，1=开启）
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_enabled, MavSysStatusSensor),
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_enabled, MavSysStatusSensor),
 
     // 传感器健康掩码（0=故障，1=正常）
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_health, MavSysStatusSensor),
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_health, MavSysStatusSensor),
 
     // 主循环最大占用率（0–1000，建议<1000）
-    MAVLINK_REFLECT_PROXY(load, LoadPercents),
+    MAVLINK_CODEGEN_PROXY(load, LoadPercents),
 
     // 电池电压
-    MAVLINK_REFLECT_PROXY(voltage_battery, VoltageCode),
+    MAVLINK_CODEGEN_PROXY(voltage_battery, VoltageCode),
 
     // 电池电流
-    MAVLINK_REFLECT_PROXY(current_battery, CurrentCode),
+    MAVLINK_CODEGEN_PROXY(current_battery, CurrentCode),
 
     // 剩余电量百分比
-    MAVLINK_REFLECT_PROXY(battery_remaining, int8_t),
+    MAVLINK_CODEGEN_PROXY(battery_remaining, int8_t),
 
     // 通信丢包率（UART/I2C/SPI/CAN）
-    MAVLINK_REFLECT_PROXY(drop_rate_comm, uint16_t),
+    MAVLINK_CODEGEN_PROXY(drop_rate_comm, uint16_t),
 
     // 通信错误数
-    MAVLINK_REFLECT_PROXY(errors_comm, uint16_t),
+    MAVLINK_CODEGEN_PROXY(errors_comm, uint16_t),
 
     // 飞控自定义错误码
-    MAVLINK_REFLECT_PROXY(errors_count, uint16_t[4]),
+    MAVLINK_CODEGEN_PROXY(errors_count, uint16_t[4]),
 
     // 扩展传感器在位掩码
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_present_extended, uint32_t),
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_present_extended, uint32_t),
 
     // 扩展传感器使能掩码
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_enabled_extended, uint32_t),
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_enabled_extended, uint32_t),
 
     // 扩展传感器健康掩码
-    MAVLINK_REFLECT_PROXY(onboard_control_sensors_health_extended, uint32_t)
+    MAVLINK_CODEGEN_PROXY(onboard_control_sensors_health_extended, uint32_t)
 
 )
 
@@ -154,13 +154,13 @@ MAVLINK_REFLECT_DEFMSG(
 
 
 
-MAVLINK_REFLECT_DEFMSG(
+MAVLINK_CODEGEN_DEFMSG(
     ParamSet, 23,
-    MAVLINK_REFLECT_PROXY(target_system,         uint8_t),
-    MAVLINK_REFLECT_PROXY(target_component,      uint8_t),
-    MAVLINK_REFLECT_PROXY(param_id,              char[16]),
-    MAVLINK_REFLECT_PROXY(param_value,           fp32),
-    MAVLINK_REFLECT_PROXY(param_type,            MavParamType)
+    MAVLINK_CODEGEN_PROXY(target_system,         uint8_t),
+    MAVLINK_CODEGEN_PROXY(target_component,      uint8_t),
+    MAVLINK_CODEGEN_PROXY(param_id,              char[16]),
+    MAVLINK_CODEGEN_PROXY(param_value,           fp32),
+    MAVLINK_CODEGEN_PROXY(param_type,            MavParamType)
 )
 
 

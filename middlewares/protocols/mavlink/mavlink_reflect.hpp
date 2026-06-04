@@ -359,36 +359,36 @@ struct MemberBytesProxy<T>{
 };
 
 
-#define MAVLINK_REFLECT_PROXY(_NAME, _RET, ...) (_RET, _NAME, __VA_ARGS__)
+#define MAVLINK_CODEGEN_PROXY(_NAME, _RET, ...) (_RET, _NAME, __VA_ARGS__)
 
-#define _MAVLINK_REFLECT_ELEMENT_RANK(_method_tuple_) \
+#define _MAVLINK_CODEGEN_ELEMENT_RANK(_method_tuple_) \
 _TRAIT_METHOD_PICK_NAME(_method_tuple_),
 
 
-#define _MAVLINK_REFLECT_TYPETUPLE(_method_tuple_) \
+#define _MAVLINK_CODEGEN_TYPETUPLE(_method_tuple_) \
 _TRAIT_METHOD_PICK_RET(_method_tuple_),
 
-#define _MAVLINK_REFLECT_MEMBER_BYTES_PROXY(_method_tuple_) \
+#define _MAVLINK_CODEGEN_MEMBER_BYTES_PROXY(_method_tuple_) \
 template<typename Self>\
 constexpr auto _TRAIT_METHOD_PICK_NAME(_method_tuple_) (this Self && self){\
     constexpr size_t OFFSET = nth_offset_v<static_cast<size_t>(ElementRank::_TRAIT_METHOD_PICK_NAME(_method_tuple_))>;\
     return make_member_bytes_proxy<_TRAIT_METHOD_PICK_RET(_method_tuple_)>(&self.data[OFFSET]);}\
 
-#define _MAVLINK_REFLECT_STRUCT_BASE(NAME, NUM_MSG_ID, ...) \
+#define _MAVLINK_CODEGEN_STRUCT_BASE(NAME, NUM_MSG_ID, ...) \
 template<typename Storage>\
 struct [[nodiscard]] NAME##_Facade final{\
     static constexpr MavMessageId MSG_ID = MavMessageId{NUM_MSG_ID};\
-    using members_tuple = std::tuple<MACRO_MAP(_MAVLINK_REFLECT_TYPETUPLE, __VA_ARGS__) void>;\
-    enum class ElementRank:int{MACRO_MAP(_MAVLINK_REFLECT_ELEMENT_RANK, __VA_ARGS__) _NUM_MEMBERS};\
+    using members_tuple = std::tuple<MACRO_MAP(_MAVLINK_CODEGEN_TYPETUPLE, __VA_ARGS__) void>;\
+    enum class ElementRank:int{MACRO_MAP(_MAVLINK_CODEGEN_ELEMENT_RANK, __VA_ARGS__) _NUM_MEMBERS};\
     static constexpr size_t NUM_MEMBERS = static_cast<size_t>(ElementRank::_NUM_MEMBERS);\
     template<size_t N> static constexpr size_t nth_offset_v = _nth_offset<N, members_tuple>::value;\
     static constexpr size_t BYTES_SIZE = nth_offset_v<std::tuple_size_v<members_tuple> - 1>;\
     static_assert(storage_capacity_v<Storage> >= BYTES_SIZE, "bytes size not enough");\
     Storage data;\
-    MACRO_MAP(_MAVLINK_REFLECT_MEMBER_BYTES_PROXY, __VA_ARGS__) \
+    MACRO_MAP(_MAVLINK_CODEGEN_MEMBER_BYTES_PROXY, __VA_ARGS__) \
 };\
 
-#define MAVLINK_REFLECT_DEFMSG(NAME, NUM_MSG_ID, ...) _MAVLINK_REFLECT_STRUCT_BASE(NAME, NUM_MSG_ID, __VA_ARGS__)
+#define MAVLINK_CODEGEN_DEFMSG(NAME, NUM_MSG_ID, ...) _MAVLINK_CODEGEN_STRUCT_BASE(NAME, NUM_MSG_ID, __VA_ARGS__)
 
 
 

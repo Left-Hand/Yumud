@@ -1,7 +1,7 @@
 #include "../pdstepper_primitive.hpp"
 #include "middlewares/protocols/modbus/modbus_msgs.hpp"
 #include "middlewares/protocols/modbus/modbus_serialize.hpp"
-
+#include "core/math/float/fp32.hpp"
 
 namespace ymd::robots::pdstepper{
 
@@ -11,10 +11,18 @@ struct [[nodiscard]] ErasedPacket final{
 
     enum class OpType:uint8_t{
         Write16,
-        Read16
+        Read16,
+        WriteFLoat,
+        WriteU32Array,
     };
 
+    static constexpr size_t MAX_U32ARRAY_LEN = 3;
+    static constexpr size_t MAX_MODBUS_PACKET_LEN = 32;
+
+    using u32array  = std::array<float, MAX_U32ARRAY_LEN>;
+
     uint8_t node_id;
+
 
     struct OpCode{
         uint8_t length;
@@ -24,6 +32,7 @@ struct [[nodiscard]] ErasedPacket final{
     Command command;
     union{
         uint16_t u16x1;
+        u32array u32_values;
     }context;
 
     static constexpr Self from_write16(
@@ -58,33 +67,137 @@ struct [[nodiscard]] ErasedPacket final{
         };
     }
 
+
+
+    static constexpr Self from_write32arr(
+        const uint8_t node_id,
+        const Command command,
+        std::span<const uint32_t> values
+    ){
+        return Self{
+            .node_id = node_id,
+            .op_code = {
+                .length = static_cast<uint8_t>(values.size()),
+                .type = OpType::WriteU32Array
+            },
+            .command = command,
+            .context ={.u32_values = clone_u32arr(values)}
+        };
+    }
+
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
     serialize(Serializer & srz) const {
+        if(const auto res = srz.compatible_with_length(MAX_MODBUS_PACKET_LEN);
+            res.is_err()) return Err(res.unwrap_err());
+        uint8_t * buf = srz.take_cursor_and_inc(0);
+        uint8_t * cursor = buf;
+
+        cursor = ptr_push_u8(cursor, node_id);
+
         switch(op_code.type){
             case OpType::Write16:{
-                const auto msg = modbus::req_msgs::WriteSingleHoldingRegister{
-                    .reg_addr = static_cast<uint8_t>(command),
-                    .reg_value = context.u16x1
-                };
-
-                return modbus::serialize_rtu_msg(srz, msg, node_id);
+                cursor = ptr_push_u8(cursor, 0x06);
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(context.u16x1));
                 break;
             }
 
             case OpType::Read16:{
-                const auto msg = modbus::req_msgs::ReadInputRegisters{
-                    .base_addr = static_cast<uint8_t>(command),
-                    .quantity = context.u16x1
-                };
+                cursor = ptr_push_u8(cursor, 0x04);
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(context.u16x1));
+                break;
+            }
+            case OpType::WriteFLoat:{
+                cursor = ptr_push_u8(cursor, 0x10);
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
 
-                return modbus::serialize_rtu_msg(srz, msg, node_id);
+                const size_t len = op_code.length;
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(len));
+                cursor = ptr_push_u8(cursor, static_cast<uint8_t>(len * 2));
+                for(size_t i = 0; i < len; i++){
+                    cursor = ptr_push_f32(cursor, context.u32_values[i]);
+                }
+                break;
+            }
+
+            case OpType::WriteU32Array:{
+                cursor = ptr_push_u8(cursor, 0x10);
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
+
+                const size_t len = op_code.length;
+                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(len * 2));
+                cursor = ptr_push_u8(cursor, static_cast<uint8_t>(len * 4));
+                for(size_t i = 0; i < len; i++){
+                    cursor = ptr_push_u32be(cursor, context.u32_values[i]);
+                }
                 break;
             }
         }
 
-        __builtin_unreachable();
+        const size_t num_bytes = cursor - buf;
+        (void)srz.take_cursor_and_inc(num_bytes);
+
+        const uint16_t checksum = modbus::ChecksumBuilder::from_default()
+            .push_bytes(std::span(buf, num_bytes))
+            .finalize();
+
+        cursor = ptr_push_u16le(cursor, static_cast<uint16_t>(checksum));
+
+        (void)srz.take_cursor_and_inc(2);
+
+        return Ok();
     }
+
+private:
+    template<typename T>
+    static constexpr u32array clone_u32arr(
+        std::span<const T> values
+    ){
+        static_assert(sizeof(T) == 4);
+        u32array ret;
+        const size_t len = std::min(values.size(), MAX_U32ARRAY_LEN);
+        for(size_t i = 0; i < len; i++){
+            ret[i] = std::bit_cast<uint32_t>(values[i]);
+        }
+        return ret;
+    }
+
+    static constexpr uint8_t * ptr_push_f32(uint8_t * ptr, const float value){
+        static constexpr size_t LEN = sizeof(float);
+        static_assert(LEN == 4);
+        static_assert(std::endian::native == std::endian::little);
+        const auto u8x4 = std::bit_cast<std::array<uint8_t, 4>>(value);
+        for(size_t i = 0; i < LEN; i++) ptr[i] = u8x4[i];
+        return ptr + LEN;
+    }
+
+    static constexpr uint8_t * ptr_push_u8(uint8_t * ptr, const uint8_t value){
+        ptr[0] = value;
+        return ptr + 1;
+    }
+
+    static constexpr uint8_t * ptr_push_u16be(uint8_t * ptr, const uint16_t value){
+        ptr[0] = uint8_t(value >> 8);
+        ptr[1] = uint8_t(value);
+        return ptr + 2;
+    }
+
+    static constexpr uint8_t * ptr_push_u32be(uint8_t * ptr, const uint32_t value){
+        ptr[0] = uint8_t(value >> 24);
+        ptr[1] = uint8_t(value >> 16);
+        ptr[2] = uint8_t(value >> 8);
+        ptr[3] = uint8_t(value);
+        return ptr + 4;
+    }
+
+    static constexpr uint8_t * ptr_push_u16le(uint8_t * ptr, const uint16_t value){
+        ptr[0] = uint8_t(value);
+        ptr[1] = uint8_t(value >> 8);
+        return ptr + 2;
+    }
+
 };
 
 struct ModbusPacketBackend{
@@ -103,9 +216,25 @@ struct ModbusPacketBackend{
     static constexpr ErasedPacket read16(
         const State state, 
         const Command command, 
-        const uint16_t data
+        const uint16_t quantity
     ){
-        return ErasedPacket::from_read16(state.node_id, command, data);
+        return ErasedPacket::from_read16(state.node_id, command, quantity);
+    }
+
+    // static constexpr ErasedPacket writefloat(
+    //     const State state, 
+    //     const Command command, 
+    //     std::span<const float> values
+    // ){
+    //     return ErasedPacket::from_writefloats(state.node_id, command, values);
+    // }
+
+    static constexpr ErasedPacket write32arr(
+        const State state, 
+        const Command command, 
+        std::span<const uint32_t> values
+    ){
+        return ErasedPacket::from_write32arr(state.node_id, command, values);
     }
 };
 
@@ -116,34 +245,59 @@ struct ClientApiFacade{
 
     State state;
 
-    constexpr auto calibrate_encoder() const {
-        return Backend::write16(state, Command::CalibrateEncoder, 0x01);
+    template<typename Self>
+    constexpr auto calibrate_encoder(this Self && self) {
+        return Backend::write16(self.state, Command::CalibrateEncoder, 0x01);
     }
 
-    constexpr auto reset() const {
-        return Backend::write16(state, Command::Reset, 0x01);
+    template<typename Self>
+    constexpr auto reset(this Self && self) {
+        return Backend::write16(self.state, Command::Reset, 0x01);
     }
 
-    constexpr auto restore_factory() const {
-        return Backend::write16(state, Command::RestoreFactory, 0x01);
+    template<typename Self>
+    constexpr auto restore_factory(this Self && self) {
+        return Backend::write16(self.state, Command::RestoreFactory, 0x01);
     }
 
-    constexpr auto get_swhw_version() const {
-        return Backend::read16(state, Command::GetSoftHardVer, 0x01);
+    template<typename Self>
+    constexpr auto get_swhw_version(this Self && self) {
+        return Backend::read16(self.state, Command::GetSoftHardVer, 0x01);
     }
 
-    constexpr auto get_flux() const {
-        return Backend::read16(state, Command::GetFlux, 0x02);
+    template<typename Self>
+    constexpr auto get_flux(this Self && self) {
+        return Backend::read16(self.state, Command::GetFlux, 0x02);
     }
 
-    constexpr auto get_phase_resind() const {
-        return Backend::read16(state, Command::GetPhaseResInd, 0x04);
+
+    // 5.3.3 读取相电阻和相电感指令
+    template<typename Self>
+    constexpr auto get_phase_resind(this Self && self) {
+        return Backend::read16(self.state, Command::GetPhaseResInd, 0x04);
     }
 
-    constexpr auto get_phase_current() const {
-        return Backend::read16(state, Command::GetPhaseCurrent, 0x04);
+
+    // 5.3.4 读取相电流指令
+    template<typename Self>
+    constexpr auto get_phase_current(this Self && self) {
+        return Backend::read16(self.state, Command::GetPhaseCurrent, 0x04);
     }
 
+    // 5.3.5 读取总线电压指令
+    template<typename Self>
+    constexpr auto get_busbar_voltage(this Self && self) {
+        return Backend::read16(self.state, Command::GetBusbarVoltage, 0x04);
+    }
+
+    // 5.3.22 设置位置环 PID 参数指令
+    template<typename Self>
+    constexpr auto set_position_pid_paraments(
+        this Self && self, 
+        std::array<uint32_t, 3> paraments
+    ) {
+        return Backend::write32arr(self.state, Command::SetPositionPidParaments, std::span(paraments));
+    }
 
 };
 

@@ -12,12 +12,12 @@ template<typename Serialize>
 Result<void, typename Serialize::Error> serialize_header(
     Serialize & srz,
     const uint8_t motor_id, 
-    const FuncionCode fc
+    const Command command
 ){
     const uint8_t buf[] = {
-        FRAME_HEAD_TOEKN,
+        FRAME_HEAD_CHAR,
         motor_id,
-        static_cast<uint8_t>(fc)
+        static_cast<uint8_t>(command)
     };
 
     return srz.push_bytes(buf);
@@ -29,7 +29,9 @@ Result<void, typename Serialize::Error> serialize_trailer(
     Serialize & srz
 ){
     const auto bytes = srz.collected_byte();
-    const uint8_t checksum = ChecksumBuilder::from_default().push_bytes(bytes).finalize();
+    const uint8_t checksum = ChecksumBuilder::from_default()
+        .push_bytes(bytes)
+        .finalize();
 
     const uint8_t buf[] = {
         checksum, FRAME_TAIL_TOKEN

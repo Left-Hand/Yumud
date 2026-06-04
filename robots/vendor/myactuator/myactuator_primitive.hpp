@@ -268,4 +268,11 @@ struct [[nodiscard]] MotorId final{
     uint8_t count;
 };
 
+enum class [[nodiscard]] LoopWiring:uint8_t{
+    Current,
+    Speed,
+    Position
+};
+
+
 }
