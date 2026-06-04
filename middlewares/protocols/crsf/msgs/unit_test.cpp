@@ -7,7 +7,7 @@ using namespace ymd::crsf;
 
 namespace {
 
-[[maybe_unused]] void test_ser_msg(){
+[[maybe_unused]] static void test_ser_msg(){
     {
         [[maybe_unused]] static constexpr auto msg = msgs::ParameterSettingsRead{
             .parameter_number = 0x11,

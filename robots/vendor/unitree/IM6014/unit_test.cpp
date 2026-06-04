@@ -19,7 +19,7 @@ static_assert(CodeFactory::make_x2code_from_speed(Angular<iq16>::from_turns(1_iq
 static_assert(CodeFactory::make_x1code_from_turns(1_iq16).bits == 32768);
 static_assert(CodeFactory::make_x1code_from_turns(2_iq16).bits == 32768 * 2);
 
-[[maybe_unused]] void test_code(){
+[[maybe_unused]] static void test_code(){
     constexpr auto x = std::numeric_limits<iq15>::max();
     static_assert(CodeFactory::make_x1code_from_turns(x).bits == INT32_MAX);
 }
@@ -27,7 +27,7 @@ static_assert(CodeFactory::make_x1code_from_turns(2_iq16).bits == 32768 * 2);
 static_assert(CodeFactory::make_kpcode(1_iq16).bits == 12800);
 static_assert(CodeFactory::make_kdcode(1_iq16).bits == 51200);
 
-[[maybe_unused]] void test_build_cmd_packet(){
+[[maybe_unused]] static void test_build_cmd_packet(){
     {
         static constexpr auto buffer = []{
             alignas(4) std::array<uint8_t, 20> temp_buffer;

@@ -103,7 +103,7 @@ void fmt_impl(Args&&... args) {
 #define fmt(str, ...) fmt_impl<FixedString(str)>(__VA_ARGS__)
 
 // 使用示例
-[[maybe_unused]] void test_fmt() {
+[[maybe_unused]] static void test_fmt() {
     fmt("Hello, {d}!", 42);               // ✅ 通过 - 编译期检查
     fmt("int{d}", 100);                   // ✅ 通过
     fmt("float{f}", 3.14159);             // ✅ 通过

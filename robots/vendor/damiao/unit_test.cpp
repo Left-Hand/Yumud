@@ -4,7 +4,7 @@
 using namespace ymd::robots::damiao;
 namespace{
 
-[[maybe_unused]] void test_ser_msgs(){
+[[maybe_unused]] static void test_ser_msgs(){
     static constexpr uint32_t NUM_MOTOR_ID = 0x03;
 
     constexpr auto factory = FrameFactory{

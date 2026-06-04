@@ -102,7 +102,7 @@ namespace {
 namespace test_fconv{
 
 
-[[maybe_unused]] void test_n_to_f(){ 
+[[maybe_unused]] static void test_n_to_f(){ 
 
     {
         [[maybe_unused]] constexpr float f1 = _IQNtoF(std::numeric_limits<int32_t>::min(), 16);
@@ -265,7 +265,7 @@ namespace test_fconv{
                 "INT_MIN测试");
 }
 
-[[maybe_unused]] void test_f_to_n(){
+[[maybe_unused]] static void test_f_to_n(){
 
     // 添加更多测试
     static_assert(_IQFtoN(0.0f, 16) == 0);

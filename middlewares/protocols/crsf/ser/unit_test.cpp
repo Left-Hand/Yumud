@@ -96,7 +96,7 @@ namespace {
     }
 }
 
-[[maybe_unused]] void test_ser_receiver(){
+[[maybe_unused]] static void test_ser_receiver(){
     {
         [[maybe_unused]] static constexpr std::array<uint8_t, 4> obj{0x00, 0x07, 0x02, 0x01};
         auto fn = []{

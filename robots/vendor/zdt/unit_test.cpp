@@ -33,11 +33,11 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
 
 namespace{
 
-[[maybe_unused]] void test_slice(){
+[[maybe_unused]] static void test_slice(){
 
 }
 
-[[maybe_unused]] void test_ser_msg(){
+[[maybe_unused]] static void test_ser_msg(){
 
 }
 

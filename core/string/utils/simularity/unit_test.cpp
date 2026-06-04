@@ -7,7 +7,7 @@ using namespace ymd::str;
 
 namespace{
 
-[[maybe_unused]] void test_levenshtein_distance(){
+[[maybe_unused]] static void test_levenshtein_distance(){
     {
         constexpr auto str1 = StringView("kitten");
         constexpr auto str2 = StringView("sitting");
@@ -44,7 +44,7 @@ namespace{
     }
 }
 
-[[maybe_unused]] void test_ngram_similarity(){
+[[maybe_unused]] static void test_ngram_similarity(){
     {
         constexpr auto str1 = StringView("");
         constexpr auto str2 = StringView("");
@@ -72,7 +72,7 @@ namespace{
     }
 }
 
-[[maybe_unused]] void test_simhash(){
+[[maybe_unused]] static void test_simhash(){
     {
         constexpr auto str1 = StringView("apple");
         constexpr auto str2 = StringView("apple");

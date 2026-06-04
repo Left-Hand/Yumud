@@ -201,10 +201,10 @@ struct ImplFor<int, MyStruct> {
 
 namespace{
 
-[[maybe_unused]] void test_ser(){
+[[maybe_unused]] static void test_ser(){
 
 }
-[[maybe_unused]] void test_de(){
+[[maybe_unused]] static void test_de(){
     static constexpr auto serialized1 = serialize<RawBytes>(uint8_t(42));
     static constexpr auto serialized2 = serialize<RawBytes>(1_iq16);
     static constexpr auto serialized3 = serialize<RawBytes>(1.0f);

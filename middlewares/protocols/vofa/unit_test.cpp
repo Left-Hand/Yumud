@@ -18,7 +18,7 @@ struct Receiver{
     }
 };
 
-[[maybe_unused]] void test_ser(){
+[[maybe_unused]] static void test_ser(){
     {
         constexpr auto receiver = []{
             auto ret = Receiver{};

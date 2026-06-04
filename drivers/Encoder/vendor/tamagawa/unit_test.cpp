@@ -37,7 +37,7 @@ struct Serializer{
     }
 };
 
-[[maybe_unused]] void test_ser_request(){
+[[maybe_unused]] static void test_ser_request(){
 
     // Test WriteEEprom request (0x32 01 69)
     {
@@ -173,7 +173,7 @@ noheadtail(std::span<const uint8_t, N> in){
 
 
 
-[[maybe_unused]] void test_ser_response(){
+[[maybe_unused]] static void test_ser_response(){
     // Test GetAbs response: 02 00 10 78 14 7E
     {
         constexpr uint8_t received_bytes[] = {0x02, 0x00, 0x10, 0x78, 0x14, 0x7e};
@@ -273,7 +273,7 @@ noheadtail(std::span<const uint8_t, N> in){
 }
 
 
-[[maybe_unused]] void test_crc(){
+[[maybe_unused]] static void test_crc(){
     {
         static constexpr uint8_t CRC_VALUE = ChecksumBuilder::from_default()
             .push_byte(0x8a)

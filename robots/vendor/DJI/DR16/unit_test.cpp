@@ -4,7 +4,7 @@ using namespace ymd::robots::dji::dr16;
 
 namespace{
 
-[[maybe_unused]] void test_code(){
+[[maybe_unused]] static void test_code(){
     {
         constexpr auto ks = []{
             KeySpecifiers ret{0};

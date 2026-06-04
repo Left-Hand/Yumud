@@ -49,7 +49,7 @@ static constexpr auto _pow10 = [](size_t n) -> uint64_t {
     return sum;
 };
 
-[[maybe_unused]] void test_num_digits_dec(){
+[[maybe_unused]] static void test_num_digits_dec(){
     constexpr auto u32_test_n = [&](size_t n) -> Result<void, void> {
         if(not (_least_u32_num_digits_dec(_pow10(n-1)) == n)) return Err();
         if(not (_least_u32_num_digits_dec(_pow10(n) - 1) == n)) return Err();

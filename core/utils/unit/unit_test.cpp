@@ -6,7 +6,7 @@ using namespace ymd::unit;
 
 namespace {
 
-[[maybe_unused]] void test_units(){
+[[maybe_unused]] static void test_units(){
     {
         [[maybe_unused]] static constexpr auto l1 = 1_mm;
         [[maybe_unused]] static constexpr auto l2 = MilliMeter<float>(1);

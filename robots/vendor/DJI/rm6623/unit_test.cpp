@@ -15,7 +15,7 @@ static constexpr T abs_diff(const T a, const T b){
 }
 
 
-[[maybe_unused]] void test_codes(){
+[[maybe_unused]] static void test_codes(){
     {
         constexpr auto code1 = RM6623CurrentCodeInterpreter::from_amps_bounded(1.0f);
         static_assert(abs_diff(RM6623CurrentCodeInterpreter::to_amps<float>(code1) ,1.0f) < 1e-3);
@@ -28,7 +28,7 @@ static constexpr T abs_diff(const T a, const T b){
     }
 }
 
-[[maybe_unused]] void test_calibrate_frame(){
+[[maybe_unused]] static void test_calibrate_frame(){
     {
         static_assert(RM6623_CALIBRATE_CANFRAME.id_u32() == 0x3f0);
         static_assert(RM6623_CALIBRATE_CANFRAME.length() == 8);

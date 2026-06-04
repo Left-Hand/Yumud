@@ -136,7 +136,7 @@ namespace{
 
 
 
-[[maybe_unused]] void test_12b(){
+[[maybe_unused]] static void test_12b(){
     #if 0
     {
 

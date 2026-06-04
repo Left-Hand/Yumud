@@ -24,7 +24,7 @@ static constexpr CanframeSlicingIterator make_iter(std::span<const uint8_t> byte
     return CanframeSlicingIterator(0x01, bytes);
 };
 
-[[maybe_unused]] void test_canframe_slicing(){
+[[maybe_unused]] static void test_canframe_slicing(){
 
 
     {

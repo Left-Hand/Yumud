@@ -6,7 +6,7 @@ using namespace ymd::robots::mwd;
 
 namespace{
 
-[[maybe_unused]] void test_crc(){
+[[maybe_unused]] static void test_crc(){
     {
         constexpr uint8_t val = WrapAddAccumulator::from_default()
             .push_byte(0x08)

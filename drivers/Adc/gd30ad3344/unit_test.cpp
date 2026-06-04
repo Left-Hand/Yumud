@@ -8,7 +8,7 @@ using Self = GD30AD3344;
 
 namespace{
 
-[[maybe_unused]] void test_conf_code(){
+[[maybe_unused]] static void test_conf_code(){
 
     {
         constexpr auto code = Self::ConfCode::from_default();

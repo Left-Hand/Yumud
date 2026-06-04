@@ -5,7 +5,7 @@ using namespace ymd::isobus;
 using namespace ymd::isobus::primitive;
 
 namespace{
-[[maybe_unused]] void test_pdn(){
+[[maybe_unused]] static void test_pdn(){
     static constexpr auto pdn = Pdn::from_bits(0x12345678);
 
     static constexpr auto sa = pdn.sa().get();

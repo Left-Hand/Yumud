@@ -6,7 +6,7 @@ using namespace ymd::digipw;
 namespace{
 
 // 测试零输入
-[[maybe_unused]] void test_zero_input(){
+[[maybe_unused]] static void test_zero_input(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(0), .beta = 0});
         static constexpr float u = (float)uvw.u;
@@ -21,7 +21,7 @@ namespace{
 }
 
 // 原始测试：alpha = sqrt(3)/2, beta = 0 (30度)
-[[maybe_unused]] void test_full(){
+[[maybe_unused]] static void test_full(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(SQRT3 / 2), .beta = 0});
         static constexpr float u = (float)uvw.u;
@@ -35,7 +35,7 @@ namespace{
 }
 
 // 测试扇区1: alpha=0.4, beta=0.2
-[[maybe_unused]] void test_sector1(){
+[[maybe_unused]] static void test_sector1(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(0.4), .beta = iq16(0.2)});
         static constexpr float u = (float)uvw.u;
@@ -52,7 +52,7 @@ namespace{
 }
 
 // 测试扇区2: alpha=0.3, beta=0.3
-[[maybe_unused]] void test_sector2(){
+[[maybe_unused]] static void test_sector2(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(0.3), .beta = iq16(0.3)});
         static constexpr float u = (float)uvw.u;
@@ -66,7 +66,7 @@ namespace{
 }
 
 // 测试扇区3: alpha=-0.2, beta=0.4
-[[maybe_unused]] void test_sector3(){
+[[maybe_unused]] static void test_sector3(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(-0.2), .beta = iq16(0.4)});
         static constexpr float u = (float)uvw.u;
@@ -80,7 +80,7 @@ namespace{
 }
 
 // 测试扇区4: alpha=-0.4, beta=-0.2
-[[maybe_unused]] void test_sector4(){
+[[maybe_unused]] static void test_sector4(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(-0.4), .beta = iq16(-0.2)});
         static constexpr float u = (float)uvw.u;
@@ -94,7 +94,7 @@ namespace{
 }
 
 // 测试扇区5: alpha=-0.3, beta=-0.3
-[[maybe_unused]] void test_sector5(){
+[[maybe_unused]] static void test_sector5(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(-0.3), .beta = iq16(-0.3)});
         static constexpr float u = (float)uvw.u;
@@ -108,7 +108,7 @@ namespace{
 }
 
 // 测试扇区6: alpha=0.2, beta=-0.4
-[[maybe_unused]] void test_sector6(){
+[[maybe_unused]] static void test_sector6(){
     {
         static constexpr auto uvw = SVM({.alpha = iq16(0.2), .beta = iq16(-0.4)});
         static constexpr float u = (float)uvw.u;
@@ -123,7 +123,7 @@ namespace{
 
 
 // 测试对称性：相反向量应该产生互补的占空比
-[[maybe_unused]] void test_symmetry(){
+[[maybe_unused]] static void test_symmetry(){
     {
         static constexpr auto uvw1 = SVM({.alpha = iq16(0.3), .beta = iq16(0.2)});
         static constexpr auto uvw2 = SVM({.alpha = iq16(-0.3), .beta = iq16(-0.2)});

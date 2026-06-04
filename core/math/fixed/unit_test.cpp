@@ -13,7 +13,7 @@ static_assert(iq24(10.0) + 90 == 100);
 static_assert(iq16(10.0) + 90 == 100);
 static_assert(iq10(10.0) + 90 == 100);
 
-[[maybe_unused]] void test_add(){
+[[maybe_unused]] static void test_add(){
     auto add2 = [&](const iq16 a, const int8_t b) -> iq16 {return a + b;};
     // auto add2 = [&](const iq16 a, const int8_t b){return a + b;};
     static_assert((iq16(9)) == 9);

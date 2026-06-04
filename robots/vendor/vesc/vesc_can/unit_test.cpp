@@ -15,14 +15,14 @@ static constexpr T abs_err(const T a ,const T b){
 
 namespace{
 
-[[maybe_unused]] void test_strong_type(){
+[[maybe_unused]] static void test_strong_type(){
 
     {
         static_assert(Scaled<int16_t, 1000>::from_float_bounded(1.0).bits == 1000);
     }
 }
 
-[[maybe_unused]] void test_ser(){
+[[maybe_unused]] static void test_ser(){
 
     {
         constexpr auto msg = GnssTime{

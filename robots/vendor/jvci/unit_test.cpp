@@ -7,7 +7,7 @@ using namespace ymd::robots::jvci;
 
 
 namespace {
-[[maybe_unused]] void test_degrees(){
+[[maybe_unused]] static void test_degrees(){
     using namespace utils;
     {
         static constexpr auto f_1 = (degree001_to_turns(360 * 100));

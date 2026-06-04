@@ -30,7 +30,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
 }
 
 
-[[maybe_unused]] void test_multi_ser(){
+[[maybe_unused]] static void test_multi_ser(){
     static constexpr auto header = Header::from_bits(0x12);
     static constexpr auto buf = std::to_array<uint8_t, 8>({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08});
 
@@ -79,7 +79,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     }
 }
 
-[[maybe_unused]] void test_full_single_frame(){
+[[maybe_unused]] static void test_full_single_frame(){
     static constexpr auto header = Header::from_bits(0x12);
     static constexpr auto buf_7 = std::to_array<uint8_t, 7>(
         {1,2,3,4,5,6,7});
@@ -117,7 +117,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     }
 }
 
-[[maybe_unused]] void test_long_multi_ser(){
+[[maybe_unused]] static void test_long_multi_ser(){
     static constexpr auto header = Header::from_bits(0x12);
     static constexpr auto buf_large = std::to_array<uint8_t, 20>(
         {

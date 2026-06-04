@@ -21,7 +21,7 @@ static consteval double err_f64(const math::fixed<Q, T> a, const math::fixed<Q, 
     return (double)(a.to_bits() - b.to_bits()) / static_cast<double>(1ull << Q);
 }
 
-[[maybe_unused]] void test_sqrt(){
+[[maybe_unused]] static void test_sqrt(){
     static_assert(math::sqrt(iq16(0)) == iq16(0));
     static_assert(math::sqrt(iq16(4)) == iq16(2));
     static_assert(math::sqrt(iq16(16)) == iq16(4));

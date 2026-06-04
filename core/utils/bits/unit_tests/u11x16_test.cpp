@@ -3,7 +3,7 @@
 using namespace ymd;;
 
 namespace {
-[[maybe_unused]] void test_u11x16() {
+[[maybe_unused]] static void test_u11x16() {
     {
         static constexpr uint16_t BASE = 0x80;
         static constexpr auto elements = []{
