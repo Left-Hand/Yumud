@@ -1,6 +1,6 @@
-#include "canopen_nmt_msg.hpp"
-#include "canopen_sdo_msg.hpp"
-#include "flex_assert.hpp"
+#include "../canopen_nmt_msg.hpp"
+#include "../canopen_sdo_msg.hpp"
+#include "../flex_assert.hpp"
 
 
 using namespace ymd;

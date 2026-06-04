@@ -1,1 +1,0 @@
-#include "canopen_nmt_object.hpp"

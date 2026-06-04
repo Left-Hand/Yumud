@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <tuple>
-
+#include "j1939_primitive.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
 #include "core/stream/ostream.hpp"
 #include "primitive/can/can_frame.hpp"
@@ -440,39 +440,39 @@ struct alignas(4) [[nodiscard]] EcuName final{
 
     
     [[nodiscard]] constexpr auto identity_number(this auto && self) {
-        return make_bitfield_proxy<0, 21, IdentityNumber>(self.bits);
+        return make_bitfield_proxy<0, 21, IdentityNumber>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto manufacturer_code(this auto && self) {
-        return make_bitfield_proxy<21, 32, ManufacturerCode>(self.bits);
+        return make_bitfield_proxy<21, 32, ManufacturerCode>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto ecu_instance(this auto && self) {
-        return make_bitfield_proxy<32, 35, EcuInstance>(self.bits);
+        return make_bitfield_proxy<32, 35, EcuInstance>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto function_instance(this auto && self) {
-        return make_bitfield_proxy<35, 40, FunctionInstance>(self.bits);
+        return make_bitfield_proxy<35, 40, FunctionInstance>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto function(this auto && self) {
-        return make_bitfield_proxy<40, 48, Function>(self.bits);
+        return make_bitfield_proxy<40, 48, Function>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto vehicle_system(this auto && self) {
-        return make_bitfield_proxy<49, 56, VehicleSystem>(self.bits);
+        return make_bitfield_proxy<49, 56, VehicleSystem>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto vehicle_system_instance(this auto && self) {
-        return make_bitfield_proxy<56,60, VehicleSystemInstance>(self.bits);
+        return make_bitfield_proxy<56,60, VehicleSystemInstance>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto industry_group(this auto && self) {
-        return make_bitfield_proxy<60,63, IndustryGroup>(self.bits);
+        return make_bitfield_proxy<60,63, IndustryGroup>(&self.bits);
     }
 
     [[nodiscard]] constexpr auto arbitrary_address_capable(this auto && self) {
-        return make_bitfield_proxy<63,64, AribitaryAddressCapable>(self.bits);
+        return make_bitfield_proxy<63,64, AribitaryAddressCapable>(&self.bits);
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self) noexcept {

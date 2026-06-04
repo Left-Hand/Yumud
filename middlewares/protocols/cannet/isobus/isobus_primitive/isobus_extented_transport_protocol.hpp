@@ -8,8 +8,7 @@
 namespace ymd::isobus
 {
 /// @brief The states that a ETP session could be in. Used for the internal state machine.
-enum class StateMachineState
-{
+enum class StateMachineState{
     None, ///< Protocol session is not in progress
     SendRequestToSend, ///< We are sending the request to send message
     WaitForClearToSend, ///< We are waiting for a clear to send message
@@ -22,8 +21,7 @@ enum class StateMachineState
 };
 
 /// @brief A list of all defined abort reasons in ISO11783
-enum class ConnectionAbortReason : std::uint8_t
-{
+enum class ConnectionAbortReason : std::uint8_t{
     Reserved = 0, ///< Reserved, not to be used, but should be tolerated
     AlreadyInCMSession = 1, ///< We are already in a connection mode session and can't support another
     SystemResourcesNeeded = 2, ///< Session must be aborted because the system needs resources

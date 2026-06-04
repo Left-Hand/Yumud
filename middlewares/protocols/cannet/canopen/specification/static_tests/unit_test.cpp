@@ -1,5 +1,5 @@
-#include "cia301_primitive.hpp"
-#include "cia402_primitive.hpp"
+#include "../cia301_primitive.hpp"
+#include "../cia402_primitive.hpp"
 
 using namespace ymd::canopen;
 
