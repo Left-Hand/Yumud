@@ -15,8 +15,8 @@ static constexpr auto to_can_frame(const T& self){
     return MsgSerde<T>::to_can_frame(self);
 }
 
-template<typename T, VerifyLevel verify_level = VerifyLevel::Propagate>
+template<typename T, VerifyLevel VERIFY_LEVEL = VerifyLevel::Propagate>
 static constexpr auto from_can_frame(const hal::ClassicCanFrame & frame){
-    return MsgSerde<T>::template from_can_frame<verify_level>(frame);
+    return MsgSerde<T>::template from_can_frame<VERIFY_LEVEL>(frame);
 }
 }

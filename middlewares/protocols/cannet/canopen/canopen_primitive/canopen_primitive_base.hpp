@@ -46,7 +46,7 @@ struct [[nodiscard]] NodeId final{
         return Some(NodeId{static_cast<uint8_t>(bits & 0b1111111)});
     }
 
-    static constexpr NodeId boardcast(){
+    static constexpr NodeId from_boardcast(){
         return from_u7(0);
     }
 
@@ -160,8 +160,8 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 
 // B000h to BFFFh System variables用于路由网关的系统变量 
 // C000h to FFFFh Reserved保留
-struct [[nodiscard]] OdPreIndex final{
-    using Self = OdPreIndex;
+struct [[nodiscard]] OdMajorIndex final{
+    using Self = OdMajorIndex;
     uint16_t count;
 
     /// @brief 从比特位构造主序列，无任何检查
@@ -179,10 +179,10 @@ struct [[nodiscard]] OdPreIndex final{
     }
 };
 
-static_assert(sizeof(OdPreIndex) == sizeof(uint16_t));
+static_assert(sizeof(OdMajorIndex) == sizeof(uint16_t));
 
-struct [[nodiscard]] OdSubIndex final{
-    using Self = OdSubIndex;
+struct [[nodiscard]] OdMinorIndex final{
+    using Self = OdMinorIndex;
     uint8_t count;
 
     /// @brief 从比特位构造次序列，无任何检查
@@ -200,23 +200,23 @@ struct [[nodiscard]] OdSubIndex final{
     }
 };
 
-static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));   
+static_assert(sizeof(OdMinorIndex) == sizeof(uint8_t));   
 
 
 struct [[nodiscard]] OdIndex final{
     using Self = OdIndex;
-    OdPreIndex pre;
-    OdSubIndex sub;
+    OdMajorIndex major;
+    OdMinorIndex minor;
 
-    constexpr explicit OdIndex(const uint16_t _pre, const uint8_t _sub):
-        pre(OdPreIndex::from_bits(_pre)),
-        sub(OdSubIndex::from_bits(_sub)){;}
+    constexpr explicit OdIndex(const uint16_t _major, const uint8_t _minor):
+        major(OdMajorIndex::from_bits(_major)),
+        minor(OdMinorIndex::from_bits(_minor)){;}
 
-    static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
-        return Self(_pre.to_bits(), _sub.to_bits());
+    static constexpr Self from_parts(const OdMajorIndex _major, const OdMinorIndex _minor){
+        return Self(_major.to_bits(), _minor.to_bits());
     }
     [[nodiscard]] constexpr bool operator==(const OdIndex& other) const noexcept {
-        return pre == other.pre and sub == other.sub;
+        return major == other.major and minor == other.minor;
     }
 };
 

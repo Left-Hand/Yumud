@@ -9,7 +9,7 @@ using namespace ymd::canopen::primitive;
 using namespace ymd::canopen::nmt_msgs;
 using namespace ymd::canopen::sdo_msgs;
 
-[[maybe_unused]] static void canopen_msg_static_test1(){
+[[maybe_unused]] static void test_canopen_heartbeat(){
     using Msg = Heartbeat;
     static constexpr auto msg = Msg{
         .station_nodeid = NodeId::from_u7(5),
@@ -27,7 +27,7 @@ using namespace ymd::canopen::sdo_msgs;
         .station_nodeid == NodeId::from_u7(5));
 }
 
-[[maybe_unused]] static void canopen_node_guarding_request_static_test() {
+[[maybe_unused]] static void test_canopen_node_guarding_request() {
     using Msg = NodeGuardingRequest;
     static constexpr auto msg = Msg{
         .target_nodeid = NodeId::from_u7(3)
@@ -43,7 +43,7 @@ using namespace ymd::canopen::sdo_msgs;
         .target_nodeid == NodeId::from_u7(3));
 }
 
-[[maybe_unused]] static void canopen_node_guarding_response_static_test() {
+[[maybe_unused]] static void test_canopen_node_guarding_response() {
     using Msg = NodeGuardingResponse;
     static constexpr auto msg = Msg{
         .station_nodeid = NodeId::from_u7(7),
@@ -63,7 +63,7 @@ using namespace ymd::canopen::sdo_msgs;
         .station_nodeid == NodeId::from_u7(7));
 }
 
-[[maybe_unused]] static void canopen_emergency_static_test() {
+[[maybe_unused]] static void test_canopen_emergency() {
     using Msg = Emergency;
     static constexpr auto msg = Msg{
         .station_nodeid = NodeId::from_u7(5),
@@ -101,93 +101,94 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 static_assert(PdoOnlyFunctionCode::try_from_bits(0).is_none());
 static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
 
-[[maybe_unused]] static void test1(){
-    static constexpr auto err_code = SdoAbortCode(SdoAbortCode::DataTransferOrStorageFailed);
-    static constexpr auto context = SdoExpeditedContext::from_exception(
-        OdIndex(0, 0),
-        err_code
-    );
-
-    static_assert(context.header.to_bits() == 0x80'0000'00);
-    static_assert(context.bytes_u32() == err_code.to_u32());
-
-    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0}))
-        .header.cmd_spec().to_u8() == 0x4f);
-    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
-        .header.cmd_spec().to_u8() == 0x4b);
-    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
-        .header.cmd_spec().to_u8() == 0x47);
-    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
-        .header.cmd_spec().to_u8() == 0x43);
-
-    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0}))
-        .header.cmd_spec().to_u8() == 0x2f);
-    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
-        .header.cmd_spec().to_u8() == 0x2b);
-    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
-        .header.cmd_spec().to_u8() == 0x27);
-    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
-        .header.cmd_spec().to_u8() == 0x23);
-    // static_assert()
-}
 
 
-
-[[maybe_unused]] static void canopen_sdo_expedited_request_static_test() {
+[[maybe_unused]] static void test_canopen_sdo_expedited_request() {
     using Msg = ExpeditedRequest;
-    
+    {
+        static constexpr auto err_code = SdoAbortCode(SdoAbortCode::DataTransferOrStorageFailed);
+        static constexpr auto context = SdoExpeditedContextFactory::from_exception(
+            OdIndex(0, 0),
+            err_code
+        );
+
+        static_assert(context.header.to_bits() == 0x80'0000'00);
+        static_assert(context.bytes_u32() == err_code.to_u32());
+
+        static_assert(SdoExpeditedContextFactory::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+            .header.cmd_spec().to_u8() == 0x4f);
+        static_assert(SdoExpeditedContextFactory::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+            .header.cmd_spec().to_u8() == 0x4b);
+        static_assert(SdoExpeditedContextFactory::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+            .header.cmd_spec().to_u8() == 0x47);
+        static_assert(SdoExpeditedContextFactory::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+            .header.cmd_spec().to_u8() == 0x43);
+
+        static_assert(SdoExpeditedContextFactory::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+            .header.cmd_spec().to_u8() == 0x2f);
+        static_assert(SdoExpeditedContextFactory::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+            .header.cmd_spec().to_u8() == 0x2b);
+        static_assert(SdoExpeditedContextFactory::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+            .header.cmd_spec().to_u8() == 0x27);
+        static_assert(SdoExpeditedContextFactory::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+            .header.cmd_spec().to_u8() == 0x23);
+        // static_assert()
+    }
     // #region
     // 测试写请求
-    static constexpr auto write_request = Msg{
-        .client_nodeid = NodeId::from_u7(5),
-        .context = SdoExpeditedContext::from_write_request<uint32_t>(
-            OdIndex{0x1000, 0},
-            uint32_t(0x12345678u)
-        )
-    };
-    
-    static constexpr auto can_frame = msg_serde::to_can_frame(write_request);
-    static_assert(can_frame.is_standard());
-    static_assert(can_frame.length() == 8);
-    static_assert(can_frame.id_u32() == 0x605); // 0x600 + 5 (TxSDO for node 5)
-    static_assert(CobId(can_frame.identifier().to_stdid()).func_code().is_req_sdo());
-    static constexpr auto de_write_request = 
-        msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame);
-    static_assert(de_write_request.client_nodeid.to_u7() == 5);
-
+    {
+        static constexpr auto write_request = Msg{
+            .client_nodeid = NodeId::from_u7(5),
+            .context = SdoExpeditedContextFactory::from_write_request<uint32_t>(
+                OdIndex{0x1000, 0},
+                uint32_t(0x12345678u)
+            )
+        };
+        
+        static constexpr auto can_frame = msg_serde::to_can_frame(write_request);
+        static_assert(can_frame.is_standard());
+        static_assert(can_frame.length() == 8);
+        static_assert(can_frame.id_u32() == 0x605); // 0x600 + 5 (TxSDO for node 5)
+        static_assert(CobId(can_frame.identifier().to_stdid()).func_code().is_sdo_request());
+        static constexpr auto de_write_request = 
+            msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame);
+        static_assert(de_write_request.client_nodeid.to_u7() == 5);
+    }
     //#endregion
 
     //#region
     // 测试读请求
+    {
+        static constexpr auto context = SdoExpeditedContextFactory::from_read_request(
+            OdIndex{0x1001, 1});
 
-    static constexpr auto context = SdoExpeditedContext::from_read_request(
-        OdIndex{0x1001, 1});
+        static constexpr auto read_request = Msg{
+            .client_nodeid = NodeId::from_u7(3),
+            .context = context
+        };
+        
+        static constexpr auto read_can_frame = msg_serde::to_can_frame(read_request);
+        static_assert(read_can_frame.is_standard());
+        static_assert(read_can_frame.length() == 8);
+        static_assert(read_can_frame.id_u32() == 0x603); // 0x600 + 3 (TxSDO for node 3)
+        
+        static constexpr auto de_read_req = msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_can_frame);
+        static_assert(de_read_req.client_nodeid.to_u7() == 3);
+    }
 
-    static constexpr auto read_request = Msg{
-        .client_nodeid = NodeId::from_u7(3),
-        .context = context
-    };
-    
-    static constexpr auto read_can_frame = msg_serde::to_can_frame(read_request);
-    static_assert(read_can_frame.is_standard());
-    static_assert(read_can_frame.length() == 8);
-    static_assert(read_can_frame.id_u32() == 0x603); // 0x600 + 3 (TxSDO for node 3)
-    
-    static constexpr auto de_read_req = msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_can_frame);
-    static_assert(de_read_req.client_nodeid.to_u7() == 3);
 
     //#endregion
 }
 
 
 
-[[maybe_unused]] static void canopen_sdo_expedited_response_static_test() {
+[[maybe_unused]] static void test_canopen_sdo_expedited_response() {
     using Msg = ExpeditedResponse;
     
     // 测试写响应
     static constexpr auto write_response = Msg{
         .server_nodeid = NodeId::from_u7(5),
-        .context = SdoExpeditedContext::from_write_succeed(
+        .context = SdoExpeditedContextFactory::from_write_succeed(
             OdIndex{0x1000, 0}
         )
     };
@@ -203,7 +204,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     // 测试读响应
     static constexpr auto read_response = Msg{
         .server_nodeid = NodeId::from_u7(3),
-        .context = SdoExpeditedContext::from_read_response<uint32_t>(
+        .context = SdoExpeditedContextFactory::from_read_response<uint32_t>(
             OdIndex{0x1001, 1},
             uint32_t(0x11223344)
         )
@@ -224,24 +225,24 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
 #if 0
 
 
-[[maybe_unused]] static void canopen_sdo_payload_static_test() {
+[[maybe_unused]] static void test_canopen_sdo_payload() {
     // 测试 SdoExpeditedContext 的各种构建方法
     
     // 测试写请求构建
     static constexpr auto write_payload = SdoExpeditedContext::from_write_request<uint16_t>(
-        OdIndex{OdPreIndex::from_bits(0x1002), OdSubIndex::from_bits(0)},
+        OdIndex{OdMajorIndex::from_bits(0x1002), OdMinorIndex::from_bits(0)},
         0xABCDu
     );
     
     // 测试读请求构建
     static constexpr auto read_payload = SdoExpeditedContext::from_read_request<uint8_t>(
-        OdIndex{OdPreIndex::from_bits(0x1003), OdSubIndex::from_bits(2)},
+        OdIndex{OdMajorIndex::from_bits(0x1003), OdMinorIndex::from_bits(2)},
         0x00u
     );
     
     // 测试响应构建
     static constexpr auto response_payload = SdoExpeditedContext::from_read_succeed(
-        OdIndex{OdPreIndex::from_bits(0x1004), OdSubIndex::from_bits(0)}
+        OdIndex{OdMajorIndex::from_bits(0x1004), OdMinorIndex::from_bits(0)}
     );
     
     // 验证大小

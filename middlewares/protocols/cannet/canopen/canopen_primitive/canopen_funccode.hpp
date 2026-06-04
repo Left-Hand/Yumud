@@ -70,45 +70,45 @@ struct [[nodiscard]] PdoOnlyFunctionCode final{
     }
 
     [[nodiscard]] constexpr 
-    Option<uint8_t> rank() const noexcept {
+    uint8_t rank() const noexcept {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo1):
-                return Some<uint8_t>(1);
+                return 1;
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo2):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo2):
-                return Some<uint8_t>(2);
+                return 2;
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo3):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo3):
-                return Some<uint8_t>(3);
+                return 3;
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo4):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo4):
-                return Some<uint8_t>(4);
+                return 4;
         }
-        return None;
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr 
-    Option<Self> conj() const noexcept {
+    Self conj() const noexcept {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo1));
+                return Self(PdoOnlyFunctionCodeKind::RxPdo1);
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo1):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo1));
+                return Self(PdoOnlyFunctionCodeKind::TxPdo1);
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo2):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo2));
+                return Self(PdoOnlyFunctionCodeKind::RxPdo2);
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo2):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo2));
+                return Self(PdoOnlyFunctionCodeKind::TxPdo2);
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo3):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo3));
+                return Self(PdoOnlyFunctionCodeKind::RxPdo3);
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo3):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo3));
+                return Self(PdoOnlyFunctionCodeKind::TxPdo3);
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo4):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo4));
+                return Self(PdoOnlyFunctionCodeKind::RxPdo4);
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo4):
-                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo4));
+                return Self(PdoOnlyFunctionCodeKind::TxPdo4);
         }
-        return None;
+        __builtin_unreachable();
     }
 
     using enum Kind;
@@ -145,8 +145,8 @@ struct [[nodiscard]] FunctionCode final{
     [[nodiscard]] constexpr bool is_sync() const noexcept {return kind_ == Kind::Sync;}
     [[nodiscard]] constexpr bool is_energency() const noexcept {return kind_ == Kind::Emergency;}
     [[nodiscard]] constexpr bool is_heartbeat() const noexcept {return kind_ == Kind::Heartbeat;}
-    [[nodiscard]] constexpr bool is_resp_sdo() const noexcept { return (kind_ == Kind::RespSdo);}
-    [[nodiscard]] constexpr bool is_req_sdo() const noexcept { return (kind_ == Kind::ReqSdo);}
+    [[nodiscard]] constexpr bool is_sdo_response() const noexcept { return (kind_ == Kind::RespSdo);}
+    [[nodiscard]] constexpr bool is_sdo_request() const noexcept { return (kind_ == Kind::ReqSdo);}
     [[nodiscard]] constexpr bool is_tx_pdo() const noexcept {
         switch(kind_){
             case Kind::TxPdo1:

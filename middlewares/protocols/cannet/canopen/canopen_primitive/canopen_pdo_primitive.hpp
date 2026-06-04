@@ -23,7 +23,7 @@ struct [[nodiscard]] PdoMapping{
 };
 
 struct [[nodiscard]] PdoParaments{
-    OdPreIndex pre_idx;
+    OdMajorIndex pre_idx;
     CobId cob_id;
     uint8_t transmission_type;
     uint8_t inhibit_time;

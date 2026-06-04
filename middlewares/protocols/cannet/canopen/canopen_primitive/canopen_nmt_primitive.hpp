@@ -73,6 +73,7 @@ enum class [[nodiscard]] EmcyError:uint16_t{
 struct [[nodiscard]] EmcyErrorCode{
     using Kind = EmcyError; 
     using Self = EmcyErrorCode;
+
     static constexpr EmcyError OK = static_cast<EmcyError>(0x0000);
     constexpr EmcyErrorCode(const EmcyError kind) : kind_(kind) {}
 
