@@ -12,12 +12,12 @@
 
 namespace ymd::robots::dfrobot::cds55xx{
 
-#define DEF_PROPERTY_BFPROXY(p_name, start_bit, stop_bit, p_type_name, bits)\
-[[nodiscard]] constexpr auto p_name(this auto && self) {\
+#define DEF_PROPERTY_BFPROXY(prop_name, start_bit, stop_bit, p_type_name, bits)\
+[[nodiscard]] constexpr auto prop_name(this auto && self) {\
     return ymd::make_bitfield_proxy<start_bit, stop_bit, p_type_name>(bits);}
 
-#define DEF_PROPERTY_BIT(p_name, start_bit, bits) \
-    DEF_PROPERTY_BFPROXY(p_name, start_bit, (start_bit + 1), bool, bits)
+#define DEF_PROPERTY_BIT(prop_name, start_bit, bits) \
+    DEF_PROPERTY_BFPROXY(prop_name, start_bit, (start_bit + 1), bool, bits)
 
 struct [[nodiscard]] StatusFlag final{
 
@@ -39,7 +39,7 @@ struct [[nodiscard]] StatusFlag final{
     // 前未收到REG WRITE指令置1 
     DEF_PROPERTY_BIT(is_insc_invalid, 5, &self.bits); 
 
-    [[nodiscard]] constexpr bool any() const {return bits == 0;}
+    [[nodiscard]] constexpr bool any() const {return bits != 0;}
 };
 
 

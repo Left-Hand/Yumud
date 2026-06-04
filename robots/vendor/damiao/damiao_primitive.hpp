@@ -116,10 +116,11 @@ private:
 };
 
 // Limit parameters structure for different motor types
+template<typename T>
 struct [[nodiscard]] LimitParam final{
-    float x1_limit;  // Position limit (rad)
-    float x2_limit;  // Velocity limit (rad/s)
-    float torque_limit;  // Torque limit (Nm)
+    T x1_limit;  // Position limit (rad)
+    T x2_limit;  // Velocity limit (rad/s)
+    T torque_limit;  // Torque limit (Nm)
 };
 
 using NodeId = uint8_t;

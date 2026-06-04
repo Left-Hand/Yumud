@@ -11,7 +11,7 @@ struct LimitParamTable;
 #define DEF_DAMIAO_MOTOR_LIMIT_TABLE(K, pMax, vMax, tMax) \
 template<> \
 struct LimitParamTable<K> { \
-    static constexpr LimitParam table = {static_cast<float>(pMax), static_cast<float>(vMax), static_cast<float>(tMax)}; \
+    static constexpr LimitParam<float> table = {static_cast<float>(pMax), static_cast<float>(vMax), static_cast<float>(tMax)}; \
 };
 
 DEF_DAMIAO_MOTOR_LIMIT_TABLE(Package::DM3507,         12.5, 50, 5)
