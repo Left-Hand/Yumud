@@ -7,7 +7,7 @@ namespace ymd::mavlink{
 
 
 #define DEF_PROPERTY_BFPROXY(p_name, start_bit, stop_bit, p_type_name, bits)\
-template <typename Self> [[nodiscard]] constexpr auto p_name(this Self && self) {\
+[[nodiscard]] constexpr auto p_name(this auto && self) {\
     return ymd::make_bitfield_proxy<start_bit, stop_bit, p_type_name>(bits);}
 
 #define DEF_PROPERTY_BIT(p_name, start_bit, bits) \

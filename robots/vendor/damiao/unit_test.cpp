@@ -8,7 +8,9 @@ namespace{
     static constexpr uint32_t NUM_MOTOR_ID = 0x03;
 
     constexpr auto factory = FrameFactory{
-        .motor_id = NodeId(NUM_MOTOR_ID)
+        .state = {
+            .motor_id = NodeId(NUM_MOTOR_ID)
+        }
     };
 
     {

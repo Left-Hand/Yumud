@@ -209,8 +209,7 @@ struct [[nodiscard]] PhaseCurrentCode final{
 struct [[nodiscard]] MotorState final{
     uint8_t bits;
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto over_voltage(this Self && self) {
+    [[nodiscard]] constexpr auto over_voltage(this auto && self) {
         return make_bitfield_proxy<4, 1, bool>(self.bits);}
 };
 

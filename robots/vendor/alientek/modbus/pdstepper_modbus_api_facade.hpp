@@ -6,13 +6,13 @@
 namespace ymd::robots::pdstepper{
 
 
-struct [[nodiscard]] ErasedPacket final{
-    using Self = ErasedPacket;
+struct [[nodiscard]] ErasedModbusPacket final{
+    using Self = ErasedModbusPacket;
 
     enum class OpType:uint8_t{
         Write16,
         Read16,
-        WriteFLoat,
+        // WriteFLoat,
         WriteU32Array,
     };
 
@@ -109,18 +109,6 @@ struct [[nodiscard]] ErasedPacket final{
                 cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(context.u16x1));
                 break;
             }
-            case OpType::WriteFLoat:{
-                cursor = ptr_push_u8(cursor, 0x10);
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
-
-                const size_t len = op_code.length;
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(len));
-                cursor = ptr_push_u8(cursor, static_cast<uint8_t>(len * 2));
-                for(size_t i = 0; i < len; i++){
-                    cursor = ptr_push_f32(cursor, context.u32_values[i]);
-                }
-                break;
-            }
 
             case OpType::WriteU32Array:{
                 cursor = ptr_push_u8(cursor, 0x10);
@@ -200,41 +188,35 @@ private:
 
 };
 
-struct ModbusPacketBackend{
+struct ModbusPacketFactoryBackend{
+
+    using Packet = ErasedModbusPacket;
     struct State{
         uint8_t node_id;
     };
 
-    static constexpr ErasedPacket write16(
+    static constexpr Packet write16(
         const State state, 
         const Command command, 
         const uint16_t data
     ){
-        return ErasedPacket::from_write16(state.node_id, command, data);
+        return Packet::from_write16(state.node_id, command, data);
     }
 
-    static constexpr ErasedPacket read16(
+    static constexpr Packet read16(
         const State state, 
         const Command command, 
         const uint16_t quantity
     ){
-        return ErasedPacket::from_read16(state.node_id, command, quantity);
+        return Packet::from_read16(state.node_id, command, quantity);
     }
 
-    // static constexpr ErasedPacket writefloat(
-    //     const State state, 
-    //     const Command command, 
-    //     std::span<const float> values
-    // ){
-    //     return ErasedPacket::from_writefloats(state.node_id, command, values);
-    // }
-
-    static constexpr ErasedPacket write32arr(
+    static constexpr Packet write32arr(
         const State state, 
         const Command command, 
         std::span<const uint32_t> values
     ){
-        return ErasedPacket::from_write32arr(state.node_id, command, values);
+        return Packet::from_write32arr(state.node_id, command, values);
     }
 };
 
@@ -245,55 +227,46 @@ struct ClientApiFacade{
 
     State state;
 
-    template<typename Self>
-    constexpr auto calibrate_encoder(this Self && self) {
+    constexpr auto calibrate_encoder(this auto && self) {
         return Backend::write16(self.state, Command::CalibrateEncoder, 0x01);
     }
 
-    template<typename Self>
-    constexpr auto reset(this Self && self) {
+    constexpr auto reset(this auto && self) {
         return Backend::write16(self.state, Command::Reset, 0x01);
     }
 
-    template<typename Self>
-    constexpr auto restore_factory(this Self && self) {
+    constexpr auto restore_factory(this auto && self) {
         return Backend::write16(self.state, Command::RestoreFactory, 0x01);
     }
 
-    template<typename Self>
-    constexpr auto get_swhw_version(this Self && self) {
+    constexpr auto get_swhw_version(this auto && self) {
         return Backend::read16(self.state, Command::GetSoftHardVer, 0x01);
     }
 
-    template<typename Self>
-    constexpr auto get_flux(this Self && self) {
+    constexpr auto get_flux(this auto && self) {
         return Backend::read16(self.state, Command::GetFlux, 0x02);
     }
 
 
     // 5.3.3 读取相电阻和相电感指令
-    template<typename Self>
-    constexpr auto get_phase_resind(this Self && self) {
+    constexpr auto get_phase_resind(this auto && self) {
         return Backend::read16(self.state, Command::GetPhaseResInd, 0x04);
     }
 
 
     // 5.3.4 读取相电流指令
-    template<typename Self>
-    constexpr auto get_phase_current(this Self && self) {
+    constexpr auto get_phase_current(this auto && self) {
         return Backend::read16(self.state, Command::GetPhaseCurrent, 0x04);
     }
 
     // 5.3.5 读取总线电压指令
-    template<typename Self>
-    constexpr auto get_busbar_voltage(this Self && self) {
+    constexpr auto get_busbar_voltage(this auto && self) {
         return Backend::read16(self.state, Command::GetBusbarVoltage, 0x04);
     }
 
     // 5.3.22 设置位置环 PID 参数指令
-    template<typename Self>
     constexpr auto set_position_pid_paraments(
-        this Self && self, 
+        this auto && self, 
         std::array<uint32_t, 3> paraments
     ) {
         return Backend::write32arr(self.state, Command::SetPositionPidParaments, std::span(paraments));

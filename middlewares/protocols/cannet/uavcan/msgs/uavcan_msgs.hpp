@@ -23,61 +23,47 @@ struct [[nodiscard]] StatusFlag final{
     uint32_t bits;
 
 
-    template<typename Self>
-    constexpr auto is_over_voltage(this Self && self) {
+    constexpr auto is_over_voltage(this auto && self) {
         return make_bitfield_proxy<0, 1, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_under_voltage(this Self && self) {
+    constexpr auto is_under_voltage(this auto && self) {
         return make_bitfield_proxy<1, 2, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_over_current(this Self && self) {
+    constexpr auto is_over_current(this auto && self) {
         return make_bitfield_proxy<2, 3, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_throttle_lost(this Self && self) {
+    constexpr auto is_throttle_lost(this auto && self) {
         return make_bitfield_proxy<3, 4, bool>(&self.bits);}
 
     
-    template<typename Self>
-    constexpr auto is_throttle_abnormal(this Self && self) {
+    constexpr auto is_throttle_abnormal(this auto && self) {
         return make_bitfield_proxy<4, 5, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_mos_over_temperature(this Self && self) {
+    constexpr auto is_mos_over_temperature(this auto && self) {
         return make_bitfield_proxy<5, 6, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_capacitor_over_temperature(this Self && self) {
+    constexpr auto is_capacitor_over_temperature(this auto && self) {
         return make_bitfield_proxy<6, 7, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_stall(this Self && self) {
+    constexpr auto is_stall(this auto && self) {
         return make_bitfield_proxy<7, 8, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_opa_abnormal(this Self && self) {
+    constexpr auto is_opa_abnormal(this auto && self) {
         return make_bitfield_proxy<8, 9, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_upper_bridge_abnormal(this Self && self) {
+    constexpr auto is_upper_bridge_abnormal(this auto && self) {
         return make_bitfield_proxy<9, 10, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_lower_bridge_abnormal(this Self && self) {
+    constexpr auto is_lower_bridge_abnormal(this auto && self) {
         return make_bitfield_proxy<10, 11, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto is_encoder_abnormal(this Self && self) {
+    constexpr auto is_encoder_abnormal(this auto && self) {
         return make_bitfield_proxy<11, 12, bool>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto mode(this Self && self) {
+    constexpr auto mode(this auto && self) {
         return make_bitfield_proxy<12, 15, Mode>(&self.bits);}
     
-    template<typename Self>
-    constexpr auto encoder_bits(this Self && self) {
+    constexpr auto encoder_bits(this auto && self) {
         return make_bitfield_proxy<16, 31, uint16_t>(&self.bits);}
 
 };
@@ -104,17 +90,14 @@ struct [[nodiscard]] LedSettings final{
     uint16_t bits;
 
 
-    template<typename Self>
-    constexpr auto red_en(this Self && self) {
+    constexpr auto red_en(this auto && self) {
         return make_bitfield_proxy<0, 1, bool>(&self.bits);}
 
-    template<typename Self>
-    constexpr auto green_en(this Self && self) {
+    constexpr auto green_en(this auto && self) {
         return make_bitfield_proxy<1, 2, bool>(&self.bits);}
 
 
-    template<typename Self>
-    constexpr auto blue_en(this Self && self) {
+    constexpr auto blue_en(this auto && self) {
         return make_bitfield_proxy<2, 3, bool>(&self.bits);}
 
 
@@ -136,14 +119,14 @@ struct [[nodiscard]] LedSettings final{
         }
 
 
-        template<typename Self>
-        constexpr auto blink_en(this Self && self) {
+
+        constexpr auto blink_en(this auto && self) {
             return make_bitfield_proxy<0, 0 + 1, bool>(&self.bits);
         }
 
 
-        template<typename Self>
-        constexpr auto freq_bits(this Self && self) {
+
+        constexpr auto freq_bits(this auto && self) {
             return make_bitfield_proxy<1, 1 + 12, uint16_t>(&self.bits);
         }
 
@@ -153,8 +136,7 @@ struct [[nodiscard]] LedSettings final{
     };
 
 
-    template<typename Self>
-    constexpr auto blink_freq(this Self && self) {
+    constexpr auto blink_freq(this auto && self) {
         return make_bitfield_proxy<3, 3 + 13, BlinkFreqCode>(&self.bits);}
 
     [[nodiscard]] static constexpr Self from_bits(const uint16_t bits){

@@ -350,8 +350,7 @@ struct MemberBytesProxy<T>{
 
     consteval size_t capacity() const {return CAPACITY;}
 
-    template<typename Self>
-    constexpr auto operator[](this Self && self, const size_t idx) {
+    constexpr auto operator[](this auto && self, const size_t idx) {
         if(idx >= CAPACITY) __builtin_trap();
         
         return make_member_bytes_proxy<maymut_element_type>(&self.ptr[idx * ELEMENT_SIZE]);
@@ -369,8 +368,7 @@ _TRAIT_METHOD_PICK_NAME(_method_tuple_),
 _TRAIT_METHOD_PICK_RET(_method_tuple_),
 
 #define _MAVLINK_CODEGEN_MEMBER_BYTES_PROXY(_method_tuple_) \
-template<typename Self>\
-constexpr auto _TRAIT_METHOD_PICK_NAME(_method_tuple_) (this Self && self){\
+constexpr auto _TRAIT_METHOD_PICK_NAME(_method_tuple_) (this auto && self){\
     constexpr size_t OFFSET = nth_offset_v<static_cast<size_t>(ElementRank::_TRAIT_METHOD_PICK_NAME(_method_tuple_))>;\
     return make_member_bytes_proxy<_TRAIT_METHOD_PICK_RET(_method_tuple_)>(&self.data[OFFSET]);}\
 

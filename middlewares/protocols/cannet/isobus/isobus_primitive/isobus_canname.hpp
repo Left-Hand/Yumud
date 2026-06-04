@@ -439,48 +439,39 @@ struct alignas(4) [[nodiscard]] EcuName final{
     }
 
     
-    template <typename Self>
-    [[nodiscard]] constexpr auto identity_number(this Self && self) {
+    [[nodiscard]] constexpr auto identity_number(this auto && self) {
         return make_bitfield_proxy<0, 21, IdentityNumber>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto manufacturer_code(this Self && self) {
+    [[nodiscard]] constexpr auto manufacturer_code(this auto && self) {
         return make_bitfield_proxy<21, 32, ManufacturerCode>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto ecu_instance(this Self && self) {
+    [[nodiscard]] constexpr auto ecu_instance(this auto && self) {
         return make_bitfield_proxy<32, 35, EcuInstance>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto function_instance(this Self && self) {
+    [[nodiscard]] constexpr auto function_instance(this auto && self) {
         return make_bitfield_proxy<35, 40, FunctionInstance>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto function(this Self && self) {
+    [[nodiscard]] constexpr auto function(this auto && self) {
         return make_bitfield_proxy<40, 48, Function>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto vehicle_system(this Self && self) {
+    [[nodiscard]] constexpr auto vehicle_system(this auto && self) {
         return make_bitfield_proxy<49, 56, VehicleSystem>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto vehicle_system_instance(this Self && self) {
+    [[nodiscard]] constexpr auto vehicle_system_instance(this auto && self) {
         return make_bitfield_proxy<56,60, VehicleSystemInstance>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto industry_group(this Self && self) {
+    [[nodiscard]] constexpr auto industry_group(this auto && self) {
         return make_bitfield_proxy<60,63, IndustryGroup>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto arbitrary_address_capable(this Self && self) {
+    [[nodiscard]] constexpr auto arbitrary_address_capable(this auto && self) {
         return make_bitfield_proxy<63,64, AribitaryAddressCapable>(self.bits);
     }
 

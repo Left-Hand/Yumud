@@ -9,14 +9,12 @@ namespace ymd::msp{
 struct Flag{
     uint8_t bits;
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto dont_reply(this Self && self) {
+    [[nodiscard]] constexpr auto dont_reply(this auto && self) {
         return make_bitfield_proxy<0, 1, bool>(self.bits);
     }
 
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto inav8(this Self && self) {
+    [[nodiscard]] constexpr auto inav8(this auto && self) {
         return make_bitfield_proxy<1, 2, bool>(self.bits);
     }
 };

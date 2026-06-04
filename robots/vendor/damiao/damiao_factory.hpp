@@ -4,33 +4,46 @@
 
 namespace ymd::robots::damiao{
 
+struct [[nodiscard]] FrameFactoryBackend final{
+    struct State{
+        NodeId motor_id;
+    };
 
-struct [[nodiscard]] FrameFactory final{
+    static constexpr hal::ClassicCanFrame convert(const hal::ClassicCanFrame && frame){
+        return frame.clone();
+    }
+};
 
-    const NodeId motor_id;
+
+template<typename Backend>
+struct [[nodiscard]] ClientApiFacade final{
+
+    using State = typename  Backend::State;
+
+    State state;
 
     //4.2 mit 控制
-    constexpr hal::ClassicCanFrame mit_control(const MitParams& mit_param) const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, mit_param.to_can_payload());
+    constexpr auto mit_control(this auto && self, const MitParams& mit_param) noexcept {
+        return hal::ClassicCanFrame::from_parts(NO_BASE + self.state.motor_id, mit_param.to_can_payload());
     }
 
 
     //4.3
-    constexpr hal::ClassicCanFrame posvel_control(const PosVelParam& posvel_param) const noexcept {
+    constexpr auto posvel_control(this auto && self, const PosVelParam& posvel_param) noexcept {
         // pos vel mode needs extra 0x100
-        return hal::ClassicCanFrame::from_parts(POS_VEL_MODE_BASE + motor_id, posvel_param.to_can_payload());
+        return hal::ClassicCanFrame::from_parts(POS_VEL_MODE_BASE + self.state.motor_id, posvel_param.to_can_payload());
     }
 
     //4.4
-    constexpr hal::ClassicCanFrame vel_control(const VelParam& vel_param) const noexcept {
+    constexpr auto vel_control(this auto && self, const VelParam& vel_param) noexcept {
         // pos mode needs extra 0x200
-        return hal::ClassicCanFrame::from_parts(VEL_ONLY_MODE_BASE + motor_id, vel_param.to_can_payload());
+        return hal::ClassicCanFrame::from_parts(VEL_ONLY_MODE_BASE + self.state.motor_id, vel_param.to_can_payload());
     }
 
 
-    constexpr hal::ClassicCanFrame posforce_control(const PosForceParam& posforce_param) {
+    constexpr auto posforce_control(this auto && self, const PosForceParam& posforce_param) noexcept {
         // pos force mode needs extra 0x300
-        return hal::ClassicCanFrame::from_parts(POS_FORCE_MODE_BASE + motor_id, posforce_param.to_can_payload());
+        return hal::ClassicCanFrame::from_parts(POS_FORCE_MODE_BASE + self.state.motor_id, posforce_param.to_can_payload());
     }
 
 
@@ -39,34 +52,33 @@ struct [[nodiscard]] FrameFactory final{
     // 式，使能电机的命令都是一样的
 
     //4.5
-    constexpr hal::ClassicCanFrame enable() const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFC));
+    constexpr auto enable(this auto && self) noexcept {
+        return hal::ClassicCanFrame::from_parts(NO_BASE + self.state.motor_id, pack_0xff_and_tail(0xFC));
     }
 
     //4.6
-    constexpr hal::ClassicCanFrame disable() const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFD));
+    constexpr auto disable(this auto && self) noexcept {
+        return hal::ClassicCanFrame::from_parts(NO_BASE + self.state.motor_id, pack_0xff_and_tail(0xFD));
     }
 
     //4.7 保存零点
-    constexpr hal::ClassicCanFrame set_zero() const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFE));
+    constexpr auto set_zero(this auto && self) noexcept {
+        return hal::ClassicCanFrame::from_parts(NO_BASE + self.state.motor_id, pack_0xff_and_tail(0xFE));
     }
 
     //4.8 清除错误
-    constexpr hal::ClassicCanFrame clear_error() const noexcept {
-        return hal::ClassicCanFrame::from_parts(NO_BASE + motor_id, pack_0xff_and_tail(0xFB));
+    constexpr auto clear_error(this auto && self) noexcept {
+        return hal::ClassicCanFrame::from_parts(NO_BASE + self.state.motor_id, pack_0xff_and_tail(0xFB));
     }
 
-    template<typename T>
+    template<typename T, typename Self>
     requires (sizeof(T) == 4)
-    constexpr hal::ClassicCanFrame write_param(const uint8_t reg_addr, const T param){
-        const auto && param_bytes = std::bit_cast<std::array<uint8_t, 4>>(param);
-        return pack_write_param(motor_id, reg_addr, param_bytes); 
+    constexpr auto write_param(this auto && self, const uint8_t reg_addr, const T param){
+        return pack_write_param(self.state.motor_id, reg_addr, std::bit_cast<std::array<uint8_t, 4>>(param)); 
     }
 
-    constexpr hal::ClassicCanFrame query_param(uint8_t reg_addr) const noexcept {
-        return hal::ClassicCanFrame::from_parts(NMT_CAN_FRAME_ID, pack_query_param_data(motor_id, reg_addr));
+    constexpr auto query_param(this auto && self, uint8_t reg_addr) noexcept {
+        return hal::ClassicCanFrame::from_parts(NMT_CAN_FRAME_ID, pack_query_param_data(self.state.motor_id, reg_addr));
     }
 
 private:
@@ -132,6 +144,6 @@ private:
     }
 };
 
-
+using FrameFactory = ClientApiFacade<FrameFactoryBackend>;
 
 }

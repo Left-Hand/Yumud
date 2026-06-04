@@ -215,18 +215,15 @@ struct [[nodiscard]] HSV978 final{
     // uint16_t v:8;
     uint32_t bits;
     
-    template <typename Self>
-    [[nodiscard]] constexpr auto hue(this Self && self) {
+    [[nodiscard]] constexpr auto hue(this auto && self) {
         return make_bitfield_proxy<0, 9, uint16_t>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto sat(this Self && self) {
+    [[nodiscard]] constexpr auto sat(this auto && self) {
         return make_bitfield_proxy<9, 16, uint16_t>(self.bits);
     }
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto val(this Self && self) {
+    [[nodiscard]] constexpr auto val(this auto && self) {
         return make_bitfield_proxy<16, 24, uint16_t>(self.bits);
     }
 

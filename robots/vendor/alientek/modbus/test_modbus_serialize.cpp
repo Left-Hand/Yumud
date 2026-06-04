@@ -41,7 +41,8 @@ struct [[nodiscard]] Serializer final{
 
 
 [[maybe_unused]] static void test_modbus_serialize(){
-    static constexpr auto factory = ClientApiFacade<ModbusPacketBackend>{.state{.node_id = 0x01}};
+    using ModbusPacketFactory = ClientApiFacade<ModbusPacketFactoryBackend>;
+    static constexpr auto factory = ModbusPacketFactory{.state{.node_id = 0x01}};
 
 
     {
