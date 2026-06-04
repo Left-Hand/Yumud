@@ -1,7 +1,8 @@
-#include "tamagawa_utils.hpp"
-#include "tamagawa_primitive.hpp"
-#include "tamagawa_msgs.hpp"
-#include "tamagawa_serialize.hpp"
+#include "../tamagawa_utils.hpp"
+#include "../tamagawa_primitive.hpp"
+#include "../tamagawa_msgs.hpp"
+#include "../tamagawa_serialize.hpp"
+#include "../tamagawa_api_facade.hpp"
 
 #include "core/utils/Result.hpp"
 #include <atomic>
@@ -42,14 +43,14 @@ struct Serializer{
     // Test WriteEEprom request (0x32 01 69)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::WriteEEprom{
                 .address = 0x01,
-                .val = 0x69
+                .value = 0x69
             };
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x04);
@@ -64,11 +65,11 @@ struct Serializer{
     // Test GetAbs request (0x02)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::GetAbs{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -78,13 +79,13 @@ struct Serializer{
     // Test ReadEEprom request (0xEA 01)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::ReadEEprom{
                 .address = 0x01
             };
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x03);
@@ -97,11 +98,11 @@ struct Serializer{
     // Test GetAllInfo request (0x1A)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::GetAllInfo{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -111,11 +112,11 @@ struct Serializer{
     // Test GetAbm request (0x8A)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::GetAbm{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -125,11 +126,11 @@ struct Serializer{
     // Test GetVersion request (0x92)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::GetVersion{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -139,11 +140,11 @@ struct Serializer{
     // Test ClearAbmAndFault request (0x62)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::ClearAbmAndFault{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -153,11 +154,11 @@ struct Serializer{
     // Test ClearAbs request (0xC2)
     {
         constexpr auto serializer = []{
-            auto recv = Serializer{};
+            auto srz = Serializer{};
 
             constexpr auto req = req_msgs::ClearAbs{};
-            serialize_msg(recv, req).unwrap();
-            return recv;
+            serialize_msg(srz, req).unwrap();
+            return srz;
         }();
 
         static_assert(serializer.length() == 0x01);
@@ -245,7 +246,7 @@ noheadtail(std::span<const uint8_t, N> in){
 
         constexpr auto msg = resp_msgs::ReadEEprom::from_bytes(noheadtail(std::span{received_bytes}));
         static_assert(msg.address == 0x01);
-        static_assert(msg.val == 0x69);
+        static_assert(msg.value == 0x69);
     }
 
     // Test ClearAbmAndFault response: 62 00 A9 99 18 4A
@@ -268,7 +269,7 @@ noheadtail(std::span<const uint8_t, N> in){
 
         constexpr auto msg = resp_msgs::WriteEEprom::from_bytes(noheadtail(std::span{received_bytes}));
         static_assert(msg.address == 0x01);
-        static_assert(msg.val == 0x69);
+        static_assert(msg.value == 0x69);
     }
 }
 

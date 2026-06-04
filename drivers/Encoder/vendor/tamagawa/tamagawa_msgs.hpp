@@ -9,7 +9,6 @@ namespace ymd::drivers::tamagawa{
 
 
 namespace req_msgs{
-using namespace primitive;
 
 
 // REQ[0x1A] 全部信息
@@ -71,17 +70,24 @@ struct [[nodiscard]] WriteEEprom final {
     static constexpr size_t CONTEXT_LENGTH = 2;
 
     uint8_t address;
-    uint8_t val;
+    uint8_t value;
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
-        const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        const uint8_t buffer[] = {self.address, self.value};
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
+    }
+
+    constexpr void fill_bytes(
+        std::span<uint8_t, CONTEXT_LENGTH> bytes
+    ) const noexcept {
+        bytes[0] = (*this).address;
+        bytes[1] = (*this).value;
     }
 
     static constexpr Self from_bytes(
@@ -89,7 +95,7 @@ struct [[nodiscard]] WriteEEprom final {
     ) noexcept {
         return Self{
             .address = bytes[0],
-            .val = bytes[1]
+            .value = bytes[1]
         };
     }
 };
@@ -105,10 +111,10 @@ struct [[nodiscard]] ReadEEprom final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {self.address};
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -128,7 +134,6 @@ struct [[nodiscard]] ReadEEprom final {
 
 
 namespace resp_msgs{
-using namespace primitive;
 
 
 
@@ -147,7 +152,7 @@ struct [[nodiscard]] GetAllInfo final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
@@ -156,7 +161,7 @@ struct [[nodiscard]] GetAllInfo final {
             self.abm.bytes[0], self.abm.bytes[1], self.abm.bytes[2],
             std::bit_cast<uint8_t>(self.almc)
         };
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -188,13 +193,13 @@ struct [[nodiscard]] GetAbs final{
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -222,13 +227,13 @@ struct [[nodiscard]] GetAbm final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abm.bytes[0], self.abm.bytes[1], self.abm.bytes[2]
         };
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -263,10 +268,10 @@ struct [[nodiscard]] GetVersion final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const auto buffer = std::bit_cast<std::array<uint8_t, 8>>(self);
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -294,13 +299,13 @@ struct [[nodiscard]] ClearAbmAndFault final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -329,13 +334,13 @@ struct [[nodiscard]] ClearAbs final {
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
         const uint8_t buffer[] = {
             std::bit_cast<uint8_t>(self.sf),
             self.abs.bytes[0], self.abs.bytes[1], self.abs.bytes[2]
         };
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -359,14 +364,14 @@ struct [[nodiscard]] WriteEEprom final {
     static constexpr size_t CONTEXT_LENGTH = 2;
 
     uint8_t address;
-    uint8_t val;
+    uint8_t value;
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
-        const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        const uint8_t buffer[] = {self.address, self.value};
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -377,7 +382,7 @@ struct [[nodiscard]] WriteEEprom final {
     ) noexcept {
         return WriteEEprom{
             .address = bytes[0],
-            .val = bytes[1],
+            .value = bytes[1],
         };
     }
 };
@@ -390,14 +395,14 @@ struct [[nodiscard]] ReadEEprom final {
     static constexpr size_t CONTEXT_LENGTH = 2;
 
     uint8_t address;
-    uint8_t val;
+    uint8_t value;
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize_context(Serializer & serializer) const noexcept{
+    serialize_context(Serializer & srz) const noexcept{
         auto & self = *this;
-        const uint8_t buffer[] = {self.address, self.val};
-        if(const auto res = serializer.push_bytes(std::span(buffer));
+        const uint8_t buffer[] = {self.address, self.value};
+        if(const auto res = srz.push_bytes(std::span(buffer));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -408,36 +413,12 @@ struct [[nodiscard]] ReadEEprom final {
     ) noexcept {
         return ReadEEprom{
             .address = bytes[0],
-            .val = bytes[1],
+            .value = bytes[1],
         };
     }
 };
 
 }
 
-#if 0
 
-struct [[nodiscard]] Response final{
-    using Self = Response;
-
-    CfCode cf;
-
-    union{
-        GetAbs _0;
-        GetAbm _1;
-        GetVersion _2;
-        GetAllInfo _3;
-        ClearFault _7;
-        ClearAbs _8;
-        ClearAbmAndFault _c;
-        std::array<uint8_t, 10> bytes;
-    }context;
-
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept {
-        return std::span{reinterpret_cast<const uint8_t *>(this), 11};
-    }
-
-};
-
-#endif
 }

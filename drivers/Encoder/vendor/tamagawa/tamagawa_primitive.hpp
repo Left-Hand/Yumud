@@ -15,7 +15,6 @@ namespace ymd::drivers::tamagawa{
 
 static constexpr size_t MAX_EEPROM_PAGE = 0x3c;
 
-namespace primitive{
 
 static constexpr size_t MAX_CONTEXT_SIZE = 8;
 
@@ -90,14 +89,14 @@ struct [[nodiscard]] Abs24 final{
 
     constexpr Angular<uq32> to_angle(size_t enc_resolution) const noexcept {
         const size_t shift_cnt = static_cast<size_t>(32u - enc_resolution);
-        const uint32_t bits = static_cast<uint32_t>(static_cast<uint32_t>(b24()) << shift_cnt);
+        const uint32_t bits = static_cast<uint32_t>(b24()) << shift_cnt;
         return Angular<uq32>::from_turns(uq32::from_bits(bits));
     }
 
-    constexpr void fill_bytes(std::span<uint8_t, 3> other_bytes) const noexcept {
-        other_bytes[0] = bytes[0];
-        other_bytes[1] = bytes[1];
-        other_bytes[2] = bytes[2];
+    constexpr void fill_bytes(std::span<uint8_t, 3> buf) const noexcept {
+        buf[0] = bytes[0];
+        buf[1] = bytes[1];
+        buf[2] = bytes[2];
     }
 
     static constexpr Self from_bytes(std::span<const uint8_t, 3> bytes){
@@ -132,9 +131,6 @@ struct [[nodiscard]] Abm24 final{
         };
     }
 };
-
-}
-
 
 
 }
