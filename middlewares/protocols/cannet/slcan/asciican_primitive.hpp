@@ -95,7 +95,7 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 using Frame = hal::ClassicCanFrame;
 
-enum class Error:uint8_t{
+enum class [[nodiscard]] Error:uint8_t{
     NoInput,
     NoArg,
     OddPayloadLength,

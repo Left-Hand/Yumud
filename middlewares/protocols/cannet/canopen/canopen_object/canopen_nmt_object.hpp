@@ -8,9 +8,8 @@
 // https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html
 namespace ymd::canopen{
 
-#ifndef CANOPEN_MAX_PERDEF_ERROR
-static constexpr size_t NUM_CANOPEN_MAX_PERDEF_ERROR = 8u;
-#endif
+static constexpr size_t NUM_CANOPEN_MAX_PERDEFINE_ERROR = 8u;
+
 struct PredefinedError{
     uint16_t additive_error;
 };
@@ -108,8 +107,8 @@ struct PerdefErrFieldReg{
     }
     #endif
 private:
-    // RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
-    RingMemento<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
+    // RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEFINE_ERROR> error_queue_;
+    RingMemento<PredefinedError, NUM_CANOPEN_MAX_PERDEFINE_ERROR> error_queue_;
 };
 
 struct CobidSyncMsgReg{

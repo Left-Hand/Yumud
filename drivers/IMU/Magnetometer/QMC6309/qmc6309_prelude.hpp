@@ -19,6 +19,13 @@ struct QMC6309_Prelude{
     using IResult = Result<T, Error>;
 
 
+    enum class [[nodiscard]] Odr:uint8_t{
+    };
+
+    enum class [[nodiscard]] FullScale:uint8_t{
+    };
+
+
     enum class [[nodiscard]] Mode:uint8_t{
         Suspend = 0b00,
         Normal = 0b01,
@@ -59,15 +66,7 @@ struct QMC6309_Prelude{
     };
 };
 
-struct QMC6309_Regs:public QMC6309_Prelude{
-
-
-    struct NestedXyz{
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    };
-
+struct QMC6309_Regset:public QMC6309_Prelude{
     struct R8_Status1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Status1;
 
@@ -104,9 +103,6 @@ struct QMC6309_Regs:public QMC6309_Prelude{
         uint8_t __resv__:7;
         uint8_t selftest:1;
     };
-
-    
-
 };
 
 

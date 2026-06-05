@@ -8,9 +8,9 @@ namespace ymd::robots::pdstepper{
 
 
 
-template<typename Serialize>
-Result<void, typename Serialize::Error> serialize_header(
-    Serialize & srz,
+template<typename Serializer>
+Result<void, typename Serializer::Error> serialize_header(
+    Serializer & srz,
     const uint8_t motor_id, 
     const Command command
 ){
@@ -24,9 +24,9 @@ Result<void, typename Serialize::Error> serialize_header(
 }
 
 
-template<typename Serialize>
-Result<void, typename Serialize::Error> serialize_trailer(
-    Serialize & srz
+template<typename Serializer>
+Result<void, typename Serializer::Error> serialize_trailer(
+    Serializer & srz
 ){
     const auto bytes = srz.collected_byte();
     const uint8_t checksum = ChecksumBuilder::from_default()
@@ -34,7 +34,7 @@ Result<void, typename Serialize::Error> serialize_trailer(
         .finalize();
 
     const uint8_t buf[] = {
-        checksum, FRAME_TAIL_TOKEN
+        checksum, FRAME_TAIL_CHAR
     };
 
     return srz.push_bytes(buf);

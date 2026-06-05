@@ -32,7 +32,7 @@ void Self::push_byte(const uint8_t byte){
             bytes_[bytes_count_] = byte;
             bytes_count_++;
             if(bytes_count_ == sizeof(TransportFrame)){
-                if(frame_.tail == TAIL_TOKEN)
+                if(frame_.tail == TAIL_CHAR)
                     flush();
                 reset();
             }

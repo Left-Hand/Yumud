@@ -41,7 +41,7 @@ public:
     }
 private:
     IResult<> set_brightness(const uint8_t brightness);
-    CH455_phy transport_;
+    CH455_Transport transport_;
 
     // using Callback = std::function<void(MatrixKeyEvent)>;
 };

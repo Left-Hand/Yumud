@@ -33,16 +33,20 @@ struct LIS3DH_Prelude{
 
     template<typename T = void>
     using IResult = Result<T, Error>; 
-    using RegAddr = uint8_t;
+    // using RegAddr = uint8_t;
+
+    enum class RegAddr:uint8_t{
+
+    };
 };
 
-struct _LIS3DH_Regs:public LIS3DH_Prelude{
+struct LIS3DH_Regset:public LIS3DH_Prelude{
 
     struct R8_WhoAmI:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0F}; 
-        static constexpr uint8_t key = 0x11;
+        static constexpr uint8_t KEY = 0x11;
         uint8_t data;
-    }DEF_R8(whoami_reg)
+    };
 
 
     struct R8_Ctrl1:public Reg8<>{

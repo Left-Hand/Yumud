@@ -58,12 +58,6 @@ private:
         return Ok();
     }
 
-    // IResult<> read_bulk(uint8_t reg_addr, std::span<uint8_t> pbuf){
-    //     if(const auto res = transport_.read_bulk(reg_addr, pbuf, std::endian::little);
-    //         res.is_err()) return Err(res.unwrap_err());
-    //     return Ok();
-    // }
-
     [[nodiscard]] static constexpr iq24 calc_gyr_scaler(const GyrFs fs){
         switch(fs){
             case GyrFs::_2000deg  :      

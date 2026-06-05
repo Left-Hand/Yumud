@@ -11,7 +11,7 @@
 //  * 注意：本实现为完全原创，未使用上述项目的任何代码。
 //  * 参考仅用于理解问题领域，未复制任何具体实现。
 
-namespace ymd::drivers::icm42688::details{
+namespace ymd::drivers::icm42688{
 
 // FifoHeader: 8位bitfield结构体
 struct [[nodiscard]] FifoHeader {
