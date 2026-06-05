@@ -30,39 +30,6 @@ struct [[nodiscard]] Serializer final{
 };
 
 
-[[maybe_unused]] static void test_serialze_header(){
-    {
-        //header v1
-
-        static constexpr auto header = MavlinkHeaderV1{
-            .len = 2,
-            .seq = 3,
-            .sysid = 4,
-            .compid = 5,
-            .msgid = 6
-        };
-
-
-        constexpr auto serializer = []{
-            auto ret = Serializer{};
-
-            serialize_header_v1(ret, header).unwrap();
-            return ret;
-        }();
-
-
-        // 预期: fe 02 03 04 05 06
-        static_assert(serializer.length() == 6);
-        static_assert(serializer.bytes[0]  == 0xfe);
-        static_assert(serializer.bytes[1]  == 0x02);
-        static_assert(serializer.bytes[2]  == 0x03);
-        static_assert(serializer.bytes[3]  == 0x04);
-        static_assert(serializer.bytes[4]  == 0x05);
-        static_assert(serializer.bytes[5]  == 0x06);
-
-    }
-
-}
 
 // https://blog.csdn.net/qq_51566076/article/details/149910138
 

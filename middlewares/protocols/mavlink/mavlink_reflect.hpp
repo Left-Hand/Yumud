@@ -370,7 +370,7 @@ _TRAIT_METHOD_PICK_RET(_method_tuple_),
 #define _MAVLINK_CODEGEN_MEMBER_BYTES_PROXY(_method_tuple_) \
 constexpr auto _TRAIT_METHOD_PICK_NAME(_method_tuple_) (this auto && self){\
     constexpr size_t OFFSET = nth_offset_v<static_cast<size_t>(ElementRank::_TRAIT_METHOD_PICK_NAME(_method_tuple_))>;\
-    return make_member_bytes_proxy<_TRAIT_METHOD_PICK_RET(_method_tuple_)>(&self.data[OFFSET]);}\
+    return make_member_bytes_proxy<_TRAIT_METHOD_PICK_RET(_method_tuple_)>(&self.bytes[OFFSET]);}\
 
 #define _MAVLINK_CODEGEN_STRUCT_BASE(NAME, NUM_MSG_ID, ...) \
 template<typename Storage>\
@@ -382,7 +382,8 @@ struct [[nodiscard]] NAME##_Facade final{\
     template<size_t N> static constexpr size_t nth_offset_v = _nth_offset<N, members_tuple>::value;\
     static constexpr size_t BYTES_SIZE = nth_offset_v<std::tuple_size_v<members_tuple> - 1>;\
     static_assert(storage_capacity_v<Storage> >= BYTES_SIZE, "bytes size not enough");\
-    Storage data;\
+    Storage bytes;\
+    [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const {return std::span(bytes);}\
     MACRO_MAP(_MAVLINK_CODEGEN_MEMBER_BYTES_PROXY, __VA_ARGS__) \
 };\
 
