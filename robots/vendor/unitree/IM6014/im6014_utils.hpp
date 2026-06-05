@@ -7,22 +7,6 @@ namespace ymd::robots::unitree::im6014{
 
 namespace utils{
 
-static constexpr uint8_t * ptr_push_u16(uint8_t * cursor, const uint16_t bits) noexcept {
-    cursor[0] = bits & 0xff;
-    cursor[1] = (bits >> 8) & 0xff;
-    return cursor + 2;
-}
-
-static constexpr uint8_t * ptr_push_u32(uint8_t * cursor, const uint32_t bits) noexcept {
-    cursor[0] = bits & 0xff;
-    cursor[1] = (bits >> 8) & 0xff;
-    cursor[2] = (bits >> 16) & 0xff;
-    cursor[3] = (bits >> 24) & 0xff;
-    return cursor + 4;
-}
-
-
-
 template<typename T, uint32_t SCALE>
 struct mul;
 

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "damiao_primitive.hpp"
+#include "core/utils/bytes/buffer_cursor.hpp"
 #include "core/math/float/fp32.hpp"
 #include "robots/vendor/mit/mit_primitive.hpp"
 #include "damiao_utils.hpp"
-
 namespace ymd::robots::damiao{
 
 struct [[nodiscard]] PosVelParam final{
@@ -15,10 +15,10 @@ struct [[nodiscard]] PosVelParam final{
         auto & self = *this;
 
         std::array<uint8_t, 8> u8x8;
-        uint8_t * cursor = u8x8.data();
+        auto cursor = BufferCursor{u8x8.data()};
         
-        cursor = utils::ptr_push_fp32(cursor, self.q);
-        cursor = utils::ptr_push_fp32(cursor, self.dq);
+        cursor.push_b32le(self.q);
+        cursor.push_b32le(self.dq);
 
         return hal::ClassicCanPayload::from_u8x8(u8x8);
     }
@@ -82,11 +82,12 @@ struct PosForceParam{
         auto & self = *this;
 
         std::array<uint8_t, 8> u8x8;
-        uint8_t * cursor = u8x8.data();
+        auto cursor = BufferCursor{u8x8.data()};
         
-        cursor = utils::ptr_push_fp32(cursor, self.q);
-        cursor = utils::ptr_push_u16le(cursor, std::bit_cast<uint16_t>(qd_code));
-        cursor = utils::ptr_push_u16le(cursor, std::bit_cast<uint16_t>(torque_current_limit_code));
+        
+        cursor.push_b32le(self.q);
+        cursor.push_b16le(qd_code);
+        cursor.push_b16le(torque_current_limit_code);
 
         return hal::ClassicCanPayload::from_u8x8(u8x8);
     }

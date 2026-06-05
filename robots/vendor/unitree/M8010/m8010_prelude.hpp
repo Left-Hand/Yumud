@@ -2,6 +2,7 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/sumtype.hpp"
+#include "core/utils/bytes/buffer_cursor.hpp"
 #include "core/container/bits_set.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 
@@ -13,25 +14,6 @@
 
 
 namespace ymd::robots::unitree{
-
-static constexpr uint8_t * u8ptr_push_u8le(uint8_t * cursor, const uint8_t value){
-    cursor[0] = value;
-    return cursor + 1;
-}
-
-static constexpr uint8_t * u8ptr_push_u16le(uint8_t * cursor, const uint16_t value){
-    cursor[0] = value;
-    cursor[1] = value >> 8;
-    return cursor + 2;
-}
-
-static constexpr uint8_t * u8ptr_push_u32le(uint8_t * cursor, const uint32_t value){
-    cursor[0] = value;
-    cursor[1] = value >> 8;
-    cursor[2] = value >> 16;
-    cursor[3] = value >> 24;
-    return cursor + 4;
-}
 
 struct [[nodiscard]] MotorId final{
     uint8_t bits;

@@ -2,6 +2,7 @@
 
 #include "im6014_utils.hpp"
 #include "im6014_prelude.hpp"
+#include "core/utils/bytes/buffer_cursor.hpp"
 
 namespace ymd::robots::unitree::im6014{
 
@@ -50,7 +51,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Crc>final {
 
         const uint32_t crc32 = crc_builder.finalize();
 
-        ptr = utils::ptr_push_u32(ptr, crc32);
+        ptr = u8ptr_push_u32le(ptr, crc32);
     }
 };
 
@@ -59,9 +60,8 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Crc>final {
 template<>
 struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Kd>final {
     uint8_t * ptr;
-constexpr 
-    CmdPacketBuilder<CmdPacketBuildStep::Crc> push_kd_code(const KdCode code) && {
-        ptr = utils::ptr_push_u16(ptr, code.bits);
+    constexpr CmdPacketBuilder<CmdPacketBuildStep::Crc> push_kd_code(const KdCode code) && {
+        ptr = u8ptr_push_u16le(ptr, code.bits);
         return {ptr};
     }
 };
@@ -72,7 +72,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Kp>final {
     uint8_t * ptr;
 
     constexpr CmdPacketBuilder<CmdPacketBuildStep::Kd> push_kp_code(const KpCode code) && {
-        ptr = utils::ptr_push_u16(ptr, code.bits);
+        ptr = u8ptr_push_u16le(ptr, code.bits);
         return {ptr};
     }
 };
@@ -84,7 +84,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Position> final {
     uint8_t* ptr;
 
     constexpr CmdPacketBuilder<CmdPacketBuildStep::Kp> push_x1_code(const X1Code code) && {
-        ptr = utils::ptr_push_u32(ptr, static_cast<uint32_t>(code.bits));
+        ptr = u8ptr_push_u32le(ptr, static_cast<uint32_t>(code.bits));
         return {ptr};
     }
 };
@@ -94,7 +94,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Speed> final {
     uint8_t* ptr;
 
     constexpr CmdPacketBuilder<CmdPacketBuildStep::Position> push_x2_code(const X2Code code) && {
-        ptr = utils::ptr_push_u16(ptr, code.bits);
+        ptr = u8ptr_push_u16le(ptr, code.bits);
         return {ptr};
     }
 };
@@ -106,7 +106,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Torque> final {
     uint8_t* ptr;
 
     constexpr CmdPacketBuilder<CmdPacketBuildStep::Speed> push_tau_code(const TorqueCode code) && {
-        ptr = utils::ptr_push_u16(ptr, code.bits);
+        ptr = u8ptr_push_u16le(ptr, code.bits);
         return {ptr};
     }
 };
@@ -120,7 +120,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Status> final {
         bits |= (std::bit_cast<uint8_t>(status_code) << 0);
         bits |= (0x00 << 8);//reserved byte
         
-        ptr = utils::ptr_push_u16(ptr, bits);
+        ptr = u8ptr_push_u16le(ptr, bits);
         return {ptr};
     }
 };
@@ -131,7 +131,7 @@ struct [[nodiscard]] CmdPacketBuilder<CmdPacketBuildStep::Header> final {
     uint8_t* ptr;
 
     constexpr CmdPacketBuilder<CmdPacketBuildStep::Status> push_header() && {
-        ptr = utils::ptr_push_u16(ptr, 0xfeee);
+        ptr = u8ptr_push_u16le(ptr, 0xfeee);
         return {ptr};
     }
 };

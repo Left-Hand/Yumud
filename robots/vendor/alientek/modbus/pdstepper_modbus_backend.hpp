@@ -1,5 +1,5 @@
 #include "pdstepper_modbus_api_facade.hpp"
-
+#include "core/utils/bytes/buffer_cursor.hpp"
 
 namespace ymd::robots::pdstepper{
 
@@ -90,47 +90,47 @@ struct [[nodiscard]] ErasedModbusPacket final{
         if(const auto res = srz.compatible_with_length(MAX_MODBUS_PACKET_LEN);
             res.is_err()) return Err(res.unwrap_err());
         uint8_t * buf = srz.take_cursor_and_inc(0);
-        uint8_t * cursor = buf;
+        auto cursor = BufferCursor{buf};
 
-        cursor = ptr_push_u8(cursor, node_id);
+        cursor.push_u8be(node_id);
 
         switch(op_code.type){
             case OpType::Write16:{
-                cursor = ptr_push_u8(cursor, 0x06);
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(context.u16x1));
+                cursor.push_u8be(0x06);
+                cursor.push_u16be(static_cast<uint16_t>(command));
+                cursor.push_u16be(static_cast<uint16_t>(context.u16x1));
                 break;
             }
 
             case OpType::Read16:{
-                cursor = ptr_push_u8(cursor, 0x04);
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(context.u16x1));
+                cursor.push_u8be(0x04);
+                cursor.push_u16be(static_cast<uint16_t>(command));
+                cursor.push_u16be(static_cast<uint16_t>(context.u16x1));
                 break;
             }
 
             case OpType::WriteU32Array:{
-                cursor = ptr_push_u8(cursor, 0x10);
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(command));
+                cursor.push_u8be(0x10);
+                cursor.push_u16be(static_cast<uint16_t>(command));
 
                 const size_t len = op_code.length;
-                cursor = ptr_push_u16be(cursor, static_cast<uint16_t>(len * 2));
-                cursor = ptr_push_u8(cursor, static_cast<uint8_t>(len * 4));
+                cursor.push_u16be(static_cast<uint16_t>(len * 2));
+                cursor.push_u8be(static_cast<uint8_t>(len * 4));
                 for(size_t i = 0; i < len; i++){
-                    cursor = ptr_push_u32be(cursor, context.u32_values[i]);
+                    cursor.push_u32be(context.u32_values[i]);
                 }
                 break;
             }
         }
 
-        const size_t num_bytes = cursor - buf;
+        const size_t num_bytes = cursor.ptr - buf;
         (void)srz.take_cursor_and_inc(num_bytes);
 
         const uint16_t checksum = modbus::ChecksumBuilder::from_default()
             .push_bytes(std::span(buf, num_bytes))
             .finalize();
 
-        cursor = ptr_push_u16le(cursor, static_cast<uint16_t>(checksum));
+        cursor.push_u16le(static_cast<uint16_t>(checksum));
 
         (void)srz.take_cursor_and_inc(2);
 
@@ -151,7 +151,7 @@ private:
         return ret;
     }
 
-    static constexpr uint8_t * ptr_push_f32(uint8_t * ptr, const float value){
+    static constexpr uint8_t * push_f32(uint8_t * ptr, const float value){
         static constexpr size_t LEN = sizeof(float);
         static_assert(LEN == 4);
         static_assert(std::endian::native == std::endian::little);
@@ -160,18 +160,18 @@ private:
         return ptr + LEN;
     }
 
-    static constexpr uint8_t * ptr_push_u8(uint8_t * ptr, const uint8_t value){
+    static constexpr uint8_t * push_u8be(uint8_t * ptr, const uint8_t value){
         ptr[0] = value;
         return ptr + 1;
     }
 
-    static constexpr uint8_t * ptr_push_u16be(uint8_t * ptr, const uint16_t value){
+    static constexpr uint8_t * push_u16be(uint8_t * ptr, const uint16_t value){
         ptr[0] = uint8_t(value >> 8);
         ptr[1] = uint8_t(value);
         return ptr + 2;
     }
 
-    static constexpr uint8_t * ptr_push_u32be(uint8_t * ptr, const uint32_t value){
+    static constexpr uint8_t * push_u32be(uint8_t * ptr, const uint32_t value){
         ptr[0] = uint8_t(value >> 24);
         ptr[1] = uint8_t(value >> 16);
         ptr[2] = uint8_t(value >> 8);
@@ -179,7 +179,7 @@ private:
         return ptr + 4;
     }
 
-    static constexpr uint8_t * ptr_push_u16le(uint8_t * ptr, const uint16_t value){
+    static constexpr uint8_t * push_u16le(uint8_t * ptr, const uint16_t value){
         ptr[0] = uint8_t(value);
         ptr[1] = uint8_t(value >> 8);
         return ptr + 2;

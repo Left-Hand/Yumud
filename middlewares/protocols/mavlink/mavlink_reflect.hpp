@@ -2,6 +2,7 @@
 
 #include "mavlink_primitive.hpp"
 #include "core/utils/marco_utils.hpp"
+#include "core/tmp/array.hpp"
 
 namespace ymd::mavlink{
 
@@ -29,47 +30,6 @@ static constexpr size_t storage_capacity_v<std::array<T, N>> = N;
 
 template<typename T, size_t N>
 static constexpr size_t storage_capacity_v<std::span<T, N>> = N;
-
-template<typename T>
-static constexpr bool is_cstyle_array_v = false;
-
-template<typename T, std::size_t N>
-static constexpr bool is_cstyle_array_v<T[N]> = true;
-
-template<typename T, std::size_t N>
-static constexpr bool is_cstyle_array_v<const T[N]> = true;
-
-
-
-template<typename T>
-static constexpr bool is_cstyle_char_array_v = false;
-
-template<std::size_t N>
-static constexpr bool is_cstyle_char_array_v<char[N]> = true;
-
-template<std::size_t N>
-static constexpr bool is_cstyle_char_array_v<const char[N]> = true;
-
-template<typename T>
-struct _cstyle_array_size;
-
-template<typename T, std::size_t N>
-struct _cstyle_array_size<T[N]> : std::integral_constant<std::size_t, N> {};
-
-template<typename T, std::size_t N>
-struct _cstyle_array_size<const T[N]> : std::integral_constant<std::size_t, N> {};
-
-template<typename T>
-static constexpr std::size_t cstyle_array_size_v = 
-    _cstyle_array_size<T>::value;
-
-
-
-static_assert(is_cstyle_char_array_v<char[8]> == true);
-static_assert(is_cstyle_char_array_v<const char[8]> == true);
-static_assert(is_cstyle_char_array_v<uint8_t[8]> == false);
-
-
 
 
 template<typename T>
@@ -254,11 +214,9 @@ struct _nth_offset<0, Tup>{
 
 
 template<typename T>
-struct MemberBytesProxy{
+struct BytesProxy{
     using ptr_type = std::conditional_t<std::is_const_v<T>, const uint8_t *, uint8_t *>;
     using U = std::remove_const_t<T>;
-
-
 
     ptr_type ptr;
 
@@ -275,13 +233,13 @@ struct MemberBytesProxy{
 };
 
 template<typename T>
-requires(is_cstyle_char_array_v<T>)
-struct MemberBytesProxy<T>{
+requires(tmp::is_cstyle_char_array_v<T>)
+struct BytesProxy<T>{
     static_assert(not std::is_pointer_v<T>);
     using ptr_type = std::conditional_t<std::is_const_v<T>, const uint8_t *, uint8_t *>;
     using U = std::remove_const_t<T>;
     static_assert(not std::is_pointer_v<U>);
-    static constexpr size_t CAPACITY = cstyle_array_size_v<U>;
+    static constexpr size_t CAPACITY = tmp::cstyle_array_size_v<U>;
 
     ptr_type ptr;
 
@@ -328,18 +286,18 @@ static constexpr auto make_member_bytes_proxy(B ptr){
     static_assert(not std::is_pointer_v<R>);
     using T = std::conditional_t<std::is_const_v<std::remove_pointer_t<B>>, 
         const R, R>;
-    return MemberBytesProxy<T>(ptr);
+    return BytesProxy<T>(ptr);
 }
 
 
 
 template<typename T>
-requires(is_cstyle_array_v<T> and (not is_cstyle_char_array_v<T>))
-struct MemberBytesProxy<T>{
+requires(tmp::is_cstyle_array_v<T> and (not tmp::is_cstyle_char_array_v<T>))
+struct BytesProxy<T>{
     using ptr_type = std::conditional_t<std::is_const_v<T>, const uint8_t *, uint8_t *>;
     using U = std::remove_const_t<T>;
 
-    static constexpr size_t CAPACITY = cstyle_array_size_v<U>;
+    static constexpr size_t CAPACITY = tmp::cstyle_array_size_v<U>;
 
     using element_type = std::remove_all_extents_t<U>;
     using maymut_element_type = std::conditional_t<std::is_const_v<T>, const element_type, element_type>;
