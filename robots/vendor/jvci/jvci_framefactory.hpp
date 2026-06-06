@@ -1,11 +1,14 @@
 #pragma once
 
 #include "jvci_primitive.hpp"
+#include "core/utils/bytes/buffer_cursor.hpp"
 
 
 namespace ymd::robots::jvci{
 struct [[nodiscard]] CanRequestFrameFactory final{
 public:
+    using U8X8 = std::array<uint8_t, 8>;
+
     const NodeId node_id;
 
 /// ========== 读取方法 ==========
@@ -81,48 +84,48 @@ public:
 
     /// 进入空闲状态（寄存器0x00A0，写入1执行）
     constexpr hal::ClassicCanFrame idle_state() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::IdleState, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::IdleState, uint16_t(1)));
     }
 
     /// ========== 校准与初始化 ==========
 
     /// 校准电机（寄存器0x00A1，写入1执行）
     constexpr hal::ClassicCanFrame calibrate_motor() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::CalibrateMotor, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::CalibrateMotor, uint16_t(1)));
     }
 
     /// 进入闭环（寄存器0x00A2，写入1执行）
     constexpr hal::ClassicCanFrame enter_close_loop() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::EnterCloseLoop, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::EnterCloseLoop, uint16_t(1)));
     }
 
     /// ========== 参数管理 ==========
 
     /// 擦除参数（寄存器0x00A3，写入1执行）
     constexpr hal::ClassicCanFrame erase_param() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::EraseParam, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::EraseParam, uint16_t(1)));
     }
 
     /// 保存参数（寄存器0x00A4，写入1执行）
     constexpr hal::ClassicCanFrame save_param() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SaveParam, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::SaveParam, uint16_t(1)));
     }
 
     /// 重启驱动器（寄存器0x00A5，写入1执行，重启约1.5秒）
     constexpr hal::ClassicCanFrame restart_driver() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::RestartDriver, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::RestartDriver, uint16_t(1)));
     }
 
     /// ========== 原点设置 ==========
 
     /// 设置原点（寄存器0x00A6，写入1执行，保存偏置角并重启）
     constexpr hal::ClassicCanFrame set_origin() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetOrigin, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::SetOrigin, uint16_t(1)));
     }
 
     /// 设置临时原点（寄存器0x00A7，写入1执行，立即执行不保存）
     constexpr hal::ClassicCanFrame set_temp_origin() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetTempOrigin, static_cast<uint16_t>(1)));
+        return make_can_frame(make_write16_context(RegAddr::SetTempOrigin, uint16_t(1)));
     }
 
     /// ========== 特殊指令 ==========
@@ -130,7 +133,10 @@ public:
     /// PV指令（位置-速度）：以指定速度转到目标位置
     /// @param p 目标位置
     /// @param s PV指令专用速度码
-    constexpr hal::ClassicCanFrame pv_command(const PositionCode p, const PvSpeedCode s) const noexcept {
+    constexpr hal::ClassicCanFrame pv_command(
+        const PositionCode p, 
+        const PvSpeedCode s
+    ) const noexcept {
         return make_can_frame(make_triple_context(
             Command::CmdPV,
             std::bit_cast<uint32_t>(p.bits),
@@ -143,7 +149,11 @@ public:
     /// @param p 目标位置
     /// @param s PVT指令专用速度码
     /// @param t 力矩百分比码（0-100%）
-    constexpr hal::ClassicCanFrame pvt_command(const PositionCode p, const PvSpeedCode s, const PvTorqueCode t) const noexcept {
+    constexpr hal::ClassicCanFrame pvt_command(
+        const PositionCode p, 
+        const PvSpeedCode s, 
+        const PvTorqueCode t
+    ) const noexcept {
         return make_can_frame(make_triple_context(
             Command::CmdPVT,
             std::bit_cast<uint32_t>(p.bits),
@@ -153,7 +163,7 @@ public:
     }
 private:
     /// 将缓冲区打包为 CAN 标准帧 直接传值
-    constexpr hal::ClassicCanFrame make_can_frame(const std::array<uint8_t, 8> buf) const noexcept {
+    constexpr hal::ClassicCanFrame make_can_frame(const U8X8 buf) const noexcept {
         return hal::ClassicCanFrame::from_parts(
             make_request_canid(node_id),
             hal::ClassicCanPayload::from_u8x8(buf)
@@ -165,26 +175,20 @@ private:
     /// @param arg1 位置参数（32bit）
     /// @param arg2 速度参数（16bit）
     /// @param arg3 力矩/填充参数（8bit）
-    static constexpr std::array<uint8_t, 8> make_triple_context(
+    static constexpr U8X8 make_triple_context(
         const Command command,
         const uint32_t arg1,
         const uint16_t arg2,
         const uint8_t arg3
     ){
-        std::array<uint8_t, 8> buf = {
-            static_cast<uint8_t>(command),
-            static_cast<uint8_t>((arg1) >> 24),
-            static_cast<uint8_t>((arg1) >> 16),
-            static_cast<uint8_t>((arg1) >> 8),
-            static_cast<uint8_t>((arg1)),
+        U8X8 u8x8;
+        auto cursor = BufferCursor{u8x8.data()};
+        cursor.push_u8be(static_cast<uint8_t>(command));
+        cursor.push_u32be(arg1);
+        cursor.push_u16be(arg2);
+        cursor.push_u8be(arg3);
 
-            static_cast<uint8_t>((arg2) >> 8),
-            static_cast<uint8_t>((arg2)),
-
-            static_cast<uint8_t>((arg3)),
-        };
-
-        return buf;
+        return u8x8;
     }
 
     /// 生成无参数指令帧的基础模板
@@ -192,8 +196,9 @@ private:
     /// @param reg_addr 寄存器地址
     /// @return 填充好头部的帧缓冲区
     __attribute__((always_inline))
-    static constexpr std::array<uint8_t, 8> make_noarg_context(const Command command, const RegAddr reg_addr){
-        std::array<uint8_t, 8> buf = {
+    static constexpr U8X8 
+    make_noarg_context(const Command command, const RegAddr reg_addr){
+        U8X8 buf = {
             static_cast<uint8_t>(command),
             static_cast<uint8_t>(static_cast<uint16_t>(reg_addr) >> 8),
             static_cast<uint8_t>(static_cast<uint16_t>(reg_addr)),
@@ -207,7 +212,8 @@ private:
     /// 生成读取指令帧
     /// @param command 读取命令（ReadReg16=0x4B 或 ReadReg32=0x43）
     /// @param reg_addr 寄存器地址
-    static constexpr std::array<uint8_t, 8> make_read_context(const Command command, const RegAddr reg_addr){
+    static constexpr U8X8 
+    make_read_context(const Command command, const RegAddr reg_addr){
         return make_noarg_context(command, reg_addr);
     }
 
@@ -215,7 +221,7 @@ private:
     /// @param command 写入命令（WriteReg16=0x2B 或 WriteReg32=0x23）
     /// @param reg_addr 寄存器地址
     /// @param arg 参数值（会根据命令类型自动分解为高低字节）
-    static constexpr std::array<uint8_t, 8> make_write_context(
+    static constexpr U8X8 make_write_context(
         const Command command,
         const RegAddr reg_addr,
         const uint32_t arg
@@ -243,7 +249,7 @@ private:
     /// 自动处理1字节和2字节类型的转换
     template<typename T>
     requires (sizeof(T) <= 2)
-    static constexpr std::array<uint8_t, 8> make_write16_context(
+    static constexpr U8X8 make_write16_context(
         const RegAddr reg_addr, const T code
     ){
         if constexpr(sizeof(T) == 1){
@@ -257,7 +263,7 @@ private:
     /// 自动处理4字节强类型码的位转换
     template<typename T>
     requires (sizeof(T) == 4)
-    static constexpr std::array<uint8_t, 8> make_write32_context(
+    static constexpr U8X8 make_write32_context(
         const RegAddr reg_addr, const T code
     ){
         return make_write_context(Command::WriteReg32, reg_addr, std::bit_cast<uint32_t>(code));
