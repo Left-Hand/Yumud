@@ -372,7 +372,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteSingleHoldingRegister{
-                .reg_addr = 0x0002,
+                .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -394,7 +394,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteSingleHoldingRegister{
-                .reg_addr = 0x0002,
+                .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
             serialize_tcp_msg(ret, msg, unitid, 0x015E).unwrap();
@@ -427,7 +427,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleCoils{
-                .base_addr = 0x0004,
+                .base_address = 0x0004,
                 .quantity = 0x000A,  // 10个线圈
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -449,7 +449,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleCoils{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x0008,  // 8个线圈
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0269).unwrap();
@@ -482,7 +482,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleRegisters{
-                .base_addr = 0x0004,
+                .base_address = 0x0004,
                 .quantity = 0x0002,  // 2个寄存器
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -504,7 +504,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x0002,  // 2个寄存器
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0268).unwrap();
@@ -594,7 +594,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::MaskWriteRegister{
-                .reg_addr = 0x0004,
+                .reg_address = 0x0004,
                 .and_mask = 0xFF00,
                 .or_mask = 0x00FF
             };
@@ -619,7 +619,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::MaskWriteRegister{
-                .reg_addr = 0x0010,
+                .reg_address = 0x0010,
                 .and_mask = 0x0F0F,
                 .or_mask = 0xF0F0
             };

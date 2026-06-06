@@ -70,14 +70,12 @@ public:
         return Self();
     }
 
-    // __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
-    //     Self self = Self();
-    //     self.dlc = ClassicCanDlc::from_length(len);
-    //     return self;
-    // }
-
-    __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
-        return Self(std::move(array), ClassicCanDlc::full());
+    __attribute__((always_inline)) static constexpr Self 
+    from_u8x8(
+        U8X8 array, 
+        const ClassicCanDlc dlc = ClassicCanDlc::full()
+    ){
+        return Self(std::move(array), dlc);
     }
 
     __attribute__((always_inline)) static constexpr Self from_empty(){
@@ -164,19 +162,13 @@ public:
     }
 
     /// \brief 从64位整数和长度创建一个数据帧
-    __attribute__((always_inline)) static constexpr Self from_u64_and_dlc(
+    __attribute__((always_inline)) static constexpr Self from_u64(
         const uint64_t int_val,
-        const ClassicCanDlc dlc
+        const ClassicCanDlc dlc = ClassicCanDlc::full()
     ){
         return Self(std::bit_cast<U8X8>(int_val),dlc);
     }
 
-    /// \brief 从64位整数创建一个长度为8的数据帧
-    __attribute__((always_inline)) static constexpr Self from_u64(
-        const uint64_t int_val
-    ){
-        return Self(std::bit_cast<U8X8>(int_val), ClassicCanDlc::full());
-    }
 
     /// \brief 从数组和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(

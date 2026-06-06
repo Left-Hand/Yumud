@@ -79,7 +79,7 @@ public:
     ) noexcept{
         return Self(
             CanIdentifier::from_sxx32_rxmir(id_bits), 
-            Payload::from_u64_and_dlc(payload_bits, ClassicCanDlc::from_bits(dlc_bits))
+            Payload::from_u64(payload_bits, ClassicCanDlc::from_bits(dlc_bits))
         );
     }
 

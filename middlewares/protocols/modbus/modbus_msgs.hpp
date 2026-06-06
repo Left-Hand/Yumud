@@ -110,13 +110,13 @@ struct [[nodiscard]] ReadCoils final{
 
 
     //基地址
-    uint16_t base_addr;
+    uint16_t base_address;
 
     //响应数量
     uint16_t quantity; 
 
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 // REQ[2] 读取离散输入
@@ -125,13 +125,13 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadDiscreteInputs;
 
     //基地址
-    uint16_t base_addr;
+    uint16_t base_address;
 
     //数量
     uint16_t quantity; 
 
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 // REQ[3] 读取保持寄存器
@@ -140,12 +140,12 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadHoldingRegisters;
 
     //基地址
-    uint16_t base_addr;
+    uint16_t base_address;
 
     //数量
     uint16_t quantity; 
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 // REQ[4] 读取输入寄存器
@@ -154,12 +154,12 @@ struct [[nodiscard]] ReadInputRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadInputRegisters;
 
     //基地址
-    uint16_t base_addr;
+    uint16_t base_address;
 
     //数量(1至125(0x7D))
     uint16_t quantity; 
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 // REQ[5] 写入单个线圈
@@ -211,10 +211,10 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     using Self = WriteSingleHoldingRegister;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleHoldingRegister;
 
-    uint16_t reg_addr;
+    uint16_t reg_address;
     uint16_t reg_value;
 
-    DEF_MODBUS_SERDE_U16FIELDS(reg_addr, reg_value)
+    DEF_MODBUS_SERDE_U16FIELDS(reg_address, reg_value)
 };
 
 
@@ -224,7 +224,7 @@ struct [[nodiscard]] WriteMultipleCoils final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleCoils;
     //length not constant
 
-    uint16_t base_addr;
+    uint16_t base_address;
     std::span<const uint8_t> coils_values;
 
     constexpr size_t context_length() const noexcept {
@@ -240,8 +240,8 @@ struct [[nodiscard]] WriteMultipleCoils final{
             const uint16_t quantity = static_cast<uint16_t>(coils_values.size());
 
             const std::array<uint8_t, 4> buffer = {
-                static_cast<uint8_t>(self.base_addr >> 8),
-                static_cast<uint8_t>(self.base_addr & 0xFF),
+                static_cast<uint8_t>(self.base_address >> 8),
+                static_cast<uint8_t>(self.base_address & 0xFF),
                 static_cast<uint8_t>(quantity >> 8),
                 static_cast<uint8_t>(quantity & 0xFF)
             };
@@ -264,15 +264,15 @@ struct [[nodiscard]] WriteMultipleCoils final{
         if(const auto res = dsrz.compatible_with_length(4);
             res.is_err()) return Err(res.unwrap_err());
         
-        uint16_t base_addr;
+        uint16_t base_address;
         uint16_t quantity;
-        bytes_fill_u16be_args(dsrz.take_cursor_and_inc(4), base_addr, quantity);
+        bytes_fill_u16be_args(dsrz.take_cursor_and_inc(4), base_address, quantity);
 
         if(const auto res = dsrz.compatible_with_length(quantity);
             res.is_err()) return Err(res.unwrap_err());
         
         return Ok(Self{
-            .base_addr = base_addr,
+            .base_address = base_address,
             .coils_values = std::span(dsrz.take_cursor_and_inc(quantity), quantity)
         });
     }
@@ -285,7 +285,7 @@ struct [[nodiscard]] WriteMultipleRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleRegisters;
     //length not constant
 
-    uint16_t base_addr;
+    uint16_t base_address;
     std::span<const uint16_t> reg_values;
 
     constexpr size_t context_length() const noexcept {
@@ -302,8 +302,8 @@ struct [[nodiscard]] WriteMultipleRegisters final{
             const uint8_t num_bytes = static_cast<uint8_t>(quantity * 2);
 
             const std::array<uint8_t, 5> buffer = {
-                static_cast<uint8_t>(self.base_addr >> 8),
-                static_cast<uint8_t>(self.base_addr & 0xFF),
+                static_cast<uint8_t>(self.base_address >> 8),
+                static_cast<uint8_t>(self.base_address & 0xFF),
                 static_cast<uint8_t>(quantity >> 8),
                 static_cast<uint8_t>(quantity & 0xFF),
                 static_cast<uint8_t>(num_bytes)
@@ -338,11 +338,11 @@ struct [[nodiscard]] MaskWriteRegister final{
     using Self = MaskWriteRegister;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::MaskWriteRegister;
 
-    uint16_t reg_addr;
+    uint16_t reg_address;
     uint16_t and_mask;
     uint16_t or_mask;
 
-    DEF_MODBUS_SERDE_U16FIELDS(reg_addr, and_mask, or_mask)
+    DEF_MODBUS_SERDE_U16FIELDS(reg_address, and_mask, or_mask)
 };
 
 
@@ -567,10 +567,10 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
     using Self = WriteSingleHoldingRegister;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleHoldingRegister;
 
-    uint16_t reg_addr;
+    uint16_t reg_address;
     uint16_t reg_value;
 
-    DEF_MODBUS_SERDE_U16FIELDS(reg_addr, reg_value)
+    DEF_MODBUS_SERDE_U16FIELDS(reg_address, reg_value)
 };
 
 
@@ -580,10 +580,10 @@ struct [[nodiscard]] WriteMultipleCoils final{
     using Self = WriteMultipleCoils;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleCoils;
 
-    uint16_t base_addr;
+    uint16_t base_address;
     uint16_t quantity;
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 
@@ -593,10 +593,10 @@ struct [[nodiscard]] WriteMultipleRegisters final{
     using Self = WriteMultipleRegisters;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleRegisters;
 
-    uint16_t base_addr;
+    uint16_t base_address;
     uint16_t quantity;
 
-    DEF_MODBUS_SERDE_U16FIELDS(base_addr, quantity)
+    DEF_MODBUS_SERDE_U16FIELDS(base_address, quantity)
 };
 
 
@@ -644,11 +644,11 @@ struct [[nodiscard]] MaskWriteRegister final{
     using Self = MaskWriteRegister;
     static constexpr FunctionCode FUNC_CODE = FunctionCode::MaskWriteRegister;
 
-    uint16_t reg_addr;
+    uint16_t reg_address;
     uint16_t and_mask;
     uint16_t or_mask;
 
-    DEF_MODBUS_SERDE_U16FIELDS(reg_addr, and_mask, or_mask)
+    DEF_MODBUS_SERDE_U16FIELDS(reg_address, and_mask, or_mask)
 };
 
 

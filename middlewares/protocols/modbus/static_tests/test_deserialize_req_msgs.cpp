@@ -45,7 +45,7 @@ static constexpr Deserializer make_dsrz(std::span<const uint8_t> buf){
             return req_msgs::ReadCoils::deserialize_from(dsrz).unwrap();
         }();
 
-        static_assert(msg.base_addr == 0x00);
+        static_assert(msg.base_address == 0x00);
         static_assert(msg.quantity == 0x02);
     }
 }

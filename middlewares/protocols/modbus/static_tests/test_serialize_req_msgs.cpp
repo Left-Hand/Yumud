@@ -49,7 +49,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadCoils{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x08,
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0011).unwrap();
@@ -82,7 +82,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x02,
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -106,7 +106,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
-                .base_addr = 100,
+                .base_address = 100,
                 .quantity = 0x01,
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -131,7 +131,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x02,
             };
             serialize_tcp_msg(ret, msg, unitid, 0).unwrap();
@@ -159,7 +159,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x02,
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0097).unwrap();
@@ -187,7 +187,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
-                .base_addr = 100,
+                .base_address = 100,
                 .quantity = 0x01,
             };
             serialize_tcp_msg(ret, msg, unitid, 0).unwrap();
@@ -223,7 +223,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadInputRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .quantity = 0x02,
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0097).unwrap();
@@ -315,7 +315,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::WriteSingleHoldingRegister{
-                .reg_addr = 0x0002,
+                .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -338,7 +338,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::WriteSingleHoldingRegister{
-                .reg_addr = 0x0002,
+                .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
             serialize_tcp_msg(ret, msg, unitid, 0x015E).unwrap();
@@ -371,7 +371,7 @@ struct [[nodiscard]] Serializer final{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
             const auto msg = req_msgs::WriteMultipleRegisters{
-                .base_addr = 0x0004,
+                .base_address = 0x0004,
                 .reg_values = std::span(values),
             };
             serialize_rtu_msg(ret, msg, nodeid).unwrap();
@@ -403,7 +403,7 @@ struct [[nodiscard]] Serializer final{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
             const auto msg = req_msgs::WriteMultipleRegisters{
-                .base_addr = 0x0000,
+                .base_address = 0x0000,
                 .reg_values = std::span(values),
             };
             serialize_tcp_msg(ret, msg, unitid, 0x0268).unwrap();
@@ -479,7 +479,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::MaskWriteRegister{
-                .reg_addr = 0x0004,
+                .reg_address = 0x0004,
                 .and_mask = 0xFF00,
                 .or_mask = 0x00FF
             };
@@ -505,7 +505,7 @@ struct [[nodiscard]] Serializer final{
         constexpr auto serializer = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::MaskWriteRegister{
-                .reg_addr = 0x0010,
+                .reg_address = 0x0010,
                 .and_mask = 0x0F0F,
                 .or_mask = 0xF0F0
             };
