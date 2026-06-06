@@ -1,4 +1,4 @@
-#include "zdt_stepper_msg.hpp"
+#include "../zdt_stepper_msg.hpp"
 
 using namespace ymd;
 using namespace ymd::robots::zdtmotor;
