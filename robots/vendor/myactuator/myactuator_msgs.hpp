@@ -279,7 +279,7 @@ struct [[nodiscard]] GetPidParameter final{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         return Ok(Self{
             .pid_idx = std::bit_cast<PidIndex>(bytes[0]),
-            .value = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<3, 4>()))
+            .value = math::fp32::from_bits(bytes_to_int_le<uint32_t>(bytes.subspan<3, 4>()))
         });
     }
 };
@@ -329,9 +329,9 @@ struct [[nodiscard]] _MotorStatusReport{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived self;
         self.motor_temperature.bits = bytes[0];
-        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
-        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
-        self.axis_degrees.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        self.q_current.bits = bytes_to_int_le<int16_t>(bytes.subspan<1, 2>());
+        self.axis_speed.bits = bytes_to_int_le<int16_t>(bytes.subspan<3, 2>());
+        self.axis_degrees.bits = bytes_to_int_le<int16_t>(bytes.subspan<5, 2>());
         return Ok(self);
     };
 };
@@ -352,9 +352,9 @@ struct [[nodiscard]] _MotorStatusReport2{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived self;
         self.motor_temperature.bits = bytes[0];
-        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
-        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
-        self.axis_lap_angle_code.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        self.q_current.bits = bytes_to_int_le<uint16_t>(bytes.subspan<1, 2>());
+        self.axis_speed.bits = bytes_to_int_le<uint16_t>(bytes.subspan<3, 2>());
+        self.axis_lap_angle_code.bits = bytes_to_int_le<uint16_t>(bytes.subspan<5, 2>());
         return Ok(self);
     };
 };

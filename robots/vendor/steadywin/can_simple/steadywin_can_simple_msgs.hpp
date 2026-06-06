@@ -7,6 +7,12 @@
 #include <utility>
 
 namespace ymd::robots::steadywin::can_simple{
+
+static constexpr math::fp32 le_byte_to_fp32(
+    std::span<const uint8_t, 4> bytes
+){
+    return math::fp32::from_bits(bytes_to_int_le<int32_t>(bytes));
+}
 namespace req_msgs{
 using namespace steadywin::primitive;
 
@@ -410,7 +416,7 @@ struct [[nodiscard]] HeartbeatV513 final{
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         const auto self = Self{
             .axis_fault_flags = std::bit_cast<AxisFaultFlags>(
-                le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())
+                bytes_to_int_le<uint32_t>(bytes.subspan<0, 4>())
             ),
             .axis_state = ({
                 const auto res = try_into_axis_state(bytes[4]); 
@@ -449,7 +455,7 @@ struct [[nodiscard]] GetError final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self;
-        self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
+        self.motor_exception = bytes_to_int_le<uint64_t>(bytes);
         return Ok(self);
     }
 
@@ -485,7 +491,7 @@ struct MitControl{
 
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 5> bytes){
-        const uint16_t position_code_bits = le_bytes_to_int<uint16_t>(bytes.subspan<1, 2>());
+        const uint16_t position_code_bits = bytes_to_int_le<uint16_t>(bytes.subspan<1, 2>());
         const int16_t speed_code_bits = 
             (static_cast<int16_t>(bytes[3]) << 4)
             | (static_cast<int16_t>(bytes[4]) >> 4);
@@ -514,10 +520,10 @@ struct [[nodiscard]] GetEncoderEstimates final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            // .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
-            // .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
-            .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
-            .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
+            // .position = std::bit_cast<math::fp32>(bytes_to_int_le<uint32_t>(bytes.subspan<0, 4>())),
+            // .velocity = std::bit_cast<math::fp32>(bytes_to_int_le<uint32_t>(bytes.subspan<4, 4>()))
+            .position = std::bit_cast<math::fp32>(bytes_to_int_le<uint32_t>(bytes.subspan<0, 4>())),
+            .velocity = std::bit_cast<math::fp32>(bytes_to_int_le<uint32_t>(bytes.subspan<4, 4>()))
         };
         return Ok(self);
     }
@@ -538,8 +544,8 @@ struct [[nodiscard]] GetEncoderCount final{
 
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
-        const iq14 multilap_turns = iq14::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>()));
-        const uq32 lap_turns = uq32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()) << (32 - 14));
+        const iq14 multilap_turns = iq14::from_bits(bytes_to_int_le<int32_t>(bytes.subspan<0, 4>()));
+        const uq32 lap_turns = uq32::from_bits(bytes_to_int_le<uint32_t>(bytes.subspan<4, 4>()) << (32 - 14));
         Self self{
             .multilap_angle = Angular<iq14>::from_turns(multilap_turns),
             .lap_angle = Angular<uq32>::from_turns(lap_turns),
@@ -565,8 +571,8 @@ struct [[nodiscard]] GetIq final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            .iq_setpoint = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
-            .iq_measured = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
+            .iq_setpoint = le_byte_to_fp32(bytes.subspan<0, 4>()),
+            .iq_measured = le_byte_to_fp32(bytes.subspan<4, 4>())
         };
         return Ok(self);
     }
@@ -589,8 +595,8 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            .bus_voltage = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
-            .bus_current = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+            .bus_voltage = le_byte_to_fp32(bytes.subspan<0, 4>()),
+            .bus_current = le_byte_to_fp32(bytes.subspan<4, 4>())
         };
         return Ok(self);
     }
@@ -613,8 +619,8 @@ struct [[nodiscard]] GetTorques final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            .torque_setpoint = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
-            .torque_measured = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+            .torque_setpoint = le_byte_to_fp32(bytes.subspan<0, 4>()),
+            .torque_measured = le_byte_to_fp32(bytes.subspan<4, 4>())
         };
         return Ok(self);
     }
@@ -637,8 +643,8 @@ struct [[nodiscard]] GetPowers final{
     static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            .eletrical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
-            .mechanical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+            .eletrical_power = le_byte_to_fp32(bytes.subspan<0, 4>()),
+            .mechanical_power = le_byte_to_fp32(bytes.subspan<4, 4>())
         };
         return Ok(self);
     }

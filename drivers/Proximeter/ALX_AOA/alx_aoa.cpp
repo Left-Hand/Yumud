@@ -57,7 +57,7 @@ private:
 
 
 template<typename T>
-[[nodiscard]] static constexpr T be_bytes_to_int(
+[[nodiscard]] static constexpr T bytes_to_int_be(
     const std::span<const uint8_t, sizeof(T)> bytes)
 {
     using U = std::make_unsigned_t<T>;
@@ -74,7 +74,7 @@ template<typename T>
 [[nodiscard]] static constexpr Result<RequestCommand, Error> parse_command(
     const std::span<const uint8_t, 2> bytes
 ){
-    const auto bits = be_bytes_to_int<uint16_t>(bytes);
+    const auto bits = bytes_to_int_be<uint16_t>(bytes);
     switch(bits){
         case static_cast<uint16_t>(RequestCommand::Location):
             return Ok(RequestCommand::Location);
@@ -88,28 +88,28 @@ template<typename T>
 [[nodiscard]] static constexpr Result<DeviceIdCode, Error> parse_device_id(
     const std::span<const uint8_t, 4> bytes
 ){
-    const auto bits = be_bytes_to_int<uint32_t>(bytes);
+    const auto bits = bytes_to_int_be<uint32_t>(bytes);
     return Ok(DeviceIdCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<TargetAngleCode, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
-    const auto bits = be_bytes_to_int<int16_t>(bytes);
+    const auto bits = bytes_to_int_be<int16_t>(bytes);
     return Ok(TargetAngleCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<TargetDistanceCode, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
-    const auto bits = be_bytes_to_int<uint32_t>(bytes);
+    const auto bits = bytes_to_int_be<uint32_t>(bytes);
     return Ok(TargetDistanceCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<TargetStatus, Error> parse_tag_status(
     const std::span<const uint8_t, 2> bytes
 ){
-    const auto bits = be_bytes_to_int<uint16_t>(bytes);
+    const auto bits = bytes_to_int_be<uint16_t>(bytes);
     if(bits != static_cast<uint16_t>(TargetStatus::Normal)) 
         return Err(Error::InvalidTagStatus);
     return Ok(TargetStatus{bits});
@@ -118,7 +118,7 @@ template<typename T>
 [[nodiscard]] static constexpr Result<uint16_t, Error> parse_batch_sn(
     const std::span<const uint8_t, 2> bytes
 ){
-    const auto bits = be_bytes_to_int<uint16_t>(bytes);
+    const auto bits = bytes_to_int_be<uint16_t>(bytes);
     return Ok(bits);
 }
 
@@ -313,14 +313,14 @@ Result<Event, Error> Self::parse(){
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+    [[maybe_unused]] const auto seq_id = bytes_to_int_be<uint16_t>(spawner.spawn<2>());
     const auto req_command = ({
         const auto res = parse_command(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+    [[maybe_unused]] const auto protocol_version = bytes_to_int_be<uint16_t>(spawner.spawn<2>());
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){

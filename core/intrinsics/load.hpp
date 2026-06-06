@@ -6,7 +6,7 @@ namespace ymd::intrinsics{
 // 方法3：手动组合两个对齐的字（如你要求的）
 [[nodiscard]] static constexpr uint32_t load_u32_may_unaligned(const uint8_t *addr) {
     if(std::is_constant_evaluated()){
-        return le_bytes_to_int<uint32_t>(std::span<const uint8_t, 4>(addr, 4));
+        return bytes_to_int_le<uint32_t>(std::span<const uint8_t, 4>(addr, 4));
     }
     const uintptr_t addr_val = reinterpret_cast<uintptr_t>(addr);
     const uint32_t *aligned_addr = reinterpret_cast<const uint32_t*>(addr_val & ~3);

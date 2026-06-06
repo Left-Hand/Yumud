@@ -90,7 +90,8 @@ static constexpr Option<ReqCommand> try_into_req_command(const uint8_t b){
 
 
 // CRC-8/MAXIM
-static constexpr uint8_t calc_crc8(std::span<const uint8_t> bytes){
+[[nodiscard]] static constexpr uint8_t 
+calc_crc8(std::span<const uint8_t> bytes){
     // https://www.codeleading.com/article/59474838692/
     // 遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明
 

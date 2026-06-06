@@ -36,7 +36,7 @@ struct [[nodiscard]] ChecksumBuilder final{
         return self;
     }
 
-    [[nodiscard]] uint8_t finalize() const noexcept {
+    [[nodiscard]] uint16_t finalize() const noexcept {
         return checksum;
     }
 };
