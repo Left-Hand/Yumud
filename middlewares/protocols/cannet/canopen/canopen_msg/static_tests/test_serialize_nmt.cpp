@@ -12,7 +12,7 @@ using namespace ymd::canopen::sdo_msgs;
 [[maybe_unused]] static void test_canopen_heartbeat(){
     using Msg = Heartbeat;
     static constexpr auto msg = Msg{
-        .station_nodeid = NodeId::from_u7(5),
+        .station_node_id = NodeId::from_u7(5),
         .station_state = NodeState::Operating
     };
     static constexpr auto can_frame = msg_serde::to_can_frame(msg);
@@ -20,17 +20,17 @@ using namespace ymd::canopen::sdo_msgs;
     static_assert(can_frame.length() == 1);
     static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeState::Operating));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .station_nodeid == NodeId::from_u7(5));
+        .station_node_id == NodeId::from_u7(5));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .station_state == NodeState::Operating);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
-        .station_nodeid == NodeId::from_u7(5));
+        .station_node_id == NodeId::from_u7(5));
 }
 
 [[maybe_unused]] static void test_canopen_node_guarding_request() {
     using Msg = NodeGuardingRequest;
     static constexpr auto msg = Msg{
-        .target_nodeid = NodeId::from_u7(3)
+        .target_node_id = NodeId::from_u7(3)
     };
     static constexpr auto can_frame = msg_serde::to_can_frame(msg);
     static_assert(can_frame.is_standard());
@@ -38,15 +38,15 @@ using namespace ymd::canopen::sdo_msgs;
     static_assert(can_frame.id_u32() == 0x703); // 0x700 | 3
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .target_nodeid == NodeId::from_u7(3));
+        .target_node_id == NodeId::from_u7(3));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
-        .target_nodeid == NodeId::from_u7(3));
+        .target_node_id == NodeId::from_u7(3));
 }
 
 [[maybe_unused]] static void test_canopen_node_guarding_response() {
     using Msg = NodeGuardingResponse;
     static constexpr auto msg = Msg{
-        .station_nodeid = NodeId::from_u7(7),
+        .station_node_id = NodeId::from_u7(7),
         .station_state = NodeState::PreOperational
     };
     static constexpr auto can_frame = msg_serde::to_can_frame(msg);
@@ -56,17 +56,17 @@ using namespace ymd::canopen::sdo_msgs;
     static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeState::PreOperational));
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .station_nodeid == NodeId::from_u7(7));
+        .station_node_id == NodeId::from_u7(7));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .station_state == NodeState::PreOperational);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
-        .station_nodeid == NodeId::from_u7(7));
+        .station_node_id == NodeId::from_u7(7));
 }
 
 [[maybe_unused]] static void test_canopen_emergency() {
     using Msg = Emergency;
     static constexpr auto msg = Msg{
-        .station_nodeid = NodeId::from_u7(5),
+        .station_node_id = NodeId::from_u7(5),
         .error_code = EmcyErrorCode::Communication,
         .error_register = 0x08,
         .manufacturer_specific = {0x11, 0x22, 0x33, 0x44, 0x55}
@@ -86,13 +86,13 @@ using namespace ymd::canopen::sdo_msgs;
     static_assert(can_frame.payload_bytes()[7] == 0x55); // manufacturer_specific[4]
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .station_nodeid == NodeId::from_u7(5));
+        .station_node_id == NodeId::from_u7(5));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .error_code == EmcyErrorCode::Communication);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .error_register == 0x08);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
-        .station_nodeid == NodeId::from_u7(5));
+        .station_node_id == NodeId::from_u7(5));
 }
 
 
@@ -138,7 +138,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     // 测试写请求
     {
         static constexpr auto write_request = Msg{
-            .client_nodeid = NodeId::from_u7(5),
+            .client_node_id = NodeId::from_u7(5),
             .context = SdoExpeditedContextFactory::write_request<uint32_t>(
                 OdIndex{0x1000, 0},
                 uint32_t(0x12345678u)
@@ -152,7 +152,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
         static_assert(CobId(can_frame.identifier().to_stdid()).func_code().is_sdo_request());
         static constexpr auto de_write_request = 
             msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame);
-        static_assert(de_write_request.client_nodeid.to_u7() == 5);
+        static_assert(de_write_request.client_node_id.to_u7() == 5);
     }
     //#endregion
 
@@ -163,7 +163,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
             OdIndex{0x1001, 1});
 
         static constexpr auto read_request = Msg{
-            .client_nodeid = NodeId::from_u7(3),
+            .client_node_id = NodeId::from_u7(3),
             .context = context
         };
         
@@ -173,7 +173,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
         static_assert(read_can_frame.id_u32() == 0x603); // 0x600 + 3 (TxSDO for node 3)
         
         static constexpr auto de_read_req = msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_can_frame);
-        static_assert(de_read_req.client_nodeid.to_u7() == 3);
+        static_assert(de_read_req.client_node_id.to_u7() == 3);
     }
 
 
@@ -187,7 +187,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     
     // 测试写响应
     static constexpr auto write_response = Msg{
-        .server_nodeid = NodeId::from_u7(5),
+        .server_node_id = NodeId::from_u7(5),
         .context = SdoExpeditedContextFactory::write_succeed(
             OdIndex{0x1000, 0}
         )
@@ -199,11 +199,11 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     static_assert(write_resp_can_frame.id_u32() == 0x585); // 0x580 + 5 (RxSDO for node 5)
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(write_resp_can_frame)
-        .server_nodeid == NodeId::from_u7(5));
+        .server_node_id == NodeId::from_u7(5));
         
     // 测试读响应
     static constexpr auto read_response = Msg{
-        .server_nodeid = NodeId::from_u7(3),
+        .server_node_id = NodeId::from_u7(3),
         .context = SdoExpeditedContextFactory::read_response<uint32_t>(
             OdIndex{0x1001, 1},
             uint32_t(0x11223344)
@@ -217,7 +217,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     static_assert(read_resp_can_frame.payload_u64() != 0); // 确保有效载荷不为0
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_resp_can_frame)
-        .server_nodeid == NodeId::from_u7(3));
+        .server_node_id == NodeId::from_u7(3));
 
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_resp_can_frame)
         .context.bytes_u32() == 0x11223344);

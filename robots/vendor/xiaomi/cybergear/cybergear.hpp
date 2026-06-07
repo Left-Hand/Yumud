@@ -89,7 +89,7 @@ public:
         );
     }
 
-    constexpr hal::ClassicCanFrame set_motor_nodeid(const uint8_t new_node_id){
+    constexpr hal::ClassicCanFrame set_motor_node_id(const uint8_t new_node_id){
         const auto extid = CgId::from_parts(
             cybergear::Command::SET_CAN_ID, 
             host_id | (new_node_id << 8), 

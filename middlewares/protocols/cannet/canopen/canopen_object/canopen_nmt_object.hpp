@@ -82,7 +82,7 @@ struct PerdefErrFieldReg{
     constexpr Result<PredefinedError, SdoAbortCode> nth_error(size_t idx){
         if(idx >= error_queue_.size())
             return Err(SdoAbortCode::NoDataAvailable);
-        return Ok();
+        return Ok(error_queue_[idx]);
     }
 
     #if 0

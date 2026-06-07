@@ -91,11 +91,11 @@ struct [[nodiscard]] CobId final{
     }
 
     static constexpr CobId from_parts(
-        const NodeId _nodeid, 
+        const NodeId _node_id, 
         const FunctionCode _fcode
     ){
         const uint16_t bits = static_cast<uint16_t>(
-            _nodeid.to_u7() | 
+            _node_id.to_u7() | 
             static_cast<uint16_t>(_fcode.to_u4() << 7));
 
         return from_bits(bits);

@@ -112,8 +112,8 @@ private:
     struct [[nodiscard]] IdBase final{
         uint16_t count;
 
-        constexpr hal::CanStdId  operator +(const uint8_t nodeid) const noexcept {
-            return hal::CanStdId::from_u11(count + nodeid);
+        constexpr hal::CanStdId  operator +(const uint8_t node_id) const noexcept {
+            return hal::CanStdId::from_u11(count + node_id);
         }
     };
 

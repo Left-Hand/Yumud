@@ -11,12 +11,16 @@ struct MsgSerde;
 
 
 template<typename T>
+requires requires(T t) { t.to_can_frame(); }
 static constexpr auto to_can_frame(const T& self){
-    return MsgSerde<T>::to_can_frame(self);
+    return self.to_can_frame();
 }
 
 template<typename T, VerifyLevel VERIFY_LEVEL = VerifyLevel::Propagate>
+requires requires(const CanFrame& frame) { T::template from_can_frame<VERIFY_LEVEL>(frame); }
 static constexpr auto from_can_frame(const CanFrame & frame){
-    return MsgSerde<T>::template from_can_frame<VERIFY_LEVEL>(frame);
+    return T::template from_can_frame<VERIFY_LEVEL>(frame);
 }
+
+
 }

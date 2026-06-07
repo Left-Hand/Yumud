@@ -46,7 +46,7 @@ namespace {
     // 测试写请求
     {
         static constexpr auto write_request = Msg{
-            .client_nodeid = NodeId::from_u7(5),
+            .client_node_id = NodeId::from_u7(5),
             .context = SdoExpeditedContextFactory::write_request<uint32_t>(
                 OdIndex{0x1000, 0},
                 uint32_t(0x12345678u)
@@ -60,7 +60,7 @@ namespace {
         static_assert(CobId(can_frame.identifier().to_stdid()).func_code().is_sdo_request());
         static constexpr auto de_write_request = 
             msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame);
-        static_assert(de_write_request.client_nodeid.to_u7() == 5);
+        static_assert(de_write_request.client_node_id.to_u7() == 5);
     }
     //#endregion
 
@@ -71,7 +71,7 @@ namespace {
             OdIndex{0x1001, 1});
 
         static constexpr auto read_request = Msg{
-            .client_nodeid = NodeId::from_u7(3),
+            .client_node_id = NodeId::from_u7(3),
             .context = context
         };
         
@@ -81,7 +81,7 @@ namespace {
         static_assert(read_can_frame.id_u32() == 0x603); // 0x600 + 3 (TxSDO for node 3)
         
         static constexpr auto de_read_req = msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_can_frame);
-        static_assert(de_read_req.client_nodeid.to_u7() == 3);
+        static_assert(de_read_req.client_node_id.to_u7() == 3);
     }
 
 
@@ -95,7 +95,7 @@ namespace {
     
     // 测试写响应
     static constexpr auto write_response = Msg{
-        .server_nodeid = NodeId::from_u7(5),
+        .server_node_id = NodeId::from_u7(5),
         .context = SdoExpeditedContextFactory::write_succeed(
             OdIndex{0x1000, 0}
         )
@@ -107,11 +107,11 @@ namespace {
     static_assert(write_resp_can_frame.id_u32() == 0x585); // 0x580 + 5 (RxSDO for node 5)
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(write_resp_can_frame)
-        .server_nodeid == NodeId::from_u7(5));
+        .server_node_id == NodeId::from_u7(5));
         
     // 测试读响应
     static constexpr auto read_response = Msg{
-        .server_nodeid = NodeId::from_u7(3),
+        .server_node_id = NodeId::from_u7(3),
         .context = SdoExpeditedContextFactory::read_response<uint32_t>(
             OdIndex{0x1001, 1},
             uint32_t(0x11223344)
@@ -125,7 +125,7 @@ namespace {
     static_assert(read_resp_can_frame.payload_u64() != 0); // 确保有效载荷不为0
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_resp_can_frame)
-        .server_nodeid == NodeId::from_u7(3));
+        .server_node_id == NodeId::from_u7(3));
 
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(read_resp_can_frame)
         .context.bytes_u32() == 0x11223344);

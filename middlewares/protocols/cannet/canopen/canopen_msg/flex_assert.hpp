@@ -43,7 +43,7 @@ else{\
     }\
 })\
 
-#define CANOPEN_FLEX_EXTERNAL_ASSERT_NONE(expr, ...) \
+#define CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(expr, ...) \
 ({\
     const bool expr_ = bool(expr);\
     if(expr_ == false) [[unlikely]]{\
@@ -62,7 +62,7 @@ else{\
     }\
 })\
 
-#define CANOPEN_FLEX_RETURN_SOME(some) \
+#define CANOPEN_RETURN_SOME(some) \
 ({\
     if constexpr (VERIFY_LEVEL == VerifyLevel::Propagate)\
         return Some(some);\

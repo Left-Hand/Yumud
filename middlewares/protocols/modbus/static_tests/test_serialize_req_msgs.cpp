@@ -78,14 +78,14 @@ struct [[nodiscard]] Serializer final{
     
     {
         // [RTU] 读保持寄存器 (0x03) - 地址0，读取2个寄存器
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_address = 0x0000,
                 .quantity = 0x02,
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 03 00 00 00 02 C4 0B
@@ -102,14 +102,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读保持寄存器 (0x03) - 地址100，读取1个寄存器
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadHoldingRegisters{
                 .base_address = 100,
                 .quantity = 0x01,
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 03 00 64 00 01 CRC  (CRC需要计算)
@@ -311,14 +311,14 @@ struct [[nodiscard]] Serializer final{
 [[maybe_unused]] static void test_ser0x06(){
     {
         // [RTU] 写单个寄存器 (0x06) - 地址2，写入值255
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::WriteSingleHoldingRegister{
                 .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 06 00 02 00 FF CRC
@@ -366,7 +366,7 @@ struct [[nodiscard]] Serializer final{
 [[maybe_unused]] static void test_ser0x10(){
     {
         // [RTU] 写多个寄存器 (0x10) - 地址4开始，写入2个寄存器 [0x0001, 0x1234]
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
@@ -374,7 +374,7 @@ struct [[nodiscard]] Serializer final{
                 .base_address = 0x0004,
                 .reg_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             // serialize_rtu_header(ret, 0, 0).unwrap();
             return ret;
         }();
@@ -435,11 +435,11 @@ struct [[nodiscard]] Serializer final{
 [[maybe_unused]] static void test_ser0x11(){
     {
         // [RTU] 报告从机ID - 无数据负载请求
-        constexpr uint8_t nodeid = 5;
+        constexpr uint8_t node_id = 5;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReportSlaveId{};
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 05 11 CRC
@@ -475,7 +475,7 @@ struct [[nodiscard]] Serializer final{
 [[maybe_unused]] static void test_ser0x16(){
     {
         // [RTU] 掩码写寄存器 - 地址0x0004，AND掩码0xFF00，OR掩码0x00FF
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::MaskWriteRegister{
@@ -483,7 +483,7 @@ struct [[nodiscard]] Serializer final{
                 .and_mask = 0xFF00,
                 .or_mask = 0x00FF
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 16 00 04 FF 00 00 FF CRC
@@ -535,7 +535,7 @@ struct [[nodiscard]] Serializer final{
     {
         // [RTU] 读写多个寄存器 - 读0个寄存器（边界情况）
         // 注意：标准Modbus要求读数量至少为1，此用例测试序列化器行为
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0xAAAA, 0xBBBB};
@@ -546,7 +546,7 @@ struct [[nodiscard]] Serializer final{
                 .write_quantity = 2,
                 .write_reg_values = std::span(values)
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 验证序列化是否正确处理读数量为0的情况
@@ -555,7 +555,7 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读写多个寄存器 - 写数量为0（仅执行读操作）
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ReadWriteRegisters{
@@ -565,7 +565,7 @@ struct [[nodiscard]] Serializer final{
                 .write_quantity = 0x0000,
                 .write_reg_values = {}  // 空span
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期长度: 8(固定头) + 5
@@ -577,11 +577,11 @@ struct [[nodiscard]] Serializer final{
 [[maybe_unused]] static void test_ser0x29(){
     {
         // [RTU] 重启指定从机
-        constexpr uint8_t nodeid = 8;
+        constexpr uint8_t node_id = 8;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = req_msgs::ResetSlave{};
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 08 29 CRC

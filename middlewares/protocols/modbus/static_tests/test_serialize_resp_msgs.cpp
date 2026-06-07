@@ -71,14 +71,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读线圈响应 (0x01) - 返回2个线圈状态
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint8_t values[] = {0x03}; // 2个线圈ON
             const auto msg = resp_msgs::ReadCoils{
                 .coil_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 01 01 03 CRC
@@ -122,14 +122,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读离散输入响应 (0x02) - 返回8个离散输入状态
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint8_t values[] = {0xAA}; // 交替的ON/OFF
             const auto msg = resp_msgs::ReadDiscreteInputs{
                 .discrete_input_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 02 01 AA CRC
@@ -147,14 +147,14 @@ struct [[nodiscard]] Serializer final{
     
     {
         // [RTU] 读保持寄存器响应 (0x03) - 返回2个寄存器值
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x000A, 0x0102};
             const auto msg = resp_msgs::ReadHoldingRegisters{
                 .reg_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 03 04 00 0A 01 02 CRC
@@ -260,14 +260,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读输入寄存器响应 (0x04) - 返回1个寄存器值
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x05DC}; // 1500 decimal
             const auto msg = resp_msgs::ReadInputRegisters{
                 .reg_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 04 02 05 DC CRC
@@ -342,14 +342,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 写单个线圈响应 (0x05) - 地址10，值ON
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteSingleCoil{
                 .coil_addr = 0x000A,  // 地址10
                 .coil_value = 0xFF00,  // ON
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 05 00 0A FF 00 CRC
@@ -368,14 +368,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 写单个寄存器响应 (0x06) - 地址2，值255
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteSingleHoldingRegister{
                 .reg_address = 0x0002,
                 .reg_value = 0x00FF,
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 06 00 02 00 FF CRC
@@ -423,14 +423,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 写多个线圈响应 (0x0f) - 地址4，写入10个线圈
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleCoils{
                 .base_address = 0x0004,
                 .quantity = 0x000A,  // 10个线圈
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 0F 00 04 00 0A CRC
@@ -478,14 +478,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 写多个寄存器响应 (0x10) - 地址4，写入2个寄存器
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::WriteMultipleRegisters{
                 .base_address = 0x0004,
                 .quantity = 0x0002,  // 2个寄存器
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 10 00 04 00 02 CRC
@@ -533,14 +533,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 报告从机ID响应 - 返回从机ID信息
-        constexpr uint8_t nodeid = 5;
+        constexpr uint8_t node_id = 5;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
             const auto msg = resp_msgs::ReportSlaveId{
                 .slave_id_data = std::span(data),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 05 11 01 02 03 04 05 CRC
@@ -590,7 +590,7 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 掩码写寄存器响应 - 地址0x0004，AND掩码0xFF00，OR掩码0x00FF
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             const auto msg = resp_msgs::MaskWriteRegister{
@@ -598,7 +598,7 @@ struct [[nodiscard]] Serializer final{
                 .and_mask = 0xFF00,
                 .or_mask = 0x00FF
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 16 00 04 FF 00 00 FF CRC
@@ -651,14 +651,14 @@ struct [[nodiscard]] Serializer final{
 
     {
         // [RTU] 读写多个寄存器响应 - 返回2个寄存器值
-        constexpr uint8_t nodeid = 1;
+        constexpr uint8_t node_id = 1;
         constexpr auto srz = []{
             auto ret = Serializer{};
             static constexpr uint16_t values[] = {0x0001, 0x1234};
             const auto msg = resp_msgs::ReadWriteRegisters{
                 .read_reg_values = std::span(values),
             };
-            serialize_rtu_msg(ret, msg, nodeid).unwrap();
+            serialize_rtu_msg(ret, msg, node_id).unwrap();
             return ret;
         }();
         // 预期: 01 17 04 00 01 12 34 CRC

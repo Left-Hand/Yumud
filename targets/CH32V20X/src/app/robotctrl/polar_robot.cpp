@@ -292,13 +292,13 @@ void polar_robot_main(){
 
     MOTOR1_UART.init({921600});
 
-    zdtmotor factory1{{.nodeid = {1}}, &MOTOR1_UART};
+    zdtmotor factory1{{.node_id = {1}}, &MOTOR1_UART};
 
     if(&MOTOR1_UART != &MOTOR2_UART){
         MOTOR2_UART.init({921600});
     }
 
-    zdtmotor factory2{{.nodeid = {2}}, &MOTOR2_UART};
+    zdtmotor factory2{{.node_id = {2}}, &MOTOR2_UART};
 
 
     #else
