@@ -327,76 +327,8 @@ public:
     [[nodiscard]] constexpr bool is_ok() const noexcept { return bits_ == NO_ERROR; }
     [[nodiscard]] constexpr bool is_err() const noexcept { return bits_ != NO_ERROR; }
 
-    //不要在外部使用这个函数 因为它有可能返回空指针
-    static constexpr const char * err_to_str(const SdoAbortError err){
-        using Kind = SdoAbortError;
-        switch(err){
-            case Kind::ToggleBitNotAlternated:
-                return "ToggleBitNotAlternated";
-            case Kind::SdoProtocolTimedOut:
-                return "SdoProtocolTimedOut";
-            case Kind::InvalidClientServerCommandSpecifier:
-                return "InvalidClientServerCommandSpecifier";
-            case Kind::InvalidBlockSize:
-                return "InvalidBlockSize";
-            case Kind::InvalidSequenceNumber:
-                return "InvalidSequenceNumber";
-            case Kind::CrcError:
-                return "CrcError";
-            case Kind::OutOfMemory:
-                return "OutOfMemory";
-            case Kind::UnsupportedAccessToObject:
-                return "UnsupportedAccessToObject";
-            case Kind::AttemptToReadWriteOnlyObject:
-                return "AttemptToReadWriteOnlyObject";
-            case Kind::AttemptToWriteReadOnlyObject:
-                return "AttemptToWriteReadOnlyObject";
-            case Kind::ObjectNotInDictionary:
-                return "ObjectNotInDictionary";
-            case Kind::ObjectCannotBeMappedToPdo:
-                return "ObjectCannotBeMappedToPdo";
-            case Kind::ExceedPdoLength:
-                return "ExceedPdoLength";
-            case Kind::GeneralParameterIncompatibility:
-                return "GeneralParameterIncompatibility";
-            case Kind::GeneralInternalIncompatibility:
-                return "GeneralInternalIncompatibility";
-            case Kind::HardwareError:
-                return "HardwareError";
-            case Kind::DataTypeMismatchLengthMismatch:
-                return "DataTypeMismatchLengthMismatch";
-            case Kind::DataTypeMismatchLengthTooHigh:
-                return "DataTypeMismatchLengthTooHigh";
-            case Kind::DataTypeMismatchLengthTooLow:
-                return "DataTypeMismatchLengthTooLow";
-            case Kind::SubIndexDoesNotExist:
-                return "SubIndexDoesNotExist";
-            case Kind::InvalidValueForParameter:
-                return "InvalidValueForParameter";
-            case Kind::ValueTooHigh:
-                return "ValueTooHigh";
-            case Kind::ValueTooLow:
-                return "ValueTooLow";
-            case Kind::MaxLessThanMin:
-                return "MaxLessThanMin";
-            case Kind::ResourceNotAvailable:
-                return "ResourceNotAvailable";
-            case Kind::GeneralError:
-                return "GeneralError";
-            case Kind::DataTransferOrStorageFailed:
-                return "DataTransferOrStorageFailed";
-            case Kind::LocalControlPreventsDataTransfer:
-                return "LocalControlPreventsDataTransfer";
-            case Kind::DeviceStatePreventsDataTransfer:
-                return "DeviceStatePreventsDataTransfer";
-            case Kind::ObjectDictionaryGenerationFailed:
-                return "ObjectDictionaryGenerationFailed";
-            case Kind::NoDataAvailable:
-                return "NoDataAvailable";
-            default:
-                return nullptr;
-        }
-    }
+
+    static const char * err_to_str(const SdoAbortError err);
 
     using enum SdoAbortError;
 private:
@@ -473,7 +405,7 @@ struct SdoExpeditedContextFactory{
     template <typename T, typename D = tmp::size_to_uint_t<sizeof(T)>>
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_request(
+    Self write_request(
         const OdIndex od_index,
         const auto int_val
     ){
@@ -488,7 +420,7 @@ struct SdoExpeditedContextFactory{
     template <size_t Extents>
     requires (Extents <= 4) || (Extents == std::dynamic_extent)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_request(
+    Self write_request(
         const OdIndex od_index,
         const std::span<const uint8_t, Extents> bytes
     ){
@@ -506,17 +438,17 @@ struct SdoExpeditedContextFactory{
     template <size_t Extents>
     requires (Extents <= 4)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_request(
+    Self write_request(
         const OdIndex od_index,
         const std::array<uint8_t, Extents> bytes
     ){
-        return from_write_request(od_index, std::span(bytes));
+        return write_request(od_index, std::span(bytes));
     }
 
     template <size_t Extents>
     requires (Extents <= 4)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_request(
+    Self write_request(
         const OdIndex od_index,
         const std::array<const uint8_t, Extents> bytes
     ){
@@ -528,7 +460,7 @@ struct SdoExpeditedContextFactory{
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_succeed(
+    Self write_succeed(
         const OdIndex od_index
     ){
         constexpr auto SPECIFIER = SdoCommand(SdoCommand::Kind::ServerExpeditedWriteSucceed);
@@ -540,7 +472,7 @@ struct SdoExpeditedContextFactory{
 
 
     [[nodiscard]] __always_inline static constexpr 
-    Self from_read_request(
+    Self read_request(
         const OdIndex od_index
     ){
         constexpr auto SPECIFIER = SdoCommand(SdoCommand::Kind::ClientInitRead);
@@ -553,7 +485,7 @@ struct SdoExpeditedContextFactory{
     template <typename T, typename D = tmp::size_to_uint_t<sizeof(T)>>
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_read_response(
+    Self read_response(
         const OdIndex od_index,
         const auto int_val
     ){
@@ -568,7 +500,7 @@ struct SdoExpeditedContextFactory{
     template <size_t Extents>
     requires (Extents <= 4)
     [[nodiscard]] __always_inline static constexpr 
-    Self from_read_response(
+    Self read_response(
         const OdIndex od_index,
         const std::array<uint8_t, Extents> bytes
     ){
@@ -580,7 +512,7 @@ struct SdoExpeditedContextFactory{
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    Self from_exception(
+    Self sdo_exception(
         const OdIndex od_index,
         const SdoAbortCode abort_code
     ){

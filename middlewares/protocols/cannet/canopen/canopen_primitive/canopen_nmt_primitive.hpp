@@ -77,12 +77,49 @@ struct [[nodiscard]] EmcyErrorCode{
     static constexpr EmcyError OK = static_cast<EmcyError>(0x0000);
     constexpr EmcyErrorCode(const EmcyError kind) : kind_(kind) {}
 
-    static constexpr Option<Self> try_from_bits(const uint16_t bits){
-        if(bits == 0) return Some(Self(OK));
-        if(const auto * str = err_to_str(static_cast<EmcyError>(bits)); str != nullptr)
-            return Some(Self(static_cast<EmcyError>(bits)));
-        return None;
+    static constexpr Option<Self> try_from_bits(const uint16_t b){
+        if(b == 0) return Some(Self(OK));
+        bool finded = false;
+        switch(static_cast<EmcyError>(b)){
+            case Kind::Generic: [[fallthrough]];
+            case Kind::Current: [[fallthrough]];
+            case Kind::InputCurrent: [[fallthrough]];
+            case Kind::InternalCurrent: [[fallthrough]];
+            case Kind::OutputCurrent: [[fallthrough]];
+            case Kind::Voltage: [[fallthrough]];
+            case Kind::BusbarVoltage: [[fallthrough]];
+            case Kind::InternalVoltage: [[fallthrough]];
+            case Kind::OutputVoltage: [[fallthrough]];
+            case Kind::Temperature: [[fallthrough]];
+            case Kind::SituationTemperature: [[fallthrough]];
+            case Kind::InternalTemperature: [[fallthrough]];
+            case Kind::Hardware: [[fallthrough]];
+            case Kind::Software: [[fallthrough]];
+            case Kind::InternalSoftware: [[fallthrough]];
+            case Kind::UserSoftware: [[fallthrough]];
+            case Kind::SetterSoftware: [[fallthrough]];
+            case Kind::AdjuntDevice: [[fallthrough]];
+            case Kind::Monitor: [[fallthrough]];
+            case Kind::Communication: [[fallthrough]];
+            case Kind::CommunicationOverload: [[fallthrough]];
+            case Kind::Passive: [[fallthrough]];
+            case Kind::NodeProtect: [[fallthrough]];
+            case Kind::BusRecovery: [[fallthrough]];
+            case Kind::Protocol: [[fallthrough]];
+            case Kind::UnhandledPdo: [[fallthrough]];
+            case Kind::OutOfRange: [[fallthrough]];
+            case Kind::External: [[fallthrough]];
+            case Kind::AddictiveFunction: [[fallthrough]];
+            case Kind::Specified: [[fallthrough]];
+                finded = true;
+                break;
+        };
+
+        if(not finded)
+            return None;
+        return Some(Self(static_cast<EmcyError>(b)));
     }
+
     constexpr Kind kind() const noexcept { return kind_; }
     [[nodiscard]] constexpr bool operator ==(const Kind kind) const noexcept { return kind_ == kind; }
     [[nodiscard]] constexpr bool is_ok() const noexcept {

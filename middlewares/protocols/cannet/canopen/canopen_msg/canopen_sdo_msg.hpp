@@ -9,21 +9,21 @@ namespace ymd::canopen::sdo_msgs{
 using namespace canopen::primitive;
 
 
-struct [[nodiscard]] ExpeditedRequest{
+struct [[nodiscard]] ExpeditedRequest final{
     NodeId client_nodeid;
     SdoExpeditedContext context;
 
     [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
-        return context.to_can_frame(client_nodeid.with_func_code(FunctionCode::ReqSdo));
+        return context.to_can_frame(client_nodeid.to_cobid(FunctionCode::ReqSdo));
     }
 };
 
-struct [[nodiscard]] ExpeditedResponse{
+struct [[nodiscard]] ExpeditedResponse final{
     NodeId server_nodeid;
     SdoExpeditedContext context;
 
     [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
-        return context.to_can_frame(server_nodeid.with_func_code(FunctionCode::RespSdo));
+        return context.to_can_frame(server_nodeid.to_cobid(FunctionCode::RespSdo));
     }
 };
 }
