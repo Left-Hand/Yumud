@@ -11,7 +11,7 @@ namespace ymd{
 
 static constexpr void bit_cursor_store_bits(
     __restrict__ uint8_t * ptr,
-    const size_t offset_bits,
+    const size_t bit_offset,
     __restrict__ const uint8_t * data,
     const size_t data_width
 );
@@ -19,23 +19,23 @@ static constexpr void bit_cursor_store_bits(
 
 struct [[nodiscard]] BitCursor final {
     uint8_t* ptr;
-    size_t offset_bits;
+    size_t bit_offset;
 
     [[nodiscard]] constexpr bool is_aligned_to_byte() const {
-        return (offset_bits & 0b111) == 0;
+        return (bit_offset & 0b111) == 0;
     }
 
     [[nodiscard]] /* constexpr */ bool is_aligned_to_word() const {
-        if((offset_bits & 0b111) != 0) return false;
-        const uint8_t * end = ptr + (offset_bits >> 3);
+        if((bit_offset & 0b111) != 0) return false;
+        const uint8_t * end = ptr + (bit_offset >> 3);
         const uintptr_t byte_addr = reinterpret_cast<uintptr_t>(end);
         return (byte_addr & (sizeof(size_t) - 1)) == 0;
     }
     
     constexpr void push_bits(const uint8_t* data, const size_t data_width) {
         auto& self = *this;
-        bit_cursor_store_bits(self.ptr, self.offset_bits, data, data_width);
-        self.offset_bits += data_width;
+        bit_cursor_store_bits(self.ptr, self.bit_offset, data, data_width);
+        self.bit_offset += data_width;
     }
 
     template<typename T>
@@ -43,6 +43,13 @@ struct [[nodiscard]] BitCursor final {
         static constexpr size_t LEN = sizeof(T);
         const auto src = std::bit_cast<std::array<uint8_t, LEN>>(int_val);
         push_bits(src.data(), LEN * 8);
+    }
+
+    template<typename T>
+    constexpr void push_int(const T int_val, const size_t width) {
+        static constexpr size_t LEN = sizeof(T);
+        const auto src = std::bit_cast<std::array<uint8_t, LEN>>(int_val);
+        push_bits(src.data(), width);
     }
 
     template<size_t N>
@@ -101,15 +108,15 @@ static constexpr auto generate_masks = []() {
 
 static constexpr void bit_cursor_store_bits(
 	__restrict__ uint8_t * buffer,
-	const size_t offset_bits,
+	const size_t bit_offset,
 	__restrict__ const uint8_t * data,
 	const size_t data_width
 ) {
     if (data_width == 0) return;
     
 
-    if ((offset_bits & 7) == 0 && (data_width & 7) == 0) {
-        uint8_t * dst = buffer + (offset_bits >> 3);
+    if ((bit_offset & 7) == 0 && (data_width & 7) == 0) {
+        uint8_t * dst = buffer + (bit_offset >> 3);
         for(size_t i = 0; i < (data_width >> 3); i++){
             dst[i] = data[i];
         }
@@ -121,7 +128,7 @@ static constexpr void bit_cursor_store_bits(
     auto& shift_masks = generate_masks.shift_masks;
 
     
-    size_t bit_pos = offset_bits;
+    size_t bit_pos = bit_offset;
     size_t data_bit_pos = 0;
     size_t remaining = data_width;
     
