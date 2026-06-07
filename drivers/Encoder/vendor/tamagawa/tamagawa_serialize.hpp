@@ -5,12 +5,10 @@
 
 namespace ymd::drivers::tamagawa{
 
-using namespace primitive;
-
-
 template<typename Serializer, typename Msg>
-static constexpr Result<void, typename Serializer::Error> serialize_msg(
-    Serializer & serializer,
+static constexpr Result<void, typename Serializer::Error> 
+serialize_msg(
+    Serializer & srz,
     const Msg & msg
 ){
 
@@ -23,14 +21,14 @@ static constexpr Result<void, typename Serializer::Error> serialize_msg(
             static_cast<uint8_t>(CF_CODE),
         };
 
-        if(const auto res = serializer.push_bytes(buffer); 
+        if(const auto res = srz.push_bytes(buffer); 
             res.is_err()) return Err(res.unwrap_err());
     }
 
     if constexpr(CONTEXT_LENGTH != 0){
         //context
         {
-            if(const auto res = msg.serialize_context(serializer); 
+            if(const auto res = msg.serialize_context(srz); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -39,7 +37,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_msg(
         {
             //crc字段为小端序
             const uint8_t checksum = ChecksumBuilder::from_default()
-                .push_bytes(serializer.collected_bytes())
+                .push_bytes(srz.collected_bytes())
                 .finalize()
             ;
     
@@ -47,7 +45,7 @@ static constexpr Result<void, typename Serializer::Error> serialize_msg(
                 static_cast<uint8_t>(checksum),
             };
     
-            if(const auto res = serializer.push_bytes(buffer); 
+            if(const auto res = srz.push_bytes(buffer); 
                 res.is_err()) return Err(res.unwrap_err());
         }
     }
@@ -57,18 +55,18 @@ static constexpr Result<void, typename Serializer::Error> serialize_msg(
 
 template<typename Serializer, typename Request>
 static constexpr Result<void, typename Serializer::Error> serialize_request(
-    Serializer & serializer,
+    Serializer & srz,
     const Request & request
 ){
-    return serialize_msg(serializer, request);
+    return serialize_msg(srz, request);
 }
 
 template<typename Serializer, typename Response>
 static constexpr Result<void, typename Serializer::Error> serialize_response(
-    Serializer & serializer,
+    Serializer & srz,
     const Response & response
 ){
-    return serialize_msg(serializer, response);
+    return serialize_msg(srz, response);
 }
 
 

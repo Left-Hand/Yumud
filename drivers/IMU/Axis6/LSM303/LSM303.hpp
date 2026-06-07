@@ -8,7 +8,7 @@
 // CC 4.0 BY-SA版权
 // https://blog.csdn.net/cp1300/article/details/86997168
 
-#include "details/LSM303_Prelude.hpp"
+#include "lsm303_prelude.hpp"
 
 namespace ymd::drivers{
 
@@ -47,5 +47,6 @@ private:
     IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val);
     IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val);
 };
+
 
 }

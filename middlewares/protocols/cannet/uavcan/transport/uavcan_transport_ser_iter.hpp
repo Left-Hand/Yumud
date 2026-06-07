@@ -21,19 +21,23 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
     };
 
     struct [[nodiscard]] alignas(4) State final{
+        using Self = State;
+
         uint16_t bytes_offset;
         bool toggle_bit;
 
         static constexpr State zero() {
-            return State{0, false};
+            return Self{.bytes_offset = 0, .toggle_bit = false};
         }
     };
 
     explicit constexpr Bytes2CanFrameSlicingIterator(const Parameters & params):params_(params){
+        #ifndef _NDEBUG
         if(params_.src_bytes.data() == nullptr)
             __builtin_trap();
         if(params_.src_bytes.size() > 256) // UAVCAN 有最大传输大小限制
             __builtin_trap();
+        #endif
     }
 
     [[nodiscard]] constexpr hal::ClassicCanFrame next() {
@@ -47,12 +51,12 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
 
         const size_t pending_length = src_bytes.size() - bytes_offset;
 
-        std::array<uint8_t, 8> payload;
-        uint8_t * cursor = payload.data();
+        std::array<uint8_t, 8> u8x8;
+        uint8_t * cursor = u8x8.data();
 
         if(bytes_offset == 0){//first frame
             if(pending_length > 7){//multi frame
-                const auto checksum = CrcBuilder::from_default()
+                const auto checksum = ChecksumBuilder::from_default()
                     .push_signature(params_.signature)
                     .push_bytes(src_bytes)
                     .finalize()
@@ -69,7 +73,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
         // 1：对于Single frame transfer ，End of transfer 这一 bit 位永远为 1。
         // 2：对于Multiframe transfer ，如果当前帧是数据包的最后一帧，该位为1 ，否则为0。
         const auto [copy_len, is_end_of_transfer] = [&]() -> std::pair<size_t, bool>{ 
-            const int32_t available_capacity = 7 - (cursor - payload.data());
+            const int32_t available_capacity = 7 - (cursor - u8x8.data());
             
             if(static_cast<int32_t>(pending_length) <= available_capacity){
                 return std::make_pair(pending_length, true);
@@ -103,7 +107,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
 
         return hal::ClassicCanFrame::from_parts(
             params_.header.to_can_id(),
-            hal::ClassicCanPayload::from_bytes(std::span(payload.data(), cursor))
+            hal::ClassicCanPayload::from_bytes(std::span(u8x8.data(), cursor))
         );
     }
 
@@ -116,16 +120,16 @@ private:
     State state_ = State::zero();
 
     [[nodiscard]] static constexpr 
-    uint8_t * u8ptr_push_be_u16(uint8_t * ptr, uint16_t val){
-        ptr[0] = uint8_t(val >> 8);
-        ptr[1] = uint8_t(val & 0xff);
-        return ptr + 2;
+    uint8_t * u8ptr_push_be_u16(uint8_t * cursor, uint16_t val){
+        cursor[0] = uint8_t(val >> 8);
+        cursor[1] = uint8_t(val & 0xff);
+        return cursor + 2;
     }
 
     [[nodiscard]] static constexpr 
-    uint8_t * u8ptr_push_u8(uint8_t * ptr, uint8_t val){
-        ptr[0] = uint8_t(val & 0xff);
-        return ptr + 1;
+    uint8_t * u8ptr_push_u8(uint8_t * cursor, uint8_t val){
+        cursor[0] = uint8_t(val & 0xff);
+        return cursor + 1;
     }
 };
 

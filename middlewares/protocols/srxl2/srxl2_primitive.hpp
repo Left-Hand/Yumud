@@ -8,26 +8,26 @@
 namespace ymd::srxl2{
 
 
-enum class DeviceType:uint8_t{
+enum class [[nodiscard]] DeviceType:uint8_t{
     None = 0x00,
     RemoteReceiver = 0x1,
     Receiver = 0x2,
 };
 
 
-struct DeviceId{
+struct [[nodiscard]] DeviceId final{
     uint8_t index : 4;
     DeviceType type : 4;
 
-    constexpr uint8_t to_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return std::bit_cast<uint8_t>(*this);
     }
 
-    constexpr bool is_boardcast() const{
+    [[nodiscard]] constexpr bool is_boardcast() const{
         return to_u8() == 0xff;
     }
 
-    constexpr bool need_ack() const{
+    [[nodiscard]] constexpr bool need_ack() const{
         return to_u8() != 0;
     }
 };
@@ -36,7 +36,7 @@ struct DeviceId{
 static_assert(sizeof(DeviceId) == 1);
 
 
-enum class PacketId:uint8_t{
+enum class [[nodiscard]] PacketId:uint8_t{
     HandShake = 0x21,
     BindInfo = 0x41,
     ParameterConfig = 0x50,
@@ -45,20 +45,20 @@ enum class PacketId:uint8_t{
     ControlData = 0xcd
 };
 
-enum class Baudrate:uint8_t{
+enum class [[nodiscard]] Baudrate:uint8_t{
     _115200bps = 0x00,
     _400000bps = 0x01
 };
 
-struct Guid{
-    uint32_t count;
+struct [[nodiscard]] Guid final{
+    uint32_t bits;
 };
 
-struct Uid{
-    uint32_t count;
+struct [[nodiscard]] Uid final{
+    uint32_t bits;
 };
 
-enum class BindType:uint8_t{
+enum class [[nodiscard]] BindType:uint8_t{
     None = 0x00,
     Dsm2_22ms = 0x01,
     Dsm2_mc24 = 0x02
@@ -68,7 +68,7 @@ namespace msgs{
 // The packet format is as follows: 
 // <0xA6><0x21><Length><SrcID><DestID><Priority><BaudRate><Info><UID><CRC> 
 
-struct HandShake{
+struct [[nodiscard]] HandShake final{
     Baudrate buadrate;
 
 };

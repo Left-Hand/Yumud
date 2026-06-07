@@ -15,7 +15,7 @@ struct [[nodiscard]] BytesReader final{
     [[nodiscard]] constexpr T fetch(){
         if(remaining().size() < sizeof(T))
             __builtin_trap();
-        return le_bytes_to_int<T>(fetch_bytes<sizeof(T)>());
+        return bytes_to_int_le<T>(fetch_bytes<sizeof(T)>());
     }
 
 private:

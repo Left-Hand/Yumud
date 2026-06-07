@@ -6,10 +6,10 @@
 namespace ymd::srxl2{
 
 struct [[nodiscard]] ChecksumBuilder final{
-    uint8_t checksum;
-
     static constexpr ChecksumBuilder from_default(){
-        return ChecksumBuilder{.checksum = 0};
+        ChecksumBuilder self;
+        self.checksum = 0;
+        return self;
     }
 
 
@@ -35,6 +35,8 @@ struct [[nodiscard]] ChecksumBuilder final{
     [[nodiscard]] uint8_t finalize() const noexcept {
         return checksum;
     }
+private:
+    uint8_t checksum;
 };
 
 }

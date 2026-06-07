@@ -131,7 +131,7 @@ struct [[nodiscard]] CanFrameAssemblyIterator final {
         }
         
         // 更新状态
-        state_.expected_toggle = !state_.expected_toggle;
+        state_.expected_toggle_bit = !state_.expected_toggle_bit;
         
         // 检查是否完成
         if (tail_byte.is_end_of_transfer) {

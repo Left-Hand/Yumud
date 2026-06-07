@@ -2,8 +2,9 @@
 
 #include "canopen_funccode.hpp"
 #include "core/container/bits_set.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 
-namespace ymd::canopen::primitive{
+namespace ymd::canopen{
 
 using CanFrame = hal::ClassicCanFrame;
 using CanPayload = hal::ClassicCanPayload;
@@ -46,7 +47,7 @@ struct [[nodiscard]] NodeId final{
         return Some(NodeId{static_cast<uint8_t>(bits & 0b1111111)});
     }
 
-    static constexpr NodeId boardcast(){
+    static constexpr NodeId from_boardcast(){
         return from_u7(0);
     }
 
@@ -73,7 +74,7 @@ struct [[nodiscard]] NodeId final{
     }
 
     // cobid + fcode
-    [[nodiscard]] constexpr CobId with_func_code(const FunctionCode fcode) const;
+    [[nodiscard]] constexpr CobId to_cobid(const FunctionCode fcode) const;
 
     [[nodiscard]] constexpr bool operator==(const NodeId & other) const noexcept {
         return bits == other.bits;
@@ -83,16 +84,18 @@ struct [[nodiscard]] NodeId final{
 
 
 struct [[nodiscard]] CobId final{
+    uint16_t bits;
+
     constexpr explicit CobId(const hal::CanStdId stdid){
         (*this) = std::bit_cast<CobId>(stdid.to_u11());
     }
 
     static constexpr CobId from_parts(
-        const NodeId _nodeid, 
+        const NodeId _node_id, 
         const FunctionCode _fcode
     ){
         const uint16_t bits = static_cast<uint16_t>(
-            _nodeid.to_u7() | 
+            _node_id.to_u7() | 
             static_cast<uint16_t>(_fcode.to_u4() << 7));
 
         return from_bits(bits);
@@ -102,16 +105,16 @@ struct [[nodiscard]] CobId final{
         return hal::CanStdId::from_bits(to_bits());
     }
 
-    constexpr FunctionCode func_code() const noexcept {
-        return FunctionCode::from_bits(static_cast<uint8_t>(fcode_));
+    constexpr FunctionCode func_code() const noexcept{
+        return make_bitfield_proxy<7, 11, FunctionCode>(&bits).get();
+    }
+
+    constexpr NodeId node_id() const noexcept{
+        return make_bitfield_proxy<0, 7, NodeId>(&bits).get();
     }
 
     static constexpr CobId from_bits(const uint16_t bits){
-        return std::bit_cast<CobId>(bits);
-    }
-
-    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
-        return std::bit_cast<uint16_t>(*this);
+        return CobId(hal::CanStdId::from_bits(bits));
     }
 
     static constexpr CobId from_u11(const uint16_t bits){
@@ -120,24 +123,16 @@ struct [[nodiscard]] CobId final{
         return from_bits(bits);
     }
 
+    [[nodiscard]] constexpr uint16_t to_bits() const noexcept {
+        return std::bit_cast<uint16_t>(*this);
+    }
+
     [[nodiscard]] constexpr uint16_t to_u11() const noexcept {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    constexpr NodeId node_id() const noexcept {
-        return NodeId::from_u7(nodeid_);
-    }
 
-private:
-    uint16_t nodeid_:7;
-    uint16_t fcode_:4;
-    uint16_t __resv__ : 5;
 };
-
-// static constexpr CobId SYNC_COBID = CobId::from_bits(0x080);
-// static constexpr CobId EMCY_COBID = CobId::from_bits(0x080);
-// static constexpr CobId TIME_COBID = CobId::from_bits(0x100);
-
 
 static_assert(sizeof(CobId) == sizeof(uint16_t));
 
@@ -160,8 +155,8 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 
 // B000h to BFFFh System variables用于路由网关的系统变量 
 // C000h to FFFFh Reserved保留
-struct [[nodiscard]] OdPreIndex final{
-    using Self = OdPreIndex;
+struct [[nodiscard]] OdMajorIndex final{
+    using Self = OdMajorIndex;
     uint16_t count;
 
     /// @brief 从比特位构造主序列，无任何检查
@@ -179,11 +174,11 @@ struct [[nodiscard]] OdPreIndex final{
     }
 };
 
-static_assert(sizeof(OdPreIndex) == sizeof(uint16_t));
+static_assert(sizeof(OdMajorIndex) == sizeof(uint16_t));
 
-struct [[nodiscard]] OdSubIndex final{
-    using Self = OdSubIndex;
-    uint8_t count;
+struct [[nodiscard]] OdMinorIndex final{
+    using Self = OdMinorIndex;
+    uint8_t bits;
 
     /// @brief 从比特位构造次序列，无任何检查
     /// @param bits 
@@ -192,36 +187,37 @@ struct [[nodiscard]] OdSubIndex final{
     }
 
     [[nodiscard]] constexpr uint8_t to_bits() const noexcept {
-        return count;
+        return bits;
     }
 
     [[nodiscard]] constexpr bool operator==(const Self & other) const noexcept {
-        return count == other.count;
+        return bits == other.bits;
     }
 };
 
-static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));   
+static_assert(sizeof(OdMinorIndex) == sizeof(uint8_t));   
 
 
 struct [[nodiscard]] OdIndex final{
     using Self = OdIndex;
-    OdPreIndex pre;
-    OdSubIndex sub;
+    OdMajorIndex major;
+    OdMinorIndex minor;
 
-    constexpr explicit OdIndex(const uint16_t _pre, const uint8_t _sub):
-        pre(OdPreIndex::from_bits(_pre)),
-        sub(OdSubIndex::from_bits(_sub)){;}
 
-    static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
-        return Self(_pre.to_bits(), _sub.to_bits());
+    static constexpr Self from_parts(const OdMajorIndex _major, const OdMinorIndex _minor){
+        return Self(_major, _minor);
+    }
+
+    static constexpr Self from_num(const uint16_t _major, const uint8_t _minor){
+        return Self(OdMajorIndex::from_bits(_major), OdMinorIndex::from_bits(_minor));
     }
     [[nodiscard]] constexpr bool operator==(const OdIndex& other) const noexcept {
-        return pre == other.pre and sub == other.sub;
+        return major == other.major and minor == other.minor;
     }
 };
 
 
-[[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const noexcept {
+[[nodiscard]] constexpr CobId NodeId::to_cobid(const FunctionCode fcode) const noexcept {
     return CobId::from_parts(*this, fcode);
 }
 

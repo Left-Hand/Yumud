@@ -5,11 +5,7 @@
 namespace ymd::digipw{
 
 template<typename T>
-struct MpptPno;
-
-
-template<>
-struct [[nodiscard]] MpptPno<iq16> final{
+struct [[nodiscard]] MpptPno final{
 public:
     constexpr MpptPno();
 
@@ -54,16 +50,16 @@ public:
 	[[nodiscard]] auto output() const noexcept {return this->VmppOut;}
 
 private:
-	iq16  Ipv;
-	iq16  Vpv;
-	iq16  DeltaPmin;
-	iq16  MaxVolt;
-	iq16  MinVolt;
-	iq16  Stepsize;
-	iq16  VmppOut;
-	iq16  DeltaP;
-	iq16  PanelPower;
-	iq16  PanelPower_Prev;
+	T  Ipv;
+	T  Vpv;
+	T  DeltaPmin;
+	T  MaxVolt;
+	T  MinVolt;
+	T  Stepsize;
+	T  VmppOut;
+	T  DeltaP;
+	T  PanelPower;
+	T  PanelPower_Prev;
 	bool inited;
 };
 

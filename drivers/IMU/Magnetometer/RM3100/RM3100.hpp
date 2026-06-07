@@ -48,6 +48,7 @@ struct RM3100:public RM3100_Prelude{
     }
 
     IResult<math::Vec3<int32_t>> get_mag_i32();
+
 private:
     RM3100_I2cTransport transport_;
 };

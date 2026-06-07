@@ -41,10 +41,10 @@ struct [[nodiscard]] PushSciFrameHeader final{
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) const noexcept{
-        if(const auto res = serializer.push_u8(frame_ttl);
+    serialize(Serializer & srz) const noexcept{
+        if(const auto res = srz.push_u8(frame_ttl);
             res.is_err()) return res;
-        if(const auto res = serializer.push_u8(static_cast<uint8_t>(esc_id));
+        if(const auto res = srz.push_u8(static_cast<uint8_t>(esc_id));
             res.is_err()) return res;
         return Ok();
     }
@@ -52,24 +52,24 @@ struct [[nodiscard]] PushSciFrameHeader final{
 
 template<typename Serializer, typename Payload>
 constexpr Result<void, typename Serializer::Error> serialize_pushsci_frame(
-    Serializer & serializer, 
+    Serializer & srz, 
     const PushSciFrameHeader header, 
     const Payload & payload
 ) noexcept {
-    serializer.push_u8(0xec);
-    serializer.push_u8(0x96);
-    serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+    srz.push_u8(0xec);
+    srz.push_u8(0x96);
+    srz.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
 
-    if(const auto res = header.serialize(serializer);
+    if(const auto res = header.serialize(srz);
         res.is_err()) return res;
 
-    serializer.push_u8(payload.frame_length());
+    srz.push_u8(payload.frame_length());
     
-    if(const auto res = payload.serialize(serializer);
+    if(const auto res = payload.serialize(srz);
         res.is_err()) return res;
 
-    const auto verify_byte = calc_sum(0, serializer.received_bytes());
-    serializer.push_u8(verify_byte);
+    const auto verify_byte = calc_sum(0, srz.received_bytes());
+    srz.push_u8(verify_byte);
 }
 
 struct [[nodiscard]] SetZero final{
@@ -81,7 +81,7 @@ struct [[nodiscard]] SetZero final{
 
     template<typename Serializer>
     constexpr Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) const noexcept{
+    serialize(Serializer & srz) const noexcept{
         //nothing to do
         return Ok();
     }
@@ -125,7 +125,7 @@ struct [[nodiscard]]  SetFocParaments final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) noexcept {
+    serialize(Serializer & srz) noexcept {
         //nothing to do
         return Ok();
     }
@@ -140,7 +140,7 @@ struct [[nodiscard]] GetFocParaments final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) noexcept {
+    serialize(Serializer & srz) noexcept {
         //nothing to do
         return Ok();
     }
@@ -165,12 +165,12 @@ struct [[nodiscard]] ControlFrame final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) noexcept {
-        if(const auto res = serializer.push_u8(static_cast<uint8_t>(control_mode));
+    serialize(Serializer & srz) noexcept {
+        if(const auto res = srz.push_u8(static_cast<uint8_t>(control_mode));
             res.is_err()) return res;
-        if(const auto res = serializer.push_u16(value);
+        if(const auto res = srz.push_u16(value);
             res.is_err()) return res;
-        if(const auto res = serializer.push_u16(__resv__);
+        if(const auto res = srz.push_u16(__resv__);
             res.is_err()) return res;
         return Ok();
     }
@@ -194,9 +194,9 @@ struct [[nodiscard]] PushCanFrameHeader final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) noexcept {
-        serializer.push_u8(frame_ttl);
-        serializer.push_u8(static_cast<uint8_t>(esc_id));
+    serialize(Serializer & srz) noexcept {
+        srz.push_u8(frame_ttl);
+        srz.push_u8(static_cast<uint8_t>(esc_id));
         return Ok();
     }
 };
@@ -204,22 +204,22 @@ struct [[nodiscard]] PushCanFrameHeader final{
 template<typename Serializer, typename Payload>
 Result<void, typename Serializer::Error> 
 serialize_pushcan_frame(
-    Serializer & serializer, 
+    Serializer & srz, 
     const PushCanFrameHeader header, 
     Payload & payload
 ) noexcept {
-    if(const auto res = serializer.push_u8(0x7b);
+    if(const auto res = srz.push_u8(0x7b);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = serializer.push_u8(0x8c);
+    if(const auto res = srz.push_u8(0x8c);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = serializer.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
+    if(const auto res = srz.push_u8(static_cast<uint8_t>(Payload::FRAME_ID));
         res.is_err()) return Err(res.unwrap_err());
-    header.serialize(serializer);
-    if(const auto res = serializer.push_u8(payload.frame_length());
+    header.serialize(srz);
+    if(const auto res = srz.push_u8(payload.frame_length());
         res.is_err()) return Err(res.unwrap_err());
-    payload.serialize(serializer);
-    const auto verify_byte = calc_sum(0, serializer.received_bytes());
-    if(const auto res = serializer.push_u8(verify_byte);
+    payload.serialize(srz);
+    const auto verify_byte = calc_sum(0, srz.received_bytes());
+    if(const auto res = srz.push_u8(verify_byte);
         res.is_err()) return Err(res.unwrap_err());
 }
 
@@ -261,7 +261,7 @@ struct [[nodiscard]] PowerUnitState final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) const noexcept{
+    serialize(Serializer & srz) const noexcept{
         //nothing to do
         return Ok();
     }
@@ -302,7 +302,7 @@ struct [[nodiscard]] FocParamentResponse final {
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize(Serializer & serializer) const noexcept {
+    serialize(Serializer & srz) const noexcept {
         //nothing to do
         return Ok();
     }

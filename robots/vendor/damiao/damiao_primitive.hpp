@@ -10,7 +10,7 @@
 
 namespace ymd::robots::damiao{
 
-enum class [[nodiscard]] MotorKind : uint8_t {
+enum class [[nodiscard]] Package : uint8_t {
     DM3507 = 0,
     DM4310 = 1,
     DM4310_48V = 2,
@@ -116,40 +116,12 @@ private:
 };
 
 // Limit parameters structure for different motor types
+template<typename T>
 struct [[nodiscard]] LimitParam final{
-    float x1_limit;  // Position limit (rad)
-    float x2_limit;  // Velocity limit (rad/s)
-    float torque_limit;  // Torque limit (Nm)
+    T x1_limit;  // Position limit (rad)
+    T x2_limit;  // Velocity limit (rad/s)
+    T torque_limit;  // Torque limit (Nm)
 };
-
-
-namespace details{
-template<MotorKind K>
-struct LimitParamTable;
-
-#define DEF_DAMIAO_MOTOR_LIMIT_TABLE(K, pMax, vMax, tMax) \
-template<> \
-struct LimitParamTable<K> { \
-    static constexpr LimitParam table = {static_cast<float>(pMax), static_cast<float>(vMax), static_cast<float>(tMax)}; \
-};
-
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM3507,         12.5, 50, 5)
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4310,         12.5, 30, 10) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4310_48V,     12.5, 50, 10) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4340,         12.5, 8, 28)  
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4340_48V,     12.5, 10, 28) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM6006,         12.5, 45, 20) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM8006,         12.5, 45, 40) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM8009,         12.5, 45, 54) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM10010L,       12.5, 25, 200)
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM10010,        12.5, 20, 200)
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMH3510,        12.5, 280, 1) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMH6215,        12.5, 45, 10) 
-DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMG6220,        12.5, 45, 10) 
-
-#undef DEF_DAMIAO_MOTOR_LIMIT_TABLE
-}
-
 
 using NodeId = uint8_t;
 }

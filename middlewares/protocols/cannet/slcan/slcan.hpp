@@ -76,11 +76,12 @@ struct [[nodiscard]] StatusFlag final{
         return from_bits(0);
     }
 
-    constexpr std::tuple<char, char> to_nibbles() const noexcept {
+    constexpr std::array<char, 2> to_nibbles() const noexcept {
         const uint8_t bits = std::bit_cast<uint8_t>(*this);
-        // chars[0] = '0' + (bits >> 4);
-        // chars[1] = '0' + (bits & 0x0F);
-        return std::make_tuple('0' + (bits >> 4), '0' + (bits & 0x0F));
+        std::array<char, 2> chars;
+        chars[0] = '0' + (bits >> 4);
+        chars[1] = '0' + (bits & 0x0F);
+        return chars;
     }
 };
 

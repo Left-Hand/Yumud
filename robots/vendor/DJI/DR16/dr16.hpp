@@ -8,8 +8,7 @@ namespace ymd::robots::dji::dr16{
 
 
 #define DR16_KEY_SPECIFIER_BIT(KEY_NAME, BIT_INDEX)                     \
-    template <typename Self>                                             \
-    [[nodiscard]] constexpr auto KEY_NAME(this Self&& self) {            \
+    [[nodiscard]] constexpr auto KEY_NAME(this auto && self) {            \
         return make_bitfield_proxy<BIT_INDEX, BIT_INDEX + 1, bool>(&self.bits);       \
     }
 

@@ -4,10 +4,7 @@
 
 namespace ymd::digipw{
 template<typename T>
-struct MpptIncc;
-
-template<>
-struct MpptIncc<iq16> final{
+struct MpptIncc final{
 public:
     constexpr MpptIncc(){
         reset();
@@ -82,23 +79,23 @@ public:
 	}
 
 private:
-	iq16  Ipv = 0;
-	iq16  Vpv = 0;
-	iq16  IpvH = 0;
-	iq16  IpvL = 0;
-	iq16  VpvH = 0;
-	iq16  VpvL = 0;
-	iq16  MaxVolt = 0;
-	iq16  MinVolt = 0;
-	iq16  Stepsize = 0;
-	iq16  VmppOut = 0;
-	iq16  Cond = 0;
-	iq16  IncCond = 0;
-	iq16  DeltaV = 0;
-	iq16  DeltaI = 0;
-	iq16  VpvOld = 0;
-	iq16  IpvOld = 0;
-	iq16  StepFirst = 0;
+	T  Ipv = 0;
+	T  Vpv = 0;
+	T  IpvH = 0;
+	T  IpvL = 0;
+	T  VpvH = 0;
+	T  VpvL = 0;
+	T  MaxVolt = 0;
+	T  MinVolt = 0;
+	T  Stepsize = 0;
+	T  VmppOut = 0;
+	T  Cond = 0;
+	T  IncCond = 0;
+	T  DeltaV = 0;
+	T  DeltaI = 0;
+	T  VpvOld = 0;
+	T  IpvOld = 0;
+	T  StepFirst = 0;
 	bool inited = false;
 } ;
 

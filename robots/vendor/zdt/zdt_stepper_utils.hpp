@@ -187,12 +187,12 @@ struct [[nodiscard]] CanFrame2BytesDumper{
             if(frames[0].is_standard())
                 return Err(Error::RxMsgIdTypeNotMatch);
 
-            const auto id = frame_to_nodeid(frames[0]);
+            const auto id = frame_to_node_id(frames[0]);
 
             for(size_t i = 1; i < frames.size(); i++){
                 if(frames[i].is_standard())
                     return Err(Error::RxMsgIdTypeNotMatch);
-                const auto next_id = frame_to_nodeid(frames[i]);
+                const auto next_id = frame_to_node_id(frames[i]);
                 if(next_id != id) return Err(Error::RxMsgNodeIdNotTheSame);
             }
             NodeId::from_u8(id);
@@ -229,7 +229,7 @@ struct [[nodiscard]] CanFrame2BytesDumper{
         return Ok<FlatPacket>(flat_packet);
     }
 
-    static inline constexpr uint8_t frame_to_nodeid(
+    static inline constexpr uint8_t frame_to_node_id(
         const hal::ClassicCanFrame & frame
     ){
         return static_cast<uint8_t>(frame.identifier().to_extid().to_u29() >> 8);

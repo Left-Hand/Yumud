@@ -12,7 +12,7 @@ static constexpr T abs_diff(const T a, const T b){
     if(b > a) return b - a;
     return a - b;
 }
-[[maybe_unused]] void test_codes(){
+[[maybe_unused]] static void test_codes(){
 
 
     {
@@ -38,7 +38,7 @@ static constexpr T abs_diff(const T a, const T b){
     }
 }
 
-[[maybe_unused]] void test_ser_frame(){
+[[maybe_unused]] static void test_ser_frame(){
 
 }
 

@@ -107,20 +107,20 @@ struct [[nodiscard]] BytesReader{
     [[nodiscard]] constexpr Option<int32_t> fetch_i32(){
         if(remaining().size() < 4)
             return None;
-        return Some(le_bytes_to_int<int32_t>(fetch_bytes<4>()));
+        return Some(bytes_to_int_le<int32_t>(fetch_bytes<4>()));
     }
     
     [[nodiscard]] constexpr Option<uint32_t> fetch_u32(){
         if(remaining().size() < 4)
             return None;
-        return Some(le_bytes_to_int<uint32_t>(fetch_bytes<4>()));
+        return Some(bytes_to_int_le<uint32_t>(fetch_bytes<4>()));
     }
 
 
     [[nodiscard]] constexpr Option<math::fp32> fetch_f32(){
         if(remaining().size() < 4)
             return None;
-        return Some(math::fp32::from_bits(le_bytes_to_int<int32_t>(fetch_bytes<4>())));
+        return Some(math::fp32::from_bits(bytes_to_int_le<int32_t>(fetch_bytes<4>())));
     }
 private:
     std::span<const uint8_t> bytes_;

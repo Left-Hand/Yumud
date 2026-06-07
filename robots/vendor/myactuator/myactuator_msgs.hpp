@@ -6,7 +6,7 @@
 namespace ymd::robots::myactuator{
 namespace req_msgs{
 
-#define DEF_COMMAND_ONLY_REQ_MSG(cmd_type)\
+#define DEF_NOFIELD_REQ_MSG(cmd_type)\
 struct [[nodiscard]] cmd_type final{\
     static constexpr ReqCommand COMMAND = ReqCommand::cmd_type;\
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {\
@@ -79,13 +79,13 @@ struct [[nodiscard]] SetPlanAccel final{
 };
 
 // 读取多圈编码器位置数据命令(0x60) page13
-DEF_COMMAND_ONLY_REQ_MSG(GetMultiAngle)
+DEF_NOFIELD_REQ_MSG(GetMultiAngle)
 
 //  读取多圈编码器原始位置数据命令(0x61) page15
-DEF_COMMAND_ONLY_REQ_MSG(GetMultiAngleWithoutOffset)
+DEF_NOFIELD_REQ_MSG(GetMultiAngleWithoutOffset)
 
 // 取多圈编码器零偏数据命令(0x62) page17
-DEF_COMMAND_ONLY_REQ_MSG(GetEncoderMultilapOffset)
+DEF_NOFIELD_REQ_MSG(GetEncoderMultilapOffset)
 
 // 写 入编码器多圈值到ROM作为电机零点命令(0x63) page 18
 struct [[nodiscard]] WriteEncoderMultilapOffset final{
@@ -100,28 +100,28 @@ struct [[nodiscard]] WriteEncoderMultilapOffset final{
 };
 
 //  写入编码器当前多圈位置到ROM作为电机零点命令 (0x64) page 20
-DEF_COMMAND_ONLY_REQ_MSG(WriteCurrentEncoderMultilapOffset)
+DEF_NOFIELD_REQ_MSG(WriteCurrentEncoderMultilapOffset)
 
 // 读取单圈编码器命令(0x90) page 21
-DEF_COMMAND_ONLY_REQ_MSG(ReadLapEncoder)
+DEF_NOFIELD_REQ_MSG(ReadLapEncoder)
 
 // 读取多圈角度命令(0x92) page 23
-DEF_COMMAND_ONLY_REQ_MSG(ReadMultiLapAngle)
+DEF_NOFIELD_REQ_MSG(ReadMultiLapAngle)
 
 // 读取单圈角度命令(0x94) page 25
-DEF_COMMAND_ONLY_REQ_MSG(ReadLapAngle)
+DEF_NOFIELD_REQ_MSG(ReadLapAngle)
 
 // 读取电机状态1和错误标志命令(0x9A) page 27
-DEF_COMMAND_ONLY_REQ_MSG(GetStatus1);
+DEF_NOFIELD_REQ_MSG(GetStatus1);
 
 // 读取电机状态2命令(0x9C) page 29
-DEF_COMMAND_ONLY_REQ_MSG(GetStatus2);
+DEF_NOFIELD_REQ_MSG(GetStatus2);
 
 // 读取电机状态3命令(0x9D) page 31
-DEF_COMMAND_ONLY_REQ_MSG(GetStatus3);
+DEF_NOFIELD_REQ_MSG(GetStatus3);
 
 // 电机关闭命令(0x80) page 33
-DEF_COMMAND_ONLY_REQ_MSG(ShutDown);
+DEF_NOFIELD_REQ_MSG(ShutDown);
 
 // 转矩闭环控制命令(OxA1) page 34
 struct [[nodiscard]] SetTorque final{
@@ -252,20 +252,15 @@ struct [[nodiscard]] MitParams final{
 };
 
 
-#undef DEF_COMMAND_ONLY_REQ_MSG
+#undef DEF_NOFIELD_REQ_MSG
 };
 
 
-enum class [[nodiscard]] LoopWiring:uint8_t{
-    Current,
-    Speed,
-    Position
-};
 
 
 namespace resp_msgs{
 
-#define DEF_COMMAND_ONLY_RESP_MSG(cmd_type)\
+#define DEF_NOFIELD_RESP_MSG(cmd_type)\
 struct [[nodiscard]] cmd_type final{};
 // struct cmd{
 //    constexpr CommandHeadedDataFielfill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const noexcept {
@@ -284,7 +279,7 @@ struct [[nodiscard]] GetPidParameter final{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         return Ok(Self{
             .pid_idx = std::bit_cast<PidIndex>(bytes[0]),
-            .value = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<3, 4>()))
+            .value = math::fp32::from_bits(bytes_to_int_le<uint32_t>(bytes.subspan<3, 4>()))
         });
     }
 };
@@ -304,9 +299,9 @@ struct [[nodiscard]] GetPlanAccel final{
 };
 
 
-DEF_COMMAND_ONLY_RESP_MSG(GetStatus1);
+DEF_NOFIELD_RESP_MSG(GetStatus1);
 
-DEF_COMMAND_ONLY_RESP_MSG(GetStatus2);
+DEF_NOFIELD_RESP_MSG(GetStatus2);
 
 struct [[nodiscard]] GetStatus3 final{
     TemperatureCode_i8 motor_temperature;
@@ -334,9 +329,9 @@ struct [[nodiscard]] _MotorStatusReport{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived self;
         self.motor_temperature.bits = bytes[0];
-        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
-        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
-        self.axis_degrees.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        self.q_current.bits = bytes_to_int_le<int16_t>(bytes.subspan<1, 2>());
+        self.axis_speed.bits = bytes_to_int_le<int16_t>(bytes.subspan<3, 2>());
+        self.axis_degrees.bits = bytes_to_int_le<int16_t>(bytes.subspan<5, 2>());
         return Ok(self);
     };
 };
@@ -357,9 +352,9 @@ struct [[nodiscard]] _MotorStatusReport2{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived self;
         self.motor_temperature.bits = bytes[0];
-        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
-        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
-        self.axis_lap_angle_code.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        self.q_current.bits = bytes_to_int_le<uint16_t>(bytes.subspan<1, 2>());
+        self.axis_speed.bits = bytes_to_int_le<uint16_t>(bytes.subspan<3, 2>());
+        self.axis_lap_angle_code.bits = bytes_to_int_le<uint16_t>(bytes.subspan<5, 2>());
         return Ok(self);
     };
 };
@@ -420,7 +415,7 @@ struct [[nodiscard]] GetPackage final{
     }
 };
 
-DEF_COMMAND_ONLY_RESP_MSG(ShutDown);
+DEF_NOFIELD_RESP_MSG(ShutDown);
 
 
 struct [[nodiscard]] MitParams final{

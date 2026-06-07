@@ -12,9 +12,9 @@ using namespace asciican::primitive::operations;
 
 #if(SLCAN_DEBUG_EN == 1)
 #define constexpr
-#define RETURN_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
+#define RAISE_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
 #else
-#define RETURN_ERR(e, ...) {return Err(e);}
+#define RAISE_ERR(e, ...) {return Err(e);}
 #endif
 
 template<typename T = void>
@@ -48,7 +48,7 @@ Option<uint8_t> _char2digit(char c){
 [[nodiscard]] static constexpr 
 IResult<uint32_t> _parse_hex_str(const StringView str){
     if(str.length() == 0)
-        RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::NoArg);
 
     uint32_t ret = 0;
 
@@ -57,7 +57,7 @@ IResult<uint32_t> _parse_hex_str(const StringView str){
         const auto may_digit = _char2digit(chr);
 
         if(may_digit.is_none())
-            RETURN_ERR(Error::InvalidCharInHex, chr);
+            RAISE_ERR(Error::InvalidCharInHex, chr);
 
         ret = static_cast<uint32_t>(ret << 4) | static_cast<uint32_t>(may_digit.unwrap());
     }
@@ -89,22 +89,22 @@ IResult<uint32_t> _parse_dual_char(const char c1, const char c2){
 [[nodiscard]] static constexpr 
 IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() == 0)
-        RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::NoArg);
 
     if(str.length() > STD_ID_STR_LEN)
-        RETURN_ERR(Error::StdIdTooLong);
+        RAISE_ERR(Error::StdIdTooLong);
     if(str.length() < STD_ID_STR_LEN)
-        RETURN_ERR(Error::StdIdTooShort);
+        RAISE_ERR(Error::StdIdTooShort);
 
     const auto either_id = _parse_hex_str(str);
     
     if(either_id.is_err())
-        RETURN_ERR(either_id.unwrap_err());
+        RAISE_ERR(either_id.unwrap_err());
 
     const auto id = either_id.unwrap();
 
     if(id > 0x7ff)
-        RETURN_ERR(Error::StdIdOverflow);
+        RAISE_ERR(Error::StdIdOverflow);
 
     return Ok(hal::CanStdId::from_bits(id));
 }
@@ -113,23 +113,23 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
 [[nodiscard]] static constexpr 
 IResult<hal::CanExtId> _parse_ext_id(const StringView str){
     if(str.length() == 0) 
-        RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::NoArg);
 
     if(str.length() > EXT_ID_STR_LEN)
-        RETURN_ERR(Error::ExtIdTooLong);
+        RAISE_ERR(Error::ExtIdTooLong);
     if(str.length() < EXT_ID_STR_LEN)
-        RETURN_ERR(Error::ExtIdTooShort);
+        RAISE_ERR(Error::ExtIdTooShort);
 
 
     const auto either_id = _parse_hex_str(str);
     
     if(either_id.is_err())
-        RETURN_ERR(either_id.unwrap_err());
+        RAISE_ERR(either_id.unwrap_err());
 
     const auto id = either_id.unwrap();
 
     if(id > ((1u << 29) - 1))
-        RETURN_ERR(Error::ExtIdOverflow);
+        RAISE_ERR(Error::ExtIdOverflow);
 
     return Ok(hal::CanExtId::from_bits(id));
 }
@@ -140,9 +140,9 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     const size_t dlc
 ){
     if((str.length() & 1) != 0) 
-        RETURN_ERR(Error::OddPayloadLength, str.length(), dlc, str);
+        RAISE_ERR(Error::OddPayloadLength, str.length(), dlc, str);
     if(str.length() != dlc * 2) 
-        RETURN_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
+        RAISE_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
 
     alignas(4) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
 
@@ -152,7 +152,7 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
             const auto res = _parse_dual_char(
                 str[i * 2], str[i * 2 + 1]
             );
-            if(res.is_err()) RETURN_ERR(res.unwrap_err());
+            if(res.is_err()) RAISE_ERR(res.unwrap_err());
             res.unwrap();
         });
     }
@@ -169,20 +169,20 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
 [[nodiscard]] static constexpr 
 IResult<size_t> _parse_dlc(const StringView str){
     if(str.length() == 0) 
-        RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::NoArg);
     if(str.length() != 1) 
-        RETURN_ERR(Error::InvalidDlcFormat, str.length());
+        RAISE_ERR(Error::InvalidDlcFormat, str.length());
 
     const auto dlc = ({
         const auto res = _parse_hex_str(str);
         
         if(res.is_err()) 
-            RETURN_ERR(res.unwrap_err());
+            RAISE_ERR(res.unwrap_err());
         res.unwrap();
     });
 
     if(dlc > NUM_MAX_CAN_DLC)
-        RETURN_ERR(Error::PayloadLengthOverflow, dlc);
+        RAISE_ERR(Error::PayloadLengthOverflow, dlc);
 
     return Ok(dlc);
 }
@@ -203,14 +203,14 @@ template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr
 IResult<hal::ClassicCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
     if(str.length() == 0) 
-        RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::NoArg);
 
     constexpr size_t ID_LEN = IS_EXTENDED ? 8 : 3;
     constexpr size_t DLC_LEN = 1;
     using ID = std::conditional_t<IS_EXTENDED, hal::CanExtId, hal::CanStdId>;
 
     if(str.length() < 4)
-        RETURN_ERR(Error::ArgTooShort, str.length());
+        RAISE_ERR(Error::ArgTooShort, str.length());
 
     // auto provider = StrProvider{str};
     size_t offset = 0;
@@ -218,14 +218,14 @@ IResult<hal::ClassicCanFrame> parse_msg(const StringView str, hal::CanRtr can_rt
 
     const uint32_t id_u32_checked = ({
         const auto res = _parse_id_u32<IS_EXTENDED>(StringView(str.data() + offset, ID_LEN));
-        if(res.is_err()) RETURN_ERR(res.unwrap_err());
+        if(res.is_err()) RAISE_ERR(res.unwrap_err());
         res.unwrap();
     });
     offset += ID_LEN;
 
     const size_t dlc = ({
         const auto res = _parse_dlc(StringView(str.data() + offset, DLC_LEN));
-        if(res.is_err()) RETURN_ERR(res.unwrap_err());
+        if(res.is_err()) RAISE_ERR(res.unwrap_err());
         res.unwrap();
     });
 
@@ -236,7 +236,7 @@ IResult<hal::ClassicCanFrame> parse_msg(const StringView str, hal::CanRtr can_rt
         case hal::CanRtr::Data:{
             const auto payload = ({
                 const auto res = parse_payload(payload_str, dlc);
-                if(res.is_err()) RETURN_ERR(res.unwrap_err());
+                if(res.is_err()) RAISE_ERR(res.unwrap_err());
                 res.unwrap();
             });
 
@@ -249,7 +249,7 @@ IResult<hal::ClassicCanFrame> parse_msg(const StringView str, hal::CanRtr can_rt
         }
         case hal::CanRtr::Remote:{
             if(payload_str.length() != 0) 
-                RETURN_ERR(Error::PayloadFoundedInRemote);
+                RAISE_ERR(Error::PayloadFoundedInRemote);
             return Ok(hal::ClassicCanFrame::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
@@ -271,17 +271,17 @@ uint32_t _chr_to_baud_unchecked(char chr){
         case '7': return 800000;
         case '8': return 1000000;
     }
-    __builtin_trap();
+    __builtin_unreachable();
 }
 
-auto _msg_to_operation = [](const hal::ClassicCanFrame & frame) { 
+auto _frame_to_operation = [](const hal::ClassicCanFrame & frame) { 
     return Operation(SendCanFrame{frame.clone()}); };
 
 
 IResult<Operation> SlcanParser::process_line(const StringView input_line) const noexcept {
     static constexpr bool IS_EXTENDED = true;
     const StringView line = input_line.trim();
-    if(line.size() == 0) RETURN_ERR(Error::NoInput);
+    if(line.size() == 0) RAISE_ERR(Error::NoInput);
     if(line.size() == 1){
         switch(line[0]){
             case 'F': return Ok(Operation(response_flag()));
@@ -300,13 +300,11 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
             case 'M': 
             case 'm': 
             case 'Z': 
-                RETURN_ERR(Error::NoArg);
+                RAISE_ERR(Error::NoArg);
         }
-        RETURN_ERR(Error::InvalidCommand);
-    }else{
-        const auto cmd_line = line.substr(1).unwrap();
-        if(cmd_line.size() == 0) [[unlikely]]
-            RETURN_ERR(Error::NoArg);
+        RAISE_ERR(Error::InvalidCommand);
+    }else if(line.size() > 1){
+        const auto cmd_line = StringView(std::next(line.begin()), line.end());
         switch(line[0]){
             // Setup with standard CAN bit-rates where n is 0-8.
             // This command is only active if the CAN channel is closed.
@@ -320,10 +318,8 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
             // S7 Setup 800Kbit
             // S8 Setup 1Mbit
             case 'S': {
-                if(cmd_line.size() == 0) 
-                    RETURN_ERR(Error::NoArg);
                 if(cmd_line.size() > 1) 
-                    RETURN_ERR(Error::ArgTooLong);
+                    RAISE_ERR(Error::ArgTooLong);
                 const auto chr = cmd_line[0];
                 if(chr < '0' || chr > '8') 
                     return Err(Error::InvalidCanBaudrate);
@@ -334,40 +330,40 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
             // Setup with BTR0/BTR1 CAN bit-rates where xx and yy is a hex
             // value. This command is only active if the CAN channel is closed.
             case 's':{
-                RETURN_ERR(Error::WillNeverSupport);
+                RAISE_ERR(Error::WillNeverSupport);
             }
 
             case 't': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
-                .map(_msg_to_operation);
+                .map(_frame_to_operation);
 
             case 'T': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
-                .map(_msg_to_operation);
+                .map(_frame_to_operation);
                 
             case 'r': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
-                .map(_msg_to_operation);
+                .map(_frame_to_operation);
 
 
             case 'R': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
-                .map(_msg_to_operation);
+                .map(_frame_to_operation);
 
             case 'd': //标准canfd(无brs)
-                RETURN_ERR(Error::WillSoonSupport);
+                RAISE_ERR(Error::WillSoonSupport);
             case 'D': //拓展canfd(无brs)
-                RETURN_ERR(Error::WillSoonSupport);
+                RAISE_ERR(Error::WillSoonSupport);
             case 'b': //标准canfd(无有brs)
-                RETURN_ERR(Error::WillSoonSupport);
+                RAISE_ERR(Error::WillSoonSupport);
             case 'B': //拓展canfd(无有brs)
-                RETURN_ERR(Error::WillSoonSupport);
+                RAISE_ERR(Error::WillSoonSupport);
 
             // Sets Acceptance Code Register (ACn Register of SJA1000).
             // This command is only active if the CAN channel is initiated and
             // not opened.
-            case 'M': RETURN_ERR(Error::WillNeverSupport);
+            case 'M': RAISE_ERR(Error::WillNeverSupport);
 
             // Sets Acceptance Mask Register (AMn Register of SJA1000).
             // This command is only active if the CAN channel is initiated and
             // not opened.
-            case 'm': RETURN_ERR(Error::WillNeverSupport);
+            case 'm': RAISE_ERR(Error::WillNeverSupport);
 
             // Sets Time Stamp ON/OFF for received frames only.
             // This command is only active if the CAN channel is closed.
@@ -393,10 +389,10 @@ IResult<Operation> SlcanParser::process_line(const StringView input_line) const 
             // it loop arround and get’s back to 0x0000. This corresponds to exact
             // 60,000mS (i.e. 1 minute which will be more than enough in most
             // systems)
-            case 'Z': RETURN_ERR(Error::WillNeverSupport);
+            case 'Z': RAISE_ERR(Error::WillNeverSupport);
 
         }
-        RETURN_ERR(Error::InvalidCommand);
+        RAISE_ERR(Error::InvalidCommand);
     }
 
     //unreachable

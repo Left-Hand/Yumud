@@ -6,12 +6,12 @@
 namespace ymd::mavlink{
 
 
-#define DEF_PROPERTY_BFPROXY(p_name, start_bit, stop_bit, p_type_name, bits)\
-template <typename Self> [[nodiscard]] constexpr auto p_name(this Self && self) {\
+#define DEF_PROPERTY_BFPROXY(prop_name, start_bit, stop_bit, p_type_name, bits)\
+[[nodiscard]] constexpr auto prop_name(this auto && self) {\
     return ymd::make_bitfield_proxy<start_bit, stop_bit, p_type_name>(bits);}
 
-#define DEF_PROPERTY_BIT(p_name, start_bit, bits) \
-    DEF_PROPERTY_BFPROXY(p_name, start_bit, (start_bit + 1), bool, bits)
+#define DEF_PROPERTY_BIT(prop_name, start_bit, bits) \
+    DEF_PROPERTY_BFPROXY(prop_name, start_bit, (start_bit + 1), bool, bits)
 
 
 struct [[nodiscard]] HlFailureFlag final{
@@ -146,7 +146,6 @@ enum class [[nodiscard]] MavAutopilot : uint8_t {
     Argentum = 17,            // Argentum
     Urus = 18,                // Urus
     Kk = 19,                  // KK
-    EnumEnd = 20,             // 枚举结束标志
 };
 
 

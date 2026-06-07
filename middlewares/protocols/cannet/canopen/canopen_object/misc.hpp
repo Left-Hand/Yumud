@@ -18,7 +18,7 @@ struct SaveParamRegSet{
     };
 
 
-    SdoAbortCode write(const std::span<const uint8_t> pbuf, const OdSubIndex sidx){
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const OdMinorIndex sidx){
         //TODO support auto save
         if(sidx != 0x00)
             return SdoAbortCode::UnsupportedAccess;
@@ -46,7 +46,7 @@ struct SaveParamRegSet{
     } 
 
 
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdMinorIndex sidx) const noexcept {
         //TODO
         // ReadStruct reg = ReadStruct{pbuf};
         return Ok();
@@ -71,7 +71,7 @@ struct LoadParamRegSet{
     };
 
 
-    SdoAbortCode write(const std::span<const uint8_t> pbuf, const OdSubIndex sidx){
+    SdoAbortCode write(const std::span<const uint8_t> pbuf, const OdMinorIndex sidx){
         //TODO support auto save
         if(sidx == 0x00){
             return SdoAbortCode::UnsupportedAccess;
@@ -100,7 +100,7 @@ struct LoadParamRegSet{
     } 
 
 
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdMinorIndex sidx) const noexcept {
         //TODO
         // ReadStruct reg = ReadStruct{pbuf};
         return Ok();

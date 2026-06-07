@@ -54,7 +54,7 @@ static constexpr iq16 convert_temperature(const uint16_t bits){
 
 
 namespace{
-[[maybe_unused]] void test_convert_temperature(){
+[[maybe_unused]] static void test_convert_temperature(){
     constexpr float f0 = (float)convert_temperature(0x0000);
     constexpr float f1 = (float)convert_temperature(0x07ff);
     constexpr float f2 = (float)convert_temperature(0xf800);

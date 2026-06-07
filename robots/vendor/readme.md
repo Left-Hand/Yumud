@@ -59,7 +59,7 @@
 - evo: evo电机
     - [ ] can协议
 
-- flyskytech:
+- flysky: 富斯科技
     - [x] fsi6x遥控器
         - [ ] 静态冒烟测试
 

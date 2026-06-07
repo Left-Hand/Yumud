@@ -74,45 +74,6 @@ IResult<> ICM42605::validate(){
     return Ok();
 }
 
-// uint8_t ICM42605::GetData(icmData_t *icm, uint8_t MODE) {
-//     int16_t out;
-//     uint8_t data[6];
-
-//     //加速度计
-//     if (MODE & ICM_MODE_ACC) {
-//         if (read_regs(ICM42605_ACC_DATA_X1, data, 6) == 0)
-//             return 1;
-//         out = (int16_t) (data[0] << 8 | data[1]);
-//         icm->ax = (float) out * 16 / 32768.0f;
-//         out = (int16_t) (data[2] << 8 | data[3]);
-//         icm->ay = (float) out * 16 / 32768.0f;
-//         out = (int16_t) (data[4] << 8 | data[5]);
-//         icm->az = (float) out * 16 / 32768.0f;
-//     }
-
-//     //角速度计
-//     if (MODE & ICM_MODE_GYR) {
-//         if (read_regs(ICM42605_GYR_DATA_X1, data, 6) == 0)
-//             return 2;
-//         out = (int16_t) (data[0] << 8 | data[1]);
-//         icm->gx = (float) out * 2000.0f / 32768.0f;
-//         out = (int16_t) (data[2] << 8 | data[3]);
-//         icm->gy = (float) out * 2000.0f / 32768.0f;
-//         out = (int16_t) (data[4] << 8 | data[5]);
-//         icm->gz = (float) out * 2000.0f / 32768.0f;
-//     }
-
-//     //温度计
-//     if (MODE & ICM_MODE_TEMP) {
-//         if (read_regs(ICM42605_TEMP_DATA0, data, 2) == 0)
-//             return 3;
-//         out = (int16_t) (data[0] << 8 | data[1]);
-//         icm->temp = 25.0f + (float) out * 1.0f / 132.48f;
-//     }
-
-//     return 0;
-// }
-
 
 IResult<> ICM42605::update(){
     TODO();

@@ -30,6 +30,7 @@ public:
 
 struct [[nodiscard]] EntryDataType {
 public:
+    using Self = EntryDataType;
 
     enum class [[nodiscard]] Kind:uint8_t{
         Bit = 0x01,
@@ -69,21 +70,21 @@ public:
     }
 
     template<typename U>
-    static constexpr Item from(){
+    static constexpr Self from(){
         using T = std::decay_t<U>;
         if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
-            return uint8;
+            return Self(Kind::U8);
         } else if constexpr (std::is_same_v<T, int16_t> || std::is_same_v<T, uint16_t>) {
-            return uint16;
+            return Self(Kind::U16);
         } else if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>){
-            return uint32;
+            return Self(Kind::U32);
         } else{
             static_assert(false_v<U>, "EntryDataType::from() only support int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t");
         }
     }
 
 private:
-    Item kind_;
+    Kind kind_;
 };
 
 

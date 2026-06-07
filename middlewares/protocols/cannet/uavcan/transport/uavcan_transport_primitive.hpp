@@ -265,6 +265,7 @@ private:
 
 struct [[nodiscard]] TailByte final{
     using Self = TailByte;
+
     uint8_t transfer_id:5;
     uint8_t toggle:1;
     uint8_t is_end_of_transfer:1;
@@ -279,6 +280,7 @@ struct [[nodiscard]] TailByte final{
     }
 };
 
+static_assert(sizeof(TailByte) == 1);
 
 struct [[nodiscard]] Header final{
     using Self = Header;

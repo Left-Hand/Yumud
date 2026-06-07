@@ -3,18 +3,12 @@
 #include "../canopen_primitive/canopen_primitive.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/container/ring_memento.hpp"
+
+
 // https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html
 namespace ymd::canopen{
 
-#ifndef CANOPEN_MAX_PERDEF_ERROR
-static constexpr size_t NUM_CANOPEN_MAX_PERDEF_ERROR = 8u;
-#endif
-
-template<uint16_t NUM_PRE_INDEX, uint8_t NUM_SUB_INDEX>
-struct _ob_t{
-    using type = void;
-};
-
+static constexpr size_t NUM_CANOPEN_MAX_PERDEFINE_ERROR = 8u;
 
 struct PredefinedError{
     uint16_t additive_error;
@@ -24,8 +18,6 @@ struct PredefinedError{
 };
 
 namespace ymd::canopen::basic{
-using namespace canopen;
-using namespace canopen::primitive;
 
 
 // 此对象提供有关设备类型的信息。该对象描述了逻辑设备类型及其功能。它由两个16位域组成，一个描述所用设备协议或应用协议，
@@ -37,8 +29,8 @@ using namespace canopen::primitive;
 // 与对象1000h具有相同的值定义。
 struct ControlWordReg{
     //控制字寄存器 只读32位
-    static constexpr uint16_t NUM_PRE_IDX = 0x1000;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x00;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1000;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x00;
 
     uint16_t protocol_version;
     uint16_t extra_msg;
@@ -48,8 +40,8 @@ struct ControlWordReg{
 // https://blog.csdn.net/qq_15181569/article/details/106191562
 struct ErrorReg{
     //错误寄存器 只读8位
-    static constexpr uint16_t NUM_PRE_IDX = 0x1001;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x00;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1001;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x00;
 
     uint8_t generic:1;
     uint8_t current:1;
@@ -63,37 +55,37 @@ struct ErrorReg{
 
 struct ManufacturerStatusReg{
     //厂商信息 只读32位
-    static constexpr uint16_t NUM_PRE_IDX = 0x1002;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1002;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
     
     uint32_t manufacturer_id;
 
 };
 
 struct PerdefErrFieldReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1003;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1003;
 
     constexpr void push_error(const PredefinedError & error){
         error_queue_.push_front(error);
     }
     
-    [[nodiscard]] constexpr size_t get_error_count(){
+    [[nodiscard]] constexpr size_t error_count(){
         return error_queue_.size();
     }
 
-    [[nodiscard]] constexpr size_t get_subentries_count(){
+    [[nodiscard]] constexpr size_t subentries_count(){
         return error_queue_.size();
     }
 
-    constexpr Result<PredefinedError, SdoAbortCode> get_error(size_t idx){
+    constexpr Result<PredefinedError, SdoAbortCode> nth_error(size_t idx){
         if(idx >= error_queue_.size())
             return Err(SdoAbortCode::NoDataAvailable);
-        return Ok();
+        return Ok(error_queue_[idx]);
     }
 
     #if 0
-    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdSubIndex sidx) const noexcept {
-        static constexpr OdSubIndex base_idx = 1;
+    SdoAbortCode read(const std::span<uint8_t> pbuf, const OdMinorIndex sidx) const noexcept {
+        static constexpr OdMinorIndex base_idx = 1;
 
         if(unlikely(sidx) < 1){
             pbuf[0] = uint8_t(getErrorCnt());
@@ -113,13 +105,13 @@ struct PerdefErrFieldReg{
     }
     #endif
 private:
-    // RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
-    RingMemento<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
+    // RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEFINE_ERROR> error_queue_;
+    RingMemento<PredefinedError, NUM_CANOPEN_MAX_PERDEFINE_ERROR> error_queue_;
 };
 
 struct CobidSyncMsgReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1005;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1005;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t cobid:29;
     uint32_t frame:1;//0:11位CANID,1:29位CANID
@@ -128,15 +120,15 @@ struct CobidSyncMsgReg{
 };
 
 struct CommCyclicPeriodReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1006;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1006;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t period_us;//单位us
 };
 
 struct SyncWindowLengthReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1007;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1007;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t length;
 };
@@ -145,43 +137,43 @@ struct SyncWindowLengthReg{
 
 struct DeviceNameReg{
     // 设备名称寄存器 只读 字符串类型
-    static constexpr uint16_t NUM_PRE_IDX = 0x1008;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1008;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
 };
 
 struct HardwareVersionReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1009;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1009;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
 };
 
 struct SoftwareVersionReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1010;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1010;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
 };
 
 struct NodeGuardingPeriodReg{
     // 节点守护时间寄存器 可读写 16位无符号整数
-    static constexpr uint16_t NUM_PRE_IDX = 0x100C;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x100C;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint8_t val;
 };
 
 struct NodeGuardingPeriodFracReg{
     // 节点守护时间寄存器 可读写 16位无符号整数
-    static constexpr uint16_t NUM_PRE_IDX = 0x100D;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x100D;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint16_t val;
 };
 
 
 struct TimeStampReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1012;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1012;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t cobid:29;
     uint32_t frame:1;
@@ -190,16 +182,16 @@ struct TimeStampReg{
 };
 
 struct GpTimeStampReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1013;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1013;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t timestamp;
 };
 
 
 struct EmcyCobidReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1014;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1014;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint32_t canid:29;
     uint32_t frame:1;
@@ -209,16 +201,16 @@ struct EmcyCobidReg{
 
 
 struct EmcyDepressTimeReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1015;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1015;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint16_t time;
 };
 
 struct ConsumerHeartbeatOverTimeReg{
     //心跳时间寄存器 可读写 32位无符号整数
-    static constexpr uint16_t NUM_PRE_IDX = 0x1016;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1016;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint16_t time;
     uint8_t node_id;
@@ -227,14 +219,14 @@ struct ConsumerHeartbeatOverTimeReg{
 
 struct ProducterHeartbeatOverTimeReg{
     //心跳时间寄存器 可读写 32位无符号整数
-    static constexpr uint16_t NUM_PRE_IDX = 0x1016;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1016;
+    static constexpr uint8_t NUM_UNIQUE_MINOR_IDX = 0x0;
 
     uint16_t time;
 };
 
 struct IdentificationReg{
-    static constexpr uint16_t NUM_PRE_IDX = 0x1023;
+    static constexpr uint16_t NUM_MAJOR_IDX = 0x1023;
 };
 
 }

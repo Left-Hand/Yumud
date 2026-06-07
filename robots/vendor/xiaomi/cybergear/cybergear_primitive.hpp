@@ -81,20 +81,16 @@ struct alignas(4) [[nodiscard]] CgId final{
     uint32_t bits;
 
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto cmd(this Self && self) {
+    [[nodiscard]] constexpr auto cmd(this auto && self) {
         return make_bitfield_proxy<24, 29, cybergear::Command>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto high(this Self && self) {
+    [[nodiscard]] constexpr auto high(this auto && self) {
         return make_bitfield_proxy<8, 24, uint16_t>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto fault(this Self && self) {
+    [[nodiscard]] constexpr auto fault(this auto && self) {
         return make_bitfield_proxy<8, 24, uint16_t>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto low(this Self && self) {
+    [[nodiscard]] constexpr auto low(this auto && self) {
         return make_bitfield_proxy<0, 8, uint8_t>(&self.bits);}
 
     [[nodiscard]] static constexpr 
@@ -123,20 +119,16 @@ struct alignas(4) [[nodiscard]] CgId final{
 struct alignas(4)  [[nodiscard]] TxContext final{
     uint64_t bits;
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto cmd_rad(this Self && self) {
+    [[nodiscard]] constexpr auto cmd_rad(this auto && self) {
         return make_bitfield_proxy<0, 16, RadCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto cmd_omega(this Self && self) {
+    [[nodiscard]] constexpr auto cmd_omega(this auto && self) {
         return make_bitfield_proxy<16, 32, OmegaCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto cmd_kp(this Self && self) {
+    [[nodiscard]] constexpr auto cmd_kp(this auto && self) {
         return make_bitfield_proxy<32, 48, KpCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto cmd_kd(this Self && self) {
+    [[nodiscard]] constexpr auto cmd_kd(this auto && self) {
         return make_bitfield_proxy<48, 64, KdCode>(&self.bits);}
 
     constexpr hal::ClassicCanPayload to_can_payload() const noexcept {return hal::ClassicCanPayload::from_u64(bits);}
@@ -147,20 +139,16 @@ static_assert(sizeof(TxContext) == 8);
 struct alignas(4)  [[nodiscard]] RxContext final{
     uint64_t bits;
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto radians(this Self && self) {            
+    [[nodiscard]] constexpr auto radians(this auto && self) {            
         return make_bitfield_proxy<0, 16, RadCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto omega(this Self && self) {          
+    [[nodiscard]] constexpr auto omega(this auto && self) {          
         return make_bitfield_proxy<16, 32, OmegaCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto torque(this Self && self) {         
+    [[nodiscard]] constexpr auto torque(this auto && self) {         
         return make_bitfield_proxy<32, 48, TorqueCode>(&self.bits);}
 
-    template <typename Self>
-    [[nodiscard]] constexpr auto temperature(this Self && self) {    
+    [[nodiscard]] constexpr auto temperature(this auto && self) {    
         return make_bitfield_proxy<48, 64, TemperatureCode>(&self.bits);}
 };
 

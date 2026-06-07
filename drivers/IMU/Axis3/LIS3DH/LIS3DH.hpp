@@ -29,8 +29,8 @@ public:
         transport_(spi_drv){;}
     explicit LIS3DH(hal::SpiDrv && spi_drv):
         transport_(std::move(spi_drv)){;}
-    explicit LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        transport_(hal::SpiDrv{spi, index}){;}
+    explicit LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        transport_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> init();
     IResult<> update();
@@ -109,21 +109,25 @@ public:
 private:
     Transport transport_;
 
-    using Regs = _LIS3DH_Regs;
-    Regs regs_ = {};
+    using Regset = LIS3DH_Regset;
+    Regset regs_ = {};
 
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
-        if(res.is_err()) return res;
+        if(const auto res = transport_.write_reg(
+            static_cast<uint8_t>(T::REG_ADDR), reg.to_bits()
+        );  res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
     template<typename T>
     IResult<> read_reg(T & reg){
-        return LIS3DH::IResult<>(transport_.read_reg(T::REG_ADDR, reg.as_bits_mut()));
+        if(const auto res = transport_.read_reg(
+            static_cast<uint8_t>(T::REG_ADDR), reg.as_bits_mut()
+        );  res.is_err()) return Err(res.unwrap_err());
+        return Ok();
     }
 
     IResult<> verify_phy(){

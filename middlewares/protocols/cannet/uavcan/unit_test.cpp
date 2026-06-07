@@ -10,7 +10,7 @@ namespace {
 
 
 
-static_assert(sizeof(TailByte) == 1);
+
 
 }
 

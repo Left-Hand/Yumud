@@ -110,13 +110,13 @@ private:
         std::copy(bytes.begin(), bytes.end(), std::next(buf.begin()));
 
         return hal::ClassicCanFrame::from_parts(
-            nodeid_and_piececnt_to_canid(node_id, piece_cnt),
+            node_id_and_piececnt_to_canid(node_id, piece_cnt),
             hal::ClassicCanPayload::from_u8x8(buf)
         );
     }
 
     //固定为拓展帧
-    static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
+    static constexpr hal::CanExtId node_id_and_piececnt_to_canid(
         const NodeId node_id,
         const uint8_t piece
     ){

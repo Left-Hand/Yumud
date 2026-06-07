@@ -296,24 +296,20 @@ struct [[nodiscard]] IdentifierLayout final{
         return self;
     };
 
-    template<typename Self>
-    constexpr auto & sidh(this Self && self){
+    constexpr auto & sidh(this auto && self){
         return self.bytes[0];
     }
 
-    template<typename Self>
-    constexpr auto & sidl(this Self && self){
+    constexpr auto & sidl(this auto && self){
         return self.bytes[1];
     }
 
-    template<typename Self>
-    constexpr auto & eid0(this Self && self){
+    constexpr auto & eid0(this auto && self){
         return self.bytes[2];
     }
 
 
-    template<typename Self>
-    constexpr auto & eid8(this Self && self){
+    constexpr auto & eid8(this auto && self){
         return self.bytes[3];
     }
 };

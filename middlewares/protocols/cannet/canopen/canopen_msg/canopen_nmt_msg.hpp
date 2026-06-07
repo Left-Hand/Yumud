@@ -6,7 +6,6 @@
 
 
 namespace ymd::canopen::nmt_msgs{
-using namespace canopen::primitive;
 
 // NMT（Network Management）报文
 // 功能：网络管理，用于启动、停止、复位节点等操作
@@ -14,17 +13,34 @@ using namespace canopen::primitive;
 // 包括：
 // NMT命令消息（主站发送）
 // 节点状态变化通知（从站发送）
-struct [[nodiscard]] NetManage{
+struct [[nodiscard]] NetManage final{
     //网络管理报文 
     using Self = NetManage;
     static constexpr auto COBID = CobId::from_bits(0x00);
 
+    NodeId dest_node_id;
     NmtCommand cmd;
-    NodeId dest_nodeid;
 
-    constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
+    constexpr void fill_payload_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = std::bit_cast<uint8_t>(cmd);
-        bytes[1] = dest_nodeid.to_u7();
+        bytes[1] = dest_node_id.to_u7();
+    }
+
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+    -> CANOPEN_FLEX_OPTION(Self){
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 2);
+
+        const auto canid_u32 = frame.id_u32();
+
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(canid_u32 == 0);
+
+        const auto self = Self{
+            .dest_node_id = NodeId::from_u7(frame[1]),
+            .cmd = CANOPEN_FLEX_TRY_UNWRAP_RESULT_TO_OPTION(convert::try_cast<NmtCommand>(frame[0])),
+        };
+        CANOPEN_RETURN_SOME(self);
     }
 };
 
@@ -32,28 +48,50 @@ struct [[nodiscard]] NetManage{
 // 功能：同步信号，用于同步所有节点的操作
 // COB-ID：0x080（固定）
 // 特点：无数据域，仅作为同步触发信号
-struct [[nodiscard]] Sync{
+struct [[nodiscard]] Sync final{
+    using Self = Sync;
+
     // 同步功能用于让总线上所有节点同步，主要用于让节点同步 PDO 消息。其 COB-ID 固定为
     // 0x80，数据域为空。
     static constexpr auto COBID = CobId::from_bits(0x80);
+
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
+        return CanFrame::from_empty_data(COBID.to_stdid());
+    }
+
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+    -> CANOPEN_FLEX_OPTION(Self){
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 0);
+
+        const auto canid_u32 = frame.id_u32();
+
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(canid_u32 == Self::COBID.to_bits());
+
+        const auto self = Self{};
+        CANOPEN_RETURN_SOME(self);
+    }
 };
 
 // Emergency报文
 // 功能：紧急错误报告
 // COB-ID：0x080 + NodeID
 // 数据：错误代码、错误寄存器、厂商特定错误字段等
-struct [[nodiscard]] Emergency {
+struct [[nodiscard]] Emergency final{
     using Self = Emergency;
-    NodeId station_nodeid;
+
+
+    NodeId station_node_id;
     EmcyErrorCode error_code;
     uint8_t error_register;
     std::array<uint8_t, 5> manufacturer_specific;
 
     [[nodiscard]] constexpr CobId cobid() const noexcept {
-        return CobId::from_bits(0x080 | station_nodeid.to_u7());
+        return CobId::from_bits(0x080 | station_node_id.to_u7());
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 8> bytes) const noexcept {
+    constexpr void fill_payload_bytes(const std::span<uint8_t, 8> bytes) const noexcept {
         bytes[0] = static_cast<uint8_t>(error_code.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(error_code.to_bits());
         bytes[2] = error_register;
@@ -63,214 +101,155 @@ struct [[nodiscard]] Emergency {
         bytes[6] = manufacturer_specific[3];
         bytes[7] = manufacturer_specific[4];
     }
+
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
+        auto & self = *this;
+        const auto can_id = self.cobid().to_stdid();
+        std::array<uint8_t, 8> u8x8;
+        self.fill_payload_bytes(u8x8);
+        return CanFrame::from_parts(can_id, CanPayload::from_u8x8(u8x8));
+    }
+
+
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+        -> CANOPEN_FLEX_OPTION(Self) {
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 8);
+
+        const auto canid_u32 = frame.id_u32();
+        const auto bytes = frame.payload_bytes_sized<8>();
+
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE((canid_u32 & 0b11110000000) == 0x080);
+        
+        const uint16_t error_code_u16 = (bytes[0] << 8) | bytes[1];
+        const auto self = Self{
+            .station_node_id = NodeId::from_u7(canid_u32 & 0x7f),
+            .error_code = CANOPEN_FLEX_TRY_UNWRAP_RESULT_TO_OPTION(
+                convert::try_cast<EmcyErrorCode>(error_code_u16)),
+            .error_register = bytes[2],
+            .manufacturer_specific = {bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]}
+        };
+        CANOPEN_RETURN_SOME(self);
+    }
 };
 
 
 // BootUp已经弃用，被HeartBeat复用
 // struct [[nodiscard]] BootUp{ 
 //     using Self = BootUp;
-//     NodeId station_nodeid;
+//     NodeId station_node_id;
 // };
 
-struct [[nodiscard]] NodeGuardingRequest {
+struct [[nodiscard]] NodeGuardingRequest final {
     // Node guarding request message
     using Self = NodeGuardingRequest;
-    NodeId target_nodeid;
+    NodeId target_node_id;
     
     [[nodiscard]] constexpr CobId cobid() const noexcept {
-        return CobId::from_bits(0x700 | target_nodeid.to_u7());
-    }
-};
-
-struct [[nodiscard]] NodeGuardingResponse {
-    // Node guarding response message
-    using Self = NodeGuardingResponse;
-    NodeId station_nodeid;
-    NodeState station_state;
-    
-    [[nodiscard]] constexpr CobId cobid() const noexcept {
-        return CobId::from_bits(0x700 | station_nodeid.to_u7());
-    }
-};
-
-struct [[nodiscard]] Heartbeat{ 
-    using Self = Heartbeat;
-    NodeId station_nodeid;
-    NodeState station_state;
-    [[nodiscard]] static constexpr Self from_bootup(const NodeId station_nodeid){
-        return Self{
-            .station_nodeid = station_nodeid,
-            .station_state = NodeState::BootUp
-        };
-    }
-    [[nodiscard]] bool is_bootup() const noexcept {
-        return station_state == NodeState::BootUp;
-    }
-};
-
-}
-
-namespace ymd::canopen::msg_serde{
-
-
-template<>
-struct MsgSerde<nmt_msgs::NetManage>{
-    using Self = nmt_msgs::NetManage;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
-        std::array<uint8_t, 2> bytes;
-        self.fill_bytes(bytes);
-        return CanFrame::from_parts(
-            Self::COBID.to_stdid(), 
-            hal::ClassicCanPayload::from_bytes(std::span(bytes))
-        );
+        return CobId::from_bits(0x700 | target_node_id.to_u7());
     }
 
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-    -> FLEX_OPTION(Self){
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
-
-        const auto canid_u32 = msg.id_u32();
-
-        FLEX_EXTERNAL_ASSERT_NONE(canid_u32 == 0);
-
-        const auto self = Self{
-            .cmd = FLEX_TRY_UNWRAP_RESULT_TO_OPTION(convert::try_cast<NmtCommand>(msg[0])),
-            .dest_nodeid = NodeId::from_u7(msg[1]),
-        };
-        FLEX_RETURN_SOME(self);
-    }
-};
-
-
-template<>
-struct MsgSerde<nmt_msgs::Sync>{
-    using Self = nmt_msgs::Sync;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
-        return CanFrame::from_empty_data(Self::COBID.to_stdid());
-    }
-
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-    -> FLEX_OPTION(Self){
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
-
-        const auto canid_u32 = msg.id_u32();
-
-        FLEX_EXTERNAL_ASSERT_NONE(canid_u32 == Self::COBID.to_bits());
-
-        const auto self = Self{};
-        FLEX_RETURN_SOME(self);
-    }
-};
-
-
-template<>
-struct MsgSerde<nmt_msgs::Heartbeat>{
-    using Self = nmt_msgs::Heartbeat;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self) noexcept {
-        const auto can_id = hal::CanStdId::from_bits(0x700 | self.station_nodeid.to_u7());
-        const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
-    }
-
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-    -> FLEX_OPTION(Self){
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 1);
-
-        const auto canid_u32 = msg.id_u32();
-
-        FLEX_EXTERNAL_ASSERT_NONE((canid_u32 & 0b111'1000'0000) == 0x700);
-        const auto self = Self{
-            .station_nodeid = NodeId::from_u7(canid_u32 & 0x7f),
-            .station_state = std::bit_cast<NodeState>(msg[0])
-        };
-        FLEX_RETURN_SOME(self);
-    }
-};
-
-
-template<>
-struct MsgSerde<nmt_msgs::NodeGuardingRequest> {
-    using Self = nmt_msgs::NodeGuardingRequest;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self& self) {
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
+        auto & self = *this;
         return CanFrame::from_empty_data(self.cobid().to_stdid());
     }
 
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-        -> FLEX_OPTION(Self) {
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+        -> CANOPEN_FLEX_OPTION(Self) {
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 0);
 
-        const auto canid_u32 = msg.id_u32();
-        FLEX_EXTERNAL_ASSERT_NONE((canid_u32 & 0b11110000000) == 0x700);
+        const auto canid_u32 = frame.id_u32();
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE((canid_u32 & 0b11110000000) == 0x700);
         
         const auto self = Self{
-            .target_nodeid = NodeId::from_u7(canid_u32 & 0x7f)
+            .target_node_id = NodeId::from_u7(canid_u32 & 0x7f)
         };
-        FLEX_RETURN_SOME(self);
+        CANOPEN_RETURN_SOME(self);
     }
 };
 
-template<>
-struct MsgSerde<nmt_msgs::NodeGuardingResponse> {
-    using Self = nmt_msgs::NodeGuardingResponse;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self& self) {
+struct [[nodiscard]] NodeGuardingResponse final {
+    // Node guarding response message
+    using Self = NodeGuardingResponse;
+    NodeId station_node_id;
+    NodeStateKind station_state;
+    
+    [[nodiscard]] constexpr CobId cobid() const noexcept {
+        return CobId::from_bits(0x700 | station_node_id.to_u7());
+    }
+
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
+        auto & self = *this;
         const auto can_id = self.cobid().to_stdid();
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
         return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
     }
 
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-        -> FLEX_OPTION(Self) {
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 1);
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+        -> CANOPEN_FLEX_OPTION(Self) {
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 1);
 
-        const auto canid_u32 = msg.id_u32();
-        FLEX_EXTERNAL_ASSERT_NONE((canid_u32 & 0b11110000000) == 0x700);
+        const auto canid_u32 = frame.id_u32();
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE((canid_u32 & 0b11110000000) == 0x700);
         
         const auto self = Self{
-            .station_nodeid = NodeId::from_u7(canid_u32 & 0x7f),
-            .station_state = std::bit_cast<NodeState>(msg[0])
+            .station_node_id = NodeId::from_u7(canid_u32 & 0x7f),
+            .station_state = std::bit_cast<NodeStateKind>(frame[0])
         };
-        FLEX_RETURN_SOME(self);
+        CANOPEN_RETURN_SOME(self);
     }
+
 };
 
-template<>
-struct MsgSerde<nmt_msgs::Emergency> {
-    using Self = nmt_msgs::Emergency;
-    [[nodiscard]] static constexpr CanFrame to_can_frame(const Self& self) {
+struct [[nodiscard]] Heartbeat final{  
+    using Self = Heartbeat;
+    NodeId station_node_id;
+    NodeStateKind station_state;
+
+
+    [[nodiscard]] static constexpr Self from_bootup(const NodeId station_node_id){
+        return Self{
+            .station_node_id = station_node_id,
+            .station_state = NodeStateKind::BootUp
+        };
+    }
+
+    [[nodiscard]] constexpr CobId cobid() const noexcept {
+        return CobId::from_bits(0x700 | station_node_id.to_u7());
+    }
+
+    [[nodiscard]] bool is_bootup() const noexcept {
+        return station_state == NodeStateKind::BootUp;
+    }
+
+    [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
+        auto & self = *this;
         const auto can_id = self.cobid().to_stdid();
-        std::array<uint8_t, 8> bytes{};
-        self.fill_bytes(bytes);
+        const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
         return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
     }
 
-    template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame& msg)
-        -> FLEX_OPTION(Self) {
-        FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
-        FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 8);
 
-        const auto canid_u32 = msg.id_u32();
-        FLEX_EXTERNAL_ASSERT_NONE((canid_u32 & 0b11110000000) == 0x080);
-        
-        const uint16_t error_code_u16 = (msg[0] << 8) | msg[1];
+    template<VerifyLevel VERIFY_LEVEL>
+    [[nodiscard]] static constexpr auto from_can_frame(const CanFrame & frame)
+    -> CANOPEN_FLEX_OPTION(Self){
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.is_standard());
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(frame.length() == 1);
+
+        const auto canid_u32 = frame.id_u32();
+
+        CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE((canid_u32 & 0b111'1000'0000) == 0x700);
         const auto self = Self{
-            .station_nodeid = NodeId::from_u7(canid_u32 & 0x7f),
-            .error_code = FLEX_TRY_UNWRAP_RESULT_TO_OPTION(
-                convert::try_cast<EmcyErrorCode>(error_code_u16)),
-            .error_register = msg[2],
-            .manufacturer_specific = {msg[3], msg[4], msg[5], msg[6], msg[7]}
+            .station_node_id = NodeId::from_u7(canid_u32 & 0x7f),
+            .station_state = std::bit_cast<NodeStateKind>(frame[0])
         };
-        FLEX_RETURN_SOME(self);
+        CANOPEN_RETURN_SOME(self);
     }
 };
+
 }

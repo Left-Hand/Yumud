@@ -10,11 +10,11 @@
 namespace ymd::vofa{
 
 
-template<typename Receiver, typename ... Args>
-constexpr void ser_just_float(Receiver & receiver, Args && ... args){
-    constexpr std::array<uint8_t, 4> TAIL_BYTES = {0x00, 0x00, 0x80, 0x7f} ;
+template<typename Serializer, typename ... Args>
+constexpr void ser_just_float(Serializer & srz, Args && ... args){
+    static constexpr std::array<uint8_t, 4> TAIL_BYTES = {0x00, 0x00, 0x80, 0x7f} ;
     auto push_bytes = [&](std::span<const uint8_t> bytes) constexpr {
-        receiver.push_bytes(bytes);
+        srz.push_bytes(bytes);
     };
 
     auto push_element = [&]<typename T>(T && element) constexpr {

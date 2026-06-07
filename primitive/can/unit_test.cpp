@@ -127,7 +127,7 @@ static_assert([]{
     return (!frame.is_remote()) && frame.length() == 0;
 }());
 
-[[maybe_unused]] void test_payload(){
+[[maybe_unused]] static void test_payload(){
     {
         struct Data{
             uint32_t d1;
@@ -238,7 +238,7 @@ static_assert([]{
 
 
 
-[[maybe_unused]] void test_event(){
+[[maybe_unused]] static void test_event(){
     // {
     //     static constexpr auto ev = hal::CanEvent::from(hal::CanTransmitEvent{
     //         .kind = hal::CanTransmitEvent::Success,

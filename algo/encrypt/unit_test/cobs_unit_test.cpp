@@ -21,7 +21,7 @@ struct TestReceiver{
 };
 
 
-[[maybe_unused]] void test_cobs_ser(){
+[[maybe_unused]] static void test_cobs_ser(){
     {
         static constexpr std::array<uint8_t, 6> input = {1,2,7,3, 5, 6};
         cobs::CobsEncoder encoder;
@@ -45,7 +45,7 @@ struct TestReceiver{
 
 
 // 添加解码测试
-[[maybe_unused]] void test_cobs_deser() {
+[[maybe_unused]] static void test_cobs_deser() {
     // 测试解码原始的 {1,2,0,3,5,6}
     static constexpr std::array<uint8_t, 7> encoded_input = {7, 1, 2, 7, 3, 5, 6};
     

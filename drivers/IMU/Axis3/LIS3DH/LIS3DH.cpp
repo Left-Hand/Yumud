@@ -53,7 +53,7 @@ Result<void, Error> LIS3DH::clear_flag(){
 
 
 Result<void, Error> LIS3DH::validate(){
-    auto & reg = regs_.whoami_reg;
+    auto reg = Regset::R8_WhoAmI{};
 
     if(const auto res = verify_phy();
         res.is_err()) return Err(res.unwrap_err());
@@ -62,7 +62,7 @@ Result<void, Error> LIS3DH::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
         
-    if(reg.to_bits() != reg.key)
+    if(reg.to_bits() != reg.KEY)
         return Err(Error::InvalidChipId);
     
     return Ok();

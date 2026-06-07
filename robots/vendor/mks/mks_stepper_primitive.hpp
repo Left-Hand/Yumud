@@ -131,11 +131,11 @@ enum class [[nodiscard]] FuncCode:uint8_t{
 };
 
 [[nodiscard]] static constexpr uint8_t get_verify_code(
-    const NodeId nodeid,
+    const NodeId node_id,
     const FuncCode func_code,
     std::span<const uint8_t> bytes 
 ){
-    uint32_t sum = nodeid.to_u8();
+    uint32_t sum = node_id.to_u8();
     sum += std::bit_cast<uint8_t>(func_code);
     for(const auto byte: bytes){
         sum += byte;

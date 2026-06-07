@@ -7,22 +7,6 @@ namespace ymd::robots::unitree::im6014{
 
 namespace utils{
 
-static constexpr uint8_t * ptr_push_u16(uint8_t * ptr, const uint16_t bits) noexcept {
-    ptr[0] = bits & 0xff;
-    ptr[1] = (bits >> 8) & 0xff;
-    return ptr + 2;
-}
-
-static constexpr uint8_t * ptr_push_u32(uint8_t * ptr, const uint32_t bits) noexcept {
-    ptr[0] = bits & 0xff;
-    ptr[1] = (bits >> 8) & 0xff;
-    ptr[2] = (bits >> 16) & 0xff;
-    ptr[3] = (bits >> 24) & 0xff;
-    return ptr + 4;
-}
-
-
-
 template<typename T, uint32_t SCALE>
 struct mul;
 
@@ -127,44 +111,57 @@ template<typename D, uint32_t RATIO, typename T>
 
 //crc32 mpeg
 struct [[nodiscard]] Crc32Builder final{
-    uint32_t count;
+    using Self = Crc32Builder;
+
+    static constexpr uint32_t DW_POLYNOMIAL = 0x04c11db7; 
 
     static constexpr Crc32Builder from_default(){
-        return {0xFFFFFFFF};
+        Self self;
+        self.checksum = 0xFFFFFFFF;
+        return self;
+    }
+
+    constexpr Crc32Builder push_bytes(std::span<const uint8_t> bytes) const noexcept {
+        auto self = *this;
+        const uint8_t * cursor = bytes.data();
+        uint32_t len = bytes.size();
+        
+        while(len--) {
+            self.checksum = (self.checksum << 8) ^ TABLE[(self.checksum >> 24 ^ *cursor++) & 0xff];
+        }
+
+        return self;
     }
 
     constexpr Crc32Builder push_element(const uint32_t element) const noexcept {
-        #if 1
+        auto self = *this;
         uint32_t xbit = 0; 
         uint32_t data = 0; 
-        uint32_t CRC32 = this->count; 
-        constexpr uint32_t dwPolynomial = 0x04c11db7; 
 
-        xbit = 1 << 31; data = element; 
+
+        xbit = 1 << 31; 
+        data = element; 
         for (uint32_t bits = 0; bits < 32; bits++){ 
-            if (CRC32 & 0x80000000){ 
-                CRC32 <<= 1; 
-                CRC32 ^= dwPolynomial;
+            if (self.checksum & 0x80000000){ 
+                self.checksum <<= 1; 
+                self.checksum ^= DW_POLYNOMIAL;
             } else {
-                CRC32 <<= 1; 
+                self.checksum <<= 1; 
             }
 
             if (data & xbit) {
-                CRC32 ^= dwPolynomial;
+                self.checksum ^= DW_POLYNOMIAL;
             } 
             xbit >>= 1; 
         } 
-        return {CRC32};
-        #else
-        auto bytes = std::bit_cast<std::array<uint8_t, 4>>(element);
-        return push_bytes(std::span(bytes));
-        #endif
+        return self;
     }
     [[nodiscard]] constexpr uint32_t finalize() const noexcept {
-        return count;
+        return checksum;
     }
 
-
+private:
+    uint32_t checksum;
 
     /* CRC余式表 */
     static constexpr uint32_t TABLE[256] = {
@@ -203,16 +200,7 @@ struct [[nodiscard]] Crc32Builder final{
     };//查表法计算crc
 
 
-    constexpr Crc32Builder push_bytes(std::span<const uint8_t> bytes) const noexcept {
-        const uint8_t * ptr = bytes.data();
-        uint32_t len = bytes.size();
-        uint32_t crc = this->count;
-        
-        while(len--) {
-            crc = (crc << 8) ^ TABLE[(crc >> 24 ^ *ptr++) & 0xff];
-        }
-        return Crc32Builder{crc};
-    }
+
 
 };
 

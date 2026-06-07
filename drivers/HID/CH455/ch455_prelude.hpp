@@ -74,9 +74,9 @@ struct CH455_Prelude{
 };
 
 
-class CH455_phy final :public CH455_Prelude{
+class CH455_Transport final :public CH455_Prelude{
 public:
-    CH455_phy(
+    CH455_Transport(
         const hal::Gpio & scl, 
         const hal::Gpio & sda
     ):

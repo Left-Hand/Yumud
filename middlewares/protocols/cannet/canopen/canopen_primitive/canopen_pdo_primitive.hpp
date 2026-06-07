@@ -4,26 +4,32 @@
 
 namespace ymd::canopen::primitive{
 
-struct [[nodiscard]] PdoMapping{
-    uint8_t bits;
-    uint8_t sub_idx;
-    uint16_t pre_idx;
-    static constexpr PdoMapping from_u32(const uint32_t map){
-        PdoMapping self;
-        self.bits = (map & 0xFF);
-        self.sub_idx = ((map >> 8) & 0xFF);
-        self.pre_idx = ((map >> 16) & 0xFF);
-        return self;
-    }
+struct [[nodiscard]] PdoMapping final{
+    // uint8_t bits;
+    // uint8_t minor_index;
+    // uint16_t major_index;
 
-    constexpr uint32_t to_u32(const PdoMapping & map){ 
-        return (map.bits | (map.sub_idx << 8) | (map.pre_idx << 16));
-    }
+
+    uint32_t bits;
+
+
+    // constexpr FunctionCode func_code() const noexcept{
+    //     return make_bitfield_proxy<7, 11, FunctionCode>(&bits).get();
+    // }
+
+    // constexpr NodeId node_id() const noexcept{
+    //     return make_bitfield_proxy<0, 7, NodeId>(&bits).get();
+    // }
+
+
+    // constexpr uint32_t to_u32(const PdoMapping & map){ 
+    //     return (map.bits | (map.minor_index << 8) | (map.major_index << 16));
+    // }
 
 };
 
-struct [[nodiscard]] PdoParaments{
-    OdPreIndex pre_idx;
+struct [[nodiscard]] PdoParaments final{
+    OdMajorIndex major_index;
     CobId cob_id;
     uint8_t transmission_type;
     uint8_t inhibit_time;

@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include "drivers/IMU/details/InvensenseIMU.hpp"

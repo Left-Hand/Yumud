@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "details/BMP280_phy.hpp"
+#include "bmp280_phy.hpp"
 
 namespace ymd::drivers{
 

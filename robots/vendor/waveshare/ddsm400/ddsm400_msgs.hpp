@@ -1,5 +1,4 @@
 #include "ddsm400_primitive.hpp"
-#include "core/utils/bytes/bytes_caster.hpp"
 
 namespace ymd::robots::waveshare::ddsm400{
 namespace req_msgs{
@@ -21,14 +20,14 @@ struct [[nodiscard]] SetTarget final{
     AccelerationTimeCode acceleration_time_code;
     Enable brake_en;
 
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
-        bytes[0] = static_cast<uint8_t>(setpoint_code.bits >> 8);
-        bytes[1] = static_cast<uint8_t>(setpoint_code.bits);
-        bytes[2] = 0;
-        bytes[3] = 0;
-        bytes[4] = static_cast<uint8_t>(acceleration_time_code.bits);
-        bytes[5] = (brake_en == EN) ? 0xff : 0x00;
-        bytes[6] = 0;
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> buf) const noexcept {
+        buf[0] = static_cast<uint8_t>(setpoint_code.bits >> 8);
+        buf[1] = static_cast<uint8_t>(setpoint_code.bits);
+        buf[2] = 0;
+        buf[3] = 0;
+        buf[4] = static_cast<uint8_t>(acceleration_time_code.bits);
+        buf[5] = (brake_en == EN) ? 0xff : 0x00;
+        buf[6] = 0;
     }
 };
 
@@ -45,8 +44,8 @@ struct [[nodiscard]] SetTarget final{
 
 struct [[nodiscard]] GetJourney final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetJourney;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
-        std::fill(bytes.begin(), bytes.end(), 0);
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> buf) const noexcept {
+        std::fill(buf.begin(), buf.end(), 0);
     }
 };
 
@@ -60,9 +59,9 @@ struct [[nodiscard]] GetJourney final{
 struct [[nodiscard]] SetLoopMode final{
     static constexpr ReqCommand COMMAND = ReqCommand::SetLoopMode;
     LoopMode loop_mode;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
-        bytes[0] = static_cast<uint8_t>(loop_mode);
-        std::fill(bytes.begin() + 1, bytes.end(), 0);
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> buf) const noexcept {
+        buf[0] = static_cast<uint8_t>(loop_mode);
+        std::fill(buf.begin() + 1, buf.end(), 0);
     }
 };
 
@@ -79,9 +78,9 @@ struct [[nodiscard]] SetLoopMode final{
 struct [[nodiscard]] SetMotorId final{
     static constexpr ReqCommand COMMAND = ReqCommand::SetMotorId;
     MotorId target_motor_id;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
-        bytes[0] = target_motor_id.to_u8();
-        std::fill(bytes.begin() + 1, bytes.end(), 0);
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> buf) const noexcept {
+        buf[0] = target_motor_id.to_u8();
+        std::fill(buf.begin() + 1, buf.end(), 0);
     }
 };
 
@@ -90,8 +89,8 @@ struct [[nodiscard]] SetMotorId final{
 // 内容	ID	0x75	0	0	0	0	0	0	0	CRC8
 struct [[nodiscard]] GetLoopMode final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetLoopMode;
-    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> bytes) const noexcept {
-        std::fill(bytes.begin(), bytes.end(), 0);
+    constexpr void fill_bytes(std::span<uint8_t, NUM_PAYLOAD_BYTES> buf) const noexcept {
+        std::fill(buf.begin(), buf.end(), 0);
     }
 };
 
@@ -110,13 +109,13 @@ struct [[nodiscard]] Feedback final{
     FaultFlags fault_flags;
 
     static constexpr Result<Self, DeMsgError> 
-    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> bytes){
+    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> buf){
         return Ok(Self{
-            .speed_code = SpeedCode{.bits = be_bytes_to_int<int16_t>(bytes.subspan<0,2>())},
-            .current_code = CurrentCode{.bits = be_bytes_to_int<int16_t>(bytes.subspan<2,2>())},
-            .acceleration_time_code = AccelerationTimeCode{.bits = bytes[4]},
-            .temprature_code = TempratureCode{.bits = bytes[5]},
-            .fault_flags = std::bit_cast<FaultFlags>(bytes[6]),
+            .speed_code = SpeedCode{.bits = bytes_to_int_be<int16_t>(buf.subspan<0,2>())},
+            .current_code = CurrentCode{.bits = bytes_to_int_be<int16_t>(buf.subspan<2,2>())},
+            .acceleration_time_code = AccelerationTimeCode{.bits = buf[4]},
+            .temprature_code = TempratureCode{.bits = buf[5]},
+            .fault_flags = std::bit_cast<FaultFlags>(buf[6]),
         });
     }
 };
@@ -133,11 +132,11 @@ struct [[nodiscard]] Feedback2 final{
     FaultFlags fault_flags;
 
     static constexpr Result<Self, DeMsgError> 
-    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> bytes){
+    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> buf){
         return Ok(Self{
-            .laps_cnt = be_bytes_to_int<int32_t>(bytes.subspan<0,4>()),
-            .lap_angle_code = LapAngleCode{.bits = be_bytes_to_int<uint16_t>(bytes.subspan<4,2>())},
-            .fault_flags = std::bit_cast<FaultFlags>(bytes[6]),
+            .laps_cnt = bytes_to_int_be<int32_t>(buf.subspan<0,4>()),
+            .lap_angle_code = LapAngleCode{.bits = bytes_to_int_be<uint16_t>(buf.subspan<4,2>())},
+            .fault_flags = std::bit_cast<FaultFlags>(buf[6]),
         });
     }
 };
@@ -147,8 +146,8 @@ struct [[nodiscard]] SetLoopMode final{
     using Self = SetLoopMode;
     static constexpr RespCommand COMMAND = RespCommand::SetLoopMode;
     static constexpr Result<Self, DeMsgError> 
-    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> bytes){
-        (void)bytes; //unused
+    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> buf){
+        (void)buf; //unused
         return Ok(Self{});
     }
 };
@@ -162,7 +161,7 @@ struct [[nodiscard]] GetLoopMode final{
     using Self = GetLoopMode;
     static constexpr RespCommand COMMAND = RespCommand::GetLoopMode;
 
-    enum class RespLoopMode:uint8_t{
+    enum class [[nodiscard]] RespLoopMode:uint8_t{
         OpenLoop = 0x00,
         CurrentLoop = 0x01,
         SpeedLoop = 0x02,
@@ -174,8 +173,8 @@ struct [[nodiscard]] GetLoopMode final{
     RespLoopMode loop_mode;
 
     static constexpr Result<Self, DeMsgError> 
-    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> bytes){
-        const auto b = bytes[0];
+    try_from_bytes(std::span<const uint8_t, NUM_PAYLOAD_BYTES> buf){
+        const auto b = buf[0];
         if(b > MAX_NUM) 
             return Err(DeMsgError::Unnamed);
         return Ok(Self{

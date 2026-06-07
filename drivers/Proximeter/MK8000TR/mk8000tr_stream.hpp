@@ -9,7 +9,7 @@ namespace ymd::drivers::mk8000tr{
 static constexpr size_t DEFAULT_UART_BAUD = 115200;
 static constexpr uint8_t HEADER_TOKEN = 0xF0;
 static constexpr uint8_t LEN_TOKEN = 0x05;
-static constexpr uint8_t TAIL_TOKEN = 0xAA;
+static constexpr uint8_t TAIL_CHAR = 0xAA;
 
 
 struct [[nodiscard]] SignalStrengthCode final{

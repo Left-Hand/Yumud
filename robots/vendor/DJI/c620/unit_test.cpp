@@ -13,7 +13,7 @@ static constexpr T abs_diff(const T a, const T b){
     if(b > a) return b - a;
     return a - b;
 }
-[[maybe_unused]] void test_codes(){
+[[maybe_unused]] static void test_codes(){
     {
         constexpr auto code1 = C620CurrentCodeInterpreter::from_amps_bounded(1.0f);
         static_assert(abs_diff(C620CurrentCodeInterpreter::to_amps<float>(code1) ,1.0f) < 1e-3);

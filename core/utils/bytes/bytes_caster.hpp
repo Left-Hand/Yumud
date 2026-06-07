@@ -34,13 +34,13 @@ __attribute__((always_inline))
 
 template<typename D, size_t Extent>
 __attribute__((always_inline))
-[[nodiscard]] static constexpr D le_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
+[[nodiscard]] static constexpr D bytes_to_int_le(const std::span<const uint8_t, Extent> bytes){
     return bytes_to_int<std::endian::little, D, Extent>(bytes);
 }
 
 template<typename D, size_t Extent>
 __attribute__((always_inline))
-[[nodiscard]] static constexpr D be_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
+[[nodiscard]] static constexpr D bytes_to_int_be(const std::span<const uint8_t, Extent> bytes){
     return bytes_to_int<std::endian::big, D, Extent>(bytes);
 }
 }

@@ -31,7 +31,6 @@ using namespace ymd::drivers;
 #define MMC5983_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
 #define RAISE_ERR(x, ...) (x)
-#define RAISE_ERR(x, ...) (x)
 #endif
 
 
