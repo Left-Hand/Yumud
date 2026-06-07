@@ -5,6 +5,9 @@
 #include "core/math/float/fp32.hpp"
 #include "robots/vendor/mit/mit_primitive.hpp"
 #include "damiao_utils.hpp"
+
+
+
 namespace ymd::robots::damiao{
 
 struct [[nodiscard]] PosVelParam final{
@@ -31,9 +34,12 @@ struct [[nodiscard]] VelParam final{
     constexpr hal::ClassicCanPayload to_can_payload() const noexcept {
         auto & self = *this;
 
-        const auto vel_bytes = std::bit_cast<std::array<uint8_t, 4>>(self.dq);
+        std::array<uint8_t, 8> u8x8;
+        auto cursor = BufferCursor{u8x8.data()};
+        
+        cursor.push_b32le(self.dq);
 
-        return hal::ClassicCanPayload::from_bytes(vel_bytes);
+        return hal::ClassicCanPayload::from_bytes(std::span(u8x8.data(), cursor.ptr));
     }
 };  
 
@@ -125,38 +131,38 @@ struct [[nodiscard]] FeedbackPacketInterpreter final{
     alignas(4) Storage bytes;
 
     // 获取状态
-    [[nodiscard]] constexpr NodeId motor_id() const {
-        return NodeId((bytes[0] & 0xF));
+    [[nodiscard]] constexpr NodeId motor_id(this auto && self) noexcept {
+        return NodeId((self.bytes[0] & 0xF));
     }
 
     // 获取状态
-    [[nodiscard]] constexpr Status status() const {
-        return Status::from_bits((bytes[0] & 0xF0) >> 4);
+    [[nodiscard]] constexpr Status status(this auto && self) noexcept {
+        return Status::from_bits((self.bytes[0] & 0xF0) >> 4);
     }
 
     // 获取角度值 (u16)
-    [[nodiscard]] constexpr uint16_t angle_u16() const {
-        return (bytes[1] << 8) | bytes[2];
+    [[nodiscard]] constexpr uint16_t angle_u16(this auto && self) noexcept {
+        return (self.bytes[1] << 8) | self.bytes[2];
     }
 
     // 获取速度值 (u12)
-    [[nodiscard]] constexpr uint16_t speed_u12() const {
-        return (bytes[3] << 4) | (bytes[4] >> 4);
+    [[nodiscard]] constexpr uint16_t speed_u12(this auto && self) noexcept {
+        return (self.bytes[3] << 4) | (self.bytes[4] >> 4);
     }
 
     // 获取扭矩值 (u12)
-    [[nodiscard]] constexpr uint16_t torque_u12() const {
-        return ((bytes[4] & 0x0F) << 8) | bytes[5];
+    [[nodiscard]] constexpr uint16_t torque_u12(this auto && self) noexcept {
+        return ((self.bytes[4] & 0x0F) << 8) | self.bytes[5];
     }
 
     // 获取MOS温度
-    [[nodiscard]] constexpr int8_t mos_temperature() const {
-        return static_cast<int8_t>(bytes[6]);
+    [[nodiscard]] constexpr int8_t mos_temperature(this auto && self) noexcept {
+        return static_cast<int8_t>(self.bytes[6]);
     }
 
     // 获取电机温度
-    [[nodiscard]] constexpr int8_t motor_temperature() const {
-        return static_cast<int8_t>(bytes[7]);
+    [[nodiscard]] constexpr int8_t motor_temperature(this auto && self) noexcept {
+        return static_cast<int8_t>(self.bytes[7]);
     }
 
 };

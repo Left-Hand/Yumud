@@ -201,7 +201,7 @@ struct [[nodiscard]] TxContext final{
     
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize_to_frame(Serializer && serializer) const noexcept {
+    serialize_to_frame(Serializer && srz) const noexcept {
         auto & self = *this;
         std::array<uint8_t, 17> buffer;
 
@@ -211,7 +211,7 @@ struct [[nodiscard]] TxContext final{
         buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[16] = static_cast<uint8_t>(crc_code >> 8);
 
-        return serializer.push_bytes(std::span(buffer));
+        return srz.push_bytes(std::span(buffer));
     } 
 };
 
@@ -319,7 +319,7 @@ struct [[nodiscard]] RxContext final{
 
     template<typename Serializer>
     Result<void, typename Serializer::Error> 
-    serialize_to_frame(Serializer && serializer) const noexcept {
+    serialize_to_frame(Serializer && srz) const noexcept {
         auto & self = *this;
         std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
@@ -328,7 +328,7 @@ struct [[nodiscard]] RxContext final{
         buffer[14] = static_cast<uint8_t>(crc_code & 0xff);
         buffer[15] = static_cast<uint8_t>(crc_code >> 8);
 
-        return serializer.push_bytes(std::span(buffer));
+        return srz.push_bytes(std::span(buffer));
     } 
 private:
 

@@ -6,7 +6,7 @@ using namespace ymd::modbus;
 
 namespace{
 
-struct [[nodiscard]] Deserializer final{
+struct [[nodiscard]] Desrz final{
     using Error = Infallible;
 
     std::span<const uint8_t> bytes;
@@ -24,8 +24,8 @@ struct [[nodiscard]] Deserializer final{
     }
 };
 
-static constexpr Deserializer make_dsrz(std::span<const uint8_t> buf){
-    return Deserializer(buf);
+static constexpr Desrz make_dsrz(std::span<const uint8_t> buf){
+    return Desrz(buf);
 }
 
 #define MAKE_DSRZ(buf) make_dsrz(std::span(buf))

@@ -44,10 +44,10 @@ struct [[nodiscard]] ParameterSettingsRead final{
     uint8_t parameter_chunk_number; // Chunk number to request, starts with 0
 
     template<typename Serializer>
-    constexpr Result<void, typename Serializer::Error> serialize(Serializer & serializer) const {
+    constexpr Result<void, typename Serializer::Error> serialize(Serializer & srz) const {
         auto & self = *this;
         uint8_t buf[] = {self.parameter_number, self.parameter_chunk_number};
-        return serializer.push_bytes(buf);
+        return srz.push_bytes(buf);
     }
 };
 

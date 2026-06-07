@@ -28,7 +28,7 @@ struct [[nodiscard]] ErasedFrame{
     uint32_t arg;
 
     static constexpr ErasedFrame 
-    from_write0(const uint8_t node_id, uint16_t item_id) {
+    from_write_0(const uint8_t node_id, uint16_t item_id) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write0,
@@ -38,7 +38,7 @@ struct [[nodiscard]] ErasedFrame{
     }
 
     static constexpr ErasedFrame 
-    from_write16(const uint8_t node_id, uint16_t item_id, const uint16_t value) {
+    from_write_16(const uint8_t node_id, uint16_t item_id, const uint16_t value) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write16,
@@ -48,7 +48,7 @@ struct [[nodiscard]] ErasedFrame{
     }
 
     static constexpr ErasedFrame 
-    from_read16(const uint8_t node_id, uint16_t item_id) {
+    from_read_16(const uint8_t node_id, uint16_t item_id) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Read16,
@@ -59,7 +59,7 @@ struct [[nodiscard]] ErasedFrame{
 
 
     static constexpr ErasedFrame 
-    from_write32(const uint8_t node_id, uint16_t item_id, const uint32_t value) {
+    from_write_32(const uint8_t node_id, uint16_t item_id, const uint32_t value) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Write32,
@@ -69,7 +69,7 @@ struct [[nodiscard]] ErasedFrame{
     }
 
     static constexpr ErasedFrame 
-    from_read32(const uint8_t node_id, uint16_t item_id) {
+    from_read_32(const uint8_t node_id, uint16_t item_id) {
         return ErasedFrame{
             .node_id = node_id,
             .op_code = OpCode::Read32,

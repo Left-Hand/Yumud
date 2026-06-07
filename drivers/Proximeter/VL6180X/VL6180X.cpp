@@ -301,7 +301,7 @@ IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
 // 		;
 
 // 	// read lux!
-// 	float lux = read16(RegAddr::RESULT_ALS_VAL);
+// 	float lux = read_16(RegAddr::RESULT_ALS_VAL);
 
 // 	// clear interrupt
 // 	write8(RegAddr::SYSTEM_INTERRUPT_CLEAR, 0x07);

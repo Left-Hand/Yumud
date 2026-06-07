@@ -47,24 +47,24 @@ struct [[nodiscard]] Serializer final{
 
 
     {
-        constexpr auto serializer = [&]{
+        constexpr auto srz = [&]{
             auto ret = Serializer{};
             factory.calibrate_encoder().serialize(ret).unwrap();
             return ret;
         }();
-        static_assert(serializer.length() == 8);
-        static_assert(serializer.bytes[0]  == 0x01);
-        static_assert(serializer.bytes[1]  == 0x06); 
-        static_assert(serializer.bytes[2]  == 0x00);
-        static_assert(serializer.bytes[3]  == 0x01);
-        static_assert(serializer.bytes[4]  == 0x00);
-        static_assert(serializer.bytes[5]  == 0x01);
-        static_assert(serializer.bytes[6]  == 0x19);
-        static_assert(serializer.bytes[7]  == 0xca); 
+        static_assert(srz.length() == 8);
+        static_assert(srz.bytes[0]  == 0x01);
+        static_assert(srz.bytes[1]  == 0x06); 
+        static_assert(srz.bytes[2]  == 0x00);
+        static_assert(srz.bytes[3]  == 0x01);
+        static_assert(srz.bytes[4]  == 0x00);
+        static_assert(srz.bytes[5]  == 0x01);
+        static_assert(srz.bytes[6]  == 0x19);
+        static_assert(srz.bytes[7]  == 0xca); 
     }
 
     {
-        constexpr auto serializer = [&]{
+        constexpr auto srz = [&]{
             auto ret = Serializer{};
             const auto packet = factory.set_position_pid_paraments({300, 30, 380});
             packet.serialize(ret).unwrap();
@@ -72,32 +72,32 @@ struct [[nodiscard]] Serializer final{
         }();
 
         // 01 10 00 63  00 06 0C 00     00 01 2C 00     00 00 1E 00     00 01 7C 57 79
-        static_assert(serializer.length() == 21);
-        static_assert(serializer.bytes[0]  == 0x01);
-        static_assert(serializer.bytes[1]  == 0x10); 
-        static_assert(serializer.bytes[2]  == 0x00);
-        static_assert(serializer.bytes[3]  == 0x63);
+        static_assert(srz.length() == 21);
+        static_assert(srz.bytes[0]  == 0x01);
+        static_assert(srz.bytes[1]  == 0x10); 
+        static_assert(srz.bytes[2]  == 0x00);
+        static_assert(srz.bytes[3]  == 0x63);
 
-        static_assert(serializer.bytes[4]  == 0x00);
-        static_assert(serializer.bytes[5]  == 0x06);
-        static_assert(serializer.bytes[6]  == 0x0c);
-        static_assert(serializer.bytes[7]  == 0x00); 
+        static_assert(srz.bytes[4]  == 0x00);
+        static_assert(srz.bytes[5]  == 0x06);
+        static_assert(srz.bytes[6]  == 0x0c);
+        static_assert(srz.bytes[7]  == 0x00); 
 
-        static_assert(serializer.bytes[8]  == 0x00);
-        static_assert(serializer.bytes[9]  == 0x01);
-        static_assert(serializer.bytes[10]  == 0x2c);
-        static_assert(serializer.bytes[11]  == 0x00); 
+        static_assert(srz.bytes[8]  == 0x00);
+        static_assert(srz.bytes[9]  == 0x01);
+        static_assert(srz.bytes[10]  == 0x2c);
+        static_assert(srz.bytes[11]  == 0x00); 
 
-        static_assert(serializer.bytes[12]  == 0x00);
-        static_assert(serializer.bytes[13]  == 0x00);
-        static_assert(serializer.bytes[14]  == 0x1e);
-        static_assert(serializer.bytes[15]  == 0x00); 
+        static_assert(srz.bytes[12]  == 0x00);
+        static_assert(srz.bytes[13]  == 0x00);
+        static_assert(srz.bytes[14]  == 0x1e);
+        static_assert(srz.bytes[15]  == 0x00); 
 
-        static_assert(serializer.bytes[16]  == 0x00);
-        static_assert(serializer.bytes[17]  == 0x01);
-        static_assert(serializer.bytes[18]  == 0x7c);
-        static_assert(serializer.bytes[19]  == 0x57); 
-        static_assert(serializer.bytes[20]  == 0x79); 
+        static_assert(srz.bytes[16]  == 0x00);
+        static_assert(srz.bytes[17]  == 0x01);
+        static_assert(srz.bytes[18]  == 0x7c);
+        static_assert(srz.bytes[19]  == 0x57); 
+        static_assert(srz.bytes[20]  == 0x79); 
     }
 
 

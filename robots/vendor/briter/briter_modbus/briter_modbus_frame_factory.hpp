@@ -14,20 +14,20 @@ struct [[nodiscard]] ModbusFrameFactoryBackend{
     struct [[nodiscard]] State{
         const uint8_t node_id;
 
-        constexpr ErasedFrame write16(ItemId reg_addr, const uint16_t reg_val) const {
-            return ErasedFrame::from_write16(node_id, uint16_t(reg_addr), reg_val);
+        constexpr ErasedFrame write_16(ItemId reg_addr, const uint16_t reg_val) const {
+            return ErasedFrame::from_write_16(node_id, uint16_t(reg_addr), reg_val);
         }
 
-        constexpr ErasedFrame write32(ItemId reg_addr, const uint32_t reg_val) const {
-            return ErasedFrame::from_write32(node_id, uint16_t(reg_addr), reg_val);
+        constexpr ErasedFrame write_32(ItemId reg_addr, const uint32_t reg_val) const {
+            return ErasedFrame::from_write_32(node_id, uint16_t(reg_addr), reg_val);
         }
 
-        constexpr ErasedFrame read16(ItemId reg_addr) const {
-            return ErasedFrame::from_read16(node_id, uint16_t(reg_addr));
+        constexpr ErasedFrame read_16(ItemId reg_addr) const {
+            return ErasedFrame::from_read_16(node_id, uint16_t(reg_addr));
         }
 
-        constexpr ErasedFrame read32(ItemId reg_addr) const {
-            return ErasedFrame::from_read32(node_id, uint16_t(reg_addr));
+        constexpr ErasedFrame read_32(ItemId reg_addr) const {
+            return ErasedFrame::from_read_32(node_id, uint16_t(reg_addr));
         }
     };
 

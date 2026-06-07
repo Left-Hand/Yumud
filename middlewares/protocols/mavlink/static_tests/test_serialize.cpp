@@ -48,7 +48,7 @@ struct [[nodiscard]] Serializer final{
 
         static constexpr uint8_t crc_extra = 50;
 
-        constexpr auto serializer = []{
+        constexpr auto srz = []{
             auto ret = Serializer{};
 
             serialize_tailer(ret, std::span(buf), crc_extra).unwrap();
@@ -56,9 +56,9 @@ struct [[nodiscard]] Serializer final{
         }();
 
 
-        static_assert(serializer.length() == 2);
-        static_assert(serializer.bytes[0]  == 0xaf);
-        static_assert(serializer.bytes[1]  == 0x28);
+        static_assert(srz.length() == 2);
+        static_assert(srz.bytes[0]  == 0xaf);
+        static_assert(srz.bytes[1]  == 0x28);
 
     }
 }

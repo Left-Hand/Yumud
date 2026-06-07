@@ -52,80 +52,80 @@ public:
 
     /// 设置力矩（寄存器0x0020，倍数×100，范围±100Nm）
     constexpr hal::ClassicCanFrame set_torque(const TorqueCode code) const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetTorque, code));
+        return make_can_frame(make_write_16_context(RegAddr::SetTorque, code));
     }
 
     /// 设置速度（寄存器0x0022，倍数×100，范围±10000rpm）
     constexpr hal::ClassicCanFrame set_speed(const SpeedCode code) const noexcept {
-        return make_can_frame(make_write32_context(RegAddr::SetSpeedH, code));
+        return make_can_frame(make_write_32_context(RegAddr::SetSpeedH, code));
     }
 
     /// 设置绝对位置（寄存器0x0023，倍数×100，范围-11796120°~11796480°）
     constexpr hal::ClassicCanFrame set_absolute_position(const PositionCode code) const noexcept {
-        return make_can_frame(make_write32_context(RegAddr::SetAbsPositionH, code));
+        return make_can_frame(make_write_32_context(RegAddr::SetAbsPositionH, code));
     }
 
     /// 设置相对位置（寄存器0x0025，倍数×100，范围-11796120°~11796480°）
     constexpr hal::ClassicCanFrame set_relative_position(const PositionCode code) const noexcept {
-        return make_can_frame(make_write32_context(RegAddr::SetRelPositionH, code));
+        return make_can_frame(make_write_32_context(RegAddr::SetRelPositionH, code));
     }
 
     /// 设置低速（寄存器0x0027，倍数×100，范围±300rpm）
     constexpr hal::ClassicCanFrame set_low_speed(const LowSpeedCode code) const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetLowSpeed, code));
+        return make_can_frame(make_write_16_context(RegAddr::SetLowSpeed, code));
     }
 
     /// ========== 控制模式与状态 ==========
 
     /// 切换控制模式（寄存器0x0060，范围0-5）
     constexpr hal::ClassicCanFrame set_control_mode(const ControlMode mode) const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::ControlMode, mode));
+        return make_can_frame(make_write_16_context(RegAddr::ControlMode, mode));
     }
 
     /// 进入空闲状态（寄存器0x00A0，写入1执行）
     constexpr hal::ClassicCanFrame idle_state() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::IdleState, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::IdleState, uint16_t(1)));
     }
 
     /// ========== 校准与初始化 ==========
 
     /// 校准电机（寄存器0x00A1，写入1执行）
     constexpr hal::ClassicCanFrame calibrate_motor() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::CalibrateMotor, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::CalibrateMotor, uint16_t(1)));
     }
 
     /// 进入闭环（寄存器0x00A2，写入1执行）
     constexpr hal::ClassicCanFrame enter_close_loop() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::EnterCloseLoop, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::EnterCloseLoop, uint16_t(1)));
     }
 
     /// ========== 参数管理 ==========
 
     /// 擦除参数（寄存器0x00A3，写入1执行）
     constexpr hal::ClassicCanFrame erase_param() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::EraseParam, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::EraseParam, uint16_t(1)));
     }
 
     /// 保存参数（寄存器0x00A4，写入1执行）
     constexpr hal::ClassicCanFrame save_param() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SaveParam, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::SaveParam, uint16_t(1)));
     }
 
     /// 重启驱动器（寄存器0x00A5，写入1执行，重启约1.5秒）
     constexpr hal::ClassicCanFrame restart_driver() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::RestartDriver, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::RestartDriver, uint16_t(1)));
     }
 
     /// ========== 原点设置 ==========
 
     /// 设置原点（寄存器0x00A6，写入1执行，保存偏置角并重启）
     constexpr hal::ClassicCanFrame set_origin() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetOrigin, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::SetOrigin, uint16_t(1)));
     }
 
     /// 设置临时原点（寄存器0x00A7，写入1执行，立即执行不保存）
     constexpr hal::ClassicCanFrame set_temp_origin() const noexcept {
-        return make_can_frame(make_write16_context(RegAddr::SetTempOrigin, uint16_t(1)));
+        return make_can_frame(make_write_16_context(RegAddr::SetTempOrigin, uint16_t(1)));
     }
 
     /// ========== 特殊指令 ==========
@@ -249,7 +249,7 @@ private:
     /// 自动处理1字节和2字节类型的转换
     template<typename T>
     requires (sizeof(T) <= 2)
-    static constexpr U8X8 make_write16_context(
+    static constexpr U8X8 make_write_16_context(
         const RegAddr reg_addr, const T code
     ){
         if constexpr(sizeof(T) == 1){
@@ -263,7 +263,7 @@ private:
     /// 自动处理4字节强类型码的位转换
     template<typename T>
     requires (sizeof(T) == 4)
-    static constexpr U8X8 make_write32_context(
+    static constexpr U8X8 make_write_32_context(
         const RegAddr reg_addr, const T code
     ){
         return make_write_context(Command::WriteReg32, reg_addr, std::bit_cast<uint32_t>(code));

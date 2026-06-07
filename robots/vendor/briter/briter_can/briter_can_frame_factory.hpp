@@ -18,24 +18,24 @@ struct [[nodiscard]] CanFrameFactoryBackend{
     struct [[nodiscard]] State{
         const uint8_t node_id;
 
-        constexpr ErasedFrame write0(CanCommand reg_addr) const {
-            return ErasedFrame::from_write0(node_id, uint16_t(reg_addr));
+        constexpr ErasedFrame write_0(CanCommand item_id) const {
+            return ErasedFrame::from_write_0(node_id, uint16_t(item_id));
         }
 
-        constexpr ErasedFrame write16(CanCommand reg_addr, const uint16_t reg_val) const {
-            return ErasedFrame::from_write16(node_id, uint16_t(reg_addr), reg_val);
+        constexpr ErasedFrame write_16(CanCommand item_id, const uint16_t reg_val) const {
+            return ErasedFrame::from_write_16(node_id, uint16_t(item_id), reg_val);
         }
 
-        constexpr ErasedFrame write32(CanCommand reg_addr, const uint32_t reg_val) const {
-            return ErasedFrame::from_write32(node_id, uint16_t(reg_addr), reg_val);
+        constexpr ErasedFrame write_32(CanCommand item_id, const uint32_t reg_val) const {
+            return ErasedFrame::from_write_32(node_id, uint16_t(item_id), reg_val);
         }
 
-        constexpr ErasedFrame read16(CanEnqueryId reg_addr) const {
-            return ErasedFrame::from_read16(node_id, uint16_t(reg_addr));
+        constexpr ErasedFrame read_16(CanEnqueryId item_id) const {
+            return ErasedFrame::from_read_16(node_id, uint16_t(item_id));
         }
 
-        constexpr ErasedFrame read32(CanEnqueryId reg_addr) const {
-            return ErasedFrame::from_read32(node_id, uint16_t(reg_addr));
+        constexpr ErasedFrame read_32(CanEnqueryId item_id) const {
+            return ErasedFrame::from_read_32(node_id, uint16_t(item_id));
         }
     };
 

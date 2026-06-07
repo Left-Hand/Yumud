@@ -34,7 +34,7 @@ struct [[nodiscard]] ErasedModbusPacket final{
         u32array u32_values;
     }context;
 
-    static constexpr Self from_write16(
+    static constexpr Self from_write_16(
         const uint8_t node_id,
         const Command command,
         const uint16_t data
@@ -50,7 +50,7 @@ struct [[nodiscard]] ErasedModbusPacket final{
         };
     }
 
-    static constexpr Self from_read16(
+    static constexpr Self from_read_16(
         const uint8_t node_id,
         const Command command,
         const uint16_t quantity
@@ -68,7 +68,7 @@ struct [[nodiscard]] ErasedModbusPacket final{
 
 
 
-    static constexpr Self from_write32arr(
+    static constexpr Self from_write_32arr(
         const uint8_t node_id,
         const Command command,
         std::span<const uint32_t> values
@@ -155,67 +155,41 @@ private:
         static constexpr size_t LEN = sizeof(float);
         static_assert(LEN == 4);
         static_assert(std::endian::native == std::endian::little);
-        const auto u8x4 = std::bit_cast<std::array<uint8_t, 4>>(value);
-        for(size_t i = 0; i < LEN; i++) ptr[i] = u8x4[i];
-        return ptr + LEN;
-    }
-
-    static constexpr uint8_t * push_u8be(uint8_t * ptr, const uint8_t value){
-        ptr[0] = value;
-        return ptr + 1;
-    }
-
-    static constexpr uint8_t * push_u16be(uint8_t * ptr, const uint16_t value){
-        ptr[0] = uint8_t(value >> 8);
-        ptr[1] = uint8_t(value);
-        return ptr + 2;
-    }
-
-    static constexpr uint8_t * push_u32be(uint8_t * ptr, const uint32_t value){
-        ptr[0] = uint8_t(value >> 24);
-        ptr[1] = uint8_t(value >> 16);
-        ptr[2] = uint8_t(value >> 8);
-        ptr[3] = uint8_t(value);
-        return ptr + 4;
-    }
-
-    static constexpr uint8_t * push_u16le(uint8_t * ptr, const uint16_t value){
-        ptr[0] = uint8_t(value);
-        ptr[1] = uint8_t(value >> 8);
-        return ptr + 2;
+        const uint32_t u32_value = std::bit_cast<uint32_t>(value);
+        return u8ptr_push_u32le(ptr, u32_value);
     }
 
 };
 
-struct ModbusPacketFactoryBackend{
+struct [[nodiscard]] ModbusPacketFactoryBackend final{
 
     using Packet = ErasedModbusPacket;
     struct State{
         uint8_t node_id;
     };
 
-    static constexpr Packet write16(
+    static constexpr Packet write_16(
         const State state, 
         const Command command, 
         const uint16_t data
     ){
-        return Packet::from_write16(state.node_id, command, data);
+        return Packet::from_write_16(state.node_id, command, data);
     }
 
-    static constexpr Packet read16(
+    static constexpr Packet read_16(
         const State state, 
         const Command command, 
         const uint16_t quantity
     ){
-        return Packet::from_read16(state.node_id, command, quantity);
+        return Packet::from_read_16(state.node_id, command, quantity);
     }
 
-    static constexpr Packet write32arr(
+    static constexpr Packet write_32arr(
         const State state, 
         const Command command, 
         std::span<const uint32_t> values
     ){
-        return Packet::from_write32arr(state.node_id, command, values);
+        return Packet::from_write_32arr(state.node_id, command, values);
     }
 };
 
