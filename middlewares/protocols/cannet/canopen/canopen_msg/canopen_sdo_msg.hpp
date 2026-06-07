@@ -7,7 +7,6 @@
 namespace ymd::canopen::sdo_msgs{
 
 
-using namespace canopen::primitive;
 
 
 struct [[nodiscard]] ExpeditedRequest final{

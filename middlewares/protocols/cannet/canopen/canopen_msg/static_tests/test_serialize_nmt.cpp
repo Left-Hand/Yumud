@@ -5,7 +5,6 @@
 
 using namespace ymd;
 using namespace ymd::canopen;
-using namespace ymd::canopen::primitive;
 using namespace ymd::canopen::nmt_msgs;
 using namespace ymd::canopen::sdo_msgs;
 
@@ -13,16 +12,16 @@ using namespace ymd::canopen::sdo_msgs;
     using Msg = Heartbeat;
     static constexpr auto msg = Msg{
         .station_node_id = NodeId::from_u7(5),
-        .station_state = NodeState::Operating
+        .station_state = NodeStateKind::Operating
     };
     static constexpr auto can_frame = msg_serde::to_can_frame(msg);
     static_assert(can_frame.is_standard());
     static_assert(can_frame.length() == 1);
-    static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeState::Operating));
+    static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeStateKind::Operating));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .station_node_id == NodeId::from_u7(5));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .station_state == NodeState::Operating);
+        .station_state == NodeStateKind::Operating);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
         .station_node_id == NodeId::from_u7(5));
 }
@@ -47,18 +46,18 @@ using namespace ymd::canopen::sdo_msgs;
     using Msg = NodeGuardingResponse;
     static constexpr auto msg = Msg{
         .station_node_id = NodeId::from_u7(7),
-        .station_state = NodeState::PreOperational
+        .station_state = NodeStateKind::PreOperational
     };
     static constexpr auto can_frame = msg_serde::to_can_frame(msg);
     static_assert(can_frame.is_standard());
     static_assert(can_frame.length() == 1);
     static_assert(can_frame.id_u32() == 0x707); // 0x700 | 7
-    static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeState::PreOperational));
+    static_assert(can_frame.payload_bytes()[0] == static_cast<uint8_t>(NodeStateKind::PreOperational));
     
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
         .station_node_id == NodeId::from_u7(7));
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::NoCheck>(can_frame)
-        .station_state == NodeState::PreOperational);
+        .station_state == NodeStateKind::PreOperational);
     static_assert(msg_serde::from_can_frame<Msg, VerifyLevel::Propagate>(can_frame).unwrap()
         .station_node_id == NodeId::from_u7(7));
 }
@@ -108,29 +107,29 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     {
         static constexpr auto err_code = SdoAbortCode(SdoAbortCode::DataTransferOrStorageFailed);
         static constexpr auto context = SdoExpeditedContextFactory::sdo_exception(
-            OdIndex(0, 0),
+            OdIndex::from_num(0, 0),
             err_code
         );
 
         static_assert(context.header.to_bits() == 0x80'0000'00);
         static_assert(context.bytes_u32() == err_code.to_u32());
 
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0}))
             .header.cmd_spec().to_u8() == 0x4f);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0}))
             .header.cmd_spec().to_u8() == 0x4b);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x47);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x43);
 
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0}))
             .header.cmd_spec().to_u8() == 0x2f);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0}))
             .header.cmd_spec().to_u8() == 0x2b);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x27);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x23);
         // static_assert()
     }

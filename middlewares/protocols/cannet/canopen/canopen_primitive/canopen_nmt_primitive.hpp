@@ -10,9 +10,9 @@
 
 
 
-namespace ymd::canopen::primitive{
+namespace ymd::canopen{
 
-enum class [[nodiscard]] NodeState:uint8_t{
+enum class [[nodiscard]] NodeStateKind:uint8_t{
     BootUp = 0x00,
     Stopped = 0x04,
     PreOperational = 0x05,
@@ -36,7 +36,7 @@ enum class [[nodiscard]] NmtCommand:uint8_t{
 // 错误寄存器[2]
 // 自定义错误区域[3-7]
 
-enum class [[nodiscard]] EmcyError:uint16_t{
+enum class [[nodiscard]] EmcyErrorKind:uint16_t{
     Generic = 0x1000,
     Current = 0x2000,
     InputCurrent = 0x2100,
@@ -71,16 +71,16 @@ enum class [[nodiscard]] EmcyError:uint16_t{
 };
 
 struct [[nodiscard]] EmcyErrorCode{
-    using Kind = EmcyError; 
+    using Kind = EmcyErrorKind; 
     using Self = EmcyErrorCode;
 
-    static constexpr EmcyError OK = static_cast<EmcyError>(0x0000);
-    constexpr EmcyErrorCode(const EmcyError kind) : kind_(kind) {}
+    static constexpr EmcyErrorKind OK = static_cast<EmcyErrorKind>(0x0000);
+    constexpr EmcyErrorCode(const EmcyErrorKind kind) : kind_(kind) {}
 
     static constexpr Option<Self> try_from_bits(const uint16_t b){
         if(b == 0) return Some(Self(OK));
         bool finded = false;
-        switch(static_cast<EmcyError>(b)){
+        switch(static_cast<EmcyErrorKind>(b)){
             case Kind::Generic: [[fallthrough]];
             case Kind::Current: [[fallthrough]];
             case Kind::InputCurrent: [[fallthrough]];
@@ -117,7 +117,7 @@ struct [[nodiscard]] EmcyErrorCode{
 
         if(not finded)
             return None;
-        return Some(Self(static_cast<EmcyError>(b)));
+        return Some(Self(static_cast<EmcyErrorKind>(b)));
     }
 
     constexpr Kind kind() const noexcept { return kind_; }
@@ -139,8 +139,8 @@ struct [[nodiscard]] EmcyErrorCode{
         return std::bit_cast<uint16_t>(kind_);
     }
 
-    [[nodiscard]] static constexpr const char * err_to_str(const EmcyError err){
-        using enum EmcyError;
+    [[nodiscard]] static constexpr const char * err_to_str(const EmcyErrorKind err){
+        using enum EmcyErrorKind;
         switch(err){
             default: return nullptr;
             case Generic: return "Generic";
@@ -182,7 +182,7 @@ private:
     Kind kind_;
 
 
-    inline friend OutputStream & operator <<(OutputStream & os, const EmcyError & err){ 
+    inline friend OutputStream & operator <<(OutputStream & os, const EmcyErrorKind & err){ 
         if(const auto * str = err_to_str(err); str != nullptr)
             return os << str;
         const auto guard = os.create_guard();
@@ -205,15 +205,15 @@ static_assert(sizeof(EmcyErrorCode) == 2);
 namespace ymd{
 
 template<>
-struct ImplFor<convert::TryFrom<uint8_t>, canopen::primitive::NodeState>{
-    using Self = canopen::primitive::NodeState;
+struct ImplFor<convert::TryFrom<uint8_t>, canopen::NodeStateKind>{
+    using Self = canopen::NodeStateKind;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint8_t int_val){
-        switch(int_val){
-            case static_cast<uint8_t>(Self::BootUp): 
-            case static_cast<uint8_t>(Self::Stopped): 
-            case static_cast<uint8_t>(Self::PreOperational): 
-            case static_cast<uint8_t>(Self::Operating): 
+        switch(static_cast<Self>(int_val)){
+            case Self::BootUp: 
+            case Self::Stopped: 
+            case Self::PreOperational: 
+            case Self::Operating: 
                 return Ok(static_cast<Self>(int_val));
         }
         return Err();
@@ -221,8 +221,8 @@ struct ImplFor<convert::TryFrom<uint8_t>, canopen::primitive::NodeState>{
 };
 
 template<>
-struct ImplFor<convert::TryFrom<uint8_t>, canopen::primitive::NmtCommand>{
-    using Self = canopen::primitive::NmtCommand;
+struct ImplFor<convert::TryFrom<uint8_t>, canopen::NmtCommand>{
+    using Self = canopen::NmtCommand;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint8_t int_val){
         switch(static_cast<Self>(int_val)){
@@ -237,18 +237,14 @@ struct ImplFor<convert::TryFrom<uint8_t>, canopen::primitive::NmtCommand>{
     }
 };
 
-}
 
-namespace ymd{
-
-
-// EmcyError
+// EmcyErrorKind
 template<>
-struct ImplFor<convert::TryFrom<uint16_t>, canopen::primitive::EmcyError>{
-    using Self = canopen::primitive::EmcyError;
+struct ImplFor<convert::TryFrom<uint16_t>, canopen::EmcyErrorKind>{
+    using Self = canopen::EmcyErrorKind;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint16_t int_val){
-        if(canopen::primitive::EmcyErrorCode::err_to_str(static_cast<Self>(int_val)) != nullptr)
+        if(canopen::EmcyErrorCode::err_to_str(static_cast<Self>(int_val)) != nullptr)
             return Ok(static_cast<Self>(int_val));
         else
             return Err();
@@ -256,8 +252,8 @@ struct ImplFor<convert::TryFrom<uint16_t>, canopen::primitive::EmcyError>{
 };
 
 template<>
-struct ImplFor<convert::TryFrom<uint16_t>, canopen::primitive::EmcyErrorCode>{
-    using Self = canopen::primitive::EmcyErrorCode;
+struct ImplFor<convert::TryFrom<uint16_t>, canopen::EmcyErrorCode>{
+    using Self = canopen::EmcyErrorCode;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint16_t int_val){
         const auto may_code = Self::try_from_bits(int_val);

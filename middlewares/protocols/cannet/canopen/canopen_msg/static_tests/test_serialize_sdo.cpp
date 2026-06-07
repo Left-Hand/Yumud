@@ -5,7 +5,6 @@
 
 using namespace ymd;
 using namespace ymd::canopen;
-using namespace ymd::canopen::primitive;
 using namespace ymd::canopen::nmt_msgs;
 using namespace ymd::canopen::sdo_msgs;
 
@@ -16,29 +15,29 @@ namespace {
     {
         static constexpr auto err_code = SdoAbortCode(SdoAbortCode::DataTransferOrStorageFailed);
         static constexpr auto context = SdoExpeditedContextFactory::sdo_exception(
-            OdIndex(0, 0),
+            OdIndex::from_num(0, 0),
             err_code
         );
 
         static_assert(context.header.to_bits() == 0x80'0000'00);
         static_assert(context.bytes_u32() == err_code.to_u32());
 
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0}))
             .header.cmd_spec().to_u8() == 0x4f);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0}))
             .header.cmd_spec().to_u8() == 0x4b);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x47);
-        static_assert(SdoExpeditedContextFactory::read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::read_response(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x43);
 
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0}))
             .header.cmd_spec().to_u8() == 0x2f);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0}))
             .header.cmd_spec().to_u8() == 0x2b);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x27);
-        static_assert(SdoExpeditedContextFactory::write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+        static_assert(SdoExpeditedContextFactory::write_request(OdIndex::from_num(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
             .header.cmd_spec().to_u8() == 0x23);
         // static_assert()
     }

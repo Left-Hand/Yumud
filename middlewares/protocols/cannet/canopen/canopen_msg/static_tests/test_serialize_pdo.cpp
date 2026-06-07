@@ -5,8 +5,7 @@
 
 using namespace ymd;
 using namespace ymd::canopen;
-using namespace ymd::canopen::primitive;
-using namespace ymd::canopen::nmt_msgs;
+using namespace ymd::canopen::nmt_msgs; 
 using namespace ymd::canopen::sdo_msgs;
 
 namespace {

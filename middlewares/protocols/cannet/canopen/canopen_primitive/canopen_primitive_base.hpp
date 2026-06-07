@@ -4,7 +4,7 @@
 #include "core/container/bits_set.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
 
-namespace ymd::canopen::primitive{
+namespace ymd::canopen{
 
 using CanFrame = hal::ClassicCanFrame;
 using CanPayload = hal::ClassicCanPayload;
@@ -203,12 +203,13 @@ struct [[nodiscard]] OdIndex final{
     OdMajorIndex major;
     OdMinorIndex minor;
 
-    constexpr explicit OdIndex(const uint16_t _major, const uint8_t _minor):
-        major(OdMajorIndex::from_bits(_major)),
-        minor(OdMinorIndex::from_bits(_minor)){;}
 
     static constexpr Self from_parts(const OdMajorIndex _major, const OdMinorIndex _minor){
-        return Self(_major.to_bits(), _minor.to_bits());
+        return Self(_major, _minor);
+    }
+
+    static constexpr Self from_num(const uint16_t _major, const uint8_t _minor){
+        return Self(OdMajorIndex::from_bits(_major), OdMinorIndex::from_bits(_minor));
     }
     [[nodiscard]] constexpr bool operator==(const OdIndex& other) const noexcept {
         return major == other.major and minor == other.minor;

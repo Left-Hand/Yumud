@@ -6,7 +6,6 @@
 
 
 namespace ymd::canopen::nmt_msgs{
-using namespace canopen::primitive;
 
 // NMT（Network Management）报文
 // 功能：网络管理，用于启动、停止、复位节点等操作
@@ -19,8 +18,8 @@ struct [[nodiscard]] NetManage final{
     using Self = NetManage;
     static constexpr auto COBID = CobId::from_bits(0x00);
 
-    NmtCommand cmd;
     NodeId dest_node_id;
+    NmtCommand cmd;
 
     constexpr void fill_payload_bytes(const std::span<uint8_t, 2> bytes) const noexcept {
         bytes[0] = std::bit_cast<uint8_t>(cmd);
@@ -38,8 +37,8 @@ struct [[nodiscard]] NetManage final{
         CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE(canid_u32 == 0);
 
         const auto self = Self{
-            .cmd = CANOPEN_FLEX_TRY_UNWRAP_RESULT_TO_OPTION(convert::try_cast<NmtCommand>(frame[0])),
             .dest_node_id = NodeId::from_u7(frame[1]),
+            .cmd = CANOPEN_FLEX_TRY_UNWRAP_RESULT_TO_OPTION(convert::try_cast<NmtCommand>(frame[0])),
         };
         CANOPEN_RETURN_SOME(self);
     }
@@ -176,7 +175,7 @@ struct [[nodiscard]] NodeGuardingResponse final {
     // Node guarding response message
     using Self = NodeGuardingResponse;
     NodeId station_node_id;
-    NodeState station_state;
+    NodeStateKind station_state;
     
     [[nodiscard]] constexpr CobId cobid() const noexcept {
         return CobId::from_bits(0x700 | station_node_id.to_u7());
@@ -200,7 +199,7 @@ struct [[nodiscard]] NodeGuardingResponse final {
         
         const auto self = Self{
             .station_node_id = NodeId::from_u7(canid_u32 & 0x7f),
-            .station_state = std::bit_cast<NodeState>(frame[0])
+            .station_state = std::bit_cast<NodeStateKind>(frame[0])
         };
         CANOPEN_RETURN_SOME(self);
     }
@@ -210,13 +209,13 @@ struct [[nodiscard]] NodeGuardingResponse final {
 struct [[nodiscard]] Heartbeat final{  
     using Self = Heartbeat;
     NodeId station_node_id;
-    NodeState station_state;
+    NodeStateKind station_state;
 
 
     [[nodiscard]] static constexpr Self from_bootup(const NodeId station_node_id){
         return Self{
             .station_node_id = station_node_id,
-            .station_state = NodeState::BootUp
+            .station_state = NodeStateKind::BootUp
         };
     }
 
@@ -225,7 +224,7 @@ struct [[nodiscard]] Heartbeat final{
     }
 
     [[nodiscard]] bool is_bootup() const noexcept {
-        return station_state == NodeState::BootUp;
+        return station_state == NodeStateKind::BootUp;
     }
 
     [[nodiscard]] constexpr CanFrame to_can_frame() const noexcept {
@@ -247,7 +246,7 @@ struct [[nodiscard]] Heartbeat final{
         CANOPEN_EXTERNAL_RETURN_NONE_IFFALSE((canid_u32 & 0b111'1000'0000) == 0x700);
         const auto self = Self{
             .station_node_id = NodeId::from_u7(canid_u32 & 0x7f),
-            .station_state = std::bit_cast<NodeState>(frame[0])
+            .station_state = std::bit_cast<NodeStateKind>(frame[0])
         };
         CANOPEN_RETURN_SOME(self);
     }

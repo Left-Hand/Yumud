@@ -18,8 +18,6 @@ struct PredefinedError{
 };
 
 namespace ymd::canopen::basic{
-using namespace canopen;
-using namespace canopen::primitive;
 
 
 // 此对象提供有关设备类型的信息。该对象描述了逻辑设备类型及其功能。它由两个16位域组成，一个描述所用设备协议或应用协议，

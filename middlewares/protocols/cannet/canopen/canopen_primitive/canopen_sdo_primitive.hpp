@@ -8,7 +8,7 @@
 #include "core/utils/convert.hpp"
 
 
-namespace ymd::canopen::primitive{
+namespace ymd::canopen{
 
 // enum struct [[nodiscard]] SdoCommandKind : uint8_t {
 //     DownloadSegment = 0x00,  // 下载段
@@ -235,21 +235,16 @@ struct alignas(4) [[nodiscard]] SdoExpeditedHeader final{
 
     [[nodiscard]] constexpr uint32_t to_bits() const noexcept { return bits; }
 
-
-
-    constexpr OdIndex od_index() const noexcept {
-        return OdIndex{
-            major_index().to_bits(),
-            minor_index().to_bits()
-        };
-    }
-    
     constexpr OdMajorIndex major_index() const noexcept {
         return OdMajorIndex::from_bits((bits >> 8) & 0xFFFF);  // 取中间16位
     }
     
     constexpr OdMinorIndex minor_index() const noexcept {
         return OdMinorIndex::from_bits(bits & 0xFF);  // 取低8位
+    }
+
+    constexpr OdIndex od_index() const noexcept {
+        return OdIndex{major_index(),minor_index()};
     }
 
     constexpr SdoCommand cmd_spec() const noexcept {
@@ -548,11 +543,11 @@ private:
 namespace ymd{
 
 template<>
-struct ImplFor<convert::TryFrom<uint32_t>, canopen::primitive::SdoAbortError>{
-    using Self = canopen::primitive::SdoAbortError;
+struct ImplFor<convert::TryFrom<uint32_t>, canopen::SdoAbortError>{
+    using Self = canopen::SdoAbortError;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint32_t int_val){
-        if(canopen::primitive::SdoAbortCode::err_to_str(
+        if(canopen::SdoAbortCode::err_to_str(
             static_cast<Self>(int_val)) == nullptr
         ) return Err();
         return Ok(static_cast<Self>(int_val));
@@ -560,8 +555,8 @@ struct ImplFor<convert::TryFrom<uint32_t>, canopen::primitive::SdoAbortError>{
 };
 
 template<>
-struct ImplFor<convert::TryFrom<uint32_t>, canopen::primitive::SdoAbortCode>{
-    using Self = canopen::primitive::SdoAbortCode;
+struct ImplFor<convert::TryFrom<uint32_t>, canopen::SdoAbortCode>{
+    using Self = canopen::SdoAbortCode;
     using Error = void;
     static constexpr Result<Self, Error> try_from(uint32_t int_val){
         const auto may_code = Self::try_from_bits(int_val);

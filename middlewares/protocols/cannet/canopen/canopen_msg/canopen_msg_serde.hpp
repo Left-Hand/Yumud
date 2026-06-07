@@ -4,7 +4,6 @@
 #include "primitive/can/can_frame.hpp"
 
 namespace ymd::canopen::msg_serde{
-using namespace primitive;
 
 template<typename T>
 struct MsgSerde;

@@ -1,7 +1,7 @@
 #include "canopen_sdo_primitive.hpp"
 
 
-using namespace ymd::canopen::primitive;
+using namespace ymd::canopen;
 
 
 //不要在外部使用这个函数 因为它有可能返回空指针
