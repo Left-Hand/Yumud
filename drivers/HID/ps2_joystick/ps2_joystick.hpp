@@ -23,6 +23,7 @@ DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+#if 0
 enum class [[nodiscard]] JoyStickChannelSelection:uint8_t{
     Select,
     L3,
@@ -45,6 +46,7 @@ enum class [[nodiscard]] JoyStickChannelSelection:uint8_t{
     LX,
     LY
 };
+#endif
 
 
 enum class [[nodiscard]] DevId:uint8_t{
@@ -140,6 +142,7 @@ struct [[nodiscard]] RxPacket{
 
     #pragma pack(pop)
 
+    #if 0
     [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannelSelection sel) const noexcept {
         switch(sel){
             case JoyStickChannelSelection::Select:
@@ -190,6 +193,8 @@ struct [[nodiscard]] RxPacket{
         //unreachable
         __builtin_trap();
     }
+
+    #endif
 
     [[nodiscard]] imconstexpr std::span<uint8_t, 6> as_bytes_mut() {
         return std::span<uint8_t, 6>{reinterpret_cast<uint8_t *>(this), sizeof(*this)};

@@ -68,7 +68,7 @@ struct TCS34725_Prelude{
 struct TCS34725_Regset final:public TCS34725_Prelude{
     struct R8_Enable:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Enable;
-        uint8_t powerOn : 1;
+        uint8_t power_on : 1;
         uint8_t adc_en : 1;
         uint8_t __resv1__ :1;
         uint8_t wait_en : 1;
@@ -78,7 +78,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
     struct R8_Integration:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Integration;
-        uint8_t data;
+        uint8_t bits;
     }DEF_R8(integration_reg)
 
     struct R8_IntPersistence:public Reg8<>{
@@ -118,12 +118,12 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
     struct R16_LowThr:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::LowThr;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::HighThr;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(high_thr_reg)
 
     struct R8_DeviceId:public Reg8<>{
@@ -133,7 +133,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
         // 0x4D = TCS34723 and TCS34727
 
         static constexpr uint8_t KEY = 0x44;
-        uint8_t id;
+        uint8_t bits;
     };
 
 };

@@ -11,6 +11,13 @@
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/aht10-temp-humi-sensor.html
 
 namespace ymd::drivers{
+
+
+
+
+
+struct AHT10_Prelude{
+
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x38);
 
 enum class Mode:uint8_t{
@@ -20,8 +27,6 @@ enum class Mode:uint8_t{
 };
 
 static constexpr uint8_t MEASURE_COMMAND = 0xac;
-
-struct AHT10_Prelude{
 
 // 比特位	意义	描述
 // Bit[7]	忙闲指示	1=设备忙，处于测量模式 0=设备闲，处于休眠模式
@@ -71,6 +76,10 @@ struct [[nodiscard]] Packet final{
         return TemperatureCode{bits};
     }
 };
+
+
+
+
 };
 
 
