@@ -38,7 +38,7 @@ protected:
 public:
 
 
-    struct [[nodiscard]] GestureId{
+    struct [[nodiscard]] GestureId final{
         enum class [[nodiscard]] Kind:uint8_t{
             SlideDown = 0x01,
             SlideUp = 0x02,

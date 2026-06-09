@@ -40,234 +40,256 @@ private:
 namespace ymd::drivers{
 
 struct [[nodiscard]] HT16K33_Prelude{
-    enum class [[nodiscard]]  Error_Kind:uint8_t{
-        DisplayBitIndexOutOfRange,
-        DisplayByteIndexOutOfRange,
-        DisplayPayloadOversize,
-        DisplayXOutOfRange,
-        DisplayYOutOfRange,
-        KeyColumnOutOfRange,
-        KeyRowOutOfRange,
-        InvalidInterruptCode
-    };
+enum class [[nodiscard]]  Error_Kind:uint8_t{
+    DisplayBitIndexOutOfRange,
+    DisplayByteIndexOutOfRange,
+    DisplayPayloadOversize,
+    DisplayXOutOfRange,
+    DisplayYOutOfRange,
+    KeyColumnOutOfRange,
+    KeyRowOutOfRange,
+    InvalidInterruptCode
+};
 
-    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
+DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    using RegAddr = uint8_t;
+using RegAddr = uint8_t;
 
 
-    //  1 1 1 0 A2 A1 A0
-    static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u7(0b1110000);
+//  1 1 1 0 A2 A1 A0
+static constexpr auto DEFAULT_I2C_ADDR = 
+    hal::I2cSlaveAddr<7>::from_u7(0b1110000);
 
-    static constexpr auto make_address_sop28(
-        const BoolLevel A2,
-        const BoolLevel A1,
-        const BoolLevel A0
-    ){
-        return hal::I2cSlaveAddr<7>::from_u7(DEFAULT_I2C_ADDR.to_u7()
-            | ((A2 == HIGH) ? 0b100 : 0)
-            | ((A1 == HIGH) ? 0b010 : 0)
-            | ((A0 == HIGH) ? 0b001 : 0)
-        );
+static constexpr auto make_address_sop28(
+    const BoolLevel A2,
+    const BoolLevel A1,
+    const BoolLevel A0
+){
+    return hal::I2cSlaveAddr<7>::from_u7(DEFAULT_I2C_ADDR.to_u7()
+        | ((A2 == HIGH) ? 0b100 : 0)
+        | ((A1 == HIGH) ? 0b010 : 0)
+        | ((A0 == HIGH) ? 0b001 : 0)
+    );
+}
+
+static constexpr auto make_address_sop24(
+    const BoolLevel A1,
+    const BoolLevel A0
+){
+    return make_address_sop28(
+        LOW, A1, A0
+    );
+}
+
+enum class [[nodiscard]] Package:uint8_t{
+    SOP20,
+    SOP24,
+    SOP28
+};
+
+enum class [[nodiscard]] PulseDuty:uint8_t{
+    _1_16, _2_16, _3_16, _4_16,
+    _5_16, _6_16, _7_16, _8_16,
+    _9_16, _10_16, _11_16, _12_16,
+    _13_16, _14_16, _15_16, _16_16
+};
+
+enum class [[nodiscard]] BlinkFreq:uint8_t{
+    OFF = 0b00,
+    _2HZ = 0b01,
+    _1HZ = 0b01,
+    _0_5HZ = 0b01,
+};
+
+enum class [[nodiscard]] IntPinFunc:uint8_t{
+    AsRowDriver,
+    InterruptActiveLow,
+    InterruptActiveHigh
+};
+
+struct [[nodiscard]] Command final{
+
+public:
+    template<typename T>
+    requires (sizeof(T) == 1)
+    constexpr Command(const T cmd):
+        bits_(std::bit_cast<uint8_t>(cmd)){;}
+
+    [[nodiscard]] uint8_t to_u8() const noexcept {
+        return bits_;
     }
+private:
+    uint8_t bits_;
+};
 
-    static constexpr auto make_address_sop24(
-        const BoolLevel A1,
-        const BoolLevel A0
-    ){
-        return make_address_sop28(
-            LOW, A1, A0
-        );
-    }
-
-    enum class [[nodiscard]] Package:uint8_t{
-        SOP20,
-        SOP24,
-        SOP28
+struct [[nodiscard]] Settings final{
+    struct [[nodiscard]] SOP28Settings final{
+        static constexpr Package PACKAGE = Package::SOP28;
     };
 
-    enum class [[nodiscard]] PulseDuty:uint8_t{
-        _1_16, _2_16, _3_16, _4_16,
-        _5_16, _6_16, _7_16, _8_16,
-        _9_16, _10_16, _11_16, _12_16,
-        _13_16, _14_16, _15_16, _16_16
-    };
-
-    enum class [[nodiscard]] BlinkFreq:uint8_t{
-        OFF = 0b00,
-        _2HZ = 0b01,
-        _1HZ = 0b01,
-        _0_5HZ = 0b01,
-    };
-
-    enum class [[nodiscard]] IntPinFunc:uint8_t{
-        AsRowDriver,
-        InterruptActiveLow,
-        InterruptActiveHigh
-    };
-
-    struct [[nodiscard]] Command final{
-
-    public:
-        template<typename T>
-        requires (sizeof(T) == 1)
-        constexpr Command(const T cmd):
-            bits_(std::bit_cast<uint8_t>(cmd)){;}
-
-        [[nodiscard]] uint8_t to_u8() const noexcept {
-            return bits_;
-        }
-    private:
-        uint8_t bits_;
-    };
-
-    struct [[nodiscard]] Settings final{
-        struct [[nodiscard]] SOP28Settings final{
-            static constexpr Package PACKAGE = Package::SOP28;
-        };
-
-        struct [[nodiscard]] SOP20Settings final{
-            static constexpr Package PACKAGE = Package::SOP20;
-        };
-    };
-
-    struct [[nodiscard]] Config final{
-        IntPinFunc int_pin_func = IntPinFunc::InterruptActiveLow;
-        PulseDuty pulse_duty = PulseDuty::_10_16;
-        BlinkFreq blink_freq = BlinkFreq::OFF;
-
-        // static constexpr Config Default(){
-        //     return {
-        //         .int_pin_func = IntPinFunc::InterruptActiveLow,
-        //         .pulse_duty = PulseDuty::_10_16,
-        //         .blink_freq = BlinkFreq::_2HZ
-        //     };
-        // }
-    };
-
-    struct [[nodiscard]] KeyData final{
-        [[nodiscard]] constexpr bool test(const uint8_t x ,const uint8_t y) const noexcept {
-            const bool is_high_byte = x >= 8;
-            const auto byte = buf_[y * 2 + is_high_byte];
-            return byte & (1 << (x % 8));
-        }
-
-        constexpr Option<std::tuple<uint8_t, uint8_t>> first_xy() const noexcept {
-            const auto it = std::find_if(buf_.begin(), buf_.end(), 
-                [](const uint8_t data){return data != 0x00;}
-            );
-
-            if(it == buf_.end()) return None;
-            const auto idx = std::distance(buf_.begin(), it);
-
-            const uint8_t y = idx >> 1;
-            const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
-            const uint8_t x = __builtin_ctz(line);
-            return Some{std::make_tuple(x,y)};
-        }
-
-        template<size_t R>
-        requires (R < 3)
-        constexpr std::bitset<13> row_to_bitset() const noexcept {
-            const auto low_byte = buf_[R * 2];
-            const auto high_byte = buf_[R * 2 + 1];
-            return std::bitset<13>((high_byte << 8) | low_byte);
-        }
-
-        constexpr std::span<uint8_t> as_bytes_mut(){
-            return std::span(buf_);
-        }
-
-        constexpr std::span<const uint8_t> as_bytes() const noexcept {
-            return std::span(buf_);
-        }
-
-        friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
-            const auto b3 = std::to_array<std::bitset<13>>({
-                self.row_to_bitset<0>(),
-                self.row_to_bitset<1>(),
-                self.row_to_bitset<2>()
-            });
-
-            return os << b3;
-        }
-    private:
-        std::array<uint8_t, 6> buf_;
+    struct [[nodiscard]] SOP20Settings final{
+        static constexpr Package PACKAGE = Package::SOP20;
     };
 };
 
-struct HT16K33_Regs:public HT16K33_Prelude{
-    struct SetDataPtrCommand:public Reg8<>{
-        uint8_t addr:4;
-        const uint8_t __resv__:4 = 0b0000; 
-    };
-    VALIDATE_R8(SetDataPtrCommand)
+struct [[nodiscard]] Config final{
+    IntPinFunc int_pin_func = IntPinFunc::InterruptActiveLow;
+    PulseDuty pulse_duty = PulseDuty::_10_16;
+    BlinkFreq blink_freq = BlinkFreq::OFF;
 
-    struct SystemSetupCommand:public Reg8<>{
-        uint8_t turn_on:1;
-        uint8_t __resv__:7 = 0b0010000;
+    // static constexpr Config Default(){
+    //     return {
+    //         .int_pin_func = IntPinFunc::InterruptActiveLow,
+    //         .pulse_duty = PulseDuty::_10_16,
+    //         .blink_freq = BlinkFreq::_2HZ
+    //     };
+    // }
+};
 
-        SystemSetupCommand(const bool _turn_on):
-            turn_on(_turn_on){;}
-    };
 
-    VALIDATE_R8(SystemSetupCommand)
+struct [[nodiscard]] SetDataPtrCommand final{
+    uint8_t reg_addr:4;
+    const uint8_t __resv__:4 = 0b0000; 
+};
 
-    struct KeyDataPtrCommand:public Reg8<>{
-        uint8_t key:3;
-        const uint8_t __resv__:5 = 0b01000;
-    };
+struct [[nodiscard]] SystemSetupCommand final{
+    uint8_t turn_on:1;
+    uint8_t __resv__:7 = 0b0010000;
 
-    VALIDATE_R8(KeyDataPtrCommand)
+    SystemSetupCommand(const bool _turn_on):
+        turn_on(_turn_on){;}
+};
 
-    struct IntFlagPtr:public Reg8<>{
-        const uint8_t __resv__ = 0b01100000;
-    };
 
-    VALIDATE_R8(IntFlagPtr)
+struct [[nodiscard]] KeyDataPtrCommand final{
+    uint8_t key:3;
+    const uint8_t __resv__:5 = 0b01000;
+};
 
-    struct DisplaySetupCommand:public Reg8<>{
-        uint8_t display_on:1;
-        BlinkFreq blink_freq:2;
-        uint8_t __resv__:5 = 0b10000;
 
-        constexpr DisplaySetupCommand(
-            const Enable en,
-            const BlinkFreq freq
-        ){
-            display_on = (en == EN);
-            blink_freq = freq;
-        }
-    };
+struct IntFlagPtr{
+    const uint8_t __resv__ = 0b01100000;
+};
 
-    VALIDATE_R8(DisplaySetupCommand)
 
-    struct IntSet:public Reg8<>{
-        IntPinFunc int_pin_func:2;
-        const uint8_t __resv__:6 = 0b101000;
+struct DisplaySetupCommand{
+    uint8_t display_on:1;
+    BlinkFreq blink_freq:2;
+    uint8_t __resv__:5 = 0b10000;
 
-        IntSet(const IntPinFunc _func):
-            int_pin_func(_func)
-        {;}
-    };
+    constexpr DisplaySetupCommand(
+        const Enable en,
+        const BlinkFreq freq
+    ){
+        display_on = (en == EN);
+        blink_freq = freq;
+    }
+};
 
-    VALIDATE_R8(IntSet)
 
-    struct DimmingSet:public Reg8<>{
-        PulseDuty dimming:4;
-        const uint8_t __resv__:4 = 0b1110;
+struct IntSet{
+    IntPinFunc int_pin_func:2;
+    const uint8_t __resv__:6 = 0b101000;
 
-        constexpr DimmingSet(const PulseDuty pulse){
-            dimming = pulse;
-        }
-    };
+    IntSet(const IntPinFunc _func):
+        int_pin_func(_func)
+    {;}
+};
 
-    VALIDATE_R8(DimmingSet)
+VALIDATE_R8(IntSet)
+
+struct [[nodiscard]] KeyData final{
+    [[nodiscard]] constexpr bool test(const uint8_t x ,const uint8_t y) const noexcept {
+        const bool is_high_byte = x >= 8;
+        const auto byte = buf_[y * 2 + is_high_byte];
+        return byte & (1 << (x % 8));
+    }
+
+    constexpr Option<std::tuple<uint8_t, uint8_t>> first_xy() const noexcept {
+        const auto it = std::find_if(buf_.begin(), buf_.end(), 
+            [](const uint8_t data){return data != 0x00;}
+        );
+
+        if(it == buf_.end()) return None;
+        const auto idx = std::distance(buf_.begin(), it);
+
+        const uint8_t y = idx >> 1;
+        const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
+        const uint8_t x = __builtin_ctz(line);
+        return Some{std::make_tuple(x,y)};
+    }
+
+    template<size_t R>
+    requires (R < 3)
+    constexpr std::bitset<13> row_to_bitset() const noexcept {
+        const auto low_byte = buf_[R * 2];
+        const auto high_byte = buf_[R * 2 + 1];
+        return std::bitset<13>((high_byte << 8) | low_byte);
+    }
+
+    constexpr std::span<uint8_t> as_bytes_mut(){
+        return std::span(buf_);
+    }
+
+    constexpr std::span<const uint8_t> as_bytes() const noexcept {
+        return std::span(buf_);
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
+        const auto b3 = std::to_array<std::bitset<13>>({
+            self.row_to_bitset<0>(),
+            self.row_to_bitset<1>(),
+            self.row_to_bitset<2>()
+        });
+
+        return os << b3;
+    }
+private:
+    std::array<uint8_t, 6> buf_;
+};
+
+
+static constexpr size_t NUM_GC_RAM_BYTES = 16;
+static constexpr size_t NUM_KEY_RAM_SIZE = 3;
+
+
+struct [[nodiscard]] GcRam final{
+    std::array<uint8_t, NUM_GC_RAM_BYTES> bytes;
+
+    constexpr auto as_bytes() const noexcept {return std::span(bytes);}
+
+    constexpr IResult<> write_pixel(const uint8_t x, const uint8_t y, const bool val){
+        if(x > 7) return Err(Error::DisplayXOutOfRange);
+        if(y > 15) return Err(Error::DisplayYOutOfRange);
+        const uint8_t idx = x * 2 + (y / 8);
+        const uint8_t mask = 1 << (y % 8); 
+        if(val)bytes[idx] |= mask;
+        else bytes[idx] &= ~mask;
+        return Ok();
+    }
+};
+
+struct [[nodiscard]] DimmingSet final{
+    PulseDuty dimming:4;
+    const uint8_t __resv__:4 = 0b1110;
+
+    constexpr DimmingSet(const PulseDuty pulse){
+        dimming = pulse;
+    }
+};
+
+
+};
+
+struct HT16K33_Regset:public HT16K33_Prelude{
+
+
+
+
 
     //  HOLTEK use only
     // struct TestMode:public Reg8<>{
@@ -275,26 +297,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
     // };
 
 
-    static constexpr size_t NUM_GC_RAM_BYTES = 16;
-    static constexpr size_t NUM_KEY_RAM_SIZE = 3;
 
-    struct GcRam final{
-        std::array<uint8_t, NUM_GC_RAM_BYTES> bytes;
-
-        GcRam() = default;
-
-        constexpr auto as_bytes() const noexcept {return std::span(bytes);}
-
-        constexpr IResult<> write_pixel(const uint8_t x, const uint8_t y, const bool val){
-            if(x > 7) return Err(Error::DisplayXOutOfRange);
-            if(y > 15) return Err(Error::DisplayYOutOfRange);
-            const uint8_t idx = x * 2 + (y / 8);
-            const uint8_t mask = 1 << (y % 8); 
-            if(val)bytes[idx] |= mask;
-            else bytes[idx] &= ~mask;
-            return Ok();
-        }
-    };
     
     using KeyRam = std::array<uint8_t, NUM_KEY_RAM_SIZE>;
     
@@ -316,35 +319,35 @@ public:
         return Ok();
     }
 
-    IResult<> write_data(const RegAddr addr, const uint8_t data){
-        if(const auto res = i2c_drv_.write_reg(addr, data);
+    IResult<> write_data(const RegAddr reg_addr, const uint8_t data){
+        if(const auto res = i2c_drv_.write_reg(reg_addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_bulk(
-        const RegAddr addr, 
+        const RegAddr reg_addr, 
         const std::span<const uint8_t> pbuf
     ){
         // page 23
         // After reaching the display memory location 0X0FH the pointer will reset to 0X00H (display	
         // memory).
-        if(const auto res = i2c_drv_.write_bulk(addr, pbuf);
+        if(const auto res = i2c_drv_.write_bulk(reg_addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_data(const RegAddr addr, uint8_t & data){
-        if(const auto res = i2c_drv_.read_reg(addr, data);
+    IResult<> read_data(const RegAddr reg_addr, uint8_t & data){
+        if(const auto res = i2c_drv_.read_reg(reg_addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> read_bulk(
-        const RegAddr addr, 
+        const RegAddr reg_addr, 
         const std::span<uint8_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_bulk(addr, pbuf);
+        if(const auto res = i2c_drv_.read_bulk(reg_addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

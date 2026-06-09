@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class HT16K33 final:public HT16K33_Regs{
+class HT16K33 final:public HT16K33_Prelude{
 public:
     template<typename Set>
     explicit HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
@@ -56,6 +56,9 @@ public:
     IResult<KeyData> get_key_data();
 private:
     using Phy = HT16K33_Transport;
+    using Regset = HT16K33_Regset;
+
+    Regset regs_;
     Phy transport_;
     Package package_;
 

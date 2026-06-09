@@ -76,6 +76,8 @@ IResult<BoolLevel> HT16K33::get_intreg_status(){
     }
 }
 
+
+
 IResult<> HT16K33::init(const Config & cfg){
     if(const auto res = validate(); 
         res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));

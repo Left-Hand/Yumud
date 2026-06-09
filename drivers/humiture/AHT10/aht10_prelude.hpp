@@ -13,9 +13,6 @@
 namespace ymd::drivers{
 
 
-
-
-
 struct AHT10_Prelude{
 
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x38);
@@ -34,7 +31,7 @@ static constexpr uint8_t MEASURE_COMMAND = 0xac;
 // Bit[4]	保留	保留
 // Bit[3]	校准使能位	1=已校准 0=未校准
 // Bit[2~0]	保留	保留
-struct [[nodiscard]] Status final{
+struct [[nodiscard]] StatusCode final{
     uint8_t __resv__:3;
     uint8_t cali_en:1;
     uint8_t __resv2__:1;
@@ -62,8 +59,8 @@ struct [[nodiscard]] TemperatureCode final{
 struct [[nodiscard]] Packet final{
     std::array<uint8_t, 6> bytes;
 
-    constexpr Status status() const noexcept {
-        return std::bit_cast<Status>(bytes[0]);
+    constexpr StatusCode status_code() const noexcept {
+        return std::bit_cast<StatusCode>(bytes[0]);
     }
 
     constexpr HumidityCode humidity_code() const noexcept {
