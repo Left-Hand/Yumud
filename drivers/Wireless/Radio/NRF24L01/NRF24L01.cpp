@@ -27,7 +27,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> NRF24L01::write_command(const NRF24L01::Command cmd){
-    if(const auto res = p_spi_drv_->write_single<uint8_t>(cmd.to_u8());
+    if(const auto res = spi_drv_.write_single<uint8_t>(cmd.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

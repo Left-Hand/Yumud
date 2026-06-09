@@ -47,6 +47,19 @@ class Error{
     };
 };
 
+enum class [[nodiscard]] Status:uint8_t{
+    Ok = 0x00,
+    NoCard = 0xff,
+    Fault = 0xfe,
+    OutOfMoney = 0xfc,
+    VerifyFailed = 0xfb,
+};
+
+enum class [[nodiscard]] CardType:uint8_t{
+    S50 = 0x04,
+    Ultralight = 0x44,
+};
+
 
 namespace req_msgs{
 
