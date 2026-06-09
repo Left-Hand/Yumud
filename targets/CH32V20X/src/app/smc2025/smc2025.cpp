@@ -24,7 +24,7 @@
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/Display/ST7789/st7789.hpp"
 
 #include "render.hpp"
 #include "scenes.hpp"

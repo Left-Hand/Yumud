@@ -7,7 +7,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/Display/ST7789/st7789.hpp"
 #include "primitive/image/painter/painter_base.hpp"
 
 

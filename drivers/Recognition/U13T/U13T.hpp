@@ -1,79 +1,74 @@
 #pragma once
 
-#include "core/io/regs.hpp"
-#include "hal/conn/uart/uart.hpp"
+#include <cstdint>
+#include <cstddef>
 
-namespace ymd::drivers{
+namespace ymd::drivers::u13t{
 
-struct U13T_Prelude{
-    struct [[nodiscard]] Command final{
-    public:
-        enum Kind:uint8_t{
-            ReadCardNumber = 0x10,
-            ReadIdentityCardNumber = 0x20,
-            ReadBlockData = 0x11,
-            WriteBlockData = 0x12,
-            RegisterCard = 0x13,
-            UnregisterCard = 0x14,
-            Charge = 0x15,
-            Deduct = 0x16,
-            LoadKey = 0x2b,
-            SetBaudrate = 0x2c,
-            SetAddress = 0x2d,
-            SetAutoMode = 0x2e,
-        };
 
-        constexpr Command(const Kind kind, bool is_rx):
-            kind_(kind),
-            is_rx_(is_rx){;}
-
-        static constexpr Command from_bits(const uint8_t bits){
-            return Command(static_cast<Kind>(bits), bits & 0x80);
-        }
-
-        constexpr Kind kind() const noexcept {return kind_;}
-        constexpr bool is_rx() const noexcept {return is_rx_;}
-    private:
-        Kind kind_:7;
-        bool is_rx_:1;
+struct [[nodiscard]] Command final{
+public:
+    enum Kind:uint8_t{
+        ReadCardNumber = 0x10,
+        ReadIdentityCardNumber = 0x20,
+        ReadBlockData = 0x11,
+        WriteBlockData = 0x12,
+        RegisterCard = 0x13,
+        UnregisterCard = 0x14,
+        Charge = 0x15,
+        Deduct = 0x16,
+        LoadKey = 0x2b,
+        SetBaudrate = 0x2c,
+        SetAddress = 0x2d,
+        SetAutoMode = 0x2e,
     };
 
-    class Error{
-        enum Kind:uint8_t{
-            VerifyErr = 0xFB,
-            BlanceInsufficient = 0xfc,
-            DeviceError = 0xfe,
-            NoCard = 0xff,
-        };
-    };
-};
+    constexpr Command(const Kind kind, bool is_rx):
+        kind_(kind),
+        is_rx_(is_rx){;}
 
-class U13T:public U13T_Prelude{
-public:
-// private:
-// private:
-
-    RingBuf<uint8_t, 32> recv;
-    int8_t dead_ticks = 0;
-    const int8_t dead_limit = 3;
-
-
-    hal::UartBase & uart_;
-
-public:
-    U13T(hal::UartBase & uart):uart_(uart){;}
-
-    void init();
-    void tick();
-    void update();
-
-    void write(std::span<const uint8_t> pbuf){
-        uart_.try_write_bytes(pbuf);
+    static constexpr Command from_bits(const uint8_t bits){
+        return Command(static_cast<Kind>(bits), bits & 0x80);
     }
 
+    constexpr Kind kind() const noexcept {return kind_;}
+    constexpr bool is_rx() const noexcept {return is_rx_;}
+private:
+    Kind kind_:7;
+    bool is_rx_:1;
+};
+
+class Error{
+    enum Kind:uint8_t{
+        VerifyErr = 0xFB,
+        BlanceInsufficient = 0xfc,
+        DeviceError = 0xfe,
+        NoCard = 0xff,
+    };
 };
 
 
+namespace req_msgs{
+
+struct [[nodiscard]] SetBaudrate{
+    static constexpr size_t PAYLOAD_LENGTH = 7;
+    uint32_t baudrate;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        buf[0] = uint8_t(baudrate >> 24  );
+        buf[1] = uint8_t(baudrate >> 16  );
+        buf[2] = uint8_t(baudrate >> 8   );
+        buf[3] = uint8_t(baudrate        );
+        buf[4] = 0x98;
+        buf[5] = 0x24;
+        buf[6] = 0x31;
+    }
+};
+
+
+}
+
+#if 0
 struct U13T_MsgFactory:public U13T_Prelude{
 
     static constexpr std::array<uint8_t, 7> make_baudrate_payload(const uint32_t baudrate){
@@ -129,4 +124,7 @@ struct U13T_MsgFactory:public U13T_Prelude{
         (void)(baudrate);
     }
 };
+#endif
+
+
 }

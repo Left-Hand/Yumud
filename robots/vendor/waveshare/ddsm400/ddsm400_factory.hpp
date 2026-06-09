@@ -8,38 +8,54 @@ namespace ymd::robots::waveshare::ddsm400{
 using namespace primitive;
 
 
-struct [[nodiscard]] FrameFactory{
+struct FrameFactoryBackend{
     using Packet = std::array<uint8_t, NUM_PACKET_BYTES>;
 
-    MotorId motor_id;
+    struct State{
+        MotorId motor_id;
+    };
 
-    constexpr Packet set_target(const req_msgs::SetTarget & msg) const noexcept {
-        return serialize(msg);
+    template<typename Msg>
+    static constexpr Packet convert(const State & state, Msg && msg){
+        return transport::serialize_request(state.motor_id, std::forward<T>(msg));
     }
 
-    constexpr Packet get_journey() const noexcept {
-        return serialize(req_msgs::GetJourney{});
+};
+
+
+template<typename Backend>
+struct [[nodiscard]] ClientApiFacade{
+
+    using State = Backend::State;
+
+    State state;
+
+    constexpr auto set_target(this auto && self, const req_msgs::SetTarget & msg) noexcept {
+        return Backend::convert(self.state, msg);
     }
 
-    constexpr Packet set_loop_mode(const req_msgs::SetLoopMode & msg) const noexcept {
-        return serialize(msg);
+    constexpr auto get_journey(this auto && self) noexcept {
+        return Backend::convert(self.state, req_msgs::GetJourney{});
     }
 
-    constexpr Packet set_motor_id(const req_msgs::SetMotorId & msg) const noexcept {
-        return serialize(msg);
+    constexpr auto set_loop_mode(this auto && self, const req_msgs::SetLoopMode & msg) noexcept {
+        return Backend::convert(self.state, msg);
     }
 
-    constexpr Packet get_loop_mode() const noexcept {
-        return serialize(req_msgs::GetLoopMode{});
+    constexpr auto set_motor_id(this auto && self, const req_msgs::SetMotorId & msg) noexcept {
+        return Backend::convert(self.state, msg);
+    }
+
+    constexpr auto get_loop_mode(this auto && self) noexcept {
+        return Backend::convert(self.state, req_msgs::GetLoopMode{});
     }
 
 private:
 
-    template<typename T>
-    constexpr Packet serialize(T && msg) const noexcept {
-        return transport::serialize_request(motor_id, std::forward<T>(msg));
-    }
+
 };
+
+using FrameFactory = ClientApiFacade<FrameFactoryBackend>;
 
 
 }

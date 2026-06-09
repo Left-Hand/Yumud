@@ -17,11 +17,10 @@
 namespace ymd::drivers{
 
 struct PMW3901_Prelude{
-    struct R8_Motion:public Reg8<>{
-
+    struct [[nodiscard]] MotionCode final{
         uint8_t frame_from0:1;
         uint8_t run_mode:2;
-        const uint8_t __resv1__:1 = 0;
+        uint8_t __resv1__:1;
         uint8_t raw_from0:1;
         uint8_t __resv2__:2;
         uint8_t occured:1;
@@ -29,7 +28,7 @@ struct PMW3901_Prelude{
 
     #pragma pack(push, 1)
     struct [[nodiscard]] PMW3901_Packet final{
-        alignas(1) R8_Motion motion = {};
+        alignas(1) MotionCode motion = {};
         alignas(1) uint8_t observation = {};
         alignas(2) int16_t dx = {};
         alignas(2) int16_t dy = {};

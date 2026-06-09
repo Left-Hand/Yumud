@@ -224,7 +224,7 @@ IResult<> PMW3901::read_data_slow(){
     const auto dy_ubits = static_cast<uint16_t>((buf[4] << 8) | buf[3]);
 
 
-    packet_.motion.as_bits_mut() = buf[0];
+    packet_.motion = std::bit_cast<MotionCode>(buf[0]);
     packet_.dx = std::bit_cast<int16_t>(dx_ubits);
     packet_.dy = std::bit_cast<int16_t>(dy_ubits);
 
@@ -232,7 +232,8 @@ IResult<> PMW3901::read_data_slow(){
 }
 
 IResult<> PMW3901::read_data_burst(){
-    return read_bulk(0x16, std::span(&packet_.motion.as_bits_mut(), 6));
+    auto begin = reinterpret_cast<uint8_t *>(&packet_.motion);
+    return read_bulk(0x16, std::span(begin, 6));
 }
 
 
