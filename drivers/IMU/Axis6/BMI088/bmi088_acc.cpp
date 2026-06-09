@@ -82,7 +82,7 @@ IResult<> BMI088_Acc::update(){
 }
 
 
-IResult<math::Vec3<iq24>> BMI088_Acc::read_acc(){
+IResult<math::Vec3<iq24>> BMI088_Acc::get_acc(){
     return Ok(math::Vec3<iq24>(
         std::bit_cast<int16_t>(regs_.acc_x_reg.to_bits()) * acc_scaler_,
         std::bit_cast<int16_t>(regs_.acc_y_reg.to_bits()) * acc_scaler_,

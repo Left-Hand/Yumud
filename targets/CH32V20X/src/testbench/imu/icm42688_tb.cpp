@@ -122,8 +122,8 @@ void icm42688_main(){
     //     case hal::TimerEvent::Update:{
     //         const auto u0 = clock::micros();
     //         imu.update().examine();
-    //         const auto gyr = imu.read_gyr().examine();
-    //         const auto acc = imu.read_acc().examine();
+    //         const auto gyr = imu.get_gyr().examine();
+    //         const auto acc = imu.get_acc().examine();
 
     //         z_radians = z_radians + gyr.z * INV_FS;
     //         // mahony.myupdate_v2(gyr, acc);

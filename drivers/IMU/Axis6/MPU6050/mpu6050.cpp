@@ -138,7 +138,7 @@ IResult<> MPU6050::update(){
     return res;
 }
 
-IResult<math::Vec3<iq24>> MPU6050::read_acc(){
+IResult<math::Vec3<iq24>> MPU6050::get_acc(){
 
     return  Ok{math::Vec3<iq24>{
         iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_x_reg.to_bits())) * acc_scaler_,
@@ -147,7 +147,7 @@ IResult<math::Vec3<iq24>> MPU6050::read_acc(){
     }};
 }
 
-IResult<math::Vec3<iq24>> MPU6050::read_gyr(){
+IResult<math::Vec3<iq24>> MPU6050::get_gyr(){
 
     return Ok{math::Vec3<iq24>{
         iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_x_reg.to_bits())) * gyr_scaler_,

@@ -484,7 +484,7 @@ void nuedc_2025e_joint_main(){
 
                 // imu补偿
                 const auto yaw_gyr = -(
-                    bmi160_.read_gyr().examine().z + 
+                    bmi160_.get_gyr().examine().z + 
                     THIS_BMI160_YAW_GYR_BIAS);
 
                 const auto yaw_speed = yaw_gyr * iq20(1 / TAU);

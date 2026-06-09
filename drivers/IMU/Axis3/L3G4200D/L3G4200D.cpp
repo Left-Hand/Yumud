@@ -202,7 +202,7 @@ IResult<> L3G4200D::update(){
 }
 
 
-IResult<math::Vec3<iq24>> L3G4200D::read_acc(){
+IResult<math::Vec3<iq24>> L3G4200D::get_acc(){
     return Ok(math::Vec3<iq24>::ZERO);
 }
 

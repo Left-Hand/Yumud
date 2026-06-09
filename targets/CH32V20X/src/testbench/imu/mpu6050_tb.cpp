@@ -62,8 +62,8 @@ using namespace ymd::drivers;
     while(true){
         mpu.update().examine();
         DEBUG_PRINTLN_IDLE(
-            mpu.read_acc().examine(),
-            mpu.read_gyr().examine()
+            mpu.get_acc().examine(),
+            mpu.get_gyr().examine()
         );
     }
 }
@@ -118,29 +118,29 @@ using namespace ymd::drivers;
             #endif
 
             // mahony.update9(
-                // mpu.read_gyr().examine(), 
-                // mpu.read_acc().examine(), 
+                // mpu.get_gyr().examine(), 
+                // mpu.get_acc().examine(), 
                 // aku.read_mag().examine()
             // );
 
             // mahony.update(
-            //     mpu.read_gyr().examine(), 
-            //     mpu.read_acc().examine(),
+            //     mpu.get_gyr().examine(), 
+            //     mpu.get_acc().examine(),
             //     aku.read_mag().examine()
             // );
 
             const auto begin_us = clock::micros();
 
             // mahony.update(
-            //     mpu.read_gyr().examine(), 
-            //     mpu.read_acc().examine()
+            //     mpu.get_gyr().examine(), 
+            //     mpu.get_acc().examine()
             //     // aku.read_mag().examine()
             // );
 
             
             mahony.update(
-                mpu.read_gyr().examine(), 
-                mpu.read_acc().examine()
+                mpu.get_gyr().examine(), 
+                mpu.get_acc().examine()
             );
                 
             const auto end_us = clock::micros();

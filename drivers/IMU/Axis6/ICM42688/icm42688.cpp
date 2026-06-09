@@ -223,7 +223,7 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-IResult<math::Vec3<iq24>> ICM42688::read_acc(){
+IResult<math::Vec3<iq24>> ICM42688::get_acc(){
     return Ok{math::Vec3<iq24>{
 		acc_scale_ * iq16::from_bits(regs_.acc_bits_.x), 
 		acc_scale_ * iq16::from_bits(regs_.acc_bits_.y), 
@@ -232,7 +232,7 @@ IResult<math::Vec3<iq24>> ICM42688::read_acc(){
 }
 
 
-IResult<math::Vec3<iq24>> ICM42688::read_gyr(){
+IResult<math::Vec3<iq24>> ICM42688::get_gyr(){
 
     return Ok{math::Vec3<iq24>{
 		gyr_scale_ * iq16::from_bits(regs_.gyr_bits_.x),

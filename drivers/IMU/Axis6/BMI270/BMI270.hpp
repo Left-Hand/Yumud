@@ -38,7 +38,7 @@ public:
 
     IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
     [[nodiscard]] PmuMode get_pmu_mode(const PmuType pmu);
-    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> get_acc();
 private:
     BoschImu_Transport transport_;
     BMI270_Regset regs_ = {};

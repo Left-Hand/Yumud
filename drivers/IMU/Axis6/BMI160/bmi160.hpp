@@ -53,8 +53,8 @@ public:
 
     IResult<PmuMode> get_pmu_mode(const PmuType pmu);
 
-    IResult<math::Vec3<iq24>> read_acc();
-    IResult<math::Vec3<iq24>> read_gyr();
+    IResult<math::Vec3<iq24>> get_acc();
+    IResult<math::Vec3<iq24>> get_gyr();
 
 private:
     BoschImu_Transport transport_;

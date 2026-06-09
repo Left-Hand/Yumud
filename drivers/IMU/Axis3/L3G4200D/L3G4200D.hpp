@@ -29,7 +29,7 @@ public:
     IResult<> calibrate(uint8_t samples);
     IResult<> update();
 
-    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> get_acc();
     IResult<uint8_t> read_temperature();
 private:
     using Regs = L3G4200D_Regs;

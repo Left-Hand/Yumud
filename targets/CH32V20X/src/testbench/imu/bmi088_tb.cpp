@@ -70,8 +70,8 @@ static void bmi088_tb(hal::Spi & spi){
 
             
             mahony.update(
-                gyr_sensor.read_gyr().examine(), 
-                acc_sensor.read_acc().examine()
+                gyr_sensor.get_gyr().examine(), 
+                acc_sensor.get_acc().examine()
             );
                 
             const auto end_ms = clock::micros();

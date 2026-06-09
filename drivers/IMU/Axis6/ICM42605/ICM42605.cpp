@@ -85,12 +85,12 @@ IResult<> ICM42605::reset(){
     return Ok();
 }
 
-IResult<math::Vec3<iq24>> ICM42605::read_acc(){
+IResult<math::Vec3<iq24>> ICM42605::get_acc(){
     TODO();
     return Ok{math::Vec3<iq24>{0,0,0}};
 }
 
-IResult<math::Vec3<iq24>> ICM42605::read_gyr(){
+IResult<math::Vec3<iq24>> ICM42605::get_gyr(){
     TODO();
     return Ok{math::Vec3<iq24>{0,0,0}};
 }

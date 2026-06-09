@@ -17,8 +17,8 @@
 //     // acc_gyr_sensor_.update();
 //     // mag_sensor_.update();
 
-//     // acc3_ = bias_.acc.xform(math::Vec3(acc_gyr_sensor_.read_acc()));
-//     // gyr3_ = math::Vec3(acc_gyr_sensor_.read_gyr()) - bias_.gyr;
+//     // acc3_ = bias_.acc.xform(math::Vec3(acc_gyr_sensor_.get_acc()));
+//     // gyr3_ = math::Vec3(acc_gyr_sensor_.get_gyr()) - bias_.gyr;
 //     // mag3_ = bias_.mag.xform(math::Vec3(mag_sensor_.read_mag()));
 
 //     // quat_ = mahony_.update9(gyr3_, acc3_, mag3_);
@@ -27,8 +27,8 @@
 //     acc_gyr_sensor_.update();
 //     mag_sensor_.update();
 
-//     acc3_raw = math::Vec3{acc_gyr_sensor_.read_acc()};
-//     gyr3_raw = math::Vec3{acc_gyr_sensor_.read_gyr()};
+//     acc3_raw = math::Vec3{acc_gyr_sensor_.get_acc()};
+//     gyr3_raw = math::Vec3{acc_gyr_sensor_.get_gyr()};
 //     mag3_raw = math::Vec3{mag_sensor_.read_mag()};
 //     // mag3_raw = math::Vec3{};
 //     const auto rot_raw = calculate_raw_dir(mag3_raw);
@@ -74,7 +74,7 @@
     
 //     for(size_t i = 0; i < config_.calibrate_times; i++){
 //         acc_gyr_sensor_.update();
-//         acc_bias_sum += math::Vec3(acc_gyr_sensor_.read_acc());
+//         acc_bias_sum += math::Vec3(acc_gyr_sensor_.get_acc());
 //     }
 
 //     const auto acc_vec3 = acc_bias_sum / config_.calibrate_times;
@@ -86,7 +86,7 @@
     
 //     for(size_t i = 0; i < config_.calibrate_times; i++){
 //         acc_gyr_sensor_.update();
-//         gyr_bias_sum += math::Vec3(acc_gyr_sensor_.read_gyr());
+//         gyr_bias_sum += math::Vec3(acc_gyr_sensor_.get_gyr());
 //     }
 
 //     return gyr_bias_sum / config_.calibrate_times;

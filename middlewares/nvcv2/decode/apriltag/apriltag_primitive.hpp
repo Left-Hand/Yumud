@@ -20,18 +20,8 @@ struct [[nodiscard]] ApriltagPattern final{
 };
 
 struct [[nodiscard]] ApriltagIndex final{
-public:
-    static constexpr ApriltagIndex from_u16(const uint16_t raw){
-        return {raw};
-    }
 
-    constexpr uint16_t to_u16() const noexcept {
-        return index_;
-    }
-private:
-    constexpr ApriltagIndex(uint16_t index):index_(index){}
-
-    uint16_t index_ = 0;
+    uint16_t count = 0;
 };
 
 struct [[nodiscard]] ApriltagDirection final{
@@ -137,7 +127,7 @@ template<typename T, size_t N, typename Fn>
         const auto down_code = std::forward<Fn>(fn)(raw_code, ApriltagDirection::Kind::Down);
         const auto left_code = std::forward<Fn>(fn)(raw_code, ApriltagDirection::Kind::Left);
 
-        const auto apriltag_idx = ApriltagIndex::from_u16(i);
+        const auto apriltag_idx = ApriltagIndex(i);
 
 
         if(dst_code == up_code) 

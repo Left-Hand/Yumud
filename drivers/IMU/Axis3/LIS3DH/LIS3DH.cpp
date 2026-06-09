@@ -82,7 +82,7 @@ Result<void, Error> LIS3DH::reset(){
 
 
 
-IResult<math::Vec3<iq24>> LIS3DH::read_acc(){
+IResult<math::Vec3<iq24>> LIS3DH::get_acc(){
     return Ok(math::Vec3<iq24>::ZERO);
 
 }

@@ -39,7 +39,7 @@ public:
 
     IResult<> clear_flag();
 
-    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> get_acc();
     IResult<> sleep(){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.norm_mod_en = false; 

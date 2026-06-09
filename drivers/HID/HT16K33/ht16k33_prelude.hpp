@@ -64,19 +64,21 @@ using RegAddr = uint8_t;
 static constexpr auto DEFAULT_I2C_ADDR = 
     hal::I2cSlaveAddr<7>::from_u7(0b1110000);
 
-static constexpr auto make_address_sop28(
+static constexpr hal::I2cSlaveAddr<7> make_address_sop28(
     const BoolLevel A2,
     const BoolLevel A1,
     const BoolLevel A0
 ){
-    return hal::I2cSlaveAddr<7>::from_u7(DEFAULT_I2C_ADDR.to_u7()
-        | ((A2 == HIGH) ? 0b100 : 0)
-        | ((A1 == HIGH) ? 0b010 : 0)
-        | ((A0 == HIGH) ? 0b001 : 0)
-    );
+    uint8_t i2c_addr_u7 = DEFAULT_I2C_ADDR.to_u7();
+
+    i2c_addr_u7 |= ((A2 == HIGH) ? 0b100 : 0);
+    i2c_addr_u7 |= ((A1 == HIGH) ? 0b010 : 0);
+    i2c_addr_u7 |= ((A0 == HIGH) ? 0b001 : 0);
+
+    return hal::I2cSlaveAddr<7>::from_u7(i2c_addr_u7);
 }
 
-static constexpr auto make_address_sop24(
+static constexpr hal::I2cSlaveAddr<7> make_address_sop24(
     const BoolLevel A1,
     const BoolLevel A0
 ){
@@ -140,14 +142,6 @@ struct [[nodiscard]] Config final{
     IntPinFunc int_pin_func = IntPinFunc::InterruptActiveLow;
     PulseDuty pulse_duty = PulseDuty::_10_16;
     BlinkFreq blink_freq = BlinkFreq::OFF;
-
-    // static constexpr Config Default(){
-    //     return {
-    //         .int_pin_func = IntPinFunc::InterruptActiveLow,
-    //         .pulse_duty = PulseDuty::_10_16,
-    //         .blink_freq = BlinkFreq::_2HZ
-    //     };
-    // }
 };
 
 
@@ -160,8 +154,8 @@ struct [[nodiscard]] SystemSetupCommand final{
     uint8_t turn_on:1;
     uint8_t __resv__:7 = 0b0010000;
 
-    SystemSetupCommand(const bool _turn_on):
-        turn_on(_turn_on){;}
+    SystemSetupCommand(const Enable _turn_on):
+        turn_on(_turn_on == EN){;}
 };
 
 

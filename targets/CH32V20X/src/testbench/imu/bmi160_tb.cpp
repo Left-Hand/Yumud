@@ -92,8 +92,8 @@ void bmi160_main(){
 
         clock::delay(20ms);
         bmi.update().examine();
-        const auto acc = bmi.read_acc().unwrap();
-        const auto gyr = bmi.read_gyr().unwrap();
+        const auto acc = bmi.get_acc().unwrap();
+        const auto gyr = bmi.get_gyr().unwrap();
         // Quat gest = Quat::from_shortest_arc({0,0,1}, acc);
         // DEBUG_PRINTLN_IDLE(gest);
         DEBUG_PRINTLN_IDLE(acc, gyr);

@@ -17,7 +17,7 @@ struct AHT10_Prelude{
 
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x38);
 
-enum class Mode:uint8_t{
+enum class [[nodiscard]] Mode:uint8_t{
     Nor = 0b00,
     Cyc = 0b01,
     Cmd = 0b10

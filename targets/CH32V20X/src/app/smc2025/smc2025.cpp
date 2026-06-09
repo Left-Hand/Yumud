@@ -339,7 +339,7 @@ void smc2025_main(){
         case hal::TimerEvent::Update:{
             mpu.update().examine();
             qmc.update().examine();
-            const auto gyr = mpu.read_gyr().examine();
+            const auto gyr = mpu.get_gyr().examine();
             yaw_angle = Angular<iq16>::from_turns(
                 (yaw_angle + Angular<iq16>::from_radians(static_cast<iq16>(gyr.z)) * 0.04_iq16)
                 .unsigned_normalized().to_turns());
@@ -359,10 +359,10 @@ void smc2025_main(){
         // DEBUG_PRINTLN_IDLE(gyr.z);
         DEBUG_PRINTLN_IDLE(
             yaw_angle.to_degrees(), 
-            mpu.read_acc().examine(),
+            mpu.get_acc().examine(),
             qmc.read_mag().examine()
         );
-        //     mpu.read_acc().examine(),
+        //     mpu.get_acc().examine(),
             
         // );
         // test_paint();
