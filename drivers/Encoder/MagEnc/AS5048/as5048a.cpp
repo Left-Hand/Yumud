@@ -13,7 +13,7 @@ struct [[nodiscard]] SpiRequestPacket final{
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr bool is_verification_passed() const noexcept {
+    [[nodiscard]] constexpr bool is_valid() const noexcept {
         return std::popcount(to_bits()) % 2 == is_even;
     }
 };
@@ -30,7 +30,7 @@ struct [[nodiscard]] SpiResponsePacket final{
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr bool is_verification_passed() const noexcept {
+    [[nodiscard]] constexpr bool is_valid() const noexcept {
         return std::popcount(to_bits()) % 2 == is_even;
     }
 };

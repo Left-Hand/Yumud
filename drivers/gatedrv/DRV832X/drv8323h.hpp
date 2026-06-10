@@ -1,26 +1,27 @@
 #pragma once
 
 #include "drv832x_prelude.hpp"
+#include "core/container/closure/heapless_function.hpp"
 
 namespace ymd::drivers{
 
-class DRV8323H_TransportIntf final:public DRV832X_Prelude{
+class DRV8323H_Vtable final:public DRV832X_Prelude{
 public:
     // _6x = GND,
     // _3x = 47K to GND,
     // _1x = HiZ,
     // Independent = VDD,
-    virtual void set_pwm_mode(const PwmMode mode) = 0;
+    static constexpr size_t SBO_SIZE = 8;
 
-
-    virtual void set_idrive(const IDriveP drive) = 0;
+    HeaplessFunction<IResult<>(PwmMode), SBO_SIZE> set_pwm_mode;
+    HeaplessFunction<IResult<>(IDriveP), SBO_SIZE> set_drive_hs;
 };
 
-
+template<typename Backend>
 class DRV8323H final:
     public DRV832X_Prelude{
 public:
-    using Transport = DRV8323H_TransportIntf;
+    using Transport = DRV8323H_Vtable;
     explicit DRV8323H(Transport & transport):
         transport_(transport){;}
 

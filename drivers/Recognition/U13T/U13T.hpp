@@ -31,8 +31,8 @@ public:
         return Command(static_cast<Kind>(bits), bits & 0x80);
     }
 
-    constexpr Kind kind() const noexcept {return kind_;}
-    constexpr bool is_rx() const noexcept {return is_rx_;}
+    [[nodiscard]] constexpr Kind kind() const noexcept {return kind_;}
+    [[nodiscard]] constexpr bool is_rx() const noexcept {return is_rx_;}
 private:
     Kind kind_:7;
     bool is_rx_:1;
