@@ -13,6 +13,8 @@
 
 
 namespace ymd::drivers{
+
+
 struct VCE2755_Prelude{
     using Error = EncoderError;
 
@@ -189,7 +191,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x00
     struct [[nodiscard]] R8_ChipId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
-        PackageCode code;
+        uint8_t code;
     };
 
     VALIDATE_R8(R8_ChipId)

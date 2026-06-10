@@ -49,7 +49,7 @@ public:
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
-    IResult<PackageCode> get_package_code();
+    IResult<uint8_t> get_package_code();
 
 private:
     hal::SpiDrv spi_drv_;

@@ -12,8 +12,8 @@
 
 namespace ymd::drivers{
 
-class MT6816 final{
-public:
+
+struct MT6816_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
@@ -22,6 +22,11 @@ public:
     struct Config{
         Enable fast_mode_en = EN;
     };
+};
+
+class MT6816 final:public MT6816_Prelude{
+public:
+
 
 public:
     explicit MT6816(const hal::SpiDrv & spi_drv):
