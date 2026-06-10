@@ -25,28 +25,6 @@ using Error = PMW3901::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-enum class [[nodiscard]] RegAddr:uint8_t{
-    Product_ID              = 0x00,
-    Revision_ID             = 0x01,
-    Motion                  = 0x02,
-    Delta_X_L               = 0x03,
-    Delta_X_H               = 0x04,
-    Delta_Y_L               = 0x05,
-    Delta_Y_H               = 0x06,
-    Squal                   = 0x07,
-    RawData_Sum             = 0x08,
-    RawData_Max             = 0x09,
-    RawData_Min_            = 0x0A,
-    Shutter_Lower           = 0x0B,
-    Shutter_Upper           = 0x0C,
-    Observation             = 0x15,
-    Motion_Burst            = 0x16,
-    Power_Up_Reset          = 0x3A,
-    Shutdown                = 0x3B,
-    RawData_Grab            = 0x58,
-    RawData_Grab_Status     = 0x59,
-    Inverse_Product_ID      = 0x5F,
-};
 
 static constexpr auto INIT_LIST1 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
@@ -212,7 +190,9 @@ IResult<> PMW3901::read_data(){
     return read_data_burst();
 }
 
-IResult<> PMW3901::read_data_slow(){
+IResult<PMW3901::Packet> PMW3901::update(){
+    Packet packet;
+
     std::array<uint8_t, 5> buf;
 
     for(size_t i = 0; i < buf.size(); i++){
@@ -224,27 +204,11 @@ IResult<> PMW3901::read_data_slow(){
     const auto dy_ubits = static_cast<uint16_t>((buf[4] << 8) | buf[3]);
 
 
-    packet_.motion = std::bit_cast<MotionCode>(buf[0]);
-    packet_.dx = std::bit_cast<int16_t>(dx_ubits);
-    packet_.dy = std::bit_cast<int16_t>(dy_ubits);
+    packet.motion = std::bit_cast<MotionCode>(buf[0]);
+    packet.dx = std::bit_cast<int16_t>(dx_ubits);
+    packet.dy = std::bit_cast<int16_t>(dy_ubits);
 
-    return Ok();
-}
-
-IResult<> PMW3901::read_data_burst(){
-    auto begin = reinterpret_cast<uint8_t *>(&packet_.motion);
-    return read_bulk(0x16, std::span(begin, 6));
-}
-
-
-
-IResult<> PMW3901::update(){
-    return read_data()
-    .if_ok([&]{
-        x_cm += int16_t(packet_.dx) * scale;
-        y_cm += int16_t(packet_.dy) * scale;
-    });
-
+    return Ok(packet);
 }
 
 IResult<> PMW3901::assert_reg(const uint8_t reg_addr, const uint8_t reg_val, const Error & error){
@@ -286,7 +250,7 @@ IResult<> PMW3901::init() {
         res.is_err()) return res;
 
     if(const auto res = update();
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 
 	// set performance optimization registers
 	// from PixArt PMW3901MB Optical Motion Tracking chip demo kit V3.20 (21 Aug 2018)

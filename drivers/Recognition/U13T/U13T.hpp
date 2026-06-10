@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
+#include "core/utils/bytes/buffer_cursor.hpp"
+#include <span>
 
 namespace ymd::drivers::u13t{
 
@@ -68,15 +68,74 @@ struct [[nodiscard]] SetBaudrate{
     uint32_t baudrate;
 
     constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
-        buf[0] = uint8_t(baudrate >> 24  );
-        buf[1] = uint8_t(baudrate >> 16  );
-        buf[2] = uint8_t(baudrate >> 8   );
-        buf[3] = uint8_t(baudrate        );
-        buf[4] = 0x98;
-        buf[5] = 0x24;
-        buf[6] = 0x31;
+        auto cursor = BufferCursor(buf);
+        cursor.push_u32be(baudrate); 
+        cursor.push_u8be(0x98); 
+        cursor.push_u8be(0x24); 
+        cursor.push_u8be(0x31); 
     }
 };
+
+struct [[nodiscard]] ReadBlockData{
+    static constexpr size_t PAYLOAD_LENGTH = 1;
+    uint8_t block_num;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        buf[0] = block_num;
+    }
+};
+
+struct [[nodiscard]] WriteBlockData{
+    static constexpr size_t PAYLOAD_LENGTH = 17;
+    uint8_t block_num;
+    std::span<const uint8_t, 16> block_data;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        buf[0] = block_num;
+
+        uint8_t * dst = buf + 1;
+        for(size_t i = 0; i < 16; i++){
+            dst[i] = block_data[i];
+        }
+    }
+};
+
+struct [[nodiscard]] RegisterCard{
+    static constexpr size_t PAYLOAD_LENGTH = 5;
+    uint8_t block_num;
+    uint32_t initial_value;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        auto cursor = BufferCursor(buf);
+        cursor.push_u8be(block_num); 
+        cursor.push_u32be(initial_value); 
+    }
+};
+
+struct [[nodiscard]] DeleteCard{
+    static constexpr size_t PAYLOAD_LENGTH = 4;
+    uint8_t block_num;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        buf[0] = block_num;
+        buf[1] = 0x38;
+        buf[2] = 0x52;
+        buf[3] = 0x7a;
+    }
+};
+
+struct [[nodiscard]] ChargeMoney{
+    static constexpr size_t PAYLOAD_LENGTH = 5;
+    uint8_t block_num;
+    uint32_t money;
+
+    constexpr void fill_bytes(__restrict uint8_t buf[PAYLOAD_LENGTH]){
+        auto cursor = BufferCursor(buf);
+        cursor.push_u8be(block_num); 
+        cursor.push_u32be(money); 
+    }
+};
+
 
 
 }
@@ -84,17 +143,6 @@ struct [[nodiscard]] SetBaudrate{
 #if 0
 struct U13T_MsgFactory:public U13T_Prelude{
 
-    static constexpr std::array<uint8_t, 7> make_baudrate_payload(const uint32_t baudrate){
-        return {
-            uint8_t(baudrate >> 24  ),
-            uint8_t(baudrate >> 16  ),
-            uint8_t(baudrate >> 8   ),
-            uint8_t(baudrate        ),
-            0x98,
-            0x24,
-            0x31
-        };
-    }
 
     static constexpr uint8_t calc_vcode(const uint8_t len, const uint8_t madder, const uint8_t command, const std::span<const uint8_t> payload){
         uint8_t vcode = len ^ madder ^ command;
