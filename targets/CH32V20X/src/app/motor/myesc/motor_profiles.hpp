@@ -28,9 +28,9 @@ static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 static constexpr size_t HFI_FREQ = 1000;
 
-static constexpr auto SHUNT_RESISTANCE = 0.006f;
-static constexpr auto OPA_GAIN = 20;
-static constexpr auto CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE);
+static constexpr double SHUNT_RESISTANCE_OHMS = 0.006f;
+static constexpr double OPA_GAIN = 20;
+static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
 // static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_FULLSCALE_AMPS / (1 << 12));
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
 // const auto scaler_u = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
@@ -161,6 +161,7 @@ struct MotorProfile_Wheel{
     static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(86.24 * 1E-6);
+    static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 0.0645_iq20;
     static constexpr auto MODU_VOLT_LIMIT = iq16(3.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 300;

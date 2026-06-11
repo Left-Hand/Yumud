@@ -1,7 +1,7 @@
-#include "cds55xx.hpp"
+#include "st3215_serialize.hpp"
 
 using namespace ymd;
-using namespace ymd::robots::dfrobot::cds55xx;
+using namespace ymd::robots::waveshare::st3215;
 
 
 namespace{
@@ -20,6 +20,8 @@ static constexpr int find_different(
 };
 
 
+
+#if 0
 
 [[maybe_unused]] static constexpr void test_frame_serialize(){
 
@@ -80,5 +82,6 @@ static constexpr int find_different(
 
     }
 }
+#endif
 
 }

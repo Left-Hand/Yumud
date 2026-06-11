@@ -10,7 +10,22 @@
 #include "core/utils/bits/bitfield_proxy.hpp"
 #include <span>
 
-namespace ymd::robots::dfrobot::cds55xx{
+namespace ymd::robots::waveshare::st3215{
+
+struct [[nodiscard]] ServoId final{
+    uint8_t bits;
+
+    [[nodiscard]] constexpr bool is_boardcast() const {
+        return bits == 0xfe;
+    }
+
+    [[nodiscard]] constexpr bool is_unique() const {
+        return bits < 0xfe;
+    }
+};
+
+
+
 
 #define DEF_PROPERTY_BFPROXY(prop_name, start_bit, stop_bit, p_type_name, bits)\
 [[nodiscard]] constexpr auto prop_name(this auto && self) {\
@@ -20,9 +35,8 @@ namespace ymd::robots::dfrobot::cds55xx{
     DEF_PROPERTY_BFPROXY(prop_name, start_bit, (start_bit + 1), bool, bits)
 
 struct [[nodiscard]] StatusFlag final{
-
-
     using Self = StatusFlag;
+
     uint8_t bits;
 
     
@@ -65,25 +79,16 @@ private:
     Kind kind_;
 };
 
-static constexpr auto HEADER_TOKEN = std::to_array<uint8_t>({0xff, 0xff});
-
-struct [[nodiscard]] ServoId final{
-    uint8_t count;
-
-    [[nodiscard]] constexpr bool is_boardcast() const {
-        return count == 0xfe;
-    }
-
-    [[nodiscard]] constexpr bool is_unique() const {
-        return count < 0xfe;
-    }
-};
-
 
 
 
 namespace ins_msgs{
 
+
+struct [[nodiscard]] Ping final{
+    static constexpr Instruction INSTRUCTION = Instruction::Ping;
+    static constexpr size_t PAYLOAD_LENGTH = 0;
+};
 
 struct [[nodiscard]] WriteData final{
     static constexpr Instruction INSTRUCTION = Instruction::WriteData;
@@ -115,10 +120,6 @@ struct [[nodiscard]] InvokeAsync final{
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 
-struct [[nodiscard]] Ping final{
-    static constexpr Instruction INSTRUCTION = Instruction::Ping;
-    static constexpr size_t PAYLOAD_LENGTH = 0;
-};
 
 struct [[nodiscard]] Reset final{
     static constexpr Instruction INSTRUCTION = Instruction::Reset;

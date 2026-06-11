@@ -739,11 +739,11 @@ void myesc_main(){
 
 
         state.uvw_curr_unfilted = UvwCoord<iq20>{
-            .u = static_cast<int32_t>((uvw_current_u12x3[0]) - static_cast<int32_t>((state.uvw_current_bits_offset[0])))
+            .u = (int32_t(uvw_current_u12x3[0]) - int32_t((state.uvw_current_bits_offset[0])))
                  * CURRENT_AMPS_PER_ADC_LSB,
-            .v = static_cast<int32_t>((uvw_current_u12x3[1]) - static_cast<int32_t>((state.uvw_current_bits_offset[1])))
+            .v = (int32_t(uvw_current_u12x3[1]) - int32_t((state.uvw_current_bits_offset[1])))
                  * CURRENT_AMPS_PER_ADC_LSB,
-            .w = static_cast<int32_t>((uvw_current_u12x3[2]) - static_cast<int32_t>((state.uvw_current_bits_offset[2])))
+            .w = (int32_t(uvw_current_u12x3[2]) - int32_t((state.uvw_current_bits_offset[2])))
                  * CURRENT_AMPS_PER_ADC_LSB,
         };
 
@@ -808,7 +808,7 @@ void myesc_main(){
                 );
 
 
-                state.encoder_elec_angle = Angular<uq32>::from_turns(pu_to_uq32(next_encoder_lapturns * MotorProfile::POLE_PAIRS)
+                state.encoder_elec_angle = Angular<uq32>::from_turns(math::pu_to_uq32(next_encoder_lapturns * MotorProfile::POLE_PAIRS)
                         + MotorProfile::SENSORED_ELEC_ANGLE_BASE.to_turns());
             }else{
                 const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
@@ -912,37 +912,37 @@ void myesc_main(){
 
         // const auto dq_volt_gen = (generate_dq_volt_by_hfi()).clamp(MODU_VOLT_LIMIT);
         // const auto dq_volt_gen = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        const auto dq_volt_gen = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        // const auto dq_volt_gen = DqCoord<iq20>{2.0_iq20, 0};
-        // const auto dq_volt_gen = generate_dq_volt_by_constant_voltage().clamp(MotorProfile::MODU_VOLT_LIMIT);
+        auto dq_volt_gen = generate_dq_volt_by_pi_ctrl();
+        
+        const bool cross_decoupling_enabled = true;
 
-        auto alphabeta_volt_gen = dq_volt_gen.to_alphabeta(elec_sincos);
-        // alphabeta_volt_gen = alphabeta_volt_gen + hfi_alphabeta_volt;
+        if(cross_decoupling_enabled){
+            const bool is_speed_stable = true;
+            const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
+            dq_volt_gen.d -= MotorProfile::PHASE_INDUCTANCE * dq_curr_unfilted.q * omega;
+            dq_volt_gen.q += MotorProfile::PHASE_INDUCTANCE * dq_curr_unfilted.d * omega;
+        }
 
-        // auto alphabeta_volt_gen = openloop_alphabeta_volt;
-        // alphabeta_volt_gen = alphabeta_volt_gen + hfi_alphabeta_volt;
+        const bool bemf_decoupling_enabled = true;
+        if(bemf_decoupling_enabled){
+            const bool is_speed_stable = true;
+            const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
+           dq_volt_gen.q += MotorProfile::FLUX_LINKAGE * omega;
+        }
 
 
-        // const auto alphabeta_volt_gen = dq_volt_gen.to_alphabeta(elec_sincos) + generate_alpha_beta_volt_by_hfi();
-        // const auto alphabeta_volt_gen = openloop_alphabeta_volt;
-        // const auto alphabeta_volt_gen = AlphaBetaCoord<iq20>{1, 0};
-        // const auto alphabeta_volt_gen = hfi_alphabeta_volt.clamp(MotorProfile::MODU_VOLT_LIMIT);
-        // const auto alphabeta_volt_gen = dq_volt_gen.to_alphabeta(elec_sincos) + generate_alpha_beta_volt_by_hfi();
-        // const auto alphabeta_volt_gen = AlphaBetaCoord<iq20>::ZERO;
-        // const auto alphabeta_volt_gen = generate_alpha_beta_volt_by_hfi().clamp(MODU_VOLT_LIMIT);
-
-
+        dq_volt_gen = dq_volt_gen.clamp(MotorProfile::MODU_VOLT_LIMIT);
 
         const auto inv_bus_volt_3_by2 = INV_BUS_VOLT * iq16(1.5);
 
-        auto alphabeta_dutycycle = AlphaBetaCoord<iq16>{
-            .alpha = alphabeta_volt_gen.alpha,
-            .beta = alphabeta_volt_gen.beta
-        } * inv_bus_volt_3_by2;
+        auto dq_dutycycle_gen = dq_volt_gen * inv_bus_volt_3_by2;
+
+        auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
+
 
 
         const auto uvw_dutycycle_gen = SVM(
-            alphabeta_dutycycle
+            alphabeta_dutycycle_gen
         );
 
 
@@ -955,7 +955,7 @@ void myesc_main(){
 
         state.dq_curr_unfilted = dq_curr_unfilted;
         state.dq_volt_gen = dq_volt_gen;
-        state.alphabeta_volt_gen = alphabeta_volt_gen;
+        // state.alphabeta_volt_gen = alphabeta_volt_gen;
 
         // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_unfilted);
         // smo_sensorless_ob.update({alphabeta_curr_unfilted, alphabeta_volt_gen});

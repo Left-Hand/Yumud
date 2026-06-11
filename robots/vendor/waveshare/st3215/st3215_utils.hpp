@@ -3,7 +3,7 @@
 #include <span>
 #include <cstdint>
 
-namespace ymd::robots::dfrobot::cds55xx{
+namespace ymd::robots::waveshare::st3215{
 
 struct [[nodiscard]] ChecksumBuilder final{
     using Self = ChecksumBuilder;
@@ -41,6 +41,8 @@ struct [[nodiscard]] ChecksumBuilder final{
 private:
     uint8_t checksum;
 };
+
+
 [[nodiscard]] static constexpr uint8_t calc_checksum(const uint8_t id, std::span<const uint8_t> pbuf){
     const size_t len = pbuf.size() + 1;
     // const uint32_t sum = id.count + len + std::accumulate(pbuf.begin(), pbuf.end(), 0);
