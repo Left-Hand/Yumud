@@ -1,15 +1,5 @@
-#include "fconv.hpp"
-#include "div.hpp"
+#include "setup_test.hpp"
 
-
-#include "../fixed.hpp"
-
-
-#include "sqrt.hpp"
-#include <cmath>
-
-using namespace ymd;
-using namespace ymd::fxmath::details;
 
 namespace {
 #if 0
@@ -99,7 +89,7 @@ namespace {
 }
 
 
-namespace test_fconv{
+namespace {
 
 
 [[maybe_unused]] static void test_n_to_f(){ 
@@ -399,87 +389,3 @@ namespace test_fconv{
 
 }
 
-namespace test_div{
-using namespace fxmath::details;
-
-
-void test_div32u(){
-    static_assert(div32u<1>(65536 << 1, 1 << 1) == 65536 << 1);
-    static_assert(div32u<10>(65536 << 10, 1 << 10) == 65536 << 10);
-    static_assert(div32u<10>(32768 << 10, 1 << 10) == 32768 << 10);
-    static_assert(div32u<16>(32768 << 16, 1 << 16) == 32768u << 16);
-    static_assert(div32u<16>(20000u << 16, 1u << 16) == 20000u << 16);
-    static_assert(div32u<5>(32768 << 5, 1 << 5) == 32768 << 5);
-
-    static_assert(div32u<0>(32768 << 0, 1 << 0) == 32768 << 0);
-    // static_assert(div32u<32>(
-    //     std::numeric_limits<uint32_t>::max(), 
-    //     std::numeric_limits<uint32_t>::max()) 
-    //     == std::numeric_limits<uint32_t>::max());
-}
-
-void test_div32i(){
-    static_assert(div32i<1>(65536 << 1, -1 << 1) == -65536 << 1);
-    static_assert(div32i<10>(65536 << 10, -1 << 10) == -65536 << 10);
-    static_assert(div32i<10>(32768 << 10, -1 << 10) == -32768 << 10);
-    static_assert(div32i<16>(20000 << 16, -1 << 16) == -20000 << 16);
-    static_assert(div32i<5>(32768 << 5, -1 << 5) == -32768 << 5);
-
-    static_assert(div32i<0>(32768 << 0, -1 << 0) == -32768 << 0);
-    static_assert(div32i<31>(
-        std::numeric_limits<int32_t>::max(), 
-        std::numeric_limits<int32_t>::min()) 
-        == std::numeric_limits<int32_t>::min());
-}
-
-#if 0
-// static constexpr uint32_t fit_table(uint32_t x){
-//     return 2u * 64u * 64u * 127u / (63u * (2u * x) + 2u * 64u * 64u);
-// }
-
-static constexpr uint32_t fit_table(uint32_t x){
-    return 4u * 64u * 64u * 127u / (63u * (4u * x - 1) + 4u * 64u * 64u);
-}
-
-void test_fit_table(){
-
-    static_assert(fit_table(0) == IQ6DIV_LOOPUP[0]);
-    static_assert(fit_table(1) == IQ6DIV_LOOPUP[1]);
-    static_assert(fit_table(2) == IQ6DIV_LOOPUP[2]);
-    static_assert(fit_table(3) == IQ6DIV_LOOPUP[3]);
-    static_assert(fit_table(4) == IQ6DIV_LOOPUP[4]);
-
-    auto test_all = []() -> int32_t {
-        for(uint32_t i = 0; i < 64; i++){
-            if(fit_table(i) != IQ6DIV_LOOPUP[i]) return i;
-        }
-        return -1;
-    };
-
-    static_assert(test_all() == -1);
-}
-#endif
-
-void test_sqrt(){
-
-    {
-
-        // static constexpr uint32_t b1 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-2))) .to_bits();
-        // static constexpr uint32_t b2 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-4))) .to_bits();
-        // static_assert(b1
-        //     == uq32::from_bits(1u << (32-1)).to_bits());
-        // static_assert(b2
-        //     == uq32::from_bits(1u << (32-2)).to_bits());
-    }
-
-    {
-
-        static constexpr uint32_t b1 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-16))) .to_bits();
-        static constexpr uint32_t b2 = fxmath::details::sqrt32u<32>(uq32::from_bits(1u << (32-18))) .to_bits();
-        static_assert(b1
-            == uq32::from_bits(1u << (32-8)).to_bits());
-        static_assert(b2
-            == uq32::from_bits(1u << (32-9)).to_bits());
-    }
-}
-}

@@ -70,14 +70,6 @@ using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_NiuLiu;
 
 
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-constexpr __no_inline
-std::array<math::fixed<31, int32_t>, 2> my_sincospu(const math::fixed<Q, D> x){
-    return math::sincospu<Q, D>(x);
-}
-
-
 struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 截止频率/带宽 (Hz)
@@ -85,7 +77,8 @@ struct LrSeriesCurrentRegulatorConfig{
     iq20 phase_resistance;        // 相电阻 (Ω)
     iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_precomputed() const noexcept {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> 
+    try_into_precomputed() const noexcept {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -99,31 +92,21 @@ struct LrSeriesCurrentRegulatorConfig{
         const auto & self = *this;
         digipw::PiController::Cofficients coeffs;
 
-        const auto norm_omega = iq24::from_bits(static_cast<int32_t>((static_cast<int64_t>(iq24(TAU).to_bits()) * fc) / self.fs));
+        //norm_omega = fc * 2pi / fs
+
+        const auto norm_omega = uq24::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(uq24(TAU).to_bits()) * fc) / self.fs));
+
+
         coeffs.max_out = self.voltage_limit;
 
         coeffs.kp = iq20(self.phase_inductance * self.fc) * iq16(TAU);
         coeffs.ki_discrete = self.phase_resistance * norm_omega;
 
-        coeffs.err_sum_max = self.voltage_limit / iq16(coeffs.ki_discrete);
+        coeffs.err_int_max = coeffs.max_out / iq16(coeffs.ki_discrete);
         return Ok(coeffs);
     }
 };
 
-
-
-
-#if 0
-[[maybe_unused]] auto speed_compansate_dq_volt = [&]{
-    auto dq_volt_gen = state.dq_volt_gen;
-    dq_volt_gen.d = 0.0_iq20;
-    // dq_volt_gen.d = 0.0005_iq20 * linear_speed;
-    // dq_volt_gen.d = 0.0005_iq20 * linear_speed;
-    dq_volt_gen.q = 0.0_iq20;
-    return dq_volt_gen;
-};
-
-#endif
 
 
 template<size_t FC, size_t Q>
@@ -1050,7 +1033,6 @@ void myesc_main(){
     while(true){
         poll_repl_activity();
         [[maybe_unused]] const auto now_secs = clock::seconds();
-        // [[maybe_unused]] const auto [s,c] = my_sincospu(now_secs);
         // repl_service_poller();
         // const auto hfi_response_real_bin1 = motor_state.hfi_response_real_bin1 * 100;
         // const auto hfi_response_imag_bin1 = motor_state.hfi_response_imag_bin1 * 100;
