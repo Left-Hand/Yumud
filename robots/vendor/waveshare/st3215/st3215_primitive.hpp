@@ -22,9 +22,11 @@ struct [[nodiscard]] ServoId final{
     [[nodiscard]] constexpr bool is_unique() const {
         return bits < 0xfe;
     }
+
+    constexpr bool operator ==(const ServoId &) const = default;
 };
 
-
+static constexpr auto BOARDCAST_SERVOID = ServoId{0xfe};
 
 
 #define DEF_PROPERTY_BFPROXY(prop_name, start_bit, stop_bit, p_type_name, bits)\
@@ -63,8 +65,8 @@ public:
         Ping = 0x01, 
         ReadData = 0x02,
         WriteData = 0x03,
-        AsyncWrite = 0x04,
-        InvokeAsync = 0x05,
+        RegWrite = 0x04,
+        Action = 0x05,
         Reset = 0x06,
         SyncRead = 0x82,
         SyncWrite = 0x83
@@ -75,6 +77,7 @@ public:
     constexpr Instruction(Kind kind):kind_(kind){}
 
     constexpr uint8_t to_u8() const noexcept {return static_cast<uint8_t>(kind_);}
+    constexpr Kind kind() const {return kind_;}
 private:
     Kind kind_;
 };
@@ -84,39 +87,48 @@ private:
 
 namespace ins_msgs{
 
-
+// 1.3.1 查询状态指令 PING
 struct [[nodiscard]] Ping final{
     static constexpr Instruction INSTRUCTION = Instruction::Ping;
     static constexpr size_t PAYLOAD_LENGTH = 0;
+
+    [[nodiscard]] static constexpr size_t payload_length(){return PAYLOAD_LENGTH;}
 };
 
-struct [[nodiscard]] WriteData final{
-    static constexpr Instruction INSTRUCTION = Instruction::WriteData;
-    static constexpr size_t PAYLOAD_LENGTH = 2;
-
-    uint8_t addr;
-    uint8_t val;
-};
-
-
+// 1.3.2 读指令 READ DATA
 struct [[nodiscard]] ReadData final{
     static constexpr Instruction INSTRUCTION = Instruction::ReadData;
     static constexpr size_t PAYLOAD_LENGTH = 2;
 
     uint8_t base_addr;
     uint8_t len;
+
+    [[nodiscard]] static constexpr size_t payload_length(){return PAYLOAD_LENGTH;}
 };
 
-struct [[nodiscard]] AsyncWrite final{
-    static constexpr Instruction INSTRUCTION = Instruction::AsyncWrite;
-    static constexpr size_t PAYLOAD_LENGTH = 2;
+// 1.3.3 写指令 WRITE DATA
+struct [[nodiscard]] WriteData final{
+    static constexpr Instruction INSTRUCTION = Instruction::WriteData;
 
-    uint8_t addr;
-    uint8_t val;
+    uint8_t base_addr;
+    std::span<const uint8_t> data;
+
+    [[nodiscard]] constexpr size_t payload_length() const {return data.size() + 1;}
 };
 
-struct [[nodiscard]] InvokeAsync final{
-    static constexpr Instruction INSTRUCTION = Instruction::InvokeAsync;
+
+// 1.3.4 异步写指令 REG WRITE
+struct [[nodiscard]] RegWrite final{
+    static constexpr Instruction INSTRUCTION = Instruction::RegWrite;
+
+    uint8_t base_addr;
+    std::span<const uint8_t> data;
+
+    [[nodiscard]] constexpr size_t payload_length() const {return data.size() + 1;}
+};
+
+struct [[nodiscard]] Action final{
+    static constexpr Instruction INSTRUCTION = Instruction::Action;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 };
 

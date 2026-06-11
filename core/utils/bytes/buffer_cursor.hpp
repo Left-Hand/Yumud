@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <bit>
+#include <span>
 #include "core/tmp/bits/width.hpp"
 
 namespace ymd{
@@ -138,6 +139,15 @@ u8ptr_pop_bits(const uint8_t*& ptr)
 
 struct [[nodiscard]] BufferCursor final{
     uint8_t * ptr;
+
+    __attribute__((always_inline, optimize("Ofast")))
+    constexpr void push_bytes(const std::span<const uint8_t> bytes){
+        const size_t len = bytes.size();
+        for(size_t i = 0; i < len; i++){
+            ptr[i] = bytes[i];
+        }
+        ptr += len;
+    }
 
     template<typename T, std::endian ENDIAN, typename U>
     __attribute__((always_inline, optimize("Ofast")))

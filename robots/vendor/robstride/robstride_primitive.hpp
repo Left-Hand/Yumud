@@ -19,7 +19,6 @@
 
 namespace ymd::robots::robstride{
 
-namespace primitive{
 
 enum class [[nodiscard]] DeMsgError:uint8_t{
     StdFrame,
@@ -317,8 +316,6 @@ struct [[nodiscard]] FaultFlags final{
     }
 
 };
-
-}
 
 
 }
