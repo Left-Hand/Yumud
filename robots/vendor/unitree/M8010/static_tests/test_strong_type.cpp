@@ -2,7 +2,7 @@
 
 
 using namespace ymd;
-using namespace ymd::robots::unitree;
+using namespace ymd::robots::unitree::m8010;
 
 
 namespace {

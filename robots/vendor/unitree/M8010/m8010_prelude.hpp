@@ -13,7 +13,11 @@
 #include "primitive/arithmetic/angular.hpp"
 
 
-namespace ymd::robots::unitree{
+namespace ymd::robots::unitree::m8010{
+
+
+static constexpr size_t TX_FRAME_SIZE = 17;
+static constexpr size_t RX_FRAME_SIZE = 16;
 
 struct [[nodiscard]] MotorId final{
     uint8_t bits;
@@ -152,78 +156,6 @@ struct [[nodiscard]] KdCode final{
 };
 
 
-struct [[nodiscard]] TxHeader final{
-    static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {
-        bytes[0] = 0xfe;
-        bytes[1] = 0xee;
-    }
-};
-
-
-[[nodiscard]] static constexpr uint16_t crc16_ccitt(std::span<const uint8_t> bytes)
-{
-    const uint8_t *data = bytes.data();
-    size_t length = bytes.size();
-    uint8_t i;
-    uint16_t crc = 0;        // Initial value
-    while(length--)
-    {
-        crc ^= *data++;        // crc ^= *data; data++;
-        for (i = 0; i < 8; ++i)
-        {
-            if (crc & 1)
-                crc = (crc >> 1) ^ 0x8408;        // 0x8408 = reverse 0x1021
-            else
-                crc = (crc >> 1);
-        }
-    }
-    return crc;
-}
-
-struct [[nodiscard]] TxContext final{
-    ModeInfo mode_settings;
-    TorqueCode torque_code;
-    X2Code x2_code;
-    X1Code x1_code;
-    KpCode kp_code;
-    KdCode kd_code;
-
-    constexpr void fill_bytes(const std::span<uint8_t, 13> bytes) const noexcept {
-        uint8_t * cursor = bytes.data();
-
-        cursor = u8ptr_push_u8le(cursor, std::bit_cast<uint8_t>(mode_settings));
-        cursor = u8ptr_push_u16le(cursor, torque_code.bits);
-        cursor = u8ptr_push_u16le(cursor, x2_code.bits);
-        cursor = u8ptr_push_u32le(cursor, x1_code.bits);
-        cursor = u8ptr_push_u16le(cursor, kp_code.bits);
-        cursor = u8ptr_push_u16le(cursor, kd_code.bits);
-    }
-    
-    template<typename Serializer>
-    Result<void, typename Serializer::Error> 
-    serialize_to_frame(Serializer && srz) const noexcept {
-        auto & self = *this;
-        std::array<uint8_t, 17> buffer;
-
-        TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
-        self.fill_bytes(std::span(buffer).template subspan<2, 13>());
-        const auto crc_code = crc16_ccitt(std::span(buffer).template subspan<0, 15>());
-        buffer[15] = static_cast<uint8_t>(crc_code & 0xff);
-        buffer[16] = static_cast<uint8_t>(crc_code >> 8);
-
-        return srz.push_bytes(std::span(buffer));
-    } 
-};
-
-
-struct [[nodiscard]] RxHeader final{
-    static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {
-        bytes[0] = 0xfd;
-        bytes[1] = 0xee;
-    }
-};
-
-
 struct [[nodiscard]] TempCode final{
     uint8_t bits;
 
@@ -269,68 +201,19 @@ struct [[nodiscard]] ErrorCode final{
 };
 
 
-struct [[nodiscard]] RxContext final{
-    using Self = RxContext;
+struct [[nodiscard]] RxMisc final{
+    uint16_t err_bits : 3;
+    uint16_t force_bits : 12;
+    uint16_t __resv__:1;
 
-
-    ModeInfo mode_info;
-    TorqueCode torque_code;
-    X2Code x2_code;
-    X1Code x1_code;
-    TempCode temp_code;
-
-    struct [[nodiscard]] Misc final{
-        uint16_t err_bits : 3;
-        uint16_t force_bits : 12;
-        uint16_t __resv__:1;
-
-        static constexpr Misc from_bytes(std::span<const uint8_t, 2> bytes){
-            const uint16_t ret = bytes[0] | (bytes[1] << 8);
-            return std::bit_cast<Misc>(ret);
-        }
-
-        constexpr uint16_t to_u16() const {
-            return std::bit_cast<uint16_t>(*this);
-        }
-    };
-
-    Misc misc;
-
-    static constexpr RxContext from_bytes(std::span<const uint8_t, 12> bytes) {
-        Self self;
-        self.mode_info.bits = bytes[0];
-        self.torque_code.bits = static_cast<int16_t>(bytes[1] | (bytes[2] << 8));
-        self.x2_code.bits = bytes[3] | (bytes[4] << 8);
-        self.x1_code.bits = bytes[5] | (bytes[6] << 8) | (bytes[7] << 16) | (bytes[8] << 24);
-        self.temp_code.bits = bytes[9];
-        self.misc = Misc::from_bytes(bytes.subspan<10, 2>());
-        return self;
+    static constexpr RxMisc from_bytes(std::span<const uint8_t, 2> bytes){
+        const uint16_t ret = bytes[0] | (bytes[1] << 8);
+        return std::bit_cast<RxMisc>(ret);
     }
 
-    constexpr void fill_bytes(const std::span<uint8_t, 12> bytes) const noexcept {
-        uint8_t * cursor = bytes.data();
-        cursor = u8ptr_push_u8le(cursor, mode_info.bits);
-        cursor = u8ptr_push_u16le(cursor, torque_code.bits);
-        cursor = u8ptr_push_u16le(cursor, x2_code.bits);
-        cursor = u8ptr_push_u32le(cursor, x1_code.bits);
-        cursor = u8ptr_push_u8le(cursor, temp_code.bits);
-        cursor = u8ptr_push_u16le(cursor, misc.to_u16());
+    constexpr uint16_t to_u16() const {
+        return std::bit_cast<uint16_t>(*this);
     }
-
-    template<typename Serializer>
-    Result<void, typename Serializer::Error> 
-    serialize_to_frame(Serializer && srz) const noexcept {
-        auto & self = *this;
-        std::array<uint8_t, 16> buffer;
-        TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
-        self.fill_bytes(std::span(buffer).template subspan<2, 12>());
-        const uint16_t crc_code = crc16_ccitt(std::span(buffer).template subspan<0, 14>());
-        buffer[14] = static_cast<uint8_t>(crc_code & 0xff);
-        buffer[15] = static_cast<uint8_t>(crc_code >> 8);
-
-        return srz.push_bytes(std::span(buffer));
-    } 
-private:
-
 };
+
 }
