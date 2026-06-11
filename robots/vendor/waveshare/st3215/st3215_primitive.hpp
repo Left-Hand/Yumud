@@ -86,13 +86,15 @@ private:
 
 
 namespace ins_msgs{
-
 // 1.3.1 查询状态指令 PING
 struct [[nodiscard]] Ping final{
     static constexpr Instruction INSTRUCTION = Instruction::Ping;
     static constexpr size_t PAYLOAD_LENGTH = 0;
 
-    [[nodiscard]] static constexpr size_t payload_length(){return PAYLOAD_LENGTH;}
+    [[nodiscard]] static constexpr size_t payload_length() noexcept
+    {
+        return PAYLOAD_LENGTH;
+    }
 };
 
 // 1.3.2 读指令 READ DATA
@@ -100,51 +102,96 @@ struct [[nodiscard]] ReadData final{
     static constexpr Instruction INSTRUCTION = Instruction::ReadData;
     static constexpr size_t PAYLOAD_LENGTH = 2;
 
-    uint8_t base_addr;
-    uint8_t len;
+    uint8_t base_addr;  // 读取首地址
+    uint8_t len;        // 读取字节长度
 
-    [[nodiscard]] static constexpr size_t payload_length(){return PAYLOAD_LENGTH;}
+    [[nodiscard]] static constexpr size_t payload_length() noexcept
+    {
+        return PAYLOAD_LENGTH;
+    }
 };
 
 // 1.3.3 写指令 WRITE DATA
 struct [[nodiscard]] WriteData final{
     static constexpr Instruction INSTRUCTION = Instruction::WriteData;
 
-    uint8_t base_addr;
-    std::span<const uint8_t> data;
+    uint8_t base_addr;               // 写入首地址
+    std::span<const uint8_t> data;   // 待写入数据
 
-    [[nodiscard]] constexpr size_t payload_length() const {return data.size() + 1;}
+    [[nodiscard]] constexpr size_t payload_length() const noexcept
+    {
+        // 参数长度 = 地址(1) + 数据长度
+        return data.size() + 1;
+    }
 };
-
 
 // 1.3.4 异步写指令 REG WRITE
 struct [[nodiscard]] RegWrite final{
     static constexpr Instruction INSTRUCTION = Instruction::RegWrite;
 
-    uint8_t base_addr;
-    std::span<const uint8_t> data;
+    uint8_t base_addr;               // 写入首地址
+    std::span<const uint8_t> data;   // 待写入数据
 
-    [[nodiscard]] constexpr size_t payload_length() const {return data.size() + 1;}
+    [[nodiscard]] constexpr size_t payload_length() const noexcept
+    {
+        // 参数长度 = 地址(1) + 数据长度
+        return data.size() + 1;
+    }
 };
 
+// 1.3.5 执行异步写指令 ACTION
 struct [[nodiscard]] Action final{
     static constexpr Instruction INSTRUCTION = Instruction::Action;
     static constexpr size_t PAYLOAD_LENGTH = 0;
+
+    [[nodiscard]] static constexpr size_t payload_length() noexcept
+    {
+        return PAYLOAD_LENGTH;
+    }
 };
 
-
-struct [[nodiscard]] Reset final{
-    static constexpr Instruction INSTRUCTION = Instruction::Reset;
-    static constexpr size_t PAYLOAD_LENGTH = 0;
-};
-
+// 1.3.6 同步写指令 SYNC WRITE
+// 协议规则：固定广播ID 0xFE，参数：首地址、单舵机数据长度、[舵机ID + 对应数据]...
 struct [[nodiscard]] SyncWrite final{
     static constexpr Instruction INSTRUCTION = Instruction::SyncWrite;
 
-    uint8_t base_addr;
-    uint8_t len;
+    uint8_t base_addr;                     // 统一写入首地址
+    uint8_t per_dev_data_len;              // 单个舵机的数据长度 L
+    std::span<const uint8_t> dev_list;     // 格式: ID + 数据, ID + 数据 ...
+
+    [[nodiscard]] constexpr size_t payload_length() const noexcept
+    {
+        // 参数总长 = 首地址(1) + 单包长度(1) + 设备列表总字节数
+        return 2 + dev_list.size();
+    }
 };
 
+// 1.3.7 同步读指令 SYNC READ
+// 协议规则：固定广播ID 0xFE，参数：首地址、读取长度、[舵机ID]...
+struct [[nodiscard]] SyncRead final{
+    static constexpr Instruction INSTRUCTION = Instruction::SyncRead;
+
+    uint8_t base_addr;                 // 统一读取首地址
+    uint8_t read_len;                  // 单设备读取字节数
+    std::span<const uint8_t> dev_ids;  // 待读取的舵机ID列表
+
+    [[nodiscard]] constexpr size_t payload_length() const noexcept
+    {
+        // 参数总长 = 首地址(1) + 读取长度(1) + ID列表长度
+        return 2 + dev_ids.size();
+    }
+};
+
+// 1.3.8 复位指令 RESET
+struct [[nodiscard]] Reset final{
+    static constexpr Instruction INSTRUCTION = Instruction::Reset;
+    static constexpr size_t PAYLOAD_LENGTH = 0;
+
+    [[nodiscard]] static constexpr size_t payload_length() noexcept
+    {
+        return PAYLOAD_LENGTH;
+    }
+};
 
 }
 

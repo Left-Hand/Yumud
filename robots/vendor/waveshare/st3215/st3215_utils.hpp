@@ -34,13 +34,14 @@ struct [[nodiscard]] ChecksumBuilder final{
         return self;
     }
 
-    [[nodiscard]] constexpr uint16_t finalize() const noexcept {
+    [[nodiscard]] constexpr uint8_t finalize() const noexcept {
         return ~checksum;
     }
 
 private:
     uint8_t checksum;
 };
+
 
 
 }

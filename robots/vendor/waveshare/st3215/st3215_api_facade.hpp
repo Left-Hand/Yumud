@@ -21,6 +21,15 @@ struct is_boardcast_msg<ins_msgs::Action>{static constexpr bool value = true;};
 template<>
 struct is_boardcast_msg<ins_msgs::SyncWrite>{static constexpr bool value = true;};
 
+template<>
+struct is_boardcast_msg<ins_msgs::RegWrite>{static constexpr bool value = true;};
+
+template<>
+struct is_boardcast_msg<ins_msgs::SyncRead>{static constexpr bool value = true;};
+
+template<>
+struct is_boardcast_msg<ins_msgs::Reset>{static constexpr bool value = false;}; 
+
 template<typename T>
 static constexpr bool is_boardcast_msg_v = is_boardcast_msg<T>::value;
 
@@ -37,30 +46,55 @@ static constexpr ServoId remap_id(const ServoId id){
 }
 
 
-struct ErasedPacket{
-    using Self = ErasedPacket;
+struct ErasedRequestPacket{
+    using Self = ErasedRequestPacket;
 
 
     ServoId id;
     uint8_t payload_len;
     Instruction instruction;
-    union Conetxt{
+    union Context{
         ins_msgs::Ping ping;
         ins_msgs::ReadData read_data;
         ins_msgs::WriteData write_data;
+        ins_msgs::RegWrite reg_write;
+        ins_msgs::Action action;
+        ins_msgs::SyncRead sync_read;
+        ins_msgs::SyncWrite sync_write;
+        ins_msgs::Reset reset;
     }context;
 
 
-    static constexpr Conetxt make_context(const ins_msgs::Ping & msg){
-        return Conetxt{.ping = msg};
+    static constexpr Context make_context(const ins_msgs::Ping & msg){
+        return Context{.ping = msg};
     };
 
-    static constexpr Conetxt make_context(const ins_msgs::ReadData & msg){
-        return Conetxt{.read_data = msg};
+    static constexpr Context make_context(const ins_msgs::ReadData & msg){
+        return Context{.read_data = msg};
     };
 
-    static constexpr Conetxt make_context(const ins_msgs::WriteData & msg){
-        return Conetxt{.write_data = msg};
+    static constexpr Context make_context(const ins_msgs::WriteData & msg){
+        return Context{.write_data = msg};
+    };
+    
+    static constexpr Context make_context(const ins_msgs::RegWrite & msg){
+        return Context{.reg_write = msg};
+    };
+    
+    static constexpr Context make_context(const ins_msgs::Action & msg){
+        return Context{.action = msg};
+    };
+    
+    static constexpr Context make_context(const ins_msgs::SyncRead & msg){
+        return Context{.sync_read = msg};
+    };
+    
+    static constexpr Context make_context(const ins_msgs::SyncWrite & msg){
+        return Context{.sync_write = msg};
+    };
+    
+    static constexpr Context make_context(const ins_msgs::Reset & msg){
+        return Context{.reset = msg};
     };
 
 
@@ -112,17 +146,32 @@ struct ErasedPacket{
                 cursor.push_bytes(msg.data);
                 break;
             }
-            case Instruction::RegWrite:
+            case Instruction::RegWrite:{
+                const auto & msg = self.context.reg_write;
+                cursor.push_u8be(msg.base_addr);
+                cursor.push_bytes(msg.data);
                 break;
+            }
             case Instruction::Action:
                 //nothing to write
                 break;
             case Instruction::Reset:
+                //nothing to write
                 break;
-            case Instruction::SyncRead:
+            case Instruction::SyncRead:{
+                const auto & msg = self.context.sync_read;
+                cursor.push_u8be(msg.base_addr);
+                cursor.push_u8be(msg.read_len);
+                cursor.push_bytes(msg.dev_ids);
                 break;
-            case Instruction::SyncWrite:
+            }
+            case Instruction::SyncWrite:{
+                const auto & msg = self.context.sync_write;
+                cursor.push_u8be(msg.base_addr);
+                cursor.push_u8be(msg.per_dev_data_len);
+                cursor.push_bytes(msg.dev_list);
                 break;
+            }
             
         }
 
@@ -143,8 +192,8 @@ struct FrameFactoryBackend{
     };
 
     template<typename Msg>
-    static constexpr ErasedPacket convert(const State & state, Msg && msg){
-        return ErasedPacket::from(state.id, msg);
+    static constexpr ErasedRequestPacket convert(const State & state, Msg && msg){
+        return ErasedRequestPacket::from(state.id, msg);
     }
 
 
@@ -171,6 +220,32 @@ struct [[nodiscard]] ClientApiFacade final{
         ins_msgs::WriteData && msg
     ) noexcept{
         return Backend::convert(self.state, msg);
+    }
+
+    [[nodiscard]] constexpr auto reg_write(this auto && self,
+        ins_msgs::RegWrite && msg
+    ) noexcept{
+        return Backend::convert(self.state, msg);
+    }
+
+    [[nodiscard]] constexpr auto action(this auto && self) noexcept{
+        return Backend::convert(self.state, ins_msgs::Action{});
+    }
+
+    [[nodiscard]] constexpr auto sync_read(this auto && self,
+        ins_msgs::SyncRead && msg
+    ) noexcept{
+        return Backend::convert(self.state, msg);
+    }
+
+    [[nodiscard]] constexpr auto sync_write(this auto && self,
+        ins_msgs::SyncWrite && msg
+    ) noexcept{
+        return Backend::convert(self.state, msg);
+    }
+
+    [[nodiscard]] constexpr auto reset(this auto && self) noexcept{
+        return Backend::convert(self.state, ins_msgs::Reset{});
     }
 
 
