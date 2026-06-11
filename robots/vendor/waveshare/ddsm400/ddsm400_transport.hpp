@@ -1,10 +1,9 @@
+#pragma once
+
 #include "ddsm400_primitive.hpp"
 
 
 namespace ymd::robots::waveshare::ddsm400::transport{
-using namespace primitive;
-
-
 
 template<typename T>
 static constexpr std::array<uint8_t, NUM_PACKET_BYTES> 
@@ -21,14 +20,14 @@ serialize_request(const MotorId motor_id, const T & msg){
 
 // 传输层解析器
 struct RecvTransportParser final{
-    enum class [[nodiscard]] PacketRecvState:uint8_t {
+    enum class [[nodiscard]] FsmState:uint8_t {
         MotorId = 0,
         Command = 1,
         Payload = 2,
         Crc = 3
     };
 
-    DEF_FRIEND_DERIVE_DEBUG(PacketRecvState)
+    DEF_FRIEND_DERIVE_DEBUG(FsmState)
 
     template<typename Fn>
     explicit RecvTransportParser(Fn && callback):
@@ -39,35 +38,35 @@ struct RecvTransportParser final{
 
     void reset(){
         payload_bytes_cnt_ = 0;
-        state_ = PacketRecvState::MotorId;
+        state_ = FsmState::MotorId;
     }
 
     void push_byte(const uint8_t byte){
         switch(state_){
-            case PacketRecvState::MotorId:{
+            case FsmState::MotorId:{
                 request_packet_.motor_id = MotorId::from_u8(byte);
-                state_ = PacketRecvState::Command;
+                state_ = FsmState::Command;
                 break;
             }
-            case PacketRecvState::Command:{
+            case FsmState::Command:{
                 const auto may_req_command = try_into_req_command(byte);
                 if(may_req_command.is_none()){
                     reset();
                     return;
                 }
                 request_packet_.req_command = may_req_command.unwrap();
-                state_ = PacketRecvState::Payload;
+                state_ = FsmState::Payload;
                 break;
             }
-            case PacketRecvState::Payload:{
+            case FsmState::Payload:{
                 request_packet_.payload[payload_bytes_cnt_] = byte;
                 payload_bytes_cnt_++;
                 if(payload_bytes_cnt_ >= NUM_PAYLOAD_BYTES){
-                    state_ = PacketRecvState::Crc;
+                    state_ = FsmState::Crc;
                 }
                 break;
             }
-            case PacketRecvState::Crc:{
+            case FsmState::Crc:{
                 
                 const uint16_t crc8 = request_packet_.calc_crc();
                 
@@ -107,6 +106,6 @@ private:
     Callback callback_;
     FlatPacket request_packet_;
     uint8_t payload_bytes_cnt_ = 0;
-    PacketRecvState state_ = PacketRecvState::MotorId;
+    FsmState state_ = FsmState::MotorId;
 };
 }

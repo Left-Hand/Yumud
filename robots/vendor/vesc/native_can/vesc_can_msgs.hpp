@@ -4,6 +4,7 @@
 #include "vesc_can_utils.hpp"
 
 #include "core/math/float/fp32.hpp"
+#include "core/math/float/fp64.hpp"
 
 #include "core/utils/bits/bits_caster.hpp"
 #include "primitive/can/can_payload.hpp"
@@ -860,7 +861,7 @@ struct [[nodiscard]] alignas(4) GnssLat final{
     static constexpr PacketId PACKET_ID = PacketId::GnssLat;
     static constexpr size_t PAYLOAD_LENGTH = 8;
 
-    double lat;
+    math::fp64 lat;
 };
 
 
@@ -872,7 +873,7 @@ struct [[nodiscard]] alignas(4) GnssLon final{
     static constexpr PacketId PACKET_ID = PacketId::GnssLon;
     static constexpr size_t PAYLOAD_LENGTH = 8;
 
-    double lon;
+    math::fp64 lon;
 };
 
 

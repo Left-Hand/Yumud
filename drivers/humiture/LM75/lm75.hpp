@@ -29,7 +29,7 @@ struct TemperatureCode{
         return b;
     }
 
-    constexpr iq16 to_celsis() const {
+    constexpr iq16 to_celsius() const {
         return i11() * iq16(0.125);
     }
 };
@@ -44,8 +44,8 @@ struct R8_Config{
 
 static_assert(TemperatureCode::from_b11(0x7ff).i11() == -1);
 static_assert(TemperatureCode::from_b11(0x3f8).i11() == 1016);
-static_assert(TemperatureCode::from_b11(0x3f8).to_celsis() == 127);
-static_assert(TemperatureCode::from_b11(0x648).to_celsis() == -55);
+static_assert(TemperatureCode::from_b11(0x3f8).to_celsius() == 127);
+static_assert(TemperatureCode::from_b11(0x648).to_celsius() == -55);
 
 struct LM75_Prelude{
 

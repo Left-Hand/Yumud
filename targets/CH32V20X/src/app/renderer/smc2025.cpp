@@ -162,7 +162,7 @@ static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
 }
 
 void smc2025_main(){
-    auto & UART = hal::uart6;
+    auto & UART = DEBUGGER_INST;
     UART.init({
         .remap = hal::UART6_REMAP_PC0_PC1, 
         .baudrate = hal::NearestFreq(576000),

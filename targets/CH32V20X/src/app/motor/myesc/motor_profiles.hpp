@@ -12,7 +12,7 @@ namespace ymd::myesc{
 //磁结构
 //直观理解表贴于内置式的磁路
 // https://blog.csdn.net/u010632165/article/details/103637894
-enum class [[nodiscard]] PmsmMagneticStructure{
+enum class [[nodiscard]] MagneticStructure{
     //表贴式永磁同步电机(Surface-Mounted Permanent Magnet Synchronous Motor)
     SurfaceMounted,
     //内嵌式永磁同步电机(Interior Permanent Magnet Synchronous Motor)
@@ -26,16 +26,16 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
-static constexpr size_t HFI_FREQ = 1000;
+
 
 static constexpr double SHUNT_RESISTANCE_OHMS = 0.006f;
 static constexpr double OPA_GAIN = 20;
 static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
+
 // static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_FULLSCALE_AMPS / (1 << 12));
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
-// const auto scaler_u = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
-// const auto scaler_v = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
-// const auto scaler_w = Rescaler<iq16>::from_scale(CURRENT_AMPS_PER_ADC_LSB);
+
+static constexpr size_t HFI_FREQ = 1000;
 
 using Leso = ymd::dsp::adrc::MotorLeso;
 
@@ -73,7 +73,7 @@ struct MotorProfile_Ysc{
 struct MotorProfile_3505{
     //3505航模电机
     //具有良好的凸极性
-    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::Interior;
+    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 7u;
     static constexpr auto PHASE_INDUCTANCE = iq20(20 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
@@ -108,7 +108,7 @@ struct MotorProfile_Gim4010{
 
 struct MotorProfile_36BLDB{
     //苏州凯航电机
-    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::Interior;
+    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
@@ -142,7 +142,7 @@ struct MotorProfile_NiuLiu{
 struct MotorProfile_M06Bare{
     //本末M06剪线电机（又名ddsm400)
     //!不具有任何凸极性
-    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
+    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(2200 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
@@ -158,7 +158,7 @@ struct MotorProfile_M06Bare{
 struct MotorProfile_Wheel{
     //!不具有任何凸极性
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
-    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
+    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(86.24 * 1E-6);
     static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);

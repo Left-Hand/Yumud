@@ -1,9 +1,11 @@
+#pragma once
+
 #include "ddsm400_primitive.hpp"
 
 namespace ymd::robots::waveshare::ddsm400{
-namespace req_msgs{
-using namespace primitive;
 
+
+namespace req_msgs{
 
 
 // 协议1：驱动电机转动
@@ -100,7 +102,7 @@ struct [[nodiscard]] GetLoopMode final{
 }
 
 namespace resp_msgs{
-using namespace primitive;
+
 struct [[nodiscard]] Feedback final{
     using Self = Feedback;
     static constexpr RespCommand COMMAND = RespCommand::Feedback;
