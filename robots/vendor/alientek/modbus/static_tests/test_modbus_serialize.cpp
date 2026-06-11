@@ -66,6 +66,23 @@ struct [[nodiscard]] Serializer final{
     {
         constexpr auto srz = [&]{
             auto ret = Serializer{};
+            factory.get_flux().serialize(ret).unwrap();
+            return ret;
+        }();
+        static_assert(srz.length() == 8);
+        static_assert(srz.bytes[0]  == 0x01);
+        static_assert(srz.bytes[1]  == 0x04); 
+        static_assert(srz.bytes[2]  == 0x00);
+        static_assert(srz.bytes[3]  == 0x21);
+        static_assert(srz.bytes[4]  == 0x00);
+        static_assert(srz.bytes[5]  == 0x02);
+        static_assert(srz.bytes[6]  == 0x21);
+        static_assert(srz.bytes[7]  == 0xc1); 
+    }
+
+    {
+        constexpr auto srz = [&]{
+            auto ret = Serializer{};
             const auto packet = factory.set_position_pid_paraments({300, 30, 380});
             packet.serialize(ret).unwrap();
             return ret;

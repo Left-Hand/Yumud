@@ -12,13 +12,13 @@ namespace ymd::drivers{
 
 struct BH1750_Prelude{
 public:
-    enum class Mode:uint8_t{
+    enum class [[nodiscard]] Mode:uint8_t{
         HMode = 0,
         HMode2 = 1,
         LMode = 3
     };
 
-    enum class Error_Kind{
+    enum class [[nodiscard]] Error_Kind{
 
     };
 

@@ -1,9 +1,9 @@
 #include "../ddsm400_transport.hpp"
 #include "../ddsm400_msgs.hpp"
+#include "../ddsm400_factory.hpp"
 
-using namespace ymd::robots::waveshare::ddsm400;
-using namespace primitive;
 using namespace ymd;
+using namespace ymd::robots::waveshare::ddsm400;
 
 
 // 开环指令

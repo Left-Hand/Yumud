@@ -18,7 +18,7 @@
 #include "hal/analog/adc/hw_singleton.hpp"
 
 #include "drivers/Adc/INA226/ina226.hpp"
-#include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
+#include "drivers/display/SSD1306/ssd1306.hpp"
 
 
 #include "hal/conn/i2c/i2cdrv.hpp"

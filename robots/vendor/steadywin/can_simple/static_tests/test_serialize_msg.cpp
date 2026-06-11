@@ -10,7 +10,7 @@ static constexpr AxisId ZERO_AXIS_ID = AxisId::from_bits(0);
 
 namespace {
 //上电校准
-[[maybe_unused]] void test1(){
+[[maybe_unused]] static void test1(){
     {
     static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, req_msgs::SetAxisState{
         .axis_state = AxisState::MotorCalibration
@@ -29,7 +29,7 @@ namespace {
 }
 
 //速度控制
-[[maybe_unused]] void test3(){
+[[maybe_unused]] static void test3(){
     {
     static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
         req_msgs::SetControllerMode{
@@ -66,7 +66,7 @@ namespace {
 }
 
 //位置控制
-[[maybe_unused]] void test6(){
+[[maybe_unused]] static void test6(){
     {
         static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
             req_msgs::SetControllerMode{

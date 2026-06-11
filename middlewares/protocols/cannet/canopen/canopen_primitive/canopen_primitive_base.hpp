@@ -150,6 +150,7 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
     // 1F20h to 1F27h Configuration manager objects配置管理对象 
     // 1F50h to 1F54h Program control object程序控制对象 
     // 1F80h to 1F89h NMT master objects网络管理主机对象
+
 // 2000h to 5FFFh Manufacturer-specific profile area制造商特定子协议区 
 // 6000h to 9FFFh Standardized profile area标准化设备子协议区 
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 

@@ -4,6 +4,25 @@
 
 //TCA8418是德州仪器的一款按键扫描芯片
 
+
+/**
+ *  @file Adafruit_TCA8418_registers.h
+ *
+ * 	I2C Driver for the Adafruit TCA8418 Keypad Matrix / GPIO Expander
+ *Breakout
+ *
+ * 	This is a library for the Adafruit TCA8418 breakout:
+ * 	https://www.adafruit.com/products/4918
+ *
+ * 	Adafruit invests time and resources providing this open source code,
+ *  please support Adafruit and open-source hardware by purchasing products from
+ * 	Adafruit!
+ *
+ *
+ *	BSD license (see license.txt)
+ */
+
+ 
 // https://blog.csdn.net/qq_34888956/article/details/139613908
 
 #include "details/TCA8418_phy.hpp"

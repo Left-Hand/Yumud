@@ -103,10 +103,6 @@ struct [[nodiscard]] TimerBdtr final{
     };
 
     void init(const Config &config);
-    // void set_deadzone(const Nanoseconds nanos){
-    //     set_deadzone_code(TimerDeadzoneCode::from_ns(bus_freq, nanos));
-    // }
-    // void set_deadzone_code(const TimerDeadzoneCode code);
 };
 
 
@@ -272,6 +268,8 @@ public:
             return;
         event_callback_(I);
     }
+
+    void set_compare(const TimerChannel::ChannelSelection, const uint16_t compare_value);
 
     [[nodiscard]] bool is_up_counting();
 

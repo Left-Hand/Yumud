@@ -19,14 +19,6 @@ struct [[nodiscard]] Rotation2 final{
         };
     }
 
-    // [[nodiscard]] static constexpr 
-    // Rotation2 from_radians(const T radians) {
-    //     const auto [s, c] = math::sincos(radians);
-    //     return Rotation2{
-    //         s, c};
-    // }
-
-
     // 恒等旋转（单位旋转）
     [[nodiscard]] static constexpr 
     Rotation2 identity() {

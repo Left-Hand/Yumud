@@ -187,6 +187,10 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaZeroCoord final{
         static_cast<T>(0)
     };
 
+    [[nodiscard]] static constexpr AlphaBetaZeroCoord from_uninitialized(){
+        return {};
+    }
+
     [[nodiscard]] static constexpr AlphaBetaZeroCoord from_uvw(const UvwCoord<T> & uvw){
         return AlphaBetaCoord{
             .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
@@ -225,6 +229,11 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
         static_cast<T>(0),
         static_cast<T>(0)
     };
+
+
+    [[nodiscard]] static constexpr DqCoord from_uninitialized(){
+        return {};
+    }
 
     template<typename U>
     [[nodiscard]] static constexpr DqCoord from_alphabeta(

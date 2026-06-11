@@ -22,7 +22,7 @@ public:
     IResult<> enable_default();
 
 
-    IResult<> read_acc();
+    IResult<> get_acc();
     IResult<> read_mag();
     IResult<> read();
 private:

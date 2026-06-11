@@ -46,9 +46,7 @@ IResult<> HT16K33::write_command(const Command cmd){
 }
 
 IResult<> HT16K33::setup_system(const Enable en){
-    return write_command(SystemSetupCommand{
-        (en == EN)
-    });
+    return write_command(SystemSetupCommand(en));
 }
 
 IResult<HT16K33::KeyData> HT16K33::get_key_data(){
@@ -75,6 +73,8 @@ IResult<BoolLevel> HT16K33::get_intreg_status(){
         default: return Err(Error::InvalidInterruptCode);
     }
 }
+
+
 
 IResult<> HT16K33::init(const Config & cfg){
     if(const auto res = validate(); 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal/conn/spi/spidrv.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "drivers/encoder/encoder.hpp"
 #include "core/io/regs.hpp"
@@ -14,13 +15,19 @@
 
 namespace ymd::drivers::as5048{
 
+struct AS5048_Prelude{
 
-using Error = EncoderError;
+    using Error = EncoderError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+};
 
 
-
-struct AS5048A_Regs{
+struct AS5048A_Regset:public AS5048_Prelude{
     using RegAddr = uint16_t;
+
+
     struct [[nodiscard]] R16_Nop:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0000};
         uint16_t bits;
@@ -85,7 +92,7 @@ struct AS5048A_Regs{
 };
 
 
-struct AS5048B_Regs{
+struct AS5048B_Regset:public AS5048_Prelude{
     using RegAddr = uint8_t;
 
     struct [[nodiscard]] R8_ProgrammingControl:public Reg8<>{

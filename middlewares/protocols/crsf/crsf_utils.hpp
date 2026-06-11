@@ -6,31 +6,36 @@
 namespace ymd::crsf::utils{
 
 struct [[nodiscard]] Crc8Builder final{
-    const uint8_t count;
+    using Self = Crc8Builder;
 
-    static constexpr Crc8Builder from_default(){
-        return Crc8Builder{0};
+    static constexpr Self from_default(){
+        Self self;
+        self.checksum = 0;
+        return self;
     }
 
 
-    constexpr Crc8Builder push_bytes(std::span<const uint8_t> bytes) const {
-        uint8_t crc = count;
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
+        auto self = *this;
         #pragma GCC unroll 8
         for(size_t i = 0; i < bytes.size(); i++){
-            crc = CRC8_TABLE[crc ^ bytes[i]];
+            self.checksum = CRC8_TABLE[self.checksum ^ bytes[i]];
         }
-        return {crc};
+        return self;
     }
 
-    constexpr Crc8Builder push_byte(const uint8_t byte) const {
-        uint8_t crc = count;
-        crc = CRC8_TABLE[crc ^ byte];
-        return {crc};
+    constexpr Self push_byte(const uint8_t byte) const {
+        auto self = *this;
+        self.checksum = CRC8_TABLE[self.checksum ^ byte];
+        return self;
     }
 
     [[nodiscard]] constexpr uint8_t finalize() const {
-        return count;
+        return checksum;
     }
+
+private:
+    uint8_t checksum;
 
     static constexpr std::array<uint8_t, 256> CRC8_TABLE = {
         0x00, 0xD5, 0x7F, 0xAA, 0xFE, 0x2B, 0x81, 0x54, 0x29, 0xFC, 0x56, 0x83, 0xD7, 0x02, 0xA8, 0x7D,
@@ -56,32 +61,36 @@ struct [[nodiscard]] Crc8Builder final{
 
 
 struct [[nodiscard]] CommandCrc8Builder final{
-    const uint8_t count;
+    using Self = CommandCrc8Builder;
 
-    static constexpr CommandCrc8Builder from_default(){
-        return CommandCrc8Builder{0};
+    static constexpr Self from_default(){
+        Self self;
+        self.checksum =0;
+        return self;
     }
 
 
-    constexpr CommandCrc8Builder push_bytes(std::span<const uint8_t> bytes) const {
-        uint8_t crc = count;
+    constexpr Self  push_bytes(std::span<const uint8_t> bytes) const {
+        auto self = *this;
         #pragma GCC unroll 8
         for(size_t i = 0; i < bytes.size(); i++){
-            crc = COMMAND_CRC8_TABLE[crc ^ bytes[i]];
+            self.checksum = COMMAND_CRC8_TABLE[self.checksum ^ bytes[i]];
         }
-        return {crc};
+        return self;
     }
 
-    constexpr CommandCrc8Builder push_byte(const uint8_t byte) const {
-        uint8_t crc = count;
-        crc = COMMAND_CRC8_TABLE[crc ^ byte];
-        return {crc};
+    constexpr Self  push_byte(const uint8_t byte) const {
+        auto self = *this;
+        self.checksum = COMMAND_CRC8_TABLE[self.checksum ^ byte];
+        return self;
     }
 
     [[nodiscard]] constexpr uint8_t finalize() const {
-        return count;
+        return checksum;
     }
 
+private:
+    uint8_t checksum;
 
     static constexpr std::array<uint8_t, 256> COMMAND_CRC8_TABLE = {
         0x00, 0xBA, 0xCE, 0x74, 0x26, 0x9C, 0xE8, 0x52, 0x4C, 0xF6, 0x82, 0x38, 0x6A, 0xD0, 0xA4, 0x1E,

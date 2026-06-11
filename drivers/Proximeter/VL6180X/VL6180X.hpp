@@ -1,6 +1,6 @@
 #pragma once
 
-#include "details/vl6180x_prelude.hpp"
+#include "vl6180x_prelude.hpp"
 
 namespace ymd::drivers{
 

@@ -10,7 +10,7 @@ namespace ymd::digipw{
 
 template<typename T>
 struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
-    static_assert(std::is_signed_v<T>);
+    // static_assert(std::is_signed_v<T>);
     
     T u;
     T v;
@@ -18,7 +18,12 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
 
     static constexpr UvwCoord<T> ZERO = {T(0), T(0), T(0)};
     static constexpr UvwCoord<T> HALF = {T(0.5), T(0.5), T(0.5)};
-    enum class Axis:uint8_t{U, V, W};
+    enum class [[nodiscard]] Axis:uint8_t{U, V, W};
+
+
+    [[nodiscard]] static constexpr UvwCoord from_uninitialized(){
+        return {};
+    }
 
     template<Axis A1, Axis A2>
     requires (A1 != A2)
@@ -61,47 +66,24 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
 
     template<size_t I>
     requires (I < 3)
-    [[nodiscard]] constexpr T & get(){
+    [[nodiscard]] constexpr auto & get(this auto && self){
         if constexpr(I == 0){
-            return this->u;
+            return self.u;
         } else if constexpr(I == 1){
-            return this->v;
+            return self.v;
         }else if constexpr(I == 2){
-            return this->w;
+            return self.w;
         }
     } 
 
-    template<size_t I>
-    requires (I < 3)
-    [[nodiscard]] constexpr T get() const noexcept {
-        if constexpr(I == 0){
-            return this->u;
-        } else if constexpr(I == 1){
-            return this->v;
-        }else if constexpr(I == 2){
-            return this->w;
-        }
-    }
-
     template<Axis A>
-    [[nodiscard]] constexpr T get_axis() const noexcept {
+    [[nodiscard]] constexpr auto & get_axis(this auto && self){
         if constexpr(A == Axis::U){
-            return this->u;
+            return self.u;
         } else if constexpr(A == Axis::V){
-            return this->v;
+            return self.v;
         }else if constexpr(A == Axis::W){
-            return this->w;
-        }
-    }
-
-    template<Axis A>
-    [[nodiscard]] constexpr T & get_axis(){
-        if constexpr(A == Axis::U){
-            return this->u;
-        } else if constexpr(A == Axis::V){
-            return this->v;
-        }else if constexpr(A == Axis::W){
-            return this->w;
+            return self.w;
         }
     }
 

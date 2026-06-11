@@ -27,7 +27,7 @@ protected:
 
 public:
 
-    enum class Command : uint8_t{
+    enum class [[nodiscard]] Command : uint8_t{
         ReadStatus,
         DiffToOriginal,
         SoftReset,
@@ -38,7 +38,7 @@ public:
 
     static constexpr size_t TOUCHPOINT_ENTRY_LEN  = 8;
 
-    struct [[nodiscard]] TouchPoint{
+    struct [[nodiscard]] TouchPoint final{
         using Self = TouchPoint;
         uint8_t track_id;
         uint16_t x;
@@ -72,7 +72,7 @@ public:
 
     DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
 
-    struct [[nodiscard]] FamilySpecific { 
+    struct [[nodiscard]] FamilySpecific final{ 
         std::array<char, 4> name;
         size_t max_points_count;
     };

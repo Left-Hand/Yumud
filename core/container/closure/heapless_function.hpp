@@ -9,14 +9,45 @@ namespace ymd::heapless{
 
 static constexpr size_t STATIC_FUNCTION_MAX_BUFFER_SIZE = 16;
 
-template <typename Signature, size_t BufferSize = STATIC_FUNCTION_MAX_BUFFER_SIZE>
+template <typename Signature, size_t BUFFER_SIZE = STATIC_FUNCTION_MAX_BUFFER_SIZE>
 class Function;
 
-// BufferSize > 0: 通用实现
-template <typename Ret, typename... Args, size_t BufferSize>
-requires (BufferSize > 0)
-class Function<Ret(Args...), BufferSize> {
-    alignas(std::max_align_t) std::byte storage_[BufferSize];
+
+
+// BUFFER_SIZE = 0: 退化为函数指针
+template <typename Ret, typename... Args>
+class Function<Ret(Args...), 0> {
+    using FnPtr = Ret(*)(Args...);
+    FnPtr fn_ = nullptr;
+
+public:
+    Function() noexcept = default;
+
+    Function(FnPtr fn) noexcept : fn_(fn) {}
+
+    template <typename F>
+    requires (std::is_convertible_v<F, FnPtr>)
+    constexpr Function(F&& f) noexcept : fn_(std::forward<F>(f)) {}
+
+    constexpr Ret operator()(Args... args) const noexcept {
+        return fn_(std::forward<Args>(args)...);
+    }
+
+    constexpr explicit operator bool() const noexcept {
+        return fn_ != nullptr;
+    }
+
+    constexpr bool is_null() const noexcept{
+        return bool(*this);
+    }
+};
+
+
+// BUFFER_SIZE > 0: 通用实现
+template <typename Ret, typename... Args, size_t BUFFER_SIZE>
+requires (BUFFER_SIZE > 0)
+class Function<Ret(Args...), BUFFER_SIZE> {
+    alignas(std::max_align_t) std::byte storage_[BUFFER_SIZE];
 
     using InvokeFn = Ret(*)(const std::byte*, Args...);
     using DestroyFn = void(*)(std::byte*);
@@ -24,16 +55,16 @@ class Function<Ret(Args...), BufferSize> {
     InvokeFn invoke_ = nullptr;
     DestroyFn destroy_ = nullptr;
 public:
-    constexpr Function() noexcept = default;
+    Function() noexcept = default;
 
-    constexpr ~Function() {
+    ~Function() {
         if (destroy_) destroy_(storage_);
     }
 
     template <typename F>
     requires (
         std::is_invocable_r_v<Ret, F, Args...> &&
-        sizeof(F) <= BufferSize &&
+        sizeof(F) <= BUFFER_SIZE &&
         alignof(F) <= alignof(std::max_align_t)
     )
     constexpr Function(F&& f) noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
@@ -52,23 +83,23 @@ public:
     Function(const Function&) = delete;
     Function& operator=(const Function&) = delete;
 
-    constexpr Function(Function&& other) noexcept {
+    Function(Function&& other) noexcept {
         invoke_ = other.invoke_;
         destroy_ = other.destroy_;
         if (invoke_) {
-            std::memcpy(storage_, other.storage_, BufferSize);
+            memcpy(storage_, other.storage_, BUFFER_SIZE);
             other.invoke_ = nullptr;
             other.destroy_ = nullptr;
         }
     }
 
-    constexpr Function& operator=(Function&& other) noexcept {
+    Function& operator=(Function&& other) noexcept {
         if (this != &other) {
             if (destroy_) destroy_(storage_);
             invoke_ = other.invoke_;
             destroy_ = other.destroy_;
             if (invoke_) {
-                std::memcpy(storage_, other.storage_, BufferSize);
+                memcpy(storage_, other.storage_, BUFFER_SIZE);
                 other.invoke_ = nullptr;
                 other.destroy_ = nullptr;
             }
@@ -84,35 +115,7 @@ public:
         return invoke_ != nullptr;
     }
 
-    constexpr bool is_empty() const noexcept{
-        return bool(*this);
-    }
-};
-
-// BufferSize = 0: 退化为函数指针
-template <typename Ret, typename... Args>
-class Function<Ret(Args...), 0> {
-    using FnPtr = Ret(*)(Args...);
-    FnPtr fn_ = nullptr;
-
-public:
-    constexpr Function() noexcept = default;
-
-    constexpr Function(FnPtr fn) noexcept : fn_(fn) {}
-
-    template <typename F>
-    requires (std::is_convertible_v<F, FnPtr>)
-    constexpr Function(F&& f) noexcept : fn_(std::forward<F>(f)) {}
-
-    constexpr Ret operator()(Args... args) const noexcept {
-        return fn_(std::forward<Args>(args)...);
-    }
-
-    constexpr explicit operator bool() const noexcept {
-        return fn_ != nullptr;
-    }
-
-    constexpr bool is_empty() const noexcept{
+    constexpr bool is_null() const noexcept{
         return bool(*this);
     }
 };
@@ -120,6 +123,6 @@ public:
 }
 
 namespace ymd{
-template <typename Signature, size_t BufferSize = heapless::STATIC_FUNCTION_MAX_BUFFER_SIZE>
-using HeaplessFunction = heapless::Function<Signature, BufferSize>;
+template <typename Signature, size_t BUFFER_SIZE = heapless::STATIC_FUNCTION_MAX_BUFFER_SIZE>
+using HeaplessFunction = heapless::Function<Signature, BUFFER_SIZE>;
 }

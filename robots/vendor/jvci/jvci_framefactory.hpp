@@ -5,6 +5,8 @@
 
 
 namespace ymd::robots::jvci{
+
+
 struct [[nodiscard]] CanRequestFrameFactory final{
 public:
     using U8X8 = std::array<uint8_t, 8>;

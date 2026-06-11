@@ -290,16 +290,16 @@ struct AXP192_GpioCtl_RegSet:public AXP192_Prelude{
 };
 
 struct AXP192_IntCtl_RegSet:public AXP192_Prelude{
-// 40 IRQ使能控制寄存器1 R/W D8H
-// 41 IRQ使能控制寄存器2 R/W FFH 
-// 42 IRQ使能控制寄存器3 R/W 3BH 
-// 43 IRQ使能控制寄存器4 R/W C1H 
-// 4A IRQ使能控制寄存器5 R/W 00H
-// 44 IRQ状态寄存器1 R/W 00H 
-// 45 IRQ状态寄存器2 R/W 00H 
-// 46 IRQ状态寄存器3 R/W 00H 
-// 47 IRQ状态寄存器4 R/W 00H 
-// 4D IRQ状态寄存器5 R/W 00H 
+    // 40 IRQ使能控制寄存器1 R/W D8H
+    // 41 IRQ使能控制寄存器2 R/W FFH 
+    // 42 IRQ使能控制寄存器3 R/W 3BH 
+    // 43 IRQ使能控制寄存器4 R/W C1H 
+    // 4A IRQ使能控制寄存器5 R/W 00H
+    // 44 IRQ状态寄存器1 R/W 00H 
+    // 45 IRQ状态寄存器2 R/W 00H 
+    // 46 IRQ状态寄存器3 R/W 00H 
+    // 47 IRQ状态寄存器4 R/W 00H 
+    // 4D IRQ状态寄存器5 R/W 00H 
 };
 
 struct AXP192_Adc_RegSet:public AXP192_Prelude{
@@ -310,60 +310,5 @@ struct AXP192_Coulometre_RegSet:public AXP192_Prelude{
 
 };
 
-class AXP192 final: public AXP192_Prelude{
-
-    explicit AXP192(
-        Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
-    ):
-        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){}
-
-    explicit AXP192(hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv)){}
-
-    explicit AXP192(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv){}
-
-    IResult<> set_dcdc1_voltage(const DcdcVoltage voltage);
-    IResult<> set_dcdc2_voltage(const DcdcVoltage voltage);
-    IResult<> set_dcdc3_voltage(const DcdcVoltage voltage);
-private:
-    hal::I2cDrv i2c_drv_;
-    AXP192_PowerCtl_Regset pw_regs_ = {};
-    AXP192_GpioCtl_RegSet gp_regs_ = {};
-
-    IResult<> write_reg(const RegAddr address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    IResult<> read_reg(const RegAddr address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    IResult<> read_bulk(const RegAddr addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr), pbuf);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
-
-    #if 0
-    template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
-            res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
-        return Ok();
-    }
-
-    template<typename T>
-    IResult<> read_reg(T & reg){
-        return read_reg(T::REG_ADDR, reg.as_bits_mut());
-    }
-    #endif
-};
 
 }

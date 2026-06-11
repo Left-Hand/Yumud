@@ -1,14 +1,14 @@
 #include "paw3395.hpp"
 
-
-
-
 using namespace ymd;
 using namespace ymd::drivers::paw3395;
 
 using Self = PAW3395;
 
+using RegAddr = Self::RegAddr;
 using Error = Self::Error;
+
+
 template<typename T = void>
 using IResult = Result<T, Error>;
 
@@ -44,7 +44,7 @@ using IResult = Result<T, Error>;
 #define Y_HIGH_8BIT                     5
 #define SPI_MHZ                         4
 
-
+#include "paw3395_table.ipp"
 
 IResult<> Self::corded_gaming(){
     return write_list(std::span(INIT_GAME_TABLE));

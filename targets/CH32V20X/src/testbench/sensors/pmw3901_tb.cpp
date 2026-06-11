@@ -42,8 +42,8 @@ void pmw3901_main(){
     while(true){
 
         const auto begin_us = clock::micros();
-        pmw.update().unwrap();
-        DEBUG_PRINTLN(clock::micros() - begin_us);
+        auto packet = pmw.update().unwrap();
+        DEBUG_PRINTLN(clock::micros() - begin_us, packet.dx, packet.dy);
         clock::delay(1ms);
     }
 }

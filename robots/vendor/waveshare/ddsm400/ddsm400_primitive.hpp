@@ -10,7 +10,7 @@
 
 // https://www.waveshare.net/wiki/DDSM400
 
-namespace ymd::robots::waveshare::ddsm400::primitive{
+namespace ymd::robots::waveshare::ddsm400{
 
 
 static constexpr size_t DEFAULT_BAUDRATE = 38400;

@@ -67,7 +67,7 @@ IResult<> VCE2755::init(const VCE2755::Config & cfg){
 }
 
 
-IResult<VCE2755::PackageCode> VCE2755::get_package_code(){
+IResult<uint8_t> VCE2755::get_package_code(){
     RegSet::R8_ChipId chip_id_reg;
     if(const auto res = read_reg(chip_id_reg);
         res.is_err()) return Err(res.unwrap_err());

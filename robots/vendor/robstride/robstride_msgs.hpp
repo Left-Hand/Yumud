@@ -7,6 +7,8 @@ namespace ymd::robots::robstride{
 
 
 namespace req_msgs{
+
+
 using namespace primitive;
 struct [[nodiscard]] GetDeviceId final{
     static constexpr Command COMMAND = Command::GetDeviceId;

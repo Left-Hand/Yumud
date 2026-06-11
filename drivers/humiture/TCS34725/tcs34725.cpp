@@ -37,10 +37,10 @@ IResult<TCS34725::Package> TCS34725::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    switch(std::bit_cast<Package>(reg.id)){
+    switch(std::bit_cast<Package>(reg.bits)){
         case Package::TCS34725:
         case Package::TCS34723:
-            return Ok(std::bit_cast<Package>(reg.id));
+            return Ok(std::bit_cast<Package>(reg.bits));
     }
     return Err(Error::InvalidChipId);
 }
@@ -62,7 +62,7 @@ IResult<> TCS34725::set_integration_time(const Milliseconds ms){
     const uint16_t cycles = std::clamp(int(ms.count() * 10 / 24), 1, 256);
     const uint16_t temp = 256 - cycles;
     auto reg = RegCopy(regs_.integration_reg);
-    reg.data = temp;
+    reg.bits = temp;
     return write_reg(reg);
 }
 
@@ -111,13 +111,13 @@ IResult<> TCS34725::set_wait_time(const Milliseconds ms){
 
 IResult<> TCS34725::set_int_thr_low(const uint16_t thr){
     auto reg = RegCopy(regs_.low_thr_reg);
-    reg.data = thr;
+    reg.bits = thr;
     return write_reg(reg);
 }
 
 IResult<> TCS34725::set_int_thr_high(const uint16_t thr){
     auto reg = RegCopy(regs_.high_thr_reg);
-    reg.data = thr;
+    reg.bits = thr;
     return write_reg(reg);
 }
 
@@ -136,7 +136,7 @@ IResult<bool> TCS34725::is_idle(){
 
 IResult<> TCS34725::set_power(const bool on){
     auto reg = RegCopy(regs_.enable_reg);
-    reg.powerOn = on;
+    reg.power_on = on;
     return write_reg(reg);
 }
 

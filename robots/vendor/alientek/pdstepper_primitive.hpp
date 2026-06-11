@@ -114,4 +114,21 @@ enum class [[nodiscard]] CalibrateState:uint8_t{
 };
 
 
+enum class [[nodiscard]] WorkMode : uint8_t {
+    CommPosition   = 0x00,  // 通信位置模式
+    CommSpeed      = 0x01,  // 通信速度模式
+    CommTorque     = 0x02,  // 通信力矩模式
+    Pulse          = 0x03,  // 脉冲模式
+    PulsePosition    = 0x04,  // 脉宽位置模式
+    PulseSpeed       = 0x05,  // 脉宽速度模式
+    PulseTorque      = 0x06,  // 脉宽力矩模式
+    Homing         = 0x07   // 回零模式
+};
+
+enum class [[nodiscard]] EnPinActiveLevel : uint8_t {
+    LowActive  = 0,  // EN 引脚低电平使能
+    HighActive = 1,  // EN 引脚高电平使能
+    KeepActive = 2   // EN 引脚保持有效
+};
+
 }

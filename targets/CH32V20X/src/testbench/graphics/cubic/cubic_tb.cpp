@@ -16,7 +16,7 @@
 
 #include "algebra/vectors/vec3.hpp"
 
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/Display/ST7789/st7789.hpp"
 
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"

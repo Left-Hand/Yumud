@@ -56,7 +56,7 @@ void tca9548_main(){
 
     while(true){
         mpu.update().examine();
-        DEBUG_PRINTLN(clock::millis(), mpu.read_acc().unwrap());
+        DEBUG_PRINTLN(clock::millis(), mpu.get_acc().unwrap());
         DEBUG_PRINTLN(clock::millis(), tca.validate());
         clock::delay(20ms);
     }

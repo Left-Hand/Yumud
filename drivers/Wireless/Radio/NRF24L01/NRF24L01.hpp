@@ -10,7 +10,52 @@
 namespace ymd::drivers{
 
 
-struct [[nodiscard]] _NRF24L01_Regs{
+struct [[nodiscard]] NRF24L01_Prelude{
+    enum class Error_Kind{
+
+    };
+
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class Package{
+        NRF24L01,
+    };
+
+
+    struct Command{
+        uint8_t bits;
+
+        constexpr uint8_t to_u8() const noexcept {
+            return bits;
+        }
+    };
+
+    struct CommandFactory{
+        static constexpr Command R_RX_PAYLOAD = Command(0x61);
+        static constexpr Command FLUSH_TX = Command(0xE1);
+        static constexpr Command FLUSH_RX = Command(0xE2);
+        static constexpr Command REUSE_TX_PL = Command(0xE3);
+        static constexpr Command NOP = Command(0xFF);
+
+        static constexpr Command read(const uint8_t addr){
+            return Command(0x00 | (addr & 0b11111));
+        }
+
+        static constexpr Command write(const uint8_t addr){
+            return Command(0x20 | (addr & 0b11111));
+        }
+
+        static constexpr Command write_ack_payload(const uint8_t ppp){
+            return Command(0xA8 | (ppp & 0b111));
+        }
+    };
+};
+
+struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
 
     using RegAddr = uint8_t;    
 
@@ -34,7 +79,7 @@ struct [[nodiscard]] _NRF24L01_Regs{
         uint8_t enaa_p2:1;
         uint8_t enaa_p1:1;
         uint8_t enaa_p0:1;
-        uint8_t reserved:2;
+        uint8_t __resv__:2;
     }DEF_R8(en_aa_reg)
 
     struct [[nodiscard]] R8_EnRxAddr:public Reg8<>{
@@ -46,7 +91,7 @@ struct [[nodiscard]] _NRF24L01_Regs{
         uint8_t erx_p2:1;
         uint8_t erx_p1:1;
         uint8_t erx_p0:1;
-        uint8_t reserved:2;
+        uint8_t __resv__:2;
     };
 
     struct [[nodiscard]] R8_SetupAddressWidth:public Reg8<>{
@@ -77,7 +122,7 @@ struct [[nodiscard]] _NRF24L01_Regs{
         uint8_t pf_pwr:2;
         uint8_t rf_dr:1;
         uint8_t pll_lock:1;
-        uint8_t __rsv__:3;
+        uint8_t __resv__:3;
     }DEF_R8(rf_setup_reg)
 
     struct [[nodiscard]] R8_Status:public Reg8<>{
@@ -129,72 +174,10 @@ struct [[nodiscard]] _NRF24L01_Regs{
     }DEF_R8(fifo_status_reg);
 };
 
-class NRF24L01{
-public:
-    enum class Error_Kind{
-
-    };
-
-
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class Package{
-        NRF24L01,
-    };
-protected:
-    using SpiDrvProxy = std::optional<hal::SpiDrv>;
-    SpiDrvProxy p_spi_drv_ = std::nullopt;
-
-    using Regs = _NRF24L01_Regs;
-    Regs regs_;
-    
-
-    struct Command{
-        uint8_t bits;
-
-        constexpr uint8_t to_u8() const noexcept {
-            return bits;
-        }
-    };
-
-    struct CommandFactory{
-        static constexpr Command R_RX_PAYLOAD = Command(0x61);
-        static constexpr Command FLUSH_TX = Command(0xE1);
-        static constexpr Command FLUSH_RX = Command(0xE2);
-        static constexpr Command REUSE_TX_PL = Command(0xE3);
-        static constexpr Command NOP = Command(0xFF);
-
-        static constexpr Command read(const uint8_t addr){
-            return Command(0x00 | (addr & 0b11111));
-        }
-
-        static constexpr Command write(const uint8_t addr){
-            return Command(0x20 | (addr & 0b11111));
-        }
-
-        static constexpr Command write_ack_payload(const uint8_t ppp){
-            return Command(0xA8 | (ppp & 0b111));
-        }
-    };
-
-    IResult<> write_command(const Command cmd);
-    IResult<> write_reg(const uint8_t addr, const uint8_t data);
-
-    template<typename T>
-    IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
-
-    IResult<> read_reg(const uint8_t addr, uint8_t & data);
-
-    template<typename T>
-    IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
-
-    
+class NRF24L01:public NRF24L01_Prelude{
 
 public:
-    NRF24L01(const hal::SpiDrv spi_drv):p_spi_drv_(spi_drv){;}
+    NRF24L01(const hal::SpiDrv spi_drv):spi_drv_(spi_drv){;}
     NRF24L01(const NRF24L01 & other) = delete;
     NRF24L01(NRF24L01 && other) = delete;
 
@@ -208,7 +191,26 @@ public:
 
     IResult<size_t> receive(std::span<uint8_t> buf);
 
-    // Result<Regs, Error> dump();
+private:
+
+    hal::SpiDrv spi_drv_;
+
+    using Regs = NRF24L01_Regset;
+    Regs regs_;
+    
+
+
+    IResult<> write_command(const Command cmd);
+    IResult<> write_reg(const uint8_t addr, const uint8_t data);
+
+    template<typename T>
+    IResult<> write_reg(const T & reg){return write_reg(reg.address, reg);}
+
+    IResult<> read_reg(const uint8_t addr, uint8_t & data);
+
+    template<typename T>
+    IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
+
 };
 
 };

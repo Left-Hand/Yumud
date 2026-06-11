@@ -17,7 +17,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HID/ft6336u/ft6336u.hpp"
-#include "drivers/Display/Polychrome/ST7789/st7789v3_phy.hpp"
+#include "drivers/Display/ST7789/st7789v3_phy.hpp"
 
 
 using namespace ymd;

@@ -393,7 +393,6 @@ void BasicTimer::enable_rcc(const Enable en){
 }
 
 void BasicTimer::set_remap(const TimerRemap rm){
-    // PANIC{uint8_t(rm)};
     lld::timer_set_remap(tim_nth_, rm);
 }
 
@@ -509,6 +508,23 @@ void BasicTimer::deinit(){
     event_callback_ = nullptr;
 }
 
+#if 0
+void timer_start(){
+    TIM_Cmd(SPL_INST(inst_), true);
+    
+    if(lld::is_advanced_timer(tim_nth_)){
+        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
+    }
+}
+
+void timer_stop(){
+    TIM_Cmd(SPL_INST(inst_), false);
+    
+    if((en == EN) and lld::is_advanced_timer(tim_nth_)){
+        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
+    }
+}
+#endif
 
 void BasicTimer::enable(const Enable en){
     TIM_Cmd(SPL_INST(inst_), (en == EN));
