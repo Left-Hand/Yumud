@@ -64,6 +64,7 @@ struct FnSwitches{
     uint32_t initial_encoder_dirtest_en : 1;
     uint32_t initial_tone_music : 1;
     uint32_t res_temp_compensate_source : 2;
+    uint32_t deadtime_compensate_en : 1;
     uint32_t cross_decoupling_en : 1;
     uint32_t bemf_decoupling_en : 1;
 
@@ -148,6 +149,7 @@ struct alignas(4) [[nodiscard]] AllState{
     AlphaBetaCoord<iq20> hfi_alphabeta_volt;
     AlphaBetaCoord<iq20> alphabeta_volt_gen;
     UvwCoord<iq16> uvw_dutycycle_gen;
+    AlphaBetaCoord<iq20> deadtime_comp_alphabeta_dutycycle;
 
 
     iq20 busbar_curr_raw;
@@ -265,12 +267,13 @@ struct MotorProfile_Gim4010{
 struct MotorProfile_36BLDB{
     //苏州凯航电机
     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
-    static constexpr size_t POLE_PAIRS = 14u;
+    static constexpr size_t POLE_PAIRS = 4u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
+    static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
-    static constexpr auto CURRENT_CUTOFF_FREQ = 400;
+    static constexpr auto CURRENT_CUTOFF_FREQ = 600;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
     static constexpr iq16 MACHINE_KD = 0.045_iq16;
@@ -284,9 +287,10 @@ struct MotorProfile_NiuLiu{
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
+    static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
-    static constexpr auto CURRENT_CUTOFF_FREQ = 400;
+    static constexpr auto CURRENT_CUTOFF_FREQ = 500;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
     static constexpr iq16 MACHINE_KD = 0.045_iq16;

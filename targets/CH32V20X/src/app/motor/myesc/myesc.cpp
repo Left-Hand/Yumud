@@ -63,10 +63,10 @@ using namespace ymd::myesc;
 // using MotorProfile = MotorProfile_Ysc;
 // using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
-using MotorProfile = MotorProfile_Wheel;
+// using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
 // using MotorProfile = MotorProfile_36BLDB;
-// using MotorProfile = MotorProfile_NiuLiu;
+using MotorProfile = MotorProfile_NiuLiu;
 
 
 struct LrSeriesCurrentRegulatorConfig{
@@ -242,7 +242,8 @@ void myesc_main(){
     // #region 初始化定时器
 
     // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 90ns;
-    static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 200ns;
+    // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 400ns;
+    static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 1000ns;
     static constexpr auto DEADTIME_NANOS = MOS_1C840L_500MA_BEST_DEADTIME_NS;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADTIME = 350ns;
     timer.bdtr().init({DEADTIME_NANOS});
@@ -555,6 +556,7 @@ void myesc_main(){
 
 
     OpFlags op_flags_;
+    op_flags_.initial_dc_calibrate = true;
     FnSwitches fn_switches_;
 
     AllState all_state_;
@@ -565,7 +567,7 @@ void myesc_main(){
         
         auto & dc_cal_state = state.dc_calibrate_state;
 
-        if(op_flags_.initial_dc_calibrate == false) [[unlikely]]{
+        if(op_flags_.initial_dc_calibrate == true){
             dc_cal_state.uvw_current_bits_offset_acc = {
                 std::get<0>(dc_cal_state.uvw_current_bits_offset_acc) + static_cast<uint32_t>(std::get<0>(uvw_current_u12x3)),
                 std::get<1>(dc_cal_state.uvw_current_bits_offset_acc) + static_cast<uint32_t>(std::get<1>(uvw_current_u12x3)),
@@ -578,7 +580,7 @@ void myesc_main(){
                     static_cast<uint16_t>(std::get<1>(dc_cal_state.uvw_current_bits_offset_acc) / int32_t(DC_CAL_TIMES)),
                     static_cast<uint16_t>(std::get<2>(dc_cal_state.uvw_current_bits_offset_acc) / int32_t(DC_CAL_TIMES))
                 };
-                op_flags_.initial_dc_calibrate = true;
+                op_flags_.initial_dc_calibrate = false;
             }
 
             {
@@ -729,15 +731,17 @@ void myesc_main(){
 
 
 
-        const bool is_openloop = false;
+        const bool is_openloop = true;
         const bool is_hfi = false;
 
 
         if(is_openloop){
-            const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.10_iq16 * now_secs);
-
+            constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
+            const auto speed = 1.20_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
-                uq32(frac(openloop_manchine_multilap_angle.to_turns()) * MotorProfile::POLE_PAIRS));
+                state.openloop_elec_angle.to_turns() 
+                + uq32(DT * speed * MotorProfile::POLE_PAIRS)
+            );
 
 
             state.openloop_elec_angle = openloop_elec_angle;
@@ -882,7 +886,7 @@ void myesc_main(){
         auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
 
         // const bool deadtime_comp_en = false;
-        const bool deadtime_comp_en = true;
+        const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
 
         if(deadtime_comp_en){
             // https://www.zhihu.com/question/270446098/answer/3215795384
@@ -891,7 +895,7 @@ void myesc_main(){
             const auto uvw_curr_fastlp = state.alphabeta_curr_fastlp.to_uvw();
             static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
             static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
-            static constexpr auto DEADTIME_COMP_DUTYCYCLE = uq16(
+            static constexpr auto DEADTIME_COMP_DUTYCYCLE = uq32(
                 (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
             );
 
@@ -911,8 +915,14 @@ void myesc_main(){
                 beta_sign * DEADTIME_COMP_DUTYCYCLE
             };
 
-            alphabeta_dutycycle_gen.alpha += deadtime_comp_alphabeta_dutycycle.alpha;
-            alphabeta_dutycycle_gen.beta += deadtime_comp_alphabeta_dutycycle.beta;
+
+            #define DEADTIME_LPF_FN lpf_100hz
+            // #define DEADTIME_LPF_FN lpf_allpass
+            state.deadtime_comp_alphabeta_dutycycle[0] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[0], deadtime_comp_alphabeta_dutycycle[0]);
+            state.deadtime_comp_alphabeta_dutycycle[1] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[1], deadtime_comp_alphabeta_dutycycle[1]);
+
+            alphabeta_dutycycle_gen.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
+            alphabeta_dutycycle_gen.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
         }
 
 
@@ -931,6 +941,7 @@ void myesc_main(){
 
         state.dq_curr_raw = dq_curr_raw;
         state.dq_volt_gen = dq_volt_gen;
+
         // state.alphabeta_volt_gen = alphabeta_volt_gen;
 
         // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_raw);
@@ -976,8 +987,10 @@ void myesc_main(){
         #endif
 
         current_sense(state);
-        mechanical_loop(state);
-        torque_loop(state);
+        if(not op_flags_.initial_dc_calibrate){
+            mechanical_loop(state);
+            torque_loop(state);
+        }
         state.exe_elapsed_us = clock::micros() - exe_begin_us;
         // for(volatile size_t i = 0; i < 30; i++);
         // for(volatile size_t i = 0; i < 6; i++);
@@ -1013,10 +1026,15 @@ void myesc_main(){
 
         [[maybe_unused]] static const auto list = script::make_list(
             "root",
-            script::make_function(StringView("cm"), [&](iq20 torque_curr_cmd){
+            script::make_function(StringView("tc"), [&](iq20 torque_curr_cmd){
                 // handle_start_advanced_task();
                 if(math::abs(torque_curr_cmd) > 10) return;
                 all_state_.torque_curr_cmd = torque_curr_cmd;
+            }),
+
+            script::make_function(StringView("dce"), [&](const bool en){
+                // handle_start_advanced_task();
+                fn_switches_.deadtime_compensate_en = en;
             })
         );
 
@@ -1024,7 +1042,7 @@ void myesc_main(){
     };
     
     while(true){
-        // poll_repl_activity();
+        poll_repl_activity();
         [[maybe_unused]] const auto now_secs = clock::seconds();
         // repl_service_poller();
         // const auto hfi_response_real_bin1 = all_state_.hfi_response_real_bin1 * 100;
@@ -1064,10 +1082,17 @@ void myesc_main(){
             // flux_sensorless_ob.all_state_().v_alphabeta_last[0],
             // flux_sensorless_ob.all_state_().v_alphabeta_last[1],
             all_state_.torque_curr_cmd,
-            all_state_.dq_curr_raw.d,
-            all_state_.dq_curr_raw.q,
-            all_state_.alphabeta_curr_raw[0],
-            all_state_.alphabeta_curr_raw[1],
+            // all_state_.uvw_curr_raw,
+            // all_state_.dq_volt_gen,
+            all_state_.selected_elec_angle.to_turns(),
+            all_state_.busbar_curr_raw,
+            all_state_.busbar_curr,
+            // all_state_.dq_curr_raw.d,
+            // all_state_.dq_curr_raw.q,
+            // all_state_.alphabeta_curr_raw[0],
+            // all_state_.alphabeta_curr_raw[1],
+            // all_state_.deadtime_comp_alphabeta_dutycycle,
+            // all_state_.uvw_dutycycle_gen,
             // all_state_.busbar_curr,
             // hfi_bin2_angle.to_turns()
             // all_state_.hfi_response_imag_bin2,
