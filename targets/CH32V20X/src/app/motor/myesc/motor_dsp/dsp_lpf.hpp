@@ -10,6 +10,13 @@
 // https://zhuanlan.zhihu.com/p/1941084187869282361
 namespace ymd::dsp{
 
+static constexpr size_t TAU_SCALE_SHIFT = 9;
+static constexpr size_t TAU_SCALE_NUM = 3217;
+static constexpr size_t TAU_SCALE_DEN = 1 << TAU_SCALE_SHIFT;
+
+static constexpr size_t INV_TAU_SCALE_SHIFT = 10;
+static constexpr size_t INV_TAU_SCALE_NUM = 163;
+static constexpr size_t INV_TAU_SCALE_DEN = 1 << INV_TAU_SCALE_SHIFT;
 
 static consteval int64_t pow2_to_i64(const long double x, size_t n){
     const uint64_t i = uint64_t(1) << n;
@@ -31,83 +38,77 @@ static constexpr Angular<float> calc_lpf_phaseshift_f32(uint32_t fc, uint32_t f)
 }
 
 
-static constexpr Result<math::fixed<32, uint32_t>, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
-    constexpr size_t SHIFT_BITS = 9;
-    constexpr size_t MAX_FREQ = (1u << (32u - SHIFT_BITS)) / 8;  // div 8 for margin
+static constexpr Result<uq32, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
+    // 计算 alpha = 2π·fc / (fs + 2π·fc)
     
-    // 参数检查
     if(fs == 0) return Err(StringView("fs cannot be zero"));
-    if(fs >= MAX_FREQ) return Err(StringView("fs overflow")); 
-    if(fc >= MAX_FREQ) return Err(StringView("fc overflow"));
     if(fc * 2 >= fs) return Err(StringView("nyquist failed"));
 
-    // 使用安全的乘法，防止中间溢出
-    const uint64_t pow2_32_SHIFT = static_cast<uint64_t>(1) << (32 + SHIFT_BITS);
-    const uint64_t pow2_SHIFT = static_cast<uint64_t>(1) << SHIFT_BITS;
+    const uint32_t num = fc * TAU_SCALE_NUM;     // 2π·fc
+    const uint32_t den = fs * TAU_SCALE_DEN + fc * TAU_SCALE_NUM;  // fs + 2π·fc
     
-    // 计算分子：fs * 2^(32+SHIFT_BITS)
-    const uint64_t num = static_cast<uint64_t>(fs) * pow2_32_SHIFT;
-    
-    // 计算分母：fs * 2^SHIFT_BITS + fc * TAU * 2^SHIFT_BITS
-    const uint64_t fs_term = static_cast<uint64_t>(fs) * pow2_SHIFT;
-    
-    // 确保 TAU 有足够的精度和适当的缩放
-    constexpr uint64_t TAU_SCALED = static_cast<uint64_t>(TAU * (1ull << SHIFT_BITS) + 0.5);
-    const uint64_t fc_term = static_cast<uint64_t>(fc) * TAU_SCALED;
-    
-    const uint64_t den = fs_term + fc_term;
-    
-    // 防止除零
-    if(den == 0) return Err(StringView("denominator is zero"));
-    
-    return Ok(math::fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>(num / den)));
+    const uq32 alpha = uq32::from_bits(num) / uq32::from_bits(den);
+    return Ok(alpha);
 }
 
 
+
+
+
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> lpf_1o(
+    const math::fixed<Q, int32_t> y_prev,  // y[n-1]
+    const math::fixed<Q, int32_t> x,       // x[n]
+    const uq32 alpha
+){
+    #if 1
+    return y_prev + (x - y_prev) * alpha;
+
+    #else
+    const uq32 beta = uq32::from_bits(~alpha.to_bits());  // 1 - alpha
+    
+    return math::fixed<Q, int32_t>::from_bits(
+        intrinsics::mul32hsu(x.to_bits(), alpha.to_bits()) + 
+        intrinsics::mul32hsu(y_prev.to_bits(), beta.to_bits())
+    );
+    #endif
+}
+
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_1o_inplace(
+    math::fixed<Q, int32_t> & y_state, 
+    const math::fixed<Q, int32_t> x, 
+    const uq32 alpha
+){
+    y_state = lpf_1o(y_state, x, alpha);
+}
 
 static constexpr Angular<uq32> calc_lpf_phaseshift_uq32(iq16 fc, iq16 f) {
     const auto turns = atan2pu(static_cast<iq16>(f), static_cast<iq16>(fc));
     return Angular<uq32>::from_turns(math::pu_to_uq32(turns));
 }
 
-
-//y[n] = alpha * x[n] + beta * y[n-1]
-template<size_t Q>
-static constexpr math::fixed<Q, int32_t> lpf_1o(
-    const math::fixed<Q, int32_t> x_state, 
-    const math::fixed<Q, int32_t> x_new, 
-    const uq32 alpha
-){
-    const uq32 beta = uq32::from_bits(~alpha.to_bits());
-    using acc_t = std::conditional_t<std::is_signed_v<int32_t>, int64_t, uint64_t>;
-    return math::fixed<Q, int32_t>::from_bits(
-        int32_t((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
-        + int32_t((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
-    );
-}
-
+#if 0
 struct Lpf1o{
     struct Config{
         uint32_t fs;
         uint32_t fc;
 
         constexpr Result<Lpf1o, StringView> try_into_precomputed() const noexcept {
-            // const ((fs) << (9 + 32u)) / ((fs << 9) + static_cast<uint32_t>(TAU * (1u << 9)) * fc);
-            const uq16 num = static_cast<uq16>(fs);
-            const uq16 den = static_cast<uq16>(fs) + static_cast<uq16>(TAU) * static_cast<uq16>(fc);
             return Ok(Lpf1o{
-                .alpha = static_cast<uq32>(num / den)
+                .alpha = calc_lpf_alpha_uq32(fs, fc).map([auto & x]);
             });
         }
     };
 
-    math::fixed<32, uint32_t> alpha;
+    uq32 alpha;
 
     template<size_t Q>
-    void iterate(const math::fixed<Q, int32_t> state, const math::fixed<Q, int32_t> input){
-        lpf_1o(state, input, alpha);
+    void iterate(math::fixed<Q, int32_t> & state, const math::fixed<Q, int32_t> input){
+        state = lpf_1o(state, input, alpha);
     }
 };
+#endif
 
 
 

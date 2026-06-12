@@ -54,10 +54,12 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     };
 
     [[nodiscard]] constexpr UvwCoord<T> to_uvw() const noexcept {
+        const auto half_alpha = (alpha >> 1);
+        const auto half_sqrt3_beta = beta * _sqrt3_by_2;
         return UvwCoord<T>{
             .u = alpha,
-            .v = ((beta * _sqrt3_by_2) - (alpha >> 1))
-            .w = ((-beta * _sqrt3_by_2) - (alpha >> 1))
+            .v = ((half_sqrt3_beta) - half_alpha),
+            .w = ((-half_sqrt3_beta) - half_alpha)
         };
     }
 

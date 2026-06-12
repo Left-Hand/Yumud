@@ -5,11 +5,12 @@
 namespace ymd::dsp{
 
 //a * b + c * d
-template<size_t Q1, typename D1, size_t Q2, typename D2, typename ED = tmp::extended_mul_underlying_t<D1, D2>>
+template<size_t Q1, typename D1, size_t Q2, typename D2>
 static constexpr math::fixed<Q1, D1> dot2v2(
-    const math::fixed<Q1, D1> & a, const math::fixed<Q2, D2> & b,
-    const math::fixed<Q1, D1> & c, const math::fixed<Q2, D2> & d
+    const math::fixed<Q1, D1> a, const math::fixed<Q2, D2> b,
+    const math::fixed<Q1, D1> c, const math::fixed<Q2, D2> d
 ){
+    using ED = tmp::extended_mul_underlying_t<D1, D2>;
     ED bits = 0;
     bits += static_cast<ED>(a.to_bits()) * static_cast<ED>(b.to_bits());
     bits += static_cast<ED>(c.to_bits()) * static_cast<ED>(d.to_bits());
@@ -17,11 +18,12 @@ static constexpr math::fixed<Q1, D1> dot2v2(
 }
 
 //a * d - b * c
-template<size_t Q1, typename D1, size_t Q2, typename D2, typename ED = tmp::extended_mul_underlying_t<D1, D2>>
+template<size_t Q1, typename D1, size_t Q2, typename D2>
 static constexpr math::fixed<Q1, D1> cross2v2(
-    const math::fixed<Q1, D1> & a, const math::fixed<Q2, D2> & b,
-    const math::fixed<Q1, D1> & c, const math::fixed<Q2, D2> & d
+    const math::fixed<Q1, D1> a, const math::fixed<Q2, D2> b,
+    const math::fixed<Q1, D1> c, const math::fixed<Q2, D2> d
 ){
+    using ED = tmp::extended_mul_underlying_t<D1, D2>;
     ED bits = 0;
     bits += static_cast<ED>(a.to_bits()) * static_cast<ED>(d.to_bits());
     bits -= static_cast<ED>(b.to_bits()) * static_cast<ED>(c.to_bits());

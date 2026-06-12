@@ -134,9 +134,8 @@ void AdcPrimary::init(
         ADC_StartCalibration(SPL_INST(inst_));
         while(ADC_GetCalibrationStatus(SPL_INST(inst_)));
         cali_data_ = Get_CalibrationValue(SPL_INST(inst_));
+        ADC_BufferCmd(SPL_INST(inst_), ENABLE);
     }
-
-    ADC_BufferCmd(SPL_INST(inst_), ENABLE);
 }
 
 
@@ -173,14 +172,14 @@ void AdcPrimary::enable_right_align(const Enable en){
 void AdcPrimary::set_regular_trigger(const RegularTrigger trigger){
     auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
     tempreg.EXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.EXTTRIG = (trigger != RegularTrigger::SW);
+    tempreg.EXTTRIG = (trigger != RegularTrigger::SOFT);
     SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::set_injected_trigger(const InjectedTrigger trigger){
     auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
     tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.JEXTTRIG = (trigger != InjectedTrigger::SW);
+    tempreg.JEXTTRIG = (trigger != InjectedTrigger::SOFT);
     SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
@@ -192,12 +191,12 @@ void AdcPrimary::set_wdt_threshold(const uint16_t low,const uint16_t high){
 
 
 void AdcPrimary::sw_start_regular(const bool force){
-    if(force) set_regular_trigger(RegularTrigger::SW);
+    if(force) set_regular_trigger(RegularTrigger::SOFT);
     ADC_SoftwareStartConvCmd(SPL_INST(inst_), true);
 }
 
 void AdcPrimary::sw_start_injected(const bool force){
-    if(force) set_injected_trigger(InjectedTrigger::SW);
+    if(force) set_injected_trigger(InjectedTrigger::SOFT);
     ADC_SoftwareStartInjectedConvCmd(SPL_INST(inst_), true);
 }
 

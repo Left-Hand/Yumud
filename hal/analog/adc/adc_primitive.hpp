@@ -89,11 +89,11 @@ enum class [[nodiscard]] RegularTrigger:uint8_t{
     T3TRGO = 0b100, 
     T4CC4 = 0b101, 
     EXTI11_T8TRGO = 0b110, 
-    SW = 0b111
+    SOFT = 0b111
     #endif
 
     #if defined(CH32M030) 
-    SW = 0b0000,
+    SOFT = 0b0000,
     // nothing 0b0001
     T1CC4 = 0b0010,
     T1CC5 = 0b0011,
@@ -116,7 +116,7 @@ enum class [[nodiscard]] InjectedTrigger:uint8_t{
     T3CC4 = 0b100, 
     T4TRGO = 0b101, 
     EXTI15_T8CC4 = 0b110, 
-    SW = 0b111
+    SOFT = 0b111
     #endif
 
     #if defined(CH32M030)

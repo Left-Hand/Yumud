@@ -12,6 +12,18 @@ static consteval bool is_result_nearly_equal(Fn1 && fn1, Fn2 && fn2, const long 
     return std::abs(static_cast<long double>(res1.unwrap()) - static_cast<long double>(res2.unwrap())) < eps;
 }
 
+template<std::floating_point T>
+static constexpr T abs_err_percentages(const T dst, const T src){
+    const auto abs_err = math::abs(dst - src);
+    return static_cast<T>(abs_err * 100 / src);
+}
+
+static_assert(abs_err_percentages(
+    double(TAU_SCALE_NUM) / TAU_SCALE_DEN, double(TAU)) < 3e-4);
+static_assert(abs_err_percentages(
+    double(INV_TAU_SCALE_NUM) / INV_TAU_SCALE_DEN, double(1.0 / TAU)) < 2e-2);
+
+
 
 namespace {
 // static_assert(calc_lpf_alpha_uq32(16000, 10).unwrap())
@@ -37,7 +49,19 @@ static_assert(is_result_nearly_equal(
     static_assert(phase_shift_f32 == 0.125);
 }
 
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 4000).unwrap()) - 0.439900846488) < 1e-6);
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 1000).unwrap()) - 0.164123890339) < 1e-6);
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 600).unwrap()) - 0.105393361613) < 1e-6);
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 200).unwrap()) - 0.0377860533257) < 1e-6);
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 4).unwrap()) - 0.000784781797215) < 1e-6);
+static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 1).unwrap()) - 0.000196310995276) < 1e-6);
+
+
 }
+
+// static_assert(dsp::lpf_1o(1_iq20, 2_iq20, 0.5_uq32).to_bits() == 1.5_iq20);
+// static_assert(dsp::lpf_1o(1_iq20, 2_iq20, 0.125_uq32) == 1.125_iq20);
+
 
 static_assert(dot2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == 14_iq20);
 static_assert(dot2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == 14_iq16);
