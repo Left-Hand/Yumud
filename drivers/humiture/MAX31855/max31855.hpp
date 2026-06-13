@@ -11,15 +11,15 @@ public:
     explicit MAX31855(hal::SpiDrv && spi_drv):   
         spi_drv_(std::move(spi_drv)){;}
 
-    IResult read(){
-        MAX31855_Payload payload;
+    IResult<MAX31855_Packet> read(){
+        MAX31855_Packet packet;
         // if(const auto res = spi_drv_.)
-        const auto raw_span = payload.to_u16_slice();
+        const auto raw_span = packet.to_u16_slice();
         if(const auto res = spi_drv_.read_bulk<uint16_t>(
                 std::span(raw_span)
             );
             res.is_err()) return Err(res.unwrap_err());
-        return Ok<MAX31855_Payload>(payload);
+        return Ok<MAX31855_Packet>(packet);
     }
 private:
     hal::SpiDrv spi_drv_;

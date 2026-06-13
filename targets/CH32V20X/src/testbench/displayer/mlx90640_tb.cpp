@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 #include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
-#include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
+#include "drivers/tof/VL53L0X/vl53l0x.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
@@ -9,7 +9,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 
 #include "drivers/humiture/MLX90640/mlx90640.hpp"
-#include "drivers/display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 #include <ranges>
 

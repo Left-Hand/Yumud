@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../RgbLed.hpp"
 #include "core/clock/clock.hpp"
 #include <array>
 

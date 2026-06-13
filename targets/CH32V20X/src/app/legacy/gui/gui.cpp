@@ -13,7 +13,7 @@
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
 #include "middlewares/nvcv2/shape/shape.hpp"

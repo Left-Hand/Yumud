@@ -30,7 +30,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 
 
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 
 using namespace ymd;

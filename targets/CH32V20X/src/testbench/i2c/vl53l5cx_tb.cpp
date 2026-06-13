@@ -7,7 +7,7 @@
 
 #include "src/testbench/tb.h"
 
-#include "drivers/Proximeter/VL53L5CX/vl53l5cx.hpp"
+#include "drivers/tof/VL53L5CX/vl53l5cx.hpp"
 
 // https://blog.csdn.net/qq_24312945/article/details/133848222
 

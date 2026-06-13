@@ -121,13 +121,13 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         R16_ConversionDataLow low;
     };
 
-    struct [[nodiscard]] R16_ReferenceCount:public Reg16<>{
+    struct [[nodiscard]] R8_ReferenceCount:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         uint8_t count;
     };
 
-    struct [[nodiscard]] R16_Offset:public Reg16<>{
+    struct [[nodiscard]] R8_Offset:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
         uint8_t offset;
@@ -230,9 +230,23 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t id;
     };
 
+
+    // VALIDATE_R16(R8_ReferenceCount)
+    // VALIDATE_R8(R8_Offset)
+    // VALIDATE_R16(R16_SettleCount)
+    // VALIDATE_R16(R16_ClockDivider)
+    // VALIDATE_R16(R16_Status)
+    // VALIDATE_R16(R16_StatusConfig)
+    // VALIDATE_R16(R16_Config)
+    // VALIDATE_R16(R16_MuxConfig)
+    // VALIDATE_R16(R16_ResetDev)
+    // VALIDATE_R16(R16_DriveCurrent)
+    // VALIDATE_R16(R16_ManufacturerId)
+    // VALIDATE_R16(R16_DeviceId)
+
     ConversionData conv_data[4] = {};
-    R16_ReferenceCount ref_count_regs[4] = {};
-    R16_Offset offset_regs[4] = {};
+    R8_ReferenceCount ref_count_regs[4] = {};
+    R8_Offset offset_regs[4] = {};
     R16_SettleCount settle_count_regs[4] = {};
     R16_ClockDivider clock_divider_regs[4] = {};
     R16_Status status_reg = {};

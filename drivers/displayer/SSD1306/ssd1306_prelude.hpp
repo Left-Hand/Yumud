@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/Display/prelude/prelude.hpp"
+#include "drivers/displayer/prelude/prelude.hpp"
 #include "primitive/image/packed_image.hpp"
 
 namespace ymd::drivers{

@@ -21,7 +21,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 
 
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 #include "middlewares/raster/frame_buffer.hpp"
 #include "middlewares/repl/repl.hpp"

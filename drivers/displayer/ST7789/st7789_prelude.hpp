@@ -5,7 +5,7 @@
 
 #include "primitive/image/image.hpp"
 
-#include "drivers/Display/prelude/prelude.hpp"
+#include "drivers/displayer/prelude/prelude.hpp"
 
 namespace ymd::drivers{
 struct ST7789_Prelude{
