@@ -857,10 +857,10 @@ void UartIrqHandler::on_interrupt(Uart & self){
     static constexpr uint32_t STATR_NE_MASK = 1u << 2;
     static constexpr uint32_t STATR_ORE_MASK = 1u << 3;
 
-    static constexpr uint32_t STATR_LOWEST_MASK = 0x0f;
+    static constexpr uint32_t STATR_FAULT_MASK = 0x0f;
     
 
-    if(std::bit_cast<uint32_t>(temp_statr) & STATR_LOWEST_MASK){
+    if(std::bit_cast<uint32_t>(temp_statr) & STATR_FAULT_MASK){
         // 过载错误标志。当接收移位寄存器存在数据需
         // 要转到数据寄存器时，但是数据寄存器的接收
         // 域还有数据未读出时，此位将会被置位。如果
@@ -922,63 +922,65 @@ void UartIrqHandler::on_interrupt(Uart & self){
     static constexpr uint32_t CTLR1_TXE_MASK = 1u << 7;
     static constexpr uint32_t UNION_MASK = 0xf0;
 
-    const uint32_t union_flags_mask = 
-        std::bit_cast<uint32_t>(temp_ctlr1) 
-        & std::bit_cast<uint32_t>(temp_statr) 
-        & UNION_MASK;
-
-    if(union_flags_mask){
-        // rxne
-        // 读数据寄存器非空标志，当移位寄存器中的数
-        // 据被转移到数据寄存器中，该位会被硬件置
-        // 位。如果 RXNEIE 已经被置位，则还会产生对应
-        // 的中断。对数据寄存器的读操作可以将该位清
-        // 除。也可以直接写 0 来清除该位。
-        if(union_flags_mask & CTLR1_RXNE_MASK){
-            UartIrqHandler::isr_rxne(self);
-
-            // 也可以直接写 0 来清除该位
-            // intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~(1u << 5)));
-        }
-
-        // txe
-        // 发送数据寄存器空标志。当 TDR 寄存器中的的
-        // 数据被硬件转移到移位寄存器的时候，该位被
-        // 硬件置位。如果 TXEIE 已经被置位时，就会产
-        // 生中断，对数据寄存器进行写操作，此位将会
-        // 被复位。
-        if(union_flags_mask & CTLR1_TXE_MASK){
-            UartIrqHandler::isr_txe(self);
-            // 对数据寄存器进行写操作，此位将会
+    {
+        const uint32_t union_flags_mask = 
+            std::bit_cast<uint32_t>(temp_ctlr1) 
+            & std::bit_cast<uint32_t>(temp_statr) 
+            & UNION_MASK;
+    
+        if(union_flags_mask){
+            // rxne
+            // 读数据寄存器非空标志，当移位寄存器中的数
+            // 据被转移到数据寄存器中，该位会被硬件置
+            // 位。如果 RXNEIE 已经被置位，则还会产生对应
+            // 的中断。对数据寄存器的读操作可以将该位清
+            // 除。也可以直接写 0 来清除该位。
+            if(union_flags_mask & CTLR1_RXNE_MASK){
+                UartIrqHandler::isr_rxne(self);
+    
+                // 也可以直接写 0 来清除该位
+                // intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~(1u << 5)));
+            }
+    
+            // txe
+            // 发送数据寄存器空标志。当 TDR 寄存器中的的
+            // 数据被硬件转移到移位寄存器的时候，该位被
+            // 硬件置位。如果 TXEIE 已经被置位时，就会产
+            // 生中断，对数据寄存器进行写操作，此位将会
             // 被复位。
-        }
-
-        // tc
-        // 发送完成标志。当含有数据的一帧发送完成
-        // 后，并且 TXE 被置位，则硬件将会此位置位，
-        // 如果 TCIE 被置位，还会产生对应中断，软件读
-        // 了此位再写数据寄存器则会清除此位。也可以
-        // 直接写 0 来清除此位。
-        if(union_flags_mask & CTLR1_TC_MASK){
-            UartIrqHandler::isr_tc(self);
-
-            // 也可以直接写 0 来清除此位
-            intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~CTLR1_TC_MASK));
-        }
-
-        // idle
-        // 总线空闲标志。当总线空闲时，该位将会被硬
-        // 件置位。如果 IDLEIE 已经被置位，则会产生对
-        // 应的中断。读状态寄存器再读数据寄存器的操
-        // 作会清除此位。
-        if(union_flags_mask & CTLR1_IDLE_MASK){
-            UartIrqHandler::isr_idle(self);
-
-            //已经读了状态寄存器了，
-            // 现在再读数据寄存器
-            // notify_volatile_readed(&ral_inst->DATAR);
-            // ral_inst->STATR;
-            ral_inst->DATAR;
+            if(union_flags_mask & CTLR1_TXE_MASK){
+                UartIrqHandler::isr_txe(self);
+                // 对数据寄存器进行写操作，此位将会
+                // 被复位。
+            }
+    
+            // tc
+            // 发送完成标志。当含有数据的一帧发送完成
+            // 后，并且 TXE 被置位，则硬件将会此位置位，
+            // 如果 TCIE 被置位，还会产生对应中断，软件读
+            // 了此位再写数据寄存器则会清除此位。也可以
+            // 直接写 0 来清除此位。
+            if(union_flags_mask & CTLR1_TC_MASK){
+                UartIrqHandler::isr_tc(self);
+    
+                // 也可以直接写 0 来清除此位
+                intrinsics::store_volatile_with_u32(&ral_inst->STATR, (~CTLR1_TC_MASK));
+            }
+    
+            // idle
+            // 总线空闲标志。当总线空闲时，该位将会被硬
+            // 件置位。如果 IDLEIE 已经被置位，则会产生对
+            // 应的中断。读状态寄存器再读数据寄存器的操
+            // 作会清除此位。
+            if(union_flags_mask & CTLR1_IDLE_MASK){
+                UartIrqHandler::isr_idle(self);
+    
+                //已经读了状态寄存器了，
+                // 现在再读数据寄存器
+                // notify_volatile_readed(&ral_inst->DATAR);
+                // ral_inst->STATR;
+                ral_inst->DATAR;
+            }
         }
     }
 

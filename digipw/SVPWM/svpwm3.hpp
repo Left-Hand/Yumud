@@ -18,6 +18,8 @@ enum class [[nodiscard]] SvmSector:uint8_t{
 struct alignas(16) [[nodiscard]] SvmIntermediate final{
 
     using Self = SvmIntermediate;
+
+
     // static constexpr iq16 ONE_BY_SQRT3 = iq16::from_bits(0.57735026919 * (1ull << 16));
     static constexpr uq32 ONE_BY_SQRT3 = uq32::from_bits(0.57735026919 * (1ull << 32));
     static constexpr iq16 HALF_ONE = iq16(0.5);
@@ -46,18 +48,18 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
     }
 
     __attribute__((optimize("Ofast"), always_inline, hot, flatten))
-    constexpr UvwCoord<iq16> to_uvw_dutycycle() const noexcept {
-        switch(sector){
+    constexpr UvwCoord<iq16> to_uvw_dutycycle(this Self self) noexcept {
+        switch(self.sector){
             case SvmSector::_1:
             case SvmSector::_4:
             {
 
-                const iq16 a = (alpha_dutycycle - beta_dutycycle_by_sqrt3) >> 1;
-                const iq16 b = beta_dutycycle_by_sqrt3;
+                const iq16 a = (self.alpha_dutycycle - self.beta_dutycycle_by_sqrt3) >> 1;
+                const iq16 b = self.beta_dutycycle_by_sqrt3;
 
-                const iq16 u = iq16(HALF_ONE + a + b);
-                const iq16 v = iq16(HALF_ONE - a + b);
-                const iq16 w = iq16(HALF_ONE - a - b);
+                const iq16 u = iq16(+ a + b);
+                const iq16 v = iq16(- a + b);
+                const iq16 w = iq16(- a - b);
 
                 return {u, v, w};
             }
@@ -65,9 +67,9 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
             case SvmSector::_2:
             case SvmSector::_5:
             {
-                const iq16 u = iq16(HALF_ONE + alpha_dutycycle);
-                const iq16 v = iq16(HALF_ONE + beta_dutycycle_by_sqrt3);
-                const iq16 w = iq16(HALF_ONE - beta_dutycycle_by_sqrt3);
+                const iq16 u = iq16(+ self.alpha_dutycycle);
+                const iq16 v = iq16(+ self.beta_dutycycle_by_sqrt3);
+                const iq16 w = iq16(- self.beta_dutycycle_by_sqrt3);
 
                 return {u, v, w};
             }
@@ -75,12 +77,12 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
             case SvmSector::_3:
             case SvmSector::_6:
             {
-                const iq16 a = beta_dutycycle_by_sqrt3;
-                const iq16 b = (- alpha_dutycycle - beta_dutycycle_by_sqrt3) >> 1;
+                const iq16 a = self.beta_dutycycle_by_sqrt3;
+                const iq16 b = (- self.alpha_dutycycle - self.beta_dutycycle_by_sqrt3) >> 1;
 
-                const iq16 u = iq16(HALF_ONE - a - b);
-                const iq16 v = iq16(HALF_ONE + a + b);
-                const iq16 w = iq16(HALF_ONE - a + b);
+                const iq16 u = iq16(- a - b);
+                const iq16 v = iq16(+ a + b);
+                const iq16 w = iq16(- a + b);
 
                 return {u, v, w};
             }
@@ -92,6 +94,7 @@ struct alignas(16) [[nodiscard]] SvmIntermediate final{
 
 
 // 输入的幅值的临界模长不能超过sqrt(3)/2 此时恰好能使其中一路到达最大内切圆
+// 返回的各占空比位于[-0.5, 0.5]内, 无+0.5的基准
 static constexpr UvwCoord<iq16> SVM(
     const AlphaBetaCoord<iq16> alphabeta_dutycycle
 ){

@@ -353,33 +353,42 @@ volatile uint16_t & BasicTimer::cnt(){return SPL_INST(inst_)->CNT;}
 volatile uint16_t & BasicTimer::arr(){return SPL_INST(inst_)->ATRLR;}
 
 
+void timer_alter_to_pin(
+    const Nth tim_nth,
+    const TimerChannelSelection sel,
+    const TimerRemap remap
+){
+    switch(sel.kind()){
+        case ChannelSelection::CH1:
+            tim_to_ch1_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH2:
+            tim_to_ch2_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH3:
+            tim_to_ch3_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH4:
+            tim_to_ch4_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH1N:
+            tim_to_ch1n_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH2N:
+            tim_to_ch2n_pin(tim_nth, remap).afpp();
+            break;
+        case ChannelSelection::CH3N:
+            tim_to_ch3n_pin(tim_nth, remap).afpp();
+            break;
+    }
+}
+
+
 Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_pins(
     const std::initializer_list<ChannelSelection> list
 ){
     for(const auto & sel : list){
-        switch(sel.kind()){
-        case ChannelSelection::CH1:
-            tim_to_ch1_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH2:
-            tim_to_ch2_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH3:
-            tim_to_ch3_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH4:
-            tim_to_ch4_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH1N:
-            tim_to_ch1n_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH2N:
-            tim_to_ch2n_pin(tim_nth_, remap_).afpp();
-            break;
-        case ChannelSelection::CH3N:
-            tim_to_ch3n_pin(tim_nth_, remap_).afpp();
-            break;
-        }
+        timer_alter_to_pin(tim_nth_, sel, remap_);
     }
     return Ok();
 }
@@ -448,28 +457,31 @@ void BasicTimer::set_count_mode(const TimerCountMode mode){
     SPL_INST(inst_)->CTLR1 = tmpcr1;
 }
 
-void BasicTimer::enable_arr_sync(const Enable en){
-    if(en == EN){
-        SPL_INST(inst_)->CTLR1 = SPL_INST(inst_)->CTLR1 | TIM_ARPE;
+template<typename T>
+static void reg_set_or_clear_bit(volatile T & reg, const T mask, const bool en){
+    if(en){
+        reg = static_cast<T>(reg) | static_cast<T>(mask);
     }else{
-        SPL_INST(inst_)->CTLR1 = (SPL_INST(inst_)->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
+        reg = static_cast<T>(reg) & static_cast<T>(~mask);
     }
+}
+
+template<typename T>
+[[nodiscard]] static bool reg_get_bit(const volatile T & reg, const T mask){
+    return static_cast<T>(reg) & mask;
+}
+
+
+void BasicTimer::enable_arr_sync(const Enable en){
+    reg_set_or_clear_bit(SPL_INST(inst_)->CTLR1, TIM_ARPE, en == EN);
 }
 
 void BasicTimer::enable_psc_sync(const Enable en){
-    if(en == EN){
-        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR | TIM_PSCReloadMode_Immediate;
-    }else{
-        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
-    }
+    reg_set_or_clear_bit(SPL_INST(inst_)->SWEVGR, TIM_PSCReloadMode_Immediate, en == EN);
 }
 
 void BasicTimer::enable_udis(const Enable en){
-    if(en == EN){
-        SPL_INST(inst_)->CTLR1 |= TIM_UDIS;
-    }else{
-        SPL_INST(inst_)->CTLR1 &= ~TIM_UDIS;
-    }
+    reg_set_or_clear_bit(SPL_INST(inst_)->CTLR1, TIM_UDIS, en == EN);
 }
 
 void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
@@ -584,8 +596,7 @@ void GeneralTimer::init_as_encoder(){
 }
 
 bool GeneralTimer::is_up_counting(){
-    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
-    return (tmpcr1 & TIM_DIR) == 0;
+    return reg_get_bit(SPL_INST(inst_)->CTLR1, TIM_DIR) == 0;
 }
 
 
@@ -658,33 +669,33 @@ void BasicTimer::enable_cc_ctrl_sync(const Enable en){
 }
 
 
-#define TRY_HANDLE_AND_CLEAR_IT(itstatus, I)\
-if((itstatus & static_cast<uint16_t>(I))) {\
+#define TRY_HANDLE_AND_CLEAR_IT(it_status, I)\
+if((it_status & static_cast<uint16_t>(I))) {\
     invoke_callback(I); \
     TIM_ClearITPendingBit(SPL_INST(inst_), uint8_t(I)); \
     return;\
 }\
 
 void AdvancedTimer::on_cc_interrupt(){
-    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
+    const uint16_t it_status = SPL_INST(inst_)->INTFR;
 
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC4);
 }
 
 void BasicTimer::isr_common(){
-    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
+    const uint16_t it_status = SPL_INST(inst_)->INTFR;
 
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Update);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::COM);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Trigger);
-    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Break);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Update);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::COM);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Trigger);
+    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Break);
 }
 
 void AdvancedTimer::set_repeat_times(const uint16_t rep){

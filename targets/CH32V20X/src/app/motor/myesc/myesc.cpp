@@ -304,9 +304,10 @@ void myesc_main(){
         // timer.enable_udis(DISEN);
         auto * inst = TIM1;
         const uint16_t arr = static_cast<uint16_t>(inst->ATRLR);
+        const uint16_t half_arr = arr >> 1;
         
-        auto convert = [&](const uq16 channel_dutycycle) -> uint16_t{
-            return static_cast<uint16_t>(channel_dutycycle * arr);
+        auto convert = [&](const iq16 channel_dutycycle) -> uint16_t{
+            return uint16_t(int32_t((channel_dutycycle.to_bits() * arr) >> 16) + half_arr);
         };
 
         inst->CH1CVR = convert(dutycycle.template get<0>());
@@ -1059,10 +1060,10 @@ void myesc_main(){
         );
         // [[maybe_unused]] const auto hfi_bin2_half_angle = -hfi_bin2_angle / 2;
         // [[maybe_unused]] const auto [sine_hfi_bin2_half_angle, cosine_hfi_bin2_half_angle] = hfi_bin2_half_angle.sincos();
-        [[maybe_unused]] const auto length_hfi_response = math::mag(all_state_.hfi_response_real_bin2, all_state_.hfi_response_imag_bin2) * 2;
-        // const auto power_u = ((all_state_.uvw_dutycycle_gen.u - 0.5_iq16)* all_state_.uvw_curr_raw.u);
-        // const auto power_v = ((all_state_.uvw_dutycycle_gen.v - 0.5_iq16)* all_state_.uvw_curr_raw.v);
-        // const auto power_w = ((all_state_.uvw_dutycycle_gen.w - 0.5_iq16)* all_state_.uvw_curr_raw.w);
+
+        [[maybe_unused]] const auto length_hfi_response = 
+            math::mag(all_state_.hfi_response_real_bin2, all_state_.hfi_response_imag_bin2) * 2;
+
         temperature_ = lpf_10hz(temperature_, temp_comp.comp_u12(ADC1->IDATAR4));
         if(true)DEBUG_PRINTLN(
             // s, c, 

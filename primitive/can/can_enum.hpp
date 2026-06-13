@@ -196,7 +196,8 @@ enum struct [[nodiscard]] InterruptFlagBit:uint16_t{
 
 
 //can错误
-enum class [[nodiscard]] Error:uint8_t{
+enum class [[nodiscard]] ErrorCode:uint8_t{
+    Ok = 0x0,
     Stuff = 0x1,
     Form = 0x2,
     Acknowledge = 0x3,
@@ -207,7 +208,7 @@ enum class [[nodiscard]] Error:uint8_t{
 };
 
 
-OutputStream & operator<<(OutputStream & os, const Error & error);
+OutputStream & operator<<(OutputStream & os, const ErrorCode & error);
 
 struct [[nodiscard]] Baudrate final{
 public:
@@ -372,7 +373,7 @@ enum struct [[nodiscard]] TxBufferMode:uint8_t {
 namespace ymd::hal{
 using CanBaudrate = can::Baudrate;
 using CanWiringMode = can::WiringMode;
-using CanError = can::Error;
+using CanErrorCode = can::ErrorCode;
 using CanTq = can::Tq;
 using CanLibError = can::LibError;
 using CanRtrSpecfier = can::RtrSpecfier;
