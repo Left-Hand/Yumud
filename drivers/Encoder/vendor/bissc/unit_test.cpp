@@ -4,8 +4,6 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-#include <iostream>
-#include <cassert>
 #include <bitset>
 #include <cmath>
 #include "bissc.hpp"

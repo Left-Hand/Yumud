@@ -76,17 +76,13 @@ static_assert(sizeof(PackedPoint) == 4);
 struct [[nodiscard]] TouchInfo final{
     uint8_t fingers:4;
     uint8_t :4;
-}
+};
+
 };
 
 
 
-struct [[nodiscard]] ST1663I_Regs final: public ST1663I_Prelude {
-
-
-
-
-
+struct [[nodiscard]] ST1663I_Regset final: public ST1663I_Prelude {
 
 };
 

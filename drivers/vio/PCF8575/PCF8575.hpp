@@ -22,7 +22,5 @@ public:
         i2c_drv_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 private:
     hal::I2cDrv i2c_drv_;
-
-    uint8_t data;
 };
 }

@@ -49,13 +49,19 @@ struct NCA9555_Regs:public NCA9555_Prelude{
         hal::PinMask mask = hal::PinMask::zero();
     };
 
+
+    VALIDATE_R16(R16_Input)
+    VALIDATE_R16(R16_Output)
+    VALIDATE_R16(R16_Inversion)
+    VALIDATE_R16(R16_Config)
+
     R16_Input input_reg = {};
     R16_Output output_reg = {};
     R16_Inversion inversion_reg = {};
     R16_Config config_reg = {};
 };
 
-class NCA9555 final:public NCA9555_Regs{
+class NCA9555 final:public NCA9555_Prelude{
 public:
 
     explicit NCA9555(hal::I2cDrv & i2c_drv):
@@ -75,20 +81,27 @@ public:
     IResult<> set_mode(const Nth nth, const hal::GpioMode mode);
 private:
     hal::I2cDrv i2c_drv_;
+    NCA9555_Regs regs_ = {};
 
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.to_bits(), std::endian::little);
-            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = i2c_drv_.write_reg(
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
+            reg.to_bits(), 
+            std::endian::little
+        ); res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
     
     template<typename T>
     IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.as_bits_mut(), std::endian::little);
-            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = i2c_drv_.read_reg(
+            std::bit_cast<uint8_t>(T::REG_ADDR), 
+            reg.as_bits_mut(), 
+            std::endian::little
+        ); res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 

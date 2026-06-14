@@ -16,8 +16,8 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/HID/ft6336u/ft6336u.hpp"
-#include "drivers/displayer/ST7789/st7789v3_phy.hpp"
+#include "drivers/touch/ft6336u/ft6336u.hpp"
+#include "drivers/displayer/ST7789/st7789v3_transport.hpp"
 
 
 using namespace ymd;

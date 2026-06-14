@@ -1,7 +1,6 @@
 #pragma once
 
-#include "st7789_phy.hpp"
-// #include "st7789v3_phy.hpp"
+#include "st7789_transport.hpp"
 
 namespace ymd::drivers{
 
@@ -9,10 +8,10 @@ class ST7789 final:
     public ST7789_Prelude{
 public:
     explicit ST7789(
-        ST7789_Transport && phy, 
+        ST7789_Transport && transport, 
         const math::Vec2<uint16_t> size
     ):
-        transport_(phy),
+        transport_(transport),
         algo_(size){;}
 
 

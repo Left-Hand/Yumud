@@ -18,7 +18,16 @@
 // 活动状态。
 
 
-#include "device_defs.h"
+
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/errno.hpp"
+
+#include "primitive/pwm_channel.hpp"
+
+#include "hal/gpio/vport.hpp"
+#include "hal/conn/i2c/i2cdrv.hpp"
+
 
 namespace ymd::drivers{
 class PCF8574{
