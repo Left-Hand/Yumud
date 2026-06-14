@@ -9,7 +9,6 @@ namespace ymd::robots::robstride{
 namespace req_msgs{
 
 
-using namespace primitive;
 struct [[nodiscard]] GetDeviceId final{
     static constexpr Command COMMAND = Command::GetDeviceId;
     NodeId host_id;
@@ -160,7 +159,6 @@ struct [[nodiscard]] SetBaudrate final{
 }
 
 namespace mit_msgs{
-using namespace primitive;
 
 struct [[nodiscard]] EnableMit final{
     NodeId motor_id;
@@ -302,7 +300,6 @@ struct [[nodiscard]] SetZeroPosition final{
 
 
 namespace resp_msgs{
-using namespace primitive;
 struct [[nodiscard]] GetDeviceId final{
     using Self = GetDeviceId;
     static constexpr Command COMMAND = Command::GetDeviceId;

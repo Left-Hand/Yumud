@@ -29,7 +29,7 @@ struct [[nodiscard]] SpeedCode final{
     int16_t bits;//实际速度(cm/s) = 光流速度 * 高度(m)
 };
 
-struct alignas(4) [[nodiscard]] Frame final{
+struct alignas(4) [[nodiscard]] Packet final{
     uint32_t systime_ms;
     DistanceCode distance_code;
     uint8_t signal_strength;
@@ -45,7 +45,7 @@ struct alignas(4) [[nodiscard]] Frame final{
     uint16_t __resv2__;
 };
 
-static_assert(sizeof(Frame) == 20);
+static_assert(sizeof(Packet) == 20);
 static constexpr size_t MAX_PAYLOAD_SIZE = 20;
 
 struct [[nodiscard]] ChecksumBuilder final{
@@ -75,7 +75,7 @@ struct [[nodiscard]] ChecksumBuilder final{
     }
 };
 
-using Callback = std::function<void(Frame)>;
+using Callback = std::function<void(Packet)>;
 
 class AlxAoa_ParseReceiver final{
 public:
@@ -146,14 +146,14 @@ public:
                 break;
             }
             case FsmState::AwaitLen:{
-                if(byte != sizeof(Frame)){reset(); return;}
+                if(byte != sizeof(Packet)){reset(); return;}
 
                 checksum_bd_ = checksum_bd_.push_byte(byte);
                 sw_fsm_state(FsmState::AwaitPayload);
                 break;
             }
             case FsmState::AwaitPayload:{
-                if(payload_len_ >= sizeof(Frame)){
+                if(payload_len_ >= sizeof(Packet)){
                     sw_fsm_state(FsmState::AwaitChecksum);
                 }else{
                     payload_bytes[payload_len_] = byte;
@@ -175,7 +175,7 @@ public:
 
     void flush(){
         if(callback_ == nullptr) return;
-        callback_(frame);
+        callback_(packet);
     }
 
     void reset(){
@@ -187,7 +187,7 @@ private:
 
     union{
         std::array<uint8_t, MAX_PAYLOAD_SIZE> payload_bytes;
-        Frame frame;
+        Packet packet;
     };
 
     Callback callback_;
