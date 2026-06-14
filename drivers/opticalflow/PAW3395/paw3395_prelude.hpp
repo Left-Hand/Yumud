@@ -6,7 +6,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 // https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
 // https://github.com/dotdotchan/bs2x_sdk/blob/main/application/samples/products/sle_mouse_with_dongle/mouse_sensor/mouse_sensor_paw3395.c

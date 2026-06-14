@@ -4,7 +4,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/errno.hpp"

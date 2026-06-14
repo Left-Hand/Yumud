@@ -1,12 +1,12 @@
 #pragma once
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/vec2.hpp"
-#include "algebra/regions/rect2.hpp"
-#include "algebra/regions/ray2.hpp"
-#include "algebra/vectors/quat.hpp"
-#include "algebra/transforms/basis.hpp"
-#include "algebra/regions/line2.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/regions/rect2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
+#include "middlewares/algebra/transforms/basis.hpp"
+#include "middlewares/algebra/regions/line2.hpp"
 #include "core/container/heapless_vector.hpp"
 
 #include "core/utils/Option.hpp"

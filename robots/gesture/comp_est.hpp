@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 #include "dsp/filter/homebrew/complementary_filter.hpp"
 
 namespace ymd::robots{

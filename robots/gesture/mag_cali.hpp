@@ -2,8 +2,8 @@
 
 #include "core/container/heapless_vector.hpp"
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 namespace ymd::robots{
 

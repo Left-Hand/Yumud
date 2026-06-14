@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 namespace ymd::geometry { 
 

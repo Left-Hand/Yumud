@@ -6,7 +6,7 @@
 #include "core/utils/nth.hpp"
 #include "core/string/owned/char_array.hpp"
 
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 #include "hal/conn/i2c/i2cdrv.hpp"
 

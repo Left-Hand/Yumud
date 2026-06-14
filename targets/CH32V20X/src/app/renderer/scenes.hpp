@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render.hpp"
-#include "algebra/gesture/camview2.hpp"
+#include "middlewares/algebra/gesture/camview2.hpp"
 
 
 static constexpr iq16 PIXELS_PER_METER = 10;

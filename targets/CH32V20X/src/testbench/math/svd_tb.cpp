@@ -15,11 +15,11 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 
 #include "robots/slam/svd.hpp"
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
-#include "algebra/gesture/isometry2.hpp"
-#include "algebra/gesture/isometry3.hpp"
+#include "middlewares/algebra/gesture/isometry2.hpp"
+#include "middlewares/algebra/gesture/isometry3.hpp"
 
 #include "core/string/view/string_view.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algebra/matrix/matrix.hpp"
+#include "middlewares/algebra/matrix/matrix.hpp"
 
 template <typename T>
 inline void AngleAxisRotatePoint(

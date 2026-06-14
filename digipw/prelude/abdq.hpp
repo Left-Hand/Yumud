@@ -2,7 +2,7 @@
 
 #include "uvw.hpp"
 #include "primitive/arithmetic/angular.hpp"
-#include "algebra/gesture/rotation2.hpp"
+#include "middlewares/algebra/gesture/rotation2.hpp"
 
 namespace ymd::digipw{
 

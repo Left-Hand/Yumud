@@ -1,4 +1,4 @@
-#include "algo/encrypt/lz77.hpp"
+#include "middlewares/encrypt/lz77.hpp"
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"

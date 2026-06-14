@@ -7,7 +7,7 @@
 #include "FFT.hpp"
 
 #include "core/math/realmath.hpp"
-#include "algebra/vectors/complex.hpp"
+#include "middlewares/algebra/vectors/complex.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "func_eval.hpp"

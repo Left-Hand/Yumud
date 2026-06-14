@@ -6,7 +6,7 @@
 
 #include "hal/conn/spi/spidrv.hpp"
 
-#include "algebra/regions/range2.hpp"
+#include "middlewares/algebra/regions/range2.hpp"
 #include "core/io/regs.hpp"
 
 

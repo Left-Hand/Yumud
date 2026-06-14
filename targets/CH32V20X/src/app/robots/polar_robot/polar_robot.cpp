@@ -15,8 +15,8 @@
 #include "middlewares/repl/repl_server.hpp"
 #include "middlewares/gcode/gcode.hpp"
 
-#include "algebra/vectors/polar.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/polar.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 
 

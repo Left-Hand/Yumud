@@ -22,7 +22,7 @@
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/gatedrv/MP6540/mp6540.hpp"
 
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"

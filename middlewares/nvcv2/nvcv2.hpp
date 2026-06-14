@@ -5,7 +5,7 @@
 #include "primitive/colors/color/color.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/packed_image.hpp"
-#include "algebra/regions/rect2.hpp"
+#include "middlewares/algebra/regions/rect2.hpp"
 
 
 #include <vector>

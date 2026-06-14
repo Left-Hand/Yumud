@@ -4,7 +4,7 @@
 #include "core/clock/time.hpp"
 #include "core/async/timer.hpp"
 
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 #include "primitive/colors/color/color.hpp"
 
 

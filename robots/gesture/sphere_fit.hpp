@@ -1,7 +1,7 @@
 #pragma once
 
 #include <span>
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 
 //original source of：https://github.com/stevenjiaweixie/vrgimbal
 //https://github.com/stevenjiaweixie/vrgimbal/blob/master/Firmware/VRGimbal/calibrationRoutines.cpp

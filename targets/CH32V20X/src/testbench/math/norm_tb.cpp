@@ -3,8 +3,8 @@
 #include "core/math/fixed/fixed.hpp"
 
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 using namespace ymd;
 

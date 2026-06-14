@@ -10,18 +10,18 @@
 
 #include "hal/conn/sdi/sdi.hpp"
 
-#include "algebra/regions/plane.hpp"
-#include "algebra/regions/aabb.hpp"
-#include "algebra/regions/segment2.hpp"
-#include "algebra/regions/line2.hpp"
-#include "algebra/regions/ray2.hpp"
+#include "middlewares/algebra/regions/plane.hpp"
+#include "middlewares/algebra/regions/aabb.hpp"
+#include "middlewares/algebra/regions/segment2.hpp"
+#include "middlewares/algebra/regions/line2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
 
-#include "algebra/transforms/transform3d.hpp"
-#include "algebra/transforms/transform2d.hpp"
+#include "middlewares/algebra/transforms/transform3d.hpp"
+#include "middlewares/algebra/transforms/transform2d.hpp"
 
-#include "algebra/shapes/Arc2.hpp"
-#include "algebra/shapes/Bezier2.hpp"
-#include "algebra/regions/perspective_rect.hpp"
+#include "middlewares/algebra/shapes/Arc2.hpp"
+#include "middlewares/algebra/shapes/Bezier2.hpp"
+#include "middlewares/algebra/regions/perspective_rect.hpp"
 
 
 #include "robots/kinematics/scara5_kinematics.hpp"

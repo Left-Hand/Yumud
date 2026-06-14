@@ -17,7 +17,7 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"

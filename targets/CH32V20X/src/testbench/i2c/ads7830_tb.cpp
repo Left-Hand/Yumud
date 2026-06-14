@@ -5,7 +5,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "src/testbench/tb.h"
-#include "algebra/vectors/vectorx.hpp"
+#include "middlewares/algebra/vectors/vectorx.hpp"
 
 #include "drivers/Adc/ADS7830/ads7830.hpp"
 

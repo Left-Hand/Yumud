@@ -6,8 +6,8 @@
 
 #include "core/utils/Result.hpp"
 
-#include "algebra/vectors/vec2.hpp"
-#include "algebra/regions/rect2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/regions/rect2.hpp"
 #include "primitive/colors/color/color.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
 

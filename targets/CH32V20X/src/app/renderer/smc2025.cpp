@@ -13,7 +13,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 #include "primitive/image/painter/painter.hpp"

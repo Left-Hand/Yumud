@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "algebra/vectors/vec2.hpp"
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/regions/plane.hpp"
-#include "algebra/regions/aabb.hpp"
-#include "algebra/transforms/transform3d.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/regions/plane.hpp"
+#include "middlewares/algebra/regions/aabb.hpp"
+#include "middlewares/algebra/transforms/transform3d.hpp"
 
 
 

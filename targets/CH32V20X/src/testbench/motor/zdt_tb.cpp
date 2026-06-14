@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 
 #include "primitive/colors/color/color.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 
 #include "hal/conn/uart/hw_singleton.hpp"

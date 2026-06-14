@@ -15,7 +15,7 @@
 #include "nodes/msg_factory.hpp"
 #include "nodes/node_role.hpp"
 
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 #include "nuedc_2025e_common.hpp"
 
