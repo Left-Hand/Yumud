@@ -6,7 +6,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/vio/AW9523/aw9523.hpp"
+#include "drivers/ioexpand/AW9523/aw9523.hpp"
 
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"

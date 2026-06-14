@@ -6,7 +6,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/vio/PCA9685/pca9685.hpp"
+#include "drivers/ioexpand/PCA9685/pca9685.hpp"
 
 using namespace ymd;
 
