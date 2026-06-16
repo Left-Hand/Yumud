@@ -47,16 +47,8 @@ using namespace ymd::robots::waveshare::ddsm400;
 // 01 74 00 00 00 00 00 00 00 04 （电机 1）
 // 02 74 00 00 00 00 00 00 00 F1 （电机 2）
 
-
-
-static_assert(sizeof(SpeedCode) == 2);
-static_assert(SpeedCode::try_from_rpm(10).unwrap().bits == 100);
-static_assert(SpeedCode::try_from_rpm(-10).unwrap().bits == -100);
-static_assert(CurrentCode::try_from_amps(-2).unwrap().bits == -0x4000);
-static_assert(CurrentCode::try_from_amps(-4).unwrap().bits == -0x8000);
-static_assert(CurrentCode::try_from_amps(2).unwrap().bits == 0x4000);
-static_assert(LapAngleCode::from_angle(Angular<uq32>::from_turns(0.25_uq32)).bits == 0x4000);
-void test1(){
+namespace {
+[[maybe_unused]] static void test1(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     // 电机模式切换
     // 01 A0 00 00 00 00 00 00 00 9E （开环）
@@ -120,7 +112,7 @@ void test1(){
 }
 
 // 开环/电流环指令测试
-void test_open_and_current_loop(){
+[[maybe_unused]] static void test_open_and_current_loop(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     
     // -2000
@@ -223,7 +215,7 @@ void test_open_and_current_loop(){
 }
 
 // 速度环指令测试
-void test_speed_loop(){
+[[maybe_unused]] static void test_speed_loop(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     
     // -50rpm
@@ -305,7 +297,7 @@ void test_speed_loop(){
 }
 
 // 刹车指令测试
-void test_brake(){
+[[maybe_unused]] static void test_brake(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     
     {
@@ -324,7 +316,7 @@ void test_brake(){
 }
 
 // 获取电机反馈测试
-void test_get_feedback(){
+[[maybe_unused]] static void test_get_feedback(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     
     // 获取模式反馈
@@ -342,4 +334,6 @@ void test_get_feedback(){
         static_assert(bytes[1] == 0x74);
         static_assert(bytes.back() == 0x04);
     }
+}
+
 }

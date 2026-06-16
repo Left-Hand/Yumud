@@ -22,9 +22,9 @@ serialize_request(const MotorId motor_id, const T & msg){
 struct RecvTransportParser final{
     enum class [[nodiscard]] FsmState:uint8_t {
         MotorId = 0,
-        Command = 1,
-        Payload = 2,
-        Crc = 3
+        Command,
+        Payload,
+        Checksum 
     };
 
     DEF_FRIEND_DERIVE_DEBUG(FsmState)
@@ -49,12 +49,14 @@ struct RecvTransportParser final{
                 break;
             }
             case FsmState::Command:{
-                const auto may_req_command = try_into_req_command(byte);
-                if(may_req_command.is_none()){
-                    reset();
-                    return;
-                }
-                request_packet_.req_command = may_req_command.unwrap();
+                request_packet_.req_command = ({
+                    const auto may_req_command = try_into_req_command(byte);
+                    if(may_req_command.is_none()){
+                        reset();
+                        return;
+                    }
+                    may_req_command.unwrap();
+                });
                 state_ = FsmState::Payload;
                 break;
             }
@@ -62,11 +64,11 @@ struct RecvTransportParser final{
                 request_packet_.payload[payload_bytes_cnt_] = byte;
                 payload_bytes_cnt_++;
                 if(payload_bytes_cnt_ >= NUM_PAYLOAD_BYTES){
-                    state_ = FsmState::Crc;
+                    state_ = FsmState::Checksum;
                 }
                 break;
             }
-            case FsmState::Crc:{
+            case FsmState::Checksum:{
                 
                 const uint16_t crc8 = request_packet_.calc_crc();
                 

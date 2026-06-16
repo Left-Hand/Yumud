@@ -144,7 +144,9 @@ struct [[nodiscard]] CurrentCode final{
     static constexpr Result<Self, SerMsgError> try_from_amps(const iq16 amps){
         if(amps > 4) return Err(SerMsgError::CurrentOverflow);
         if(amps < -4) return Err(SerMsgError::CurrentUnderflow);
-        const int16_t bits = static_cast<int16_t>((amps >> 3).to_bits());
+        const int16_t bits = static_cast<int16_t>(
+            std::min<int32_t>((amps >> 3).to_bits(), 32767));
+
         return Ok(Self{.bits = bits});
     }
 
@@ -177,11 +179,11 @@ struct [[nodiscard]] SpeedCode final{
     }
 
     constexpr iq16 to_rpm() const noexcept {
-        return iq16::from_bits(bits) * uq32(1.0 / 10);
+        return iq16(bits) * uq32(1.0 / 10);
     }
 
     constexpr iq16 to_rps() const noexcept {
-        return iq16::from_bits(bits) * uq32(1.0 / 600);
+        return iq16(bits) * uq32(1.0 / 600);
     }
 
     constexpr operator SetPointCode() const noexcept {
