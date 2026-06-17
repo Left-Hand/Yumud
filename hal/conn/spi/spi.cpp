@@ -11,7 +11,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-static constexpr SpiPrescaler calculate_prescaler(
+static constexpr SpiPrescaler spi_calc_prescaler(
     const uint32_t aligned_bus_clk_freq, 
     const uint32_t baudrate
 ){
@@ -342,12 +342,12 @@ HalResult Spi::set_baudrate(const SpiBaudrate baud){
         return set_prescaler(baud.unwrap_as<SpiPrescaler>());
     }else if(baud.is<LeastFreq>()){
         return set_prescaler(
-            calculate_prescaler(get_periph_clk_freq(), 
+            spi_calc_prescaler(get_periph_clk_freq(), 
             baud.unwrap_as<LeastFreq>().count
         ));
     }else if(baud.is<NearestFreq>()){
         return set_prescaler(
-            calculate_prescaler(get_periph_clk_freq(), 
+            spi_calc_prescaler(get_periph_clk_freq(), 
             baud.unwrap_as<NearestFreq>().count
         ));
     }

@@ -10,11 +10,14 @@ using namespace ymd::hal;
 #define DEBUG_DATA1_ADDRESS  ((volatile uint32_t*)0xE0000384)
 
 namespace ymd::lld{
+
+[[nodiscard]] static bool sdi_is_transmitting(){
+    return (*(DEBUG_DATA0_ADDRESS) != 0u);
+}
 void sdi_blocking_write_byte(const uint8_t byte){
-    while( (*(DEBUG_DATA0_ADDRESS) != 0u));
+    while(sdi_is_transmitting());
     *(DEBUG_DATA1_ADDRESS) = 0;
     *(DEBUG_DATA0_ADDRESS) = (0x01 << 24)| (byte << 16);
-    while(*(DEBUG_DATA0_ADDRESS));
 }
 
 void sdi_blocking_write_bytes(std::span<const uint8_t> bytes){
@@ -30,7 +33,7 @@ void sdi_blocking_write_bytes(std::span<const uint8_t> bytes){
     *(DEBUG_DATA0_ADDRESS) = (size) | (GET_DATA(0)<<8) | (GET_DATA(1)<<16) | (GET_DATA(2)<<24);\
 
     do{
-        while( (*(DEBUG_DATA0_ADDRESS) != 0u));
+        while(sdi_is_transmitting());
 
         if(writeSize>7){
             WRITE(7);

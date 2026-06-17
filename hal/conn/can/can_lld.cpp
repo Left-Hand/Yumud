@@ -183,8 +183,8 @@ void can_request_sleep(void * p_inst, const Enable en){
 }
 
 
-void can_enable_rcc(const Nth can_nth, const Enable en){
-    switch(can_nth.count()){
+void can_enable_rcc(const size_t can_nth, const Enable en){
+    switch(can_nth){
         #ifdef CAN1_PRESENT
         case 1:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, en == EN);
@@ -212,8 +212,8 @@ void can_enable_rcc(const Nth can_nth, const Enable en){
 }
 
 
-void can_set_remap(const Nth can_nth, const hal::CanRemap remap){
-    switch(can_nth.count()){
+void can_set_remap(const size_t can_nth, const hal::CanRemap remap){
+    switch(can_nth){
         #ifdef CAN1_PRESENT
         case 1:{
             switch(remap){
@@ -257,31 +257,6 @@ void can_set_remap(const Nth can_nth, const hal::CanRemap remap){
     }
     //如果运行到这里 说明调用了预期外的外设 请检查是否正确配置开关宏
     __builtin_trap();
-}
-
-
-void can_deinit(const Nth can_nth){
-    switch(can_nth.count()){
-        #ifdef CAN1_PRESENT
-        case 1:{
-            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN1, ENABLE);
-            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN1, DISABLE);
-            break;
-        }
-        #endif
-
-        #ifdef CAN2_PRESENT
-        case 2:{
-            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN2, ENABLE);
-            RCC_APB1PeriphResetCmd(RCC_APB1Periph_CAN2, DISABLE);
-            break;
-        }
-        #endif
-
-        #ifdef CAN3_PRESENT 
-        #error "can3 not supported yet"
-        #endif
-    }
 }
 
 
@@ -396,19 +371,19 @@ hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx
     return hal::ClassicCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
 }
 
-Nth can_to_nth(const uintptr_t inst_base){
+size_t can_to_nth(const uintptr_t inst_base){
     switch(inst_base){
         #ifdef CAN1_PRESENT
         case CAN1_BASE:
-            return Nth(1);
+            return size_t(1);
         #endif
         #ifdef CAN2_PRESENT
         case CAN2_BASE:
-            return Nth(2);
+            return size_t(2);
         #endif
         #ifdef CAN3_PRESENT
         case CAN3_BASE:
-            return Nth(3);
+            return size_t(3);
         #endif
     }
     __builtin_trap();

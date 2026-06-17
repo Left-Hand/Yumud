@@ -239,7 +239,7 @@ static void can_setup_interrupts(void * p_inst){
     CAN_ITConfig(SPL_INST(p_inst), it_mask, ENABLE);
 
     const auto inst_nth = lld::can_to_nth(reinterpret_cast<uintptr_t>(p_inst));
-    switch(inst_nth.count()){
+    switch(inst_nth){
         #ifdef CAN1_PRESENT
         case 1:
             //tx interrupt
@@ -345,7 +345,7 @@ void Can::init(const Config & cfg){
     lld::can_reset(p_inst_);
     #endif
 
-    lld::can_enable_rcc(inst_nth_, EN);
+    lld::can_enable_rcc(inst_nth_.count(), EN);
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
         const auto & bit_timming = cfg.bit_timming;
@@ -396,7 +396,7 @@ void Can::init(const Config & cfg){
 
 
 void Can::deinit(){
-    lld::can_deinit(inst_nth_);
+    lld::can_enable_rcc(inst_nth_.count(), DISEN);
 };
 
 void Can::init_interrupts(){
@@ -409,11 +409,11 @@ void Can::alter_to_pins(const CanRemap remap){
 }
 
 void Can::enable_rcc(const Enable en){
-    lld::can_enable_rcc(inst_nth_, en);
+    lld::can_enable_rcc(inst_nth_.count(), en);
 }
 
 void Can::set_remap(const CanRemap remap){
-    lld::can_set_remap(inst_nth_, remap);
+    lld::can_set_remap(inst_nth_.count(), remap);
 }
 
 

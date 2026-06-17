@@ -1,12 +1,19 @@
 #pragma once
 
-#include "ymd::ral/chip.hpp"
+// #include "ral/chip.hpp"
+#include <cstdint>
 #include <span>
 
 namespace ymd::hal{
-using namespace chip;
 
 // https://blog.csdn.net/Hgrjtz/article/details/106243026
+
+[[nodiscard]] static constexpr uint8_t lin_calc_pid(const uint8_t id){
+    const uint8_t P0 = (((id)^(id>>1)^(id>>2)^(id>>4))&0x01)<<6 ;
+    const uint8_t P1 = ((~((id>>1)^(id>>3)^(id>>4)^(id>>5)))&0x01)<<7 ;
+    return P0 | P1 | id;
+}
+
 class LinBus{
 public:
     void send_break(){
@@ -19,9 +26,9 @@ public:
     }
 
     void send_head(const uint8_t id){
-        sendBreak();
-        sendSync();
-        send(calculate_pid(id));
+        send_break();
+        send_sync();
+        send(lin_calc_pid(id));
         inst->wait_transmit_complete();
     }
 
@@ -41,11 +48,7 @@ public:
 private:
     USART_Def * inst;
 
-    [[nodiscard]] static constexpr uint8_t calculate_pid(const uint8_t id){
-        const uint8_t P0 = (((id)^(id>>1)^(id>>2)^(id>>4))&0x01)<<6 ;
-        const uint8_t P1 = ((~((id>>1)^(id>>3)^(id>>4)^(id>>5)))&0x01)<<7 ;
-        return P0 | P1 | id;
-    }
+
 
     [[nodiscard]] static constexpr uint8_t 
     checksum(uint8_t id , const std::span<uint8_t, 8> bytes){
@@ -74,7 +77,7 @@ private:
             }
         }
 
-        sum += calculate_pid(id);
+        sum += lin_calc_pid(id);
 
         if(sum&0xff00){
             sum&=0x00ff;

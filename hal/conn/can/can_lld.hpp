@@ -19,13 +19,12 @@ static constexpr size_t NUM_CAN_FILTERS = 14 * 2;
 #endif
 
 
-void can_deinit(const Nth can_nth);
-void can_reset(void * p_inst);
-Nth can_to_nth(const uintptr_t inst_base);
+size_t can_to_nth(const uintptr_t inst_base);
 void can_request_initialization(void * p_inst, const Enable en);
 void can_request_sleep(void * p_inst, const Enable en);
-void can_enable_rcc(const Nth can_nth, const Enable en);
-void can_set_remap(const Nth can_nth, const hal::CanRemap remap);
+void can_enable_rcc(const size_t can_nth, const Enable en);
+void can_reset(void * p_inst);
+void can_set_remap(const size_t can_nth, const hal::CanRemap remap);
 
 Result<void, void> can_initialze(void * p_inst, const void * _CAN_InitStruct);
 
@@ -45,7 +44,10 @@ void can_transmit_ttcan(
 );
 
 
-hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx);
+hal::ClassicCanFrame can_receive(
+    void * p_inst, 
+    const hal::CanFifoIndex fifo_idx
+);
 
 void can_configure_filter(
     const size_t filter_nth, 
@@ -53,8 +55,10 @@ void can_configure_filter(
     const hal::CanFilterConfig & filter_cfg
 );
 
-void can_set_filter_origin(const size_t inst_nth, const size_t origin);
-
+void can_set_filter_origin(
+    const size_t can_nth, 
+    const size_t origin
+);
 
 
 [[nodiscard]] static constexpr 
