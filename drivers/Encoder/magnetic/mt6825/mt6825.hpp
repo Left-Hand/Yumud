@@ -17,6 +17,8 @@
 
 
 namespace ymd::drivers{
+
+
 struct MT6825_Prelude { 
 using Error = EncoderError;
 
@@ -77,14 +79,6 @@ struct [[nodiscard]] alignas(4) Packet final{
     }
 
     IResult<Angular<uq32>> parse() const noexcept {
-        
-        // if(not is_overspeed) [[unlikely]] 
-        //     return Err(Error::OverSpeed);
-        // if(not is_pc1_valid()) [[unlikely]] 
-        //     return Err(Error::InvalidPc);
-        // if(not is_pc2_valid()) [[unlikely]] 
-        //     return Err(Error::InvalidPc2);
-
         return Ok(Angular<uq32>::from_turns(uq18::from_bits(angle_u18())));
     }
 
@@ -109,17 +103,16 @@ static_assert(sizeof(Packet) == 4);
 };
 
 
-struct MT6825:
-    public MT6825_Prelude
-{
-    explicit MT6825(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        spi_drv_(hal::SpiDrv(spi, rank)){}
-
+struct MT6825 final: public MT6825_Prelude{
     explicit MT6825(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){}
 
     explicit MT6825(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){}
+
+    explicit MT6825(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){}
+
 
     IResult<Angular<uq32>> read_lap_angle();
 private:

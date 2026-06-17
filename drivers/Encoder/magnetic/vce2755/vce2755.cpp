@@ -51,14 +51,11 @@ static_assert(calc_crc4(0x00001) == 0x03);
 
 
 
-IResult<> VCE2755::update(){
-    // std::array<uint8_t, 3> bytes;
-    if(const auto res = read_bulk(AnglePacket::BASE_ADDR, std::span(regs_.packet_.bytes));
-    // if(const auto res = read_bulk(AnglePacket::REG_ADDR, std::span(bytes));
+IResult<VCE2755::AnglePacket> VCE2755::update(){
+    AnglePacket angle_packet;
+    if(const auto res = read_bulk(AnglePacket::BASE_ADDR, std::span(angle_packet.bytes));
         res.is_err()) return Err(res.unwrap_err());
-    lap_turns_ = regs_.packet_.parse().unwrap().to_turns();
-    // DEBUG_PRINTLN(bytes);
-    return Ok();
+    return Ok(angle_packet);
 }
 
 IResult<> VCE2755::init(const VCE2755::Config & cfg){

@@ -1,4 +1,4 @@
-#include "mt6826s_prelude.hpp"
+#include "mt6826s.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

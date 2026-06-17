@@ -11,9 +11,12 @@
 namespace ymd::drivers{
 
 struct TLE5012_Prelude{
+
 using Error = EncoderError;
+
 template<typename T = void>
 using IResult = Result<T, Error>;
+
 enum class [[nodiscard]] RegAddr:uint8_t{
 	STAT    =  0,     
 	ACSTAT  =  1,
@@ -343,13 +346,6 @@ public:
     IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
 private:
 
-};
-
-class TLE5012 final{
-    
-
-private:
-    TLE5012_Regset regs_;
 };
 
 

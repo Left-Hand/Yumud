@@ -14,7 +14,6 @@ IResult<Angular<uq32>> MT6825::read_lap_angle(){
         res.is_err()) return Err(res.unwrap_err());
     else{
         const auto & packet = res.unwrap();
-        // DEBUG_PRINTLN(std::hex, packet.as_bytes());
         return packet.parse();
     }
 }

@@ -43,8 +43,8 @@ void vce2755_main(){
     }).examine();
 
     while(true){
-        vce2755.update().examine();
-        const auto lap_angle = vce2755.read_lap_angle().examine();
+        const auto angle_packet = vce2755.update().examine();
+        const auto lap_angle = angle_packet.parse().unwrap();
         DEBUG_PRINTLN(
             lap_angle.to_turns(),
             static_cast<int32_t>(lap_angle.to_turns().to_bits() >> (32 - 18))

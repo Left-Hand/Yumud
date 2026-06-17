@@ -186,7 +186,6 @@ struct VCE2755_Prelude{
 };
 
 struct VCE2755_Regset:public VCE2755_Prelude{
-    AnglePacket packet_;
 
     //0x00
     struct [[nodiscard]] R8_ChipId:public Reg8<>{

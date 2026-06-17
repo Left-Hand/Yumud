@@ -39,7 +39,6 @@ public:
 private:
     hal::SpiDrv spi_drv_;
     TMR3111_Regset regs_ = {};
-    uq32 lap_turns_ = 0;
 
     IResult<> transceive32(uint32_t & rx, const uint32_t tx){
         std::array<uint16_t, 2> rxbuf;

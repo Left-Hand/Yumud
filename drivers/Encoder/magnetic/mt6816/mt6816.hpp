@@ -20,7 +20,6 @@ struct MT6816_Prelude{
     using IResult = Result<T, Error>;
 
     struct Config{
-        Enable fast_mode_en = EN;
     };
 };
 
@@ -39,7 +38,6 @@ public:
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> init(const Config & cfg);
-    IResult<> reconf(const Config & cfg);
     IResult<> update();
 
     IResult<Angular<uq32>> read_lap_angle() { 

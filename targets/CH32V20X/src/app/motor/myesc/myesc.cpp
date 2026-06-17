@@ -765,7 +765,9 @@ void myesc_main(){
                 state.selected_elec_angle = state.hfi_elec_angle;
             }else{
                 //TODO: take off side effects
-                const auto encoder_lap_turns = mag_encoder_.read_lap_angle().examine().to_turns();
+                const auto angle_packet = mag_encoder_.update().examine();
+
+                const auto encoder_lap_turns = angle_packet.parse().unwrap().to_turns();
                 const auto prev_encoder_lapturns = state.encoder_lap_turns;
                 const auto encoder_diff_turns = uq32_wrapped_diff(prev_encoder_lapturns, encoder_lap_turns);
 

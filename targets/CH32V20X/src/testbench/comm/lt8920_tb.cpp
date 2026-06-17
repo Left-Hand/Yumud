@@ -7,7 +7,7 @@
 #include "hal/conn/spi/soft/soft_spi.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
+#include "drivers/radio/LT8920/lt8920.hpp"
 
 #include "core/string/view/string_view.hpp"
 

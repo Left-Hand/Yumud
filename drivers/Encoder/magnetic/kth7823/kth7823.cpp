@@ -126,7 +126,6 @@ IResult<> KTH7823::burn_zero_angle(const Angular<uq32> angle){
     auto reg_high = RegCopy(zero_high_reg);
     reg_high.bits = static_cast<uint8_t>(b16 >> 8);
 
-    // return Ok();
     if(const auto res = burn_reg(reg_low); 
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = burn_reg(reg_high); 
@@ -137,7 +136,6 @@ IResult<> KTH7823::burn_zero_angle(const Angular<uq32> angle){
 
 static constexpr uint8_t quantize_trim(const uq16 trim){
     const auto temp = math::round_cast<uint32_t>(trim * 256);
-    // const auto temp = static_cast<uint32_t>(trim * uq16(258.0 / 256));
     if(temp > 255) return 255;
     return static_cast<uint8_t>(temp);
 }

@@ -35,7 +35,6 @@ public:
 
     IResult<> set_hysteresis(const Hysteresis hysteresis);
 
-    IResult<> enable_fast_mode(const Enable en);
 
     IResult<> enable_pwm(const Enable en);
 
@@ -51,7 +50,6 @@ private:
     MT6701_TransportIntf & transport_;
     Packet packet_ = Packet::zero();
     uq32 lap_position_ = 0;
-    bool fast_mode_ = true;
 
 
     template<typename T>
@@ -63,6 +61,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         const auto bits = reg.to_bits();
+
         if(const auto res = transport_.write_reg(T::REG_ADDR, &bits, sizeof(T));
             res.is_err()) return Err(res.unwrap_err());
 

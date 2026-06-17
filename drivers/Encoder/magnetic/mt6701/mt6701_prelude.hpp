@@ -221,7 +221,7 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
         uint8_t __resv1__:1;
         uint8_t is_clockwise:1;
         uint8_t __resv2__:4;
-        uint8_t abz_mux:1;
+        uint8_t abz_mux_en:1;
         uint8_t __resv3__:1;
     };
 

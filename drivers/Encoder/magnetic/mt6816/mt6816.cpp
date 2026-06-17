@@ -34,13 +34,10 @@ using IResult = Self::IResult<T>;
 #define RAISE_ERR(x, ...) (x)
 #endif
 
-
 IResult<> Self::init(const Config & cfg) {
     static constexpr size_t MAX_INIT_RETRY_TIMES = 32;
     static constexpr size_t MAX_PRE_WAKEUP_TIMES = 30;
 
-    if(const auto res = reconf(cfg); 
-        res.is_err()) return res;
 
     //上电初始时会读出全零数据 需要跳过这个时期的脏数据
     for(size_t i = 0; i < MAX_PRE_WAKEUP_TIMES; i++){
@@ -78,14 +75,13 @@ IResult<Self::Packet> Self::get_packet(){
 
     uint16_t rx[2] = {0, 0};
 
-    if(const auto res = spi_drv_.transceive_burst(
-            std::span(rx), std::span(tx));
+    if(const auto res = spi_drv_.transceive_burst(std::span(rx), std::span(tx));
         res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
 
-    const uint16_t packet_underlying = 
+    const uint16_t packet_bits = 
         (static_cast<uint16_t>(rx[1] & 0x00FF) << 8) | 
         static_cast<uint16_t>(rx[0] & 0x00FF);
-    return Ok(std::bit_cast<Packet>(packet_underlying));
+    return Ok(std::bit_cast<Packet>(packet_bits));
 }
 
 IResult<> Self::update(){

@@ -12,11 +12,11 @@ using IResult = Self::IResult<T>;
 
 
 static constexpr Angular<uq32> u12_to_angle(const uint16_t bits){
-    return Angular<uq32>::from_turns(uq32(uq16::from_bits(bits << 4)));
+    return Angular<uq32>::from_turns(uq32::from_bits(bits << 20));
 }
 
 static constexpr uint16_t angle_to_u12(const Angular<uq32> angle){
-    return uq16(angle.to_turns()).to_bits() >> 4; 
+    return uint16_t(angle.to_turns().to_bits() >> 20); 
 }
 
 IResult<> Self::set_power_mode(const PowerMode power_mode){

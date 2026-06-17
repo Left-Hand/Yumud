@@ -43,18 +43,13 @@ public:
 
 
     IResult<> init(const Config & cfg);
-    IResult<> update();
-
-    IResult<Angular<uq32>> read_lap_angle(){
-        return Ok(Angular<uq32>::from_turns(lap_turns_));
-    }
+    IResult<AnglePacket> update();
 
     IResult<uint8_t> get_package_code();
 
 private:
     hal::SpiDrv spi_drv_;
     VCE2755_Regset regs_ = {};
-    uq32 lap_turns_ = 0;
 
 
     IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
