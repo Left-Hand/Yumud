@@ -28,10 +28,17 @@ IResult<> Transport::direct_read(uint16_t & val){
 }
 
 IResult<> Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    // 在读取寄存器的操作中，包含两个 16 位的帧。第一帧是写请求
+    // 帧，其中包括 2 位的写命令、6 位的寄存器地址和 8 位的 0 值
+    // 补齐。第二帧是返回的寄存器值，帧格式为 XXXX − XXXX −
+    // 0000 − 0000。
+
     const uint16_t tx_bits = ((reg_addr & 0b00'111111) | 0b01'000000) << 8;
     uint16_t rx_bits;
-    const auto res = transceive_u16(rx_bits, tx_bits);
-    if(res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = transceive_u16(rx_bits, tx_bits);
+        res.is_err()) return Err(res.unwrap_err());
+
     reg_val = rx_bits >> 8;
     return Ok();
 }
@@ -52,7 +59,7 @@ IResult<> Transport::burn_reg(const uint8_t reg_addr, const uint8_t reg_val){
     // 执行写入寄存器操作时务必遵守这个等待时间。
     
     {
-        const uint16_t tx_bits = static_cast<uint16_t>(static_cast<uint16_t>((reg_addr & 0b00'111111) | 0b10'000000) << 8) | reg_val;
+        const uint16_t tx_bits = (((reg_addr & 0b00'111111) | 0b10'000000) << 8) | reg_val;
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits, CONT);
             res.is_err()) return Err(res.unwrap_err());
     }
@@ -93,16 +100,14 @@ IResult<> Transport::transceive_u16(uint16_t & rx, const uint16_t tx){
     return Ok();
 }
 
-IResult<> KTH7823::update(){
+IResult<Angular<uq32>> KTH7823::read_lap_angle(){
     uint16_t bits;
         
     if(const auto res = transport_.direct_read(bits); 
         res.is_err()) return Err(res.unwrap_err());
 
-
-    lap_turns_ = lap_turns_.from_bits(static_cast<uint32_t>(bits) << 16);
-
-    return Ok();
+    const auto turns = uq32::from_bits(static_cast<uint32_t>(bits) << 16);
+    return Ok(Angular<uq32>::from_turns(turns));
 }
 
 IResult<> KTH7823::validate(){
@@ -112,10 +117,13 @@ IResult<> KTH7823::validate(){
 IResult<> KTH7823::burn_zero_angle(const Angular<uq32> angle){
     const uint16_t b16 = static_cast<uint16_t>(angle.to_turns().to_bits() >> 16);
 
-    auto reg_low = RegCopy(regset_.zero_low_reg);
+    auto zero_low_reg = Regset::R8_ZeroLow{};
+    auto zero_high_reg = Regset::R8_ZeroHigh{};
+
+    auto reg_low = RegCopy(zero_low_reg);
     reg_low.bits = static_cast<uint8_t>(b16 & 0xff);
 
-    auto reg_high = RegCopy(regset_.zero_high_reg);
+    auto reg_high = RegCopy(zero_high_reg);
     reg_high.bits = static_cast<uint8_t>(b16 >> 8);
 
     // return Ok();
@@ -136,7 +144,7 @@ static constexpr uint8_t quantize_trim(const uq16 trim){
 
 //keep mu >= 1
 static constexpr uint8_t ratio_to_trim_quantized(const uq16 mu){
-    const uq16 trim = 1 - 1/mu;
+    const uq16 trim = 1u - 1u/mu;
     return quantize_trim(trim);
 }
 
@@ -175,7 +183,8 @@ IResult<> KTH7823::set_trim(const uq16 x, const uq16 y){
     }
 
     {
-        auto reg = RegCopy(regset_.gain_trim_reg);
+        auto gain_trim_reg = Regset::R8_GainTrim{};
+        auto reg = RegCopy(gain_trim_reg);
         reg.gain_trim = trim_bits;
         if(const auto res = burn_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
@@ -192,7 +201,10 @@ IResult<> KTH7823::set_trim(const uq16 x, const uq16 y){
     return Ok();
 }
 
-IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold high){
+IResult<> KTH7823::set_mag_threshold(
+    const MagThreshold low, 
+    const MagThreshold high
+){
     auto reg = RegCopy(regset_.mag_alert_reg);
     reg.mag_low = low;
     reg.mag_high = high;
@@ -207,7 +219,10 @@ IResult<> KTH7823::set_direction(const RotateDirection direction){
     return burn_reg(reg);
 }
 
-IResult<> KTH7823::set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase){
+IResult<> KTH7823::set_zero_parameters(
+    const ZeroPulseWidth width, 
+    const ZeroPulsePhase phase
+){
     auto reg = RegCopy(regset_.z_config_reg);
     reg.zl = width;
     reg.zd = phase;
@@ -231,13 +246,15 @@ IResult<> KTH7823::set_pulse_per_turn(const uint16_t num_ppt){
     {
         auto reg = RegCopy(regset_.ppt_high_reg);
         reg.ppt_high = ppt_high;
-        return burn_reg(reg);
+        if(const auto res = burn_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
     }
 
     {
         auto reg = RegCopy(regset_.z_config_reg);
         reg.ppt_low = ppt_low;
-        return burn_reg(reg);
+        if(const auto res = burn_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
     }
     return Ok();
 }

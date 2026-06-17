@@ -168,12 +168,12 @@ struct TaskLine:public TaskBase<TaskLine>{
         const auto angular_accel = meas.angular_accel; 
         const auto omega = meas.omega;
 
-        const math::Vec2 vec_norm = math::Vec2(0.0_iq16, 1.0_iq16).rotated(theta);
-        const math::Vec2 vec_tan = math::Vec2(1.0_iq16, 0.0_iq16).rotated(theta);
+        const auto vec_norm = math::Vec2(0.0_iq16, 1.0_iq16).rotated(theta);
+        const auto vec_tan = math::Vec2(1.0_iq16, 0.0_iq16).rotated(theta);
         
         const iq16 d1 = meas.omega.cross(vec_tan);
         const iq16 d2 = meas.angular_accel.cross(vec_tan);
-        const math::Vec2 out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
+        const auto out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
 
         const iq16 E_targ = M * G * x * (1.0_iq16 - H / math::sqrt(H*H + W*W));
         
@@ -181,7 +181,7 @@ struct TaskLine:public TaskBase<TaskLine>{
         const iq16 E_k = 0.5_iq16 * J * (omega.project(vec_tan)).length_squared();
         const iq16 E = E_p + E_k;
 
-        const math::Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*math::abs(angular_accel.dot(vec_tan))) 
+        const auto out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*math::abs(angular_accel.dot(vec_tan))) 
             * vec_tan * math::sign(omega.dot(vec_tan));
 
         return out_norm + out_tan;

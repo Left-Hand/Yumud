@@ -20,12 +20,9 @@ public:
 
 
     IResult<> init(const Config & cfg);
-    IResult<> update();
 
     IResult<> set_zero_angle(const Angular<uq32> angle);
-    IResult<Angular<uq32>> read_lap_angle(){
-        return Ok(Angular<uq32>::from_turns(lap_turns_));
-    }
+    IResult<Angular<uq32>> read_lap_angle();
 
     IResult<> set_trim_x(const uq16 k);
 
@@ -45,7 +42,6 @@ public:
 private:
     hal::SpiDrv spi_drv_;
     MA730_Regset regs_ = {};
-    uq32 lap_turns_ = 0;
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

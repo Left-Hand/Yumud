@@ -88,7 +88,7 @@ struct [[nodiscard]] alignas(4) Packet final{
     }
 
     __inline constexpr IResult<> validate() const noexcept {
-        if(is_crc_valid() == false) return Err(Error::InvalidCrc);
+        if(is_crc_valid() == false) return Err(Error::InvalidChecksum);
         return Ok();
     }
 

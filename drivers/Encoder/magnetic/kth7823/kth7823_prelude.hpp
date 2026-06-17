@@ -15,11 +15,17 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 enum class [[nodiscard]] ZeroPulseWidth:uint8_t{
-    _90deg, _180deg, _270deg, _360deg
+    _90deg = 0b00,
+    _180deg = 0b01, 
+    _270deg = 0b10, 
+    _360deg = 0b11
 };
 
 enum class [[nodiscard]] ZeroPulsePhase:uint8_t{
-    _0deg, _90deg, _180deg, _270deg
+    _0deg = 0b00, 
+    _90deg = 0b01, 
+    _180deg = 0b10, 
+    _270deg = 0b11
 };
 
 enum class [[nodiscard]] MagThreshold:uint8_t{
@@ -41,20 +47,20 @@ using RegAddr = uint8_t;
 
 struct [[nodiscard]] Regset final{
 
-struct [[nodiscard]] R8_Zero_low:public Reg8<>{
+struct [[nodiscard]] R8_ZeroLow:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x00};
     uint8_t bits;
-}DEF_R8(zero_low_reg)
+};
 
-struct [[nodiscard]] R8_Zero_high:public Reg8<>{
+struct [[nodiscard]] R8_ZeroHigh:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x01};
     uint8_t bits;
-}DEF_R8(zero_high_reg)
+};
 
 struct [[nodiscard]] R8_GainTrim:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x02};
     uint8_t gain_trim;
-}DEF_R8(gain_trim_reg)
+};
 
 struct [[nodiscard]] R8_XyTraim:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x03};

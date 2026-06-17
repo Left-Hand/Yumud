@@ -70,10 +70,10 @@ struct RecvTransportParser final{
             }
             case FsmState::Checksum:{
                 
-                const uint16_t crc8 = request_packet_.calc_crc();
-                
-                if(crc8 != byte){
-                    on_crc_failed(crc8, byte);
+                const uint8_t actual_crc8 = request_packet_.calc_crc();
+                const uint8_t expected_crc8 = byte;
+                if(actual_crc8 != expected_crc8){
+                    on_crc_failed(actual_crc8, expected_crc8);
                 }else{
                     handle_flat_request(request_packet_);
                 }

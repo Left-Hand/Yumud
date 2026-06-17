@@ -78,14 +78,14 @@ IResult<EncoderFaultBitFields> MA730::get_fault(){
     return Ok(fault);
 }
 
-IResult<> MA730::update(){
+IResult<Angular<uq32>> MA730::read_lap_angle(){
     const uint16_t data = ({
         const auto res = direct_read();
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
-    lap_turns_ = static_cast<uq32>(uq16::from_bits(data));
-    return Ok();
+    const auto lap_turns = static_cast<uq32>(uq16::from_bits(data));
+    return Ok(make_angular_from_turns(lap_turns));
 }
 
 

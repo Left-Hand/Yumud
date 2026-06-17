@@ -79,11 +79,23 @@ enum class [[nodiscard]] SerMsgError:uint8_t{
 
 static constexpr Option<ReqCommand> try_into_req_command(const uint8_t b){
     switch(std::bit_cast<ReqCommand>(b)){
-        case ReqCommand::SetTarget: return Some(ReqCommand::SetTarget);
-        case ReqCommand::GetJourney: return Some(ReqCommand::GetJourney);
-        case ReqCommand::SetLoopMode: return Some(ReqCommand::SetLoopMode);
-        case ReqCommand::SetMotorId: return Some(ReqCommand::SetMotorId);
-        case ReqCommand::GetLoopMode: return Some(ReqCommand::GetLoopMode);
+        case ReqCommand::SetTarget:
+        case ReqCommand::GetJourney:
+        case ReqCommand::SetLoopMode:
+        case ReqCommand::SetMotorId:
+        case ReqCommand::GetLoopMode:
+            return Some(std::bit_cast<ReqCommand>(b));
+    }
+    return None;
+}
+
+static constexpr Option<RespCommand> try_into_resp_command(const uint8_t b){
+    switch(std::bit_cast<RespCommand>(b)){
+        case RespCommand::Feedback:
+        case RespCommand::Feedback2:
+        case RespCommand::SetLoopMode:
+        case RespCommand::GetLoopMode:
+            return Some(std::bit_cast<RespCommand>(b));
     }
     return None;
 }

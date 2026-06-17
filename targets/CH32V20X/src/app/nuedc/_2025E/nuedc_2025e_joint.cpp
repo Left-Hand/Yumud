@@ -18,7 +18,7 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 
 
-#include "drivers/encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/encoder/magnetic/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/gatedrv/MP6540/mp6540.hpp"
 
@@ -352,8 +352,6 @@ void nuedc_2025e_joint_main(){
     }();
 
     auto update_sensors = [&]{ 
-        ma730_.update().examine();
-
         if(self_node_role_ == NodeRole::YawJoint){
             bmi160_.update().examine();
         }

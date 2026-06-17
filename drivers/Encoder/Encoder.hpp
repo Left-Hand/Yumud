@@ -20,7 +20,7 @@ enum class [[nodiscard]] EncoderError_Kind:uint8_t{
 
     InvalidPc,
     InvalidPc2,
-    InvalidCrc,
+    InvalidChecksum,
 
     RegProgramUncovered,
     RegProgramResponseFormatInvalid,

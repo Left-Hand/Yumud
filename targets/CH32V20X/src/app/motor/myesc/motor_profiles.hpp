@@ -1,7 +1,7 @@
 #pragma once
 
-#include "drivers/encoder/MagEnc/MT6825/mt6825.hpp"
-#include "drivers/encoder/MagEnc/VCE2755/vce2755.hpp"
+#include "drivers/encoder/magnetic/MT6825/mt6825.hpp"
+#include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
 #include "motor_leso.hpp"
 
 //常见电机参数：

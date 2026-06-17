@@ -51,16 +51,7 @@ struct MT6835_Prelude{
 
         [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const noexcept {
             if(calc_crc() != crc) [[unlikely]]
-                return Err(Error::InvalidCrc);
-
-            // if(over_speed) [[unlikely]]
-            //     return Err(Error::OverSpeed);
-
-            // if(under_voltage) [[unlikely]]
-            //     return Err(Error::UnderVoltage);
-
-            // if(mag_weak) [[unlikely]]
-            //     return Err(Error::MagnetLow);
+                return Err(Error::InvalidChecksum);
 
             const auto turns = uq32::from_bits(uint32_t(angle21() << (32 - 21)));
             return Ok(Angular<uq32>::from_turns(turns));
