@@ -25,7 +25,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(rf_synthlock_reg)
 
     struct R16_RfConfig:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 7;
+        static constexpr RegAddr REG_ADDR = RegAddr{7};
         
         uint16_t rf_channel_no :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
         uint16_t rx_en:1;//使芯片进入 TX状态，1 有效
@@ -36,7 +36,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     REG16_QUICK_DEF(8, R16_Lambda8, reg8)
     
     struct R16_PaConfig:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 9;
+        static constexpr RegAddr REG_ADDR = RegAddr{9};
 
         uint16_t __resv1__ :7;
         uint16_t pa_gain:4;//PA增益控制
@@ -45,7 +45,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(pa_config_reg)
     
     struct R16_FuncConf:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 15;
+        static constexpr RegAddr REG_ADDR = RegAddr{15};
 
         uint16_t sda_pullup_sel:1;
         uint16_t cw_mode:1;
@@ -171,7 +171,7 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     }DEF_R16(fifo_reg)
 
     struct R16_FifoPtr:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 52;
+        static constexpr RegAddr REG_ADDR = RegAddr{52};
 
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。
