@@ -30,8 +30,9 @@ public:
         IDLE_TX,
     };
 
-    enum class Command : uint8_t {
-        __RW_MASK = 0b000'11111,
+    static constexpr uint8_t RW_MASK = 0b000'11111;
+
+    enum class [[nodiscard]] Command : uint8_t {
         R_REGISTER        = 0b000'00000, // R_REGISTER
         W_REGISTER        = 0b001'00000, // W_REGISTER
         R_RX_PAYLOAD     = 0b0110'0001,  // R_RX_PAYLOAD
@@ -47,6 +48,171 @@ public:
 
     using RegAddr = uint8_t;
 
+};
+
+
+struct [[nodiscard]] NRF24L01_Prelude{
+    enum class Error_Kind{
+
+    };
+
+
+    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class Package{
+        NRF24L01,
+    };
+
+
+    struct Command{
+        uint8_t bits;
+
+        constexpr uint8_t to_u8() const noexcept {
+            return bits;
+        }
+    };
+
+    struct CommandFactory{
+        static constexpr Command R_RX_PAYLOAD = Command(0x61);
+        static constexpr Command FLUSH_TX = Command(0xE1);
+        static constexpr Command FLUSH_RX = Command(0xE2);
+        static constexpr Command REUSE_TX_PL = Command(0xE3);
+        static constexpr Command NOP = Command(0xFF);
+
+        static constexpr Command read(const uint8_t addr){
+            return Command(0x00 | (addr & 0b11111));
+        }
+
+        static constexpr Command write(const uint8_t addr){
+            return Command(0x20 | (addr & 0b11111));
+        }
+
+        static constexpr Command write_ack_payload(const uint8_t ppp){
+            return Command(0xA8 | (ppp & 0b111));
+        }
+    };
+};
+
+struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
+
+    using RegAddr = uint8_t;    
+
+    struct [[nodiscard]] R8_Config:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+
+        uint8_t prim_rx:1;
+        uint8_t pwr_up:1;
+        uint8_t crco:1;
+        uint8_t en_crc:1;
+        uint8_t mask_max_rt:1;
+        uint8_t mask_tx_ds:3;
+    }DEF_R8(config_reg)
+    
+    struct [[nodiscard]] R8_EnAA:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+
+        uint8_t enaa_p5:1;
+        uint8_t enaa_p4:1;
+        uint8_t enaa_p3:1;
+        uint8_t enaa_p2:1;
+        uint8_t enaa_p1:1;
+        uint8_t enaa_p0:1;
+        uint8_t __resv__:2;
+    }DEF_R8(en_aa_reg)
+
+    struct [[nodiscard]] R8_EnRxAddr:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
+        uint8_t erx_p5:1;
+        uint8_t erx_p4:1;
+        uint8_t erx_p3:1;
+        uint8_t erx_p2:1;
+        uint8_t erx_p1:1;
+        uint8_t erx_p0:1;
+        uint8_t __resv__:2;
+    };
+
+    struct [[nodiscard]] R8_SetupAddressWidth:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+
+        uint8_t aw:2;
+        uint8_t __resv__:6;
+    }DEF_R8(setup_addrwidth_reg)
+
+    struct [[nodiscard]] R8_SetupAutoRetransmit:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
+        uint8_t ard:4;
+        uint8_t arc:4;
+    }DEF_R8(setup_auto_retransmit_reg)
+
+    struct [[nodiscard]] R8_RfChannel:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
+
+        uint8_t ch:7;
+        uint8_t __resv__:1;
+    }DEF_R8(rf_channel_reg)
+
+    struct [[nodiscard]] R8_RfSetup:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+
+        uint8_t lna_hcurr:1;
+        uint8_t pf_pwr:2;
+        uint8_t rf_dr:1;
+        uint8_t pll_lock:1;
+        uint8_t __resv__:3;
+    }DEF_R8(rf_setup_reg)
+
+    struct [[nodiscard]] R8_Status:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+
+        uint8_t tx_full:1;
+        uint8_t rx_p_no:3;
+        uint8_t max_rt:1;
+        uint8_t tx_ds:1;
+        uint8_t rx_dr:1;
+        uint8_t __resv__:1;
+    }DEF_R8(status_reg)
+
+    struct [[nodiscard]] R8_ObserveTx:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+
+        uint8_t plos_cnt:4;
+        uint8_t arc_cnt:4;
+    }DEF_R8(observe_tx_reg)
+
+
+    struct [[nodiscard]] R8_CarrierDetect:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
+        uint8_t cd:1;
+        uint8_t __resv__:7;
+    }DEF_R8(carrier_detect_reg)
+
+    struct [[nodiscard]] _R8_RxPwPn:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
+        uint8_t rx_pw:6;
+        uint8_t __resv__:2;
+    };
+
+    _R8_RxPwPn rx_pw_p0, rx_pw_p1, rx_pw_p2, rx_pw_p3, rx_pw_p4, rx_pw_p5;
+
+    struct [[nodiscard]] R8_FifoStatus{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x17};
+
+        uint8_t rx_empty:1;
+        uint8_t rx_full:1;
+        uint8_t __resv1__:2;
+
+        uint8_t tx_empty:1;
+        uint8_t tx_full:1;
+        uint8_t tx_reuse:1;
+        uint8_t __resv2__:1;
+    }DEF_R8(fifo_status_reg);
 };
 
 struct Si24R1_Regset:public Si24R1_Prelude{

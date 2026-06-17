@@ -21,19 +21,22 @@ private:
     Si24R1_Regset regs_ = {};
 
     IResult<> write_reg(RegAddr addr, const auto & value){
-        addr &= ~uint8_t(Command::__RW_MASK);
-        addr |= uint8_t(Command::W_REGISTER);
-        spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), (addr), CONT);
+        uint8_t addr_byte = uint8_t(addr);
+        addr_byte &= ~uint8_t(RW_MASK);
+        addr_byte |= uint8_t(Command::W_REGISTER);
+        spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), (addr_byte), CONT);
         return spi_drv_.write_bulk(&(value), sizeof(value));
     }
 
     IResult<> read_reg(RegAddr addr, auto & value){
-        addr &= ~uint8_t(Command::__RW_MASK);
-        addr |= uint8_t(Command::R_REGISTER);
-        if(const auto res = spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), uint8_t(addr), CONT);
-            res.is_err()) return Err(res.unwrap_err());
+        uint8_t addr_byte = uint8_t(addr);
+        addr_byte &= ~uint8_t(RW_MASK);
+        addr_byte |= uint8_t(Command::R_REGISTER);
+        if(const auto res = spi_drv_.transceive_single(
+            regs_.status_reg.as_bits_mut(), addr_byte, CONT
+        );  res.is_err()) return Err(res.unwrap_err());
         
-        if(const auto res = spi_drv_.read_bulk(&(value), sizeof(value));
+        if(const auto res = spi_drv_.read_bulk(&value, sizeof(value));
             res.is_err()) return Err(res.unwrap_err()); 
 
         return Ok();
@@ -41,13 +44,15 @@ private:
 
     IResult<> read_fifo(const std::span<uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
-        const uint8_t size = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
+
+        const size_t len = std::min(pbuf.size(), 32u);
+
         if(const auto res = spi_drv_.transceive_single<uint8_t>(
             regs_.status_reg.as_bits_mut(), 
             uint8_t(Command::R_RX_PAYLOAD), CONT
         ); res.is_err()) return Err(res.unwrap_err());
         
-        if(const auto res = spi_drv_.read_bulk<uint8_t>(std::span(pbuf.data(), size));
+        if(const auto res = spi_drv_.read_bulk<uint8_t>(std::span(pbuf.data(), len));
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
