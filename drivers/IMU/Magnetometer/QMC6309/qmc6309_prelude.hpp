@@ -67,7 +67,7 @@ struct QMC6309_Prelude{
 };
 
 struct QMC6309_Regset:public QMC6309_Prelude{
-    struct R8_Status1:public Reg8<>{
+    struct R8_Status1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Status1;
 
         uint8_t ready:1;
@@ -78,7 +78,7 @@ struct QMC6309_Regset:public QMC6309_Prelude{
         uint8_t :3;
     };
 
-    struct R8_Control1:public Reg8<>{
+    struct R8_Control1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Control1;
 
         uint8_t mode:2;
@@ -87,7 +87,7 @@ struct QMC6309_Regset:public QMC6309_Prelude{
         uint8_t osr2:3;
     };
 
-    struct R8_Control2:public Reg8<>{
+    struct R8_Control2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Control2;
 
         uint8_t mode:2;
@@ -97,7 +97,7 @@ struct QMC6309_Regset:public QMC6309_Prelude{
     };
 
 
-    struct R8_Control3:public Reg8<>{
+    struct R8_Control3:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Control3;
 
         uint8_t __resv__:7;

@@ -286,7 +286,7 @@ struct HT16K33_Regset:public HT16K33_Prelude{
 
 
     //  HOLTEK use only
-    // struct TestMode:public Reg8<>{
+    // struct TestMode:public Reg8{
     //     const uint8_t __resv__ = 0b1111111;
     // };
 

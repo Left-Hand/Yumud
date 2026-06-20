@@ -113,7 +113,7 @@ struct INA219_Prelude{
 
 
 struct INA219_Regs:public INA219_Prelude{
-    struct [[nodiscard]] R16_Config:public Reg16<>{
+    struct [[nodiscard]] R16_Config:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint16_t mode:3;
@@ -127,12 +127,12 @@ struct INA219_Regs:public INA219_Prelude{
 
 
 
-    struct [[nodiscard]] R16_ShuntVolt:public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVolt:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         uint16_t bits;
     }DEF_R16(shunt_volt_reg)
 
-    struct [[nodiscard]] R16_BusVolt:public Reg16<>{
+    struct [[nodiscard]] R16_BusVolt:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         uint16_t overflow:1;
         uint16_t conversion_ready:1;
@@ -144,20 +144,20 @@ struct INA219_Regs:public INA219_Prelude{
         }
     }DEF_R16(bus_volt_reg)
 
-    struct [[nodiscard]] R16_Power:public Reg16<>{
+    struct [[nodiscard]] R16_Power:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         PowerCode code;
     }DEF_R16(power_reg)
 
 
     
-    struct [[nodiscard]] R16_Current:public Reg16<>{
+    struct [[nodiscard]] R16_Current:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         // CurrentCode code;
         uint16_t bits;
     }DEF_R16(current_reg)
     
-    struct [[nodiscard]] R16_Calibration:public Reg16<>{
+    struct [[nodiscard]] R16_Calibration:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         int16_t bits;
     }DEF_R16(calibration_reg)

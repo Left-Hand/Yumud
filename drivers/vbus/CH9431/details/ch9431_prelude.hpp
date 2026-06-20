@@ -209,7 +209,7 @@ struct CH9431_Regs :public CH9431_Prelude{
     // 7Eh R8_SYSSTAT 系统状态寄存器  
     // 7Fh R8_SYSCTRL 系统控制寄存器 
 
-    struct R8_SYSCTRL:public Reg8<>{
+    struct R8_SYSCTRL:public Reg8{
         ClockPrescale CLKRPE:2;
         uint8_t CLKEN:1;
         uint8_t OSM:1;
@@ -217,14 +217,14 @@ struct CH9431_Regs :public CH9431_Prelude{
         WorkMode REQOP:3;
     }DEF_R8(sysctrl_reg)
 
-    struct R8_SYSSTAT:public Reg8<>{
+    struct R8_SYSSTAT:public Reg8{
         uint8_t __RESV__:1;
         uint8_t ICOD:3;
         uint8_t __RESV2__:1;
         WorkMode OPMOD:3;
     }DEF_R8(sysstat_reg)
 
-    struct R8_RXnIP:public Reg8<>{
+    struct R8_RXnIP:public Reg8{
         uint8_t B0BFM:1;
         uint8_t B1BFM:1;
         uint8_t B0BFE:1;
@@ -234,7 +234,7 @@ struct CH9431_Regs :public CH9431_Prelude{
         uint8_t __RESV__:2;
     }DEF_R8(rxnip_reg)
 
-    struct R8_BTIMER1:public Reg8<>{
+    struct R8_BTIMER1:public Reg8{
         uint8_t BRP:8;
 
         static constexpr uint8_t calc_brp(
@@ -246,19 +246,19 @@ struct CH9431_Regs :public CH9431_Prelude{
         }
     }DEF_R8(btimer1_reg)
 
-    struct R8_BTIMER2:public Reg8<>{
+    struct R8_BTIMER2:public Reg8{
         uint8_t TS1:4;
         uint8_t SJW:2;
         uint8_t __RESV__:2;
     }DEF_R8(btimer2_reg)
 
-    struct R8_BTIMER3:public Reg8<>{
+    struct R8_BTIMER3:public Reg8{
         uint8_t TS:3;
         uint8_t __RESV__:5;
     }DEF_R8(btimer3_reg)
 
 
-    struct R8_SYSINTE:public Reg8<>{
+    struct R8_SYSINTE:public Reg8{
         uint8_t RX0IE:1;
         uint8_t RX1IE:1;
         uint8_t TX0IE:1;
@@ -270,7 +270,7 @@ struct CH9431_Regs :public CH9431_Prelude{
     }DEF_R8(sysinte_reg)
 
 
-    struct R8_EFLAG:public Reg8<>{
+    struct R8_EFLAG:public Reg8{
         uint8_t EWARN:1;
         uint8_t EXWAR:1;
         uint8_t TXWAR:1;

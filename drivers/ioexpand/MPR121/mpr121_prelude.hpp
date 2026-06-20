@@ -48,12 +48,12 @@ struct Misc{
 };
 
 
-struct R16_Threshold:public Reg16<>{
+struct R16_Threshold:public Reg16{
     uint8_t press;
     uint8_t release;
 };
 
-struct R16_FiltteredData:public Reg16<>{
+struct R16_FiltteredData:public Reg16{
     uint16_t value:10;
     uint16_t __resv__:6;
 };
@@ -61,7 +61,7 @@ struct R16_FiltteredData:public Reg16<>{
 
 
 
-struct R8_ChargeTime:public Reg8<>{
+struct R8_ChargeTime:public Reg8{
     uint8_t cdt_a:3;
     uint8_t __resv1__:1;
     uint8_t cdt_b:3;
@@ -69,13 +69,13 @@ struct R8_ChargeTime:public Reg8<>{
 };
 
 
-struct R16_TouchStatus:public Reg16<>{
+struct R16_TouchStatus:public Reg16{
     uint16_t ele:13;
     uint16_t __resv__:2;
     uint16_t ovcf:1;
 };
 
-struct R16_OORStatus:public Reg16<>{
+struct R16_OORStatus:public Reg16{
     uint16_t ele:13;
     uint16_t __resv__:1;
     uint16_t arff:1;

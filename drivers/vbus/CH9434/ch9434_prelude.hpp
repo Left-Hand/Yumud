@@ -57,7 +57,7 @@ enum class [[nodiscard]] RegAddr:uint8_t{
     DLH = 0x01
 };
 
-struct R8_IER:public Reg8<>{
+struct R8_IER:public Reg8{
     /* Enable RX data interrupt */
     uint8_t rdi  :1; 
     /* Enable TX holding register interrupt */
@@ -86,7 +86,7 @@ struct R8_IER:public Reg8<>{
 /* FCR register bits */
 
 
-struct R8_FCR:public Reg8<>{
+struct R8_FCR:public Reg8{
     uint8_t FIFO : 1; /* Enable FIFO */
     uint8_t RXRESET: 1; /* Reset RX FIFO */
     uint8_t TXRESET: 1; /* Reset TX FIFO */
@@ -95,7 +95,7 @@ struct R8_FCR:public Reg8<>{
     uint8_t RXLVLH : 1; /* RX Trigger level MSB */
 };
 
-struct R8_IIR:public Reg8<>{
+struct R8_IIR:public Reg8{
     uint8_t noint:1;
     uint8_t iid1:1;
     uint8_t iid2:1;
@@ -115,7 +115,7 @@ enum class WordSize:uint8_t{
 enum class ParityMode:uint8_t{
 
 };
-struct R8_LCR:public Reg8<>{
+struct R8_LCR:public Reg8{
     WordSize word_size:2;
     uint8_t stop_bit:1;
     uint8_t paren:1;
@@ -124,7 +124,7 @@ struct R8_LCR:public Reg8<>{
     uint8_t dlab:1;
 };
 
-struct R8_MCR:public Reg8<>{
+struct R8_MCR:public Reg8{
     /* DTR complement */
     uint8_t dtr:1;
     /* RTS complement */
@@ -140,7 +140,7 @@ struct R8_MCR:public Reg8<>{
     uint8_t :2;
 };
 
-struct R8_LSR:public Reg8<>{
+struct R8_LSR:public Reg8{
     /* BI, FE, PE, OE bits */
     static constexpr uint8_t ERROR_MASK = 0x1e;
 
@@ -169,7 +169,7 @@ struct R8_LSR:public Reg8<>{
 
 
 
-struct R8_MSR:public Reg8<>{
+struct R8_MSR:public Reg8{
     static constexpr uint8_t DELTA_MASK = 0x0F;     /* Any of the delta bits! */
     /* Delta CTS Clear To Send */
     uint8_t dcts   :1; 

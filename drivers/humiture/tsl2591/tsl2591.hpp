@@ -66,7 +66,7 @@ struct TSL2591_Regset:public TSL2591_Prelude{
 
 
 
-    struct R8_Enable:public Reg8<>{
+    struct R8_Enable:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Enable;
 
         EnableCode code;

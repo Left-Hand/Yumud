@@ -204,18 +204,18 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
         uint16_t bits;
     };
 
-    struct [[nodiscard]] R16_RawAngle : public Reg16<>{
+    struct [[nodiscard]] R16_RawAngle : public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr::RawAngle;
         uint16_t bits;
     }DEF_R16(raw_angle_reg)
 
-    struct [[nodiscard]] R8_UVWMux : public Reg8<>{
+    struct [[nodiscard]] R8_UVWMux : public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::UVWMux;
         uint8_t __resv__:7;
         uint8_t uvw_mux:1;
     };
 
-    struct [[nodiscard]] R8_ABZMux : public Reg8<>{
+    struct [[nodiscard]] R8_ABZMux : public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ABZMux;
 
         uint8_t __resv1__:1;
@@ -225,27 +225,27 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
         uint8_t __resv3__:1;
     };
 
-    struct [[nodiscard]] R16_Resolution : public Reg16<>{
+    struct [[nodiscard]] R16_Resolution : public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr::Resolution;
         uint16_t abz_resolution:10;
         uint16_t __resv__:2;
         uint16_t pole_pairs:4;
     };
 
-    struct [[nodiscard]] R16_ZeroConfig : public Reg16<>{
+    struct [[nodiscard]] R16_ZeroConfig : public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr::ZeroConfig;
         uint16_t zero_position:12;
         ZeroPulseWidth zero_pulse_width:3;
         uint16_t hysteresis:1;
     };
 
-    struct [[nodiscard]] R8_Hystersis : public Reg8<>{
+    struct [[nodiscard]] R8_Hystersis : public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Hystersis;
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
-    struct [[nodiscard]] R8_WireConfig : public Reg8<>{
+    struct [[nodiscard]] R8_WireConfig : public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::WireConfig;
         uint8_t __resv__:5;
         uint8_t pwm_en:1;
@@ -253,18 +253,18 @@ struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
         PwmFreq pwm_freq:1;
     };
 
-    struct [[nodiscard]] R8_StartStop : public Reg8<>{
+    struct [[nodiscard]] R8_StartStop : public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::StartStop;
         uint8_t start:4;
         uint8_t stop:4;
     };
 
-    struct [[nodiscard]] R8_Start:public  Reg8<>{
+    struct [[nodiscard]] R8_Start:public  Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Start;
         uint8_t bits;
     };
 
-    struct [[nodiscard]] R8_Stop:public  Reg8<>{
+    struct [[nodiscard]] R8_Stop:public  Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Stop;
         uint8_t bits;
     };

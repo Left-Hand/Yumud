@@ -74,7 +74,7 @@ struct LT8920_Prelude{
 
 struct LT8920_Regset:public LT8920_Prelude{
 
-    struct R16_RfSynthLock:public Reg16<>{
+    struct R16_RfSynthLock:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{3};
         uint16_t __resv1__ :12;
         uint16_t synth_locked:1;//RF 频率综合器锁定标志位
@@ -82,7 +82,7 @@ struct LT8920_Regset:public LT8920_Prelude{
     };
     VALIDATE_R16(R16_RfSynthLock)
 
-    struct R16_RawRssi:public Reg16<>{
+    struct R16_RawRssi:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{6};
         uint16_t __resv__ :10;
         uint16_t raw_rssi:6;//RSSI 原始数据
@@ -90,7 +90,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_RawRssi)
 
-    struct R16_RfConfig:public Reg16<>{
+    struct R16_RfConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{7};
         uint16_t rf_channel_no :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
         uint16_t rx_en:1;//使芯片进入 TX 状态，1 有效
@@ -100,7 +100,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_RfConfig)
 
-    struct R16_PaConfig:public Reg16<>{
+    struct R16_PaConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{9};
         uint16_t __resv1__ :7;
         uint16_t pa_gain:4;//PA增益控制
@@ -110,7 +110,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_PaConfig)
 
-    struct R16_OscEnable:public Reg16<>{
+    struct R16_OscEnable:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{10};
         uint16_t osc_en :1;//开启晶体振荡器
         uint16_t __resv__ :15;
@@ -118,7 +118,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_OscEnable)
 
-    struct R16_RssiPdn:public Reg16<>{
+    struct R16_RssiPdn:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{11};
         uint16_t __resv1__ :8;
         uint16_t rssi_pdn:1;//关闭 RSSI
@@ -128,7 +128,7 @@ struct LT8920_Regset:public LT8920_Prelude{
     VALIDATE_R16(R16_RssiPdn)
 
 
-    struct R16_AutoCali:public Reg16<>{
+    struct R16_AutoCali:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{23};
         uint16_t __resv__ :2;
         uint16_t auto_cali:1;//在 TX/RX 开启前重新校准 VCO
@@ -137,7 +137,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_AutoCali)
 
-    struct R16_DeviceID:public Reg16<>{
+    struct R16_DeviceID:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{29};
         uint16_t digi_version:3;//数字版本号
         uint16_t __resv1__ :1;
@@ -147,7 +147,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_DeviceID)
 
-    struct R16_Config1:public Reg16<>{
+    struct R16_Config1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{32};
         uint16_t __resv1__ :1;
         uint16_t brclk_sel:3;//时钟选择
@@ -160,7 +160,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_Config1)
 
-    struct R16_Delay1:public Reg16<>{
+    struct R16_Delay1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{33};
         uint16_t tx_pa_on_delays:6;//在 VCO_ON 以后，等待内部 PA开启的时间，单位为 1uS
         uint16_t tx_pa_off_delays:2;//PA 关闭的等待时间，单位是 1uS，基数是 4uS，00 表示 4uS
@@ -169,7 +169,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_Delay1)
 
-    struct R16_Delay2:public Reg16<>{
+    struct R16_Delay2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{34};
         uint16_t tx_sw_on_delays:6;//VCO_ON 后，等待 RF switch 开启的时间，单位 1uS
         uint16_t __resv__ :2;
@@ -180,7 +180,7 @@ struct LT8920_Regset:public LT8920_Prelude{
     VALIDATE_R16(R16_Delay2)
 
 
-    struct R16_Config2:public Reg16<>{
+    struct R16_Config2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{35};
         uint16_t scramable_data :7;//Scramble data 的种子，收发两边必须一致
         uint16_t miso_tri :1; //当 SPI_SS=1 时，MISO 保持三态/低阻
@@ -195,13 +195,13 @@ struct LT8920_Regset:public LT8920_Prelude{
 
 
 
-    struct R16_SyncWord:public Reg16<>{
+    struct R16_SyncWord:public Reg16{
         uint16_t bits;
     };
 
     VALIDATE_R16(R16_SyncWord)
 
-    struct R16_Threshold:public Reg16<>{
+    struct R16_Threshold:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{40};
         uint16_t errbits:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
         uint16_t fifo_full_threshold:4;//认为 FIFO 为满的阈值
@@ -211,7 +211,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_Threshold)
 
-    struct R16_Config3:public Reg16<>{
+    struct R16_Config3:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{41};
         uint16_t crc_inital_data:8;//CRC 计算初始值。
         uint16_t __resv1__ :2;
@@ -226,7 +226,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_Config3)
 
-    struct R16_RxConfig:public Reg16<>{
+    struct R16_RxConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{42};
         uint16_t rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t __resv__ :2;
@@ -235,7 +235,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_RxConfig)
 
-    struct R16_RssiConfig:public Reg16<>{
+    struct R16_RssiConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{43};
         uint16_t wait_rssi_scan_time :8;//设置在扫描不同信道 RSSI 时，VCO&SYN 稳定时间
         uint16_t rssi_start_ch_offset:7;//通常 RSSI 从 2402MHz 开始扫描（0 信道）。这里可以开始的信道数 如设为 10，将从 2412MHz 开始扫描
@@ -244,7 +244,7 @@ struct LT8920_Regset:public LT8920_Prelude{
 
     VALIDATE_R16(R16_RssiConfig);
 
-    struct R16_DataRate:public Reg16<>{
+    struct R16_DataRate:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{44};
         uint16_t __resv__ :8;
         uint16_t dataRate:8;//透传速率
@@ -263,7 +263,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t crc_error_flag:1;//CRC 错误标志位
     };
 
-    struct R16_Flag:public Reg16<>{
+    struct R16_Flag:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{48};
         uint16_t __resv__ :5;
         uint16_t fifo_flag:1;
@@ -277,7 +277,7 @@ struct LT8920_Regset:public LT8920_Prelude{
     VALIDATE_R16(R16_Flag)
 
 
-    struct R16_FifoPtr:public Reg16<>{
+    struct R16_FifoPtr:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{52};
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。

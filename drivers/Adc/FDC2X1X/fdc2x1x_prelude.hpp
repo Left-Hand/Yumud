@@ -101,7 +101,7 @@ struct [[nodiscard]] FDC2X1X_Prelude{
 
 struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
 
-    struct [[nodiscard]] R16_ConversionDataHigh:public Reg16<>{
+    struct [[nodiscard]] R16_ConversionDataHigh:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint16_t data_msb:12;
@@ -110,7 +110,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t __resv__:2;
     };
 
-    struct [[nodiscard]] R16_ConversionDataLow:public Reg16<>{
+    struct [[nodiscard]] R16_ConversionDataLow:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint16_t data_lsb;
@@ -121,25 +121,25 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         R16_ConversionDataLow low;
     };
 
-    struct [[nodiscard]] R8_ReferenceCount:public Reg16<>{
+    struct [[nodiscard]] R8_ReferenceCount:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         uint8_t count;
     };
 
-    struct [[nodiscard]] R8_Offset:public Reg16<>{
+    struct [[nodiscard]] R8_Offset:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
         uint8_t offset;
     };
 
-    struct [[nodiscard]] R16_SettleCount:public Reg16<>{
+    struct [[nodiscard]] R16_SettleCount:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
         uint8_t settle_count;
     };
 
-    struct [[nodiscard]] R16_ClockDivider:public Reg16<>{
+    struct [[nodiscard]] R16_ClockDivider:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x14};
 
         uint16_t fref_divider:10;
@@ -148,7 +148,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t __resv2__:2;
     };
 
-    struct [[nodiscard]] R16_Status:public Reg16<>{
+    struct [[nodiscard]] R16_Status:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
         uint16_t ch3_unread_conv:1;
@@ -164,7 +164,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t channel_error:2;
     };
 
-    struct [[nodiscard]] R16_StatusConfig:public Reg16<>{
+    struct [[nodiscard]] R16_StatusConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x19};
 
         uint16_t data_ready_to_int:1;
@@ -176,7 +176,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t __resv2__:2;
     };
 
-    struct [[nodiscard]] R16_Config:public Reg16<>{
+    struct [[nodiscard]] R16_Config:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1a};
 
         uint16_t __resv1__:6;
@@ -190,7 +190,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
     };
 
 
-    struct [[nodiscard]] R16_MuxConfig:public Reg16<>{
+    struct [[nodiscard]] R16_MuxConfig:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1b};
 
         BandWidth bandwidth:3;
@@ -200,7 +200,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
 
     };
 
-    struct [[nodiscard]] R16_ResetDev:public Reg16<>{
+    struct [[nodiscard]] R16_ResetDev:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1c};
 
         uint16_t __resv1__:9;
@@ -209,21 +209,21 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t reset_dev:1;
     };
 
-    struct [[nodiscard]] R16_DriveCurrent:public Reg16<>{
+    struct [[nodiscard]] R16_DriveCurrent:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
 
         uint16_t __resv__:11;
         DriveCurrent drive_current:5;
     };
 
-    struct [[nodiscard]] R16_ManufacturerId:public Reg16<>{
+    struct [[nodiscard]] R16_ManufacturerId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x7E};
 
         static constexpr uint16_t correct = 0x5449;
         uint16_t id;
     };
 
-    struct [[nodiscard]] R16_DeviceId:public Reg16<>{
+    struct [[nodiscard]] R16_DeviceId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x7F};
 
         static constexpr uint16_t correct = 03054;

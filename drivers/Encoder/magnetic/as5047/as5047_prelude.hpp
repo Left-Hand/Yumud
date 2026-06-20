@@ -17,7 +17,7 @@ struct AS5047_Prelude{
 struct AS5047_Regs:public AS5047_Prelude{
 
     // static constexpr RegAddr MAG_ENC_REG_ADDR = 0x3FF;
-    struct ErrflReg:public Reg8<>{
+    struct ErrflReg:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x001};
         uint8_t frame_error:1;
         uint8_t invalid_cmd_error:1;
@@ -25,7 +25,7 @@ struct AS5047_Regs:public AS5047_Prelude{
         uint8_t :5;
     };
 
-    struct ProgReg:public Reg8<>{
+    struct ProgReg:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x002};
 
         uint8_t prog_otp_en:1;

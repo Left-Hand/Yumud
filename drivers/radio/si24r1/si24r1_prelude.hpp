@@ -100,7 +100,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
 
     using RegAddr = uint8_t;    
 
-    struct [[nodiscard]] R8_Config:public Reg8<>{
+    struct [[nodiscard]] R8_Config:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint8_t prim_rx:1;
@@ -111,7 +111,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
         uint8_t mask_tx_ds:3;
     }DEF_R8(config_reg)
     
-    struct [[nodiscard]] R8_EnAA:public Reg8<>{
+    struct [[nodiscard]] R8_EnAA:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t enaa_p5:1;
@@ -123,7 +123,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
         uint8_t __resv__:2;
     }DEF_R8(en_aa_reg)
 
-    struct [[nodiscard]] R8_EnRxAddr:public Reg8<>{
+    struct [[nodiscard]] R8_EnRxAddr:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t erx_p5:1;
@@ -135,28 +135,28 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
         uint8_t __resv__:2;
     };
 
-    struct [[nodiscard]] R8_SetupAddressWidth:public Reg8<>{
+    struct [[nodiscard]] R8_SetupAddressWidth:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t aw:2;
         uint8_t __resv__:6;
     }DEF_R8(setup_addrwidth_reg)
 
-    struct [[nodiscard]] R8_SetupAutoRetransmit:public Reg8<>{
+    struct [[nodiscard]] R8_SetupAutoRetransmit:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         uint8_t ard:4;
         uint8_t arc:4;
     }DEF_R8(setup_auto_retransmit_reg)
 
-    struct [[nodiscard]] R8_RfChannel:public Reg8<>{
+    struct [[nodiscard]] R8_RfChannel:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         uint8_t ch:7;
         uint8_t __resv__:1;
     }DEF_R8(rf_channel_reg)
 
-    struct [[nodiscard]] R8_RfSetup:public Reg8<>{
+    struct [[nodiscard]] R8_RfSetup:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         uint8_t lna_hcurr:1;
@@ -166,7 +166,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
         uint8_t __resv__:3;
     }DEF_R8(rf_setup_reg)
 
-    struct [[nodiscard]] R8_Status:public Reg8<>{
+    struct [[nodiscard]] R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
         uint8_t tx_full:1;
@@ -177,7 +177,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
         uint8_t __resv__:1;
     }DEF_R8(status_reg)
 
-    struct [[nodiscard]] R8_ObserveTx:public Reg8<>{
+    struct [[nodiscard]] R8_ObserveTx:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         uint8_t plos_cnt:4;
@@ -185,14 +185,14 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
     }DEF_R8(observe_tx_reg)
 
 
-    struct [[nodiscard]] R8_CarrierDetect:public Reg8<>{
+    struct [[nodiscard]] R8_CarrierDetect:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t cd:1;
         uint8_t __resv__:7;
     }DEF_R8(carrier_detect_reg)
 
-    struct [[nodiscard]] _R8_RxPwPn:public Reg8<>{
+    struct [[nodiscard]] _R8_RxPwPn:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t rx_pw:6;
@@ -218,7 +218,7 @@ struct [[nodiscard]] NRF24L01_Regset:public NRF24L01_Prelude{
 struct Si24R1_Regset:public Si24R1_Prelude{
 
 
-    struct R8_TopConfig:public Reg8<>{
+    struct R8_TopConfig:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint8_t prim_rx:1;
@@ -231,7 +231,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:1;
     };
 
-    struct R8_AutoAcknowledge:public Reg8<>{
+    struct R8_AutoAcknowledge:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t p0:1;
@@ -243,7 +243,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :2;
     };
     
-    struct R8_EnableRxAddress:public Reg8<>{
+    struct R8_EnableRxAddress:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t p0:1;
@@ -255,14 +255,14 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :2;
     };
 
-    struct R8_AddressWidth:public Reg8<>{
+    struct R8_AddressWidth:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
-    struct R8_AutoRetransmission:public Reg8<>{
+    struct R8_AutoRetransmission:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         // 0000: disabled
@@ -279,7 +279,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t retrans_delay:4;
     };
 
-    struct R8_RFChannel:public Reg8<>{
+    struct R8_RFChannel:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
 
@@ -287,7 +287,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:1;
     };
 
-    struct R8_RFConfig:public Reg8<>{
+    struct R8_RFConfig:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         uint8_t rf_power:3;
@@ -298,7 +298,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t cont_wave:1;
     };
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
         uint8_t tx_full:1;
@@ -309,39 +309,39 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :1;
     };
 
-    struct R8_TransmissionObservation:public Reg8<>{
+    struct R8_TransmissionObservation:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
-    struct R8_Rssi:public Reg8<>{
+    struct R8_Rssi:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
-    struct R8_RxAddr:public Reg8<>{
+    struct R8_RxAddr:public Reg8{
         static constexpr RegAddr head_address = 0x0A;
 
         uint8_t data;
     };
 
-    struct R8_TxAddr:public Reg8<>{
+    struct R8_TxAddr:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
         uint8_t data;
     };
     
-    struct R8_RxPower:public Reg8<>{
+    struct R8_RxPower:public Reg8{
         static constexpr RegAddr head_address = 0x11;
 
         uint8_t data;
     };
 
-    struct R8_FifoStatus:public Reg8<>{
+    struct R8_FifoStatus:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
 
         uint8_t rx_empty:1;
@@ -353,7 +353,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv2__:1;
     };
 
-    struct R8_DynamicPayloadLength:public Reg8<>{
+    struct R8_DynamicPayloadLength:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1c};
 
         uint8_t dpl_p0:1;
@@ -365,7 +365,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:2;
     };
 
-    struct R8_Feature:public Reg8<> {
+    struct R8_Feature:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x1d};
 
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command

@@ -73,7 +73,7 @@ struct VEML7700_Prelude{
 
 struct VEML7700_Regset:public VEML7700_Prelude{
     // CONFIGURATION REGISTER #0
-    struct R16_Config:public Reg16<>{
+    struct R16_Config:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0};
 
         // ALS shut down setting

@@ -43,13 +43,13 @@ struct MMC5603_Regset:public MMC5603_Prelude {
 
 
 
-    struct R16_Axis:public Reg16<>{
+    struct R16_Axis:public Reg16{
 
         uint8_t data_h;
         uint8_t data_l;
     };
 
-    struct R8_ExtAxis:public Reg8<>{
+    struct R8_ExtAxis:public Reg8{
         static constexpr RegAddr REG_ADDR_x = 0x06;
         static constexpr RegAddr REG_ADDR_y = 0x07;
         static constexpr RegAddr REG_ADDR_z = 0x08;
@@ -58,7 +58,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t data:4;
     };
 
-    struct R8_Temp:public Reg8<>{
+    struct R8_Temp:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
         uint8_t bits;
         operator int() const noexcept {
@@ -66,7 +66,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         }
     };
 
-    struct R8_Status1:public Reg8<>{
+    struct R8_Status1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
         uint8_t __resv__:4;
@@ -77,14 +77,14 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t temp_measure_done:1;
     };
 
-    struct R8_Odr:public Reg8<>{
+    struct R8_Odr:public Reg8{
 
 
         static constexpr RegAddr REG_ADDR = RegAddr{0x1a};
         DataRate datarate;
     };
 
-    struct R8_Ctrl0:public Reg8<>{
+    struct R8_Ctrl0:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1B};
 
         uint8_t do_mag_measure:1;
@@ -98,7 +98,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t cmm_freq_en:1;
     };
 
-    struct R8_Ctrl1:public Reg8<>{
+    struct R8_Ctrl1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1C};
 
         uint8_t bandwidth:2;
@@ -111,7 +111,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t sw_reset:1;
     };
 
-    struct R8_Ctrl2:public Reg8<>{
+    struct R8_Ctrl2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1D};
 
         //These bits determine how many measurements are done before a set is executed, when the 
@@ -127,23 +127,23 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t high_pwr:1;
     };
 
-    struct R8_AxisSelfTestX:public Reg8<>{
+    struct R8_AxisSelfTestX:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
         uint8_t bits;
     };
 
-    struct R8_AxisSelfTestY:public Reg8<>{
+    struct R8_AxisSelfTestY:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1f};
         uint8_t bits;
     };
 
-    struct R8_AxisSelfTestZ:public Reg8<>{
+    struct R8_AxisSelfTestZ:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x20};
         uint8_t bits;
     };
 
 
-    struct R8_ProductId:public Reg8<>{
+    struct R8_ProductId:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x39};
         static constexpr uint8_t correct_id = 0b00010000;
         

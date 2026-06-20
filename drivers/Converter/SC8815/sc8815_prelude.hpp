@@ -125,7 +125,7 @@ struct SC8815_Prelude{
 
 struct SC8815_Regs:public SC8815_Prelude {
 
-    struct R8_VbatSet:public Reg8<>{
+    struct R8_VbatSet:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         BatVolt vcell_set:3;
@@ -134,37 +134,37 @@ struct SC8815_Regs:public SC8815_Prelude {
         BatIrComp ircomp:2;
     }DEF_R8(vbat_set_reg)
 
-    struct R16_VbusRefISet:public Reg16<>{
+    struct R16_VbusRefISet:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint16_t value;
     }DEF_R16(vbus_ref_i_set_reg)
 
-    struct R16_VbusRefESet:public Reg16<>{
+    struct R16_VbusRefESet:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         
         uint16_t value;
     }DEF_R16(vbus_ref_e_set_reg)
     
-    struct R8_IBusLimSet:public Reg8<>{
+    struct R8_IBusLimSet:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         
         uint8_t __resv1__:8;
     }DEF_R8(ibus_lim_set_reg)
     
-    struct R8_IBatLimSet:public Reg8<>{
+    struct R8_IBatLimSet:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         uint8_t __resv1__:8;
     }DEF_R8(ibat_lim_set_reg)
 
-    struct R8_VinSet:public Reg8<>{
+    struct R8_VinSet:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
         uint8_t __resv1__:8;
     }DEF_R8(vin_set_reg)
     
-    struct R8_Ratio:public Reg8<>{
+    struct R8_Ratio:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         VBusRatio vbus_ratio:1;
@@ -174,7 +174,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t __resv1__:3;
     }DEF_R8(ratio_reg)
 
-    struct R8_Ctrl0Set:public Reg8<>{
+    struct R8_Ctrl0Set:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t dt_set:2;
@@ -184,7 +184,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t en_otg:1;
     }DEF_R8(ctrl0_set_reg)
 
-    struct R8_Ctrl1Set:public Reg8<>{
+    struct R8_Ctrl1Set:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
         
         uint8_t __resv1__:2;
@@ -196,7 +196,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t ichar_set:1;
     }DEF_R8(ctrl1_set_reg)
 
-    struct R8_Ctrl2Set:public Reg8<>{
+    struct R8_Ctrl2Set:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0B};
         
         uint8_t slew_set:2;
@@ -205,7 +205,7 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t __resv1__:4;
     }DEF_R8(ctrl2_set_reg)
 
-    struct R8_Ctrl3Set:public Reg8<>{
+    struct R8_Ctrl3Set:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
         
         uint8_t en_pfm:1;
@@ -218,42 +218,42 @@ struct SC8815_Regs:public SC8815_Prelude {
         uint8_t en_pgate:1;
     }DEF_R8(ctrl3_set_reg)
 
-    struct R16_VbusFbValue:public Reg16<>{
+    struct R16_VbusFbValue:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0d};
 
         uint16_t value;
     }DEF_R16(vbus_fb_value_reg)
 
-    struct R16_VbatFbValue:public Reg16<>{
+    struct R16_VbatFbValue:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0f};
 
         uint16_t value;
     }DEF_R16(vbat_fb_value_reg)
 
-    struct R16_IBusValue:public Reg16<>{
+    struct R16_IBusValue:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
 
         uint16_t value;
     }DEF_R16(ibus_value_reg)
 
-    struct R16_IBatValue:public Reg16<>{
+    struct R16_IBatValue:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x13};
 
         uint16_t value;
     }DEF_R16(ibat_value_reg)
 
-    struct R16_AdinValue:public Reg16<>{
+    struct R16_AdinValue:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint16_t value;
     }DEF_R16(adin_value_reg)
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
         Interrupts interrupts;
     }DEF_R8(status_reg)
 
-    struct R8_Mask:public Reg8<>{
+    struct R8_Mask:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x19};
         Interrupts interrupts_mask;
     }DEF_R8(mask_reg)

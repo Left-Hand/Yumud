@@ -46,7 +46,7 @@ public:
 
 struct PCA9685_Regset :public PCA9685_Prelude{
 
-    struct R8_Mode1:public Reg8<>{
+    struct R8_Mode1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Mode1;
         
         uint8_t allcall:1;
@@ -57,7 +57,7 @@ struct PCA9685_Regset :public PCA9685_Prelude{
         uint8_t restart:1;
     }DEF_R8(mode1_reg)
 
-    struct R8_Mode2:public Reg8<>{
+    struct R8_Mode2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Mode2;
 
         uint8_t outne:2;
@@ -67,7 +67,7 @@ struct PCA9685_Regset :public PCA9685_Prelude{
         uint8_t __resv__:3;
     }DEF_R8(mode2_reg)
 
-    struct R16_LedDuty:public Reg16<>{
+    struct R16_LedDuty:public Reg16{
 
         uint16_t cvr:12;
         uint16_t full:1;
@@ -79,7 +79,7 @@ struct PCA9685_Regset :public PCA9685_Prelude{
         R16_LedDuty off;
     };
 
-    struct R8_Prescale:public Reg8<>{
+    struct R8_Prescale:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Prescale;
 
         uint8_t prescale:8;

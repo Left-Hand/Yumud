@@ -156,14 +156,14 @@ enum class [[nodiscard]] GyrFs:uint16_t{
 struct BMI323_Regset:public BMI323_Prelude{
 
 //0x00
-struct R16_ChipId:public Reg16<>{
+struct R16_ChipId:public Reg16{
     static constexpr uint16_t KEY = 0x33;
     uint16_t chip_id:8;
     uint16_t :8;
 };
 
 //0x01
-struct R16_Err:public Reg16<>{
+struct R16_Err:public Reg16{
     // Fatal Error, chip is not in operational state (Boot-, power-system).
     // This flag will be reset only by power-on-reset or softreset.
     uint16_t fatal_err:1;
@@ -181,7 +181,7 @@ struct R16_Err:public Reg16<>{
 };
 
 //0x02
-struct R16_Status:public Reg16<>{
+struct R16_Status:public Reg16{
     uint16_t por_detected:1;
     uint16_t __resv__:1;
     uint16_t drdy_temp:1;
@@ -192,7 +192,7 @@ struct R16_Status:public Reg16<>{
 
 
 //0x0c
-struct R16_SatFlags:public Reg16<>{
+struct R16_SatFlags:public Reg16{
     uint16_t satf_acc_x:1;
     uint16_t satf_acc_y:1;
     uint16_t satf_acc_z:1;
@@ -202,7 +202,7 @@ struct R16_SatFlags:public Reg16<>{
     uint16_t :10;
 };
 
-struct _IntStatusFlag:public Reg16<>{
+struct _IntStatusFlag:public Reg16{
     uint16_t no_motion:1;
     uint16_t any_motion:1;
     uint16_t flat:1;
@@ -238,7 +238,7 @@ struct R16_IntStatusIbi:public _IntStatusFlag{
 
 
 //0x10
-struct R16_FeatureIo0:public Reg16<>{
+struct R16_FeatureIo0:public Reg16{
     uint16_t no_motion_x_en:1;
     uint16_t no_motion_y_en:1;
     uint16_t no_motion_z_en:1;
@@ -264,7 +264,7 @@ struct R16_FeatureIo0:public Reg16<>{
 
 
 //0x11
-struct R16_FeatureIo1:public Reg16<>{
+struct R16_FeatureIo1:public Reg16{
     uint16_t error_status:4;
     uint16_t sc_st_complete:1;
     uint16_t gyro_sc_result:1;
@@ -275,17 +275,17 @@ struct R16_FeatureIo1:public Reg16<>{
 };
 
 // 0x12
-struct R16_FeatureIo2:public Reg16<>{
+struct R16_FeatureIo2:public Reg16{
     uint16_t count;
 };
 
 // 0x13
-struct R16_FeatureIo3:public Reg16<>{
+struct R16_FeatureIo3:public Reg16{
     uint16_t count;
 };
 
 // 0x14
-struct R16_FeatureIoStatus:public Reg16<>{
+struct R16_FeatureIoStatus:public Reg16{
     // On read: data has been written by the feature engine
     // On write: data written by the host shall be sent to the feature engine
     uint16_t feature_io_status:1;
@@ -293,7 +293,7 @@ struct R16_FeatureIoStatus:public Reg16<>{
 };
 
 //0x15
-struct R16_FifoFillLevel:public Reg16<>{
+struct R16_FifoFillLevel:public Reg16{
     uint16_t fifo_fill_level:11;
     uint16_t :5;
 };

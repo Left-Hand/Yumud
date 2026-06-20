@@ -195,14 +195,14 @@ struct AW32001_Prelude{
 struct AW32001_Regset:public AW32001_Prelude{ 
 
 // Address: 00H, Reset State: 1000 1111.
-struct R8_InputSourceControl:public Reg8<>{
+struct R8_InputSourceControl:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::InputSourceControl;
     VIN_DPM vin_dpm:4;
     IIN_LIM iin_lim:4;
 }DEF_R8(intput_source_control_reg)
 
 // Address: 01H, Reset State1010 1100.
-struct R8_PowerOnConfiguration:public Reg8<>{
+struct R8_PowerOnConfiguration:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerOnConfiguration;
     BatterUvloThreshold vbat_uvlo:3;
     uint8_t disen_charge:1;
@@ -211,20 +211,20 @@ struct R8_PowerOnConfiguration:public Reg8<>{
     PullIntLowPeriod t_rst_dgl:2;
 }DEF_R8(power_on_configuration_reg)
 
-struct R8_ChargeCurrentControl:public Reg8<>{
+struct R8_ChargeCurrentControl:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::ChargeCurrentControl;
     uint8_t ichg:6;
     uint8_t wd_tmr_rst:1;
     uint8_t reg_rst:1;
 }DEF_R8(charge_current_control_reg)
 
-struct R8_DischargeCurrentControl:public Reg8<>{
+struct R8_DischargeCurrentControl:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::DischargeCurrentControl;
     uint8_t iterm:4;
     uint8_t idischg:4;
 }DEF_R8(discharge_current_control_reg)
 
-struct R8_ChargeVoltage:public Reg8<>{
+struct R8_ChargeVoltage:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::ChargeVoltage;
     // Battery recharge threshold (below VBAT_REG):
     // 0: 100mV; 1: 200mV (default).
@@ -237,7 +237,7 @@ struct R8_ChargeVoltage:public Reg8<>{
     uint8_t vbat_reg:6;
 }DEF_R8(charge_voltage_reg)
 
-struct R8_TimerControl:public Reg8<>{
+struct R8_TimerControl:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::TimerControl;
     uint8_t term_tmr:1;
     FastChargeTime chg_time:2;
@@ -253,7 +253,7 @@ struct R8_TimerControl:public Reg8<>{
     uint8_t en_wd_dischg:1;
 }DEF_R8(timer_control_reg)
 
-struct R8_MainControl:public Reg8<>{
+struct R8_MainControl:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::MainControl;
     uint8_t batovp_int_en:1;
     uint8_t ntc_int_en:1;
@@ -266,13 +266,13 @@ struct R8_MainControl:public Reg8<>{
     uint8_t ntc_en:1;
 }DEF_R8(main_control_reg)
 
-struct R8_SystemVoltage:public Reg8<>{
+struct R8_SystemVoltage:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::SystemVoltage;
     uint8_t vsys_reg:6;
     ThermalRegulationThreshold tj_reg:2;
 }DEF_R8(system_voltage_reg)
 
-struct R8_SystemStatus:public Reg8<>{
+struct R8_SystemStatus:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::SystemStatus;
     uint8_t therm_stat:1;
     uint8_t pg_stat:1; // power good / power fail
@@ -282,7 +282,7 @@ struct R8_SystemStatus:public Reg8<>{
     uint8_t watchdog_fault:1; //watchdog timer expiration
 }DEF_R8(system_status_reg)
 
-struct R8_Fault:public Reg8<>{
+struct R8_Fault:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Fault;
     uint8_t ntc_cold:1;
     uint8_t ntc_hot:1;
@@ -294,13 +294,13 @@ struct R8_Fault:public Reg8<>{
     DeglitchingTimes en_shipping_dgl:2;
 }DEF_R8(fault_reg)
 
-struct R8_ChipId:public Reg8<>{
+struct R8_ChipId:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::ChipId;
     static constexpr uint8_t KEY = 0b01001001;
     uint8_t chip_id;
 }DEF_R8(chip_id_reg)
 
-struct R8_IndividualCharge:public Reg8<>{
+struct R8_IndividualCharge:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::IndividualCharge;
     // VIN plug:In deglitch time of shipping mode out：
     // 0：2s; 1：100ms(default)
@@ -320,7 +320,7 @@ struct R8_IndividualCharge:public Reg8<>{
     uint8_t en_ichg_divd:1;
 }DEF_R8(individual_charge_reg)
 
-struct R8_AdditionalFunctionControl:public Reg8<>{
+struct R8_AdditionalFunctionControl:public Reg8{
     // The delay time after VSYS is Reset:
     // 0: 0s (Default); 1: 2s.
     uint8_t rstdlay:1;
@@ -350,7 +350,7 @@ struct R8_AdditionalFunctionControl:public Reg8<>{
     uint8_t en0p55:1;
 }DEF_R8(additional_function_control_reg)
 
-struct R8_AdditionalFunctionControl1:public Reg8<>{
+struct R8_AdditionalFunctionControl1:public Reg8{
     uint8_t __resv__:3;
 
     // INT 100ms exit shipping mode.

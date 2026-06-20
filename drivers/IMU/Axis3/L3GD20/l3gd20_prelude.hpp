@@ -70,7 +70,7 @@ struct L3GD20_Regset:public L3GD20_Prelude{
 
     /* Switch to normal mode and enable all three channels */
 
-    struct R8_Ctrl1:public Reg8<>{
+    struct R8_Ctrl1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::CTRL_REG1;
         uint8_t xen:1;
         uint8_t yen:1;

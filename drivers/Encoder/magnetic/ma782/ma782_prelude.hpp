@@ -80,25 +80,25 @@ struct MA782_Prelude{
 
 struct MA782_Regset:public MA782_Prelude{
     //0x00
-    struct R8_ZeroLow:public Reg8<>{
+    struct R8_ZeroLow:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ZeroDataLow;
         uint8_t bits;
     };
 
     //0x01
-    struct R8_ZeroHigh:public Reg8<>{
+    struct R8_ZeroHigh:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ZeroDataHigh;
         uint8_t bits;
     };
 
     //0x02
-    struct R8_Trim:public Reg8<>{
+    struct R8_Trim:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Trim;
         uint8_t trim;
     };
 
     //0x03
-    struct R8_TrimConfig:public Reg8<>{
+    struct R8_TrimConfig:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::TrimConfig;
         uint8_t enable_x:1;
         uint8_t enable_y:1;
@@ -106,20 +106,20 @@ struct MA782_Regset:public MA782_Prelude{
     };
 
     //0x06
-    struct R8_Threshold:public Reg8<>{
+    struct R8_Threshold:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Threshold;
         uint8_t :2;
         MagThreshold high :3;
         MagThreshold low :3;
     };
 
-    struct R8_Direction:public Reg8<>{
+    struct R8_Direction:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Direction;
         uint8_t :7;
         uint8_t direction_is_ccw :1;
     };
 
-    struct R8_Magnitude:public Reg8<>{
+    struct R8_Magnitude:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;

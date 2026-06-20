@@ -52,7 +52,7 @@ struct [[nodiscard]] AXP313A_PowerCtl_Regset:public AXP313A_Prelude{
 
 
 // 00H 开机源指示寄存器 R
-struct [[nodiscard]] R8_PowerOnSourceInd : public Reg8<>{
+struct [[nodiscard]] R8_PowerOnSourceInd : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerOnSourceInd;
 
     // VIN从低到高开机 0:否 1:是
@@ -70,7 +70,7 @@ struct [[nodiscard]] R8_PowerOnSourceInd : public Reg8<>{
 }DEF_R8(power_on_source_ind_reg);
 
 // 10H 电源输出开关控制寄存器 R/W 0:关闭 1:打开
-struct [[nodiscard]] R8_PowerOutputCtrl : public Reg8<>{
+struct [[nodiscard]] R8_PowerOutputCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerOutputCtrl;
 
     // DCDC1开关控制 定制默认值
@@ -88,7 +88,7 @@ struct [[nodiscard]] R8_PowerOutputCtrl : public Reg8<>{
 }DEF_R8(power_output_ctrl_reg);
 
 // 12H DCDC PWM控制寄存器 R/W 默认00H
-struct [[nodiscard]] R8_DcdcPwmCtrl : public Reg8<>{
+struct [[nodiscard]] R8_DcdcPwmCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::DcdcPwmCtrl;
 
     // DCDC1 PFM/PWM 0:自动切换 1:固定PWM 默0
@@ -108,7 +108,7 @@ struct [[nodiscard]] R8_DcdcPwmCtrl : public Reg8<>{
 }DEF_R8(dcdc_pwm_ctrl_reg);
 
 // 13H DCDC1电压设置寄存器 R/W 定制默认值
-struct [[nodiscard]] R8_Dcdc1VoltSet : public Reg8<>{
+struct [[nodiscard]] R8_Dcdc1VoltSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Dcdc1VoltSet;
 
     // DCDC1电压设置位 0.5~3.4V 多档位步进 定制默认值
@@ -118,7 +118,7 @@ struct [[nodiscard]] R8_Dcdc1VoltSet : public Reg8<>{
 }DEF_R8(dcdc1_volt_set_reg);
 
 // 14H DCDC2电压设置寄存器 R/W 定制默认值
-struct [[nodiscard]] R8_Dcdc2VoltSet : public Reg8<>{
+struct [[nodiscard]] R8_Dcdc2VoltSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Dcdc2VoltSet;
 
     // DCDC2电压设置位 0.5~1.54V 多档位步进 定制默认值
@@ -128,7 +128,7 @@ struct [[nodiscard]] R8_Dcdc2VoltSet : public Reg8<>{
 }DEF_R8(dcdc2_volt_set_reg);
 
 // 15H DCDC3电压设置寄存器 R/W 定制默认值
-struct [[nodiscard]] R8_Dcdc3VoltSet : public Reg8<>{
+struct [[nodiscard]] R8_Dcdc3VoltSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Dcdc3VoltSet;
 
     // DCDC3电压设置位 0.5~1.84V 多档位步进 定制默认值
@@ -138,7 +138,7 @@ struct [[nodiscard]] R8_Dcdc3VoltSet : public Reg8<>{
 }DEF_R8(dcdc3_volt_set_reg);
 
 // 16H ALDO1电压设置寄存器 R/W 定制默认值
-struct [[nodiscard]] R8_Aldo1VoltSet : public Reg8<>{
+struct [[nodiscard]] R8_Aldo1VoltSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Aldo1VoltSet;
 
     // ALDO1电压设置位 0.5~3.5V 100mV/step 定制默认值
@@ -148,7 +148,7 @@ struct [[nodiscard]] R8_Aldo1VoltSet : public Reg8<>{
 }DEF_R8(aldo1_volt_set_reg);
 
 // 17H DLDO1电压设置寄存器 R/W 定制默认值
-struct [[nodiscard]] R8_Dldo1VoltSet : public Reg8<>{
+struct [[nodiscard]] R8_Dldo1VoltSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::Dldo1VoltSet;
 
     // DLDO1电压设置位 0.5~3.5V 100mV/step 定制默认值
@@ -158,7 +158,7 @@ struct [[nodiscard]] R8_Dldo1VoltSet : public Reg8<>{
 }DEF_R8(dldo1_volt_set_reg);
 
 // 1AH 关机、重启控制寄存器 R/W 默认20H(0x20)
-struct [[nodiscard]] R8_PowerOffRstCtrl : public Reg8<>{
+struct [[nodiscard]] R8_PowerOffRstCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerOffRstCtrl;
 
     // 温度保护阈值 0:125℃ 1:145℃ 默0
@@ -178,7 +178,7 @@ struct [[nodiscard]] R8_PowerOffRstCtrl : public Reg8<>{
 }DEF_R8(power_off_rst_ctrl_reg);
 
 // 1BH 关机时序、按键关机控制寄存器 R/W 默认06H(0x06)
-struct [[nodiscard]] R8_PowerOffSeqCtrl : public Reg8<>{
+struct [[nodiscard]] R8_PowerOffSeqCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerOffSeqCtrl;
 
     // 按键关机后重启 0:不重启 1:重启 默0
@@ -194,7 +194,7 @@ struct [[nodiscard]] R8_PowerOffSeqCtrl : public Reg8<>{
 }DEF_R8(power_off_seq_ctrl_reg);
 
 // 1CH 电源唤醒控制寄存器 R/W 默认00H
-struct [[nodiscard]] R8_PowerWakeCtrl : public Reg8<>{
+struct [[nodiscard]] R8_PowerWakeCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PowerWakeCtrl;
 
     // Sleep唤醒使能 0:关闭 1:打开 默0
@@ -212,7 +212,7 @@ struct [[nodiscard]] R8_PowerWakeCtrl : public Reg8<>{
 }DEF_R8(power_wake_ctrl_reg);
 
 // 1DH 输出监视控制寄存器 R/W 默认1FH(0x1F)
-struct [[nodiscard]] R8_OutputMonCtrl : public Reg8<>{
+struct [[nodiscard]] R8_OutputMonCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::OutputMonCtrl;
 
     // DCDC过压关机 0:关闭 1:打开 默1
@@ -230,7 +230,7 @@ struct [[nodiscard]] R8_OutputMonCtrl : public Reg8<>{
 }DEF_R8(output_mon_ctrl_reg);
 
 // 1EH POK参数设置寄存器 R/W 默认80H(0x80)
-struct [[nodiscard]] R8_PokParamSet : public Reg8<>{
+struct [[nodiscard]] R8_PokParamSet : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::PokParamSet;
 
     // IRQLEVEL设置 0:1.5s 1:2.5s 默0
@@ -244,7 +244,7 @@ struct [[nodiscard]] R8_PokParamSet : public Reg8<>{
 }DEF_R8(pok_param_set_reg);
 
 // 20H IRQ控制寄存器 R/W 默认31H(0x31)
-struct [[nodiscard]] R8_IrqCtrl : public Reg8<>{
+struct [[nodiscard]] R8_IrqCtrl : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::IrqCtrl;
 
     // 芯片过温IRQ使能 0:关闭 1:打开 默1
@@ -266,7 +266,7 @@ struct [[nodiscard]] R8_IrqCtrl : public Reg8<>{
 }DEF_R8(irq_ctrl_reg);
 
 // 21H IRQ状态寄存器 R/W 默认00H 写1清零对应位
-struct [[nodiscard]] R8_IrqStatus : public Reg8<>{
+struct [[nodiscard]] R8_IrqStatus : public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr::IrqStatus;
 
     // 芯片过温IRQ状态 写1/温度恢复清零 默0

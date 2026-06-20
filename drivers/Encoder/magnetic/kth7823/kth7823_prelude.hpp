@@ -47,29 +47,29 @@ using RegAddr = uint8_t;
 
 struct [[nodiscard]] Regset final{
 
-struct [[nodiscard]] R8_ZeroLow:public Reg8<>{
+struct [[nodiscard]] R8_ZeroLow:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x00};
     uint8_t bits;
 };
 
-struct [[nodiscard]] R8_ZeroHigh:public Reg8<>{
+struct [[nodiscard]] R8_ZeroHigh:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x01};
     uint8_t bits;
 };
 
-struct [[nodiscard]] R8_GainTrim:public Reg8<>{
+struct [[nodiscard]] R8_GainTrim:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x02};
     uint8_t gain_trim;
 };
 
-struct [[nodiscard]] R8_XyTraim:public Reg8<>{
+struct [[nodiscard]] R8_XyTraim:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x03};
     uint8_t x_trim:1;
     uint8_t y_trim:1;
     uint8_t __resv__:6;
 }DEF_R8(xy_trim_reg)
 
-struct [[nodiscard]] R8_Z_Config:public Reg8<>{
+struct [[nodiscard]] R8_Z_Config:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x04};
     uint8_t __resv__:2;
     ZeroPulsePhase zd:2;
@@ -77,30 +77,30 @@ struct [[nodiscard]] R8_Z_Config:public Reg8<>{
     uint8_t ppt_low:2;
 }DEF_R8(z_config_reg)
 
-struct [[nodiscard]] R8_PPT_High:public Reg8<>{
+struct [[nodiscard]] R8_PPT_High:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x05};
     uint8_t ppt_high;
 }DEF_R8(ppt_high_reg)
 
-struct [[nodiscard]] R8_MagAlert:public Reg8<>{
+struct [[nodiscard]] R8_MagAlert:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x06};
     uint8_t __resv__:2;
     MagThreshold mag_low:3;
     MagThreshold mag_high:3;
 }DEF_R8(mag_alert_reg)
 
-struct [[nodiscard]] R8_Npp:public Reg8<>{
+struct [[nodiscard]] R8_Npp:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x07};
     uint8_t __resv__:5;
     uint8_t npp:3;
 }DEF_R8(npp_reg)
 
-struct R8_AbzLimit:public Reg8<>{
+struct R8_AbzLimit:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x08};
     AbzFreqLimit abz_limit;
 }DEF_R8(abz_limit_reg)
 
-struct R8_Rd:public Reg8<>{
+struct R8_Rd:public Reg8{
     static constexpr RegAddr REG_ADDR = RegAddr{0x09};
     uint8_t __resv__:7;
     uint8_t rd:1;

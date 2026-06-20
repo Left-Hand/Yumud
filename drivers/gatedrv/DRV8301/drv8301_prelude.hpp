@@ -94,7 +94,7 @@ struct DRV8301_Prelude{
 };
 
 struct DRV8301_Regset:public DRV8301_Prelude{
-    struct [[nodiscard]] R16_Status1:public Reg16<>{
+    struct [[nodiscard]] R16_Status1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -117,7 +117,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
 
     VALIDATE_R16(R16_Status1)
 
-    struct [[nodiscard]] R16_Status2:public Reg16<>{
+    struct [[nodiscard]] R16_Status2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -130,7 +130,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
 
     VALIDATE_R16(R16_Status2)
 
-    struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+    struct [[nodiscard]] R16_Ctrl1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -144,7 +144,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
 
     VALIDATE_R16(R16_Ctrl1)
 
-    struct [[nodiscard]] R16_Ctrl2:public Reg16<>{
+    struct [[nodiscard]] R16_Ctrl2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 

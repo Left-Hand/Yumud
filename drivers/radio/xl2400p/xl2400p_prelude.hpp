@@ -12,7 +12,7 @@ struct [[nodiscard]] XL2400P_Prelude{
 };
 
 struct [[nodiscard]] XL2400P_Regset:public XL2400P_Prelude {
-    struct [[nodiscard]] R8_TopConfig:public Reg8<>{
+    struct [[nodiscard]] R8_TopConfig:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t rx_on:1;
@@ -41,13 +41,13 @@ struct [[nodiscard]] XL2400P_Regset:public XL2400P_Prelude {
         uint8_t pmu_en:1;
     };
 
-    struct R8_AutoAcknowledge:public Reg8<>{
+    struct R8_AutoAcknowledge:public Reg8{
         uint8_t bits;
 
         auto p(this auto && self){return make_bfarray_proxy<0, 6, 6>(&self.bits);}
     };
 
-    struct [[nodiscard]] R8_EnableRxAddress:public Reg8<>{
+    struct [[nodiscard]] R8_EnableRxAddress:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t bits;
@@ -55,7 +55,7 @@ struct [[nodiscard]] XL2400P_Regset:public XL2400P_Prelude {
         auto p(this auto && self){return make_bfarray_proxy<0, 6, 6>(&self.bits);}
     };
 
-    struct [[nodiscard]] R8_AddressWidth:public Reg8<>{
+    struct [[nodiscard]] R8_AddressWidth:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t pipex_address_width:2;

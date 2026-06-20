@@ -228,12 +228,12 @@ struct ADXL345_Prelude{
 };
 
 struct ADXL345_Regset final :public ADXL345_Prelude{
-    struct R8_DeviceID:public Reg8<>{
+    struct R8_DeviceID:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::DeviceID;
         uint8_t id;
     }DEF_R8(deviceid_reg)
 
-    struct R8_TapThreshold:public Reg8<>{
+    struct R8_TapThreshold:public Reg8{
         uint8_t data;
     };
 
@@ -241,7 +241,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     // THRESH_TAP阈值之上的事件才能称之为敲击事件的最大
     // 时间。比例因子为625 μs/LSB。值为0时，禁用单击/双击
     // 功能。
-    struct R8_TapDuration:public Reg8<>{
+    struct R8_TapDuration:public Reg8{
         uint8_t data;
     };
 
@@ -249,7 +249,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     // 击事件检测到时间窗口(由Window寄存器定义)开始的等待
     // 时间，在此期间，能检测出可能的第二次敲击事件。比例
     // 因子为1.25 ms/LSB。值为0时，禁用双击功能。
-    struct R8_TapLatency:public Reg8<>{
+    struct R8_TapLatency:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::TapLatency;
         uint8_t data;
 
@@ -267,23 +267,23 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     // 延迟时间(由Latent寄存器确定)期满后的时间量，在此期
     // 间，能开始进行第二次有效敲击。比例因子为1.25 ms/LSB。
     // 值为0时，禁用双击功能。
-    struct R8_TapWindow:public Reg8<>{
+    struct R8_TapWindow:public Reg8{
         uint8_t data;
     };
 
-    struct R8_ActivityThreshold:public Reg8<>{
+    struct R8_ActivityThreshold:public Reg8{
         uint8_t data;
     };
 
-    struct R8_InactivityThreshold:public Reg8<>{
+    struct R8_InactivityThreshold:public Reg8{
         uint8_t data;
     };
 
-    struct R8_InactivityTime:public Reg8<>{
+    struct R8_InactivityTime:public Reg8{
         uint8_t z_dis;
     };
 
-    struct R8_AxisEnabler:public Reg8<>{
+    struct R8_AxisEnabler:public Reg8{
         
         uint8_t inact_z :1;
         uint8_t inact_y :1;
@@ -296,7 +296,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         
     };
 
-    struct R8_FreefallThreshold:public Reg8<>{
+    struct R8_FreefallThreshold:public Reg8{
         // THRESH_FF寄存器为8位寄存器，保存未签名格式的阈
         // 值，用于自由落体检测。所有轴的加速度与THRESH_FF
         // 的值相比较，以确定是否有自由落体事件发生。比例因子
@@ -305,7 +305,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         // 0x09)之间的值。
     };
 
-    struct R8_FreefallTime:public Reg8<>{
+    struct R8_FreefallTime:public Reg8{
         // TIME_FF寄存器为8位寄存器，存储未签名值，表示所有
         // 轴的值必须小于THRESH_FF的最小时间，以生成自由落
         // 体中断。比例因子为5 ms/LSB。如果使能自由落体中断，值
@@ -314,7 +314,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         uint8_t data;
     };
 
-    struct R8_AxisControlForSingle2DoubleTap:public Reg8<>{
+    struct R8_AxisControlForSingle2DoubleTap:public Reg8{
         
         uint8_t tapZenabled :1;
         uint8_t tapYenabled :1;
@@ -324,7 +324,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         
     };
 
-    struct R8_SourceOfSingle2DoubleTap:public Reg8<>{
+    struct R8_SourceOfSingle2DoubleTap:public Reg8{
         
         uint8_t tapZSource :1;
         uint8_t tapYSource :1;
@@ -337,7 +337,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         
     };
 
-    struct R8_DataRate:public Reg8<>{
+    struct R8_DataRate:public Reg8{
         // 这些位能选择器件带宽和输出数据速率(详情见表7和表
         // 8)。默认值为0x0A，转换为100 Hz的输出数据速率。应选择
         // 适合所选通信协议和频率的输出数据速率。选择太高输出
@@ -351,7 +351,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         
     };
 
-    struct R8_PowerCtl:public Reg8<>{
+    struct R8_PowerCtl:public Reg8{
         
         SleepingDataRate sleep_datarate :2;
 
@@ -405,7 +405,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     };
 
 
-    struct _R8_InterruptMask:public Reg8<>{
+    struct _R8_InterruptMask:public Reg8{
         uint8_t overrun :1;
         uint8_t watermark :1;
         uint8_t freefall :1;
@@ -441,7 +441,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         // SOURCE寄存器，其他位和相应的中断清零。
     };
 
-    struct R8_DataFormat:public Reg8<>{
+    struct R8_DataFormat:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::DataFormat;
         AccFs acc_fs :2;
 
@@ -468,7 +468,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
     }DEF_R8(data_format_reg)
 
 
-    struct R8_FifoCtrl:public Reg8<>{
+    struct R8_FifoCtrl:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::FifoCtrl;
         // 样本位功能
         // 旁路 无。
@@ -486,7 +486,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         FifoMode fifo_mode:2;
     };
 
-    struct R8_FifoStatus:public Reg8<>{
+    struct R8_FifoStatus:public Reg8{
         // 这些位报告FIFO存储的数据值的数量。通过DATAX、
         // DATAY和DATAZ寄存器，可从FIFO收集数据。FIFO应采
         // 取突发读取模式或多字节读取模式，因为FIFO的任意(单

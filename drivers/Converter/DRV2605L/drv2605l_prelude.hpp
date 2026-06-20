@@ -165,7 +165,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         AutoCalibration
     };
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint8_t oc_detect:1;
@@ -176,7 +176,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t device_id;
     };
 
-    struct R8_Mode:public Reg8<>{
+    struct R8_Mode:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t mode:3;
@@ -187,13 +187,13 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
 
     };
 
-    struct R8_Rtp:public Reg8<>{
+    struct R8_Rtp:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t rtp_input:8;
     };
 
-    struct R8_LibrarySel:public Reg8<>{
+    struct R8_LibrarySel:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t lib_sel:3;
@@ -202,7 +202,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t :3;
     };
 
-    struct R8_WaveformSeg:public Reg8<>{
+    struct R8_WaveformSeg:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         static constexpr RegAddr REG_ADDR_end = RegAddr(0x0B);
 
@@ -210,38 +210,38 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t wait:1;
     };
 
-    struct R8_Go:public Reg8<>{
+    struct R8_Go:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
         uint8_t go:1;
         uint8_t :7;
     };
 
-    struct R8_OverrideTimeOffset:public Reg8<>{
+    struct R8_OverrideTimeOffset:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0D};
 
         uint8_t odt:8;
     };
 
-    struct R8_SustainTimeOffsetPositive:public Reg8<>{
+    struct R8_SustainTimeOffsetPositive:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0E};
 
         uint8_t bits;
     };
 
-    struct R8_SustainTimeOffsetNegitive:public Reg8<>{
+    struct R8_SustainTimeOffsetNegitive:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0F};
 
         uint8_t bits;
     };
 
-    struct R8_BrakeTimeOffset:public Reg8<>{
+    struct R8_BrakeTimeOffset:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
         uint8_t bits;
     };
 
-    struct R8_Audio2Vibe:public Reg8<>{
+    struct R8_Audio2Vibe:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
 
         uint8_t ath_filter:2;
@@ -250,51 +250,51 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
     };
 
     
-    struct R8_Audio2VibeMinimalInputLevel:public Reg8<>{
+    struct R8_Audio2VibeMinimalInputLevel:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x12};
 
         uint8_t bits;
     };
 
     
-    struct R8_Audio2VibeMaxmalInputLevel:public Reg8<>{
+    struct R8_Audio2VibeMaxmalInputLevel:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x13};
 
         uint8_t bits;
     };
 
-    struct R8_Audio2VibeMinimalOutputDrive:public Reg8<>{
+    struct R8_Audio2VibeMinimalOutputDrive:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x14};
 
         uint8_t bits;
     };
 
 
-    struct R8_Audio2VibeMaxmalOutputDrive:public Reg8<>{
+    struct R8_Audio2VibeMaxmalOutputDrive:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x15};
 
         uint8_t bits;
     };
 
-    struct R8_RatedVoltage:public Reg8<>{
+    struct R8_RatedVoltage:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x16};
 
         uint8_t bits;
     };
 
-    struct R8_OverdriveClampVoltage:public Reg8<>{
+    struct R8_OverdriveClampVoltage:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
 
         uint8_t bits;
     };
 
-    struct R8_AutoCaliCompResult:public Reg8<>{
+    struct R8_AutoCaliCompResult:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
         uint8_t bits;
     };
 
-    struct R8_AutoCaliBackEMF:public Reg8<>{
+    struct R8_AutoCaliBackEMF:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x19};
 
         uint8_t bits;
@@ -302,7 +302,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
 
 
 
-    struct R8_FeedbackControl:public Reg8<>{
+    struct R8_FeedbackControl:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1a};
 
         uint8_t bemf_gain:2;
@@ -314,7 +314,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t n_erm_lra:1;
     };
 
-    struct R8_Control1:public Reg8<>{
+    struct R8_Control1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1b};
 
         uint8_t drive_time:5;
@@ -323,7 +323,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t startup_boost:1;
     };
 
-    struct R8_Control2:public Reg8<>{
+    struct R8_Control2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1c};
 
         uint8_t idiss_time:2;
@@ -333,7 +333,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t bidir_input:2;
     };
 
-    struct R8_Control3:public Reg8<>{
+    struct R8_Control3:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1d};
 
         uint8_t lra_openloop:1;
@@ -345,7 +345,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t ng_thresh:1;
     };
 
-    struct R8_Control4:public Reg8<>{
+    struct R8_Control4:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
 
         uint8_t otp_program:1;
@@ -356,13 +356,13 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t :2;
     };
 
-    struct R8_VbatVoltageMonitor:public Reg8<>{
+    struct R8_VbatVoltageMonitor:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1e};
 
         uint8_t bits;
     };
 
-    struct R8_LRA_ResonancePeriod:public Reg8<>{
+    struct R8_LRA_ResonancePeriod:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1f};
 
         uint8_t bits;

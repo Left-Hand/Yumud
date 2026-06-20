@@ -283,7 +283,7 @@ public:
 };
 
 struct INA3221_Regs:public INA3221_Prelude {
-    struct [[nodiscard]] R16_Config:public Reg16<>{
+    struct [[nodiscard]] R16_Config:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint16_t RESET_VALUE = 0x7127;
 
@@ -303,21 +303,21 @@ struct INA3221_Regs:public INA3221_Prelude {
         uint16_t rst:1;
     };
 
-    struct [[nodiscard]] R16_ShuntVolt1: public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVolt1: public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
         ShuntVoltCode code;
     };
 
-    struct [[nodiscard]] R16_BusVolt1:public Reg16<>{
+    struct [[nodiscard]] R16_BusVolt1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
         BusVoltCode code;
     };
 
-    struct [[nodiscard]] R16_ShuntVolt2: public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVolt2: public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -325,21 +325,21 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
 
-    struct [[nodiscard]] R16_BusVolt2:public Reg16<>{
+    struct [[nodiscard]] R16_BusVolt2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
         BusVoltCode code;
     };
 
-    struct [[nodiscard]] R16_ShuntVolt3: public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVolt3: public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
         ShuntVoltCode code;
     };
 
-    struct [[nodiscard]] R16_BusVolt3:public Reg16<>{
+    struct [[nodiscard]] R16_BusVolt3:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -347,7 +347,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     //0x07
-    struct [[nodiscard]] R16_InstantOVC1:public Reg16<>{
+    struct [[nodiscard]] R16_InstantOVC1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -355,7 +355,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     //0x08
-    struct [[nodiscard]] R16_ConstantOVC1:public Reg16<>{
+    struct [[nodiscard]] R16_ConstantOVC1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -364,7 +364,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
     //0x09
-    struct [[nodiscard]] R16_InstantOVC2:public Reg16<>{
+    struct [[nodiscard]] R16_InstantOVC2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -372,7 +372,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     //0x0a
-    struct [[nodiscard]] R16_ConstantOVC2:public Reg16<>{
+    struct [[nodiscard]] R16_ConstantOVC2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -380,7 +380,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     //0x0b
-    struct [[nodiscard]] R16_InstantOVC3:public Reg16<>{
+    struct [[nodiscard]] R16_InstantOVC3:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -389,7 +389,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
     //0x0c
-    struct [[nodiscard]] R16_ConstantOVC3:public Reg16<>{
+    struct [[nodiscard]] R16_ConstantOVC3:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
         static constexpr uint16_t RESET_VALUE = 0x7ff8;
 
@@ -398,7 +398,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
     //0x0d
-    struct [[nodiscard]] R16_ShuntVoltSum: public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVoltSum: public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0D};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
@@ -406,7 +406,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     //0x0e
-    struct [[nodiscard]] R16_ShuntVoltSumLimit: public Reg16<>{
+    struct [[nodiscard]] R16_ShuntVoltSumLimit: public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0E};
         static constexpr uint16_t RESET_VALUE = 0x7ffe;
 
@@ -415,7 +415,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
     //0x0f
-    struct [[nodiscard]] R16_Mask:public Reg16<>{
+    struct [[nodiscard]] R16_Mask:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0f};
         static constexpr uint16_t RESET_VALUE = 0x0002;
 
@@ -431,7 +431,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     // channels are above the power-valid upper-limit value. In order for the power-valid conditions to be monitored, the
     // bus measurements must be enabled through one of the corresponding MODE bits set in the Configuration
     // register. The power-valid upper-limit LSB value is 8 mV. Power-on reset value is 2710h = 10.000 V.
-    struct [[nodiscard]] R16_PowerValidUp:public Reg16<>{
+    struct [[nodiscard]] R16_PowerValidUp:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
         static constexpr uint16_t RESET_VALUE = 0x2710;
         BusVoltCode code;
@@ -446,20 +446,20 @@ struct INA3221_Regs:public INA3221_Prelude {
     // power-valid condition to be monitored, the bus measurements must be enabled through the mode (MODE3-1)
     // bits set in the Configuration register. The power-valid lower-limit LSB value is 8 mV. Power-on reset value is
     // 2328h = 9.000 V
-    struct [[nodiscard]] R16_PowerValidLo:public Reg16<>{
+    struct [[nodiscard]] R16_PowerValidLo:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
         static constexpr uint16_t RESET_VALUE = 0x2328;
         BusVoltCode code;
     };
 
-    struct [[nodiscard]] R16_ManuId:public Reg16<>{
+    struct [[nodiscard]] R16_ManuId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0xfe};
         static constexpr uint16_t KEY = 0x5449;
         uint16_t bits;
     };
 
     
-    struct [[nodiscard]] R16_ChipId:public Reg16<>{
+    struct [[nodiscard]] R16_ChipId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0xff};
         static constexpr uint16_t KEY = 0x3220;
         uint16_t bits;

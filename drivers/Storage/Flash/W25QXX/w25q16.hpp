@@ -33,7 +33,7 @@ protected:
     };
 
 
-    struct StatusReg:public Reg8<>{
+    struct StatusReg:public Reg8{
 
 
         uint8_t busy:1;

@@ -139,7 +139,7 @@ enum class [[nodiscard]] Bank{
     _4
 };
 struct Regset{
-    struct [[nodiscard]] R8_DEVICE_CONFIG:public Reg8<>{
+    struct [[nodiscard]] R8_DEVICE_CONFIG:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
         static constexpr Bank bank = Bank::_0;
         uint8_t soft_reset:1;
@@ -148,7 +148,7 @@ struct Regset{
         uint8_t __resv2__:3;
     }DEF_R8(device_config_reg)
 
-    struct [[nodiscard]] R8_DRIVE_CONFIG:public Reg8<>{
+    struct [[nodiscard]] R8_DRIVE_CONFIG:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x13};
         static constexpr Bank bank = Bank::_0;
         uint8_t spi_slew_rate:3;
@@ -156,7 +156,7 @@ struct Regset{
         uint8_t __resv__:2;
     }DEF_R8(drive_config_reg)
 
-    struct [[nodiscard]] R8_INT_CONFIG:public Reg8<>{
+    struct [[nodiscard]] R8_INT_CONFIG:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x14};
         uint8_t int1_polatity:1;
         uint8_t int1_drive_circuit:1;
@@ -167,13 +167,13 @@ struct Regset{
         uint8_t __resv__:2;
     }DEF_R8(int_config_reg)
 
-    struct [[nodiscard]] R8_FIFO_CONFIG:public Reg8<>{
+    struct [[nodiscard]] R8_FIFO_CONFIG:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x16};
         uint8_t __resv__:6;
         uint8_t fifo_mode:2;
     }DEF_R8(fifo_config_reg)
 
-    struct [[nodiscard]] R16_TEMpbuf:public Reg16<>{
+    struct [[nodiscard]] R16_TEMpbuf:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1D};
         uint16_t bits;
     }DEF_R16(tempbuf_reg)
@@ -181,12 +181,12 @@ struct Regset{
     math::Vec3<int16_t> acc_bits_ = math::Vec3<int16_t>::ZERO;
     math::Vec3<int16_t> gyr_bits_ = math::Vec3<int16_t>::ZERO;
     
-    struct [[nodiscard]] R16_TMST_FSYNC:public Reg16<>{
+    struct [[nodiscard]] R16_TMST_FSYNC:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x2B};
         int16_t bits;
     }DEF_R16(tmst_fsync_reg)
 
-    struct [[nodiscard]] R8_INT_STATUS1:public Reg8<>{
+    struct [[nodiscard]] R8_INT_STATUS1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x2D};
         uint8_t agc_rdy_int:1;
         uint8_t fifo_full_int:1;
@@ -199,35 +199,35 @@ struct Regset{
         uint8_t __resv__:1;
     }DEF_R8(int_status1_reg)
 
-    struct [[nodiscard]] R16_FIFO_COUNT:public Reg16<>{
+    struct [[nodiscard]] R16_FIFO_COUNT:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x2E};
         uint16_t fifo_count;
     }DEF_R16(fifo_count_reg)
 
-    struct [[nodiscard]] R8_FIFO_DATA:public Reg8<>{
+    struct [[nodiscard]] R8_FIFO_DATA:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x30};
         uint8_t fifo_data;
     }DEF_R8(fifo_data_reg)
 
-    struct [[nodiscard]] R16_APEX_DATA0:public Reg16<>{
+    struct [[nodiscard]] R16_APEX_DATA0:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x31};
         // uint8_t bits;
         uint16_t step_cnt;
     }DEF_R16(apex_data0_reg)
 
-    struct [[nodiscard]] R8_APEX_DATA2:public Reg8<>{
+    struct [[nodiscard]] R8_APEX_DATA2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x33};
         uint8_t step_cadence;
     }DEF_R8(apex_data2_reg)
 
-    struct [[nodiscard]] R8_APEX_DATA3:public Reg8<>{
+    struct [[nodiscard]] R8_APEX_DATA3:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x34};
         uint8_t activity_class:2;
         uint8_t dmp_idle:1;
         uint8_t __resv__:5;
     }DEF_R8(apex_data3_reg)
 
-    struct [[nodiscard]] R8_APEX_DATA4:public Reg8<>{
+    struct [[nodiscard]] R8_APEX_DATA4:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x35};
         uint8_t tap_dir:1;
         uint8_t tap_axis:2;
@@ -235,13 +235,13 @@ struct Regset{
         uint8_t __resv__:3;
     }DEF_R8(apex_data4_reg)
 
-    struct [[nodiscard]] R8_APEX_DATA5:public Reg8<>{
+    struct [[nodiscard]] R8_APEX_DATA5:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x36};
         uint8_t double_tap_timing:6;
         uint8_t __resv__:2;
     }DEF_R8(apex_data5_reg)
 
-    struct [[nodiscard]] R8_INT_STATUS2:public Reg8<>{
+    struct [[nodiscard]] R8_INT_STATUS2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x37};
         uint8_t wom_x_int:1;
         uint8_t wom_y_int:1;
@@ -250,7 +250,7 @@ struct Regset{
         uint8_t __resv__:4;
     }DEF_R8(int_status2_reg)
 
-    struct [[nodiscard]] R8_INT_STATUS3:public Reg8<>{
+    struct [[nodiscard]] R8_INT_STATUS3:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x38};
         uint8_t tap_det_int:1;
         uint8_t sleep_int:1;
@@ -261,7 +261,7 @@ struct Regset{
         uint8_t __resv__:2;
     }DEF_R8(int_status3_reg)
 
-    struct [[nodiscard]] R8_GYRO_CONFIG0:public Reg8<>{ 
+    struct [[nodiscard]] R8_GYRO_CONFIG0:public Reg8{ 
         static constexpr RegAddr REG_ADDR = RegAddr{0x4f};
         static constexpr Bank bank = Bank::_0;
         GyrOdr gyro_odr:4;
@@ -269,7 +269,7 @@ struct Regset{
         GyrFs gyro_fs:3;
     }DEF_R8(gyro_config0_reg)
 
-    struct [[nodiscard]] R8_ACCEL_CONFIG0:public Reg8<>{
+    struct [[nodiscard]] R8_ACCEL_CONFIG0:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x50};
         static constexpr Bank bank = Bank::_0;
         AccOdr accel_odr:4;
@@ -277,7 +277,7 @@ struct Regset{
         AccFs accel_fs:3;
     }DEF_R8(accel_config0_reg)
 
-    // struct [[nodiscard]] R8_GYRO_CONFIG1:public Reg8<>{
+    // struct [[nodiscard]] R8_GYRO_CONFIG1:public Reg8{
     //     static constexpr RegAddr REG_ADDR = RegAddr{0x51};
     //     static constexpr Bank bank = Bank::_0;
     //     GyrOdr gyro_odr:4;
@@ -285,7 +285,7 @@ struct Regset{
     //     GyrFs gyro_fs:3;
     // }DEF_R8(gyro_config1_reg)
 
-    struct [[nodiscard]] R8_WHO_AM_I:public Reg8<>{
+    struct [[nodiscard]] R8_WHO_AM_I:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x75};
         static constexpr Bank bank = Bank::_0;
 

@@ -91,32 +91,32 @@ using RegAddr = uint8_t;
 struct [[nodiscard]] MP6570_Regset{
 
 
-struct [[nodiscard]] R16_ThetaCmdL:public Reg16<>{
+struct [[nodiscard]] R16_ThetaCmdL:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ThetaCmdM:public Reg16<>{
+struct [[nodiscard]] R16_ThetaCmdM:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ThetaCmH:public Reg16<>{
+struct [[nodiscard]] R16_ThetaCmH:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_CycleReg:public Reg16<>{
+struct [[nodiscard]] R16_CycleReg:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
     uint8_t pole_pair;
     uint8_t cycle_p;
 };
 
-struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+struct [[nodiscard]] R16_Ctrl1:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x05};
     uint16_t nstep:9;
     uint16_t fgsel:5;
@@ -124,7 +124,7 @@ struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
     uint16_t theta_dir:1;
 };
 
-struct [[nodiscard]] R16_Gain1:public Reg16<>{
+struct [[nodiscard]] R16_Gain1:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
     uint16_t iq_limit:11;
@@ -132,50 +132,50 @@ struct [[nodiscard]] R16_Gain1:public Reg16<>{
     uint16_t __resv__:1;
 };
 
-struct [[nodiscard]] R16_ThetaBias:public Reg16<>{
+struct [[nodiscard]] R16_ThetaBias:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
     uint16_t theta_bias:11;
     uint16_t :5;
 };
 
-struct [[nodiscard]] R32_ThetaKi:public Reg32<>{
+struct [[nodiscard]] R32_ThetaKi:public Reg32{
     static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
     uint32_t bits;
 };
 
-struct [[nodiscard]] R16_ErrLimitH:public Reg16<>{
+struct [[nodiscard]] R16_ErrLimitH:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0a};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ZP1A:public Reg16<>{
+struct [[nodiscard]] R16_ZP1A:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ZP1B:public Reg16<>{
+struct [[nodiscard]] R16_ZP1B:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0c};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ZP2A:public Reg16<>{
+struct [[nodiscard]] R16_ZP2A:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0d};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_ZP2B:public Reg16<>{
+struct [[nodiscard]] R16_ZP2B:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0e};
 
     uint16_t bits;
 };
 
-struct [[nodiscard]] R16_Gain2:public Reg16<>{
+struct [[nodiscard]] R16_Gain2:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x0f};
 
     uint16_t set_gain2:4;
@@ -183,32 +183,32 @@ struct [[nodiscard]] R16_Gain2:public Reg16<>{
     uint16_t :7;
 };
 
-struct [[nodiscard]] R16_IdRef:public Reg16<>{
+struct [[nodiscard]] R16_IdRef:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
     uint16_t bits;        
 };
 
-struct [[nodiscard]] R16_IqRef:public Reg16<>{
+struct [[nodiscard]] R16_IqRef:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x11};
 
     uint16_t bits;        
 };
 
 
-struct [[nodiscard]] R16_CurrentKi:public Reg16<>{
+struct [[nodiscard]] R16_CurrentKi:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x12};
 
     uint16_t bits;        
 };
 
-struct [[nodiscard]] R16_CurrentKp:public Reg16<>{
+struct [[nodiscard]] R16_CurrentKp:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x13};
 
     uint16_t bits;        
 };
 
-struct [[nodiscard]] R16_ThetaDir:public Reg16<>{
+struct [[nodiscard]] R16_ThetaDir:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
     uint16_t :15;
@@ -216,7 +216,7 @@ struct [[nodiscard]] R16_ThetaDir:public Reg16<>{
 };
 
 
-struct [[nodiscard]] R16_SpiSdoMod:public Reg16<>{
+struct [[nodiscard]] R16_SpiSdoMod:public Reg16{
     static constexpr RegAddr REG_ADDR = RegAddr{0x33};
 
     uint16_t spi_o_mod:1;
