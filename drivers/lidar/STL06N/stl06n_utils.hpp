@@ -69,7 +69,7 @@ static constexpr size_t SECTOR_PAYLOAD_LENGTH = 2 + 2 + 12 * 3 + 2 + 2 ;
 
 struct alignas(2) [[nodiscard]] LidarDistanceCode final{
     using Self = LidarDistanceCode;
-    uint16_t millis;
+    uint16_t bits;
 
     __attribute__((always_inline))
     static constexpr Self zero() {
@@ -79,12 +79,12 @@ struct alignas(2) [[nodiscard]] LidarDistanceCode final{
     __attribute__((always_inline))
     [[nodiscard]] constexpr uq16 to_meters() const noexcept {
         constexpr uint64_t FACTOR = static_cast<uint64_t>(static_cast<double>(0.001f) * (1ull << 48));
-        return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(millis) * FACTOR) >> 32u));
+        return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(bits) * FACTOR) >> 32u));
     }
 
     __attribute__((always_inline))
     [[nodiscard]] constexpr uint16_t to_milimeters() const noexcept {
-        return millis;
+        return bits;
     }
 };
 

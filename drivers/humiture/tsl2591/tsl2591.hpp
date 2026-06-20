@@ -77,6 +77,11 @@ struct TSL2591_Regset:public TSL2591_Prelude{
     struct [[nodiscard]] Packet final{
         
     };
-}
+};
+
+
+struct TSL2591 final:public TSL2591_Prelude{
+
+};
 
 }
