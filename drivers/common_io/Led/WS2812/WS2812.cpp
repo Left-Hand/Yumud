@@ -14,13 +14,13 @@ using namespace ymd::drivers;
 // #define DELAY_CELL __nopn(4)
 #define DELAY_CELL __nopn(6)
 // #define DELAY_CELL clock::delay(1us);
-void WS2812_Transport::delay_long(){
+static void delay_long(){
     for(size_t i = 0; i < 10; i++){
         DELAY_CELL;
     }
 }
 
-void WS2812_Transport::delay_short(){
+static void delay_short(){
     for(size_t i = 0; i < 4; i++){
         DELAY_CELL;
     }

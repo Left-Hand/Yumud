@@ -279,7 +279,7 @@ void stl06n_main(){
 
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
                 [](const PackedLidarPoint & a, const PackedLidarPoint & b){ 
-                    return a.distance_code.millis < b.distance_code.millis; });
+                    return a.distance_code.bits < b.distance_code.bits; });
             })
             // | std::views::filter([i = 0](const auto&) mutable { 
             //     return (i++) % 4 == 0; 

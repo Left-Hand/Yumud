@@ -12,26 +12,19 @@
 namespace ymd::drivers::mp6570{
 
 
-struct [[nodiscard]] WriteConfig{
-    const uint8_t slave_addr;
-    const uint8_t reg_addr;
-    const bool pen;
-    const uint16_t data;
+struct [[nodiscard]] WriteConfig final{
+    uint8_t slave_addr;
+    uint8_t reg_addr;
+    bool pen;
+    uint16_t reg_val;
 };
 
-struct [[nodiscard]] ReadConfig{
-    const uint8_t slave_addr;
-    const uint8_t reg_addr;
-    const bool pen;
+struct [[nodiscard]] ReadConfig final{
+    uint8_t slave_addr;
+    uint8_t reg_addr;
+    bool pen;
 };
 
-[[nodiscard]] static constexpr size_t count_ones(const uint16_t val){
-    return __builtin_popcount(val);
-}
-
-[[nodiscard]] static constexpr bool is_odd(const uint16_t val){
-    return count_ones(val) & 0b1;
-}
 
 
 struct [[nodiscard]] TxPacket final{
@@ -51,13 +44,13 @@ struct [[nodiscard]] TxPacket final{
             },
             .payload_bytes = {
 
-                uint8_t((cfg.data >> 12) & 0b1111), 
+                uint8_t((cfg.reg_val >> 12) & 0b1111), 
 
-                uint8_t(cfg.data >> 4),
+                uint8_t(cfg.reg_val >> 4),
 
-                uint8_t(uint8_t((cfg.data & 0xff) << 4) | 
+                uint8_t(uint8_t((cfg.reg_val & 0xff) << 4) | 
                     uint8_t(cfg.pen ? 
-                        (is_odd(cfg.data) ? uint8_t(0b10) : uint8_t(0b00)) 
+                        (is_odd(cfg.reg_val) ? uint8_t(0b10) : uint8_t(0b00)) 
                         : uint8_t(0b0))),
             }
         };
@@ -76,26 +69,12 @@ struct [[nodiscard]] TxPacket final{
             }
         };
     }
+
+    [[nodiscard]] static constexpr bool is_odd(const uint16_t val){
+        return __builtin_popcount(val) & 0b1;
+    }
+
 };
-
-
-static constexpr Option<uint16_t> rx_bytes_to_data(std::span<const uint8_t, 3> bytes){
-
-    //fuck you big endian!!!
-    const uint32_t buf = uint32_t(bytes[2]) | uint32_t(bytes[1] << 8) | uint32_t(bytes[0] << 16);   
-    const uint16_t data = uint16_t(buf >> 4);
-
-    if((bytes[0] & 0xf0) != 0xf0) return None;
-    if((bytes[2] & 0x0e) != 0x0e) return None;
-
-    bool assume_is_odd = is_odd(data);
-    bool is_odd_bit = (bytes[2] & 0x01);
-
-    if(assume_is_odd != is_odd_bit) return None;
-
-    return Some(data);
-
-}
 
 using SlaveAddress = uint8_t;
 

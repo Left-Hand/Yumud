@@ -38,7 +38,7 @@
 namespace ymd::drivers{
 
 struct AW32001_Prelude{
-    enum class Error_Kind:uint8_t{
+    enum class [[nodiscard]] Error_Kind:uint8_t{
         NotReady,
         UnexpectedProductId,
     };
@@ -52,7 +52,7 @@ struct AW32001_Prelude{
 
 
     // VIN_DPM voltage regulation setting: 
-    enum class VIN_DPM : uint8_t {
+    enum class [[nodiscard]] VIN_DPM : uint8_t {
         _3_88V = 0b0000,
         _3_96V = 0b0001,
         _4_04V = 0b0010,
@@ -74,7 +74,7 @@ struct AW32001_Prelude{
     };
 
     //Input current limit setting:
-    enum class IIN_LIM:uint8_t{
+    enum class [[nodiscard]] IIN_LIM:uint8_t{
         _50mA = 0b0000,
         _80mA = 0b0001,
         _110mA,
@@ -95,19 +95,19 @@ struct AW32001_Prelude{
         Default = _50mA
     };
 
-    enum class PullIntLowPeriod:uint8_t{
+    enum class [[nodiscard]] PullIntLowPeriod:uint8_t{
         _8s = 0b00,
         _12s = 0b01,
         _16s = 0b10,
         _20s = 0b11
     };
 
-    enum class Q2LastOffTime:uint8_t{
+    enum class [[nodiscard]] Q2LastOffTime:uint8_t{
         _2s = 0b0,
         _4s = 0b1,
     };
 
-    enum class BatterUvloThreshold:uint8_t{
+    enum class [[nodiscard]] BatterUvloThreshold:uint8_t{
         _2_43V = 0b000, 
         _2_49V = 0b001, 
         _2_58V = 0b010, 
@@ -118,7 +118,7 @@ struct AW32001_Prelude{
         _3_03V = 0b111,
     };
 
-    enum class WatchdogTime:uint8_t{
+    enum class [[nodiscard]] WatchdogTime:uint8_t{
         Disabled = 0b00,
         _40s = 0b01,
         _120s = 0b10,
@@ -127,7 +127,7 @@ struct AW32001_Prelude{
         Default = _160s
     };
 
-    enum class FastChargeTime:uint8_t{
+    enum class [[nodiscard]] FastChargeTime:uint8_t{
         _3hrs = 0b00,
         _5hrs = 0b01, //default
         _8hrs = 0b10,
@@ -136,7 +136,7 @@ struct AW32001_Prelude{
         Default = _5hrs
     };
 
-    enum class ThermalRegulationThreshold:uint8_t{
+    enum class [[nodiscard]] ThermalRegulationThreshold:uint8_t{
         _60C = 0b00,
         _80C = 0b01,
         _100C = 0b10,
@@ -145,14 +145,14 @@ struct AW32001_Prelude{
         Default = _120C
     };
 
-    enum class ChargeState:uint8_t{
+    enum class [[nodiscard]] ChargeState:uint8_t{
         NotCharging = 0b00,
         PreCharge = 0b01,
         Charge = 0b10,
         ChargeDone = 0b11,
     };
 
-    enum class DeglitchingTimes:uint8_t{
+    enum class [[nodiscard]] DeglitchingTimes:uint8_t{
         _1 = 0b00,
         _2 = 0b01,
         _4 = 0b10,
@@ -173,7 +173,7 @@ struct AW32001_Prelude{
         from_volt, iq16, 4.200, 4.95, 0.05);
 
 
-    enum class [[nodiscard]] RegAddr:uint8_t{
+    enum class [[nodiscard]] [[nodiscard]] RegAddr:uint8_t{
         InputSourceControl = 0x00,
         PowerOnConfiguration = 0x01,
         ChargeCurrentControl = 0x02,

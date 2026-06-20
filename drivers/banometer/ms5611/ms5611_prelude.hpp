@@ -111,31 +111,31 @@ static constexpr Osr MS5611_OSR2048 = Osr{0b0011};
 static constexpr Osr MS5611_OSR4096 = Osr{0b0100};
 
 
-using Command = uint8_t;
+using CommandId = uint8_t;
 
 struct [[nodiscard]] CommandFactory{
 
-    static constexpr Command MS5611_COMMAND_RESET                      = Command{0x1E};        /**< reset command */
-    static constexpr Command MS5611_COMMAND_PRESSURE                   = Command{0x40};        /**< d1 convert command */
-    static constexpr Command MS5611_COMMAND_TEMPERATURE                = Command{0x50};        /**< d2 convert command */
-    static constexpr Command MS5611_COMMAND_ADC_READ                   = Command{0x00};        /**< adc read command */
-    static constexpr Command MS5611_COMMAND_PROM_READ_ADDRESS_0        = Command{0xA0};        /**< prom read address 0 command */
+    static constexpr CommandId MS5611_COMMAND_RESET                      = CommandId{0x1E};        /**< reset command */
+    static constexpr CommandId MS5611_COMMAND_PRESSURE                   = CommandId{0x40};        /**< d1 convert command */
+    static constexpr CommandId MS5611_COMMAND_TEMPERATURE                = CommandId{0x50};        /**< d2 convert command */
+    static constexpr CommandId MS5611_COMMAND_ADC_READ                   = CommandId{0x00};        /**< adc read command */
+    static constexpr CommandId MS5611_COMMAND_PROM_READ_ADDRESS_0        = CommandId{0xA0};        /**< prom read address 0 command */
 
-    static constexpr Command adc_read(){return MS5611_COMMAND_ADC_READ;}
+    static constexpr CommandId adc_read(){return MS5611_COMMAND_ADC_READ;}
 
-    static constexpr Command read_prom(const uint8_t addr){
+    static constexpr CommandId read_prom(const uint8_t addr){
         return MS5611_COMMAND_PROM_READ_ADDRESS_0 | ((addr & 0b111) << 1);
     }
 
-    static constexpr Command convert_d1(const Osr osr){
+    static constexpr CommandId convert_d1(const Osr osr){
         return MS5611_COMMAND_PRESSURE | (osr.bits & 0x0f);
     }
 
-    static constexpr Command convert_d2(const Osr osr){
+    static constexpr CommandId convert_d2(const Osr osr){
         return MS5611_COMMAND_TEMPERATURE | (osr.bits & 0x0f);
     }
 
-    static constexpr Command reset(){
+    static constexpr CommandId reset(){
         return MS5611_COMMAND_RESET;
     }
 };

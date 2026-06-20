@@ -46,11 +46,6 @@ public:
     void send_reset();
 
     void send_rgb888(const uint8_t r, const uint8_t g, const uint8_t b);
-
-private:
-
-    __no_inline static void delay_long();
-    __no_inline static void delay_short();
 };
 
 
