@@ -45,14 +45,14 @@ IResult<> CyberGearRx::on_receive(const ClassicCanFrame & frame){
     const uint8_t dlc = frame.length();
 
     switch(cmd){
-        case cybergear::Command::GET_DEVICE_ID:
+        case cybergear::Command::GetDeviceId:
             return on_mcu_id_feed_back(id_u32, bits, dlc);
-        case cybergear::Command::FBK_CTRL1:
+        case cybergear::Command::FeedbackCtrl1:
             return on_read_para_feed_back(id_u32, bits, dlc);
-        case cybergear::Command::READ_PARA:
+        case cybergear::Command::ReadParam:
             return Err{Error::PRAGRAM_TODO};
             break;
-        case cybergear::Command::FBK_FAULT:
+        case cybergear::Command::FeedbackFault:
             return Err{Error::PRAGRAM_TODO};
             break;
 

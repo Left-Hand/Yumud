@@ -45,16 +45,16 @@ enum class [[nodiscard]] Error:uint8_t{
 };
 
 enum class [[nodiscard]] Command:uint8_t{
-    GET_DEVICE_ID = 0,
-    SEND_CTRL1 = 1,
-    FBK_CTRL1 = 2,
-    EN_MOT = 3,
-    DISEN_MOT = 4,
-    SET_MACHINE_HOME = 6,
-    SET_CAN_ID = 7,
-    READ_PARA = 17,
-    WRITE_PARA = 18,
-    FBK_FAULT = 21,
+    GetDeviceId = 0,
+    SendCtrl1 = 1,
+    FeedbackCtrl1 = 2,
+    EnableMotor = 3,
+    DisableMotor = 4,
+    SetMachineHome = 6,
+    SetCanId = 7,
+    ReadParam = 17,
+    WriteParam = 18,
+    FeedbackFault = 21,
 };
 
 

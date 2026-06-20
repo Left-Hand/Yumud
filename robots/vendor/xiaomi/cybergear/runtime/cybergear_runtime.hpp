@@ -1,4 +1,4 @@
-#include "cybergear.hpp"
+#include "../cybergear.hpp"
 
 namespace ymd::robots::cybergear{
 
