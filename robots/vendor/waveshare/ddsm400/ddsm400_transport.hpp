@@ -21,10 +21,10 @@ serialize_request(const MotorId motor_id, const T & msg){
 // 传输层解析器
 struct RecvTransportParser final{
     enum class [[nodiscard]] FsmState:uint8_t {
-        MotorId = 0,
-        Command,
-        Payload,
-        Checksum 
+        AwaitMotorId = 0,
+        AwaitCommand,
+        AwaitPayload,
+        AwaitChecksum 
     };
 
     DEF_FRIEND_DERIVE_DEBUG(FsmState)
@@ -38,17 +38,17 @@ struct RecvTransportParser final{
 
     void reset(){
         payload_bytes_cnt_ = 0;
-        state_ = FsmState::MotorId;
+        state_ = FsmState::AwaitMotorId;
     }
 
     void push_byte(const uint8_t byte){
         switch(state_){
-            case FsmState::MotorId:{
+            case FsmState::AwaitMotorId:{
                 request_packet_.motor_id = MotorId::from_u8(byte);
-                state_ = FsmState::Command;
+                state_ = FsmState::AwaitCommand;
                 break;
             }
-            case FsmState::Command:{
+            case FsmState::AwaitCommand:{
                 request_packet_.req_command = ({
                     const auto may_req_command = try_into_req_command(byte);
                     if(may_req_command.is_none()){
@@ -57,18 +57,18 @@ struct RecvTransportParser final{
                     }
                     may_req_command.unwrap();
                 });
-                state_ = FsmState::Payload;
+                state_ = FsmState::AwaitPayload;
                 break;
             }
-            case FsmState::Payload:{
+            case FsmState::AwaitPayload:{
                 request_packet_.payload[payload_bytes_cnt_] = byte;
                 payload_bytes_cnt_++;
                 if(payload_bytes_cnt_ >= NUM_PAYLOAD_BYTES){
-                    state_ = FsmState::Checksum;
+                    state_ = FsmState::AwaitChecksum;
                 }
                 break;
             }
-            case FsmState::Checksum:{
+            case FsmState::AwaitChecksum:{
                 
                 const uint8_t actual_crc8 = request_packet_.calc_crc();
                 const uint8_t expected_crc8 = byte;
@@ -108,6 +108,6 @@ private:
     Callback callback_;
     FlatPacket request_packet_;
     uint8_t payload_bytes_cnt_ = 0;
-    FsmState state_ = FsmState::MotorId;
+    FsmState state_ = FsmState::AwaitMotorId;
 };
 }

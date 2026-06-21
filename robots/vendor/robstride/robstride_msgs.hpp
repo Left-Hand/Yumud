@@ -10,7 +10,7 @@ namespace req_msgs{
 
 
 struct [[nodiscard]] GetDeviceId final{
-    static constexpr Command COMMAND = Command::GetDeviceId;
+    static constexpr CommandId COMMAND = CommandId::GetDeviceId;
     NodeId host_id;
     NodeId motor_id;
 
@@ -25,7 +25,7 @@ struct [[nodiscard]] GetDeviceId final{
 
 struct [[nodiscard]] MotionControl final{
     using Self = MotionControl;
-    static constexpr Command COMMAND = Command::MotionControl;
+    static constexpr CommandId COMMAND = CommandId::MotionControl;
     TorqueCode torque_code;
     NodeId motor_id;
 
@@ -58,7 +58,7 @@ struct [[nodiscard]] MotionControl final{
 
 
 struct [[nodiscard]] EnableRunning final{
-    static constexpr Command COMMAND = Command::EnableRunning;
+    static constexpr CommandId COMMAND = CommandId::EnableRunning;
     NodeId main_id;
     NodeId motor_id;
 
@@ -68,7 +68,7 @@ struct [[nodiscard]] EnableRunning final{
 };
 
 struct [[nodiscard]] DisableRunning final{
-    static constexpr Command COMMAND = Command::DisableRunning;
+    static constexpr CommandId COMMAND = CommandId::DisableRunning;
     NodeId main_id;
     NodeId motor_id;
     bool clear_fault;
@@ -85,7 +85,7 @@ struct [[nodiscard]] DisableRunning final{
 
 
 struct [[nodiscard]] SetMechanicalZero final{
-    static constexpr Command COMMAND = Command::SetMechanicalZero;
+    static constexpr CommandId COMMAND = CommandId::SetMechanicalZero;
     NodeId main_id;
     NodeId motor_id;
 
@@ -101,7 +101,7 @@ struct [[nodiscard]] SetMechanicalZero final{
 
 
 struct [[nodiscard]] SetMotorId final{
-    static constexpr Command COMMAND = Command::SetMotorId;
+    static constexpr CommandId COMMAND = CommandId::SetMotorId;
     NodeId main_id;
     NodeId motor_id;
     NodeId preset_id;
@@ -115,7 +115,7 @@ struct [[nodiscard]] SetMotorId final{
 };
 
 struct [[nodiscard]] GetSingleParament final{
-    static constexpr Command COMMAND = Command::GetSingleParament;
+    static constexpr CommandId COMMAND = CommandId::GetSingleParament;
     NodeId main_id;
     NodeId motor_id;
     DictKey dict_key;
@@ -136,7 +136,7 @@ struct [[nodiscard]] GetSingleParament final{
 };
 
 struct [[nodiscard]] SetBaudrate final{
-    static constexpr Command COMMAND = Command::SetBaudrate;
+    static constexpr CommandId COMMAND = CommandId::SetBaudrate;
     NodeId main_id;
     NodeId motor_id;
     CanBaudrate baudrate;
@@ -302,7 +302,7 @@ struct [[nodiscard]] SetZeroPosition final{
 namespace resp_msgs{
 struct [[nodiscard]] GetDeviceId final{
     using Self = GetDeviceId;
-    static constexpr Command COMMAND = Command::GetDeviceId;
+    static constexpr CommandId COMMAND = CommandId::GetDeviceId;
     NodeId motor_id;
     uint64_t serial_number;
 
@@ -325,7 +325,7 @@ struct [[nodiscard]] GetDeviceId final{
 };
 
 struct [[nodiscard]] Feedback final{
-    static constexpr Command COMMAND = Command::Feedback;
+    static constexpr CommandId COMMAND = CommandId::Feedback;
     FaultFlags fault_flags;
     NodeId motor_id;
     NodeId host_id;

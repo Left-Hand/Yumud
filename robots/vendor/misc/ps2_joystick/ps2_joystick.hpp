@@ -23,30 +23,6 @@ DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-#if 0
-enum class [[nodiscard]] JoyStickChannelSelection:uint8_t{
-    Select,
-    L3,
-    R3,
-    Start,
-    Up,
-    Right,
-    Down,
-    Left,
-    L2,
-    R2,
-    L1,
-    R1,
-    Delta,
-    Circle,
-    Cross,
-    Square,
-    RX,
-    RY,
-    LX,
-    LY
-};
-#endif
 
 
 enum class [[nodiscard]] DevId:uint8_t{
@@ -105,9 +81,9 @@ struct [[nodiscard]] Modifiers final{
     PressLevel l1:1;
     PressLevel r1:1;
     PressLevel delta:1;
-    PressLevel circ:1;
+    PressLevel circle:1;
     PressLevel cross:1;
-    PressLevel squ:1;
+    PressLevel square:1;
 
     [[nodiscard]] constexpr math::Vec2i left_direction() const noexcept {
         auto & self =  *this;
@@ -133,7 +109,7 @@ struct alignas(2) [[nodiscard]] JoystickPosition final{
     }
 };
 
-struct [[nodiscard]] RxPacket{
+struct [[nodiscard]] RxPacket final{
     #pragma pack(push, 1)
     alignas(2) Modifiers modifiers;
 
@@ -142,59 +118,6 @@ struct [[nodiscard]] RxPacket{
 
     #pragma pack(pop)
 
-    #if 0
-    [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannelSelection sel) const noexcept {
-        switch(sel){
-            case JoyStickChannelSelection::Select:
-                return (PressLevel::Pressed == modifiers.select) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::L3:
-                return (PressLevel::Pressed == modifiers.l3) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::R3:
-                return (PressLevel::Pressed == modifiers.r3) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Start:
-                return (PressLevel::Pressed == modifiers.start) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Up:
-                return (PressLevel::Pressed == modifiers.up) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Right:
-                return (PressLevel::Pressed == modifiers.right) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Down:
-                return (PressLevel::Pressed == modifiers.down) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Left:
-                return (PressLevel::Pressed == modifiers.left) ? uint8_t(255) : uint8_t(0);
-
-
-            case JoyStickChannelSelection::L2:
-                return (PressLevel::Pressed == modifiers.l2) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::R2:
-                return (PressLevel::Pressed == modifiers.r2) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::L1:
-                return (PressLevel::Pressed == modifiers.l1) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::R1:
-                return (PressLevel::Pressed == modifiers.r1) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Delta:
-                return (PressLevel::Pressed == modifiers.delta) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Circle:
-                return (PressLevel::Pressed == modifiers.circ) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Cross:
-                return (PressLevel::Pressed == modifiers.cross) ? uint8_t(255) : uint8_t(0);
-            case JoyStickChannelSelection::Square:
-                return (PressLevel::Pressed == modifiers.squ) ? uint8_t(255) : uint8_t(0);
-
-
-            case JoyStickChannelSelection::RX:
-                return right_joystick.x;
-            case JoyStickChannelSelection::RY:
-                return right_joystick.y;
-            case JoyStickChannelSelection::LX:
-                return left_joystick.x;
-            case JoyStickChannelSelection::LY:
-                return left_joystick.y;
-        }
-        //unreachable
-        __builtin_trap();
-    }
-
-    #endif
 
     [[nodiscard]] imconstexpr std::span<uint8_t, 6> as_bytes_mut() {
         return std::span<uint8_t, 6>{reinterpret_cast<uint8_t *>(this), sizeof(*this)};
@@ -206,7 +129,7 @@ static constexpr size_t PACKET_SIZE = 6;
 
 static_assert(sizeof(RxPacket) == PACKET_SIZE);
 
-struct TxPacket{
+struct [[nodiscard]] TxPacket final{
     uint8_t right_vibration_strength;
     uint8_t left_vibration_strength;
     uint8_t __padding__[4];
