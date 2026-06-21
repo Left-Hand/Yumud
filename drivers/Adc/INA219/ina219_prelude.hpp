@@ -40,11 +40,6 @@ struct INA219_Prelude{
     };
 
     enum class [[nodiscard]] HalfScale:uint8_t{
-        // _1= 0,
-        // _1By2= 1,
-        // _1By4= 2,
-        // _1By4= 3
-
         _40mV = 0,
         _80mV = 0,
         _160mV = 0,

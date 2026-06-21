@@ -143,10 +143,10 @@ struct [[nodiscard]] CommandFactory{
 struct [[nodiscard]] CrcBuilder final{
     using Self = CrcBuilder;
 
-    uint16_t n_rem;
-
     static constexpr Self from_default(){
-        return Self{.n_rem = 0};
+        Self self;
+        self.checksum = 0;
+        return self;
     }
 
 
@@ -158,17 +158,20 @@ struct [[nodiscard]] CrcBuilder final{
             const uint16_t rhs = ((byte & 0x8000U) != 0)
                 ? 0x3000 : 0x0000;
 
-            self.n_rem = (self.n_rem << 1) ^ rhs;
+            self.checksum = (self.checksum << 1) ^ rhs;
         }
         return *this;
     }
 
     constexpr uint16_t finalize() const noexcept {
         Self self = *this;
-        self.n_rem = (0x000F & (n_rem >> 12));                                /* get rem */
-        self.n_rem ^= 0x00;  
-        return self.n_rem;
+        self.checksum = (0x000F & (checksum >> 12));                                /* get rem */
+        self.checksum ^= 0x00;  
+        return self.checksum;
     }
+
+private:
+    uint16_t checksum;
 };
 
 };
