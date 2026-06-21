@@ -61,17 +61,7 @@ __always_inline static constexpr math::fixed<Q, int32_t> lpf_1o(
     const math::fixed<Q, int32_t> x,       // x[n]
     const uq32 alpha
 ){
-    #if 1
     return y_prev + (x - y_prev) * alpha;
-
-    #else
-    const uq32 beta = uq32::from_bits(~alpha.to_bits());  // 1 - alpha
-    
-    return math::fixed<Q, int32_t>::from_bits(
-        intrinsics::mul32hsu(x.to_bits(), alpha.to_bits()) + 
-        intrinsics::mul32hsu(y_prev.to_bits(), beta.to_bits())
-    );
-    #endif
 }
 
 template<size_t Q>
@@ -87,30 +77,6 @@ static constexpr Angular<uq32> calc_lpf_phaseshift_uq32(iq16 fc, iq16 f) {
     const auto turns = atan2pu(static_cast<iq16>(f), static_cast<iq16>(fc));
     return Angular<uq32>::from_turns(math::pu_to_uq32(turns));
 }
-
-#if 0
-struct Lpf1o{
-    struct Config{
-        uint32_t fs;
-        uint32_t fc;
-
-        constexpr Result<Lpf1o, StringView> try_into_precomputed() const noexcept {
-            return Ok(Lpf1o{
-                .alpha = calc_lpf_alpha_uq32(fs, fc).map([auto & x]);
-            });
-        }
-    };
-
-    uq32 alpha;
-
-    template<size_t Q>
-    void iterate(math::fixed<Q, int32_t> & state, const math::fixed<Q, int32_t> input){
-        state = lpf_1o(state, input, alpha);
-    }
-};
-#endif
-
-
 
 
 
