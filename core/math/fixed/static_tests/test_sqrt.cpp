@@ -51,6 +51,11 @@ namespace {
     static_assert(err64(math::sqrt(uq32(1.0/64)).to_bits(), uq32(1.0/8).to_bits()) <= 4);
     static_assert(err64(math::sqrt(uq32(1.0/256)).to_bits(), uq32(1.0/16).to_bits()) <= 4);
 
+    static_assert(err64(math::sqrt(iq20(0.25)).to_bits(), iq20(0.5).to_bits()) <= 4);
+    static_assert(err64(math::sqrt(iq20(1.0/16)).to_bits(), iq20(1.0/4).to_bits()) <= 4);
+    static_assert(err64(math::sqrt(iq20(1.0/64)).to_bits(), iq20(1.0/8).to_bits()) <= 4);
+    static_assert(err64(math::sqrt(iq20(1.0/256)).to_bits(), iq20(1.0/16).to_bits()) <= 4);
+
     static_assert(math::inv_sqrt(iq10(16)) == iq10(0.25));
     static_assert(math::inv_sqrt(iq16(16)) == iq16(0.25));
     static_assert(math::inv_sqrt(uq16(16)) == uq16(0.25));

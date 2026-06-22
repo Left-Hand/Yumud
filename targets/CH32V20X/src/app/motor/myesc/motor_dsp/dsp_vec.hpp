@@ -30,6 +30,24 @@ static constexpr math::fixed<Q1, D1> cross2v2(
     return math::fixed<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
 }
 
+template<size_t Q>
+static constexpr void inplace_resat_unit_circle(
+    math::fixed<Q, int32_t> & a,
+    math::fixed<Q, int32_t> & b
+){
+    const auto inv_mag = math::inv_mag(a, b);
+    a = a * inv_mag;
+    b = b * inv_mag;
+}
 
+template<size_t Q>
+static constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> 
+resat_unit_circle(
+    math::fixed<Q, int32_t> a,
+    math::fixed<Q, int32_t> b
+){
+    inplace_resat_unit_circle(a, b);
+    return {a ,b};
+}
 
 }

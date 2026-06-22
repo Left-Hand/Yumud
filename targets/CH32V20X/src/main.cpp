@@ -7,6 +7,7 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
+    
     myesc_main();
     // steadywin_main();
     // sincos_main();

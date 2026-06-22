@@ -1,4 +1,4 @@
-#include "ina226.hpp"
+#include "../ina226.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd::hal;
@@ -9,7 +9,9 @@ using Self = INA226;
 
 template<typename T>
 requires (std::is_integral_v<T>)
-static constexpr T diff(T a, T b){
+static constexpr double abs_diff(T _a, T _b){
+    const auto a = double(_a);
+    const auto b = double(_b);
     return a > b ? a - b : b - a;
 }
 
@@ -30,8 +32,8 @@ static_assert(Self::sv_code_to_uv(0x8300) == -80'000);
 
 
 static_assert(std::abs((float)Self::bv_code_to_volts(0x7fff) - (40.96)) < 2E-4);
-static_assert(diff(Self::bv_code_to_mv(0x7fff), uint32_t(40.96 * 1000)) < 2);
-static_assert(diff(Self::bv_code_to_uv(0x7fff), uint32_t(40.96 * 1000'000)) < 10);
+static_assert(abs_diff(Self::bv_code_to_mv(0x7fff), uint32_t(40.96 * 1000)) < 2);
+static_assert(abs_diff(Self::bv_code_to_uv(0x7fff), uint32_t(40.96 * 1000'000)) < 10);
 
 
     //    _1 = 0,

@@ -95,53 +95,53 @@ constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> dft32_bin
     return _dft<5, 2, Q>(real_in);
 }
 
-template<size_t N, typename TABLE_T>
-struct DftCalcultor{
-    static_assert(std::is_signed_v<TABLE_T>);
-    static_assert(std::has_single_bit(N));
+// template<size_t N, typename TABLE_T>
+// struct DftCalcultor{
+//     static_assert(std::is_signed_v<TABLE_T>);
+//     static_assert(std::has_single_bit(N));
 
-    static constexpr size_t N_BITS = std::countr_zero(N);
-    static constexpr size_t TABLE_Q = sizeof(TABLE_T) * 8 - 1;
-    static constexpr size_t IDX_MASK = N - 1;
-    static constexpr auto BIN1_TABLE = _make_sincos_table<15, int16_t, N, 1>();
+//     static constexpr size_t N_BITS = std::countr_zero(N);
+//     static constexpr size_t TABLE_Q = sizeof(TABLE_T) * 8 - 1;
+//     static constexpr size_t IDX_MASK = N - 1;
+//     static constexpr auto BIN1_TABLE = _make_sincos_table<15, int16_t, N, 1>();
 
-    template<size_t Q, typename D>
-    static constexpr std::array<math::fixed<Q, D>, 2> calc_dft(
-        size_t bin_num,
-        std::span<const math::fixed<Q, D>, N> real_in
-    ){ 
-        int64_t real_bits = 0;
-        int64_t imag_bits = 0;
-        // 使用restrict指针
-        const auto* __restrict in_ptr = real_in.data();
-        const auto * __restrict bin1_table_ptr = BIN1_TABLE.data();
+//     template<size_t Q, typename D>
+//     static constexpr std::array<math::fixed<Q, D>, 2> calc_dft(
+//         size_t bin_num,
+//         std::span<const math::fixed<Q, D>, N> real_in
+//     ){ 
+//         int64_t real_bits = 0;
+//         int64_t imag_bits = 0;
+//         // 使用restrict指针
+//         const auto* __restrict in_ptr = real_in.data();
+//         const auto * __restrict bin1_table_ptr = BIN1_TABLE.data();
 
-        size_t i = 0;
-        #pragma GCC unroll 4
-        for (size_t _ = 0; _ < N; i++) {
-            const auto [s, c] = bin1_table_ptr[i];
-            real_bits += static_cast<int64_t>(in_ptr[i].to_bits()) * s.to_bits();
-            imag_bits -= static_cast<int64_t>(in_ptr[i].to_bits()) * c.to_bits();
-            i = (i + bin_num) & IDX_MASK;
-        }
+//         size_t i = 0;
+//         #pragma GCC unroll 4
+//         for (size_t _ = 0; _ < N; i++) {
+//             const auto [s, c] = bin1_table_ptr[i];
+//             real_bits += static_cast<int64_t>(in_ptr[i].to_bits()) * s.to_bits();
+//             imag_bits -= static_cast<int64_t>(in_ptr[i].to_bits()) * c.to_bits();
+//             i = (i + bin_num) & IDX_MASK;
+//         }
 
-        return {
-            math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(real_bits >> (N_BITS + TABLE_Q))),
-            math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(imag_bits >> (N_BITS + TABLE_Q))),
-        };
-    }
+//         return {
+//             math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(real_bits >> (N_BITS + TABLE_Q))),
+//             math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(imag_bits >> (N_BITS + TABLE_Q))),
+//         };
+//     }
 
-    template<size_t NUM_BINS, size_t Q, typename D>
-    static constexpr std::array<std::array<math::fixed<Q, D>, 2>, NUM_BINS> calc_dft(
-        std::array<size_t, NUM_BINS> bins,
-        std::span<const math::fixed<Q, D>, N> real_in
-    ){ 
-        std::array<std::array<math::fixed<Q, D>, 2>, NUM_BINS> ret;
-        for(size_t i = 0; i < NUM_BINS; i++){
-            ret[i] = calc_dft(bins[i], real_in);
-        }
-    }
-};
+//     template<size_t NUM_BINS, size_t Q, typename D>
+//     static constexpr std::array<std::array<math::fixed<Q, D>, 2>, NUM_BINS> calc_dft(
+//         std::array<size_t, NUM_BINS> bins,
+//         std::span<const math::fixed<Q, D>, N> real_in
+//     ){ 
+//         std::array<std::array<math::fixed<Q, D>, 2>, NUM_BINS> ret;
+//         for(size_t i = 0; i < NUM_BINS; i++){
+//             ret[i] = calc_dft(bins[i], real_in);
+//         }
+//     }
+// };
 
 
 }

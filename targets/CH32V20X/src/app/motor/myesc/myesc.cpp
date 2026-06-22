@@ -64,9 +64,10 @@ using namespace ymd::myesc;
 // using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
-// using MotorProfile = MotorProfile_3505;
+using MotorProfile = MotorProfile_3505;
 // using MotorProfile = MotorProfile_36BLDB;
-using MotorProfile = MotorProfile_NiuLiu;
+// using MotorProfile = MotorProfile_NiuLiu;
+// using MotorProfile = MotorProfile_2207;
 
 
 struct LrSeriesCurrentRegulatorConfig{
@@ -212,6 +213,26 @@ static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last
     return state + diff;
 }
 
+// template<size_t Q>
+// __attribute__((always_inline,  const, optimize( "-Ofast" )))
+__no_inline
+constexpr uq16 mysqrt32u(const uq16 x){
+    #if 0
+    return math::fixed<Q, uint32_t>::from_bits(
+        fxmath::details::IqSqrtIntermediate::template from_u32<Q, fxmath::details::SqrtNormStrategy::SQRT>(
+            x.to_bits()
+        ).template compute<Q, fxmath::details::SqrtNormStrategy::SQRT>()
+    );
+    #endif
+
+
+    auto it = fxmath::details::IqSqrtIntermediate::from_u32<16, fxmath::details::SqrtNormStrategy::SQRT>(
+        uq16(x).to_bits()
+    );
+
+    const auto res = uq16::from_bits(std::move(it).template compute<16,fxmath::details::SqrtNormStrategy::SQRT>());
+    return res;
+}
 
 
 
@@ -237,6 +258,31 @@ void myesc_main(){
 
 
     clock::delay(2ms);
+
+    while(true){
+        const auto now_secs = clock::seconds();
+        // const auto [_s,_c] = math::sincospu(now_secs);
+        // const auto s = iq16(iq20(_s) * 0.4_iq20 + 0.5_iq20);
+        const auto s = iq16(math::frac(now_secs));
+
+        const uq16 x = uq16(s);
+
+        auto it = fxmath::details::IqSqrtIntermediate::from_u32<16, fxmath::details::SqrtNormStrategy::SQRT>(
+            x.to_bits()
+        );
+
+        // const auto res = uq16::from_bits(it.compute<16,fxmath::details::SqrtNormStrategy::SQRT>());
+        const auto res = std::move(it).compute<16,fxmath::details::SqrtNormStrategy::SQRT>();
+
+        if(true)DEBUG_PRINTLN(
+            s,
+            it.uiq32_input,
+            it.i16_exponent,
+            res,
+            // math::sqrt(uq16(s))
+            mysqrt32u(uq16(s))
+        );
+    }
     auto & timer = hal::timer1;
 
     // #region 初始化定时器
@@ -437,13 +483,8 @@ void myesc_main(){
 
     [[maybe_unused]] static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
     // static constexpr iq20 HFI_VOLT = MIN((, 2);
-    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.0_iq20;
+    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.0_iq20;
     // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0;
-    [[maybe_unused]] static iq20 prev_sample = Zero;
-    [[maybe_unused]] static size_t hfi_idx = 0;
-    [[maybe_unused]] static std::array<iq20, HFI_N> hfi_buffer;
-    [[maybe_unused]] static bool is_samp_n = false;
-
 
 
     // PANIC{PI_CONTROLLER_COEFFS};
@@ -560,7 +601,8 @@ void myesc_main(){
     op_flags_.initial_dc_calibrate = true;
     FnSwitches fn_switches_;
 
-    AllState all_state_;
+    auto p_all_state_ = std::make_unique<AllState>();
+    AllState & all_state_ = *p_all_state_;
     all_state_.reset();
 
     [[maybe_unused]] auto current_sense = [&](AllState & state){
@@ -733,12 +775,36 @@ void myesc_main(){
 
 
         const bool is_openloop = true;
-        const bool is_hfi = false;
+        // const bool is_openloop = true;
+        const bool is_hfi = true;
 
+        auto update_hfi_angle = [&]{
+            const auto hfi_angle = Angular<uq32>::from_turns(
+                pu_to_uq32(math::atan2pu(
+                    state.hfi_response_imag_bin2, 
+                    state.hfi_response_real_bin2)
+                )
+            );
+            const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
+
+            const auto hfi_diff_angle = (next_hfi_lap_angle.cast_inner<iq16>()
+                - state.hfi_lap_angle.cast_inner<iq16>()).signed_normalized() / 2;
+
+            state.hfi_lap_angle = next_hfi_lap_angle;
+            state.hfi_multilap_angle = state.hfi_multilap_angle + hfi_diff_angle;
+            rotor_rotation_ltd_.iterate(state.rotor_rotation_state_var, {state.hfi_multilap_angle.to_turns(), 0});
+
+            state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle).unsigned_normalized().to_turns()));
+            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.675_uq32);
+            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.75_uq32);
+            // state.hfi_elec_angle = hfi_angle;
+        };
+
+        update_hfi_angle();
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = 1.20_iq16;
+            const auto speed = 0.20_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -749,20 +815,9 @@ void myesc_main(){
             state.selected_elec_angle = state.openloop_elec_angle;
         }else{
             if(is_hfi){
-                const auto hfi_angle = Angular<uq32>::from_turns(
-                    math::atan2pu(state.hfi_response_imag_bin2 - 0.002_iq20, state.hfi_response_real_bin2)
-                );
-                const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
 
-                const auto hfi_diff_angle = (next_hfi_lap_angle.cast_inner<iq16>()
-                    - state.hfi_lap_angle.cast_inner<iq16>()).signed_normalized() / 2;
-
-                state.hfi_lap_angle = next_hfi_lap_angle;
-                state.hfi_multilap_angle = state.hfi_multilap_angle + hfi_diff_angle;
-                rotor_rotation_ltd_.iterate(state.rotor_rotation_state_var, {state.hfi_multilap_angle.to_turns(), 0});
-
-                state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle).unsigned_normalized().to_turns()));
                 state.selected_elec_angle = state.hfi_elec_angle;
+                // state.selected_elec_angle = hfi_angle;
             }else{
                 //TODO: take off side effects
                 const auto angle_packet = mag_encoder_.update().examine();
@@ -810,18 +865,25 @@ void myesc_main(){
             };
         };
 
-        #if 0
-        [[maybe_unused]] auto generate_alpha_beta_volt_by_hfi = [&]{
+        #if 1
+        [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
             // static constexpr uint32_t MASK = (HFI_N) - 1;
+            [[maybe_unused]] static iq20 prev_sample = Zero;
+            [[maybe_unused]] static size_t hfi_idx = 0;
+            [[maybe_unused]] static std::array<iq20, HFI_N> hfi_buffer;
+            [[maybe_unused]] static bool is_samp_n = false;
 
 
-            const auto [s,c] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
-            const auto sample_now = dot2v2(
+
+            const auto [_s,_c] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
+            const auto s = iq15::from_bits(_s.to_bits());
+            const auto c = iq15::from_bits(_c.to_bits());
+            const auto now_sample = dot2v2(
                 state.alphabeta_curr_raw.alpha, c,
                 state.alphabeta_curr_raw.beta, s
             );
             if(is_samp_n){
-                const auto di = sample_now - prev_sample;
+                const auto di = now_sample - prev_sample;
                 hfi_buffer[hfi_idx] = di;
                 if(hfi_idx >= HFI_N){
                     hfi_idx = 0;
@@ -835,33 +897,47 @@ void myesc_main(){
                     state.hfi_response_real_bin1 = lpf_1000hz(state.hfi_response_real_bin1, hfi_response_real_bin1);
                     state.hfi_response_imag_bin1 = lpf_1000hz(state.hfi_response_imag_bin1, hfi_response_imag_bin1);
 
-                    const auto [hfi_response_real_bin2, hfi_response_imag_bin2] = dft32_bin2<20>(buffer_view);
-                    state.hfi_response_real_bin2 = lpf_1000hz(state.hfi_response_real_bin2, hfi_response_real_bin2);
-                    state.hfi_response_imag_bin2 = lpf_1000hz(state.hfi_response_imag_bin2, hfi_response_imag_bin2);
+                    auto [hfi_response_real_bin2, hfi_response_imag_bin2] = dft32_bin2<20>(buffer_view);
+
+                    hfi_response_real_bin2 += -0.003_iq20;
+                    hfi_response_imag_bin2 += -0.013_iq20;
+
+                    // inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
+                    // hfi_response_real_bin2 = std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20));
+
+                    // const auto inv_mag = math::inv_mag(hfi_response_real_bin2, hfi_response_imag_bin2);
+                    // hfi_response_real_bin2 = hfi_response_real_bin2 * inv_mag;
+                    // hfi_response_imag_bin2 = hfi_response_imag_bin2 * inv_mag;
+
+                    state.hfi_response_real_bin2 = lpf_allpass(state.hfi_response_real_bin2, hfi_response_real_bin2);
+                    state.hfi_response_imag_bin2 = lpf_allpass(state.hfi_response_imag_bin2, hfi_response_imag_bin2);
+
                 }else{
                     hfi_idx += 1;
                 }
             }else{
-                prev_sample = sample_now;
+                prev_sample = now_sample;
             }
 
             if(is_samp_n){
                 is_samp_n = false;
                 return AlphaBetaCoord<iq20>{
-                    .alpha = HFI_VOLT * iq15::from_bits(c.to_bits()),
-                    .beta = HFI_VOLT * iq15::from_bits(s.to_bits()),
+                    .alpha = HFI_VOLT * c,
+                    .beta = HFI_VOLT * s,
                 };
             }else{
                 is_samp_n = true;
                 return AlphaBetaCoord<iq20>{
-                    .alpha = (-HFI_VOLT) * iq15::from_bits(c.to_bits()),
-                    .beta = (-HFI_VOLT) * iq15::from_bits(s.to_bits()),
+                    .alpha = (-HFI_VOLT) * c,
+                    .beta = (-HFI_VOLT) * s,
                 };
             }
         };
         #endif
 
         auto dq_volt_gen = generate_dq_volt_by_pi_ctrl();
+
+
         
         const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
 
@@ -882,6 +958,7 @@ void myesc_main(){
 
         dq_volt_gen = dq_volt_gen.clamp(MotorProfile::MODU_VOLT_LIMIT);
 
+        const auto inv_busbar_volt = INV_BUS_VOLT;
         const auto inv_busbar_volt_3by2 = INV_BUS_VOLT * iq16(1.5);
 
         auto dq_dutycycle_gen = dq_volt_gen * inv_busbar_volt_3by2;
@@ -928,6 +1005,14 @@ void myesc_main(){
             alphabeta_dutycycle_gen.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
         }
 
+
+        const bool spin_hfi_enabled = true;
+
+        if(spin_hfi_enabled){
+            state.spinhfi_alphabeta_volt_gen  = generate_alpha_beta_volt_by_spin_hfi();
+            alphabeta_dutycycle_gen = alphabeta_dutycycle_gen + 
+                state.spinhfi_alphabeta_volt_gen * inv_busbar_volt;
+        }
 
         auto uvw_dutycycle_gen = SVM(
             alphabeta_dutycycle_gen
@@ -1054,12 +1139,6 @@ void myesc_main(){
         // const iq20 hfi_response_imag_bin1 = 1;
         // const auto real_bin1_double_ = math::square(hfi_response_real_bin1) - math::square(hfi_response_imag_bin1);
         // const auto imag_bin1_double_ = 2 * ((hfi_response_imag_bin1) * (hfi_response_real_bin1));
-        [[maybe_unused]] const auto hfi_bin2_angle = Angular<uq32>::from_turns(
-            pu_to_uq32(math::atan2pu(
-                all_state_.hfi_response_imag_bin2 - 0.002_iq20, 
-                all_state_.hfi_response_real_bin2)
-            )
-        );
         // [[maybe_unused]] const auto hfi_bin2_half_angle = -hfi_bin2_angle / 2;
         // [[maybe_unused]] const auto [sine_hfi_bin2_half_angle, cosine_hfi_bin2_half_angle] = hfi_bin2_half_angle.sincos();
 
@@ -1067,7 +1146,30 @@ void myesc_main(){
             math::mag(all_state_.hfi_response_real_bin2, all_state_.hfi_response_imag_bin2) * 2;
 
         temperature_ = lpf_10hz(temperature_, temp_comp.comp_u12(ADC1->IDATAR4));
+
+        const auto [_s,_c] = math::sincospu(now_secs);
+        const auto s = iq16(iq20(_s) * 0.4_iq20 + 0.5_iq20);
+
+
+        const uq16 x = uq16(s);
+
+        auto it = fxmath::details::IqSqrtIntermediate::from_u32<16, fxmath::details::SqrtNormStrategy::SQRT>(
+            x.to_bits()
+        );
+
+        const auto res = uq16::from_bits(std::move(it).compute<16,fxmath::details::SqrtNormStrategy::SQRT>());
+
         if(true)DEBUG_PRINTLN(
+            s,
+            it.uiq32_input,
+            it.i16_exponent,
+            res,
+            // math::sqrt(uq16(s))
+            mysqrt32u(uq16(s))
+        );
+
+
+        if(false)DEBUG_PRINTLN(
             // s, c, 
             pwm_u_.cvr(),
             pwm_v_.cvr(),
@@ -1087,11 +1189,21 @@ void myesc_main(){
             all_state_.torque_curr_cmd,
             // all_state_.uvw_curr_raw,
             // all_state_.dq_volt_gen,
-            all_state_.selected_elec_angle.to_turns(),
-            all_state_.busbar_curr_raw,
-            all_state_.busbar_curr,
+            // all_state_.selected_elec_angle.to_turns(),
             // all_state_.dq_curr_raw.d,
-            // all_state_.dq_curr_raw.q,
+            // all_state_.spinhfi_alphabeta_volt_gen,
+            // all_state_.hfi_response_real_bin1,
+            // all_state_.hfi_response_imag_bin1,
+            all_state_.hfi_response_real_bin2,
+            all_state_.hfi_response_imag_bin2,
+            all_state_.openloop_elec_angle.to_turns(),
+            // hfi_bin2_angle.to_turns(),
+            all_state_.hfi_elec_angle.to_turns(),
+
+            // math::sqrt(s),
+            // math::inv_sqrt(s),
+            // math::inv_mag(s, s),
+            // hfi_idx,
             // all_state_.alphabeta_curr_raw[0],
             // all_state_.alphabeta_curr_raw[1],
             // all_state_.deadtime_comp_alphabeta_dutycycle,
