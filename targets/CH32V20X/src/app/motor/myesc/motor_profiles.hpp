@@ -137,6 +137,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     UvwCoord<iq20> uvw_curr_raw;
+    iq20 unblance_curr_abs_lp;
     
     DqCoord<iq20> dq_curr_raw;
     DqCoord<iq20> dq_curr_fastlp;
