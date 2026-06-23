@@ -94,7 +94,7 @@ namespace ymd::hal{
 
 
 struct [[nodiscard]] TimerBdtr final{
-    void * inst_;
+    void * p_inst_;
     uint32_t bus_freq;
 
     struct [[nodiscard]] Config{
@@ -113,14 +113,14 @@ struct [[nodiscard]] TimerPinSetuper final{
     using Next = void;
 
     explicit TimerPinSetuper(void * inst, const TimerRemap remap) : 
-        inst_(inst),
-        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_))),
+        p_inst_(inst),
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(p_inst_))),
         remap_(remap){}
 
     Result<Next, Error> alter_to_pins(const std::initializer_list<TimerChannelSelection> list);
     Next dont_alter_to_pins();
 private:
-    void * inst_;
+    void * p_inst_;
     Nth tim_nth_;
     TimerRemap remap_;
 };
@@ -144,8 +144,8 @@ protected:
     }
 public:
     explicit BasicTimer(void * inst):
-        inst_(inst),
-        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+        p_inst_(inst),
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(p_inst_)))
         {;}
 
     struct [[nodiscard]] Config{
@@ -216,7 +216,7 @@ public:
 
     void set_remap(const TimerRemap rm);
 protected:
-    void * inst_;
+    void * p_inst_;
     Nth tim_nth_;
 
     [[nodiscard]] uint32_t get_periph_clk_freq();
@@ -243,10 +243,10 @@ public:
     explicit GeneralTimer(void * inst):
         BasicTimer(inst),
         channels_{
-            TimerOC(inst_, TimerChannel::ChannelSelection::CH1),
-            TimerOC(inst_, TimerChannel::ChannelSelection::CH2),
-            TimerOC(inst_, TimerChannel::ChannelSelection::CH3),
-            TimerOC(inst_, TimerChannel::ChannelSelection::CH4)
+            TimerOC(p_inst_, TimerChannel::ChannelSelection::CH1),
+            TimerOC(p_inst_, TimerChannel::ChannelSelection::CH2),
+            TimerOC(p_inst_, TimerChannel::ChannelSelection::CH3),
+            TimerOC(p_inst_, TimerChannel::ChannelSelection::CH4)
         }{;}
 
     void init_as_encoder();
@@ -301,14 +301,14 @@ public:
     explicit AdvancedTimer(void * inst):
             GeneralTimer(inst),
             n_channels_{
-                TimerOCN(inst_, TimerChannel::ChannelSelection::CH1N),
-                TimerOCN(inst_, TimerChannel::ChannelSelection::CH2N),
-                TimerOCN(inst_, TimerChannel::ChannelSelection::CH3N),
+                TimerOCN(p_inst_, TimerChannel::ChannelSelection::CH1N),
+                TimerOCN(p_inst_, TimerChannel::ChannelSelection::CH2N),
+                TimerOCN(p_inst_, TimerChannel::ChannelSelection::CH3N),
             }{;}
 
     void on_cc_interrupt();
     TimerBdtr bdtr(){return TimerBdtr{
-        .inst_ = inst_,
+        .p_inst_ = p_inst_,
         .bus_freq = this->get_periph_clk_freq()
     };}
     void set_repeat_times(const uint16_t rep);

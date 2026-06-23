@@ -11,35 +11,35 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SPL_INST(x) (reinterpret_cast<COPY_CONST(inst_, DMA_Channel_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(p_inst_, DMA_Channel_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::DMA_CH_Def)>(x))
 
 
 namespace {
-static constexpr Nth _dma_calc_nth(const uint32_t inst_base){
+static constexpr Nth _dma_calc_nth(const uint32_t p_inst_base){
     #ifdef DMA2_PRESENT
-    return inst_base < DMA2_Channel1_BASE ? Nth(1) : Nth(2);
+    return p_inst_base < DMA2_Channel1_BASE ? Nth(1) : Nth(2);
     #else
     return Nth(1);
     #endif
 }
 
-static constexpr Nth _dma_ch_sel_nth(const uint32_t inst_base){
-    const Nth dma_nth = _dma_calc_nth(inst_base);
+static constexpr Nth _dma_ch_sel_nth(const uint32_t p_inst_base){
+    const Nth dma_nth = _dma_calc_nth(p_inst_base);
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:
-            return Nth((inst_base - DMA1_Channel1_BASE) / 
+            return Nth((p_inst_base - DMA1_Channel1_BASE) / 
                 (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1);
         #endif
 
         #ifdef DMA2_PRESENT
         case 2:
-            if(inst_base < DMA2_Channel7_BASE){ 
-                return Nth(((inst_base - DMA2_Channel1_BASE) / 
+            if(p_inst_base < DMA2_Channel7_BASE){ 
+                return Nth(((p_inst_base - DMA2_Channel1_BASE) / 
                     (DMA2_Channel2_BASE - DMA2_Channel1_BASE)) + 1);
             }else{
-                return Nth(((inst_base - DMA2_Channel7_BASE) / 
+                return Nth(((p_inst_base - DMA2_Channel7_BASE) / 
                     (DMA2_Channel8_BASE - DMA2_Channel7_BASE)) + 7);
             }
         #endif
@@ -217,7 +217,7 @@ static volatile uint32_t & get_flag_state_reg(
 }
 
 DmaChannel::DmaChannel(void * inst):
-    inst_(inst), 
+    p_inst_(inst), 
     dma_nth_(_dma_calc_nth(reinterpret_cast<uint32_t>(inst))),
     ch_sel_nth_(_dma_ch_sel_nth(reinterpret_cast<uint32_t>(inst))),
     flag_clear_reg_(get_flag_clear_reg(dma_nth_, ch_sel_nth_)),
@@ -234,13 +234,13 @@ void DmaChannel::enable_rcc(Enable en){
 void DmaChannel::start_transfer(uintptr_t dst_addr, uintptr_t src_addr, const size_t size){
 
     if(mode_.dst_is_periph()){
-        RAL_INST(inst_) -> PADDR.BITS = dst_addr;
-        RAL_INST(inst_) -> MADDR.BITS = src_addr;
+        RAL_INST(p_inst_) -> PADDR.BITS = dst_addr;
+        RAL_INST(p_inst_) -> MADDR.BITS = src_addr;
     }else{
-        RAL_INST(inst_) -> PADDR.BITS = src_addr;
-        RAL_INST(inst_) -> MADDR.BITS = dst_addr;
+        RAL_INST(p_inst_) -> PADDR.BITS = src_addr;
+        RAL_INST(p_inst_) -> MADDR.BITS = dst_addr;
     }
-    RAL_INST(inst_) -> CNTR.BITS = size;
+    RAL_INST(p_inst_) -> CNTR.BITS = size;
     clear_pending_flag_and_restart();
 }
 
@@ -297,7 +297,7 @@ void DmaChannel::init(const Config & cfg){
 
     DMA_InitStructure.DMA_Priority = static_cast<uint32_t>(cfg.priority) << 12;
 
-    DMA_Init(SPL_INST(inst_), &DMA_InitStructure);
+    DMA_Init(SPL_INST(p_inst_), &DMA_InitStructure);
 }
 
 void DmaChannel::register_nvic(const NvicPriorityCode priority, const Enable en){
@@ -322,23 +322,23 @@ void DmaChannel::register_nvic(const NvicPriorityCode priority, const Enable en)
 void DmaChannel::clear_pending_flag_and_restart(){
     flag_clear_reg_ = (transfer_complete_mask_ | transfer_onhalf_mask_);
 
-    RAL_INST(inst_)->CFGR.EN = 1;
+    RAL_INST(p_inst_)->CFGR.EN = 1;
 }
 
 size_t DmaChannel::pending_count(){
-    return static_cast<size_t>(RAL_INST(inst_) -> CNTR.BITS);
+    return static_cast<size_t>(RAL_INST(p_inst_) -> CNTR.BITS);
 }
 
 void DmaChannel::enable_transfer_complete_interrupt(const Enable en){
 
     //write 1 clear
     flag_clear_reg_ = (transfer_complete_mask_);
-    RAL_INST(inst_)->CFGR.TCIE = en == EN;
+    RAL_INST(p_inst_)->CFGR.TCIE = en == EN;
 }
 
 void DmaChannel::enable_transfer_onhalf_interrupt(const Enable en){
     //write 1 clear
     flag_clear_reg_ = (transfer_onhalf_mask_);
-    RAL_INST(inst_)->CFGR.HTIE = en == EN;
+    RAL_INST(p_inst_)->CFGR.HTIE = en == EN;
 }
 

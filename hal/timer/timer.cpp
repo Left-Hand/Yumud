@@ -349,8 +349,8 @@ DEF_TIM_BIND_PIN_LAYOUTER(bkin)
 
 
 
-volatile uint16_t & BasicTimer::cnt(){return SPL_INST(inst_)->CNT;}
-volatile uint16_t & BasicTimer::arr(){return SPL_INST(inst_)->ATRLR;}
+volatile uint16_t & BasicTimer::cnt(){return SPL_INST(p_inst_)->CNT;}
+volatile uint16_t & BasicTimer::arr(){return SPL_INST(p_inst_)->ATRLR;}
 
 
 void timer_alter_to_pin(
@@ -414,7 +414,7 @@ void BasicTimer::stop(){
 }
 
 void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
-    TIM_ITConfig(SPL_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
+    TIM_ITConfig(SPL_INST(p_inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
@@ -424,11 +424,11 @@ uint32_t BasicTimer::get_periph_clk_freq(){
 }
 
 void BasicTimer::set_psc(const uint16_t psc){
-    SPL_INST(inst_)->PSC = psc;
+    SPL_INST(p_inst_)->PSC = psc;
 }
 
 void BasicTimer::set_arr(const uint16_t arr){
-    SPL_INST(inst_)->ATRLR = arr;
+    SPL_INST(p_inst_)->ATRLR = arr;
 }
 
 //ckd = 0 : 1分频
@@ -438,23 +438,23 @@ void BasicTimer::set_arr(const uint16_t arr){
 void BasicTimer::set_ckd(const uint8_t ckd){
     if(ckd > 2) __builtin_trap();
 
-    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(p_inst_)->CTLR1;
     
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (static_cast<uint16_t>(ckd) << 8);
 
-    SPL_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(p_inst_)->CTLR1 = tmpcr1;
 }
 
 
 void BasicTimer::set_count_mode(const TimerCountMode mode){
-    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(p_inst_)->CTLR1;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
     tmpcr1 |= (mode.to_bits() << 4);
 
 
-    SPL_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(p_inst_)->CTLR1 = tmpcr1;
 }
 
 template<typename T>
@@ -473,15 +473,15 @@ template<typename T>
 
 
 void BasicTimer::enable_arr_sync(const Enable en){
-    reg_set_or_clear_bit(SPL_INST(inst_)->CTLR1, TIM_ARPE, en == EN);
+    reg_set_or_clear_bit(SPL_INST(p_inst_)->CTLR1, TIM_ARPE, en == EN);
 }
 
 void BasicTimer::enable_psc_sync(const Enable en){
-    reg_set_or_clear_bit(SPL_INST(inst_)->SWEVGR, TIM_PSCReloadMode_Immediate, en == EN);
+    reg_set_or_clear_bit(SPL_INST(p_inst_)->SWEVGR, TIM_PSCReloadMode_Immediate, en == EN);
 }
 
 void BasicTimer::enable_udis(const Enable en){
-    reg_set_or_clear_bit(SPL_INST(inst_)->CTLR1, TIM_UDIS, en == EN);
+    reg_set_or_clear_bit(SPL_INST(p_inst_)->CTLR1, TIM_UDIS, en == EN);
 }
 
 void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
@@ -494,12 +494,12 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
-    TIM_DeInit(SPL_INST(inst_));
+    TIM_DeInit(SPL_INST(p_inst_));
     set_remap(cfg.remap);
-    SPL_INST(inst_)->CNT = 0;
+    SPL_INST(p_inst_)->CNT = 0;
     this->enable_rcc(EN);
 
-    TIM_InternalClockConfig(SPL_INST(inst_));
+    TIM_InternalClockConfig(SPL_INST(p_inst_));
     set_count_freq(cfg.count_freq);
     set_count_mode(cfg.count_mode);
 
@@ -507,11 +507,11 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
     set_ckd(0);
     enable_arr_sync(EN);
 
-    TIM_ClearFlag(SPL_INST(inst_), 0x1e7f);
-    TIM_ClearITPendingBit(SPL_INST(inst_), 0x00ff);
+    TIM_ClearFlag(SPL_INST(p_inst_), 0x1e7f);
+    TIM_ClearITPendingBit(SPL_INST(p_inst_), 0x00ff);
 
 
-    return Ok(TimerPinSetuper{inst_, cfg.remap});
+    return Ok(TimerPinSetuper{p_inst_, cfg.remap});
 }
 
 
@@ -522,27 +522,27 @@ void BasicTimer::deinit(){
 
 #if 0
 void timer_start(){
-    TIM_Cmd(SPL_INST(inst_), true);
+    TIM_Cmd(SPL_INST(p_inst_), true);
     
     if(lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
+        TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
     }
 }
 
 void timer_stop(){
-    TIM_Cmd(SPL_INST(inst_), false);
+    TIM_Cmd(SPL_INST(p_inst_), false);
     
     if((en == EN) and lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
+        TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
     }
 }
 #endif
 
 void BasicTimer::enable(const Enable en){
-    TIM_Cmd(SPL_INST(inst_), (en == EN));
+    TIM_Cmd(SPL_INST(p_inst_), (en == EN));
     
     if((en == EN) and lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
+        TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
     }
 }
 
@@ -558,7 +558,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_RepetitionCounter = 0,
         };
 
-        TIM_TimeBaseInit(SPL_INST(inst_), &TIM_TimeBaseStructure);
+        TIM_TimeBaseInit(SPL_INST(p_inst_), &TIM_TimeBaseStructure);
     }
 
 
@@ -571,7 +571,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(p_inst_),&TIM_ICInitStruct);
     }
 
     {
@@ -583,41 +583,41 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(p_inst_),&TIM_ICInitStruct);
     }
 
-	TIM_EncoderInterfaceConfig(SPL_INST(inst_),
+	TIM_EncoderInterfaceConfig(SPL_INST(p_inst_),
         TIM_EncoderMode_TI12, 
         TIM_ICPolarity_Rising,
         TIM_ICPolarity_Rising
     );
 
-    TIM_Cmd(SPL_INST(inst_), ENABLE);
+    TIM_Cmd(SPL_INST(p_inst_), ENABLE);
 }
 
 bool GeneralTimer::is_up_counting(){
-    return reg_get_bit(SPL_INST(inst_)->CTLR1, TIM_DIR) == 0;
+    return reg_get_bit(SPL_INST(p_inst_)->CTLR1, TIM_DIR) == 0;
 }
 
 
 void GeneralTimer::enable_single_shot(const Enable en){
-    TIM_SelectOnePulseMode(SPL_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
+    TIM_SelectOnePulseMode(SPL_INST(p_inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
 void GeneralTimer::set_trgo_source(const TrgoSource source){
-    TIM_SelectOutputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectOutputTrigger(SPL_INST(p_inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_trgi_source(const TrgiSource source){
-    TIM_SelectInputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectInputTrigger(SPL_INST(p_inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_slave_mode(const SlaveMode slave_mode){
-    TIM_SelectSlaveMode(SPL_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
+    TIM_SelectSlaveMode(SPL_INST(p_inst_), std::bit_cast<uint8_t>(slave_mode));
 }
 
 void GeneralTimer::enable_master_slave_mode(const Enable en){
-    TIM_SelectMasterSlaveMode(SPL_INST(inst_), 
+    TIM_SelectMasterSlaveMode(SPL_INST(p_inst_), 
         (en == EN) ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
 
@@ -652,32 +652,32 @@ void TimerBdtr::init(const Config & cfg){
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
     };
 
-    TIM_BDTRConfig(SPL_INST(inst_), &TIM_BDTRInitStructure);
+    TIM_BDTRConfig(SPL_INST(p_inst_), &TIM_BDTRInitStructure);
 }
 
 #if 0
 void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
-    uint16_t tempreg = SPL_INST(inst_)->BDTR;
+    uint16_t tempreg = SPL_INST(p_inst_)->BDTR;
     tempreg &= 0xff00;
     tempreg |= deadzone_code.bits;
-    SPL_INST(inst_)->BDTR = tempreg;
+    SPL_INST(p_inst_)->BDTR = tempreg;
 }
 #endif
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
-    TIM_CCPreloadControl(SPL_INST(inst_), (en == EN));
+    TIM_CCPreloadControl(SPL_INST(p_inst_), (en == EN));
 }
 
 
 #define TRY_HANDLE_AND_CLEAR_IT(it_status, I)\
 if((it_status & static_cast<uint16_t>(I))) {\
     invoke_callback(I); \
-    TIM_ClearITPendingBit(SPL_INST(inst_), uint8_t(I)); \
+    TIM_ClearITPendingBit(SPL_INST(p_inst_), uint8_t(I)); \
     return;\
 }\
 
 void AdvancedTimer::on_cc_interrupt(){
-    const uint16_t it_status = SPL_INST(inst_)->INTFR;
+    const uint16_t it_status = SPL_INST(p_inst_)->INTFR;
 
     TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
     TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC2);
@@ -686,7 +686,7 @@ void AdvancedTimer::on_cc_interrupt(){
 }
 
 void BasicTimer::isr_common(){
-    const uint16_t it_status = SPL_INST(inst_)->INTFR;
+    const uint16_t it_status = SPL_INST(p_inst_)->INTFR;
 
     TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Update);
     TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
@@ -699,6 +699,6 @@ void BasicTimer::isr_common(){
 }
 
 void AdvancedTimer::set_repeat_times(const uint16_t rep){
-    SPL_INST(inst_)->RPTCR = rep;
+    SPL_INST(p_inst_)->RPTCR = rep;
 }
 

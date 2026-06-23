@@ -40,8 +40,8 @@ void uart_enable_idle_interrupt(void * p_inst, const Enable en){
 }
 
 
-Nth uart_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
+Nth uart_to_nth(const uintptr_t p_inst_base){
+    switch(p_inst_base){
         #ifdef USART1_PRESENT
         case USART1_BASE:
             return Nth(1);

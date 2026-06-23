@@ -20,8 +20,8 @@ using namespace ymd::hal;
 
 namespace ymd::lld{
 
-Nth timer_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
+Nth timer_to_nth(const uintptr_t p_inst_base){
+    switch(p_inst_base){
         #ifdef TIM1_PRESENT
         case TIM1_BASE: return Nth{1}; 
         #endif

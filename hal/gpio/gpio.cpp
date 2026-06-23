@@ -15,23 +15,23 @@ namespace ymd::hal{
 
 
 void Gpio::set_high(){
-    SPL_INST(inst_)->BSHR = static_cast<uint16_t>(pin_nth_);
+    SPL_INST(p_inst_)->BSHR = static_cast<uint16_t>(pin_nth_);
 }
 void Gpio::set_low(){
-    SPL_INST(inst_)->BCR = static_cast<uint16_t>(pin_nth_);
+    SPL_INST(p_inst_)->BCR = static_cast<uint16_t>(pin_nth_);
 }
 
 //BSHR的寄存器在BCR前 {1->BSHR; 0->BCR} 使用逻辑操作而非判断以提高速度
 void Gpio::write(const BoolLevel val){
-    *(&SPL_INST(inst_)->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);
+    *(&SPL_INST(p_inst_)->BCR - int(val.to_bool())) = static_cast<uint16_t>(pin_nth_);
 }
 
 BoolLevel Gpio::read() const noexcept {
-    return BoolLevel::from(SPL_INST(inst_)->INDR & static_cast<uint16_t>(pin_nth_));
+    return BoolLevel::from(SPL_INST(p_inst_)->INDR & static_cast<uint16_t>(pin_nth_));
 }
 
 Gpio::Gpio(void * inst, const PinSource pin):
-    inst_(inst)
+    p_inst_(inst)
 
     #if defined(CH32V20X) || defined(CH32V30X)
     ,pin_nth_(PinSource(
@@ -49,7 +49,7 @@ Gpio::Gpio(void * inst, const PinSource pin):
 
 void Gpio::set_mode(const GpioMode mode){
     const auto ctz_pin = __builtin_ctz(uint16_t(pin_nth_));
-    auto & pin_cfg = (ctz_pin >= 8 ? ((SPL_INST(inst_) -> CFGHR)) : ((SPL_INST(inst_) -> CFGLR)));
+    auto & pin_cfg = (ctz_pin >= 8 ? ((SPL_INST(p_inst_) -> CFGHR)) : ((SPL_INST(p_inst_) -> CFGLR)));
     uint32_t tempreg = pin_cfg;
     const auto shifts = ((ctz_pin % 8) * 4);
     tempreg &= (~(0xf << shifts));
@@ -57,15 +57,15 @@ void Gpio::set_mode(const GpioMode mode){
     pin_cfg = tempreg;
 
     if(mode == GpioMode::InPullUP){
-        SPL_INST(inst_) -> OUTDR |= uint16_t(pin_nth_);
+        SPL_INST(p_inst_) -> OUTDR |= uint16_t(pin_nth_);
     }else if(mode == GpioMode::InPullDN){
-        SPL_INST(inst_) -> OUTDR &= ~uint16_t(pin_nth_);
+        SPL_INST(p_inst_) -> OUTDR &= ~uint16_t(pin_nth_);
     }
 }
 
 
 
-static inline PortSource inst_to_portsource(const void * inst){
+static inline PortSource p_inst_to_portsource(const void * inst){
     const auto base = reinterpret_cast<uint32_t>(inst);
     switch(base){
         #ifdef GPIOA_PRESENT
@@ -123,7 +123,7 @@ static inline void * portsource_to_inst(PortSource port) {
 
 
 PortSource Gpio::port() const noexcept {
-    return inst_to_portsource(SPL_INST(inst_));
+    return p_inst_to_portsource(SPL_INST(p_inst_));
 }
 
 Gpio make_gpio(const PortSource port_source, const PinSource pin_source){

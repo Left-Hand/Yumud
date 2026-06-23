@@ -185,7 +185,7 @@ static void init_adc(){
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
             {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
             {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},  
-            {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T13_5},  
+            {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
 
             // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
@@ -1148,8 +1148,8 @@ void myesc_main(){
 
     clock::delay(2ms);
 
-    const auto temp_comp = hal::TemperatureCompensator::load();
-    iq16 temperature_ = 0;
+    const auto temp_trimer = hal::TemperatureTrimer::load();
+    iq16 die_celsius_ = 0;
 
 
     [[maybe_unused]] auto poll_repl_activity = [&]{
@@ -1189,12 +1189,13 @@ void myesc_main(){
         [[maybe_unused]] const auto length_hfi_response = 
             math::mag(all_state_.hfi_response_real_bin2, all_state_.hfi_response_imag_bin2) * 2;
 
-        temperature_ = lpf_10hz(temperature_, temp_comp.comp_u12(ADC1->IDATAR4));
+        die_celsius_ = lpf_10hz(die_celsius_, temp_trimer.parse_u12(ADC1->IDATAR4));
 
         all_state_.torque_curr_cmd = 2 + iq16(math::sin(now_secs)) * 0.2_iq20;
 
 
         if(true)DEBUG_PRINTLN(
+            die_celsius_,
             // s, c, 
             // pwm_u_.cvr(),
             // pwm_v_.cvr(),
@@ -1248,7 +1249,7 @@ void myesc_main(){
             // full_arr,
             // all_state_.exe_duration.count(),
             
-            // temperature_,
+            // die_celsius_,
             // flux_sensorless_ob.angle().to_turns(),
             // math::atan2pu(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]),
             // all_state_.alphabeta_curr_raw[0] / all_state_.alphabeta_curr_raw[1],

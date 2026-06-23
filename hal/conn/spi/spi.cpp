@@ -27,8 +27,8 @@ static constexpr SpiPrescaler spi_calc_prescaler(
 }
 
 namespace {
-[[maybe_unused]] static constexpr Nth _spi_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
+[[maybe_unused]] static constexpr Nth _spi_to_nth(const uintptr_t p_inst_base){
+    switch(p_inst_base){
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
             return Nth(1);
@@ -218,8 +218,8 @@ void spi_set_remap(const Nth nth, const SpiRemap remap){
 
 
 Spi::Spi(ral::SPI_Def * inst):
-    inst_(inst),
-    inst_nth_(_spi_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+    p_inst_(inst),
+    inst_nth_(_spi_to_nth(reinterpret_cast<uintptr_t>(p_inst_)))
     {;}
 
     
@@ -252,7 +252,7 @@ void Spi::alter_to_pins(const SpiRemap remap){
 void Spi::enable_hw_cs(const Enable en){
 
     #if 0
-    auto && cs_gpio = spi_to_hwcs_gpio(inst_, remap);
+    auto && cs_gpio = spi_to_hwcs_gpio(p_inst_, remap);
     cs_gpio.set_high();
 
     if(en == EN){
@@ -261,7 +261,7 @@ void Spi::enable_hw_cs(const Enable en){
         cs_gpio.outpp();
     }
 
-    inst_->enable_soft_cs(!en);
+    p_inst_->enable_soft_cs(!en);
     #else
     (void)(en);
     __builtin_trap();
@@ -289,33 +289,33 @@ HalResult Spi::init(const SpiConfig & cfg){
         .SPI_FirstBit = SPI_FirstBit_MSB,
         .SPI_CRCPolynomial = 7
     };
-	SPI_Init(reinterpret_cast<SPI_TypeDef *>(inst_), &SPI_InitStructure);
+	SPI_Init(reinterpret_cast<SPI_TypeDef *>(p_inst_), &SPI_InitStructure);
 
     #endif
 
 
     #if 0
-    inst_->enable_dualbyte(DISEN);
-    inst_ -> set_bitorder(MSB);
-    inst_->enable_soft_cs(EN);
-    inst_->set_cpol(true);
-    inst_->set_cpha(true);
-    inst_->enable_bidi(DISEN);
-    inst_->enable_i2s(DISEN);
+    p_inst_->enable_dualbyte(DISEN);
+    p_inst_ -> set_bitorder(MSB);
+    p_inst_->enable_soft_cs(EN);
+    p_inst_->set_cpol(true);
+    p_inst_->set_cpha(true);
+    p_inst_->enable_bidi(DISEN);
+    p_inst_->enable_i2s(DISEN);
     set_baudrate(cfg.baudrate);
-    inst_->CRCR.CRCPOLY = 7;
-    reinterpret_cast<SPI_TypeDef *>(inst_)->I2SCFGR &= ((uint16_t)0xF7FF);
+    p_inst_->CRCR.CRCPOLY = 7;
+    reinterpret_cast<SPI_TypeDef *>(p_inst_)->I2SCFGR &= ((uint16_t)0xF7FF);
     #endif
 
     if(const auto res = set_baudrate(cfg.baudrate);
         res.is_err()) return res;
 
-    inst_->enable_spi(EN);
-    while ((inst_->STATR.TXE) == RESET);
-    inst_->DATAR.DR = 0;
+    p_inst_->enable_spi(EN);
+    while ((p_inst_->STATR.TXE) == RESET);
+    p_inst_->DATAR.DR = 0;
 
-    while ((inst_->STATR.RXNE) == RESET);
-    inst_->DATAR.DR;
+    while ((p_inst_->STATR.RXNE) == RESET);
+    p_inst_->DATAR.DR;
 
     return HalResult::Ok();
 }
@@ -324,11 +324,11 @@ HalResult Spi::init(const SpiConfig & cfg){
 HalResult Spi::set_wordsize(const SpiWordSize wordsize){
     switch(wordsize){
         case SpiWordSize::OneByte:
-            inst_->enable_dualbyte(DISEN);
+            p_inst_->enable_dualbyte(DISEN);
             return HalResult::Ok();
             break;
         case SpiWordSize::TwoBytes:
-            inst_->enable_dualbyte(EN);
+            p_inst_->enable_dualbyte(EN);
             return HalResult::Ok();
             break;
     }
@@ -357,13 +357,13 @@ HalResult Spi::set_baudrate(const SpiBaudrate baud){
 }
 
 HalResult Spi::set_prescaler(const SpiPrescaler prescaler){
-    inst_ -> CTLR1.BR = std::bit_cast<uint8_t>(prescaler.kind());
+    p_inst_ -> CTLR1.BR = std::bit_cast<uint8_t>(prescaler.kind());
     return HalResult::Ok();
 }
 
 
 HalResult Spi::set_bitorder(const BitOrder bitorder){
-    inst_->set_bitorder(bitorder);
+    p_inst_->set_bitorder(bitorder);
     return HalResult::Ok();
 }
 

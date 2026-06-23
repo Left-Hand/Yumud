@@ -19,7 +19,7 @@ static constexpr size_t NUM_CAN_FILTERS = 14 * 2;
 #endif
 
 
-size_t can_to_nth(const uintptr_t inst_base);
+size_t can_to_nth(const uintptr_t p_inst_base);
 void can_request_initialization(void * p_inst, const Enable en);
 void can_request_sleep(void * p_inst, const Enable en);
 void can_enable_rcc(const size_t can_nth, const Enable en);

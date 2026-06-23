@@ -27,7 +27,7 @@ volatile uint16_t & timer_channel_find_cvr(
     const hal::TimerChannelSelection sel
 );
 
-Nth timer_to_nth(const uintptr_t inst_base);
+Nth timer_to_nth(const uintptr_t p_inst_base);
 
 [[nodiscard]] static constexpr bool is_basic_timer(const Nth nth){
     switch(nth.count()){

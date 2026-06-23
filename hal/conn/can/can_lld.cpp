@@ -371,8 +371,8 @@ hal::ClassicCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx
     return hal::ClassicCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
 }
 
-size_t can_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
+size_t can_to_nth(const uintptr_t p_inst_base){
+    switch(p_inst_base){
         #ifdef CAN1_PRESENT
         case CAN1_BASE:
             return size_t(1);

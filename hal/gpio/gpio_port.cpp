@@ -17,7 +17,7 @@ using namespace ymd::hal;
 
 void GpioPort::set_mode(const Nth nth, const GpioMode mode){
     Gpio gpio = Gpio(
-        inst_, 
+        p_inst_, 
         std::bit_cast<PinSource>(uint16_t(1 << nth.count()))
     );
     gpio.set_mode(mode);
@@ -56,7 +56,7 @@ void gpio_enable_rcc(const void * inst, const Enable en){
 }
 
 void GpioPort::enable_rcc(const Enable en){
-    gpio_enable_rcc(inst_, en);
+    gpio_enable_rcc(p_inst_, en);
 }
 
 void GpioPort::init(){
@@ -65,17 +65,17 @@ void GpioPort::init(){
 
 
 void GpioPort::set_by_mask(const PinMask mask){
-    SPL_INST(inst_)->BSHR = mask.to_u16();
+    SPL_INST(p_inst_)->BSHR = mask.to_u16();
 }
 
 void GpioPort::clr_by_mask(const PinMask mask){
-    SPL_INST(inst_)->BCR = mask.to_u16();
+    SPL_INST(p_inst_)->BCR = mask.to_u16();
 }
 
 void GpioPort::write_by_mask(const PinMask mask){
-    SPL_INST(inst_)->OUTDR = mask.to_u16();}
+    SPL_INST(p_inst_)->OUTDR = mask.to_u16();}
 PinMask GpioPort::read_mask(){
-    return PinMask::from_u16(SPL_INST(inst_)->INDR);
+    return PinMask::from_u16(SPL_INST(p_inst_)->INDR);
 }
 
 void GpioPort::write_nth(const Nth nth, const BoolLevel data){
