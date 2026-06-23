@@ -18,7 +18,10 @@
 namespace ymd::drivers{
 
 struct MS5611_Prelude{
-static constexpr auto I2C_DEFAULT_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xee >> 1);
+
+// CSB 的反补码 即 CSB 引脚接高电平时， 地址为 1110 110+(读写位)
+// CSB 的反补码 即 CSB 引脚接低电平时， 地址为 1110 111+(读写位)
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1110'110);
 static constexpr uint8_t D1_ADDR = 0x48;
 static constexpr uint8_t D2_ADDR = 0x58;
 static constexpr uint8_t RESET_COMMAND = 0x1e;
@@ -26,6 +29,22 @@ static constexpr uint8_t RESET_COMMAND = 0x1e;
 struct [[nodiscard]] Coeffs final{
     std::array<uint16_t, 6> c_table;
 
+    struct [[nodiscard]] Product final{
+        int64_t off;
+        int64_t sens;
+        int32_t temp;
+        int32_t pressure;
+
+        [[nodiscard]] constexpr float pressure_mbar() const noexcept {
+            return static_cast<float>(pressure) / 100.0f;
+        }
+
+        [[nodiscard]] constexpr float temperature_c() const noexcept {
+            return static_cast<float>(temp) / 100.0f;
+        }
+    };
+
+    
     struct [[nodiscard]] Intermediate final{
         uint32_t d1;
         int32_t dt;
@@ -67,20 +86,6 @@ struct [[nodiscard]] Coeffs final{
         };
     }
     
-    struct [[nodiscard]] Product final{
-        int64_t off;
-        int64_t sens;
-        int32_t temp;
-        int32_t pressure;
-
-        [[nodiscard]] constexpr float pressure_mbar() const noexcept {
-            return static_cast<float>(pressure) / 100.0f;
-        }
-
-        [[nodiscard]] constexpr float temperature_c() const noexcept {
-            return static_cast<float>(temp) / 100.0f;
-        }
-    };
 
     constexpr Product calc_product(const Intermediate intermediate) const noexcept {
         const int64_t off = (static_cast<uint32_t>(c_table[1]) << 16) + 
@@ -174,6 +179,21 @@ private:
     uint16_t checksum;
 };
 
+
+enum class [[nodiscard]] Error_Kind{
+    ChipIdMismatch,
+    NoPressure
 };
+
+DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
+};
+
+
+
 
 }

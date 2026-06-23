@@ -7,7 +7,7 @@
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/humiture/TCS34725/tcs34725.hpp"
+#include "drivers/illumination/tcs34725/tcs34725.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
 
 using namespace ymd;
@@ -16,15 +16,6 @@ using namespace ymd::drivers;
 
 #define SCL_PIN hal::PD<0>()
 #define SDA_PIN hal::PD<1>()
-void tcs34725_tb(OutputStream & logger, hal::I2cBase & i2c){
-    TCS34725 tcs{&i2c};
-    tcs.init(Default).examine();
-    tcs.start_conv().examine();
-    while(true){
-        logger.println(tcs.get_crgb());
-        clock::delay(30ms);
-    }
-}
 
 void tcs34725_main(){
     DEBUGGER_INST.init({
@@ -38,5 +29,12 @@ void tcs34725_main(){
 
     hal::SoftI2c i2c{scl_pin_, sda_pin_};
     i2c.init({hal::NearestFreq(100000)});
-    tcs34725_tb(DEBUGGER, i2c);
+
+    TCS34725 tcs{&i2c};
+    tcs.init(Default).examine();
+    tcs.start_conv().examine();
+    while(true){
+        DEBUG_PRINTLN(tcs.get_crgb());
+        clock::delay(30ms);
+    }
 }

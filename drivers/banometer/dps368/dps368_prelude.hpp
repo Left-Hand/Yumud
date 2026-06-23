@@ -60,7 +60,7 @@ struct [[nodiscard]] alignas(4) CalibrateCoeffs final{
     int32_t c21;
     int32_t c30;
 
-    void init_from_bytes(std::span<const uint8_t, 18> bytes){
+    constexpr void init_from_bytes(std::span<const uint8_t, 18> bytes){
         //compose coefficients from bytes content
         c0_half = ((uint32_t)bytes[0] << 4) | (((uint32_t)bytes[1] >> 4) & 0x0F);
         get_twos_complement(&c0_half, 12);

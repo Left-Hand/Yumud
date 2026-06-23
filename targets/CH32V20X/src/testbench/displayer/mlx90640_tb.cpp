@@ -8,7 +8,7 @@
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 
-#include "drivers/humiture/MLX90640/mlx90640.hpp"
+#include "drivers/infrared/mlx90640/mlx90640.hpp"
 #include "drivers/displayer/ST7789/st7789.hpp"
 
 #include <ranges>

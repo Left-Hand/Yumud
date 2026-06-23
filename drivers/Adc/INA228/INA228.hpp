@@ -1,6 +1,6 @@
 #pragma once
 
-#include "details/ina228_transport.hpp"
+#include "ina228_transport.hpp"
 
 namespace ymd::drivers{
 
