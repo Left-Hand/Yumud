@@ -31,7 +31,7 @@ static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
 
 
-static constexpr iq20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
+static constexpr iq20 PITCH_JOINT_POSITION_LIMIT = 0.2_iq16;
 
 
 static constexpr auto ADVANCED_BLINK_PERIOD_MS = 7000ms;
@@ -150,7 +150,7 @@ void nuedc_2025e_laser_main(){
 
     auto set_laser_dutycycle = [&](iq16 duty){
         DEBUG_PRINTLN("duty", duty);
-        duty = CLAMP2(duty, 0.99_r);
+        duty = CLAMP2(duty, 0.99_iq16);
         laser_pwm.set_dutycycle(ABS(duty));
     };
 
@@ -372,7 +372,7 @@ void nuedc_2025e_laser_main(){
         {
             const auto now_secs = clock::seconds();
             auto hesitate_spin_curve = [&](const iq16 t){
-                return (- 0.3_iq20 * (1.25_r + math::sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
+                return (- 0.3_iq20 * (1.25_iq16 + math::sinpu(3.0_iq16 * t)) / MACHINE_CTRL_FREQ);
             };
 
             const auto command = msgs::DeltaPosition{

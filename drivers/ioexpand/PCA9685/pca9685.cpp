@@ -28,6 +28,13 @@ using Vport = PCA9685::PCA9685_Vport;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+
+IResult<> PCA9685::init(const Config & cfg){
+    if(const auto res = init(); res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = reconf(cfg); res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
+
 IResult<> PCA9685::set_frequency(uint32_t freq, iq16 trim){
     if(const auto res = read_reg(regs_.mode1_reg);
         res.is_err()) return res;

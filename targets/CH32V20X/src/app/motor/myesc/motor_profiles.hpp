@@ -56,6 +56,9 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT1 = 2;
 static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 
 
+// static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 90ns;
+// static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 400ns;
+static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 1000ns;
 
 struct FnSwitches{
     using Self = FnSwitches;
@@ -137,6 +140,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     UvwCoord<iq20> uvw_curr_raw;
+    UvwCoord<iq20> uvw_curr_slowlp;
     iq20 unblance_curr_abs_lp;
     
     DqCoord<iq20> dq_curr_raw;
@@ -146,6 +150,7 @@ struct alignas(4) [[nodiscard]] AllState{
     AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
     AlphaBetaCoord<iq20> spinhfi_alphabeta_volt_gen;
 
+    DqCoord<iq20> dq_volt_integral;
     DqCoord<iq20> dq_volt_gen;
 
     AlphaBetaCoord<iq20> hfi_alphabeta_volt;
@@ -242,7 +247,7 @@ struct MotorProfile_3505{
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
-    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
+    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 600;
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
 
     using MagEncoder = drivers::VCE2755;

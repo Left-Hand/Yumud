@@ -157,6 +157,20 @@ void AdcPrimary::enable_continous(const Enable en){
     SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
+
+uint16_t AdcPrimary::regular_conv_result(){
+    return SPL_INST(inst_)->RDATAR;
+}
+uint16_t AdcPrimary::injected_conv_result(const size_t rank){
+    switch(rank){
+        case 1: return SPL_INST(inst_)->IDATAR1;
+        case 2: return SPL_INST(inst_)->IDATAR2;
+        case 3: return SPL_INST(inst_)->IDATAR3;
+        case 4: return SPL_INST(inst_)->IDATAR4;
+    }
+    __builtin_abort();
+}
+
 void AdcPrimary::enable_auto_inject(const Enable en){
     ADC_AutoInjectedConvCmd(SPL_INST(inst_), (en == EN));
 }
@@ -217,9 +231,6 @@ void AdcPrimary::enable_dma(const Enable en){
     RAL_INST(inst_)->CTLR2.DMA = (en == EN);
 }
 
-uint16_t AdcPrimary::get_conv_result(){
-    return SPL_INST(inst_)->RDATAR;
-}
 
 
 void AdcPrimary::set_regular_count(const uint8_t cnt){

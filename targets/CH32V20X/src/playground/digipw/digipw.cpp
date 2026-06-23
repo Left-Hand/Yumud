@@ -47,8 +47,8 @@ void test_sogi(){
         typename Spll::Config{
             .fs = isr_freq,
             .ac_freq = ac_freq, 
-            .b0_lpf = 222.2862_r,
-            .b1_lpf = -222.034_r,
+            .b0_lpf = 222.2862_iq16,
+            .b1_lpf = -222.034_iq16,
         }
     };
 
@@ -90,7 +90,7 @@ void test_sogi(){
     
             raw_angle = Angular<uq32>::from_turns(math::frac(ac_freq * tm));
             // raw_angle = iq16(TAU) * math::frac((ac_freq-4.2_r) * tm);
-            u0 = 32.0_r * raw_angle.sin() * (0.05_r * math::sin(8 * tm) + 1);
+            u0 = 32.0_iq16 * raw_angle.sin() * (0.05_iq16 * math::sin(8 * tm) + 1);
             spll.update(u0);
         }
 
@@ -205,7 +205,7 @@ void digipw_main(){
                 static constexpr auto dt = static_cast<iq20>(uq32::from_rcp(CHOPPER_FREQ));
                 mt += dt;
                 // mp1907 = iq16(0.5) + 0.1_r * math::sinpu(50 * time());
-                pwm.set_dutycycle(iq16(0.5) + 0.1_r * math::sinpu(50 * iq16(mt)));
+                pwm.set_dutycycle(iq16(0.5) + 0.1_iq16 * math::sinpu(50 * iq16(mt)));
                 // const auto duty = 0.3_r;
                 // mp1907 = CLAMP(duty, 0, 0.4_r);
                 break;

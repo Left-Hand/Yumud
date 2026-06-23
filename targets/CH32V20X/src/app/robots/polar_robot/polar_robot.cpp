@@ -95,7 +95,7 @@ public:
         last_angle_ = angle;
         const auto flat_packet = factory_.set_angle(
             angle,
-            0.47_r
+            0.47_iq16
         );
         write_packet(flat_packet);
     }
@@ -340,10 +340,10 @@ private:
 
 
 struct [[nodiscard]] GcodeParseState final{
-    static constexpr auto X_LIMIT = 0.2_r;
-    static constexpr auto Y_LIMIT = 0.2_r;
+    static constexpr auto X_LIMIT = 0.2_iq16;
+    static constexpr auto Y_LIMIT = 0.2_iq16;
 
-    static constexpr iq16 max_speed = 0.02_r;
+    static constexpr iq16 max_speed = 0.02_iq16;
     iq16 x2_limit;
     unit::Meter<iq16> x = unit::Meter<iq16>(0);
     unit::Meter<iq16> y = unit::Meter<iq16>(0);
@@ -465,12 +465,12 @@ void polar_robot_main(){
 
     PolarRobotActuator actuator_ = {
         {
-            .rho_transform_scale = 25_r,
+            .rho_transform_scale = 25_iq16,
             .theta_transform_scale = iq16(9.53 / TAU),
             .center_bias = 0.0_deg,
 
-            .rho_range = {0.0_r, 0.4_r},
-            .theta_range = {-10_r, 10_r}
+            .rho_range = {0.0_iq16, 0.4_iq16},
+            .theta_range = {-10_iq16, 10_iq16}
         },
         {
             .radius_joint_ = &radius_joint_, 
@@ -585,13 +585,13 @@ void polar_robot_main(){
 
         script::make_function("pxy", [&](const iq16 x, const iq16 y){
             curve_gen_.add_end_coord({
-                CLAMP2(x, 0.14_r),
-                CLAMP2(y, 0.14_r)
+                CLAMP2(x, 0.14_iq16),
+                CLAMP2(y, 0.14_iq16)
             });
         }),
 
         script::make_function("next", [&](){
-            static math::Vec2<iq16> coord = {0.1_r, 0};
+            static math::Vec2<iq16> coord = {0.1_iq16, 0};
             coord = coord.forward_90deg();
             actuator_.set_coord(regu_(coord));
         })

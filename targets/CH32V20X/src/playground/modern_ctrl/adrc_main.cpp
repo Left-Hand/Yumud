@@ -120,7 +120,7 @@ void adrc_main(){
     timer.start();
     while(true){
         const auto now_secs = clock::seconds();
-        u = -180 + 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));
+        u = -180 + 10 * sign(iq16(math::sinpu(now_secs * 0.5_iq16)));
         // u = now_secs / 1000;
         // u = -180 + CLAMP(10 * iq16(math::sinpu(now_secs * 0.5_r)), -5, 5);
         // u = 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));

@@ -90,11 +90,11 @@ struct Topology{
 	
 	std::vector<Edge> _edges;
 
-	void addEdge(const Edge & edge){
+	void add_edge(const Edge & edge){
 		_edges.push_back(edge);
 	}
 
-	void emplaceEdge(const size_t a, const size_t b, const iq16 cost){
+	void emplace_edge(const size_t a, const size_t b, const iq16 cost){
 		_edges.push_back({std::min(a, b), std::max(a,b),cost});
 	}
 	
@@ -106,7 +106,7 @@ struct Topology{
 		return false;
 	}
 	
-	void initR(MatrixR & mat) const noexcept {
+	void init_r(MatrixR & mat) const noexcept {
 		mat.fill(INF);
 		mat.cross(0);
 		for(const auto & [a, b, cost]: _edges){
@@ -115,7 +115,7 @@ struct Topology{
 		}
 	}
 	
-	void initS(MatrixS & mat) const noexcept {
+	void init_s(MatrixS & mat) const noexcept {
 		mat.fill(INF);
 		mat.cross(0);
 		for(const auto & [a, b, cost]: _edges){
@@ -143,13 +143,13 @@ struct Topology{
 		}
 	}
 	
-	iq16 bestCost(MatrixS & s, const size_t from, const size_t to){
+	iq16 best_cost(MatrixS & s, const size_t from, const size_t to){
 		return s[to - 1, from - 1];
 	}
 	
 
 	
-	void bestPath_impl(Path & path, const MatrixR & r, const size_t from, const size_t to) const noexcept {
+	void bestpath_impl(Path & path, const MatrixR & r, const size_t from, const size_t to) const noexcept {
 		auto hop = r[to - 1, from - 1];
 		
 		if(to == hop){
@@ -157,14 +157,14 @@ struct Topology{
 			return;
 		}else{
 			path.push_back(hop);
-			bestPath_impl(path, r, from, hop);
+			bestpath_impl(path, r, from, hop);
 		}
 	}
 
 	void bestPath(Path & path, const MatrixR & r, const size_t from, const size_t to) const noexcept {
 		path.push_back(to);
 
-		bestPath_impl(path, r, from, to);
+		bestpath_impl(path, r, from, to);
 	}
 };
 
@@ -210,26 +210,26 @@ void floyd_main(){
 	Topology tp;
 	
 
-	tp.emplaceEdge(1, 2, 0.5_r);
-	tp.emplaceEdge(1, 3, 2.0_r);
-	tp.emplaceEdge(1, 4, 1.5_r);
+	tp.emplace_edge(1, 2, 0.5_iq16);
+	tp.emplace_edge(1, 3, 2.0_iq16);
+	tp.emplace_edge(1, 4, 1.5_iq16);
 	
-	tp.emplaceEdge(2, 5, 1.2_r);
-	tp.emplaceEdge(2, 6, 9.2_r);
+	tp.emplace_edge(2, 5, 1.2_iq16);
+	tp.emplace_edge(2, 6, 9.2_iq16);
 
-	tp.emplaceEdge(3, 5, 5.0_r);
-	tp.emplaceEdge(3, 7, 3.1_r);
+	tp.emplace_edge(3, 5, 5.0_iq16);
+	tp.emplace_edge(3, 7, 3.1_iq16);
 
-	tp.emplaceEdge(4, 7, 4.0_r);
+	tp.emplace_edge(4, 7, 4.0_iq16);
 	
-	tp.emplaceEdge(5, 6, 6.7_r);
+	tp.emplace_edge(5, 6, 6.7_iq16);
 
-	tp.emplaceEdge(6, 7, 15.6_r);
+	tp.emplace_edge(6, 7, 15.6_iq16);
 	
 	MatrixR r;
 	MatrixS s;
-	tp.initR(r);
-	tp.initS(s);
+	tp.init_r(r);
+	tp.init_s(s);
 	
 	for(size_t i = 0; i < 7; i++){
 		tp.forward(r, s, i);	
@@ -242,7 +242,7 @@ void floyd_main(){
 	
 	auto from = 3;
 	auto to = 6;
-	auto cost = tp.bestCost(s, from, to);
+	auto cost = tp.best_cost(s, from, to);
 	tp.bestPath(path, r, from, to);
 	// std::endl
 	DEBUGGER << cost << std::endl;

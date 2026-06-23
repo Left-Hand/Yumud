@@ -241,7 +241,31 @@ constexpr uq16 mysqrt32u(const uq16 x){
     return res;
 }
 
-static constexpr auto CURRENT_UNBLANCE_THRESHOLD = CURRENT_AMPS_PER_ADC_LSB * 8;
+static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
+
+static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
+    const auto abs_ref = math::abs(ref);
+    if(abs_ref < CURRENT_NOISE_STDVAR) return false;
+    const auto abs_meas = math::abs(meas);
+    return (abs_meas * 30 < abs_ref) and (abs_meas < CURRENT_NOISE_STDVAR);
+}
+
+struct DebounceState{
+    uint32_t count;
+
+    static constexpr uint32_t MAX_VALUE = 2000;
+    constexpr bool is_positive() const {
+        return count == MAX_VALUE;
+    }
+
+    constexpr void add_sample(const bool s){
+        if(s){
+            count = std::min(MAX_VALUE, count + 8);
+        }else{
+            count = uint32_t(std::max(0, int(count - 1)));
+        }
+    }
+};
 
 void myesc_main(){
     DBG_UART.init({
@@ -270,9 +294,6 @@ void myesc_main(){
 
     // #region 初始化定时器
 
-    // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 90ns;
-    // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 400ns;
-    static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 1000ns;
     static constexpr auto DEADTIME_NANOS = MOS_1C840L_500MA_BEST_DEADTIME_NS;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADTIME = 350ns;
     timer.bdtr().init({DEADTIME_NANOS});
@@ -466,15 +487,8 @@ void myesc_main(){
 
     [[maybe_unused]] static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
     // static constexpr iq20 HFI_VOLT = MIN((, 2);
-    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.3_iq20;
+    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.8_iq20;
     // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0;
-
-
-    // PANIC{PI_CONTROLLER_COEFFS};
-
-    auto d_pi_ctrl_ = PI_CONTROLLER_COEFFS.to_pi_controller();
-    auto q_pi_ctrl_ = PI_CONTROLLER_COEFFS.to_pi_controller();
-
 
     #if 0
     constexpr auto FLUX_SENSORLESS_OB_COEFFS = dsp::motor_ctl::NonlinearFluxObserver::Config{
@@ -588,6 +602,9 @@ void myesc_main(){
     AllState & all_state_ = *p_all_state_;
     all_state_.reset();
 
+    DebounceState u_disconn_dbs{0};
+    DebounceState v_disconn_dbs{0};
+
     [[maybe_unused]] auto current_sense = [&](AllState & state){
         const auto uvw_current_u12x3 = get_uvw_current_u12x3();
         
@@ -635,14 +652,22 @@ void myesc_main(){
                 (int32_t(uvw_current_u12x3[2]) - int32_t((dc_cal_state.uvw_current_bits_offset[2]))),
         };
 
-        state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
-        state.alphabeta_curr_fastlp[0] = lpf_1000hz(state.alphabeta_curr_fastlp[0], state.alphabeta_curr_raw[0]);
-        state.alphabeta_curr_fastlp[1] = lpf_1000hz(state.alphabeta_curr_fastlp[1], state.alphabeta_curr_raw[1]);
+        // state.uvw_curr_slowlp[0] = lpf_50hz(state.uvw_curr_slowlp[0], state.uvw_curr_raw[0]);
+        // state.uvw_curr_slowlp[1] = lpf_50hz(state.uvw_curr_slowlp[1], state.uvw_curr_raw[1]);
+        // state.uvw_curr_slowlp[2] = lpf_50hz(state.uvw_curr_slowlp[2], state.uvw_curr_raw[2]);
 
+        u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
+        v_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[1], state.uvw_curr_raw[0] + state.uvw_curr_raw[2]));
+        
         state.unblance_curr_abs_lp = lpf_50hz(
             state.unblance_curr_abs_lp,
             math::abs(state.uvw_curr_raw.numeric_sum())
         );
+
+
+        state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
+        state.alphabeta_curr_fastlp[0] = lpf_1000hz(state.alphabeta_curr_fastlp[0], state.alphabeta_curr_raw[0]);
+        state.alphabeta_curr_fastlp[1] = lpf_1000hz(state.alphabeta_curr_fastlp[1], state.alphabeta_curr_raw[1]);
         //#endregion
     };
     [[maybe_unused]] auto mechanical_loop = [&](AllState & state){
@@ -792,7 +817,7 @@ void myesc_main(){
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = 0.20_iq16;
+            const auto speed = -0.20_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -846,12 +871,7 @@ void myesc_main(){
         if(do_mtpa){
         }
 
-        [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
-            return DqCoord<iq20>{
-                .d = d_pi_ctrl_(dq_curr_setp.d - dq_curr_raw.d),
-                .q = q_pi_ctrl_(dq_curr_setp.q - dq_curr_raw.q)
-            };
-        };
+
 
         #if 1
         [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
@@ -890,7 +910,7 @@ void myesc_main(){
                     hfi_response_real_bin2 += -0.003_iq20;
                     hfi_response_imag_bin2 += -0.013_iq20;
 
-                    inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
+                    // inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
                     // hfi_response_real_bin2 = std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20));
 
                     // const auto inv_mag = math::inv_mag(hfi_response_real_bin2, hfi_response_imag_bin2);
@@ -922,6 +942,41 @@ void myesc_main(){
             }
         };
         #endif
+
+        [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
+            static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.3_iq20;
+            constexpr iq20 ctrl_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
+            
+            const auto kp = PI_CONTROLLER_COEFFS.kp;
+            const auto ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
+
+            iq20 d_volt_output;
+            iq20 q_volt_output;
+
+            {
+                const iq20 volt_limit = ctrl_volt_limit;
+                const iq20 err = iq20(dq_curr_setp[0] - dq_curr_raw[0]);
+                const iq20 kp_contribute = kp * err;
+                d_volt_output = CLAMP2(kp_contribute + state.dq_volt_integral[0],  volt_limit);
+                state.dq_volt_integral[0] = CLAMP(state.dq_volt_integral[0] + err * ki_discrete, 
+                    - volt_limit - d_volt_output ,  
+                    volt_limit - d_volt_output);
+            }
+
+            {
+                const iq20 volt_limit = heightleg(ctrl_volt_limit, d_volt_output);
+                const iq20 err = iq20(dq_curr_setp[1] - dq_curr_raw[1]);
+                const iq20 kp_contribute = kp * err;
+                q_volt_output = CLAMP2(kp_contribute + state.dq_volt_integral[1],  volt_limit);
+                state.dq_volt_integral[1] = CLAMP(state.dq_volt_integral[1] + err * ki_discrete, 
+                    - volt_limit - q_volt_output ,  
+                    volt_limit - q_volt_output);
+            }
+            return DqCoord<iq20>{
+                d_volt_output,
+                q_volt_output
+            };
+        };
 
         auto dq_volt_gen = generate_dq_volt_by_pi_ctrl();
 
@@ -1136,17 +1191,25 @@ void myesc_main(){
 
         temperature_ = lpf_10hz(temperature_, temp_comp.comp_u12(ADC1->IDATAR4));
 
+        all_state_.torque_curr_cmd = 2 + iq16(math::sin(now_secs)) * 0.2_iq20;
+
 
         if(true)DEBUG_PRINTLN(
             // s, c, 
             // pwm_u_.cvr(),
             // pwm_v_.cvr(),
             // pwm_w_.cvr(),
-            all_state_.uvw_curr_raw.u,
-            all_state_.uvw_curr_raw.v,
-            all_state_.uvw_curr_raw.w,
+            // all_state_.uvw_curr_raw.u,
+            // all_state_.uvw_curr_raw.v + all_state_.uvw_curr_raw.w,
+            // all_state_.uvw_curr_raw.v,
+            // all_state_.uvw_curr_raw.w,
+            // all_state_.uvw_curr_slowlp.u,
+            // all_state_.uvw_curr_slowlp.v + all_state_.uvw_curr_slowlp.w,
+            // u_disconn_dbs.count,
+            // v_disconn_dbs.count,
+            // judge_is_disconn(all_state_.uvw_curr_slowlp.u,all_state_.uvw_curr_slowlp.v + all_state_.uvw_curr_slowlp.w),
+            // judge_is_disconn(all_state_.uvw_curr_slowlp.v,all_state_.uvw_curr_slowlp.u + all_state_.uvw_curr_slowlp.w),
             all_state_.unblance_curr_abs_lp,
-            CURRENT_UNBLANCE_THRESHOLD,
             // all_state_.alphabeta_volt_gen.alpha,
             // all_state_.alphabeta_volt_gen.beta,
             // all_state_.dq_volt_gen.d,
@@ -1156,23 +1219,23 @@ void myesc_main(){
             // flux_sensorless_ob.all_state_().flux_state_mf[1],
             // flux_sensorless_ob.all_state_().v_alphabeta_last[0],
             // flux_sensorless_ob.all_state_().v_alphabeta_last[1],
-            all_state_.torque_curr_cmd,
+            // all_state_.torque_curr_cmd,
             // all_state_.uvw_curr_raw,
-            // all_state_.dq_volt_gen,
+            all_state_.dq_volt_gen.d,
+            all_state_.dq_volt_gen.q,
             // all_state_.selected_elec_angle.to_turns(),
-            // all_state_.dq_curr_raw.d,
+            all_state_.dq_curr_raw.d,
+            all_state_.dq_curr_raw.q,
+
             // all_state_.spinhfi_alphabeta_volt_gen,
             // all_state_.hfi_response_real_bin1,
             // all_state_.hfi_response_imag_bin1,
             all_state_.hfi_response_real_bin2,
             all_state_.hfi_response_imag_bin2,
-            all_state_.openloop_elec_angle.to_turns(),
+            // all_state_.openloop_elec_angle.to_turns(),
             // hfi_bin2_angle.to_turns(),
-            all_state_.hfi_elec_angle.to_turns(),
+            // all_state_.hfi_elec_angle.to_turns(),
 
-            // math::sqrt(s),
-            // math::inv_sqrt(s),
-            // math::inv_mag(s, s),
             // hfi_idx,
             // all_state_.alphabeta_curr_raw[0],
             // all_state_.alphabeta_curr_raw[1],

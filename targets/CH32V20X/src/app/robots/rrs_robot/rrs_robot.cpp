@@ -191,9 +191,9 @@ private:
     RRS3_Kinematics rrs3_kine_;
 
     std::array<Angular<iq16>,3> r_bias_ = {
-        Angular<iq16>::from_radians(1.15_r),
-        Angular<iq16>::from_radians(0.99_r),
-        Angular<iq16>::from_radians(1.25_r)
+        Angular<iq16>::from_radians(1.15_iq16),
+        Angular<iq16>::from_radians(0.99_iq16),
+        Angular<iq16>::from_radians(1.25_iq16)
     };
 
     ServoSetter servo_setter_;
@@ -213,10 +213,10 @@ void rrs3_robot_main(){
 
 
     constexpr const Config cfg{
-        .base_length = 0.081_r,
-        .link_length = 0.128_r,
-        .base_plate_radius = 0.050_r,
-        .top_plate_radius = 0.08434_r
+        .base_length = 0.081_iq16,
+        .link_length = 0.128_iq16,
+        .base_plate_radius = 0.050_iq16,
+        .top_plate_radius = 0.08434_iq16
     };
 
     Environment env{};
@@ -250,13 +250,13 @@ void rrs3_robot_main(){
 
     auto ctrl = [&]{
         const auto t = clock::seconds();
-        const auto [s,c] = math::sincospu(0.7_r * t);
+        const auto [s,c] = math::sincospu(0.7_iq16 * t);
         
         actuator_.set_gest(
             RRS3_RobotActuator::Gesture::from({
-                .yaw = Angular<iq16>::from_radians(3.0_r * s), 
-                .pitch = Angular<iq16>::from_radians(3.0_r * c), 
-                .height = 0.14_r
+                .yaw = Angular<iq16>::from_radians(3.0_iq16 * s), 
+                .pitch = Angular<iq16>::from_radians(3.0_iq16 * c), 
+                .height = 0.14_iq16
             })
         );
     };

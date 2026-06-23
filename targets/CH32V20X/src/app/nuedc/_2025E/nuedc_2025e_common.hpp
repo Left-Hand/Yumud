@@ -19,8 +19,8 @@ static constexpr size_t CANFRAME_QUEUE_SIZE = 8;
 
 static constexpr auto MAX_STATIC_SHOT_ERR = 0.007_iq20; 
 static constexpr auto PITCH_SEEKING_ANGLE = 0.012_iq20;
-static constexpr iq20 PITCH_MAX_POSITION = 0.06_r;
-static constexpr iq20 PITCH_MIN_POSITION = -0.03_r;
+static constexpr iq20 PITCH_MAX_POSITION = 0.06_iq16;
+static constexpr iq20 PITCH_MIN_POSITION = -0.03_iq16;
 
 static constexpr size_t MACHINE_CTRL_FREQ = 200;
 static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;

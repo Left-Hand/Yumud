@@ -31,11 +31,7 @@ public:
     ):
         i2c_drv_{i2c, i2c_addr}{;}
 
-    IResult<> init(const Config & cfg){
-        if(const auto res = init(); res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = reconf(cfg); res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
+    IResult<> init(const Config & cfg);
     IResult<> reconf(const Config & cfg){
         return set_frequency(cfg.freq, cfg.trim);
     }

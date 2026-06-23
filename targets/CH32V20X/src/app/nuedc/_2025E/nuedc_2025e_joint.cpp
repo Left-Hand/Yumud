@@ -51,7 +51,7 @@ using robots::NodeRole;
 using robots::MsgFactory;
 
 
-static constexpr auto SVPWM_MAX_VOLT = 3.87_r;
+static constexpr auto SVPWM_MAX_VOLT = 3.87_iq16;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
@@ -320,14 +320,14 @@ void nuedc_2025e_joint_main(){
                 case NodeRole::YawJoint:
                     return Leso::Config{
                         .fs = FOC_FREQ,
-                        .b0 = 0.5_r,
-                        .w = 0.4_r
+                        .b0 = 0.5_iq16,
+                        .w = 0.4_iq16
                     };
                 case NodeRole::PitchJoint:
                     return Leso::Config{
                         .fs = FOC_FREQ,
-                        .b0 = 1.4_r,
-                        .w = 0.2_r
+                        .b0 = 1.4_iq16,
+                        .w = 0.2_iq16
                     };
 
                 default:
@@ -339,13 +339,13 @@ void nuedc_2025e_joint_main(){
     PdCtrlLaw pd_ctrl_law_ = [&]{ 
         switch(self_node_role_){
             case NodeRole::YawJoint: 
-                return PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
-                // return PdCtrlLaw{.kp = 148.581_r, .kd = 14.7_r};
-                // return PdCtrlLaw{.kp = 128.581_r, .kd = 12.7_r};
+                return PdCtrlLaw{.kp = 128.581_iq16, .kd = 18.7_iq16};
+                // return PdCtrlLaw{.kp = 148.581_iq16, .kd = 14.7_iq16};
+                // return PdCtrlLaw{.kp = 128.581_iq16, .kd = 12.7_iq16};
             case NodeRole::PitchJoint:
-                return PdCtrlLaw{.kp = 36.281_r, .kd = 1.7_r};
-                // return PdCtrlLaw{.kp = 39.281_r, .kd = 1.2_r};
-                // return SqrtPdCtrlLaw{.kp = 166.281_r, .ks = 20.0_r, .kd = 30.4_r};
+                return PdCtrlLaw{.kp = 36.281_iq16, .kd = 1.7_iq16};
+                // return PdCtrlLaw{.kp = 39.281_iq16, .kd = 1.2_iq16};
+                // return SqrtPdCtrlLaw{.kp = 166.281_iq16, .ks = 20.0_iq16, .kd = 30.4_iq16};
             default: 
                 PANIC();
         }

@@ -10,10 +10,10 @@ namespace ymd::digipw{
 
 struct [[nodiscard]] PiController {
     struct [[nodiscard]] Cofficients { 
-        iq16 kp;                // 比例系数
-        iq16 ki_discrete;       // 离散化积分系数（Ki * Ts）
-        iq16 max_out;          // 最大输出电压限制
-        iq16 err_int_max;       // 积分项最大限制（抗饱和）
+        iq20 kp;                // 比例系数
+        iq20 ki_discrete;       // 离散化积分系数（Ki * Ts）
+        iq20 max_out;          // 最大输出电压限制
+        iq20 err_int_max;       // 积分项最大限制（抗饱和）
 
         constexpr PiController to_pi_controller() const noexcept {
             return PiController(*this);
@@ -27,13 +27,11 @@ struct [[nodiscard]] PiController {
         }
     };
 
-    using intergal_t = iq20;
-
     constexpr PiController(const Cofficients& cfg):
         kp_(cfg.kp),
         ki_discrete_(cfg.ki_discrete),
         max_out_(cfg.max_out),
-        err_int_max_(MIN(static_cast<intergal_t>(cfg.err_int_max), std::numeric_limits<intergal_t>::max()))
+        err_int_max_(MIN(static_cast<iq20>(cfg.err_int_max), std::numeric_limits<iq20>::max()))
     {}
 
     constexpr void reset(){
@@ -41,21 +39,21 @@ struct [[nodiscard]] PiController {
     }
 
     constexpr auto operator()(const iq20 err) {
-        // iq16 output = CLAMP2( + ki_discrete_ * iq16(err_int_), max_out_);
-        const iq16 kp_contribute = kp_ * iq16(err);
-        // const auto kp_contribute = kp_ * iq16(err);
-        iq16 output = CLAMP2(kp_contribute + ki_discrete_ * iq16(err_int_), max_out_);
-        err_int_ = CLAMP(err_int_ + err, -err_int_max_ - output , err_int_max_ - output);
+        // iq20 output = CLAMP2( + ki_discrete_ * iq20(err_int_), max_out_);
+        const iq20 kp_contribute = kp_ * iq20(err);
+        // const auto kp_contribute = kp_ * iq20(err);
+        iq20 output = CLAMP2(kp_contribute + err_int_, max_out_);
+        err_int_ = CLAMP(err_int_ + err * ki_discrete_, -max_out_ - output , max_out_ - output);
         // err_int_ = CLAMP(err_int_ + err, -err_int_max_, err_int_max_);
         return output;
     }
 
 public:
-    iq16 kp_;                // 比例系数
-    iq16 ki_discrete_;       // 离散化积分系数（Ki * Ts）
-    iq16 max_out_;          // 最大输出电压限制
-    intergal_t err_int_max_;       // 积分项最大限制（抗饱和）
-    intergal_t err_int_;           // 误差积分累加器
+    iq20 kp_;                // 比例系数
+    iq20 ki_discrete_;       // 离散化积分系数（Ki * Ts）
+    iq20 max_out_;          // 最大输出电压限制
+    iq20 err_int_max_;       // 积分项最大限制（抗饱和）
+    iq20 err_int_;           // 误差积分累加器
 };
 
 }

@@ -97,14 +97,7 @@ struct AdcIrqHandler{
 class AdcPrimary: public Adc_Prelude{
 public:
     explicit AdcPrimary(void * inst):
-        inst_(inst),
-        injected_channels_{
-            AdcInjectedChannel(inst_, 1),
-            AdcInjectedChannel(inst_, 2),
-            AdcInjectedChannel(inst_, 3),
-            AdcInjectedChannel(inst_, 4)
-        }{;}
-
+        inst_(inst){;}
 
     struct Config{
         Mode mode = Mode::Independent;
@@ -114,12 +107,6 @@ public:
         const std::initializer_list<AdcChannelConfig> & regular_list,
         const std::initializer_list<AdcChannelConfig> & injected_list, 
         const Config & cfg);
-
-    template<size_t I>
-    requires ((I >= 1) and (I <= 4))
-    AdcInjectedChannel & inj(){
-        return injected_channels_[I - 1];
-    }
 
 
     void set_regular_channels(const std::initializer_list<AdcChannelConfig> & regular_list);
@@ -180,7 +167,8 @@ public:
 
     void enable_dma(const Enable en);
 
-    uint16_t get_conv_result();
+    uint16_t regular_conv_result();
+    uint16_t injected_conv_result(const size_t rank);
 
 protected:
     void * inst_;
@@ -193,7 +181,7 @@ protected:
     uint8_t num_regular_ = 0;
     uint8_t num_injected_ = 0;
 
-    AdcInjectedChannel injected_channels_[4];
+    // AdcInjectedChannel injected_channels_[4];
 
 
     [[nodiscard]] uint32_t get_max_value() const noexcept {

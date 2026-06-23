@@ -166,9 +166,9 @@ public:
 private:
     // SPLL_1PH_SOGI spll1;
 
-    static constexpr iq16 default_ac_freq = 50.0_r;
-    static constexpr iq16 default_b0_lpf = 222.2862_r;
-    static constexpr iq16 default_b1_lpf = -222.034_r;
+    static constexpr iq16 default_ac_freq = 50.0_iq16;
+    static constexpr iq16 default_b0_lpf = 222.2862_iq16;
+    static constexpr iq16 default_b1_lpf = -222.034_iq16;
     // static constexpr int volt_scale_bits = 0;
 
 

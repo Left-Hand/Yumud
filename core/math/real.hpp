@@ -5,16 +5,6 @@
 #include "fixed/fixed.hpp"
 
 
-namespace ymd::literals{
-[[nodiscard]] consteval iq16 operator""_r(long double x){
-    return iq16(x);
-}
-
-[[nodiscard]] consteval iq16 operator""_r(unsigned long long x){
-    return iq16(x);
-}
-
-}
 
 using namespace ymd::literals;
 

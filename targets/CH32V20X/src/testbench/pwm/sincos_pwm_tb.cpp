@@ -155,8 +155,6 @@ void sincos_pwm_main(){
 
     adc.enable_auto_inject(DISEN);
 
-    auto & inj = adc.inj<1>();
-
     auto trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
 
@@ -187,6 +185,6 @@ void sincos_pwm_main(){
         pwm_a.set_dutycycle(static_cast<iq16>(st));
         pwm_b.set_dutycycle(static_cast<iq16>(ct));
 
-        DEBUG_PRINTLN_IDLE(st, ct, inj.get_perunit());
+        DEBUG_PRINTLN_IDLE(st, ct, hal::adc1.injected_conv_result(1));
     }
 }

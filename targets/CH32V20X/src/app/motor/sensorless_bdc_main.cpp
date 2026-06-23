@@ -30,9 +30,9 @@ using namespace ymd;
 
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
-static constexpr iq16 SAMPLE_RES = 0.008_r;
+static constexpr iq16 SAMPLE_RES = 0.008_iq16;
 static constexpr iq16 INA240_BETA = 100;
-static constexpr iq16 VOLT_BAIS = 1.65_r;
+static constexpr iq16 VOLT_BAIS = 1.65_iq16;
 
 
 
@@ -210,7 +210,7 @@ void at8222_tb(){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 watch_gpio.write(~watch_gpio.read());
-                volt = hal::adc1.inj<1>().get_perunit();
+                volt = hal::adc1.injected_conv_result(1);
                 const auto current_raw = volt_2_current(volt);
 
                 lpf.update(current_raw);
@@ -225,7 +225,7 @@ void at8222_tb(){
 
                 ect.update(bool(bpf.output() > 0));
 
-                [[maybe_unused]] const auto pos = ect.count() * 0.01_r;
+                [[maybe_unused]] const auto pos = ect.count() * 0.01_iq16;
 
                 // static constexpr auto kp = 267.0_r;
                 // static constexpr auto kd = 0.0_r;
@@ -235,10 +235,10 @@ void at8222_tb(){
                 // pwm_pos = 0.87_r * abs(math::sinpu(time()));
                 // pwm_pos = 0.7_r + 0.17_r * abs(math::sinpu(time()));
                 // pwm_pos = 0.13_r + 0.817_r * abs(math::sinpu(time()));
-                pwm_pos.set_dutycycle(0_r);
+                pwm_pos.set_dutycycle(0_iq16);
                 // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
                 // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
-                pwm_neg.set_dutycycle(0.9_r);
+                pwm_neg.set_dutycycle(0.9_iq16);
                 break;}
             default: break;
             }
@@ -268,10 +268,10 @@ void at8222_tb(){
 
         #if TEST_MODE == 0
         spd_targ = 12;
-        pos_targ = 10.0_r * now_secs + 2*frac(now_secs);
+        pos_targ = 10.0_iq16 * now_secs + 2*frac(now_secs);
         #elif TEST_MODE == 1
-        spd_targ = 7.0_r + 1.0_r * math::sinpu(1.3_r * now_secs);
-        pos_targ = 7.0_r * now_secs + iq16(-1.0/6) * math::cospu(1.3_r * now_secs);
+        spd_targ = 7.0_iq16 + 1.0_iq16 * math::sinpu(1.3_iq16 * now_secs);
+        pos_targ = 7.0_iq16 * now_secs + iq16(-1.0/6) * math::cospu(1.3_iq16 * now_secs);
         #endif
         // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
         // spd_targ = 9.0_r + 1.0_r * -1;
@@ -281,7 +281,7 @@ void at8222_tb(){
         // trackin_sig = iq16(int(0.2_r * sin(now_secs * 3) * 32)) / 32;
         // trackin_sig = iq16(int(0.2_r * now_secs * 32)) / 32;
         // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * now_secs)));
-        trackin_sig = 10 * CLAMP2(math::sinpu(7 * now_secs), 0.5_r);
+        trackin_sig = 10 * CLAMP2(math::sinpu(7 * now_secs), 0.5_iq16);
         // trackin_sig = tpzpu(t);
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);

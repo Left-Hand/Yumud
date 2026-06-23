@@ -23,11 +23,11 @@ auto build_norm_vec3_from_quat(
 using namespace ymd;
 
 void test_q14(){
-    constexpr iq14 a = 1_r;
-    constexpr iq14 b = 0.5_r;
+    constexpr iq14 a = 1_iq16;
+    constexpr iq14 b = 0.5_iq16;
     constexpr auto c = a * b;
 
-    static_assert(c == 0.5_r);
+    static_assert(c == 0.5_iq16);
 }   
 
 #if 0

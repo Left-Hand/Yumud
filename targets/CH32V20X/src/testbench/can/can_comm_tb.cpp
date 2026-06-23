@@ -29,8 +29,8 @@ void can_tb( hal::Can & can, bool is_tx){
     }
 
     {
-        iq16 data = 0.09_r;
-        iq16 data2 = 0.99_r;
+        iq16 data = 0.09_iq16;
+        iq16 data2 = 0.99_iq16;
         uint32_t id = 0x5678;
         const auto frame = hal::ClassicCanFrame::from_parts(
             hal::CanExtId::from_bits(id), 

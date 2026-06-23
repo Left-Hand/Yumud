@@ -120,14 +120,14 @@ __fast_inline static constexpr float fast_cbrtf(float x) {
 }
 
 __fast_inline static constexpr auto xyz_gamma(const iq16 x) -> iq16{
-    return (x > 0.008856_r) ? iq16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
+    return (x > 0.008856_iq16) ? iq16::from(fast_cbrtf(float(x))) : ((x * 7.787037_iq16) + 0.137931_iq16);
 }
 
 __fast_inline static constexpr auto inv_xyz_gamma_to8(const uq16 x) -> uint8_t{
-    if((x > 0.0031308_r)) 
-        return __USAT8(uint8_t(((1.055_r * 255) * math::pow(x, 0.416666_r)) - (0.055_r * 255)));
+    if((x > 0.0031308_iq16)) 
+        return __USAT8(uint8_t(((1.055_iq16 * 255) * math::pow(x, 0.416666_iq16)) - (0.055_iq16 * 255)));
     else
-        return __USAT8(uint8_t(x * 12.92_r * 255));
+        return __USAT8(uint8_t(x * 12.92_iq16 * 255));
 }
 
 
@@ -135,15 +135,15 @@ __fast_inline static constexpr std::tuple<iq16, iq16, iq16> lab888_to_xyz(const 
     const auto l = lab.l;
     const auto a = lab.a;
     const auto b = lab.b;
-    const iq16 x = ((l + 16) * 0.008621_r) + (a * 0.002_r);
-    const iq16 y = ((l + 16) * 0.008621_r);
-    const iq16 z = ((l + 16) * 0.008621_r) - (b * 0.005_r);
+    const iq16 x = ((l + 16) * 0.008621_iq16) + (a * 0.002_iq16);
+    const iq16 y = ((l + 16) * 0.008621_iq16);
+    const iq16 z = ((l + 16) * 0.008621_iq16) - (b * 0.005_iq16);
 
 
     return {
-        ((x > 0.206897_r) ? (x * x * x) : ((0.128419_r * x) - 0.017713_r)) * 095.047_r,
-        ((y > 0.206897_r) ? (y * y * y) : ((0.128419_r * y) - 0.017713_r)) * 100.000_r,
-        ((z > 0.206897_r) ? (z * z * z) : ((0.128419_r * z) - 0.017713_r)) * 108.883_r
+        ((x > 0.206897_iq16) ? (x * x * x) : ((0.128419_iq16 * x) - 0.017713_iq16)) * 095.047_iq16,
+        ((y > 0.206897_iq16) ? (y * y * y) : ((0.128419_iq16 * y) - 0.017713_iq16)) * 100.000_iq16,
+        ((z > 0.206897_iq16) ? (z * z * z) : ((0.128419_iq16 * z) - 0.017713_iq16)) * 108.883_iq16
     };
 }
 
@@ -154,9 +154,9 @@ __fast_inline static constexpr XYZ<iq16> rgb888_to_xyz(const RGB888 & rgb){
     const iq16 g_lin = iq16(xyz_table[g]) >> 8;
     const iq16 b_lin = iq16(xyz_table[b]) >> 8;
 
-    const iq16 x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * iq16(1.0f / 095.047f);
-    const iq16 y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * iq16(1.0f / 100.000f);
-    const iq16 z = ((r_lin * 0.0193_r) + (g_lin * 0.1192_r) + (b_lin * 0.9505_r)) * iq16(1.0f / 108.883f);
+    const iq16 x = ((r_lin * 0.4124_iq16) + (g_lin * 0.3576_iq16) + (b_lin * 0.1805_iq16)) * iq16(1.0f / 095.047f);
+    const iq16 y = ((r_lin * 0.2126_iq16) + (g_lin * 0.7152_iq16) + (b_lin * 0.0722_iq16)) * iq16(1.0f / 100.000f);
+    const iq16 z = ((r_lin * 0.0193_iq16) + (g_lin * 0.1192_iq16) + (b_lin * 0.9505_iq16)) * iq16(1.0f / 108.883f);
 
 
     return {xyz_gamma(x), xyz_gamma(y), xyz_gamma(z)};

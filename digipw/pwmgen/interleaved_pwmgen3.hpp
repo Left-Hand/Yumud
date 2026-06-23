@@ -125,7 +125,7 @@ public:
     struct SlaveAlgoHelper{
 
         static constexpr DutySpan calc_duty_span(const iq16 dutycycle){
-            constexpr auto NEAR_ONE = 0.999_r;
+            constexpr auto NEAR_ONE = 0.999_iq16;
             return static_cast<DutySpan>(uint8_t(NEAR_ONE + dutycycle * 3)); 
         }
 
@@ -308,8 +308,8 @@ private:
     // hal::Gpio & test_gpio = hal::PA<12>();
 
     Option<TrigOccasion> may_trig_occasion_ = None;
-    Duty dutycycle_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
-    Duty duty_cmd_ = {0.0_r, 0.0_r, 0.0_r};
+    Duty dutycycle_cmd_shadow_ = {0.0_iq16, 0.0_iq16, 0.0_iq16};
+    Duty duty_cmd_ = {0.0_iq16, 0.0_iq16, 0.0_iq16};
 
     static void set_pwm_shift_120(
         hal::TimerOC & pwm, 
@@ -461,10 +461,10 @@ private:
 
 void InterleavedPwmGen3::static_test(){
     #if 1
-    static_assert(SlaveAlgoHelper::calc_duty_span(0.0_r) == DutySpan::_0);
-    static_assert(SlaveAlgoHelper::calc_duty_span(0.2_r) == DutySpan::_120);
-    static_assert(SlaveAlgoHelper::calc_duty_span(0.6_r) == DutySpan::_240);
-    static_assert(SlaveAlgoHelper::calc_duty_span(0.8_r) == DutySpan::_360);
+    static_assert(SlaveAlgoHelper::calc_duty_span(0.0_iq16) == DutySpan::_0);
+    static_assert(SlaveAlgoHelper::calc_duty_span(0.2_iq16) == DutySpan::_120);
+    static_assert(SlaveAlgoHelper::calc_duty_span(0.6_iq16) == DutySpan::_240);
+    static_assert(SlaveAlgoHelper::calc_duty_span(0.8_iq16) == DutySpan::_360);
     #endif
 }
 

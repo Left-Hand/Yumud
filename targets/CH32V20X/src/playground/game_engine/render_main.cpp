@@ -137,7 +137,7 @@ void render_main(){
     while(true){
         const auto now_secs = clock::seconds();
         // const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
-        const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
+        const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_iq16);
         // [[maybe_unused]] const auto [s,c] = math::sincospu(now_secs * 0.3_r);
         [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
         [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
@@ -148,7 +148,7 @@ void render_main(){
             std::array<iq16, LEN> ret;
             for(size_t i = 0; i < LEN; i++){
                 // ret[i] = 0.8_iq16 * sin(7 * now_secs + i * 0.15_r);
-                ret[i] = 0.8_iq16 * math::sinpu(now_secs + i * 0.1_r);
+                ret[i] = 0.8_iq16 * math::sinpu(now_secs + i * 0.1_iq16);
             }
             return ret;
         } ();

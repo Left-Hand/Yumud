@@ -44,8 +44,8 @@ using IResult = Result<T, Error>;
 
 static constexpr iq16 to_num(SC8815::VBusRatio ratio){
     switch(ratio){
-        case SC8815::VBusRatio::_12_5x: return 12.5_r;
-        case SC8815::VBusRatio::_5x: return 5_r;
+        case SC8815::VBusRatio::_12_5x: return 12.5_iq16;
+        case SC8815::VBusRatio::_5x: return 5_iq16;
     }
     __builtin_unreachable();
 }
@@ -68,8 +68,8 @@ static constexpr uint32_t to_num(SC8815::IBusRatio ratio){
 
 static constexpr iq16 to_num(SC8815::VBatMonRatio ratio){
     switch(ratio){
-        case SC8815::VBatMonRatio::_12_5x: return 12.5_r;
-        case SC8815::VBatMonRatio::_5x: return 5_r;
+        case SC8815::VBatMonRatio::_12_5x: return 12.5_iq16;
+        case SC8815::VBatMonRatio::_5x: return 5_iq16;
     }
     __builtin_unreachable();
 }
@@ -126,7 +126,7 @@ IResult<iq16> SC8815::get_bus_current(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(0.05_r * ratio * inv_b10(uint16_t(reg.to_bits())) / 
+    return Ok(0.05_iq16 * ratio * inv_b10(uint16_t(reg.to_bits())) / 
         (3 * bus_shunt_res_mohms_));
 }
 
@@ -143,7 +143,7 @@ IResult<iq16> SC8815::get_bat_current(){
     auto & reg = regs_.ibat_value_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok((0.05_r * ratio * inv_b10(reg.to_bits()) / 
+    return Ok((0.05_iq16 * ratio * inv_b10(reg.to_bits()) / 
         (3 * bus_shunt_res_mohms_)));
 }
 

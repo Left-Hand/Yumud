@@ -58,7 +58,7 @@ void pca_tb(OutputStream & logger){
     PCA9685 pca{&i2c};
     pca.init({
         .freq = servo_freq, 
-        .trim = 1.09_r
+        .trim = 1.09_iq16
     }).unwrap();
 
     // auto pwm1 = PCA9685Channel(pca, 0_nth);
