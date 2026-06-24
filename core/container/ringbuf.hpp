@@ -129,6 +129,7 @@ public:
         return 1;
     }
 
+
     [[nodiscard]] size_t try_push(T&& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
         const size_t write_idx = write_idx_.load(std::memory_order_relaxed);
         const size_t next_write = advance(write_idx);
@@ -140,6 +141,22 @@ public:
         return 1;
     }
     
+
+    template<typename Fn>
+    [[nodiscard]] size_t ingest_one(Fn&& fn) 
+        noexcept(noexcept(fn(std::declval<T&&>())))
+    {
+        const size_t write_idx = write_idx_.load(std::memory_order_relaxed);
+        const size_t next_write = advance(write_idx);
+
+        if (next_write == read_idx_.load(std::memory_order_acquire)) return 0;
+
+        std::construct_at(data() + write_idx, std::forward<Fn>(fn)());
+        write_idx_.store(next_write, std::memory_order_release);
+        return 1;
+    }
+
+
     // 批量操作
     [[nodiscard]] size_t try_push(std::span<const T> src) noexcept(std::is_nothrow_copy_constructible_v<T>) {
         const size_t write_idx = write_idx_.load(std::memory_order_relaxed);

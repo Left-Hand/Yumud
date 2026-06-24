@@ -319,6 +319,8 @@ static void can_setup_interrupts(void * p_inst){
     return sys::clock::get_apb1_clk_freq();
     #elif defined(CH32H417)
     return sys::clock::get_ahb_clk_freq();
+    #else
+    #error "unsupported arch"
     #endif
 }
 
@@ -536,7 +538,8 @@ size_t Can::available(){
 
 Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
-    // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
+    // 因为如果没有报文被发送完成，报文发送完成中断一直不会被触发, 队列数据也就不会被外设消费
+    // 所以优先考虑向硬件中存入报文，硬件中存不下报文才存入队列中
 
     const uint32_t temp_tstar = intrinsics::load_volatile_to_u32(&(RAL_INST(p_inst_)->TSTATR));
 

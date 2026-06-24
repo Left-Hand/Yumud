@@ -23,6 +23,20 @@ static constexpr size_t MAX_INJECTED_CHANNELS = 4;
 using CTLR1 = ral::R32_ADC_CTLR1;
 using CTLR2 = ral::R32_ADC_CTLR2;
 
+void adc_set_regular_trigger(void * p_inst, const AdcRegularTrigger trigger){
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
+    tempreg.EXTSEL = static_cast<uint8_t>(trigger);
+    tempreg.EXTTRIG = (trigger != AdcRegularTrigger::SOFT);
+    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+}
+
+void adc_set_injected_trigger(void * p_inst, const AdcInjectedTrigger trigger){
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
+    tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
+    tempreg.JEXTTRIG = (trigger != AdcInjectedTrigger::SOFT);
+    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+}
+
 
 void adc_set_regular_count(void * p_inst, const uint8_t count){
     ADC_ASSERT(count <= MAX_REGULAR_CHANNELS);
@@ -241,19 +255,6 @@ void AdcPrimary::enable_right_align(const Enable en){
 }
 
 
-void adc_set_regular_trigger(void * p_inst, const AdcRegularTrigger trigger){
-    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
-    tempreg.EXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.EXTTRIG = (trigger != AdcRegularTrigger::SOFT);
-    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
-}
-
-void adc_set_injected_trigger(void * p_inst, const AdcInjectedTrigger trigger){
-    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
-    tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.JEXTTRIG = (trigger != AdcInjectedTrigger::SOFT);
-    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
-}
 
 
 void AdcPrimary::set_regular_trigger(const RegularTrigger trigger){

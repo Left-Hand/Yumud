@@ -50,12 +50,10 @@ IResult<> Self::init(const Config & cfg) {
     }
     
     for(size_t i = 0;; i++){
-        if(const auto res = this->update();
-            res.is_err()) return res;
-
-        if(const auto res = this->read_lap_angle();
-            res.is_err()){
-            if(i == MAX_INIT_RETRY_TIMES)
+        if(const auto res = this->get_packet();
+            res.is_err()
+        ){
+            if(i >= MAX_INIT_RETRY_TIMES)
                 return RAISE_ERR(Err(res.unwrap_err()));
             clock::delay(1ms);
         }else{
@@ -81,15 +79,12 @@ IResult<Self::Packet> Self::get_packet(){
     const uint16_t packet_bits = 
         (static_cast<uint16_t>(rx[1] & 0x00FF) << 8) | 
         static_cast<uint16_t>(rx[0] & 0x00FF);
-    return Ok(std::bit_cast<Packet>(packet_bits));
-}
+    
+    const auto packet = std::bit_cast<Packet>(packet_bits);
 
-IResult<> Self::update(){
-    last_packet_ = ({
-        const auto res = get_packet();
-        if(res.is_err()) return RAISE_ERR(Err(res.unwrap_err()));
-        res.unwrap();
-    });
+    if(not packet.is_pc_valid()) [[unlikely]]
+        return Err(EncoderError::InvalidPc);
 
-    return Ok();
+    return Ok(packet);
+
 }

@@ -15,7 +15,7 @@ public:
 
     IResult<> update();
 
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_lap_angle();
     
     IResult<EncoderFaultBitFields> get_fault();
 
@@ -48,8 +48,7 @@ public:
 private:
     MT6701_Regs regs_ = {};
     MT6701_TransportIntf & transport_;
-    Packet packet_ = Packet::zero();
-    uq32 lap_position_ = 0;
+    // Packet packet_ = Packet::zero();
 
 
     template<typename T>

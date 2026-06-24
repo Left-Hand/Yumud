@@ -3,6 +3,7 @@
 #include "drivers/encoder/magnetic/MT6825/mt6825.hpp"
 #include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
 #include "motor_leso.hpp"
+#include "motor_dsp/dsp_pll.hpp"
 
 //常见电机参数：
 // https://item.taobao.com/item.htm?id=643573104607
@@ -164,12 +165,14 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 torque_curr_cmd;
 
 
-
+    iq20 hfi_response;
     iq20 hfi_response_real_bin0;
     iq20 hfi_response_real_bin1;
     iq20 hfi_response_imag_bin1;
     iq20 hfi_response_real_bin2;
     iq20 hfi_response_imag_bin2;
+
+    dsp::PllState pll_state;
 
     Microseconds exe_elapsed_us;
     Microseconds last_exe_begin_us;
@@ -225,7 +228,6 @@ struct MotorProfile_Ysc{
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
     static constexpr uint32_t CURRENT_CUTOFF_FREQ = 400;
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto LESO_B0 = 30;
 
     static constexpr iq16 MACHINE_KP = 1.73_iq16;
@@ -247,8 +249,7 @@ struct MotorProfile_3505{
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
-    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 600;
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
+    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 800;
 
     using MagEncoder = drivers::VCE2755;
 };
@@ -259,7 +260,6 @@ struct MotorProfile_Gim4010{
     static constexpr auto PHASE_INDUCTANCE = iq20(300 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 1.03_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 1600;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -275,7 +275,6 @@ struct MotorProfile_36BLDB{
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 600;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -293,7 +292,6 @@ struct MotorProfile_NiuLiu{
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 500;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -309,7 +307,6 @@ struct MotorProfile_2207{
     static constexpr auto PHASE_RESISTANCE = 0.112_iq20;
     static constexpr auto FLUX_LINKAGE = iq20(3.4 * 1E-4);
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 500;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -327,7 +324,6 @@ struct MotorProfile_M06Bare{
     static constexpr auto PHASE_INDUCTANCE = iq20(2200 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -343,7 +339,6 @@ struct MotorProfile_Wheel{
     static constexpr auto PHASE_INDUCTANCE = iq20(86.24 * 1E-6);
     static constexpr auto FLUX_LINKAGE = iq20(1 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 0.0645_iq20;
-    static constexpr auto MODU_VOLT_LIMIT = iq16(3.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 300;
     using MagEncoder = drivers::VCE2755;
 };

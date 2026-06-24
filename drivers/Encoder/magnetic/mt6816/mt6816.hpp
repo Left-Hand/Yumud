@@ -38,21 +38,7 @@ public:
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> init(const Config & cfg);
-    IResult<> update();
 
-    IResult<Angular<uq32>> read_lap_angle() { 
-        return last_packet_.parse();
-    }
-
-    IResult<EncoderFaultBitFields> get_fault() {
-        EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
-        if(last_packet_.no_mag){
-            fault.mag_strength = EncoderFaultBitFields::MagStrength::Lost;
-        }else{
-            fault.mag_strength = EncoderFaultBitFields::MagStrength::Proper;
-        }
-        return Ok(fault);
-    }
 
 private:
     struct [[nodiscard]] Packet final{
@@ -60,12 +46,19 @@ private:
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        IResult<Angular<uq32>> parse() const noexcept {
-            if(not is_pc_valid()) [[unlikely]]
-                return Err(EncoderError::InvalidPc);
-
+        Angular<uq32> angle() const noexcept {
             const auto turns = static_cast<uq32>(uq14::from_bits(data_14bit));
-            return Ok(Angular<uq32>::from_turns(turns));
+            return Angular<uq32>::from_turns(turns);
+        }
+
+        EncoderFaultBitFields fault() {
+            EncoderFaultBitFields fault_flags = EncoderFaultBitFields::zero();
+            if(this->no_mag){
+                fault_flags.mag_strength = EncoderFaultBitFields::MagStrength::Lost;
+            }else{
+                fault_flags.mag_strength = EncoderFaultBitFields::MagStrength::Proper;
+            }
+            return fault_flags;
         }
 
         [[nodiscard]] bool is_pc_valid() const noexcept {
@@ -79,8 +72,6 @@ private:
     static_assert(sizeof(Packet) == 2);
 
     hal::SpiDrv spi_drv_;
-
-    Packet last_packet_ = {};
 
     IResult<Packet> get_packet();
 };

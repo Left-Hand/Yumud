@@ -41,6 +41,7 @@
 #include "motor_dsp/dsp_vec.hpp"
 
 
+
 #include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
 
 
@@ -75,9 +76,8 @@ struct LrSeriesCurrentRegulatorConfig{
     uint32_t fc;                 // 截止频率/带宽 (Hz)
     iq20 phase_inductance;        // 相电感 (H)
     iq20 phase_resistance;        // 相电阻 (Ω)
-    iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> 
+    [[nodiscard]] constexpr Result<digipw::PiCofficients, StringView> 
     try_into_precomputed() const noexcept {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
@@ -90,20 +90,15 @@ struct LrSeriesCurrentRegulatorConfig{
         if(fc * 8 >= fs) return Err(StringView("fc too large"));
 
         const auto & self = *this;
-        digipw::PiController::Cofficients coeffs;
+        digipw::PiCofficients coeffs;
 
         //norm_omega = fc * 2pi / fs
 
         const auto norm_omega = uq32::from_bits(TAU_SCALE_NUM * fc) 
             / uq32::from_bits(TAU_SCALE_DEN * self.fs);
 
-
-        coeffs.max_out = self.voltage_limit;
-
         coeffs.kp = iq20(self.phase_inductance * self.fc) * iq16(TAU);
-        coeffs.ki_discrete = self.phase_resistance * norm_omega;
-
-        coeffs.err_int_max = coeffs.max_out / iq16(coeffs.ki_discrete);
+        coeffs.ki_discrete = self.phase_resistance * norm_omega;                                    
         return Ok(coeffs);
     }
 };
@@ -165,7 +160,6 @@ static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
     .fc = MotorProfile::CURRENT_CUTOFF_FREQ,
     .phase_inductance = MotorProfile::PHASE_INDUCTANCE,
     .phase_resistance = MotorProfile::PHASE_RESISTANCE,
-    .voltage_limit = MotorProfile::MODU_VOLT_LIMIT,
 };
 
 static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_precomputed().unwrap();
@@ -485,9 +479,9 @@ void myesc_main(){
 
     // #endregion
 
-    [[maybe_unused]] static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
     // static constexpr iq20 HFI_VOLT = MIN((, 2);
-    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.8_iq20;
+    // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.5_iq20;
+    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.9_iq20;
     // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0;
 
     #if 0
@@ -787,37 +781,32 @@ void myesc_main(){
 
 
 
-        const bool is_openloop = true;
         // const bool is_openloop = true;
+        const bool is_openloop = false;
         const bool is_hfi = true;
 
         [[maybe_unused]] auto update_hfi_angle = [&]{
-            const auto hfi_angle = Angular<uq32>::from_turns(
-                pu_to_uq32(math::atan2pu(
-                    state.hfi_response_imag_bin2, 
-                    state.hfi_response_real_bin2)
-                )
-            );
+            const auto hfi_angle = state.pll_state.angle;
             const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
 
             const auto hfi_diff_angle = (next_hfi_lap_angle.cast_inner<iq16>()
-                - state.hfi_lap_angle.cast_inner<iq16>()).signed_normalized() / 2;
+                - state.hfi_lap_angle.cast_inner<iq16>()).signed_normalized();
 
             state.hfi_lap_angle = next_hfi_lap_angle;
             state.hfi_multilap_angle = state.hfi_multilap_angle + hfi_diff_angle;
-            rotor_rotation_ltd_.iterate(state.rotor_rotation_state_var, {state.hfi_multilap_angle.to_turns(), 0});
+            // rotor_rotation_ltd_.iterate(state.rotor_rotation_state_var, {state.hfi_multilap_angle.to_turns(), 0});
 
-            state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle).unsigned_normalized().to_turns()));
-            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.675_uq32);
-            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.75_uq32);
+            state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle / 2).unsigned_normalized().to_turns()));
+            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.125_uq32);
+            // state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.75_uq32);
             // state.hfi_elec_angle = hfi_angle;
         };
 
-        // update_hfi_angle();
+        update_hfi_angle();
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = -0.20_iq16;
+            const auto speed = -0.40_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -872,11 +861,15 @@ void myesc_main(){
         }
 
 
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 70);
+        PLL_COEFFS.iterate(state.pll_state, {
+            iq16(state.hfi_response_real_bin2 * 50),
+            iq16(state.hfi_response_imag_bin2 * 50)
+        });
 
         #if 1
         [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
             // static constexpr uint32_t MASK = (HFI_N) - 1;
-            [[maybe_unused]] static iq20 prev_sample = Zero;
             [[maybe_unused]] static size_t hfi_idx = 0;
             [[maybe_unused]] static std::array<iq20, HFI_N> hfi_buffer;
             [[maybe_unused]] static bool is_samp_n = false;
@@ -886,12 +879,13 @@ void myesc_main(){
             const auto [_s,_c] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
             const auto s = iq15::from_bits(_s.to_bits());
             const auto c = iq15::from_bits(_c.to_bits());
-            const auto now_sample = dot2v2(
+            const auto hfi_response = dot2v2(
                 state.alphabeta_curr_raw.alpha, c,
                 state.alphabeta_curr_raw.beta, s
             );
             if(is_samp_n){
-                const auto di = now_sample - prev_sample;
+                const auto di = hfi_response - state.hfi_response;
+                state.hfi_response = hfi_response;
                 hfi_buffer[hfi_idx] = di;
                 if(hfi_idx >= HFI_N){
                     hfi_idx = 0;
@@ -907,8 +901,9 @@ void myesc_main(){
 
                     auto [hfi_response_real_bin2, hfi_response_imag_bin2] = dft32_bin2<20>(buffer_view);
 
-                    hfi_response_real_bin2 += -0.003_iq20;
-                    hfi_response_imag_bin2 += -0.013_iq20;
+                    hfi_response_real_bin2 += 0.017_iq20;
+                    hfi_response_real_bin2 = hfi_response_real_bin2 * 0.7_iq20;
+                    // hfi_response_imag_bin2 += -0.013_iq20;
 
                     // inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
                     // hfi_response_real_bin2 = std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20));
@@ -924,7 +919,7 @@ void myesc_main(){
                     hfi_idx += 1;
                 }
             }else{
-                prev_sample = now_sample;
+                state.hfi_response = hfi_response;
             }
 
             if(is_samp_n){
@@ -943,63 +938,57 @@ void myesc_main(){
         };
         #endif
 
-        [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
-            static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.3_iq20;
-            constexpr iq20 ctrl_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
-            
-            const auto kp = PI_CONTROLLER_COEFFS.kp;
-            const auto ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
 
-            iq20 d_volt_output;
-            iq20 q_volt_output;
+        iq20 d_volt_ff = 0;
+        iq20 q_volt_ff = 0;
 
-            {
-                const iq20 volt_limit = ctrl_volt_limit;
-                const iq20 err = iq20(dq_curr_setp[0] - dq_curr_raw[0]);
-                const iq20 kp_contribute = kp * err;
-                d_volt_output = CLAMP2(kp_contribute + state.dq_volt_integral[0],  volt_limit);
-                state.dq_volt_integral[0] = CLAMP(state.dq_volt_integral[0] + err * ki_discrete, 
-                    - volt_limit - d_volt_output ,  
-                    volt_limit - d_volt_output);
-            }
-
-            {
-                const iq20 volt_limit = heightleg(ctrl_volt_limit, d_volt_output);
-                const iq20 err = iq20(dq_curr_setp[1] - dq_curr_raw[1]);
-                const iq20 kp_contribute = kp * err;
-                q_volt_output = CLAMP2(kp_contribute + state.dq_volt_integral[1],  volt_limit);
-                state.dq_volt_integral[1] = CLAMP(state.dq_volt_integral[1] + err * ki_discrete, 
-                    - volt_limit - q_volt_output ,  
-                    volt_limit - q_volt_output);
-            }
-            return DqCoord<iq20>{
-                d_volt_output,
-                q_volt_output
-            };
-        };
-
-        auto dq_volt_gen = generate_dq_volt_by_pi_ctrl();
-
-
-        
         const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
 
         if(cross_decoupling_enabled){
             const bool is_speed_stable = true;
             const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
-            dq_volt_gen.d -= MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.q * omega;
-            dq_volt_gen.q += MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.d * omega;
+            d_volt_ff -= MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.q * omega;
+            q_volt_ff += MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.d * omega;
         }
 
         const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
         if(bemf_decoupling_enabled){
             const bool is_speed_stable = true;
             const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
-           dq_volt_gen.q += MotorProfile::FLUX_LINKAGE * omega;
+           q_volt_ff += MotorProfile::FLUX_LINKAGE * omega;
         }
 
 
-        dq_volt_gen = dq_volt_gen.clamp(MotorProfile::MODU_VOLT_LIMIT);
+
+        static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.5_iq20;
+        constexpr iq20 ctrl_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
+        
+        const iq20 kp = PI_CONTROLLER_COEFFS.kp;
+        const iq20 ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
+
+        const iq20 d_curr_err = (dq_curr_setp[0] - dq_curr_raw[0]);
+        const iq20 q_curr_err = (dq_curr_setp[1] - dq_curr_raw[1]);
+
+        state.dq_volt_integral[0] = state.dq_volt_integral[0] + d_curr_err * ki_discrete;
+        state.dq_volt_integral[1] = state.dq_volt_integral[1] + q_curr_err * ki_discrete;
+        
+        
+        DqCoord<iq20> dq_volt_gen;
+        
+        {
+            const iq20 d_volt_limit = ctrl_volt_limit;
+            const iq20 d_volt_unclamped = d_volt_ff + d_curr_err * kp + state.dq_volt_integral[0];
+            dq_volt_gen[0] = CLAMP2(d_volt_unclamped, d_volt_limit);
+            state.dq_volt_integral[0] += (dq_volt_gen[0] - d_volt_unclamped);
+        }
+        
+        {
+            // const iq20 q_volt_limit = ctrl_volt_limit;
+            const iq20 q_volt_limit = heightleg(ctrl_volt_limit, dq_volt_gen[0]);
+            const iq20 q_volt_unclamped = q_volt_ff + q_curr_err * kp + state.dq_volt_integral[1];
+            dq_volt_gen[1] = CLAMP2(q_volt_unclamped, q_volt_limit);
+            state.dq_volt_integral[1] += (dq_volt_gen[1] - q_volt_unclamped);
+        }
 
         const auto inv_busbar_volt = INV_BUS_VOLT;
         const auto inv_busbar_volt_3by2 = INV_BUS_VOLT * iq16(1.5);
@@ -1049,8 +1038,8 @@ void myesc_main(){
         }
 
 
-        // const bool spin_hfi_enabled = true;
-        const bool spin_hfi_enabled = false;
+        const bool spin_hfi_enabled = true;
+        // const bool spin_hfi_enabled = false;
 
         if(spin_hfi_enabled){
             state.spinhfi_alphabeta_volt_gen  = generate_alpha_beta_volt_by_spin_hfi();
@@ -1131,11 +1120,22 @@ void myesc_main(){
 
     hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
+
+
+    // static iq20 hsx, fx, gx = 0;
+
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 jeoc_isr();
+                // const auto now_secs = clock::seconds();
+                // static uq32 now_secs = 0;
+                // static constexpr auto DT = uq32::from_rcp(FOC_FREQ);
+                // now_secs += DT;
+                // hsx = iq20(math::sinpu(1000u * now_secs));
+                // fx = hsx * iq20(math::sinpu(now_secs));
+                // gx = lpf_100hz(gx, hsx * fx);
                 break;
             }
             default: break;
@@ -1191,11 +1191,16 @@ void myesc_main(){
 
         die_celsius_ = lpf_10hz(die_celsius_, temp_trimer.parse_u12(ADC1->IDATAR4));
 
-        all_state_.torque_curr_cmd = 2 + iq16(math::sin(now_secs)) * 0.2_iq20;
+        // all_state_.torque_curr_cmd = 3 + iq16(math::sin(now_secs)) * 0.4_iq20;
+        all_state_.torque_curr_cmd = 2.4_iq20;
 
+        // if(true)DEBUG_PRINTLN(
+        //     // die_celsius_,
+        //     hsx, fx, gx);
 
         if(true)DEBUG_PRINTLN(
-            die_celsius_,
+            all_state_.hfi_response,
+            // die_celsius_,
             // s, c, 
             // pwm_u_.cvr(),
             // pwm_v_.cvr(),
@@ -1210,11 +1215,10 @@ void myesc_main(){
             // v_disconn_dbs.count,
             // judge_is_disconn(all_state_.uvw_curr_slowlp.u,all_state_.uvw_curr_slowlp.v + all_state_.uvw_curr_slowlp.w),
             // judge_is_disconn(all_state_.uvw_curr_slowlp.v,all_state_.uvw_curr_slowlp.u + all_state_.uvw_curr_slowlp.w),
-            all_state_.unblance_curr_abs_lp,
             // all_state_.alphabeta_volt_gen.alpha,
             // all_state_.alphabeta_volt_gen.beta,
-            // all_state_.dq_volt_gen.d,
-            // all_state_.dq_volt_gen.q,
+            // all_state_.d_volt_gen,
+            // all_state_.q_volt_gen,
             // flux_sensorless_ob.angle().to_turns(),
             // flux_sensorless_ob.all_state_().flux_state_mf[0],
             // flux_sensorless_ob.all_state_().flux_state_mf[1],
@@ -1222,8 +1226,7 @@ void myesc_main(){
             // flux_sensorless_ob.all_state_().v_alphabeta_last[1],
             // all_state_.torque_curr_cmd,
             // all_state_.uvw_curr_raw,
-            all_state_.dq_volt_gen.d,
-            all_state_.dq_volt_gen.q,
+            // all_state_.dq_volt_gen,
             // all_state_.selected_elec_angle.to_turns(),
             all_state_.dq_curr_raw.d,
             all_state_.dq_curr_raw.q,
@@ -1231,9 +1234,12 @@ void myesc_main(){
             // all_state_.spinhfi_alphabeta_volt_gen,
             // all_state_.hfi_response_real_bin1,
             // all_state_.hfi_response_imag_bin1,
-            all_state_.hfi_response_real_bin2,
-            all_state_.hfi_response_imag_bin2,
-            // all_state_.openloop_elec_angle.to_turns(),
+            // all_state_.hfi_response_real_bin2,
+            // all_state_.hfi_response_imag_bin2,
+            all_state_.openloop_elec_angle.to_turns(),
+            all_state_.pll_state.angle.to_turns(),
+            all_state_.hfi_elec_angle.to_turns(),
+            all_state_.pll_state.angluar_speed.to_turns(),
             // hfi_bin2_angle.to_turns(),
             // all_state_.hfi_elec_angle.to_turns(),
 

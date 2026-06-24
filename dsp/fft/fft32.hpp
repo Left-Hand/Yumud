@@ -31,18 +31,20 @@ namespace {
 template<size_t Q, typename T, size_t N, size_t Step>
 static constexpr auto _make_sincos_table(){
     std::array<std::array<math::fixed<Q, T>, 2>, N> table;
-    uq16 x = 0;
-    constexpr uq16 step = uq16::from_rcp(N) * Step;
+    uq32 x = 0;
+    constexpr uq32 delta = uq32::from_rcp(N) * Step;
     for(size_t i = 0; i < N; i++){
         const auto [s,c] = math::sincospu(x);
         table[i] = std::to_array({
             math::fixed<Q, T>::from_bits(iq15(s).to_bits()), 
             math::fixed<Q, T>::from_bits(iq15(c).to_bits())
         });
-        x += step;
+        x += delta;
     }
     return table;
 };
+
+static constexpr auto DFT32_BIN1_TABLE = _make_sincos_table<15, int16_t, 32, 1>();
 
 template<size_t N_BITS, size_t BinNum, size_t Q>
 __attribute__((optimize("Ofast"), hot, flatten))
@@ -51,20 +53,24 @@ constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> _dft(
 ){
     constexpr size_t N = 1u << N_BITS;
     constexpr size_t TABLE_Q = 15;
-    constexpr auto TABLE = _make_sincos_table<TABLE_Q, int16_t, N, BinNum>();
+
 
 	int64_t real_bits = 0;
 	int64_t imag_bits = 0;
     // 使用restrict指针
-    const auto* __restrict in_ptr = real_in.data();
-    const std::array<math::fixed<TABLE_Q, int16_t>, 2> * __restrict tab_ptr = TABLE.data();
+    const math::fixed<Q, int32_t> * __restrict in_ptr = real_in.data();
+    const std::array<math::fixed<TABLE_Q, int16_t>, 2> * __restrict tab_ptr = DFT32_BIN1_TABLE.data();
+
+    size_t j = 0;
 
     #pragma GCC unroll 4
 	for (size_t i = 0; i < N; i++) {
-        const auto [s, c] = tab_ptr[i];
-		real_bits += static_cast<int64_t>(in_ptr[i].to_bits()) * s.to_bits();
-		imag_bits -= static_cast<int64_t>(in_ptr[i].to_bits()) * c.to_bits();
+        j = (j + BinNum) & (N - 1);
+        const auto [s, c] = tab_ptr[j];
+		real_bits += static_cast<int64_t>(in_ptr[i].to_bits()) * static_cast<int32_t>(c.to_bits());
+		imag_bits -= static_cast<int64_t>(in_ptr[i].to_bits()) * static_cast<int32_t>(s.to_bits());
 	}
+
     return {
         math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(real_bits >> (N_BITS + TABLE_Q))),
         math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(imag_bits >> (N_BITS + TABLE_Q))),

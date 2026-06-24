@@ -55,34 +55,12 @@ IResult<> MT6701::init(){
     return Ok();
 }
 
-IResult<> MT6701::update(){
+IResult<Angular<uq32>> MT6701::get_lap_angle(){
     auto & reg = regs_.raw_angle_reg;
-    const auto res = read_reg(reg);
-    lap_position_ = uq32::from_bits(reg.bits);
-    return res;
-    // else if(spi_drv){
-
-    //     uint16_t data16;
-    //     spi_drv->read_single(data16).unwrap();
-
-    //     uint8_t data8 = 0;
-    //     if(fast_mode == false){
-    //         spi_drv->read_single(data8).unwrap();
-    //     }
-
-    //     semantic = Semantic{data8, data16};
-    //     if(semantic.valid(fast_mode)){
-    //         lap_position = iq16(fixed<16>(semantic.data_14bit << 2) >> 16);
-    //     } 
-    // }
-    // else{
-    //     MT6701_DEBUG("no drv!!");
-    //     PANIC();
-    // }
-}
-
-IResult<Angular<uq32>> MT6701::read_lap_angle(){
-    return Ok(Angular<uq32>::from_turns(lap_position_));
+    if(const auto res = read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    const auto angle = make_angular_from_turns(uq32::from_bits(reg.bits));
+    return Ok(angle);
 }
 
 
