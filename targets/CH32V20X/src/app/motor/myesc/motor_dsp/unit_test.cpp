@@ -1,6 +1,8 @@
 #include "dsp_lpf.hpp"
 #include "dsp_vec.hpp"
 
+#include "dsp/fft/fft32.hpp"
+
 using namespace ymd;
 using namespace ymd::dsp;
 
@@ -47,6 +49,10 @@ static_assert(is_result_nearly_equal(
     // static constexpr auto alpha = calc_lpf_alpha_f32(FS, FC).unwrap();
     static constexpr auto phase_shift_f32 = calc_lpf_phaseshift_f32(FC, FC).to_turns();
     static_assert(phase_shift_f32 == 0.125);
+}
+
+[[maybe_unused]]static void test_dft(){
+
 }
 
 static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 4000).unwrap()) - 0.439900846488) < 1e-6);

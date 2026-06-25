@@ -400,11 +400,13 @@ void myesc_main(){
         .baudrate = hal::NearestFreq(18_MHz)
     });
 
+    #if 0
     auto mag_encoder_ = MotorProfile::MagEncoder{
         &spi,
         spi.allocate_cs_pin(&mag_encoder_cs_pin_)
             .unwrap()
     };
+    #endif
 
 
     // #endregion
@@ -797,8 +799,8 @@ void myesc_main(){
             // rotor_rotation_ltd_.iterate(state.rotor_rotation_state_var, {state.hfi_multilap_angle.to_turns(), 0});
 
             state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle / 2).unsigned_normalized().to_turns()));
-            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.125_uq32);
-            // state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.75_uq32);
+            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.82_uq32);
+            state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.5_uq32);
             // state.hfi_elec_angle = hfi_angle;
         };
 
@@ -806,7 +808,7 @@ void myesc_main(){
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = -0.40_iq16;
+            const auto speed = -0.10_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -822,6 +824,8 @@ void myesc_main(){
                 // state.selected_elec_angle = hfi_angle;
             }else{
                 //TODO: take off side effects
+
+                #if 0
                 const auto angle_packet = mag_encoder_.update().examine();
 
                 const auto encoder_lap_turns = angle_packet.parse().unwrap().to_turns();
@@ -840,6 +844,7 @@ void myesc_main(){
                     + MotorProfile::SENSORED_ELEC_ANGLE_BASE.to_turns()
                 );
                 state.selected_elec_angle = state.sensed_elec_angle;
+                #endif
             }
         }
 
@@ -861,7 +866,8 @@ void myesc_main(){
         }
 
 
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 70);
+        // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 70);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 60);
         PLL_COEFFS.iterate(state.pll_state, {
             iq16(state.hfi_response_real_bin2 * 50),
             iq16(state.hfi_response_imag_bin2 * 50)
@@ -901,9 +907,16 @@ void myesc_main(){
 
                     auto [hfi_response_real_bin2, hfi_response_imag_bin2] = dft32_bin2<20>(buffer_view);
 
-                    hfi_response_real_bin2 += 0.017_iq20;
-                    hfi_response_real_bin2 = hfi_response_real_bin2 * 0.7_iq20;
-                    // hfi_response_imag_bin2 += -0.013_iq20;
+                    // hfi_response_real_bin2 += 0.017_iq20;
+                    // hfi_response_real_bin2 = hfi_response_real_bin2 * 0.7_iq20;
+
+                    //2207
+                    // hfi_response_real_bin2 -= -0.040_iq20;
+                    // hfi_response_imag_bin2 -= 0.019_iq20;
+
+                    //2207
+                    hfi_response_real_bin2 -= -0.003_iq20;
+                    hfi_response_imag_bin2 -= 0.004_iq20;
 
                     // inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
                     // hfi_response_real_bin2 = std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20));
@@ -945,8 +958,10 @@ void myesc_main(){
         const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
 
         if(cross_decoupling_enabled){
+        // if(true){
             const bool is_speed_stable = true;
-            const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
+            // const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable * iq16(TAU);
+            const auto omega = state.pll_state.angluar_speed.to_radians() * is_speed_stable;
             d_volt_ff -= MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.q * omega;
             q_volt_ff += MotorProfile::PHASE_INDUCTANCE * dq_curr_raw.d * omega;
         }
@@ -1192,7 +1207,8 @@ void myesc_main(){
         die_celsius_ = lpf_10hz(die_celsius_, temp_trimer.parse_u12(ADC1->IDATAR4));
 
         // all_state_.torque_curr_cmd = 3 + iq16(math::sin(now_secs)) * 0.4_iq20;
-        all_state_.torque_curr_cmd = 2.4_iq20;
+        // all_state_.torque_curr_cmd = 4.4_iq20;
+        all_state_.torque_curr_cmd = 3.3_iq20;
 
         // if(true)DEBUG_PRINTLN(
         //     // die_celsius_,
@@ -1228,20 +1244,23 @@ void myesc_main(){
             // all_state_.uvw_curr_raw,
             // all_state_.dq_volt_gen,
             // all_state_.selected_elec_angle.to_turns(),
-            all_state_.dq_curr_raw.d,
+            // all_state_.dq_curr_raw.d,
+            all_state_.dq_volt_gen.q,
             all_state_.dq_curr_raw.q,
 
             // all_state_.spinhfi_alphabeta_volt_gen,
             // all_state_.hfi_response_real_bin1,
             // all_state_.hfi_response_imag_bin1,
-            // all_state_.hfi_response_real_bin2,
-            // all_state_.hfi_response_imag_bin2,
+            // all_state_.dq_volt_gen.d,
+            // all_state_.dq_curr_raw.d,
+            all_state_.hfi_response_real_bin2,
+            all_state_.hfi_response_imag_bin2,
             all_state_.openloop_elec_angle.to_turns(),
             all_state_.pll_state.angle.to_turns(),
             all_state_.hfi_elec_angle.to_turns(),
             all_state_.pll_state.angluar_speed.to_turns(),
-            // hfi_bin2_angle.to_turns(),
             // all_state_.hfi_elec_angle.to_turns(),
+            // hfi_bin2_angle.to_turns(),
 
             // hfi_idx,
             // all_state_.alphabeta_curr_raw[0],

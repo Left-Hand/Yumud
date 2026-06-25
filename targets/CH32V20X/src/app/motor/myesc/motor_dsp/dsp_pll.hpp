@@ -34,7 +34,9 @@ struct [[nodiscard]] PllCoeffs final{
 
         std::tie(state.sine, state.cosine) = state.angle.sincos();
         
-        const iq16 e = dsp::cross2v2(normalized_sincos[0], state.sine , normalized_sincos[1], state.cosine );
+        const iq16 e = CLAMP2(
+            dsp::cross2v2(normalized_sincos[0], state.sine , normalized_sincos[1], state.cosine),
+            1.00_iq16);
 
         state.angluar_speed = state.angluar_speed.from_turns(
             state.angluar_speed.to_turns() + e * self.ki_discrete);
