@@ -31,8 +31,7 @@
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/ctrl/pi_controller.hpp"
 
-#include "linear_regression.hpp"
-#include "motor_profiles.hpp"
+#include "motor_config.hpp"
 
 #include "core/sdk.hpp"
 
@@ -65,10 +64,13 @@ using namespace ymd::myesc;
 // using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
-using MotorProfile = MotorProfile_3505;
+// using MotorProfile = MotorProfile_3505;
+using MotorProfile = MotorProfile_E800;
 // using MotorProfile = MotorProfile_36BLDB;
 // using MotorProfile = MotorProfile_NiuLiu;
 // using MotorProfile = MotorProfile_2207;
+
+using Leso = ymd::dsp::adrc::MotorLeso;
 
 
 struct LrSeriesCurrentRegulatorConfig{
@@ -214,28 +216,8 @@ static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last
     return state + diff;
 }
 
-// template<size_t Q>
-// __attribute__((always_inline,  const, optimize( "-Ofast" )))
-__no_inline
-constexpr uq16 mysqrt32u(const uq16 x){
-    #if 0
-    return math::fixed<Q, uint32_t>::from_bits(
-        fxmath::details::IqSqrtIntermediate::template from_u32<Q, fxmath::details::SqrtNormStrategy::SQRT>(
-            x.to_bits()
-        ).template compute<Q, fxmath::details::SqrtNormStrategy::SQRT>()
-    );
-    #endif
 
 
-    auto it = fxmath::details::IqSqrtIntermediate::from_u32<16, fxmath::details::SqrtNormStrategy::SQRT>(
-        uq16(x).to_bits()
-    );
-
-    const auto res = uq16::from_bits(std::move(it).template compute<16,fxmath::details::SqrtNormStrategy::SQRT>());
-    return res;
-}
-
-static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
 
 static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
     const auto abs_ref = math::abs(ref);
@@ -471,21 +453,8 @@ void myesc_main(){
             uint32_t(clock::millis().count()) % 800) > 400);
     };
 
-    [[maybe_unused]] auto toggle_red_led = [&]{
-        led_red_pin_.toggle();
-    };
-
-    [[maybe_unused]] auto toggle_blue_led = [&]{
-        led_blue_pin_.toggle();
-    };
 
     // #endregion
-
-    // static constexpr iq20 HFI_VOLT = MIN((, 2);
-    // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.5_iq20;
-    [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0.9_iq20;
-    // [[maybe_unused]] static constexpr iq20 HFI_VOLT = 0;
-
     #if 0
     constexpr auto FLUX_SENSORLESS_OB_COEFFS = dsp::motor_ctl::NonlinearFluxObserver::Config{
         .fs = FOC_FREQ,
@@ -530,15 +499,17 @@ void myesc_main(){
         }
     };
 
+
+    #endif
+
     [[maybe_unused]] auto smo_sensorless_ob = dsp::motor_ctl::SlideModeObserver{
         dsp::motor_ctl::SlideModeObserver::Config{
-            .f_para = 0.84_r,
-            .g_para = 0.015_r,
-            .kslide = 1.22_r,
-            .kslf = 0.6_r,
+            .f_para = 0.84_iq16,
+            .g_para = 0.015_iq16,
+            .kslide = 3.22_iq16,
+            .kslf = 0.1_iq16,
         }
     };
-    #endif
 
     using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
 
@@ -669,7 +640,7 @@ void myesc_main(){
     [[maybe_unused]] auto mechanical_loop = [&](AllState & state){
         //#region 力矩转电流
 
-        [[maybe_unused]] static constexpr iq20 TORQUE_2_current_RATIO = 1_iq20;
+        [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
         [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 1.2_iq16;
 
         // const iq20 state.torque_curr_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
@@ -783,13 +754,13 @@ void myesc_main(){
 
 
 
-        // const bool is_openloop = true;
-        const bool is_openloop = false;
-        const bool is_hfi = true;
+        const bool is_openloop = true;
+        // const bool is_openloop = false;
+        const bool run_hfi = true;
+        [[maybe_unused]] const bool run_smo = true;
 
-        [[maybe_unused]] auto update_hfi_angle = [&]{
-            const auto hfi_angle = state.pll_state.angle;
-            const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
+        [[maybe_unused]] auto update_hfi_angle = [&](const Angular<uq32> hfi_pll_angle){
+            const auto next_hfi_lap_angle = hfi_pll_angle.cast_inner<uq16>();
 
             const auto hfi_diff_angle = (next_hfi_lap_angle.cast_inner<iq16>()
                 - state.hfi_lap_angle.cast_inner<iq16>()).signed_normalized();
@@ -801,10 +772,33 @@ void myesc_main(){
             state.hfi_elec_angle = make_angular_from_turns(uq32((state.hfi_multilap_angle / 2).unsigned_normalized().to_turns()));
             state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.82_uq32);
             state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(0.5_uq32);
-            // state.hfi_elec_angle = hfi_angle;
         };
 
-        update_hfi_angle();
+        [[maybe_unused]] auto update_encoder_angle = [&](){
+            #if 0
+            const auto angle_packet = mag_encoder_.update().examine();
+
+            const auto encoder_lap_turns = angle_packet.parse().unwrap().to_turns();
+            const auto prev_encoder_lapturns = state.encoder_lap_turns;
+            const auto encoder_diff_turns = uq32_wrapped_diff(prev_encoder_lapturns, encoder_lap_turns);
+
+            state.encoder_lap_turns = encoder_lap_turns;
+            state.encoder_multilap_turns = state.encoder_multilap_turns + encoder_diff_turns;
+            rotor_rotation_ltd_.iterate(
+                state.rotor_rotation_state_var,
+                {fixed_downcast<16>(state.encoder_multilap_turns), 0}
+            );
+
+            state.sensed_elec_angle = Angular<uq32>::from_turns(
+                math::pu_to_uq32(encoder_lap_turns * MotorProfile::POLE_PAIRS)
+                + MotorProfile::SENSORED_ELEC_ANGLE_BASE.to_turns()
+            );
+            state.selected_elec_angle = state.sensed_elec_angle;
+            #endif
+        };
+
+
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 70, 1.5_iq16);
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
@@ -816,37 +810,51 @@ void myesc_main(){
 
 
             state.openloop_elec_angle = openloop_elec_angle;
-            state.selected_elec_angle = state.openloop_elec_angle;
-        }else{
-            if(is_hfi){
-
-                state.selected_elec_angle = state.hfi_elec_angle;
-                // state.selected_elec_angle = hfi_angle;
-            }else{
-                //TODO: take off side effects
-
-                #if 0
-                const auto angle_packet = mag_encoder_.update().examine();
-
-                const auto encoder_lap_turns = angle_packet.parse().unwrap().to_turns();
-                const auto prev_encoder_lapturns = state.encoder_lap_turns;
-                const auto encoder_diff_turns = uq32_wrapped_diff(prev_encoder_lapturns, encoder_lap_turns);
-
-                state.encoder_lap_turns = encoder_lap_turns;
-                state.encoder_multilap_turns = state.encoder_multilap_turns + encoder_diff_turns;
-                rotor_rotation_ltd_.iterate(
-                    state.rotor_rotation_state_var,
-                    {fixed_downcast<16>(state.encoder_multilap_turns), 0}
-                );
-
-                state.sensed_elec_angle = Angular<uq32>::from_turns(
-                    math::pu_to_uq32(encoder_lap_turns * MotorProfile::POLE_PAIRS)
-                    + MotorProfile::SENSORED_ELEC_ANGLE_BASE.to_turns()
-                );
-                state.selected_elec_angle = state.sensed_elec_angle;
-                #endif
-            }
         }
+
+
+        if(run_hfi){
+            // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 30);
+            // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fskpki(FOC_FREQ, 2000, 30000);
+
+
+            // PLL_COEFFS.iterate(state.pll_state, {
+            //     iq16(state.hfi_bin2_real_response * 30),
+            //     iq16(state.hfi_bin2_imag_response * 30)
+            // });
+            auto bin2_real_response = state.hfi_bin2_real_response;
+            auto bin2_imag_response = state.hfi_bin2_imag_response;
+
+            if(math::abs(state.pll_state.angluar_speed.to_turns()) > 10){
+                bin2_real_response -= state.hfi_bin2_real_response_slowlp;
+                bin2_imag_response -= state.hfi_bin2_imag_response_slowlp;
+            }
+
+            PLL_COEFFS.iterate(state.pll_state, {
+                iq16((bin2_real_response) * 30),
+                iq16((bin2_imag_response) * 30)
+            });
+            // PLL_COEFFS.iterate(state.pll_state, {
+            //     // iq16(state.hfi_bin2_real_response * 30),
+            //     smo_sensorless_ob.state.e.beta,
+            //     -smo_sensorless_ob.state.e.alpha,
+            // });
+
+            update_hfi_angle(state.pll_state.angle);
+            // state.observer_elec_angle= state.pll_state.angle + Angular<uq32>::QUARTER;
+
+            // state.selected_elec_angle = state.hfi_elec_angle;
+            // state.selected_elec_angle = make_angular_from_turns(
+            //     math::atan2pu(smo_sensorless_ob.state.e.beta, smo_sensorless_ob.state.e.alpha) + 0.25_uq32
+            // );
+            // state.selected_elec_angle = hfi_angle;
+        }else{
+            //TODO: take off side effects
+        }
+
+        // state.selected_elec_angle = state.openloop_elec_angle;
+        state.selected_elec_angle = state.hfi_elec_angle;
+        // state.selected_elec_angle = state.pll_state.angle + Angular<uq32>::QUARTER;
 
         const auto elec_sincos = math::Rotation2<iq16>::from_angle(state.selected_elec_angle);
 
@@ -857,7 +865,7 @@ void myesc_main(){
         state.dq_curr_fastlp[1] = lpf_1000hz(state.dq_curr_fastlp[1], dq_curr_raw[1]);
 
         
-        DqCoord<iq20> dq_curr_setp = DqCoord<iq20>{0, state.torque_curr_cmd};
+        DqCoord<iq20> dq_curr_setp = DqCoord<iq20>{0.0_iq20, state.torque_curr_cmd};
         
         const bool do_mtpa = false;
 
@@ -865,13 +873,6 @@ void myesc_main(){
         if(do_mtpa){
         }
 
-
-        // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 70);
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(FOC_FREQ, 60);
-        PLL_COEFFS.iterate(state.pll_state, {
-            iq16(state.hfi_response_real_bin2 * 50),
-            iq16(state.hfi_response_imag_bin2 * 50)
-        });
 
         #if 1
         [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
@@ -882,52 +883,45 @@ void myesc_main(){
 
 
 
-            const auto [_s,_c] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
-            const auto s = iq15::from_bits(_s.to_bits());
-            const auto c = iq15::from_bits(_c.to_bits());
+            const auto [_s_bin1,_c_bin1] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
+            const auto s_bin1 = iq15::from_bits(_s_bin1.to_bits());
+            const auto c_bin1 = iq15::from_bits(_c_bin1.to_bits());
+
             const auto hfi_response = dot2v2(
-                state.alphabeta_curr_raw.alpha, c,
-                state.alphabeta_curr_raw.beta, s
+                state.alphabeta_curr_raw.alpha, c_bin1,
+                state.alphabeta_curr_raw.beta, s_bin1
             );
+
             if(is_samp_n){
                 const auto di = hfi_response - state.hfi_response;
                 state.hfi_response = hfi_response;
+
                 hfi_buffer[hfi_idx] = di;
+
                 if(hfi_idx >= HFI_N){
                     hfi_idx = 0;
                     const auto buffer_view = std::span(hfi_buffer);
-                    const auto hfi_response_real_bin0 = dft32_bin0<20>(buffer_view);
-                    // std::tie(state.hfi_response_real_bin1, state.hfi_response_imag_bin1) = dft32_bin1<20>(buffer_view);
-                    // state.hfi_response_real_bin0 = lpf_1000hz(state.hfi_response_real_bin0, hfi_response_real_bin0);
-                    state.hfi_response_real_bin0 = hfi_response_real_bin0;
+                    const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
+                    // std::tie(state.hfi_bin1_real_response, state.hfi_bin1_imag_response) = dft32_bin1<20>(buffer_view);
+                    // state.hfi_bin0_real_response = lpf_1000hz(state.hfi_bin0_real_response, hfi_bin0_real_response);
+                    state.hfi_bin0_real_response = hfi_bin0_real_response;
 
-                    const auto [hfi_response_real_bin1, hfi_response_imag_bin1] = dft32_bin1<20>(buffer_view);
-                    state.hfi_response_real_bin1 = lpf_1000hz(state.hfi_response_real_bin1, hfi_response_real_bin1);
-                    state.hfi_response_imag_bin1 = lpf_1000hz(state.hfi_response_imag_bin1, hfi_response_imag_bin1);
+                    const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
+                    state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
+                    state.hfi_bin1_imag_response = lpf_allpass(state.hfi_bin1_imag_response, hfi_bin1_imag_response);
 
-                    auto [hfi_response_real_bin2, hfi_response_imag_bin2] = dft32_bin2<20>(buffer_view);
-
-                    // hfi_response_real_bin2 += 0.017_iq20;
-                    // hfi_response_real_bin2 = hfi_response_real_bin2 * 0.7_iq20;
+                    auto [hfi_bin2_real_response_raw, hfi_bin2_imag_response_raw] = dft32_bin2<20>(buffer_view);
 
                     //2207
-                    // hfi_response_real_bin2 -= -0.040_iq20;
-                    // hfi_response_imag_bin2 -= 0.019_iq20;
+                    // hfi_bin2_real_response -= -0.040_iq20;
+                    // hfi_bin2_imag_response -= 0.019_iq20;
 
-                    //2207
-                    hfi_response_real_bin2 -= -0.003_iq20;
-                    hfi_response_imag_bin2 -= 0.004_iq20;
 
-                    // inplace_resat_unit_circle(hfi_response_real_bin2, hfi_response_imag_bin2);
-                    // hfi_response_real_bin2 = std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20));
-
-                    // const auto inv_mag = math::inv_mag(hfi_response_real_bin2, hfi_response_imag_bin2);
-                    // hfi_response_real_bin2 = hfi_response_real_bin2 * inv_mag;
-                    // hfi_response_imag_bin2 = hfi_response_imag_bin2 * inv_mag;
-
-                    state.hfi_response_real_bin2 = lpf_allpass(state.hfi_response_real_bin2, hfi_response_real_bin2);
-                    state.hfi_response_imag_bin2 = lpf_allpass(state.hfi_response_imag_bin2, hfi_response_imag_bin2);
-
+                    state.hfi_bin2_real_response = lpf_allpass(state.hfi_bin2_real_response, hfi_bin2_real_response_raw);
+                    state.hfi_bin2_imag_response = lpf_allpass(state.hfi_bin2_imag_response, hfi_bin2_imag_response_raw);
+                    
+                    state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, hfi_bin2_real_response_raw);
+                    state.hfi_bin2_imag_response_slowlp = lpf_100hz(state.hfi_bin2_imag_response_slowlp, hfi_bin2_imag_response_raw);
                 }else{
                     hfi_idx += 1;
                 }
@@ -938,14 +932,14 @@ void myesc_main(){
             if(is_samp_n){
                 is_samp_n = false;
                 return AlphaBetaCoord<iq20>{
-                    .alpha = HFI_VOLT * c,
-                    .beta = HFI_VOLT * s,
+                    .alpha = HFI_VOLT * c_bin1,
+                    .beta = HFI_VOLT * s_bin1,
                 };
             }else{
                 is_samp_n = true;
                 return AlphaBetaCoord<iq20>{
-                    .alpha = (-HFI_VOLT) * c,
-                    .beta = (-HFI_VOLT) * s,
+                    .alpha = (-HFI_VOLT) * c_bin1,
+                    .beta = (-HFI_VOLT) * s_bin1,
                 };
             }
         };
@@ -969,14 +963,14 @@ void myesc_main(){
         const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
         if(bemf_decoupling_enabled){
             const bool is_speed_stable = true;
-            const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable;
+            const auto omega = state.pll_state.angluar_speed.to_radians() * is_speed_stable;
            q_volt_ff += MotorProfile::FLUX_LINKAGE * omega;
         }
 
+        state.dq_volt_ff.d = d_volt_ff;
+        state.dq_volt_ff.q = q_volt_ff;
 
-
-        static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.5_iq20;
-        constexpr iq20 ctrl_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
+        static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
         
         const iq20 kp = PI_CONTROLLER_COEFFS.kp;
         const iq20 ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
@@ -988,25 +982,26 @@ void myesc_main(){
         state.dq_volt_integral[1] = state.dq_volt_integral[1] + q_curr_err * ki_discrete;
         
         
-        DqCoord<iq20> dq_volt_gen;
+        DqCoord<iq20> dq_volt_gen = Zero;
         
+        #if 1
+        const iq20 d_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
         {
-            const iq20 d_volt_limit = ctrl_volt_limit;
             const iq20 d_volt_unclamped = d_volt_ff + d_curr_err * kp + state.dq_volt_integral[0];
             dq_volt_gen[0] = CLAMP2(d_volt_unclamped, d_volt_limit);
             state.dq_volt_integral[0] += (dq_volt_gen[0] - d_volt_unclamped);
         }
         
         {
-            // const iq20 q_volt_limit = ctrl_volt_limit;
-            const iq20 q_volt_limit = heightleg(ctrl_volt_limit, dq_volt_gen[0]);
+            const iq20 q_volt_limit = heightleg(d_volt_limit, dq_volt_gen[0]);
             const iq20 q_volt_unclamped = q_volt_ff + q_curr_err * kp + state.dq_volt_integral[1];
             dq_volt_gen[1] = CLAMP2(q_volt_unclamped, q_volt_limit);
             state.dq_volt_integral[1] += (dq_volt_gen[1] - q_volt_unclamped);
         }
+        #endif
 
         const auto inv_busbar_volt = INV_BUS_VOLT;
-        const auto inv_busbar_volt_3by2 = INV_BUS_VOLT * iq16(1.5);
+        const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
 
         auto dq_dutycycle_gen = dq_volt_gen * inv_busbar_volt_3by2;
 
@@ -1078,10 +1073,10 @@ void myesc_main(){
         state.dq_curr_raw = dq_curr_raw;
         state.dq_volt_gen = dq_volt_gen;
 
-        // state.alphabeta_volt_gen = alphabeta_volt_gen;
+        state.alphabeta_volt_gen = alphabeta_dutycycle_gen * BUS_VOLT;
 
         // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_raw);
-        // smo_sensorless_ob.update({alphabeta_curr_raw, alphabeta_volt_gen});
+        smo_sensorless_ob.update({state.alphabeta_curr_raw, state.alphabeta_volt_gen});
         // lbg_sensorless_ob.update({alphabeta_curr_raw, alphabeta_volt_gen});
     };
 
@@ -1174,48 +1169,50 @@ void myesc_main(){
         [[maybe_unused]] static const auto list = script::make_list(
             "root",
             script::make_function(StringView("tc"), [&](iq20 torque_curr_cmd){
-                // handle_start_advanced_task();
                 if(math::abs(torque_curr_cmd) > 10) return;
                 all_state_.torque_curr_cmd = torque_curr_cmd;
             }),
 
             script::make_function(StringView("dce"), [&](const bool en){
-                // handle_start_advanced_task();
                 fn_switches_.deadtime_compensate_en = en;
+            }),
+
+            script::make_function(StringView("cde"), [&](const bool en){
+                fn_switches_.cross_decoupling_en = en;
             })
         );
 
         repl_server.invoke(list);
     };
     
+    all_state_.torque_curr_cmd = 0.0_iq20;
+
     while(true){
         poll_repl_activity();
         [[maybe_unused]] const auto now_secs = clock::seconds();
-        // repl_service_poller();
-        // const auto hfi_response_real_bin1 = all_state_.hfi_response_real_bin1 * 100;
-        // const auto hfi_response_imag_bin1 = all_state_.hfi_response_imag_bin1 * 100;
-        // const iq20 hfi_response_real_bin1 = 1;
-        // const iq20 hfi_response_imag_bin1 = 1;
-        // const auto real_bin1_double_ = math::square(hfi_response_real_bin1) - math::square(hfi_response_imag_bin1);
-        // const auto imag_bin1_double_ = 2 * ((hfi_response_imag_bin1) * (hfi_response_real_bin1));
-        // [[maybe_unused]] const auto hfi_bin2_half_angle = -hfi_bin2_angle / 2;
-        // [[maybe_unused]] const auto [sine_hfi_bin2_half_angle, cosine_hfi_bin2_half_angle] = hfi_bin2_half_angle.sincos();
-
-        [[maybe_unused]] const auto length_hfi_response = 
-            math::mag(all_state_.hfi_response_real_bin2, all_state_.hfi_response_imag_bin2) * 2;
 
         die_celsius_ = lpf_10hz(die_celsius_, temp_trimer.parse_u12(ADC1->IDATAR4));
 
-        // all_state_.torque_curr_cmd = 3 + iq16(math::sin(now_secs)) * 0.4_iq20;
-        // all_state_.torque_curr_cmd = 4.4_iq20;
-        all_state_.torque_curr_cmd = 3.3_iq20;
+        // const auto targ = 40_iq20 + iq16(math::sin(3 * now_secs)) * 253.4_iq20;
+        // all_state_.torque_curr_cmd += 0.00005_iq20 * CLAMP2((targ - all_state_.pll_state.angluar_speed.to_turns()), 10.0_iq20);
+        // all_state_.torque_curr_cmd = CLAMP2(all_state_.torque_curr_cmd, 2.4_iq20);
+        // all_state_.torque_curr_cmd = 0.0_iq20;
 
-        // if(true)DEBUG_PRINTLN(
-        //     // die_celsius_,
-        //     hsx, fx, gx);
+        {
+            const auto offset = all_state_.hfi_bin0_real_response;
+            const auto amp = math::mag(all_state_.hfi_bin2_real_response, all_state_.hfi_bin2_imag_response) * 2;
+            static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_VOLT));
+            [[maybe_unused]] const auto lq_est_uh = int(1000000 / factor) / (offset - amp);
+            [[maybe_unused]] const auto ld_est_uh = int(1000000 / factor) / (offset + amp);
+        }
+
+        {
+            [[maybe_unused]] const auto mag_volt = math::mag(all_state_.alphabeta_volt_gen[0], all_state_.alphabeta_volt_gen[1]);
+            [[maybe_unused]] const auto mag_curr = math::mag(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]);
+        }
 
         if(true)DEBUG_PRINTLN(
-            all_state_.hfi_response,
+            // all_state_.hfi_response,
             // die_celsius_,
             // s, c, 
             // pwm_u_.cvr(),
@@ -1245,20 +1242,41 @@ void myesc_main(){
             // all_state_.dq_volt_gen,
             // all_state_.selected_elec_angle.to_turns(),
             // all_state_.dq_curr_raw.d,
-            all_state_.dq_volt_gen.q,
-            all_state_.dq_curr_raw.q,
+            // all_state_.dq_volt_gen.q,
+            // all_state_.dq_curr_raw.q,
 
             // all_state_.spinhfi_alphabeta_volt_gen,
-            // all_state_.hfi_response_real_bin1,
-            // all_state_.hfi_response_imag_bin1,
-            // all_state_.dq_volt_gen.d,
-            // all_state_.dq_curr_raw.d,
-            all_state_.hfi_response_real_bin2,
-            all_state_.hfi_response_imag_bin2,
-            all_state_.openloop_elec_angle.to_turns(),
-            all_state_.pll_state.angle.to_turns(),
-            all_state_.hfi_elec_angle.to_turns(),
+            // all_state_.hfi_bin1_real_response,
+            // all_state_.hfi_bin2_real_response,
+            // all_state_.hfi_bin2_imag_response,
+            // all_state_.hfi_bin1_real_response,
+            // all_state_.hfi_bin1_imag_response,
+            // dsp::dot2v2(
+            // all_state_.hfi_bin2_real_response, all_state_.hfi_bin1_real_response,
+            // all_state_.hfi_bin2_imag_response, all_state_.hfi_bin1_imag_response
+            // ),
+            // all_state_.hfi_bin2_real_response_slowlp,
+            // all_state_.hfi_bin2_imag_response_slowlp,
+            // all_state_.dq_volt_gen.q,
+            all_state_.alphabeta_curr_raw.alpha,
+            all_state_.alphabeta_curr_raw.beta,
+            all_state_.dq_volt_ff,
+            // mag_volt,
+            // mag_curr,
+            // mag_volt / mag_curr,
+            // math::atan2(all_state_.hfi_bin1_imag_response,
+            //     all_state_.hfi_bin1_real_response),
+
+            // math::atan2(all_state_.hfi_bin2_imag_response,
+            //     all_state_.hfi_bin2_real_response) / 2,
+            // all_state_.openloop_elec_angle.to_turns(),
+            // all_state_.pll_state.angle.to_turns(),
+            // all_state_.hfi_elec_angle.to_turns(),
             all_state_.pll_state.angluar_speed.to_turns(),
+            // offset / (offset * offset - amp * amp),
+
+            // iq12(offset) * int(1000000/ factor),
+            // iq12(amp) * int(1000000/ factor),
             // all_state_.hfi_elec_angle.to_turns(),
             // hfi_bin2_angle.to_turns(),
 
@@ -1269,8 +1287,8 @@ void myesc_main(){
             // all_state_.uvw_dutycycle_gen,
             // all_state_.busbar_curr,
             // hfi_bin2_angle.to_turns()
-            // all_state_.hfi_response_imag_bin2,
-            // all_state_.hfi_response_real_bin2
+            // all_state_.hfi_bin2_imag_response,
+            // all_state_.hfi_bin2_real_response
             // full_arr,
             // all_state_.exe_duration.count(),
             

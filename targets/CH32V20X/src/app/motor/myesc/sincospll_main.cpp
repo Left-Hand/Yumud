@@ -101,7 +101,7 @@ void sincospll_main(){
     dsp::PllState pll_state_;
     pll_state_.reset();
 
-    static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from(F_SAMPLE, PLL_PI_FC);
+    static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(F_SAMPLE, PLL_PI_FC);
 
 
     Microseconds isr_elapsed_us_ = 0us;

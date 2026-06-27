@@ -38,21 +38,18 @@ struct [[nodiscard]] PllCoeffs final{
             dsp::cross2v2(normalized_sincos[0], state.sine , normalized_sincos[1], state.cosine),
             1.00_iq16);
 
-        state.angluar_speed = state.angluar_speed.from_turns(
-            state.angluar_speed.to_turns() + e * self.ki_discrete);
-
         uint32_t angle_bits = state.angle.to_turns().to_bits();
         angle_bits += static_cast<uint32_t>((
-            static_cast<uint64_t>(ts.to_bits()) * ((self.kp * e + state.angluar_speed.to_turns()).to_bits())
+            static_cast<uint64_t>(ts.to_bits()) * ((e * self.kp + state.angluar_speed.to_turns()).to_bits())
         ) >> 16);
         state.angle = state.angle.from_turns(
             uq32::from_bits(angle_bits)
         );
+        state.angluar_speed = state.angluar_speed.from_turns(
+            state.angluar_speed.to_turns() + e * self.ki_discrete);
     }
 
-    static constexpr PllCoeffs from(const size_t fs, const size_t fc){
-        const size_t kp = 2 * fc;
-        const size_t ki = fc * fc;
+    static constexpr PllCoeffs from_fskpki(const size_t fs, const size_t kp, const size_t ki){
         const uq16 ki_discrete = uq16::from_bits(
             static_cast<uint32_t>((static_cast<uint64_t>(ki) * (1u << 16)) / fs)
         );
@@ -63,6 +60,11 @@ struct [[nodiscard]] PllCoeffs final{
             .ki_discrete = ki_discrete,
             .ts = ts
         };
+    }
+    static constexpr PllCoeffs from_fsfc(const size_t fs, const size_t fc, const uq8 zeta = 1){
+        const size_t kp = size_t(zeta * 2 * fc);
+        const size_t ki = fc * fc;
+        return from_fskpki(fs, kp, ki);
     }
 };
 
