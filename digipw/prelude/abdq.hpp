@@ -72,11 +72,11 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     }
 
     [[nodiscard]] constexpr T length() const noexcept {
-        return mag(alpha, beta);
+        return math::mag(alpha, beta);
     }
 
     [[nodiscard]] constexpr T inv_length() const noexcept {
-        return inv_mag(alpha, beta);
+        return math::inv_mag(alpha, beta);
     }
 
     [[nodiscard]] constexpr T length_squared() const noexcept {
@@ -257,7 +257,7 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
     }
 
     [[nodiscard]] constexpr T length() const noexcept {
-        return mag(d,q);
+        return math::mag(d,q);
     }
 
     [[nodiscard]] constexpr DqCoord operator + () const noexcept {

@@ -65,7 +65,8 @@ using namespace ymd::myesc;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
-using MotorProfile = MotorProfile_E800;
+// using MotorProfile = MotorProfile_E800;
+using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;
 // using MotorProfile = MotorProfile_NiuLiu;
 // using MotorProfile = MotorProfile_2207;
@@ -77,7 +78,7 @@ struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 截止频率/带宽 (Hz)
     iq20 phase_inductance;        // 相电感 (H)
-    iq20 phase_resistance;        // 相电阻 (Ω)
+    iq20 phase_resistance_ohm;        // 相电阻 (Ω)
 
     [[nodiscard]] constexpr Result<digipw::PiCofficients, StringView> 
     try_into_precomputed() const noexcept {
@@ -100,7 +101,7 @@ struct LrSeriesCurrentRegulatorConfig{
             / uq32::from_bits(TAU_SCALE_DEN * self.fs);
 
         coeffs.kp = iq20(self.phase_inductance * self.fc) * iq16(TAU);
-        coeffs.ki_discrete = self.phase_resistance * norm_omega;                                    
+        coeffs.ki_discrete = self.phase_resistance_ohm * norm_omega;                                    
         return Ok(coeffs);
     }
 };
@@ -161,7 +162,7 @@ static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
     .fc = MotorProfile::CURRENT_CUTOFF_FREQ,
     .phase_inductance = MotorProfile::PHASE_INDUCTANCE,
-    .phase_resistance = MotorProfile::PHASE_RESISTANCE,
+    .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
 };
 
 static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_precomputed().unwrap();
@@ -459,7 +460,7 @@ void myesc_main(){
     constexpr auto FLUX_SENSORLESS_OB_COEFFS = dsp::motor_ctl::NonlinearFluxObserver::Config{
         .fs = FOC_FREQ,
         .phase_inductance = MotorProfile::PHASE_INDUCTANCE,
-        .phase_resistance = MotorProfile::PHASE_RESISTANCE,
+        .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
 
         // .observer_gain = 0.16_iq20, // [rad/s]
         // .pm_flux_linkage = 0.000017_iq20, // [V / (rad/s)]
@@ -477,7 +478,7 @@ void myesc_main(){
     [[maybe_unused]] constexpr auto FLUX_SENSORLESS_OB_COEFFS = dsp::motor_ctl::NonlinearFluxObserver::ConfigF32{
         .fs = FOC_FREQ,
         .phase_inductance = float(MotorProfile::PHASE_INDUCTANCE),
-        .phase_resistance = float(MotorProfile::PHASE_RESISTANCE),
+        .phase_resistance_ohm = float(MotorProfile::PHASE_RESISTANCE_OHM),
 
         // .observer_gain = 10.1023, // [rad/s]
         .observer_gain = 0.1023, // [rad/s]
@@ -486,21 +487,6 @@ void myesc_main(){
     }.try_into_precomputed().unwrap();
     #endif
 
-    #if 0
-    [[maybe_unused]] auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
-        FLUX_SENSORLESS_OB_COEFFS
-    };
-
-    [[maybe_unused]] auto lbg_sensorless_ob = dsp::motor_ctl::LuenbergerObserver{
-        dsp::motor_ctl::LuenbergerObserver::Config{
-            .fs = FOC_FREQ,
-            .phase_inductance = MotorProfile::PHASE_INDUCTANCE,
-            .phase_resistance = MotorProfile::PHASE_RESISTANCE
-        }
-    };
-
-
-    #endif
 
     [[maybe_unused]] auto smo_sensorless_ob = dsp::motor_ctl::SlideModeObserver{
         dsp::motor_ctl::SlideModeObserver::Config{
@@ -798,11 +784,11 @@ void myesc_main(){
         };
 
 
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 70, 1.5_iq16);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 55, 1.5_iq16);
 
         if(is_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = -0.10_iq16;
+            const auto speed = -0.40_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -1198,18 +1184,18 @@ void myesc_main(){
         // all_state_.torque_curr_cmd = CLAMP2(all_state_.torque_curr_cmd, 2.4_iq20);
         // all_state_.torque_curr_cmd = 0.0_iq20;
 
-        {
+        // {
             const auto offset = all_state_.hfi_bin0_real_response;
             const auto amp = math::mag(all_state_.hfi_bin2_real_response, all_state_.hfi_bin2_imag_response) * 2;
             static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_VOLT));
             [[maybe_unused]] const auto lq_est_uh = int(1000000 / factor) / (offset - amp);
             [[maybe_unused]] const auto ld_est_uh = int(1000000 / factor) / (offset + amp);
-        }
+        // }
 
-        {
-            [[maybe_unused]] const auto mag_volt = math::mag(all_state_.alphabeta_volt_gen[0], all_state_.alphabeta_volt_gen[1]);
-            [[maybe_unused]] const auto mag_curr = math::mag(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]);
-        }
+        // {
+            // [[maybe_unused]] const auto mag_volt = math::mag(all_state_.alphabeta_volt_gen[0], all_state_.alphabeta_volt_gen[1]);
+            // [[maybe_unused]] const auto mag_curr = math::mag(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]);
+        // }
 
         if(true)DEBUG_PRINTLN(
             // all_state_.hfi_response,
@@ -1247,8 +1233,8 @@ void myesc_main(){
 
             // all_state_.spinhfi_alphabeta_volt_gen,
             // all_state_.hfi_bin1_real_response,
-            // all_state_.hfi_bin2_real_response,
-            // all_state_.hfi_bin2_imag_response,
+            all_state_.hfi_bin2_real_response,
+            all_state_.hfi_bin2_imag_response,
             // all_state_.hfi_bin1_real_response,
             // all_state_.hfi_bin1_imag_response,
             // dsp::dot2v2(
@@ -1258,12 +1244,18 @@ void myesc_main(){
             // all_state_.hfi_bin2_real_response_slowlp,
             // all_state_.hfi_bin2_imag_response_slowlp,
             // all_state_.dq_volt_gen.q,
-            all_state_.alphabeta_curr_raw.alpha,
-            all_state_.alphabeta_curr_raw.beta,
-            all_state_.dq_volt_ff,
+            // all_state_.alphabeta_curr_raw.alpha,
+            // all_state_.alphabeta_curr_raw.beta,
+            // all_state_.dq_volt_ff,
+            // lq_est_uh,
+            // ld_est_uh,
             // mag_volt,
             // mag_curr,
             // mag_volt / mag_curr,
+            all_state_.alphabeta_curr_raw.length(),
+            all_state_.dq_volt_gen.length(),
+            all_state_.dq_volt_gen.length() / all_state_.alphabeta_curr_raw.length(),
+            // all_state_.alphabeta_volt_gen.length(),
             // math::atan2(all_state_.hfi_bin1_imag_response,
             //     all_state_.hfi_bin1_real_response),
 

@@ -12,7 +12,7 @@ namespace ymd::dsp::motor_ctl{
 class NonlinearFluxObserver final{
 public:
     struct [[nodiscard]] Precomputed final{
-        iq16 phase_resistance;
+        iq16 phase_resistance_ohm;
         iq20 temp1;
         iq12 pm_flux_sqr_mf_2;
         iq16 phase_inductance_mf;
@@ -21,7 +21,7 @@ public:
     struct [[nodiscard]] Config final{
         uint32_t fs;
         iq20 phase_inductance;
-        iq16 phase_resistance;
+        iq16 phase_resistance_ohm;
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
 
@@ -33,7 +33,7 @@ public:
             
             
             Precomputed coeffs{
-                .phase_resistance = phase_resistance,
+                .phase_resistance_ohm = phase_resistance_ohm,
                 .temp1 = temp1,
                 .pm_flux_sqr_mf_2 = pm_flux_sqr_mf_2,
                 .phase_inductance_mf = phase_inductance_mf
@@ -45,7 +45,7 @@ public:
     struct [[nodiscard]] ConfigF32 final{
         uint32_t fs;
         float phase_inductance;
-        float phase_resistance;
+        float phase_resistance_ohm;
         float observer_gain; // [rad/s]
         float pm_flux_linkage; // [V / (rad/s)]
 
@@ -57,7 +57,7 @@ public:
             
             
             Precomputed coeffs;
-            coeffs.phase_resistance = coeffs.phase_resistance.from(phase_resistance);
+            coeffs.phase_resistance_ohm = coeffs.phase_resistance_ohm.from(phase_resistance_ohm);
             coeffs.temp1 = coeffs.temp1.from(temp1);
             coeffs.pm_flux_sqr_mf_2 = coeffs.pm_flux_sqr_mf_2.from(pm_flux_sqr_mf_2);
             coeffs.phase_inductance_mf = coeffs.phase_inductance_mf.from(phase_inductance_mf);
@@ -126,7 +126,7 @@ public:
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
             // flux dynamics (prediction)
-            iq16 x_dot = -precomputed_.phase_resistance * I_alphabeta[i] + state_.v_alphabeta_last[i];
+            iq16 x_dot = -precomputed_.phase_resistance_ohm * I_alphabeta[i] + state_.v_alphabeta_last[i];
             // integrate prediction to current timestep
             state_.flux_state_mf[i] += x_dot;
 
