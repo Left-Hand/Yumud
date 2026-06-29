@@ -18,25 +18,10 @@ using namespace ymd;
 
 
 
-static constexpr size_t F_SAMPLE = 16000;
+static constexpr size_t F_SAMPLE = 36000;
 static constexpr auto DT = uq32::from_rcp(F_SAMPLE);
 
-// static constexpr size_t PLL_PI_FC = 1200;
-// static constexpr size_t PLL_PI_FC = 16000;
-// static constexpr size_t PLL_PI_FC = 1600;
-static constexpr size_t PLL_PI_FC = 1800;
-// static constexpr size_t PLL_PI_FC = 900;
-// static constexpr size_t PLL_LPF_FC = 1100;
-static constexpr size_t PLL_LPF_FC = 4000;
-// static constexpr size_t PLL_LPF_FC = 100;
-// static constexpr size_t PLL_PI_FC = 100;
-// static constexpr size_t PLL_LPF_FC = 100;
-// static constexpr size_t PLL_LPF_FC = 300;
-static constexpr size_t PLL_KP = 2 * PLL_PI_FC;
-static constexpr size_t PLL_KI = PLL_PI_FC * PLL_PI_FC;
-static constexpr uq16 PLL_KI_BY_FS = uq16::from_bits(
-    static_cast<uint32_t>((static_cast<uint64_t>(PLL_KI) * (1u << 16)) / F_SAMPLE)
-);
+
 
 static constexpr math::fixed<32, uint32_t> uq32_mul(const math::fixed<32, uint32_t> a, const size_t b){
     const auto bits = static_cast<uint32_t>((static_cast<uint64_t>(a.to_bits()) * b) & std::numeric_limits<uint32_t>::max());
@@ -86,6 +71,8 @@ void sincospll_main(){
 
     iq16 mock_angular_speed = 0;
     Angular<uq32> mock_angle_ = Zero;
+    Angular<uq32> sync_angle_ = Zero;
+    iq16 angular_speed_lp = 0;
 
     iq16 normalized_sine_ = Zero;
     iq16 normalized_cosine_ = Zero;
@@ -101,12 +88,12 @@ void sincospll_main(){
     dsp::PllState pll_state_;
     pll_state_.reset();
 
-    static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(F_SAMPLE, PLL_PI_FC);
+    static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(F_SAMPLE, 70, 1.7_iq16);
 
 
     Microseconds isr_elapsed_us_ = 0us;
-    [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
-    [[maybe_unused]] static constexpr auto LPF_ALPHA_F = float(LPF_ALPHA);
+    // [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
+    // [[maybe_unused]] static constexpr auto LPF_ALPHA_F = float(LPF_ALPHA);
     auto isr_fn = [&]{
         for(size_t i = 0; i < 1; i++){//simulate input
         // if(false){//simulate input
@@ -116,7 +103,8 @@ void sincospll_main(){
             // const iq16 mock_angular_speed = 45;
             // const iq16 mock_angular_speed = 450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(32 * now_secs));
             // mock_angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(10 * now_secs));
-            mock_angular_speed = 645 * iq16(math::sinpu(now_secs)) + 16 * iq16(math::sinpu(10 * now_secs));
+            mock_angular_speed = 645 * iq16(math::sinpu(now_secs)) + 8 * iq16(math::sinpu(10 * now_secs));
+            if(mock_angular_speed < 120) mock_angular_speed = 0;
             // const iq16 mock_angular_speed = 45 * iq16(math::sinpu(now_secs));
             // const iq16 mock_angular_speed = 4;
             // const iq16 mock_angular_speed = 2;
@@ -124,6 +112,8 @@ void sincospll_main(){
                 static_cast<int64_t>(mock_angle_.to_turns().to_bits()) + (
                 (static_cast<int64_t>(DT.to_bits()) * mock_angular_speed.to_bits()) >> 16)
             )));
+
+
 
             #if 1
             const auto [mock_sine, mock_cosine] = mock_angle_.sincos();
@@ -134,8 +124,8 @@ void sincospll_main(){
 
             [[maybe_unused]] const auto [noise_sine_, noise_cosine_] = [] -> std::tuple<iq16, iq16>{
                 const uint32_t noise = generate_noise();
-                const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x1fF));
-                const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x1fF));
+                const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x1ffF));
+                const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x1ffF));
                 return std::make_tuple(
                     iq16::from_bits(i1),
                     iq16::from_bits(i2)
@@ -157,17 +147,24 @@ void sincospll_main(){
         }
 
         {
-            normalized_sine_ = dsp::lpf_1o(normalized_sine_, measured_sine_, LPF_ALPHA);
+            normalized_sine_ = dsp::lpf_1o(normalized_sine_, measured_sine_, std::numeric_limits<uq32>::max());
             // normalized_cosine_ = dsp::lpf_1o(normalized_cosine_,
             //     measured_cosine_ * iq16(2 / 1.73) + measured_sine_ * iq16(1.0 / 1.73), 
             //     LPF_ALPHA
             // );
             normalized_cosine_ = dsp::lpf_1o(normalized_cosine_,
                 measured_cosine_,
-                LPF_ALPHA
+                std::numeric_limits<uq32>::max()
             );
             
             PLL_COEFFS.iterate(pll_state_, {normalized_sine_, normalized_cosine_});
+
+            static constexpr auto alpha = dsp::calc_lpf_alpha_uq32(F_SAMPLE, 70).unwrap();
+            angular_speed_lp = dsp::lpf_1o(angular_speed_lp, pll_state_.angluar_speed.to_turns(), alpha);
+            sync_angle_ = sync_angle_.from_turns(uq32::from_bits(static_cast<uint32_t>(
+                static_cast<int64_t>(sync_angle_.to_turns().to_bits()) + (
+                (static_cast<int64_t>(DT.to_bits()) * pll_state_.angluar_speed.to_turns().to_bits()) >> 16)
+            )));
         }
     };
 
@@ -198,10 +195,16 @@ void sincospll_main(){
 
             pll_state_.angle.to_turns(),
             pll_state_.angluar_speed.to_turns(),
+            pll_state_.angluar_speed_integral.to_turns(),
 
             // pll_state_.angluar_speed.to_turns(),
             // pll_state_.err_filtered,
+
             Angular<iq16>::from_turns(iq16(mock_angle_.to_turns()) - iq16(pll_state_.angle.to_turns())).signed_normalized().to_turns(),
+            sync_angle_.to_turns(),
+            measured_sine_,
+            measured_cosine_,
+            angular_speed_lp,
             // math::pu_to_uq32(math::atan2pu(measured_sine_, measured_cosine_))
             // (pll_state_.angle + Angular<uq32>::from_turns(0.125_uq32)).unsigned_normalized().to_turns()
             // math::atan2pu(normalized_sine_, normalized_cosine_)

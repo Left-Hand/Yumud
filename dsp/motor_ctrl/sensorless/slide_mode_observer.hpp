@@ -47,7 +47,6 @@ public:
 
     constexpr void reset(){
         state.reset();
-        turns_ = 0;
     }
 
 
@@ -73,9 +72,6 @@ public:
     }
 
 
-    // 获取估计的转子角度
-    Angular<iq16> angle() const noexcept {return Angular<iq16>::from_turns(turns_);}
-
 private:
     iq16 f_para_ = 0;
     iq16 g_para_ = 0;
@@ -83,9 +79,6 @@ private:
     iq16 kslf_ = 0;
 public:
     State state;
-
-    iq16 turns_ = 0;
-
     // 滑模阈值
     static constexpr iq16 E0 = iq16(1.5);
     // 滑模阈值的倒数

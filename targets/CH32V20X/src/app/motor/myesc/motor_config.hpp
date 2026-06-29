@@ -23,6 +23,19 @@ static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTA
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
 
-[[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.5_iq20;
+[[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.0_iq20;
+
+
+// using MotorProfile = MotorProfile_Ysc;
+// using MotorProfile = MotorProfile_Gim4010;
+// using MotorProfile = MotorProfile_M06Bare;
+// using MotorProfile = MotorProfile_Wheel;
+// using MotorProfile = MotorProfile_3505;
+using MotorProfile = MotorProfile_E800;
+// using MotorProfile = MotorProfile_NidecFan;
+// using MotorProfile = MotorProfile_36BLDB;
+// using MotorProfile = MotorProfile_NiuLiu;
+// using MotorProfile = MotorProfile_2207;
+
 
 }

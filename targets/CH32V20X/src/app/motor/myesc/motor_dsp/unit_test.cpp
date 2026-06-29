@@ -89,3 +89,34 @@ static_assert(std::abs((float)std::get<1>(resat_unit_circle(1.0_iq20, 1.73205080
 
 static_assert(std::abs((float)std::get<0>(resat_unit_circle(0.010_iq20, 0.0173205080757_iq20)) - 0.5f) < 1e-4);
 static_assert(std::abs((float)std::get<1>(resat_unit_circle(0.010_iq20, 0.0173205080757_iq20)) - 0.866025403784f) < 1e-4);
+
+
+    // if(a > b){
+    //     std::swap(a, b);
+    //     ratio = 1 - ratio;
+    // }
+    // if(b - a > 0.5_uq32){
+    //     return uq32((iq32(b) - iq32(a)) * ratio + iq32(a));
+    // }else{
+    //     return (b - a) * ratio + a;
+    // }
+
+// static_assert(abs_err_percentages((float)lerp_pu(0.5_uq32, 0.8_uq32, 0.1_uq32), 0.53f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.4_uq32, 0.1_uq32), 0.22f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.4_uq32, 0.9_uq32), 0.38f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.9_uq32, 0.5_uq32), 0.05f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.9_uq32, 0.2_uq32), 0.14f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.1_uq32, 0.5_uq32), 0.15f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.6_uq32, 0.8_uq32, 0.5_uq32), 0.70f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.6_uq32, 0.8_uq32, 0.2_uq32), 0.64f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.2_uq32, 0.5_uq32), 0.05f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.2_uq32, 0.2_uq32), 0.96f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.8_uq32, 0.6_uq32, 0.5_uq32), 0.70f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.8_uq32, 0.6_uq32, 0.2_uq32), 0.76f) < 1e-3);
+
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.8_uq32, 0.1_uq32), 0.16f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.2_uq32, 0.8_uq32, 0.9_uq32), 0.84f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.1_uq32, 0.9_uq32, 0.9_uq32), 0.92f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.1_uq32, 0.9_uq32, 0.1_uq32), 0.08f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.1_uq32, 0.1_uq32), 0.92f) < 1e-3);
+// static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.1_uq32, 0.9_uq32), 0.08f) < 1e-3);

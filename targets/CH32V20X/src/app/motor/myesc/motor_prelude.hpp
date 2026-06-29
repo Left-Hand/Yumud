@@ -42,6 +42,10 @@ enum class [[nodiscard]] HfiMethod:uint8_t{
     
 };
 
+struct TimerTick{
+    int16_t bits;
+};
+
 
 //不做温度补偿
 static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_25C = 0;
@@ -121,6 +125,23 @@ struct alignas(4) [[nodiscard]] DcCalibrateState{
     }
 };
 
+struct DebounceState{
+    uint32_t count;
+
+    static constexpr uint32_t MAX_VALUE = 2000;
+    constexpr bool is_positive() const {
+        return count == MAX_VALUE;
+    }
+
+    constexpr void add_sample(const bool s){
+        if(s){
+            count = std::min(MAX_VALUE, count + 8);
+        }else{
+            count = uint32_t(std::max(0, int(count - 1)));
+        }
+    }
+};
+
 struct alignas(4) [[nodiscard]] AllState{
     DcCalibrateState dc_calibrate_state;
 
@@ -137,13 +158,16 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> encoder_elec_angle;
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
+    Angular<uq32> hybrid_elec_angle;
     Angular<uq32> selected_elec_angle;
 
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_slowlp;
     iq20 unblance_curr_abs_lp;
-    
+    DebounceState u_disconn_dbs;
+    DebounceState v_disconn_dbs;
+
     DqCoord<iq20> dq_curr_raw;
     DqCoord<iq20> dq_curr_fastlp;
 
@@ -155,7 +179,7 @@ struct alignas(4) [[nodiscard]] AllState{
     DqCoord<iq20> dq_volt_gen;
     DqCoord<iq20> dq_volt_ff;
 
-    AlphaBetaCoord<iq20> hfi_alphabeta_volt;
+    // AlphaBetaCoord<iq20> hfi_alphabeta_volt;
     AlphaBetaCoord<iq20> alphabeta_volt_gen;
     UvwCoord<iq16> uvw_dutycycle_gen;
     AlphaBetaCoord<iq20> deadtime_comp_alphabeta_dutycycle;
@@ -175,11 +199,14 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 hfi_bin2_real_response_slowlp;
     iq20 hfi_bin2_imag_response_slowlp;
 
-    dsp::PllState pll_state;
+    dsp::PllState hfi_pll_state;
+    dsp::PllState obs_pll_state;
 
-    Microseconds exe_elapsed_us;
-    Microseconds last_exe_begin_us;
-    Microseconds exe_duration;
+
+
+    TimerTick isr_entry_tick;
+    TimerTick isr_exit_tick;
+    TimerTick isr_elapsed_ticks;
 
 
     void reset(){

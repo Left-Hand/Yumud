@@ -20,7 +20,7 @@ public:
 
     struct [[nodiscard]] Config final{
         uint32_t fs;
-        iq20 phase_inductance;
+        iq20 phase_inductance_mh;
         iq16 phase_resistance_ohm;
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
@@ -29,7 +29,7 @@ public:
             auto & cfg = *this;
             const iq12 pm_flux_sqr_mf_2 = math::square(iq12(cfg.pm_flux_linkage * cfg.fs));
             const iq20 temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
-            const iq16 phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
+            const iq16 phase_inductance_mf = (cfg.phase_inductance_mh * cfg.fs * uq32(1e-3));
             
             
             Precomputed coeffs{
@@ -44,7 +44,7 @@ public:
 
     struct [[nodiscard]] ConfigF32 final{
         uint32_t fs;
-        float phase_inductance;
+        float phase_inductance_mh;
         float phase_resistance_ohm;
         float observer_gain; // [rad/s]
         float pm_flux_linkage; // [V / (rad/s)]
@@ -53,7 +53,7 @@ public:
             auto & cfg = *this;
             const float pm_flux_sqr_mf_2 = math::square((cfg.pm_flux_linkage * cfg.fs));
             const float temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
-            const float phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
+            const float phase_inductance_mf = (cfg.phase_inductance_mh * cfg.fs * 1e-3f);
             
             
             Precomputed coeffs;
@@ -68,14 +68,14 @@ public:
 
     struct [[nodiscard]] State final{
         std::array<iq16, 2> flux_state_mf;        // [Vs * Fs]
+        std::array<iq16, 2> eta_mf;        // [Vs * Fs]
         std::array<iq16, 2> v_alphabeta_last; // [V]
-        uq32 turns;                   // [rad]
 
         static constexpr State zero() {
             return State{
                 .flux_state_mf = {0, 0},
+                .eta_mf = {0, 0},
                 .v_alphabeta_last = {0, 0},
-                .turns = 0
             };
         }
 
@@ -121,7 +121,7 @@ public:
             static_cast<iq16>((alphabeta_curr)[1]), 
         };
         // alpha-beta vector operations
-        iq16 eta_mf[2];
+        std::array<iq16, 2> eta_mf;
 
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
@@ -156,12 +156,7 @@ public:
         state_.v_alphabeta_last[0] = static_cast<iq16>((alphabeta_volt)[0]);
         state_.v_alphabeta_last[1] = static_cast<iq16>((alphabeta_volt)[1]);
 
-        // phase_ = atan2(eta_mf[1], eta_mf[0]);
-        state_.turns = math::atan2pu(eta_mf[1], eta_mf[0]);
-    }
-
-    constexpr Angular<uq32> angle() const noexcept {
-        return Angular<uq32>::from_turns(state_.turns);
+        state_.eta_mf = eta_mf;
     }
 
     constexpr const State & state() const noexcept {
