@@ -166,23 +166,25 @@ struct alignas(4) [[nodiscard]] AllState{
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_slowlp;
-    iq20 unblance_curr_abs_lp;
-    DebounceState u_disconn_dbs;
-    DebounceState v_disconn_dbs;
 
+
+    DqCoord<iq20> dq_curr_setp;
     DqCoord<iq20> dq_curr_raw;
     DqCoord<iq20> dq_curr_fastlp;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
-    AlphaBetaCoord<iq20> spinhfi_alphabeta_volt_gen;
+
 
     DqCoord<iq20> dq_volt_integral;
     DqCoord<iq20> dq_volt_gen;
-    DqCoord<iq20> dq_volt_ff;
+    // DqCoord<iq20> dq_dutycycle_gen;
+    DqCoord<iq20> dq_volt_decouple;
 
     // AlphaBetaCoord<iq20> hfi_alphabeta_volt;
+    AlphaBetaCoord<iq20> alphabeta_dutycycle_gen;
     AlphaBetaCoord<iq20> alphabeta_volt_gen;
+    AlphaBetaCoord<iq20> spinhfi_alphabeta_volt_gen;
     UvwCoord<iq16> uvw_dutycycle_gen;
     AlphaBetaCoord<iq20> deadtime_comp_alphabeta_dutycycle;
 
@@ -191,6 +193,9 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 busbar_curr;
     iq20 torque_curr_cmd;
 
+    iq20 unblance_curr_abs_lp;
+    DebounceState u_disconn_dbs;
+    DebounceState v_disconn_dbs;
 
     iq20 hfi_response;
     iq20 hfi_bin0_real_response;

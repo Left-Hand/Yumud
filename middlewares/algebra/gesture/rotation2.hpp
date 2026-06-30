@@ -19,6 +19,15 @@ struct [[nodiscard]] Rotation2 final{
         };
     }
 
+    [[nodiscard]] static constexpr 
+    Rotation2 from_angle_approx(auto angle) {
+        const auto [s, c] = angle.sincos_approx();
+        return Rotation2{
+            static_cast<T>(s), 
+            static_cast<T>(c)
+        };
+    }
+
     // 恒等旋转（单位旋转）
     [[nodiscard]] static constexpr 
     Rotation2 identity() {

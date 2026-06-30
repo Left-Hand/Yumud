@@ -696,10 +696,12 @@ void myesc_main(){
 
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
+        // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, PLL_FC, PLL_ZETA);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
 
-
-        const bool is_openloop = true;
-        // const bool is_openloop = false;
+    
+        const bool run_openloop = true;
+        // const bool run_openloop = false;
         const bool run_hfi = true;
         // const bool run_hfi = false;
 
@@ -722,11 +724,9 @@ void myesc_main(){
             // state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(uq32(iq32(state.hfi_pll_state.angluar_speed_integral.to_turns() * uq32(1.0 / 3500))));
         };
 
-        [[maybe_unused]] auto iterate_encoder_angle = [&](){
+        [[maybe_unused]] auto iterate_encoder_angle = [&](const Angular<uq32> encoder_angle){
             #if 0
-            const auto angle_packet = mag_encoder_.update().examine();
-
-            const auto encoder_lap_turns = angle_packet.parse().unwrap().to_turns();
+            const auto encoder_lap_turns = encoder_angle.to_turns();
             const auto prev_encoder_lapturns = state.encoder_lap_turns;
             const auto encoder_diff_turns = uq32_wrapped_diff(prev_encoder_lapturns, encoder_lap_turns);
 
@@ -746,9 +746,9 @@ void myesc_main(){
         };
 
 
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
 
-        if(is_openloop){
+
+        if(run_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
             const auto speed = -0.40_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
@@ -762,14 +762,6 @@ void myesc_main(){
 
 
         if(run_hfi){
-            // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 30);
-            // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fskpki(FOC_FREQ, 2000, 30000);
-
-
-            // PLL_COEFFS.iterate(state.hfi_pll_state, {
-            //     iq16(state.hfi_bin2_real_response * 30),
-            //     iq16(state.hfi_bin2_imag_response * 30)
-            // });
             auto bin2_real_response = state.hfi_bin2_real_response;
             auto bin2_imag_response = state.hfi_bin2_imag_response;
 
@@ -817,17 +809,100 @@ void myesc_main(){
 
         //#endregion
 
-        const auto dq_curr_raw = state.alphabeta_curr_raw.to_dq(elec_sincos);
-        state.dq_curr_fastlp[0] = lpf_1000hz(state.dq_curr_fastlp[0], dq_curr_raw[0]);
-        state.dq_curr_fastlp[1] = lpf_1000hz(state.dq_curr_fastlp[1], dq_curr_raw[1]);
+        {
+            const auto dq_curr_raw = state.alphabeta_curr_raw.to_dq(elec_sincos);
+            state.dq_curr_fastlp[0] = lpf_1000hz(state.dq_curr_fastlp[0], dq_curr_raw[0]);
+            state.dq_curr_fastlp[1] = lpf_1000hz(state.dq_curr_fastlp[1], dq_curr_raw[1]);
+            state.dq_curr_raw = dq_curr_raw;
+        }
 
-        
-        DqCoord<iq20> dq_curr_setp = DqCoord<iq20>{0.0_iq20, state.torque_curr_cmd};
-        
-        const bool do_mtpa = false;
+        {
 
-        //TODO mtpa
-        if(do_mtpa){
+            enum class DqCurrentSource{
+                IdAlwaysZero,
+                IdAlwaysZeroRamped,
+                Independent,
+                IndependentRamped,
+                Torque,
+            };
+
+
+            iq20 d_curr_setp = 0;
+            iq20 q_curr_setp = state.torque_curr_cmd;
+            
+            const bool do_mtpa = false;
+            const bool do_mtpv = false;
+
+            //TODO mtpa
+            if(do_mtpa){
+            }
+
+            //TODO mtpv
+            if(do_mtpv){
+            }
+
+            state.dq_curr_setp.d = d_curr_setp;
+            state.dq_curr_setp.q = q_curr_setp;
+
+        }
+
+
+        {
+            iq20 d_volt_decouple = 0;
+            iq20 q_volt_decouple = 0;
+
+            const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
+            const bool is_speed_stable = true;
+            const auto omega = state.hfi_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
+
+            if(cross_decoupling_enabled){
+            // if(true){
+                d_volt_decouple -= MotorProfile::PHASE_INDUCTANCE_MH * state.dq_curr_raw.q * omega;
+                q_volt_decouple += MotorProfile::PHASE_INDUCTANCE_MH * state.dq_curr_raw.d * omega;
+            }
+
+            const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
+            if(bemf_decoupling_enabled){
+                q_volt_decouple += MotorProfile::FLUX_LINKAGE * omega;
+            }
+
+            state.dq_volt_decouple.d = d_volt_decouple;
+            state.dq_volt_decouple.q = q_volt_decouple;
+        }
+
+
+        {
+            const iq20 kp = PI_CONTROLLER_COEFFS.kp;
+            const iq20 ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
+
+            const iq20 d_curr_err = (state.dq_curr_setp[0] - state.dq_curr_raw[0]);
+            const iq20 q_curr_err = (state.dq_curr_setp[1] - state.dq_curr_raw[1]);
+
+            state.dq_volt_integral[0] = state.dq_volt_integral[0] + d_curr_err * ki_discrete;
+            state.dq_volt_integral[1] = state.dq_volt_integral[1] + q_curr_err * ki_discrete;
+            
+            
+            DqCoord<iq20> dq_volt_gen = Zero;
+            
+            //电压限制圆的半径
+            const iq20 volt_limit_radius = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
+
+            {
+                const iq20 d_volt_limit = volt_limit_radius;
+                const iq20 d_volt_unclamped = state.dq_volt_decouple.d + d_curr_err * kp + state.dq_volt_integral.d;
+                dq_volt_gen.d = CLAMP2(d_volt_unclamped, d_volt_limit);
+                state.dq_volt_integral.d += (dq_volt_gen.d - d_volt_unclamped);
+            }
+            
+            {
+                const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_gen.d);
+                // const iq20 q_volt_limit = volt_limit_radius;
+                const iq20 q_volt_unclamped = state.dq_volt_decouple.q + q_curr_err * kp + state.dq_volt_integral.q;
+                dq_volt_gen.q = CLAMP2(q_volt_unclamped, q_volt_limit);
+                state.dq_volt_integral.q += (dq_volt_gen.q - q_volt_unclamped);
+            }
+
+            state.dq_volt_gen = dq_volt_gen;
         }
 
 
@@ -903,136 +978,81 @@ void myesc_main(){
         #endif
 
 
-        iq20 d_volt_ff = 0;
-        iq20 q_volt_ff = 0;
-
-        const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
-
-        if(cross_decoupling_enabled){
-        // if(true){
-            const bool is_speed_stable = true;
-            // const auto omega = state.rotor_rotation_state_var.x2 * is_speed_stable * iq16(TAU);
-            const auto omega = state.hfi_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
-            d_volt_ff -= MotorProfile::PHASE_INDUCTANCE_MH * dq_curr_raw.q * omega;
-            q_volt_ff += MotorProfile::PHASE_INDUCTANCE_MH * dq_curr_raw.d * omega;
-        }
-
-        const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
-        if(bemf_decoupling_enabled){
-            const bool is_speed_stable = true;
-            const auto omega = state.hfi_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
-           q_volt_ff += MotorProfile::FLUX_LINKAGE * omega;
-        }
-
-        state.dq_volt_ff.d = d_volt_ff;
-        state.dq_volt_ff.q = q_volt_ff;
 
 
-        
-        const iq20 kp = PI_CONTROLLER_COEFFS.kp;
-        const iq20 ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
-
-        const iq20 d_curr_err = (dq_curr_setp[0] - dq_curr_raw[0]);
-        const iq20 q_curr_err = (dq_curr_setp[1] - dq_curr_raw[1]);
-
-        state.dq_volt_integral[0] = state.dq_volt_integral[0] + d_curr_err * ki_discrete;
-        state.dq_volt_integral[1] = state.dq_volt_integral[1] + q_curr_err * ki_discrete;
-        
-        
-        DqCoord<iq20> dq_volt_gen = Zero;
-        
-        #if 1
-        const iq20 volt_limit_radius = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
-        {
-            const iq20 d_volt_limit = volt_limit_radius;
-            const iq20 d_volt_unclamped = d_volt_ff + d_curr_err * kp + state.dq_volt_integral[0];
-            dq_volt_gen[0] = CLAMP2(d_volt_unclamped, d_volt_limit);
-            state.dq_volt_integral[0] += (dq_volt_gen[0] - d_volt_unclamped);
-        }
-        
-        {
-            const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_gen[0]);
-            // const iq20 q_volt_limit = volt_limit_radius;
-            const iq20 q_volt_unclamped = q_volt_ff + q_curr_err * kp + state.dq_volt_integral[1];
-            dq_volt_gen[1] = CLAMP2(q_volt_unclamped, q_volt_limit);
-            state.dq_volt_integral[1] += (dq_volt_gen[1] - q_volt_unclamped);
-        }
-        #endif
 
         const auto inv_busbar_volt = INV_BUS_VOLT;
         const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
 
-        auto dq_dutycycle_gen = dq_volt_gen * inv_busbar_volt_3by2;
+        auto dq_dutycycle_gen = state.dq_volt_gen * inv_busbar_volt_3by2;
 
-        auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
+        {
+            auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
 
-        // const bool deadtime_comp_en = false;
-        const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
+            // const bool deadtime_comp_en = false;
+            const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
 
-        if(deadtime_comp_en){
-            // https://www.zhihu.com/question/270446098/answer/3215795384
-            // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
+            if(deadtime_comp_en){
+                // https://www.zhihu.com/question/270446098/answer/3215795384
+                // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
 
-            const auto uvw_curr_fastlp = state.alphabeta_curr_fastlp.to_uvw();
-            static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
-            static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
-            static constexpr auto DEADTIME_COMP_DUTYCYCLE = uq32(
-                (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
-            );
+                const auto uvw_curr_fastlp = state.alphabeta_curr_fastlp.to_uvw();
+                static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
+                static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
+                static constexpr auto DEADTIME_COMP_DUTYCYCLE = uq32(
+                    (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
+                );
 
-            const auto alpha_sign = (
-                +2 * math::sign(uvw_curr_fastlp.u) 
-                - math::sign(uvw_curr_fastlp.v) 
-                - math::sign(uvw_curr_fastlp.w)
-            ) * ONE_BY_3;
+                const auto alpha_sign = (
+                    +2 * math::sign(uvw_curr_fastlp.u) 
+                    - math::sign(uvw_curr_fastlp.v) 
+                    - math::sign(uvw_curr_fastlp.w)
+                ) * ONE_BY_3;
 
-            const auto beta_sign = (
-                + math::sign(uvw_curr_fastlp.v) 
-                - math::sign(uvw_curr_fastlp.w)
-            ) * ONE_BY_SQRT3;
+                const auto beta_sign = (
+                    + math::sign(uvw_curr_fastlp.v) 
+                    - math::sign(uvw_curr_fastlp.w)
+                ) * ONE_BY_SQRT3;
 
-            const auto deadtime_comp_alphabeta_dutycycle = AlphaBetaCoord<iq20>{
-                alpha_sign * DEADTIME_COMP_DUTYCYCLE,
-                beta_sign * DEADTIME_COMP_DUTYCYCLE
-            };
+                const auto deadtime_comp_alphabeta_dutycycle = AlphaBetaCoord<iq20>{
+                    alpha_sign * DEADTIME_COMP_DUTYCYCLE,
+                    beta_sign * DEADTIME_COMP_DUTYCYCLE
+                };
 
 
-            #define DEADTIME_LPF_FN lpf_100hz
-            // #define DEADTIME_LPF_FN lpf_allpass
-            state.deadtime_comp_alphabeta_dutycycle[0] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[0], deadtime_comp_alphabeta_dutycycle[0]);
-            state.deadtime_comp_alphabeta_dutycycle[1] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[1], deadtime_comp_alphabeta_dutycycle[1]);
+                #define DEADTIME_LPF_FN lpf_100hz
+                // #define DEADTIME_LPF_FN lpf_allpass
+                state.deadtime_comp_alphabeta_dutycycle[0] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[0], deadtime_comp_alphabeta_dutycycle[0]);
+                state.deadtime_comp_alphabeta_dutycycle[1] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[1], deadtime_comp_alphabeta_dutycycle[1]);
 
-            alphabeta_dutycycle_gen.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
-            alphabeta_dutycycle_gen.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
+                alphabeta_dutycycle_gen.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
+                alphabeta_dutycycle_gen.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
+            }
+
+
+            const bool spin_hfi_enabled = true;
+            // const bool spin_hfi_enabled = false;
+
+            if(spin_hfi_enabled){
+                state.spinhfi_alphabeta_volt_gen  = generate_alpha_beta_volt_by_spin_hfi();
+                alphabeta_dutycycle_gen = alphabeta_dutycycle_gen + 
+                    state.spinhfi_alphabeta_volt_gen * inv_busbar_volt;
+            }
+
+            state.alphabeta_dutycycle_gen = alphabeta_dutycycle_gen;
         }
 
 
-        const bool spin_hfi_enabled = true;
-        // const bool spin_hfi_enabled = false;
 
-        if(spin_hfi_enabled){
-            state.spinhfi_alphabeta_volt_gen  = generate_alpha_beta_volt_by_spin_hfi();
-            alphabeta_dutycycle_gen = alphabeta_dutycycle_gen + 
-                state.spinhfi_alphabeta_volt_gen * inv_busbar_volt;
-        }
+        state.uvw_dutycycle_gen = SVM(state.alphabeta_dutycycle_gen);
 
-        auto uvw_dutycycle_gen = SVM(
-            alphabeta_dutycycle_gen
-        );
+        set_uvw_dutycycle(state.uvw_dutycycle_gen);
 
 
-
-        set_uvw_dutycycle(uvw_dutycycle_gen);
-
-
-        state.busbar_curr_raw = (state.uvw_curr_raw.dot(uvw_dutycycle_gen));
+        state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_gen));
         state.busbar_curr = lpf_10hz(state.busbar_curr, state.busbar_curr_raw);
-        state.uvw_dutycycle_gen = uvw_dutycycle_gen;
 
-        state.dq_curr_raw = dq_curr_raw;
-        state.dq_volt_gen = dq_volt_gen;
 
-        state.alphabeta_volt_gen = alphabeta_dutycycle_gen * BUS_VOLT;
 
         // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_raw);
         // smo_sensorless_ob_.update({state.alphabeta_curr_raw, state.alphabeta_volt_gen});
@@ -1190,7 +1210,7 @@ void myesc_main(){
             // all_state_.dq_volt_gen.q,
             // all_state_.alphabeta_curr_raw.alpha,
             // all_state_.alphabeta_curr_raw.beta,
-            // all_state_.dq_volt_ff,
+            // all_state_.dq_volt_decouple,
             // lq_est_uh,
             // ld_est_uh,
             // mag_volt,
