@@ -1,7 +1,7 @@
 #include "dsp_lpf.hpp"
 #include "dsp_vec.hpp"
 
-#include "dsp/fft/fft32.hpp"
+#include "dsp_fft32.hpp"
 
 using namespace ymd;
 using namespace ymd::dsp;
@@ -120,3 +120,17 @@ static_assert(std::abs((float)std::get<1>(resat_unit_circle(0.010_iq20, 0.017320
 // static_assert(abs_err_percentages((float)lerp_pu(0.1_uq32, 0.9_uq32, 0.1_uq32), 0.08f) < 1e-3);
 // static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.1_uq32, 0.1_uq32), 0.92f) < 1e-3);
 // static_assert(abs_err_percentages((float)lerp_pu(0.9_uq32, 0.1_uq32, 0.9_uq32), 0.08f) < 1e-3);
+
+
+namespace {
+    [[maybe_unused]] static void test_dft_bin_0(){ 
+        constexpr auto real_in = [] ->std::array<math::fixed<16, int32_t>, 32>{
+            std::array<math::fixed<16, int32_t>, 32> arr;
+            arr.fill(1);
+            return arr;
+        }();
+    
+        static_assert(dft32_bin0<16>(std::span(real_in)) == 1);
+    }
+
+}

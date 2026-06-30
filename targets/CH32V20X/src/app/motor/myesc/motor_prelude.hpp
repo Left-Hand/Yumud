@@ -42,8 +42,10 @@ enum class [[nodiscard]] HfiMethod:uint8_t{
     
 };
 
-struct TimerTick{
-    int16_t bits;
+struct alignas(4) TimerTick{
+    // int16_t bits;
+    uint16_t counter_value;
+    bool is_up_counting;
 };
 
 
@@ -202,11 +204,12 @@ struct alignas(4) [[nodiscard]] AllState{
     dsp::PllState hfi_pll_state;
     dsp::PllState obs_pll_state;
 
-
+    size_t hfi_idx = 0;
+    std::array<iq20, 32> hfi_buffer;
+    bool hfi_is_neg_samp = false;
 
     TimerTick isr_entry_tick;
     TimerTick isr_exit_tick;
-    TimerTick isr_elapsed_ticks;
 
 
     void reset(){

@@ -97,12 +97,10 @@ void AdcPrimary::set_regular_channels(
     const std::initializer_list<AdcChannelConfig> & regular_list
 ){ 
     adc_set_regular_count(p_inst_, regular_list.size());
-    size_t idx = 0;
-    for(const auto & regular_cfg : regular_list){
-        adc_configure_regular_channel(p_inst_, idx + 1, regular_cfg);
+    for(size_t i = 0; i < regular_list.size(); i++){
+        auto & regular_cfg = regular_list.begin()[i];
+        adc_configure_regular_channel(p_inst_, i + 1, regular_cfg);
         adc::details::install_pin(regular_cfg.ch_sel);
-
-        idx++;
     }
 }
 
@@ -111,23 +109,20 @@ void AdcPrimary::set_injected_channels(
     const std::initializer_list<AdcChannelConfig> & injected_list
 ){
     adc_set_injected_count(p_inst_, injected_list.size());
-    uint8_t idx = 0;
-    for(const auto & injected_cfg : injected_list){
+    // uint8_t idx = 0;
+    for(size_t i = 0; i < injected_list.size(); i++){
+        const auto & injected_cfg  = injected_list.begin()[i];
 
-
-        adc_configure_injected_channel(p_inst_, idx + 1, injected_cfg);
+        adc_configure_injected_channel(p_inst_, i + 1, injected_cfg);
 
         ADC_SetInjectedOffset(
             SPL_INST(p_inst_), 
-            ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (idx),
+            ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i),
             
             // offset can`t be negative
             static_cast<uint16_t>(cali_data_)
         ); 
-
         adc::details::install_pin(injected_cfg.ch_sel);
-
-        idx++;
     }
 }
 
@@ -242,8 +237,12 @@ uint16_t AdcPrimary::injected_conv_result(const size_t rank){
     __builtin_abort();
 }
 
+
+void adc_enable_auto_inject(void * p_inst, const Enable en){
+    ADC_AutoInjectedConvCmd(SPL_INST(p_inst), (en == EN));
+}
 void AdcPrimary::enable_auto_inject(const Enable en){
-    ADC_AutoInjectedConvCmd(SPL_INST(p_inst_), (en == EN));
+    adc_enable_auto_inject(p_inst_, en);
 }
 
 

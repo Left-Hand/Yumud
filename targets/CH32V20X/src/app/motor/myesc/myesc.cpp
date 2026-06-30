@@ -14,7 +14,6 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/dma/dma.hpp"
 
-#include "dsp/fft/fft32.hpp"
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
@@ -38,6 +37,7 @@
 
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
+#include "motor_dsp/dsp_fft32.hpp"
 
 
 
@@ -55,9 +55,6 @@ using namespace ymd::myesc;
 
 
 #define DBG_UART hal::usart2
-
-// static constexpr uint32_t DEBUG_UART_BAUD = 576000;
-// static constexpr uint32_t CHOPPER_FREQ = 24_KHz;
 
 
 using Leso = ymd::dsp::adrc::MotorLeso;
@@ -110,9 +107,6 @@ static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
 }
 
 
-static constexpr auto LPF_ALPHA_10HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 10).unwrap();
-static constexpr auto LPF_ALPHA_800HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 800).unwrap();
-
 template<size_t Q>
 static constexpr math::fixed<Q, int32_t> lpf_10hz(
     math::fixed<Q, int32_t> x_state,
@@ -159,6 +153,48 @@ static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
 
 static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_precomputed().unwrap();
 
+static constexpr iiq32 uq32_wrapped_diff(const uq32 last, const uq32 now){
+    const iiq32 diff = iiq32::from_bits(
+        static_cast<int64_t>(now.to_bits()) - static_cast<int64_t>(last.to_bits())
+    );
+    if(diff > iiq32(0.5)) return diff - 1;
+    if(diff < iiq32(-0.5)) return diff + 1;
+    return diff;
+};
+
+static_assert(uq32_wrapped_diff(0.35_uq32, 0.6_uq32).to_bits() == iiq32(0.25).to_bits());
+static_assert(uq32_wrapped_diff(0.75_uq32, 0.50_uq32).to_bits() == iiq32(-0.25).to_bits());
+static_assert(uq32_wrapped_diff(0.05_uq32, 0.80_uq32).to_bits() == iiq32(-0.25).to_bits());
+
+static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last, const uq32 now){
+    const auto diff = uq32_wrapped_diff(last, now);
+    return state + diff;
+}
+
+
+
+
+static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
+    const auto abs_ref = math::abs(ref);
+    if(abs_ref < CURRENT_NOISE_STDVAR) return false;
+    const auto abs_meas = math::abs(meas);
+    return (abs_meas * 30 < abs_ref) and (abs_meas < CURRENT_NOISE_STDVAR);
+}
+
+
+
+
+iq16 _tmrticks_to_us(const int32_t counter_value){
+    static constexpr uint32_t factor = (1ull << 32) * (1.0 / 144);
+    return iq16::from_bits(int32_t((int64_t(counter_value) * factor) >> 16));
+}
+
+iq16 tmrticks_to_us(const TimerTick tick){
+    int32_t counter_value = int32_t(tick.counter_value);
+    if(tick.is_up_counting) counter_value = TIMER_ARR_VALUE + counter_value;
+    else counter_value = TIMER_ARR_VALUE - counter_value;
+    return _tmrticks_to_us(counter_value);
+}
 
 
 
@@ -191,45 +227,6 @@ static void init_adc(){
 
 
 
-static constexpr iiq32 uq32_wrapped_diff(const uq32 last, const uq32 now){
-    const iiq32 diff = iiq32::from_bits(
-        static_cast<int64_t>(now.to_bits()) - static_cast<int64_t>(last.to_bits())
-    );
-    if(diff > iiq32(0.5)) return diff - 1;
-    if(diff < iiq32(-0.5)) return diff + 1;
-    return diff;
-};
-
-static_assert(uq32_wrapped_diff(0.35_uq32, 0.6_uq32).to_bits() == iiq32(0.25).to_bits());
-static_assert(uq32_wrapped_diff(0.75_uq32, 0.50_uq32).to_bits() == iiq32(-0.25).to_bits());
-static_assert(uq32_wrapped_diff(0.05_uq32, 0.80_uq32).to_bits() == iiq32(-0.25).to_bits());
-
-static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last, const uq32 now){
-    const auto diff = uq32_wrapped_diff(last, now);
-    return state + diff;
-}
-
-
-
-
-static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
-    const auto abs_ref = math::abs(ref);
-    if(abs_ref < CURRENT_NOISE_STDVAR) return false;
-    const auto abs_meas = math::abs(meas);
-    return (abs_meas * 30 < abs_ref) and (abs_meas < CURRENT_NOISE_STDVAR);
-}
-
-
-static constexpr float HALFWAVE_MICROS = 1000000.0 / (CHOPPER_FREQ * 2);
-static constexpr size_t TIMER_ARR_VALUE = 144000000 / (CHOPPER_FREQ * 2) - 1;
-static constexpr float ADC_SAMPLE_TICKS = (13.5 + 1.5) * 3;
-static constexpr float ADC_ALIGNED_IPCORE_FREQ = 144000000;
-static constexpr float ADC_CLOCK_DIVIDER_COUNT = 8;
-static constexpr float ADC_SAMPLE_ELAPSED_MICROS = ADC_SAMPLE_TICKS * (1000000.0 / (ADC_ALIGNED_IPCORE_FREQ / ADC_CLOCK_DIVIDER_COUNT));
-static constexpr float ADC_SAMPLE_TRIM_DUTYCYCLE = ADC_SAMPLE_ELAPSED_MICROS / HALFWAVE_MICROS;
-
-static constexpr float PWMGEN_MAX_DUTYCYCLE = 1.0f - ADC_SAMPLE_TRIM_DUTYCYCLE;
-static constexpr size_t ADC_SAMPLE_TRIM_CC_VALUE = (TIMER_ARR_VALUE + 1) * ADC_SAMPLE_TRIM_DUTYCYCLE;
 
 
 void myesc_main(){
@@ -314,20 +311,24 @@ void myesc_main(){
         .out_en = DISEN
     });
     // timer.oc<4>().cvr() = timer.arr() - ADC_SAMPLE_TRIM_CC_VALUE - 5;
-    timer.oc<4>().cvr() = timer.arr() - 5;
-    // timer.oc<4>().cvr() = timer.arr() - 140;
-    // timer.oc<4>().cvr() = 2;
-    // timer.oc<4>().cvr() = timer.arr() / 2;
+    timer.oc<4>().cvr() = timer.arr() - 8;
 
     timer.oc<4>().enable_output(EN);
 
     #define TIM_INST TIM1
 
     auto get_timer_tick = []() -> TimerTick{
+        auto * inst = TIM_INST;
         if(timer.is_up_counting()){
-            return TimerTick(static_cast<uint16_t>(timer.arr()) + static_cast<uint16_t>(timer.cnt()));
+            return TimerTick{
+                .counter_value = static_cast<uint16_t>(inst->CNT),
+                .is_up_counting = true
+            };
         }else{
-            return TimerTick(static_cast<uint16_t>(timer.arr()) - static_cast<uint16_t>(timer.cnt()));
+            return TimerTick{
+                .counter_value = static_cast<uint16_t>(inst->CNT),
+                .is_up_counting = false
+            };
         }
     };
 
@@ -508,50 +509,14 @@ void myesc_main(){
 
     using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
 
-    #if 0
 
-    Leso leso = Leso{
-        MotorProfile::LESO_COEFFS
-    };
-
-    Leso::State leso_state_var_ = Zero;
-
-
-    static constexpr auto command_shaper_coeffs = Nltd2o::Config{
-        .fs = FOC_FREQ,
-        // .r = 30.5_q24,
-        // .h = 2.5_q24
-        // .r = 252.5_iq10,
-        // .r = 152.5_iq10,
-        .r = 202.5_iq10,
-        .h = 0.01_iq10,
-        .x2_limit = 240
-    }.try_into_precomputed().unwrap();
-    #else
-    static constexpr auto command_shaper_coeffs = Nltd2o::Config{
+    [[maybe_unused]] static constexpr auto command_shaper_ = Nltd2o::Config{
         .fs = FOC_FREQ,
         .r = 587.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 40
     }.try_into_precomputed().unwrap();
 
-    #endif
-
-    static constexpr Nltd2o command_shaper_{
-        command_shaper_coeffs
-    };
-
-
-    using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
-    static constexpr auto rotor_rotation_ltd_coeffs = Ltd2o::Config{
-        .fs = FOC_FREQ, .r = 500
-    }.try_into_precomputed().unwrap();
-
-    [[maybe_unused]] static constexpr Ltd2o rotor_rotation_ltd_{
-        rotor_rotation_ltd_coeffs
-    };
-
-    static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
 
 
@@ -604,11 +569,11 @@ void myesc_main(){
 
         state.uvw_curr_raw = UvwCoord<iq20>{
             .u = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_current_u12x3[0]) - int32_t((dc_cal_state.uvw_current_bits_offset[0]))),
+                (int32_t(uvw_current_u12x3[0]) - int32_t(dc_cal_state.uvw_current_bits_offset[0])),
             .v = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_current_u12x3[1]) - int32_t((dc_cal_state.uvw_current_bits_offset[1]))),
+                (int32_t(uvw_current_u12x3[1]) - int32_t(dc_cal_state.uvw_current_bits_offset[1])),
             .w = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_current_u12x3[2]) - int32_t((dc_cal_state.uvw_current_bits_offset[2]))),
+                (int32_t(uvw_current_u12x3[2]) - int32_t(dc_cal_state.uvw_current_bits_offset[2])),
         };
 
         state.u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
@@ -736,6 +701,9 @@ void myesc_main(){
         const bool is_openloop = true;
         // const bool is_openloop = false;
         const bool run_hfi = true;
+        // const bool run_hfi = false;
+
+
         [[maybe_unused]] const bool run_smo = true;
 
         [[maybe_unused]] auto iterate_hfi_angle = [&](const Angular<uq32> hfi_pll_angle){
@@ -754,7 +722,7 @@ void myesc_main(){
             // state.hfi_elec_angle = state.hfi_elec_angle + make_angular_from_turns(uq32(iq32(state.hfi_pll_state.angluar_speed_integral.to_turns() * uq32(1.0 / 3500))));
         };
 
-        [[maybe_unused]] auto update_encoder_angle = [&](){
+        [[maybe_unused]] auto iterate_encoder_angle = [&](){
             #if 0
             const auto angle_packet = mag_encoder_.update().examine();
 
@@ -866,13 +834,9 @@ void myesc_main(){
         #if 1
         [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
             // static constexpr uint32_t MASK = (HFI_N) - 1;
-            [[maybe_unused]] static size_t hfi_idx = 0;
-            [[maybe_unused]] static std::array<iq20, HFI_N> hfi_buffer;
-            [[maybe_unused]] static bool is_samp_n = false;
 
 
-
-            const auto [_s_bin1,_c_bin1] = DFT32_BIN1_SINCOS_TABLE[hfi_idx];
+            const auto [_s_bin1,_c_bin1] = DFT32_BIN1_SINCOS_TABLE[state.hfi_idx];
             const auto s_bin1 = iq15::from_bits(_s_bin1.to_bits());
             const auto c_bin1 = iq15::from_bits(_c_bin1.to_bits());
 
@@ -882,52 +846,54 @@ void myesc_main(){
             );
 
             #if 1
-            if(is_samp_n){
+            if(state.hfi_is_neg_samp){
                 const auto di = hfi_response - state.hfi_response;
                 state.hfi_response = hfi_response;
 
-                hfi_buffer[hfi_idx] = di;
+                state.hfi_buffer[state.hfi_idx] = di;
 
-                if(hfi_idx >= HFI_N){
-                    hfi_idx = 0;
-                    const auto buffer_view = std::span(hfi_buffer);
-                    const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
-                    // std::tie(state.hfi_bin1_real_response, state.hfi_bin1_imag_response) = dft32_bin1<20>(buffer_view);
-                    // state.hfi_bin0_real_response = lpf_1000hz(state.hfi_bin0_real_response, hfi_bin0_real_response);
-                    state.hfi_bin0_real_response = hfi_bin0_real_response;
+                if(state.hfi_idx >= HFI_N){
+                    state.hfi_idx = 0;
 
-                    const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
-                    state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
-                    state.hfi_bin1_imag_response = lpf_allpass(state.hfi_bin1_imag_response, hfi_bin1_imag_response);
+                    for(size_t i = 0; i < 1; i++){
+                        const auto buffer_view = std::span(state.hfi_buffer);
 
-                    auto [hfi_bin2_real_response_raw, hfi_bin2_imag_response_raw] = dft32_bin2<20>(buffer_view);
+                        // const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
+                        // state.hfi_bin0_real_response = hfi_bin0_real_response;
 
-                    //2207
-                    // hfi_bin2_real_response -= -0.040_iq20;
-                    // hfi_bin2_imag_response -= 0.019_iq20;
+                        // const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
+                        // state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
+                        // state.hfi_bin1_imag_response = lpf_allpass(state.hfi_bin1_imag_response, hfi_bin1_imag_response);
+
+                        auto [hfi_bin2_real_response_raw, hfi_bin2_imag_response_raw] = dft32_bin2<20>(buffer_view);
+
+                        //2207
+                        // hfi_bin2_real_response -= -0.040_iq20;
+                        // hfi_bin2_imag_response -= 0.019_iq20;
 
 
-                    state.hfi_bin2_real_response = lpf_allpass(state.hfi_bin2_real_response, hfi_bin2_real_response_raw);
-                    state.hfi_bin2_imag_response = lpf_allpass(state.hfi_bin2_imag_response, hfi_bin2_imag_response_raw);
-                    
-                    state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, hfi_bin2_real_response_raw);
-                    state.hfi_bin2_imag_response_slowlp = lpf_100hz(state.hfi_bin2_imag_response_slowlp, hfi_bin2_imag_response_raw);
+                        state.hfi_bin2_real_response = lpf_allpass(state.hfi_bin2_real_response, hfi_bin2_real_response_raw);
+                        state.hfi_bin2_imag_response = lpf_allpass(state.hfi_bin2_imag_response, hfi_bin2_imag_response_raw);
+                        
+                        state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, hfi_bin2_real_response_raw);
+                        state.hfi_bin2_imag_response_slowlp = lpf_100hz(state.hfi_bin2_imag_response_slowlp, hfi_bin2_imag_response_raw);
+                    }
                 }else{
-                    hfi_idx += 1;
+                    state.hfi_idx += 1;
                 }
             }else{
                 state.hfi_response = hfi_response;
             }
             #endif
 
-            if(is_samp_n){
-                is_samp_n = false;
+            if(state.hfi_is_neg_samp){
+                state.hfi_is_neg_samp = false;
                 return AlphaBetaCoord<iq20>{
                     .alpha = HFI_VOLT * c_bin1,
                     .beta = HFI_VOLT * s_bin1,
                 };
             }else{
-                is_samp_n = true;
+                state.hfi_is_neg_samp = true;
                 return AlphaBetaCoord<iq20>{
                     .alpha = (-HFI_VOLT) * c_bin1,
                     .beta = (-HFI_VOLT) * s_bin1,
@@ -961,7 +927,7 @@ void myesc_main(){
         state.dq_volt_ff.d = d_volt_ff;
         state.dq_volt_ff.q = q_volt_ff;
 
-        static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
+
         
         const iq20 kp = PI_CONTROLLER_COEFFS.kp;
         const iq20 ki_discrete = PI_CONTROLLER_COEFFS.ki_discrete;
@@ -976,15 +942,17 @@ void myesc_main(){
         DqCoord<iq20> dq_volt_gen = Zero;
         
         #if 1
-        const iq20 d_volt_limit = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
+        const iq20 volt_limit_radius = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
         {
+            const iq20 d_volt_limit = volt_limit_radius;
             const iq20 d_volt_unclamped = d_volt_ff + d_curr_err * kp + state.dq_volt_integral[0];
             dq_volt_gen[0] = CLAMP2(d_volt_unclamped, d_volt_limit);
             state.dq_volt_integral[0] += (dq_volt_gen[0] - d_volt_unclamped);
         }
         
         {
-            const iq20 q_volt_limit = heightleg(d_volt_limit, dq_volt_gen[0]);
+            const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_gen[0]);
+            // const iq20 q_volt_limit = volt_limit_radius;
             const iq20 q_volt_unclamped = q_volt_ff + q_curr_err * kp + state.dq_volt_integral[1];
             dq_volt_gen[1] = CLAMP2(q_volt_unclamped, q_volt_limit);
             state.dq_volt_integral[1] += (dq_volt_gen[1] - q_volt_unclamped);
@@ -1068,51 +1036,24 @@ void myesc_main(){
 
         // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_raw);
         // smo_sensorless_ob_.update({state.alphabeta_curr_raw, state.alphabeta_volt_gen});
-        nlf_ob_.update(state.alphabeta_curr_raw, state.alphabeta_volt_gen);
         // lbg_sensorless_ob.update({alphabeta_curr_raw, alphabeta_volt_gen});
+        
+        if(0){
 
-        PLL_COEFFS.iterate(state.obs_pll_state, {
-            iq16((nlf_ob_.state().eta_mf[0]) * 3),
-            iq16(-(nlf_ob_.state().eta_mf[1]) * 3)
-        });
+            nlf_ob_.update(state.alphabeta_curr_raw, state.alphabeta_volt_gen);
+            PLL_COEFFS.iterate(state.obs_pll_state, {
+                iq16((nlf_ob_.state().eta_mf[0]) * 3),
+                iq16(-(nlf_ob_.state().eta_mf[1]) * 3)
+            });
+        }
     };
 
-    [[maybe_unused]] static size_t trig_prog = 0;
     auto jeoc_isr = [&]{
         auto  & state = all_state_;
         timming_watch_pin_.set_high();
 
 
         state.isr_entry_tick = get_timer_tick();
-
-        #if 0
-        if(timer.is_up_counting()){
-            switch(trig_prog){
-                case 0:{
-                    timer.oc<4>().set_cvr(full_arr * 1 / 4);
-
-                    trig_prog = 1;
-                    break;
-                }
-                case 1:{
-                    timer.oc<4>().set_cvr(full_arr * 2 / 4);
-
-                    trig_prog = 2;
-                    break;
-                }
-                case 2:{
-                    timer.oc<4>().set_cvr(full_arr * 3 / 4);
-                    trig_prog = 3;
-                    break;
-                }
-                case 3:{
-                    timer.oc<4>().set_cvr(10);
-                    trig_prog = 0;
-                    break;
-                }
-            }
-        }
-        #endif
 
         current_sense(state);
         if(not op_flags_.initial_dc_calibrate){
@@ -1121,30 +1062,18 @@ void myesc_main(){
         }
 
         state.isr_exit_tick = get_timer_tick();
-        state.isr_elapsed_ticks.bits = state.isr_entry_tick.bits - state.isr_entry_tick.bits;
-        // for(volatile size_t i = 0; i < 30; i++);
-        // for(volatile size_t i = 0; i < 6; i++);
+        // state.isr_elapsed_ticks.bits = state.isr_entry_tick.bits - state.isr_entry_tick.bits;
         timming_watch_pin_.set_low();
     };
 
     hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
 
-
-    // static iq20 hsx, fx, gx = 0;
-
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 jeoc_isr();
-                // const auto now_secs = clock::seconds();
-                // static uq32 now_secs = 0;
-                // static constexpr auto DT = uq32::from_rcp(FOC_FREQ);
-                // now_secs += DT;
-                // hsx = iq20(math::sinpu(1000u * now_secs));
-                // fx = hsx * iq20(math::sinpu(now_secs));
-                // gx = lpf_100hz(gx, hsx * fx);
                 break;
             }
             default: break;
@@ -1281,12 +1210,12 @@ void myesc_main(){
             // all_state_.hfi_elec_angle.to_turns(),
             // nlf_ob_.state().eta_mf[0],
             // nlf_ob_.state().eta_mf[1],
-            all_state_.hfi_pll_state.angluar_speed_integral.to_turns(),
-            all_state_.obs_pll_state.angluar_speed_integral.to_turns(),
+            // all_state_.hfi_pll_state.angluar_speed_integral.to_turns(),
+            // all_state_.obs_pll_state.angluar_speed_integral.to_turns(),
             all_state_.hfi_elec_angle.to_turns(),
-            all_state_.observer_elec_angle.to_turns(),
-            all_state_.hybrid_elec_angle.to_turns(),
-            hybrid_ratio,
+            // all_state_.observer_elec_angle.to_turns(),
+            // all_state_.hybrid_elec_angle.to_turns(),
+            // hybrid_ratio,
 
             // offset / (offset * offset - amp * amp),
 
@@ -1311,8 +1240,15 @@ void myesc_main(){
             // flux_sensorless_ob.angle().to_turns(),
             // math::atan2pu(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]),
             // all_state_.alphabeta_curr_raw[0] / all_state_.alphabeta_curr_raw[1],
-            static_cast<uint32_t>(all_state_.isr_entry_tick.bits),
-            static_cast<uint32_t>(all_state_.isr_exit_tick.bits)
+
+            tmrticks_to_us(all_state_.isr_entry_tick),
+            tmrticks_to_us(all_state_.isr_exit_tick)
+            // tmrticks_to_us(all_state_.isr_exit_tick) - tmrticks_to_us(all_state_.isr_entry_tick)
+            // all_state_.isr_entry_tick.counter_value,
+            // all_state_.isr_exit_tick.counter_value
+            
+            // tmrticks_diff_to_us(all_state_.isr_entry_tick, all_state_.isr_exit_tick)
+
             // uint16_t(TIM_INST->ATRLR)
             // timer.oc<4>().cvr(),
             // timer.arr()

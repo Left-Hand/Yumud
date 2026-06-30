@@ -23,8 +23,22 @@ static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTA
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
 
-[[maybe_unused]] static constexpr iq20 HFI_VOLT = 1.0_iq20;
+static constexpr iq20 HIF_MODU_DEPTH_LIMIT = 0.1_iq20;
+static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
 
+static constexpr iq20 HFI_VOLT = HIF_MODU_DEPTH_LIMIT * BUS_VOLT;
+static constexpr float HALFWAVE_MICROS = 1000000.0 / (CHOPPER_FREQ * 2);
+static constexpr size_t TIMER_ARR_VALUE = 144000000 / (CHOPPER_FREQ * 2) - 1;
+static constexpr float ADC_SAMPLE_TICKS = (13.5 + 1.5) * 3;
+static constexpr float ADC_ALIGNED_IPCORE_FREQ = 144000000;
+static constexpr float ADC_CLOCK_DIVIDER_COUNT = 8;
+static constexpr float ADC_SAMPLE_ELAPSED_MICROS = ADC_SAMPLE_TICKS * (1000000.0 / (ADC_ALIGNED_IPCORE_FREQ / ADC_CLOCK_DIVIDER_COUNT));
+static constexpr float ADC_SAMPLE_TRIM_DUTYCYCLE = ADC_SAMPLE_ELAPSED_MICROS / HALFWAVE_MICROS;
+
+static constexpr float PWMGEN_MAX_DUTYCYCLE = 1.0f - ADC_SAMPLE_TRIM_DUTYCYCLE;
+static constexpr size_t ADC_SAMPLE_TRIM_CC_VALUE = (TIMER_ARR_VALUE + 1) * ADC_SAMPLE_TRIM_DUTYCYCLE;
+
+static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
 // using MotorProfile = MotorProfile_Ysc;
 // using MotorProfile = MotorProfile_Gim4010;
