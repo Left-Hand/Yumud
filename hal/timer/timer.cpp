@@ -636,19 +636,25 @@ void TimerBdtr::init(const Config & cfg){
     // 0：MOE 只能被软件置位。
 
     const auto deadzone_code = [&] -> TimerDeadzoneCode{
-        if(cfg.deadzone.is<TimerDeadzoneCode>()) return cfg.deadzone.unwrap_as<TimerDeadzoneCode>();
-        if(cfg.deadzone.is<Nanoseconds>()) return TimerDeadzoneCode::from_ns(self.bus_freq, cfg.deadzone.unwrap_as<Nanoseconds>());
+        if(cfg.deadzone.is<TimerDeadzoneCode>()) 
+            return cfg.deadzone.unwrap_as<TimerDeadzoneCode>();
+        if(cfg.deadzone.is<Nanoseconds>()) 
+            return TimerDeadzoneCode::from_ns(self.bus_freq, cfg.deadzone.unwrap_as<Nanoseconds>());
         __builtin_trap();
     }();
 
-
+    // https://zhuanlan.zhihu.com/p/648629584
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
-        .TIM_OSSRState = TIM_OSSRState_Disable,
-        .TIM_OSSIState = TIM_OSSIState_Disable,
+        .TIM_OSSRState = TIM_OSSRState_Enable,
+        .TIM_OSSIState = TIM_OSSIState_Enable,
         .TIM_LOCKLevel = static_cast<uint16_t>(std::bit_cast<uint8_t>(cfg.level) << 8),
         .TIM_DeadTime = deadzone_code.bits,
         .TIM_Break = TIM_Break_Disable,
-        .TIM_BreakPolarity = TIM_BreakPolarity_Low,
+        // .TIM_Break = TIM_Break_Enable,
+        // .TIM_BreakPolarity = TIM_BreakPolarity_Low,
+        .TIM_BreakPolarity = TIM_BreakPolarity_High,
+
+        //当刹车信号恢复正常时，PWM信号是否会自动恢复
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
     };
 

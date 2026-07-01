@@ -256,8 +256,9 @@ void myesc_main(){
 
     // #region 初始化定时器
 
-    static constexpr auto DEADTIME_NANOS = MOS_1C840L_500MA_BEST_DEADTIME_NS;
+
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADTIME = 350ns;
+    hal::PA<6>().inflt();
     timer.bdtr().init({DEADTIME_NANOS});
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADTIME);
 
@@ -310,8 +311,14 @@ void myesc_main(){
         .valid_level = HIGH,
         .out_en = DISEN
     });
+
+    {
+        timer.oc<1>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<2>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<3>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<4>().cvr() = TIMER_ARR_VALUE - 8;
+    }
     // timer.oc<4>().cvr() = timer.arr() - ADC_SAMPLE_TRIM_CC_VALUE - 5;
-    timer.oc<4>().cvr() = timer.arr() - 8;
 
     timer.oc<4>().enable_output(EN);
 
@@ -697,7 +704,8 @@ void myesc_main(){
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, PLL_FC, PLL_ZETA);
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
+        // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 35, 2.0_iq16);
 
     
         const bool run_openloop = true;
@@ -882,7 +890,7 @@ void myesc_main(){
             state.dq_volt_integral[1] = state.dq_volt_integral[1] + q_curr_err * ki_discrete;
             
             
-            DqCoord<iq20> dq_volt_gen = Zero;
+            DqCoord<iq20> dq_volt_ctrl = Zero;
             
             //电压限制圆的半径
             const iq20 volt_limit_radius = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
@@ -890,19 +898,19 @@ void myesc_main(){
             {
                 const iq20 d_volt_limit = volt_limit_radius;
                 const iq20 d_volt_unclamped = state.dq_volt_decouple.d + d_curr_err * kp + state.dq_volt_integral.d;
-                dq_volt_gen.d = CLAMP2(d_volt_unclamped, d_volt_limit);
-                state.dq_volt_integral.d += (dq_volt_gen.d - d_volt_unclamped);
+                dq_volt_ctrl.d = CLAMP2(d_volt_unclamped, d_volt_limit);
+                state.dq_volt_integral.d += (dq_volt_ctrl.d - d_volt_unclamped);
             }
             
             {
-                const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_gen.d);
+                const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_ctrl.d);
                 // const iq20 q_volt_limit = volt_limit_radius;
                 const iq20 q_volt_unclamped = state.dq_volt_decouple.q + q_curr_err * kp + state.dq_volt_integral.q;
-                dq_volt_gen.q = CLAMP2(q_volt_unclamped, q_volt_limit);
-                state.dq_volt_integral.q += (dq_volt_gen.q - q_volt_unclamped);
+                dq_volt_ctrl.q = CLAMP2(q_volt_unclamped, q_volt_limit);
+                state.dq_volt_integral.q += (dq_volt_ctrl.q - q_volt_unclamped);
             }
 
-            state.dq_volt_gen = dq_volt_gen;
+            state.dq_volt_ctrl = dq_volt_ctrl;
         }
 
 
@@ -933,8 +941,8 @@ void myesc_main(){
                     for(size_t i = 0; i < 1; i++){
                         const auto buffer_view = std::span(state.hfi_buffer);
 
-                        // const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
-                        // state.hfi_bin0_real_response = hfi_bin0_real_response;
+                        const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
+                        state.hfi_bin0_real_response = hfi_bin0_real_response;
 
                         // const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
                         // state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
@@ -984,7 +992,7 @@ void myesc_main(){
         const auto inv_busbar_volt = INV_BUS_VOLT;
         const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
 
-        auto dq_dutycycle_gen = state.dq_volt_gen * inv_busbar_volt_3by2;
+        auto dq_dutycycle_gen = state.dq_volt_ctrl * inv_busbar_volt_3by2;
 
         {
             auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
@@ -1040,6 +1048,7 @@ void myesc_main(){
             }
 
             state.alphabeta_dutycycle_gen = alphabeta_dutycycle_gen;
+            state.alphabeta_volt_gen = alphabeta_dutycycle_gen * BUS_VOLT;
         }
 
 
@@ -1050,7 +1059,7 @@ void myesc_main(){
 
 
         state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_gen));
-        state.busbar_curr = lpf_10hz(state.busbar_curr, state.busbar_curr_raw);
+        state.busbar_curr_lp = lpf_10hz(state.busbar_curr_lp, state.busbar_curr_raw);
 
 
 
@@ -1101,12 +1110,11 @@ void myesc_main(){
         }
     );
 
-    set_uvw_dutycycle(UvwCoord<iq16>::HALF);
     timer.start();
 
     clock::delay(2ms);
 
-    const auto temp_trimer = hal::TemperatureTrimer::load();
+    const auto TEMP_TRIMER = hal::TemperatureTrimer::load();
     iq16 die_celsius_ = 0;
 
 
@@ -1139,7 +1147,7 @@ void myesc_main(){
         poll_repl_activity();
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
-        die_celsius_ = lpf_10hz(die_celsius_, temp_trimer.parse_u12(ADC1->IDATAR4));
+        die_celsius_ = lpf_10hz(die_celsius_, TEMP_TRIMER.parse_u12(ADC1->IDATAR4));
 
         // const auto targ = 40_iq20 + iq16(math::sin(3 * now_secs)) * 253.4_iq20;
         // all_state_.torque_curr_cmd += 0.00005_iq20 * CLAMP2((targ - all_state_.hfi_pll_state.angluar_speed.to_turns()), 10.0_iq20);
@@ -1150,13 +1158,13 @@ void myesc_main(){
             const auto offset = all_state_.hfi_bin0_real_response;
             const auto amp = math::mag(all_state_.hfi_bin2_real_response, all_state_.hfi_bin2_imag_response) * 2;
             static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_VOLT));
-            [[maybe_unused]] const auto lq_est_uh = int(1000000 / factor) / (offset - amp);
-            [[maybe_unused]] const auto ld_est_uh = int(1000000 / factor) / (offset + amp);
+            [[maybe_unused]] const auto lq_est_mh = iq20(1000.0 / factor) / (offset - amp);
+            [[maybe_unused]] const auto ld_est_mh = iq20(1000.0 / factor) / (offset + amp);
         // }
 
         // {
-            // [[maybe_unused]] const auto mag_volt = math::mag(all_state_.alphabeta_volt_gen[0], all_state_.alphabeta_volt_gen[1]);
-            // [[maybe_unused]] const auto mag_curr = math::mag(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]);
+            [[maybe_unused]] const auto mag_volt = math::mag(all_state_.dq_volt_integral[0], all_state_.dq_volt_integral[1]);
+            [[maybe_unused]] const auto mag_curr = math::mag(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]);
         // }
 
         if(true)DEBUG_PRINTLN(
@@ -1187,10 +1195,10 @@ void myesc_main(){
             // flux_sensorless_ob.all_state_().v_alphabeta_last[1],
             // all_state_.torque_curr_cmd,
             // all_state_.uvw_curr_raw,
-            // all_state_.dq_volt_gen,
+            // all_state_.dq_volt_ctrl,
             // all_state_.selected_elec_angle.to_turns(),
             // all_state_.dq_curr_raw.d,
-            // all_state_.dq_volt_gen.q,
+            // all_state_.dq_volt_ctrl.q,
             // all_state_.dq_curr_raw.q,
 
             // all_state_.spinhfi_alphabeta_volt_gen,
@@ -1207,18 +1215,20 @@ void myesc_main(){
             // ),
             // all_state_.hfi_bin2_real_response_slowlp,
             // all_state_.hfi_bin2_imag_response_slowlp,
-            // all_state_.dq_volt_gen.q,
             // all_state_.alphabeta_curr_raw.alpha,
+            // all_state_.dq_volt_ctrl.d,
+            // all_state_.dq_volt_ctrl.q,
             // all_state_.alphabeta_curr_raw.beta,
-            // all_state_.dq_volt_decouple,
-            // lq_est_uh,
-            // ld_est_uh,
             // mag_volt,
             // mag_curr,
-            // mag_volt / mag_curr,
+            all_state_.uvw_curr_raw,
+
+            // lq_est_mh,
+            // ld_est_mh,
+            // mag_volt / mag_curr * 0.666666_iq16,
             // all_state_.alphabeta_curr_raw.length(),
-            // all_state_.dq_volt_gen.length(),
-            // all_state_.dq_volt_gen.length() / all_state_.alphabeta_curr_raw.length(),
+            // all_state_.dq_volt_ctrl.length(),
+            // all_state_.dq_volt_ctrl.length() / all_state_.alphabeta_curr_raw.length(),
             // all_state_.alphabeta_volt_gen.length(),
             // math::atan2(all_state_.hfi_bin1_imag_response,
             //     all_state_.hfi_bin1_real_response),
@@ -1249,7 +1259,7 @@ void myesc_main(){
             // all_state_.alphabeta_curr_raw[1],
             // all_state_.deadtime_comp_alphabeta_dutycycle,
             // all_state_.uvw_dutycycle_gen,
-            // all_state_.busbar_curr,
+
             // hfi_bin2_angle.to_turns()
             // all_state_.hfi_bin2_imag_response,
             // all_state_.hfi_bin2_real_response
@@ -1262,7 +1272,9 @@ void myesc_main(){
             // all_state_.alphabeta_curr_raw[0] / all_state_.alphabeta_curr_raw[1],
 
             tmrticks_to_us(all_state_.isr_entry_tick),
-            tmrticks_to_us(all_state_.isr_exit_tick)
+            tmrticks_to_us(all_state_.isr_exit_tick),
+            all_state_.busbar_curr_lp,
+            all_state_.dq_curr_raw.q
             // tmrticks_to_us(all_state_.isr_exit_tick) - tmrticks_to_us(all_state_.isr_entry_tick)
             // all_state_.isr_entry_tick.counter_value,
             // all_state_.isr_exit_tick.counter_value

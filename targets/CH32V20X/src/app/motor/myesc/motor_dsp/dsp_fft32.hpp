@@ -13,14 +13,14 @@ constexpr math::fixed<Q, int32_t> dft32_bin0(
 ){
     constexpr size_t N_BITS = 5;
     constexpr size_t N = 1u << N_BITS;
-	int64_t real_bits = 0;
+	int32_t real_bits = 0;
 
     // 使用restrict指针
     const auto* __restrict in_ptr = real_in.data();
 
     #pragma GCC unroll 4
 	for (size_t i = 0; i < N; i++) {
-		real_bits += static_cast<int64_t>(in_ptr[i].to_bits());
+		real_bits += static_cast<int32_t>(in_ptr[i].to_bits());
 	}
 
     return  math::fixed<Q, int32_t>::from_bits(static_cast<int32_t>(real_bits >> (N_BITS)));

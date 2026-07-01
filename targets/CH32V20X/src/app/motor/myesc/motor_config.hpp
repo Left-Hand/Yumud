@@ -13,7 +13,7 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 
 // #region VOLTAGE
-static constexpr auto BUS_VOLT = iq16(12.0);
+static constexpr auto BUS_VOLT = iq16(16.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.1_iq20;
 static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
@@ -24,6 +24,8 @@ static constexpr double SHUNT_RESISTANCE_OHMS = 0.006f;
 static constexpr double OPA_GAIN = 20;
 static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
 // #endregion
+
+static constexpr auto DEADTIME_NANOS = 120ns;
 
 static constexpr size_t PLL_FC = 75;
 static constexpr auto PLL_ZETA = 2.0_iq16;
@@ -55,6 +57,7 @@ static constexpr size_t DC_CAL_TIMES = 32 * 128;
 // using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
 using MotorProfile = MotorProfile_E800;
+// using MotorProfile = MotorProfile_Gkf2023;
 // using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;
 // using MotorProfile = MotorProfile_NiuLiu;

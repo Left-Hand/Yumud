@@ -177,7 +177,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     DqCoord<iq20> dq_volt_integral;
-    DqCoord<iq20> dq_volt_gen;
+    DqCoord<iq20> dq_volt_ctrl;
     // DqCoord<iq20> dq_dutycycle_gen;
     DqCoord<iq20> dq_volt_decouple;
 
@@ -190,7 +190,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     iq20 busbar_curr_raw;
-    iq20 busbar_curr;
+    iq20 busbar_curr_lp;
     iq20 torque_curr_cmd;
 
     iq20 unblance_curr_abs_lp;
