@@ -184,7 +184,6 @@ struct alignas(4) [[nodiscard]] AllState{
     // AlphaBetaCoord<iq20> hfi_alphabeta_volt;
     AlphaBetaCoord<iq20> alphabeta_dutycycle_final;
     AlphaBetaCoord<iq20> alphabeta_volt_final;
-    AlphaBetaCoord<iq20> spinhfi_alphabeta_volt_gen;
     UvwCoord<iq16> uvw_dutycycle_gen;
     AlphaBetaCoord<iq20> deadtime_comp_alphabeta_dutycycle;
 
@@ -198,18 +197,25 @@ struct alignas(4) [[nodiscard]] AllState{
     DebounceState v_disconn_dbs;
 
     size_t hfi_idx;
-    std::array<iq20, 32> hfi_di_buffer;
-    bool hfi_is_neg_samp;
+    // std::array<iq20, 32> hfi_di_buffer;
+
 
     
     iq20 hfi_response;
+    iq20 hfi_bin0_real_response_acc;
     iq20 hfi_bin0_real_response;
+
     iq20 hfi_bin1_real_response;
     iq20 hfi_bin1_imag_response;
+
+    iq20 hfi_bin2_real_response_acc;
+    iq20 hfi_bin2_imag_response_acc;
     iq20 hfi_bin2_real_response;
     iq20 hfi_bin2_imag_response;
     iq20 hfi_bin2_real_response_slowlp;
     iq20 hfi_bin2_imag_response_slowlp;
+
+    bool hfi_is_neg_samp;
 
     dsp::PllState hfi_pll_state;
     dsp::PllState obs_pll_state;

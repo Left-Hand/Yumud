@@ -10,7 +10,7 @@
 
 namespace ymd::dsp{
 
-struct [[nodiscard]] PllState final{
+struct [[nodiscard]] alignas(4) PllState final{
     Angular<iq16> angluar_speed_integral;
     Angular<iq16> angluar_speed;
     Angular<uq32> angle;
@@ -25,7 +25,7 @@ struct [[nodiscard]] PllState final{
     }
 };
 
-struct [[nodiscard]] PllCoeffs final{
+struct [[nodiscard]] alignas(4) PllCoeffs final{
     size_t kp;
     uq16 ki_discrete;
     uq32 ts;

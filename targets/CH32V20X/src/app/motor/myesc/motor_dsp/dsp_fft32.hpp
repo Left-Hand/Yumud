@@ -46,6 +46,25 @@ static constexpr auto SINCOS_32STEP_TABLE = []{
     return table;
 }();
 
+static constexpr auto SINCOS_64STEP_TABLE = []{
+    using T = int32_t;
+
+    static constexpr size_t Q = 15;
+    static constexpr size_t NUM_STEPS = 64;
+    std::array<std::array<math::fixed<15, T>, 2>, NUM_STEPS> table;
+    uq32 x = 0;
+    constexpr uq32 delta = uq32::from_rcp(NUM_STEPS);
+    for(size_t i = 0; i < NUM_STEPS; i++){
+        const auto [s,c] = math::sincospu(x);
+        table[i] = std::to_array({
+            math::fixed<Q, T>::from_bits(math::fixed<Q, T>(s).to_bits()), 
+            math::fixed<Q, T>::from_bits(math::fixed<Q, T>(c).to_bits())
+        });
+        x += delta;
+    }
+    return table;
+}();
+
 static constexpr std::array<iq15, 2> sincos_32step(const size_t idx){
     return SINCOS_32STEP_TABLE[idx];
 }

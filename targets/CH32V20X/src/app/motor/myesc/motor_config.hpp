@@ -13,7 +13,7 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 
 // #region VOLTAGE
-static constexpr auto BUS_VOLT = iq16(16.0);
+static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.1_iq20;
 static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
