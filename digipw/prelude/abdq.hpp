@@ -12,7 +12,7 @@ struct DqCoord;
 namespace details{
 template<typename To, typename From>
 __attribute__((optimize("Ofast"), always_inline))
-static constexpr void alphabeta_to_dq(
+static constexpr void inv_rotate(
     To & dq, const From & alphabeta, const auto & angle
 ){
     auto [s,c] = angle.sincos();
@@ -23,7 +23,7 @@ static constexpr void alphabeta_to_dq(
 
 template<typename To, typename From>
 __attribute__((optimize("Ofast"), always_inline))
-static constexpr void dq_to_alphabeta(
+static constexpr void rotate(
     To & alphabeta, const From & dq, const auto & angle
 ){
     auto [s,c] = angle.sincos();
@@ -123,9 +123,9 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     }
 
     template<typename U>
-    [[nodiscard]] constexpr DqCoord<T> to_dq(const math::Rotation2<U> rot) const noexcept {
+    [[nodiscard]] constexpr DqCoord<T> inv_rotate(const math::Rotation2<U> rot) const noexcept {
         DqCoord<T> dq;
-        details::alphabeta_to_dq(dq, *this, rot);
+        details::inv_rotate(dq, *this, rot);
         return dq;
     }
 
@@ -243,7 +243,7 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
         const Rotation2<U> rot
     ){
         DqCoord self;
-        details::alphabeta_to_dq(self, ab, rot);
+        details::inv_rotate(self, ab, rot);
         return self;
     }
 
@@ -314,9 +314,9 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
 
 
     template<typename U>
-    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const math::Rotation2<U> rot) const noexcept {
+    [[nodiscard]] constexpr AlphaBetaCoord<T> rotate(const U rot) const noexcept {
         AlphaBetaCoord<T> ret;
-        details::dq_to_alphabeta(ret, *this, rot);
+        details::rotate(ret, *this, rot);
         return ret;
     }
 

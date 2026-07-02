@@ -127,7 +127,7 @@ struct alignas(4) [[nodiscard]] DcCalibrateState{
     }
 };
 
-struct DebounceState{
+struct alignas(4) [[nodiscard]] DebounceState final{
     uint32_t count;
 
     static constexpr uint32_t MAX_VALUE = 2000;
@@ -142,6 +142,11 @@ struct DebounceState{
             count = uint32_t(std::max(0, int(count - 1)));
         }
     }
+};
+
+struct alignas(4) [[nodiscard]] DeadcompState final{
+    std::array<int8_t, 3> uvw_sign;
+    std::array<bool, 3> uvw_strong;
 };
 
 struct alignas(4) [[nodiscard]] AllState{
@@ -166,11 +171,12 @@ struct alignas(4) [[nodiscard]] AllState{
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_slowlp;
+    UvwCoord<iq20> uvw_curr_fastlp;
 
 
     DqCoord<iq20> dq_curr_setp;
     DqCoord<iq20> dq_curr_raw;
-    DqCoord<iq20> dq_curr_fastlp;
+    // DqCoord<iq20> dq_curr_fastlp;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
@@ -181,11 +187,12 @@ struct alignas(4) [[nodiscard]] AllState{
     // DqCoord<iq20> dq_dutycycle_gen;
     DqCoord<iq20> dq_volt_decouple;
 
-    // AlphaBetaCoord<iq20> hfi_alphabeta_volt;
+    AlphaBetaCoord<iq20> hfi_alphabeta_dutycycle;
     AlphaBetaCoord<iq20> alphabeta_dutycycle_final;
     AlphaBetaCoord<iq20> alphabeta_volt_final;
     UvwCoord<iq16> uvw_dutycycle_gen;
-    AlphaBetaCoord<iq20> deadtime_comp_alphabeta_dutycycle;
+    UvwCoord<iq16> uvw_dutycycle_deadcomp;
+    DeadcompState deadcomp_state;
 
 
     iq20 busbar_curr_raw;

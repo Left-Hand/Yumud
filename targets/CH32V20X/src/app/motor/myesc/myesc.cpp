@@ -137,6 +137,13 @@ static constexpr math::fixed<Q, int32_t> lpf_1000hz(
 }
 
 template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_500hz(
+    math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
+){
+    return lpf_specified_fc<500>(x_state, x_new);
+}
+
+template<size_t Q>
 static constexpr math::fixed<Q, int32_t> lpf_allpass(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -223,8 +230,41 @@ static void init_adc(){
 }
 
 
+static constexpr iq16 sat_left(const iq16 x){
+    // p(x) = (((((-0.125)x + (-0.125))x + 0)x + (-0.5))x + 0)x + 1
+    iq16 result = -0.125_iq16;           // x^5 系数
+    result = result * x - 0.125_iq16;      // x^4 系数
+    result = result * x ;        // x^3 系数（0）
+    result = result * x - 0.5_iq16;        // x^2 系数
+    result = result * x;        // x^1 系数（0）
+    result = result * x + 1.0_iq16;        // 常数项
+    return result;
+}
+
+static constexpr iq16 sat_right(const iq16 x){
+    iq16 result = -20 * x * x + 33.62992_iq16 * x - 13.634_iq16;
+    return result;
+}
 
 
+static constexpr iq16 mysat0(const iq16 x){
+    if(x < 0) return 1;
+    if(x > 1) return 0;
+
+    return math::sqrt(1 - x * x);
+}
+
+static constexpr iq16 mysat(const iq16 x){
+    if(x < 0) return 1;
+    if(x > 1) return 0;
+    auto res = sat_left(x);
+
+    if(x > 0.88_iq16){
+        res = std::min(res, sat_right(x));
+        res = std::max(res, 0_iq16);
+    }
+    return res;
+}
 
 void myesc_main(){
     DBG_UART.init({
@@ -519,7 +559,7 @@ void myesc_main(){
     }.try_into_precomputed().unwrap();
 
 
-
+    uint8_t dcm = 0;
 
 
     OpFlags op_flags_;
@@ -577,18 +617,21 @@ void myesc_main(){
                 (int32_t(uvw_current_u12x3[2]) - int32_t(dc_cal_state.uvw_current_bits_offset[2])),
         };
 
-        state.u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
-        state.v_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[1], state.uvw_curr_raw[0] + state.uvw_curr_raw[2]));
+        state.uvw_curr_fastlp[0] = lpf_1000hz(state.uvw_curr_fastlp[0], state.uvw_curr_raw[0]);
+        state.uvw_curr_fastlp[1] = lpf_1000hz(state.uvw_curr_fastlp[1], state.uvw_curr_raw[1]);
+        state.uvw_curr_fastlp[2] = lpf_1000hz(state.uvw_curr_fastlp[2], state.uvw_curr_raw[2]);
+
+        // state.u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
+        // state.v_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[1], state.uvw_curr_raw[0] + state.uvw_curr_raw[2]));
         
-        state.unblance_curr_abs_lp = lpf_50hz(
-            state.unblance_curr_abs_lp,
-            math::abs(state.uvw_curr_raw.numeric_sum())
-        );
+        // state.unblance_curr_abs_lp = lpf_50hz(
+        //     state.unblance_curr_abs_lp,
+        //     math::abs(state.uvw_curr_raw.numeric_sum())
+        // );
 
 
         state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
-        state.alphabeta_curr_fastlp[0] = lpf_1000hz(state.alphabeta_curr_fastlp[0], state.alphabeta_curr_raw[0]);
-        state.alphabeta_curr_fastlp[1] = lpf_1000hz(state.alphabeta_curr_fastlp[1], state.alphabeta_curr_raw[1]);
+        state.alphabeta_curr_fastlp = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_fastlp);
         //#endregion
     };
     [[maybe_unused]] auto mechanical_loop = [&](AllState & state){
@@ -699,7 +742,7 @@ void myesc_main(){
 
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, PLL_FC, PLL_ZETA);
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 75, 2.0_iq16);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 45, 2.0_iq16);
 
     
         const bool run_openloop = true;
@@ -753,7 +796,7 @@ void myesc_main(){
 
         if(run_openloop){
             constexpr uq32 DT = uq32::from_rcp(FOC_FREQ);
-            const auto speed = 0.40_iq16;
+            const auto speed = 0.10_iq16;
             const auto openloop_elec_angle = make_angular_from_turns(
                 state.openloop_elec_angle.to_turns() 
                 + uq32(DT * speed * MotorProfile::POLE_PAIRS)
@@ -808,14 +851,14 @@ void myesc_main(){
         // state.selected_elec_angle = state.hybrid_elec_angle;
         // state.selected_elec_angle = state.hfi_pll_state.angle + Angular<uq32>::QUARTER;
 
-        const auto elec_sincos = math::Rotation2<iq16>::from_angle(state.selected_elec_angle);
+        const auto elec_sincos = math::Rotation2<iq31>::from_angle(state.selected_elec_angle);
 
         //#endregion
 
         {
-            const auto dq_curr_raw = state.alphabeta_curr_raw.to_dq(elec_sincos);
-            state.dq_curr_fastlp[0] = lpf_1000hz(state.dq_curr_fastlp[0], dq_curr_raw[0]);
-            state.dq_curr_fastlp[1] = lpf_1000hz(state.dq_curr_fastlp[1], dq_curr_raw[1]);
+            const auto dq_curr_raw = state.alphabeta_curr_raw.inv_rotate(elec_sincos);
+            // state.dq_curr_fastlp[0] = lpf_1000hz(state.dq_curr_fastlp[0], dq_curr_raw[0]);
+            // state.dq_curr_fastlp[1] = lpf_1000hz(state.dq_curr_fastlp[1], dq_curr_raw[1]);
             state.dq_curr_raw = dq_curr_raw;
         }
 
@@ -887,18 +930,17 @@ void myesc_main(){
             
             DqCoord<iq20> dq_volt_ctrl = Zero;
             
-            //电压限制圆的半径
-            const iq20 volt_limit_radius = CTRL_MODU_DEPTH_LIMIT * BUS_VOLT;
-
             {
-                const iq20 d_volt_limit = volt_limit_radius;
+                const iq20 d_volt_limit = CTRL_VOLT_LIMIT;
                 const iq20 d_volt_unclamped = state.dq_volt_decouple.d + d_curr_err * kp + state.dq_volt_integral.d;
                 dq_volt_ctrl.d = CLAMP2(d_volt_unclamped, d_volt_limit);
                 state.dq_volt_integral.d += (dq_volt_ctrl.d - d_volt_unclamped);
             }
             
             {
-                const iq20 q_volt_limit = heightleg(volt_limit_radius, dq_volt_ctrl.d);
+                // const iq20 q_volt_limit = heightleg(CTRL_VOLT_LIMIT, dq_volt_ctrl.d);
+                // const iq20 q_volt_limit = CTRL_VOLT_LIMIT * mysat(iq16(math::abs(dq_volt_ctrl.d) * INV_CTRL_VOLT_LIMIT));
+                const iq20 q_volt_limit = CTRL_VOLT_LIMIT * mysat0(iq16(math::abs(dq_volt_ctrl.d) * INV_CTRL_VOLT_LIMIT));
                 // const iq20 q_volt_limit = volt_limit_radius;
                 const iq20 q_volt_unclamped = state.dq_volt_decouple.q + q_curr_err * kp + state.dq_volt_integral.q;
                 dq_volt_ctrl.q = CLAMP2(q_volt_unclamped, q_volt_limit);
@@ -914,66 +956,32 @@ void myesc_main(){
 
         
         {
-            auto alphabeta_dutycycle_final = (state.dq_volt_ctrl * inv_busbar_volt_3by2).to_alphabeta(elec_sincos);
-
-            const bool deadtime_comp_en = false;
-            // const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
-
-            if(deadtime_comp_en){
-                // https://www.zhihu.com/question/270446098/answer/3215795384
-                // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
-
-                const auto uvw_curr_fastlp = state.alphabeta_curr_fastlp.to_uvw();
-                static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
-                static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
-                static constexpr auto DEADTIME_COMP_DUTYCYCLE = uq32(
-                    (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
-                );
-
-                const auto alpha_sign = (
-                    +2 * math::sign(uvw_curr_fastlp.u) 
-                    - math::sign(uvw_curr_fastlp.v) 
-                    - math::sign(uvw_curr_fastlp.w)
-                ) * ONE_BY_3;
-
-                const auto beta_sign = (
-                    + math::sign(uvw_curr_fastlp.v) 
-                    - math::sign(uvw_curr_fastlp.w)
-                ) * ONE_BY_SQRT3;
-
-                const auto deadtime_comp_alphabeta_dutycycle = AlphaBetaCoord<iq20>{
-                    alpha_sign * DEADTIME_COMP_DUTYCYCLE,
-                    beta_sign * DEADTIME_COMP_DUTYCYCLE
-                };
+            auto alphabeta_dutycycle_final = (state.dq_volt_ctrl * inv_busbar_volt_3by2).rotate(elec_sincos);
 
 
-                #define DEADTIME_LPF_FN lpf_100hz
-                // #define DEADTIME_LPF_FN lpf_allpass
-                state.deadtime_comp_alphabeta_dutycycle[0] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[0], deadtime_comp_alphabeta_dutycycle[0]);
-                state.deadtime_comp_alphabeta_dutycycle[1] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[1], deadtime_comp_alphabeta_dutycycle[1]);
-
-                alphabeta_dutycycle_final.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
-                alphabeta_dutycycle_final.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
-            }
-
-
-            const bool hfi_enabled = true;
-            const bool hfi_is_spin = true;
-            // const bool spin_hfi_enabled = false;
+            const bool hfi_enabled = false;
+            const bool hfi_use_spin = true;
+            // const bool hfi_use_spin = false;
 
 
 
             if(hfi_enabled){
-                const auto lg2_num_hfi_samples = 5;
-                const auto num_hfi_samples = 1 << lg2_num_hfi_samples;
-                const auto mask = num_hfi_samples - 1;
                 auto & table = SINCOS_32STEP_TABLE;
                 static constexpr size_t table_size = std::tuple_size_v<std::decay_t<decltype(table)>>;
-                const auto fact = table_size / num_hfi_samples;
+                const auto table_idx_mask = table_size - 1;
+                const auto hfi_modu_depth = HFI_MODU_DEPTH_LIMIT;
+
 
                 auto calc_spin_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
-                    const auto [s_bin1,c_bin1] = table[state.hfi_idx * fact];
-                    const auto [s_bin2,c_bin2] = table[(state.hfi_idx * fact * 2) & mask];
+                    const auto lg2_len_hfi_samples = 5;
+                    const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
+
+                    const auto table_fact = table_size / len_hfi_samples;
+                    
+                    const auto now_hfi_idx = state.hfi_idx;
+                    if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
+                    const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
+                    const auto [s_bin2,c_bin2] = table[(now_hfi_idx * table_fact * 2) & table_idx_mask];
 
                     const auto hfi_response = dot2v2(
                         state.alphabeta_curr_raw.alpha, c_bin1,
@@ -984,19 +992,19 @@ void myesc_main(){
                         const auto di = hfi_response - state.hfi_response;
                         state.hfi_response = hfi_response;
 
-                        auto next_hfi_idx = state.hfi_idx + 1;
+                        auto next_hfi_idx = now_hfi_idx + 1;
 
 
-                        if(next_hfi_idx >= num_hfi_samples){
+                        if(next_hfi_idx >= len_hfi_samples){
                             next_hfi_idx = 0;
 
-                            state.hfi_bin0_real_response = state.hfi_bin0_real_response_acc >> lg2_num_hfi_samples;
+                            state.hfi_bin0_real_response = state.hfi_bin0_real_response_acc >> lg2_len_hfi_samples;
                             state.hfi_bin0_real_response_acc = 0;
 
-                            state.hfi_bin2_real_response = state.hfi_bin2_real_response_acc >> lg2_num_hfi_samples;
+                            state.hfi_bin2_real_response = state.hfi_bin2_real_response_acc >> lg2_len_hfi_samples;
                             state.hfi_bin2_real_response_acc = 0;
 
-                            state.hfi_bin2_imag_response = state.hfi_bin2_imag_response_acc >> lg2_num_hfi_samples;
+                            state.hfi_bin2_imag_response = state.hfi_bin2_imag_response_acc >> lg2_len_hfi_samples;
                             state.hfi_bin2_imag_response_acc = 0;
 
                             state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, state.hfi_bin2_real_response);
@@ -1017,25 +1025,66 @@ void myesc_main(){
                     if(state.hfi_is_neg_samp){
                         state.hfi_is_neg_samp = false;
                         return AlphaBetaCoord<iq20>{
-                            .alpha = HFI_MODU_DEPTH_LIMIT * c_bin1,
-                            .beta = HFI_MODU_DEPTH_LIMIT * s_bin1,
+                            .alpha = hfi_modu_depth * c_bin1,
+                            .beta = hfi_modu_depth * s_bin1,
                         };
                     }else{
                         state.hfi_is_neg_samp = true;
                         return AlphaBetaCoord<iq20>{
-                            .alpha = (-HFI_MODU_DEPTH_LIMIT) * c_bin1,
-                            .beta = (-HFI_MODU_DEPTH_LIMIT) * s_bin1,
+                            .alpha = (-hfi_modu_depth) * c_bin1,
+                            .beta = (-hfi_modu_depth) * s_bin1,
                         };
                     }
                 };
 
                 auto calc_pulse_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
-                    return AlphaBetaCoord<iq20>::ZERO;
+                    const auto lg2_len_hfi_samples = 5;
+                    const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
+
+                    const auto table_fact = table_size / len_hfi_samples;
+
+                    // const Angular<uq32> est_angle = state.hfi_pll_state.angle;
+                    const Angular<uq32> est_angle = Zero;
+                    const auto est_angle_sincos = math::Rotation2<iq31>::from_angle(est_angle);
+
+                    // const auto hfi_response = dot2v2(
+                    //     state.alphabeta_curr_raw.alpha, c_bin1,
+                    const auto now_hfi_idx = state.hfi_idx;
+                    if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
+                    const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
+
+                    
+                    if(state.hfi_is_neg_samp){
+                        auto next_hfi_idx = now_hfi_idx + 1;
+                        if(next_hfi_idx >= len_hfi_samples){
+                            next_hfi_idx = 0;
+                        }else{
+
+                        }
+                        state.hfi_idx = next_hfi_idx;
+
+                    }else{
+
+                    }
+
+
+
+
+                    const auto dq_dutycycle = DqCoord<iq20>{
+                        hfi_modu_depth * (state.hfi_is_neg_samp ? c_bin1 : -c_bin1),
+                        // hfi_modu_depth * (c_bin1),
+                        0.0_iq20
+                    };
+
+                    state.hfi_is_neg_samp = !state.hfi_is_neg_samp;
+
+                    return (dq_dutycycle * iq20(1.5)).rotate(est_angle_sincos);
+
                 };
 
 
-                const auto hfi_alphabeta_dutycycle = [&] -> AlphaBetaCoord<iq20> {
-                    if(hfi_is_spin){
+                state.hfi_alphabeta_dutycycle = [&] -> AlphaBetaCoord<iq20> {
+                    if(hfi_use_spin){
                         return calc_spin_hfi_dutycycle();
                     }else{
                         return calc_pulse_hfi_dutycycle();
@@ -1043,7 +1092,7 @@ void myesc_main(){
                     __builtin_unreachable();
                 }();
 
-                alphabeta_dutycycle_final = alphabeta_dutycycle_final + hfi_alphabeta_dutycycle;
+                alphabeta_dutycycle_final = alphabeta_dutycycle_final + state.hfi_alphabeta_dutycycle;
             }
 
             state.alphabeta_dutycycle_final = alphabeta_dutycycle_final;
@@ -1051,8 +1100,116 @@ void myesc_main(){
         }
 
 
+        {
+            auto uvw_dutycycle_gen = SVM(state.alphabeta_dutycycle_final);
 
-        state.uvw_dutycycle_gen = SVM(state.alphabeta_dutycycle_final);
+            // const bool deadtime_comp_en = false;
+            // const bool deadtime_comp_en = true;
+            const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
+
+            if(deadtime_comp_en){
+                // https://www.zhihu.com/question/270446098/answer/3215795384
+                // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
+
+                const auto uvw_curr_fastlp = state.uvw_curr_fastlp;
+                [[maybe_unused]] const auto weak_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 3;
+                [[maybe_unused]] const auto strong_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 6;
+                static constexpr auto DEADTIME_COMP_DUTYCYCLE = iq16(
+                    (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
+                );
+
+                // [[maybe_unused]] static constexpr auto f = (float)DEADTIME_COMP_DUTYCYCLE;
+
+                [[maybe_unused]] static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
+                [[maybe_unused]] static constexpr auto TWO_BY_3 = uq32(2.0 / 3.0);
+                [[maybe_unused]] static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
+
+
+
+
+
+                UvwCoord<iq16> uvw_dutycycle_deadcomp;
+                if(dcm){
+                    [[maybe_unused]] auto & state_sign = state.deadcomp_state.uvw_sign;
+                    [[maybe_unused]] auto & state_strong = state.deadcomp_state.uvw_strong;
+                    [[maybe_unused]] auto prev_sign = state.deadcomp_state.uvw_sign;
+                    [[maybe_unused]] auto prev_strong = state.deadcomp_state.uvw_strong;
+                    
+                    #if 0
+
+                    #define REDETECT_PHASE(idx)\
+                    if(prev_strong[idx]){\
+                        if(prev_sign[idx] >= 0){\
+                            if(uvw_curr_fastlp[idx] < strong_flip_threshold){\
+                                state_sign[idx] = -1;\
+                                state_strong[idx] = false;\
+                            }\
+                        }else{\
+                            if(uvw_curr_fastlp[idx] > -strong_flip_threshold){\
+                                state_sign[idx] = 1;\
+                                state_strong[idx] = false;\
+                            }\
+                        }\
+                    }else{\
+                        if(prev_sign[idx] >= 0){\
+                            if(uvw_curr_fastlp[idx] < -weak_flip_threshold){\
+                                state_sign[idx] = -1;\
+                                state_strong[idx] = true;\
+                            }\
+                        }else{\
+                            if(uvw_curr_fastlp[idx] > weak_flip_threshold){\
+                                state_sign[idx] = 1;\
+                                state_strong[idx] = true;\
+                            }\
+                        }\
+                    }
+                    #else
+
+                    #define REDETECT_PHASE(idx)\
+                    state_sign[idx] = uvw_curr_fastlp[idx] > 0 ? 1 : -1;
+
+                    #endif
+
+
+                    REDETECT_PHASE(0)
+                    REDETECT_PHASE(1)
+                    REDETECT_PHASE(2)
+                    // uvw_dutycycle_deadcomp[0] = (prev_sign[1] + prev_sign[2]) * DEADTIME_COMP_DUTYCYCLE;
+                    // uvw_dutycycle_deadcomp[1] = (prev_sign[2] + prev_sign[0]) * DEADTIME_COMP_DUTYCYCLE;
+                    // uvw_dutycycle_deadcomp[2] = (prev_sign[0] + prev_sign[1]) * DEADTIME_COMP_DUTYCYCLE;
+
+                    uvw_dutycycle_deadcomp[0] = (prev_sign[0]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+                    uvw_dutycycle_deadcomp[1] = (prev_sign[1]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+                    uvw_dutycycle_deadcomp[2] = (prev_sign[2]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+
+                }else{
+
+                    const auto alpha_sign = (
+                        +2 * math::sign(uvw_curr_fastlp.u) 
+                        - math::sign(uvw_curr_fastlp.v) 
+                        - math::sign(uvw_curr_fastlp.w)
+                    ) * ONE_BY_3;
+    
+                    const auto beta_sign = (
+                        + math::sign(uvw_curr_fastlp.v) 
+                        - math::sign(uvw_curr_fastlp.w)
+                    ) * ONE_BY_SQRT3;
+    
+                    const auto deadtime_comp_alphabeta_dutycycle = AlphaBetaCoord<iq16>{
+                        alpha_sign * DEADTIME_COMP_DUTYCYCLE,
+                        beta_sign * DEADTIME_COMP_DUTYCYCLE
+                    };
+
+                    uvw_dutycycle_deadcomp = SVM(deadtime_comp_alphabeta_dutycycle);
+                }
+
+                uvw_dutycycle_gen = uvw_dutycycle_gen + uvw_dutycycle_deadcomp;
+                state.uvw_dutycycle_deadcomp = uvw_dutycycle_deadcomp;
+            }
+
+            state.uvw_dutycycle_gen = uvw_dutycycle_gen;
+
+        }
 
         set_uvw_dutycycle(state.uvw_dutycycle_gen);
 
@@ -1132,6 +1289,10 @@ void myesc_main(){
                 fn_switches_.deadtime_compensate_en = en;
             }),
 
+            script::make_function(StringView("dcm"), [&](const bool en){
+                dcm = en;
+            }),
+
             script::make_function(StringView("cde"), [&](const bool en){
                 fn_switches_.cross_decoupling_en = en;
             })
@@ -1195,31 +1356,40 @@ void myesc_main(){
             // all_state_.uvw_curr_raw,
             // all_state_.dq_volt_ctrl,
             // all_state_.selected_elec_angle.to_turns(),
-            // all_state_.dq_curr_raw.d,
+            // all_state_.alphabeta_curr_raw.alpha,
+            // all_state_.alphabeta_curr_raw.beta,
+            // all_state_.hfi_alphabeta_dutycycle,
+            // all_state_.hfi_idx,
+            // all_state_.hfi_is_neg_samp,
             // all_state_.dq_volt_ctrl.q,
             // all_state_.dq_curr_raw.q,
 
-            all_state_.hfi_bin2_real_response, 
-            // all_state_.hfi_bin1_real_response,
-            all_state_.hfi_bin2_imag_response, 
+            // all_state_.hfi_bin2_real_response, 
+            // all_state_.hfi_bin0_real_response,
+            // all_state_.hfi_bin2_imag_response, 
+            // all_state_.hfi_bin2_imag_response + all_state_.hfi_bin0_real_response, 
+            // all_state_.hfi_bin2_imag_response, 
             // all_state_.hfi_bin1_imag_response
             // ),
             // all_state_.hfi_bin2_real_response_slowlp,
             // all_state_.hfi_bin2_imag_response_slowlp,
             // all_state_.alphabeta_curr_raw.alpha,
-            // all_state_.dq_volt_ctrl.d,
-            // all_state_.dq_volt_ctrl.q,
+            all_state_.dq_volt_ctrl.d,
+            all_state_.dq_volt_ctrl.q,
             // mag_volt,
             // inv_mag_curr,
             // all_state_.uvw_curr_raw,
             
-            lq_est_mh,
-            ld_est_mh,
-            mag_volt * inv_mag_curr * 0.666666_iq16,
+            // lq_est_mh,
+            // ld_est_mh,
+            // mag_volt * inv_mag_curr * 0.666666_iq16,
             
-            all_state_.openloop_elec_angle.to_turns(),
-            all_state_.hfi_elec_angle.to_turns(),
-
+            // all_state_.openloop_elec_angle.to_turns(),
+            // all_state_.hfi_elec_angle.to_turns(),
+            all_state_.uvw_dutycycle_gen,
+            all_state_.uvw_dutycycle_deadcomp,
+            all_state_.deadcomp_state.uvw_sign,
+            all_state_.alphabeta_curr_fastlp.to_uvw().u,
             // all_state_.alphabeta_curr_raw.length(),
             // all_state_.dq_volt_ctrl.length(),
             // all_state_.dq_volt_ctrl.length() / all_state_.alphabeta_curr_raw.length(),
@@ -1230,7 +1400,6 @@ void myesc_main(){
             // math::atan2(all_state_.hfi_bin2_imag_response,
             //     all_state_.hfi_bin2_real_response) / 2,
             // all_state_.openloop_elec_angle.to_turns(),
-            all_state_.hfi_bin0_real_response >> 5,
             // all_state_.hfi_pll_state.angle.to_turns(),
             // all_state_.hfi_elec_angle.to_turns(),
             // nlf_ob_.state().eta_mf[0],

@@ -15,8 +15,17 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 // #region VOLTAGE
 static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
-static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.1_iq20;
-static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.6_iq20;
+
+
+//should below 1/sqrt(3):
+// 1/sqrt(3) * 1.5 = 2 / sqrt(3)
+// reach svm max duty
+
+static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.08_iq20;
+static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.38_iq20;
+
+static constexpr iq20 CTRL_VOLT_LIMIT = BUS_VOLT * CTRL_MODU_DEPTH_LIMIT;
+static constexpr iq20 INV_CTRL_VOLT_LIMIT = 1 / CTRL_VOLT_LIMIT;
 // #endregion
 
 // #region OPA 
@@ -26,6 +35,7 @@ static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTA
 // #endregion
 
 static constexpr auto DEADTIME_NANOS = 120ns;
+// static constexpr auto DEADTIME_NANOS = 920ns;
 
 static constexpr size_t PLL_FC = 75;
 static constexpr auto PLL_ZETA = 2.0_iq16;
@@ -50,10 +60,6 @@ static constexpr float PWMGEN_MAX_DUTYCYCLE = 1.0f - ADC_SAMPLE_TRIM_DUTYCYCLE;
 static constexpr size_t ADC_SAMPLE_TRIM_CC_VALUE = (TIMER_ARR_VALUE + 1) * ADC_SAMPLE_TRIM_DUTYCYCLE;
 
 static constexpr size_t DC_CAL_TIMES = 32 * 128;
-
-
-static constexpr size_t NUM_HFI_SAMPLES = 32;
-static_assert(std::has_single_bit(NUM_HFI_SAMPLES));
 
 
 // using MotorProfile = MotorProfile_Ysc;

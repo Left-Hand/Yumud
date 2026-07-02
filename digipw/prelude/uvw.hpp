@@ -17,13 +17,37 @@ struct [[nodiscard]] alignas(sizeof(T)) UvwCoord final{
     T w;
 
     static constexpr UvwCoord<T> ZERO = {T(0), T(0), T(0)};
-    static constexpr UvwCoord<T> HALF = {T(0.5), T(0.5), T(0.5)};
     enum class [[nodiscard]] Axis:uint8_t{U, V, W};
 
 
     [[nodiscard]] static constexpr UvwCoord from_uninitialized(){
         return {};
     }
+
+    [[nodiscard]] constexpr UvwCoord operator +() const noexcept {
+        return UvwCoord{u, v, w};
+    }
+
+    [[nodiscard]] constexpr UvwCoord operator -() const noexcept {
+        return UvwCoord{-u, -v, -w};
+    }
+
+    [[nodiscard]] constexpr UvwCoord operator +(const UvwCoord & rhs) const noexcept {
+        return UvwCoord{u + rhs.u, v + rhs.v, w + rhs.w};
+    }
+
+    [[nodiscard]] constexpr UvwCoord operator -(const UvwCoord & rhs) const noexcept {
+        return UvwCoord{u - rhs.u, v - rhs.v, w - rhs.w};
+    }
+
+    constexpr UvwCoord & operator +=(const UvwCoord & rhs) noexcept {
+        this->u += rhs.u;
+        this->v += rhs.v;
+        this->w += rhs.w;
+        return *this;
+    }
+
+
 
     template<Axis A1, Axis A2>
     requires (A1 != A2)
