@@ -51,12 +51,17 @@ static constexpr size_t ADC_SAMPLE_TRIM_CC_VALUE = (TIMER_ARR_VALUE + 1) * ADC_S
 
 static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
+
+static constexpr size_t NUM_HFI_SAMPLES = 32;
+static_assert(std::has_single_bit(NUM_HFI_SAMPLES));
+
+
 // using MotorProfile = MotorProfile_Ysc;
 // using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
-// using MotorProfile = MotorProfile_3505;
-using MotorProfile = MotorProfile_E800;
+using MotorProfile = MotorProfile_3505;
+// using MotorProfile = MotorProfile_E800;
 // using MotorProfile = MotorProfile_Gkf2023;
 // using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;

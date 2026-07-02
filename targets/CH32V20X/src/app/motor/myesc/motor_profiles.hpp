@@ -48,7 +48,7 @@ struct MotorProfile_3505{
     static constexpr auto PHASE_RESISTANCE_OHM = 0.109_iq20;
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
-    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 800;
+    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 600;
 
 };
 
@@ -106,9 +106,14 @@ struct MotorProfile_Gkf2023{
 struct MotorProfile_Gim4010{
     //伺泰威关节电机
     static constexpr size_t POLE_PAIRS = 14u;
-    static constexpr auto PHASE_INDUCTANCE_MH = iq20(300 * 1E-3);
-    static constexpr auto PHASE_RESISTANCE_OHM = 1.03_iq20;
-    static constexpr auto CURRENT_CUTOFF_FREQ = 1600;
+    static constexpr size_t DECUTION_RATIO = 10u;
+    static constexpr auto Q_AXIS_INDUCTANCE = iq20(570 * 1E-3);
+    static constexpr auto D_AXIS_INDUCTANCE = iq20(440 * 1E-3);
+
+    static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE + D_AXIS_INDUCTANCE) >> 1;
+    static constexpr auto PHASE_RESISTANCE_OHM = 0.78_iq20;
+    static constexpr auto CURRENT_CUTOFF_FREQ = 800;
+    static constexpr auto FLUX_LINKAGE = iq20(3.4 * 1E-4);
 };
 
 struct MotorProfile_36BLDB{

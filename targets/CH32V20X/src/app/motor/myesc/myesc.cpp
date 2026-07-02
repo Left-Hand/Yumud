@@ -198,9 +198,6 @@ iq16 tmrticks_to_us(const TimerTick tick){
 
 
 
-static constexpr size_t HFI_N = 32;
-static_assert(std::has_single_bit(HFI_N));
-
 static void init_adc(){
 
     hal::adc1.init({
@@ -259,7 +256,7 @@ void myesc_main(){
 
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADTIME = 350ns;
     hal::PA<6>().inflt();
-    timer.bdtr().init({DEADTIME_NANOS});
+
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADTIME);
 
     timer.init({
@@ -283,34 +280,23 @@ void myesc_main(){
         }).unwrap()
         ;
 
+    timer.bdtr().init({DEADTIME_NANOS});
     // timer.enable_cc_ctrl_sync(EN);
     timer.enable_arr_sync(EN);
     // timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
-    timer.set_trgo_source(hal::TimerTrgoSource::Update);
-
-    auto & pwm_u_ = timer.oc<1>();
-    auto & pwm_v_ = timer.oc<2>();
-    auto & pwm_w_ = timer.oc<3>();
-
-    pwm_u_.init(Default);
-    pwm_v_.init(Default);
-    pwm_w_.init(Default);
-
-    timer.ocn<1>().init(Default);
-    timer.ocn<2>().init(Default);
-    timer.ocn<3>().init(Default);
+    // timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
 
-    pwm_u_.enable_cvr_sync(EN);
-    pwm_v_.enable_cvr_sync(EN);
-    pwm_w_.enable_cvr_sync(EN);
-
+    timer.oc<1>().init(Default);
+    timer.oc<2>().init(Default);
+    timer.oc<3>().init(Default);    
     timer.oc<4>().init({
         .oc_mode = hal::TimerOcMode::ActiveAboveCvr,
         .cvr_sync_en = EN,
         .valid_level = HIGH,
-        .out_en = DISEN
+        .out_en = EN
     });
+
 
     {
         timer.oc<1>().cvr() = TIMER_ARR_VALUE >> 1;
@@ -318,9 +304,14 @@ void myesc_main(){
         timer.oc<3>().cvr() = TIMER_ARR_VALUE >> 1;
         timer.oc<4>().cvr() = TIMER_ARR_VALUE - 8;
     }
-    // timer.oc<4>().cvr() = timer.arr() - ADC_SAMPLE_TRIM_CC_VALUE - 5;
 
-    timer.oc<4>().enable_output(EN);
+
+    timer.ocn<1>().init(Default);
+    timer.ocn<2>().init(Default);
+    timer.ocn<3>().init(Default);
+
+
+
 
     #define TIM_INST TIM1
 
@@ -357,6 +348,10 @@ void myesc_main(){
         timer.stop();
     };
 
+    stop_pwm();
+    //确保pwm完全停止
+    clock::delay(20ms);
+
     // #endregion 初始化定时器
 
     // #region 初始化ADC
@@ -374,9 +369,8 @@ void myesc_main(){
         };
     };
 
-    stop_pwm();
-    //确保pwm完全停止
-    clock::delay(20ms);
+
+
     // #endregion
     auto timming_watch_pin_ = hal::PA<12>();
     timming_watch_pin_.outpp();
@@ -559,13 +553,13 @@ void myesc_main(){
 
             {
                 const auto LOW_HFI_VOLT = iq20(0.6_iq16);
-                const auto [s,c] = dsp::DFT32_BIN1_SINCOS_TABLE[dc_cal_state.dc_cal_cnt & 0x1f];
-                const auto alphabeta_volt_gen = AlphaBetaCoord<iq16>{
-                    .alpha = iq15::from_bits(s.to_bits()) * LOW_HFI_VOLT,
-                    .beta = iq15::from_bits(c.to_bits()) * LOW_HFI_VOLT
+                const auto [s,c] = dsp::SINCOS_32STEP_TABLE[dc_cal_state.dc_cal_cnt & 0x1f];
+                const auto alphabeta_volt_final = AlphaBetaCoord<iq16>{
+                    .alpha = c * LOW_HFI_VOLT,
+                    .beta = s * LOW_HFI_VOLT
                 };
 
-                set_uvw_dutycycle(SVM(alphabeta_volt_gen * INV_BUS_VOLT * iq16(1.5)));
+                set_uvw_dutycycle(SVM(alphabeta_volt_final * INV_BUS_VOLT * iq16(1.5)));
             }
             return;
         }
@@ -808,8 +802,8 @@ void myesc_main(){
             );
         }
 
-        // state.selected_elec_angle = state.openloop_elec_angle;
-        state.selected_elec_angle = state.hfi_elec_angle;
+        state.selected_elec_angle = state.openloop_elec_angle;
+        // state.selected_elec_angle = state.hfi_elec_angle;
         // state.selected_elec_angle = state.hybrid_elec_angle;
         // state.selected_elec_angle = state.hfi_pll_state.angle + Angular<uq32>::QUARTER;
 
@@ -914,88 +908,12 @@ void myesc_main(){
         }
 
 
-        #if 1
-        [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
-            // static constexpr uint32_t MASK = (HFI_N) - 1;
-
-
-            const auto [_s_bin1,_c_bin1] = DFT32_BIN1_SINCOS_TABLE[state.hfi_idx];
-            const auto s_bin1 = iq15::from_bits(_s_bin1.to_bits());
-            const auto c_bin1 = iq15::from_bits(_c_bin1.to_bits());
-
-            const auto hfi_response = dot2v2(
-                state.alphabeta_curr_raw.alpha, c_bin1,
-                state.alphabeta_curr_raw.beta, s_bin1
-            );
-
-            #if 1
-            if(state.hfi_is_neg_samp){
-                const auto di = hfi_response - state.hfi_response;
-                state.hfi_response = hfi_response;
-
-                state.hfi_buffer[state.hfi_idx] = di;
-
-                if(state.hfi_idx >= HFI_N){
-                    state.hfi_idx = 0;
-
-                    for(size_t i = 0; i < 1; i++){
-                        const auto buffer_view = std::span(state.hfi_buffer);
-
-                        const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
-                        state.hfi_bin0_real_response = hfi_bin0_real_response;
-
-                        // const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
-                        // state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
-                        // state.hfi_bin1_imag_response = lpf_allpass(state.hfi_bin1_imag_response, hfi_bin1_imag_response);
-
-                        auto [hfi_bin2_real_response_raw, hfi_bin2_imag_response_raw] = dft32_bin2<20>(buffer_view);
-
-                        //2207
-                        // hfi_bin2_real_response -= -0.040_iq20;
-                        // hfi_bin2_imag_response -= 0.019_iq20;
-
-
-                        state.hfi_bin2_real_response = lpf_allpass(state.hfi_bin2_real_response, hfi_bin2_real_response_raw);
-                        state.hfi_bin2_imag_response = lpf_allpass(state.hfi_bin2_imag_response, hfi_bin2_imag_response_raw);
-                        
-                        state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, hfi_bin2_real_response_raw);
-                        state.hfi_bin2_imag_response_slowlp = lpf_100hz(state.hfi_bin2_imag_response_slowlp, hfi_bin2_imag_response_raw);
-                    }
-                }else{
-                    state.hfi_idx += 1;
-                }
-            }else{
-                state.hfi_response = hfi_response;
-            }
-            #endif
-
-            if(state.hfi_is_neg_samp){
-                state.hfi_is_neg_samp = false;
-                return AlphaBetaCoord<iq20>{
-                    .alpha = HFI_VOLT * c_bin1,
-                    .beta = HFI_VOLT * s_bin1,
-                };
-            }else{
-                state.hfi_is_neg_samp = true;
-                return AlphaBetaCoord<iq20>{
-                    .alpha = (-HFI_VOLT) * c_bin1,
-                    .beta = (-HFI_VOLT) * s_bin1,
-                };
-            }
-        };
-        #endif
-
-
-
-
-
         const auto inv_busbar_volt = INV_BUS_VOLT;
         const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
 
-        auto dq_dutycycle_gen = state.dq_volt_ctrl * inv_busbar_volt_3by2;
-
+        
         {
-            auto alphabeta_dutycycle_gen = dq_dutycycle_gen.to_alphabeta(elec_sincos);
+            auto alphabeta_dutycycle_final = (state.dq_volt_ctrl * inv_busbar_volt_3by2).to_alphabeta(elec_sincos);
 
             // const bool deadtime_comp_en = false;
             const bool deadtime_comp_en = fn_switches_.deadtime_compensate_en;
@@ -1033,27 +951,91 @@ void myesc_main(){
                 state.deadtime_comp_alphabeta_dutycycle[0] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[0], deadtime_comp_alphabeta_dutycycle[0]);
                 state.deadtime_comp_alphabeta_dutycycle[1] = DEADTIME_LPF_FN(state.deadtime_comp_alphabeta_dutycycle[1], deadtime_comp_alphabeta_dutycycle[1]);
 
-                alphabeta_dutycycle_gen.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
-                alphabeta_dutycycle_gen.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
+                alphabeta_dutycycle_final.alpha -= state.deadtime_comp_alphabeta_dutycycle.alpha;
+                alphabeta_dutycycle_final.beta -= state.deadtime_comp_alphabeta_dutycycle.beta;
             }
 
 
             const bool spin_hfi_enabled = true;
             // const bool spin_hfi_enabled = false;
 
+            [[maybe_unused]] auto generate_alpha_beta_volt_by_spin_hfi = [&]{
+
+
+                const auto [s_bin1,c_bin1] = SINCOS_32STEP_TABLE[state.hfi_idx];
+
+                const auto hfi_response = dot2v2(
+                    state.alphabeta_curr_raw.alpha, c_bin1,
+                    state.alphabeta_curr_raw.beta, s_bin1
+                );
+
+                if(state.hfi_is_neg_samp){
+                    const auto di = hfi_response - state.hfi_response;
+                    state.hfi_response = hfi_response;
+
+                    state.hfi_di_buffer[state.hfi_idx] = di;
+
+                    auto next_hfi_idx = state.hfi_idx + 1;
+                    if(next_hfi_idx >= NUM_HFI_SAMPLES){
+                        next_hfi_idx = 0;
+
+                        const auto buffer_view = std::span(state.hfi_di_buffer);
+
+                        const auto hfi_bin0_real_response = dft32_bin0<20>(buffer_view);
+                        state.hfi_bin0_real_response = hfi_bin0_real_response;
+
+                        // const auto [hfi_bin1_real_response, hfi_bin1_imag_response] = dft32_bin1<20>(buffer_view);
+                        // state.hfi_bin1_real_response = lpf_allpass(state.hfi_bin1_real_response, hfi_bin1_real_response);
+                        // state.hfi_bin1_imag_response = lpf_allpass(state.hfi_bin1_imag_response, hfi_bin1_imag_response);
+
+                        auto [hfi_bin2_real_response_raw, hfi_bin2_imag_response_raw] = dft32_bin2<20>(buffer_view);
+
+                        //2207
+                        // hfi_bin2_real_response -= -0.040_iq20;
+                        // hfi_bin2_imag_response -= 0.019_iq20;
+
+
+                        state.hfi_bin2_real_response = lpf_allpass(state.hfi_bin2_real_response, hfi_bin2_real_response_raw);
+                        state.hfi_bin2_imag_response = lpf_allpass(state.hfi_bin2_imag_response, hfi_bin2_imag_response_raw);
+                        
+                        state.hfi_bin2_real_response_slowlp = lpf_100hz(state.hfi_bin2_real_response_slowlp, hfi_bin2_real_response_raw);
+                        state.hfi_bin2_imag_response_slowlp = lpf_100hz(state.hfi_bin2_imag_response_slowlp, hfi_bin2_imag_response_raw);
+                    }
+
+                    state.hfi_idx = next_hfi_idx;
+                }else{
+                    state.hfi_response = hfi_response;
+                }
+
+                if(state.hfi_is_neg_samp){
+                    state.hfi_is_neg_samp = false;
+                    return AlphaBetaCoord<iq20>{
+                        .alpha = HFI_VOLT * c_bin1,
+                        .beta = HFI_VOLT * s_bin1,
+                    };
+                }else{
+                    state.hfi_is_neg_samp = true;
+                    return AlphaBetaCoord<iq20>{
+                        .alpha = (-HFI_VOLT) * c_bin1,
+                        .beta = (-HFI_VOLT) * s_bin1,
+                    };
+                }
+            };
+
+
             if(spin_hfi_enabled){
                 state.spinhfi_alphabeta_volt_gen  = generate_alpha_beta_volt_by_spin_hfi();
-                alphabeta_dutycycle_gen = alphabeta_dutycycle_gen + 
+                alphabeta_dutycycle_final = alphabeta_dutycycle_final + 
                     state.spinhfi_alphabeta_volt_gen * inv_busbar_volt;
             }
 
-            state.alphabeta_dutycycle_gen = alphabeta_dutycycle_gen;
-            state.alphabeta_volt_gen = alphabeta_dutycycle_gen * BUS_VOLT;
+            state.alphabeta_dutycycle_final = alphabeta_dutycycle_final;
+            state.alphabeta_volt_final = alphabeta_dutycycle_final * BUS_VOLT;
         }
 
 
 
-        state.uvw_dutycycle_gen = SVM(state.alphabeta_dutycycle_gen);
+        state.uvw_dutycycle_gen = SVM(state.alphabeta_dutycycle_final);
 
         set_uvw_dutycycle(state.uvw_dutycycle_gen);
 
@@ -1063,13 +1045,13 @@ void myesc_main(){
 
 
 
-        // flux_sensorless_ob.update(alphabeta_volt_gen, alphabeta_curr_raw);
-        // smo_sensorless_ob_.update({state.alphabeta_curr_raw, state.alphabeta_volt_gen});
-        // lbg_sensorless_ob.update({alphabeta_curr_raw, alphabeta_volt_gen});
+        // flux_sensorless_ob.update(alphabeta_volt_final, alphabeta_curr_raw);
+        // smo_sensorless_ob_.update({state.alphabeta_curr_raw, state.alphabeta_volt_final});
+        // lbg_sensorless_ob.update({alphabeta_curr_raw, alphabeta_volt_final});
         
         if(0){
 
-            nlf_ob_.update(state.alphabeta_curr_raw, state.alphabeta_volt_gen);
+            nlf_ob_.update(state.alphabeta_curr_raw, state.alphabeta_volt_final);
             PLL_COEFFS.iterate(state.obs_pll_state, {
                 iq16((nlf_ob_.state().eta_mf[0]) * 3),
                 iq16(-(nlf_ob_.state().eta_mf[1]) * 3)
@@ -1184,8 +1166,8 @@ void myesc_main(){
             // v_disconn_dbs.count,
             // judge_is_disconn(all_state_.uvw_curr_slowlp.u,all_state_.uvw_curr_slowlp.v + all_state_.uvw_curr_slowlp.w),
             // judge_is_disconn(all_state_.uvw_curr_slowlp.v,all_state_.uvw_curr_slowlp.u + all_state_.uvw_curr_slowlp.w),
-            // all_state_.alphabeta_volt_gen.alpha,
-            // all_state_.alphabeta_volt_gen.beta,
+            // all_state_.alphabeta_volt_final.alpha,
+            // all_state_.alphabeta_volt_final.beta,
             // all_state_.d_volt_gen,
             // all_state_.q_volt_gen,
             // flux_sensorless_ob.angle().to_turns(),
@@ -1221,28 +1203,30 @@ void myesc_main(){
             // all_state_.alphabeta_curr_raw.beta,
             // mag_volt,
             // mag_curr,
-            all_state_.uvw_curr_raw,
+            // all_state_.uvw_curr_raw,
 
-            // lq_est_mh,
-            // ld_est_mh,
-            // mag_volt / mag_curr * 0.666666_iq16,
+            lq_est_mh,
+            ld_est_mh,
+            mag_volt / mag_curr * 0.666666_iq16,
+
+
             // all_state_.alphabeta_curr_raw.length(),
             // all_state_.dq_volt_ctrl.length(),
             // all_state_.dq_volt_ctrl.length() / all_state_.alphabeta_curr_raw.length(),
-            // all_state_.alphabeta_volt_gen.length(),
+            // all_state_.alphabeta_volt_final.length(),
             // math::atan2(all_state_.hfi_bin1_imag_response,
             //     all_state_.hfi_bin1_real_response),
 
             // math::atan2(all_state_.hfi_bin2_imag_response,
             //     all_state_.hfi_bin2_real_response) / 2,
             // all_state_.openloop_elec_angle.to_turns(),
-            // all_state_.hfi_pll_state.angle.to_turns(),
+            all_state_.hfi_pll_state.angle.to_turns(),
             // all_state_.hfi_elec_angle.to_turns(),
             // nlf_ob_.state().eta_mf[0],
             // nlf_ob_.state().eta_mf[1],
             // all_state_.hfi_pll_state.angluar_speed_integral.to_turns(),
             // all_state_.obs_pll_state.angluar_speed_integral.to_turns(),
-            all_state_.hfi_elec_angle.to_turns(),
+            // all_state_.hfi_elec_angle.to_turns()
             // all_state_.observer_elec_angle.to_turns(),
             // all_state_.hybrid_elec_angle.to_turns(),
             // hybrid_ratio,
@@ -1260,7 +1244,6 @@ void myesc_main(){
             // all_state_.deadtime_comp_alphabeta_dutycycle,
             // all_state_.uvw_dutycycle_gen,
 
-            // hfi_bin2_angle.to_turns()
             // all_state_.hfi_bin2_imag_response,
             // all_state_.hfi_bin2_real_response
             // full_arr,
@@ -1271,21 +1254,17 @@ void myesc_main(){
             // math::atan2pu(all_state_.alphabeta_curr_raw[0], all_state_.alphabeta_curr_raw[1]),
             // all_state_.alphabeta_curr_raw[0] / all_state_.alphabeta_curr_raw[1],
 
-            tmrticks_to_us(all_state_.isr_entry_tick),
-            tmrticks_to_us(all_state_.isr_exit_tick),
-            all_state_.busbar_curr_lp,
-            all_state_.dq_curr_raw.q
-            // tmrticks_to_us(all_state_.isr_exit_tick) - tmrticks_to_us(all_state_.isr_entry_tick)
-            // all_state_.isr_entry_tick.counter_value,
-            // all_state_.isr_exit_tick.counter_value
-            
-            // tmrticks_diff_to_us(all_state_.isr_entry_tick, all_state_.isr_exit_tick)
+            // tmrticks_to_us(all_state_.isr_entry_tick),
+            // tmrticks_to_us(all_state_.isr_exit_tick),
+            // all_state_.busbar_curr_lp,
+            // all_state_.dq_curr_raw.q
+            tmrticks_to_us(all_state_.isr_exit_tick) - tmrticks_to_us(all_state_.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)
             // timer.oc<4>().cvr(),
             // timer.arr()
             // all_state_.isr_elapsed_ticks.count()
-            // all_state_.alphabeta_volt_gen,
+            // all_state_.alphabeta_volt_final,
             // all_state_.alphabeta_curr_raw
             // all_state_.uvw_curr_raw.u,
             // all_state_.uvw_curr_raw.v,
