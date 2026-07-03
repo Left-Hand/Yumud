@@ -2,6 +2,7 @@
 #include "dsp_vec.hpp"
 
 #include "dsp_fft32.hpp"
+#include "dsp_pll.hpp"
 
 using namespace ymd;
 using namespace ymd::dsp;
@@ -71,7 +72,9 @@ static_assert(math::abs((float)(calc_lpf_alpha_uq32(32000, 1).unwrap()) - 0.0001
 
 static_assert(dot2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == 14_iq20);
 static_assert(dot2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == 14_iq16);
-static_assert(cross2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == -2_iq20);
+static_assert(cross2v2(
+    1_iq20, 2_iq20, 
+    3_iq20, 4_iq20) == -2_iq20);
 static_assert(cross2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == -2_iq16);
 
 
@@ -123,14 +126,37 @@ static_assert(std::abs((float)std::get<1>(resat_unit_circle(0.010_iq20, 0.017320
 
 
 namespace {
-    [[maybe_unused]] static void test_dft_bin_0(){ 
-        constexpr auto real_in = [] ->std::array<math::fixed<16, int32_t>, 32>{
-            std::array<math::fixed<16, int32_t>, 32> arr;
-            arr.fill(1);
-            return arr;
-        }();
-    
-        static_assert(dft32_bin0<16>(std::span(real_in)) == 1);
-    }
+[[maybe_unused]] static void test_dft_bin_0(){ 
+    constexpr auto real_in = [] ->std::array<math::fixed<16, int32_t>, 32>{
+        std::array<math::fixed<16, int32_t>, 32> arr;
+        arr.fill(1);
+        return arr;
+    }();
 
+    static_assert(dft32_bin0<16>(std::span(real_in)) == 1);
+}
+
+
+[[maybe_unused]] static void test_pll_coeff(){
+    // kp = (zeta * 2 * fc);
+    // ki_discrete = fc * fc / fs;
+
+    #define TEST_CASE(_fs, _fc, _zeta)\
+    {\
+        static constexpr size_t fs = _fs;\
+        static constexpr size_t fc = _fc;\
+        static constexpr iq16 zeta = iq16(_zeta);\
+        static constexpr auto pll_coeffs = dsp::PllCoeffs::from_fsfc(fs, fc, zeta);\
+        static constexpr auto err_kp = abs_err_percentages((float)pll_coeffs.kp, (float)(float(zeta) * 2 * fc));\
+        static constexpr auto err_ki_discrete = abs_err_percentages((float)pll_coeffs.ki_discrete, (float)(float(fc) * fc / fs));\
+        static_assert(err_kp < 1e-2);\
+        static_assert(err_ki_discrete < 3e-2);\
+    }\
+
+    TEST_CASE(36000, 20, 1)
+    TEST_CASE(36000, 40, 1)
+    TEST_CASE(36000, 100, 1)
+    TEST_CASE(36000, 100, 2)
+    TEST_CASE(36000, 900, 1)
+}
 }

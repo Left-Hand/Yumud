@@ -19,8 +19,6 @@
 #include "middlewares/algebra/vectors/vec3.hpp"
 #include "middlewares/algebra/vectors/quat.hpp"
 
-#include "digipw/prelude/abdq.hpp"
-
 using namespace ymd;
 
 namespace PhysicalConstants {

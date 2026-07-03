@@ -179,6 +179,7 @@ struct alignas(4) [[nodiscard]] AllState{
     // DqCoord<iq20> dq_curr_fastlp;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
+    AlphaBetaCoord<iq20> prev_alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
 
 
@@ -187,11 +188,12 @@ struct alignas(4) [[nodiscard]] AllState{
     // DqCoord<iq20> dq_dutycycle_gen;
     DqCoord<iq20> dq_volt_decouple;
 
-    AlphaBetaCoord<iq20> hfi_alphabeta_dutycycle;
+    AlphaBetaCoord<iq20> alphabeta_dutycycle_hfi;
     AlphaBetaCoord<iq20> alphabeta_dutycycle_final;
     AlphaBetaCoord<iq20> alphabeta_volt_final;
-    UvwCoord<iq16> uvw_dutycycle_gen;
+
     UvwCoord<iq16> uvw_dutycycle_deadcomp;
+    UvwCoord<iq16> uvw_dutycycle_genout;
     DeadcompState deadcomp_state;
 
 
@@ -209,6 +211,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     
     iq20 hfi_response;
+    iq20 pulse_hfi_di;
     iq20 hfi_bin0_real_response_acc;
     iq20 hfi_bin0_real_response;
 

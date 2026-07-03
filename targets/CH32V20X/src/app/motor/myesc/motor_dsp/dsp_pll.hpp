@@ -31,32 +31,38 @@ struct [[nodiscard]] alignas(4) PllCoeffs final{
     uq32 ts;
 
     constexpr void iterate(PllState & state, const std::array<iq16, 2> normalized_sincos) const {
+        iq16 err = dsp::cross2v2(
+            normalized_sincos[0], state.sine, 
+            normalized_sincos[1], state.cosine
+        );
+
+        iterate_err(state, err);
+    }
+
+    constexpr void iterate_err(PllState & state, iq16 normalized_err) const {
         auto & self = *this;
 
-        std::tie(state.sine, state.cosine) = state.angle.sincos();
-        
-        const iq16 e = CLAMP2(
-            dsp::cross2v2(normalized_sincos[0], state.sine , normalized_sincos[1], state.cosine),
-            1.00_iq16);
+        normalized_err = CLAMP2(normalized_err, 1.00_iq16);
 
-        state.angluar_speed = make_angular_from_turns(e * self.kp + state.angluar_speed_integral.to_turns());
+        const auto angluar_speed = make_angular_from_turns(normalized_err * self.kp + state.angluar_speed_integral.to_turns());
         uint32_t angle_bits = state.angle.to_turns().to_bits();
         
         angle_bits += static_cast<uint32_t>((
-            static_cast<uint64_t>(ts.to_bits()) * (state.angluar_speed.to_turns()).to_bits()
+            static_cast<uint64_t>(ts.to_bits()) * (angluar_speed.to_turns()).to_bits()
         ) >> 16);
 
         state.angle = state.angle.from_turns(
             uq32::from_bits(angle_bits)
         );
+
+        std::tie(state.sine, state.cosine) = state.angle.sincos();
+        state.angluar_speed = angluar_speed;
         state.angluar_speed_integral = state.angluar_speed_integral.from_turns(
-            state.angluar_speed_integral.to_turns() + e * self.ki_discrete);
+            state.angluar_speed_integral.to_turns() + normalized_err * self.ki_discrete);
     }
 
     static constexpr PllCoeffs from_fskpki(const size_t fs, const size_t kp, const size_t ki){
-        const uq16 ki_discrete = uq16::from_bits(
-            static_cast<uint32_t>((static_cast<uint64_t>(ki) * (1u << 16)) / fs)
-        );
+        const uq16 ki_discrete = uq16::from_bits(ki) / uq16::from_bits(fs);
         const uq32 ts = uq32::from_rcp(fs);
 
         return PllCoeffs{

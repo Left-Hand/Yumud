@@ -9,24 +9,9 @@ using Error = AS5047::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> AS5047::init() {
-    TODO();
-    return Ok();
-}
-
-uint16_t AS5047::get_angle_bits(){
-    TODO();
-    return 0;
-}
-
-IResult<> AS5047::update() {
-    TODO();
-    return Ok();
-}
 
 namespace {
-struct TransmissionFrame{
-protected:
+struct [[nodiscard]] Packet final{
     uint16_t addr_:14;
     union{
         uint16_t read_:1;

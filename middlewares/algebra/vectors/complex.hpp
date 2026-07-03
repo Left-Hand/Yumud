@@ -41,7 +41,7 @@ public:
     }
 
 
-    [[nodiscard]] constexpr Angular<T> to_angle() const noexcept {
+    [[nodiscard]] constexpr Angular<T> angle() const noexcept {
         return Angular<T>::from_turns(math::atan2pu(im, re));
     }
 

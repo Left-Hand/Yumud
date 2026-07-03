@@ -79,9 +79,6 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
         return math::inv_mag(alpha, beta);
     }
 
-    [[nodiscard]] constexpr T length_squared() const noexcept {
-        return square(alpha) + square(beta);
-    }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator +() const noexcept {
         return AlphaBetaCoord{alpha, beta};
@@ -91,12 +88,24 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
         return AlphaBetaCoord{-alpha, -beta};
     }
 
+    constexpr AlphaBetaCoord & operator +=(const AlphaBetaCoord & rhs) noexcept {
+        *this = AlphaBetaCoord{alpha + rhs.alpha, beta + rhs.beta};
+        return *this;
+    }
+
     [[nodiscard]] constexpr AlphaBetaCoord operator +(const AlphaBetaCoord & rhs) const noexcept {
-        return AlphaBetaCoord{alpha + rhs.alpha, beta + rhs.beta};
+        auto ret = *this;
+        return (ret += rhs);
+    }
+
+    constexpr AlphaBetaCoord & operator -=(const AlphaBetaCoord & rhs) noexcept {
+        *this = AlphaBetaCoord{alpha - rhs.alpha, beta - rhs.beta};
+        return *this;
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator -(const AlphaBetaCoord & rhs) const noexcept {
-        return AlphaBetaCoord{alpha - rhs.alpha, beta - rhs.beta};
+        auto ret = *this;
+        return (ret -= rhs);
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator *(const auto rhs) const noexcept {
@@ -107,9 +116,6 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
         return AlphaBetaCoord{lhs * rhs.alpha, lhs * rhs.beta};
     }
 
-    [[nodiscard]] constexpr Angular<T> angle() const noexcept {
-        return Angular<T>::from_turns(math::atan2pu(beta, alpha));
-    }
 
     template<typename Fn>
     [[nodiscard]] constexpr AlphaBetaCoord map(Fn && fn) const noexcept {
@@ -118,22 +124,12 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
             std::forward<Fn>(fn)(beta)};
     }
 
-    [[nodiscard]] constexpr AlphaBetaCoord operator /(const auto rhs) const noexcept {
-        return AlphaBetaCoord{alpha / rhs, beta / rhs};
-    }
 
     template<typename U>
     [[nodiscard]] constexpr DqCoord<T> inv_rotate(const math::Rotation2<U> rot) const noexcept {
         DqCoord<T> dq;
         details::inv_rotate(dq, *this, rot);
         return dq;
-    }
-
-    [[nodiscard]] constexpr AlphaBetaCoord clamp(const auto max) const noexcept {
-        return AlphaBetaCoord{
-            CLAMP2(this->alpha, static_cast<T>(max)), 
-            CLAMP2(this->beta, static_cast<T>(max))
-        };
     }
 
     template<size_t I>
@@ -170,9 +166,9 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     }
 
 private:
-    static constexpr T _2_by_3 = static_cast<T>(2.0/3);
-    static constexpr T _sqrt3_by_3 = static_cast<T>(math::sqrt(T(3)) / 3);
-    static constexpr T _sqrt3_by_2 = static_cast<T>(math::sqrt(T(3)) / 2);
+    static constexpr uq32 _2_by_3 = static_cast<T>(2.0/3);
+    static constexpr uq32 _sqrt3_by_3 = static_cast<T>(1.73205080757 / 3);
+    static constexpr uq32 _sqrt3_by_2 = static_cast<T>(1.73205080757 / 2);
 };
 
 template<typename T>
@@ -211,10 +207,10 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaZeroCoord final{
     }
 
 private:
-    static constexpr T _2_by_3 = static_cast<T>(2.0/3);
-    static constexpr T _sqrt3_by_3 = static_cast<T>(math::sqrt(T(3)) / 3);
-    static constexpr T _sqrt3_by_2 = static_cast<T>(math::sqrt(T(3)) / 2);
-    static constexpr T _sqrt2_by_2 = static_cast<T>(math::sqrt(T(2)) / 2);
+    static constexpr uq32 _2_by_3 = static_cast<uq32>(2.0/3);
+    static constexpr uq32 _sqrt3_by_3 = static_cast<uq32>(1.73205080757 / 3);
+    static constexpr uq32 _sqrt3_by_2 = static_cast<uq32>(1.73205080757 / 2);
+    static constexpr uq32 _sqrt2_by_2 = static_cast<uq32>(math::sqrt(T(2)) / 2);
 };
 
 
@@ -280,16 +276,18 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
         return DqCoord{d * rhs, q * rhs};
     }
 
-    [[nodiscard]] constexpr DqCoord operator /(const auto rhs) const noexcept {
-        return DqCoord{d / rhs, q / rhs};
+
+    constexpr DqCoord & operator +=(const DqCoord & rhs) noexcept {
+        *this = DqCoord{d + rhs.d, q + rhs.q};
+        return *this;
     }
 
-    [[nodiscard]] constexpr DqCoord clamp(const auto max) const noexcept {
-        return DqCoord{
-            CLAMP2(this->d, max), 
-            CLAMP2(this->q, max)
-        };
+    constexpr DqCoord & operator -=(const DqCoord & rhs) const noexcept {
+        *this = DqCoord{d - rhs.d, q - rhs.q};
+        return *this;
     }
+
+
 
     template<size_t I>
     requires (I < 2)
