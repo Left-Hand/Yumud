@@ -17,7 +17,7 @@ using RegSet = VCE2755_Regset;
 using AnglePacket = RegSet::AnglePacket;
 
 // 对应的 CRC 生成多项式为 X4+X+1，初始值=0000b，数据输入输出不取反。
-static constexpr uint8_t calc_crc4(uint32_t bits20) {
+[[nodiscard]] static constexpr uint8_t calc_crc4(uint32_t bits20) {
     // 确保只使用低20位
     bits20 &= 0x000FFFFF;
     

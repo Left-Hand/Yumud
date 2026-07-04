@@ -11,6 +11,8 @@
 namespace ymd::lld{
 
 
+[[nodiscard]] bool timer_is_up_counting(void * p_inst);
+
 std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
     const uint32_t aligned_bus_clk_freq,
     const hal::TimerCountFreq count_freq

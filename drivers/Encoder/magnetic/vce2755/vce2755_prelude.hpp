@@ -190,6 +190,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x00
     struct [[nodiscard]] R8_ChipId:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+        
         uint8_t code;
     };
 
@@ -198,6 +199,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x40
     struct [[nodiscard]] R8_IO:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x40};
+        
         uint8_t spi_3wire_en:1;
 
         //0: 2mA 
@@ -213,6 +215,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x41
     struct [[nodiscard]] R8_AbzInvert:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
+        
         uint8_t abz_inv:1;
         uint8_t __resv__:5;
         PwmFreq pwm_freq:1;
@@ -224,6 +227,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x42
     struct [[nodiscard]] R8_Direction:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x42};
+        
         uint8_t __resv__:5;
         uint8_t is_ccw:1;
         uint8_t __resv2__:2;
@@ -233,18 +237,19 @@ struct VCE2755_Regset:public VCE2755_Prelude{
 
 
     //0x43,0x44,
-    struct [[nodiscard]] R16_AbzResolution:public Reg8 {
+    struct [[nodiscard]] R16_AbzResolution:public Reg16 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x43};
-        uint8_t abz_res_9_8:2;
-        uint8_t __resv__:6;
-        uint8_t abz_res_7_0:8;
+        
+        uint16_t abz_res_9_8:2;
+        uint16_t __resv__:6;
+        uint16_t abz_res_7_0:8;
 
         void set_resolution(const uint16_t resolution) {
             abz_res_9_8 = resolution >> 8;
             abz_res_7_0 = resolution & 0xFF;
         }
 
-        uint16_t get_resolution() const noexcept {
+        [[nodiscard]] uint16_t get_resolution() const noexcept {
             return (abz_res_9_8 << 8) | abz_res_7_0;
         }
     };
@@ -252,15 +257,17 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     VALIDATE_R16(R16_AbzResolution)
     
     //0x46,0x47
-    struct [[nodiscard]] R16_ZeroPosition:public Reg8 {
+    struct [[nodiscard]] R16_ZeroPosition:public Reg16 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x46};
+        
+
         uint8_t zero_pos_11_8:4;
         uint8_t __resv__:4;
         uint8_t zero_pos_7_0:8;
 
         void set_angle(const Angular<uq32> angle) {
             const uint16_t zero_pos_u12 = static_cast<uint16_t>(angle.to_turns().to_bits() >> (32 - 12));
-            zero_pos_11_8 = zero_pos_u12 >> 8;
+            zero_pos_11_8 = (zero_pos_u12 >> 8) & 0x0f;
             zero_pos_7_0 = zero_pos_u12 & 0xFF;
         }
     };
@@ -270,6 +277,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x48
     struct [[nodiscard]] R8_Hysteresis:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x48};
+        
         uint8_t __resv__:5;
         Hysteresis hysteresis:3;
     };
@@ -279,6 +287,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x4a
     struct [[nodiscard]] R8_ZWidth:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4a};
+        
         uint8_t __resv__:5;
         uint8_t z_width:3;
     };
@@ -288,6 +297,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x4c
     struct [[nodiscard]] R8_UvwResolution:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4c};
+        
         uint8_t abz_resolution:3;
         uint8_t __resv__:5;
     };
@@ -297,6 +307,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x4d
     struct [[nodiscard]] R8_Bandwidth:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4d};
+        
         BandWidth bandwidth:6;
         WeakMagAlarmLevel weak_mag_alarm_lvl:2;
     };

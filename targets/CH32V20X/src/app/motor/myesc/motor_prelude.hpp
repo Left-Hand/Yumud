@@ -114,10 +114,10 @@ struct OpFlags{
 
 struct alignas(4) [[nodiscard]] DcCalibrateState{
     std::array<uint32_t, 3> uvw_current_bits_offset_acc;
-    std::array<uint16_t, 3> uvw_current_bits_offset;
+    std::array<int32_t, 3> uvw_current_bits_offset;
 
-    bool dc_cal_done;
     size_t dc_cal_cnt;
+    bool dc_cal_done;
 
     void reset(){
         #pragma GCC diagnostic push
@@ -149,17 +149,35 @@ struct alignas(4) [[nodiscard]] DeadcompState final{
     std::array<bool, 3> uvw_strong;
 };
 
+struct Temperature{
+    iq16 celsius;
+
+    constexpr iq16 to_celsius() const {
+        return celsius;
+    }
+};
+
+
+struct alignas(4) [[nodiscard]] TemperatureState final{
+    std::array<Temperature, 4> elements;
+
+    auto & die(this auto && self){return self.elements[0];}
+    auto & ext1(this auto && self){return self.elements[1];}
+    auto & ext2(this auto && self){return self.elements[2];}
+    auto & ext3(this auto && self){return self.elements[3];}
+};
+
 struct alignas(4) [[nodiscard]] AllState{
-    DcCalibrateState dc_calibrate_state;
+
 
     SecondOrderState<iq16> track_ref;
     SecondOrderState<iq16> rotor_rotation_state_var;
 
+    iq20 torque_curr_cmd;
+
     uq32 encoder_lap_turns;
     iiq32 encoder_multilap_turns;
 
-    Angular<uq16> hfi_lap_angle;
-    Angular<iq16> hfi_multilap_angle;
 
     Angular<uq32> openloop_elec_angle;
     Angular<uq32> encoder_elec_angle;
@@ -196,39 +214,45 @@ struct alignas(4) [[nodiscard]] AllState{
     UvwCoord<iq16> uvw_dutycycle_genout;
     DeadcompState deadcomp_state;
 
-
+    DcCalibrateState dc_calibrate_state;
     iq20 busbar_curr_raw;
     iq20 busbar_curr_lp;
-    iq20 torque_curr_cmd;
+
 
     iq20 unblance_curr_abs_lp;
     DebounceState u_disconn_dbs;
     DebounceState v_disconn_dbs;
 
     size_t hfi_idx;
-    // std::array<iq20, 32> hfi_di_buffer;
-
-
-    
-    iq20 hfi_response;
-    iq20 pulse_hfi_di;
-    iq20 hfi_bin0_real_response_acc;
-    iq20 hfi_bin0_real_response;
-
-    iq20 hfi_bin1_real_response;
-    iq20 hfi_bin1_imag_response;
-
-    iq20 hfi_bin2_real_response_acc;
-    iq20 hfi_bin2_imag_response_acc;
-    iq20 hfi_bin2_real_response;
-    iq20 hfi_bin2_imag_response;
-    iq20 hfi_bin2_real_response_slowlp;
-    iq20 hfi_bin2_imag_response_slowlp;
-
     bool hfi_is_neg_samp;
+
+    iq20 hfi_response;
+    Angular<uq16> prev_hfi_lap_angle2x;
+    Angular<iq16> hfi_multilap_angle2x;
+
+    iq20 pulsehfi_d_response;
+    iq20 pulsehfi_q_response;
+
+    iq20 spinhfi_bin0_real_response_acc;
+    iq20 spinhfi_bin0_real_response;
+
+    iq20 spinhfi_bin1_real_response;
+    iq20 spinhfi_bin1_imag_response;
+
+    iq20 spinhfi_bin2_real_response_acc;
+    iq20 spinhfi_bin2_imag_response_acc;
+    iq20 spinhfi_bin2_real_response;
+    iq20 spinhfi_bin2_imag_response;
+    iq20 spinhfi_bin2_real_response_slowlp;
+    iq20 spinhfi_bin2_imag_response_slowlp;
+
+    uq32 observer_hybrid_ratio;
+
 
     dsp::PllState hfi_pll_state;
     dsp::PllState obs_pll_state;
+
+    TemperatureState temperature_state;
 
 
     TimerTick isr_entry_tick;

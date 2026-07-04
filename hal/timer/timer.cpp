@@ -520,28 +520,11 @@ void BasicTimer::deinit(){
     event_callback_ = nullptr;
 }
 
-#if 0
-void timer_start(){
-    TIM_Cmd(SPL_INST(p_inst_), true);
-    
-    if(lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
-    }
-}
-
-void timer_stop(){
-    TIM_Cmd(SPL_INST(p_inst_), false);
-    
-    if((en == EN) and lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
-    }
-}
-#endif
 
 void BasicTimer::enable(const Enable en){
     TIM_Cmd(SPL_INST(p_inst_), (en == EN));
     
-    if((en == EN) and lld::is_advanced_timer(tim_nth_)){
+    if(lld::is_advanced_timer(tim_nth_)){
         TIM_CtrlPWMOutputs(SPL_INST(p_inst_), (en == EN));
     }
 }
@@ -595,8 +578,9 @@ void GeneralTimer::init_as_encoder(){
     TIM_Cmd(SPL_INST(p_inst_), ENABLE);
 }
 
+
 bool GeneralTimer::is_up_counting(){
-    return reg_get_bit(SPL_INST(p_inst_)->CTLR1, TIM_DIR) == 0;
+    return lld::timer_is_up_counting(p_inst_);
 }
 
 
