@@ -28,7 +28,6 @@
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
-#include "digipw/ctrl/pi_controller.hpp"
 
 #include "motor_config.hpp"
 
@@ -39,7 +38,7 @@
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_fft32.hpp"
 
-
+#include "motor_dsp/dsp_pi.hpp"
 
 #include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
 
@@ -66,7 +65,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq20 phase_inductance_mh;        // 相电感 (mH)
     iq20 phase_resistance_ohm;        // 相电阻 (Ω)
 
-    [[nodiscard]] constexpr Result<digipw::PiCofficients, StringView> 
+    [[nodiscard]] constexpr Result<dsp::PiCofficients, StringView> 
     try_into_precomputed() const noexcept {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
@@ -79,7 +78,7 @@ struct LrSeriesCurrentRegulatorConfig{
         if(fc * 8 >= fs) return Err(StringView("fc too large"));
 
         const auto & self = *this;
-        digipw::PiCofficients coeffs;
+        dsp::PiCofficients coeffs;
 
         //norm_omega = fc * 2pi / fs
 
@@ -94,6 +93,8 @@ struct LrSeriesCurrentRegulatorConfig{
         return Ok(coeffs);
     }
 };
+
+
 
 
 
@@ -151,9 +152,9 @@ static constexpr math::fixed<Q, int32_t> lpf_allpass(
 }
 
 
-static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
+static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
-    .fc = MotorProfile::CURRENT_CUTOFF_FREQ,
+    .fc = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ,
     .phase_inductance_mh = MotorProfile::PHASE_INDUCTANCE_MH,
     .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
 };
@@ -757,7 +758,8 @@ void myesc_main(){
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, PLL_FC, PLL_ZETA);
-        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 65, 2.0_iq16);
+        static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 105, 2.0_iq16);
+        // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 65, 2.0_iq16);
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 35, 2.0_iq16);
         // static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 45, 2.0_iq16);
 
@@ -880,10 +882,11 @@ void myesc_main(){
             const bool is_speed_stable = true;
             const auto omega = state.hfi_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
 
+            const auto phase_ind = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
             if(cross_decoupling_enabled){
             // if(true){
-                d_volt_decouple -= MotorProfile::PHASE_INDUCTANCE_MH * state.dq_curr_raw.q * omega;
-                q_volt_decouple += MotorProfile::PHASE_INDUCTANCE_MH * state.dq_curr_raw.d * omega;
+                d_volt_decouple -= phase_ind * state.dq_curr_raw.q * omega;
+                q_volt_decouple += phase_ind * state.dq_curr_raw.d * omega;
             }
 
             const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
@@ -1393,7 +1396,7 @@ void myesc_main(){
             // flux_sensorless_ob.state().v_alphabeta_last[0],
             // flux_sensorless_ob.state().v_alphabeta_last[1],
             // state.torque_curr_cmd,
-            // state.uvw_curr_raw,
+            state.uvw_curr_raw,
             // state.dq_volt_ctrl,
             // state.selected_elec_angle.to_turns(),
             // state.alphabeta_curr_raw.alpha,
@@ -1404,9 +1407,9 @@ void myesc_main(){
             // state.dq_volt_ctrl.q,
             // state.dq_curr_raw.q,
 
-            state.spinhfi_bin2_real_response, 
+            // state.spinhfi_bin2_real_response, 
             // state.spinhfi_bin0_real_response,
-            state.spinhfi_bin2_imag_response, 
+            // state.spinhfi_bin2_imag_response, 
             // state.spinhfi_bin2_imag_response + state.spinhfi_bin0_real_response, 
             // state.spinhfi_bin2_imag_response, 
             // state.spinhfi_bin1_imag_response
@@ -1447,9 +1450,11 @@ void myesc_main(){
             // nlf_ob_.state().eta_mf[1],
             state.openloop_elec_angle.to_turns(),
             state.hfi_pll_state.angle.to_turns(),
-            // state.obs_pll_state.angluar_speed_integral.to_turns(),
-            state.hfi_elec_angle.to_turns(),
-            state.temperature_state.die().to_celsius(),
+            // state.hfi_pll_state.angle.to_turns(),
+            state.hfi_pll_state.angluar_speed.to_turns(),
+            // state.hfi_elec_angle.to_turns(),
+            // state.temperature_state.die().to_celsius(),
+
             // state.observer_elec_angle.to_turns(),
             // state.hybrid_elec_angle.to_turns(),
             // state.observer_hybrid_ratio,
@@ -1480,7 +1485,8 @@ void myesc_main(){
             // tmrticks_to_us(state.isr_entry_tick),
             // tmrticks_to_us(state.isr_exit_tick),
             // state.busbar_curr_lp,
-            // state.dq_curr_raw.q
+            state.dq_curr_raw.q,
+            state.dq_curr_raw.d,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)

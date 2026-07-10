@@ -11,9 +11,13 @@ static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
 // static constexpr uint32_t CHOPPER_FREQ = 10_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
+static constexpr auto DEADTIME_NANOS = 120ns;
+// static constexpr auto DEADTIME_NANOS = 920ns;
+
+
 
 // #region VOLTAGE
-static constexpr auto BUS_VOLT = iq16(12.0);
+static constexpr auto BUS_VOLT = iq16(24.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 
 
@@ -30,20 +34,18 @@ static constexpr iq20 INV_CTRL_VOLT_LIMIT = 1 / CTRL_VOLT_LIMIT;
 
 // #region OPA 
 static constexpr double SHUNT_RESISTANCE_OHMS = 0.006f;
-static constexpr double OPA_GAIN = 20;
-static constexpr double CURRENT_FULLSCALE_AMPS = 3.3 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
+static constexpr double HW_OPA_GAIN = 20;
+static constexpr double ONCHIP_OPA_GAIN = 1;
+static constexpr double OPA_GAIN = HW_OPA_GAIN * ONCHIP_OPA_GAIN;
+static constexpr double CURRENT_HALFSCALE_AMPS = 1.65 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
 // #endregion
 
-static constexpr auto DEADTIME_NANOS = 120ns;
-// static constexpr auto DEADTIME_NANOS = 920ns;
-
-static constexpr size_t PLL_FC = 75;
-static constexpr auto PLL_ZETA = 2.0_iq16;
 
 
 
-// static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_FULLSCALE_AMPS / (1 << 12));
-static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_FULLSCALE_AMPS / (1 << 12));
+// static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_HALFSCALE_AMPS / (1 << 12));
+static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS / (1 << 12);
+static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_AMPS_PER_ADC_LSB_F);
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
 
 
@@ -63,13 +65,13 @@ static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
 
 // using MotorProfile = MotorProfile_Ysc;
-// using MotorProfile = MotorProfile_Gim4010;
+using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
 // using MotorProfile = MotorProfile_E800;
 // using MotorProfile = MotorProfile_Gkf2023;
-using MotorProfile = MotorProfile_NidecFan;
+// using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;
 // using MotorProfile = MotorProfile_NiuLiu;
 // using MotorProfile = MotorProfile_2207;

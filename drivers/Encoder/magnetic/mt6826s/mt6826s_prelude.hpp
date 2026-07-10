@@ -21,7 +21,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 // @brief MT6826S commands
-enum class Command:uint16_t{
+enum class [[nodiscard]] Command:uint16_t{
     ReadReg = 0b0011,
     WriteReg = 0b0110,
     BurnReg = 0b1100,
@@ -36,20 +36,20 @@ enum class [[nodiscard]] RegAddr:uint16_t{
 };
 
 
-enum class Hysteresis:uint8_t{
+enum class [[nodiscard]] Hysteresis:uint8_t{
     LSB1, LSB2, LSB4, LSB8,
     LSB0, LSB0_25, LSB00_5
 };
 
-enum class ZeroPulseWidth:uint8_t{
+enum class [[nodiscard]] ZeroPulseWidth:uint8_t{
     LSB1, LSB2, LSB4, LSB8,LSB12, LSB16, HALF
 };
 
-enum class PwmFreq:uint8_t{
+enum class [[nodiscard]] PwmFreq:uint8_t{
     _994Hz,_497Hz
 };
 
-struct Status{
+struct [[nodiscard]] alignas(1) Status final{
     uint8_t overspeed:1;
     uint8_t magweak:1;
     uint8_t uvlo:1;
@@ -76,7 +76,7 @@ struct Status{
 };
 
 
-struct Packet final{
+struct [[nodiscard]] alignas(4) Packet final{
     uint16_t angle_msb_u15;
     Status status;
     uint8_t crc;
