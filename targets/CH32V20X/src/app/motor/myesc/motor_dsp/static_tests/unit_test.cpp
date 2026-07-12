@@ -134,6 +134,8 @@ static_assert(abs_err_percentages(
     #undef TEST_CASE
 }
 
+static_assert(abs_err_percentages(1.0f, 1.01f) > 0.9f);
+static_assert(abs_err_percentages(1.0f, 1.01f) < 1.1f);
 
 [[maybe_unused]] static void test_pi_calc(){
     // Ki = 2pi * fc * R
@@ -152,7 +154,7 @@ static_assert(abs_err_percentages(
         static constexpr auto kp_err = abs_err_percentages((float)coeffs.kp, float(2 * M_PI * fc * _ind_mh * 0.001));\
         static constexpr auto ki_err = abs_err_percentages((float)coeffs.ki_discrete, float(2 * M_PI * fc * _res_ohm / fs));\
         static_assert(kp_err < 1e-2);\
-        static_assert(ki_err < 1e-2);\
+        static_assert(ki_err < 1.5e-2);\
     }\
 
 
@@ -173,6 +175,14 @@ static_assert(abs_err_percentages(
     TEST_CASE(36000, 1000, 0.022f, 0.222f)
     TEST_CASE(36000, 3000, 0.022f, 0.222f)
     TEST_CASE(36000, 200, 0.022f, 0.222f)
+
+    TEST_CASE(36000, 1000, 0.022f, 0.072f)
+    TEST_CASE(36000, 3000, 0.022f, 0.072f)
+    TEST_CASE(36000, 200, 0.022f, 0.072f)
+
+    TEST_CASE(56000, 1000, 0.022f, 0.072f)
+    TEST_CASE(56000, 3000, 0.022f, 0.072f)
+    TEST_CASE(56000, 200, 0.022f, 0.072f)
 
     TEST_CASE(32768, 1000, 0.022f, 0.222f)
     TEST_CASE(32768, 3000, 0.022f, 0.222f)

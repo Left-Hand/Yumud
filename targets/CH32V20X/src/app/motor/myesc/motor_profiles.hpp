@@ -38,7 +38,7 @@ struct MotorProfile_3505{
     //具有良好的凸极性
     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 10u;
-    static constexpr auto FLUX_LINKAGE = iq20(8.4 * 1E-4);
+    static constexpr auto FLUX_LINKAGE = iq20(88.4 * 1E-4);
 
     static constexpr auto Q_AXIS_INDUCTANCE_MH = iq20(60 * 1E-3);
     static constexpr auto D_AXIS_INDUCTANCE_MH = iq20(35 * 1E-3);
@@ -61,7 +61,7 @@ struct MotorProfile_E800{
     static constexpr auto D_AXIS_INDUCTANCE_MH = iq20(62 * 1E-3);
 
     static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
-    static constexpr auto FLUX_LINKAGE = iq20(8.4 * 1E-4);
+    static constexpr auto FLUX_LINKAGE = iq20(88.4 * 1E-4);
     static constexpr auto PHASE_RESISTANCE_OHM = 0.125_iq20;
 
     static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 600;
@@ -77,7 +77,7 @@ struct MotorProfile_NidecFan{
     static constexpr auto D_AXIS_INDUCTANCE_MH = iq20(137 * 1E-3);
 
     static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
-    static constexpr auto FLUX_LINKAGE = iq20(8.4 * 1E-4);
+    static constexpr auto FLUX_LINKAGE = iq20(50.4 * 1E-4);
     static constexpr auto PHASE_RESISTANCE_OHM = 0.07_iq20;
 
     static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 800;
@@ -93,14 +93,7 @@ struct MotorProfile_2207{
     static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 500;
 };
 
-struct MotorProfile_Gkf2023{
-    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
-    static constexpr size_t POLE_PAIRS = 7u;
-    static constexpr auto PHASE_INDUCTANCE_MH = iq20(240 * 1E-3);
-    static constexpr auto PHASE_RESISTANCE_OHM = 1.114_iq20;
-    static constexpr auto FLUX_LINKAGE = iq20(3.4 * 1E-4);
-    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 300;
-};
+
 
 
 struct MotorProfile_Gim4010{
@@ -112,10 +105,26 @@ struct MotorProfile_Gim4010{
 
     static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
     static constexpr auto PHASE_RESISTANCE_OHM = 0.78_iq20;
-    static constexpr auto FLUX_LINKAGE = iq20(3.4 * 1E-4);
+    static constexpr auto FLUX_LINKAGE = iq20(73.4 * 1E-4);
 
 
     static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 800;
+};
+// struct MotorProfile_Gkf2023{
+//     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
+//     static constexpr size_t POLE_PAIRS = 7u;
+//     static constexpr auto PHASE_INDUCTANCE_MH = iq20(240 * 1E-3);
+//     static constexpr auto PHASE_RESISTANCE_OHM = 1.714_iq20;
+//     static constexpr auto FLUX_LINKAGE = iq20(9.4 * 1E-3);
+//     static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 600;
+// };
+struct MotorProfile_Gkf2023{
+    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
+    static constexpr size_t POLE_PAIRS = 7u;
+    static constexpr auto PHASE_INDUCTANCE_MH = iq20(240 * 1E-3);
+    static constexpr auto PHASE_RESISTANCE_OHM = 1.714_iq20;
+    static constexpr auto FLUX_LINKAGE = iq20(13.4 * 1E-3);
+    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 600;
 };
 
 struct MotorProfile_36BLDB{

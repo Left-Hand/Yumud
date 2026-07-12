@@ -88,6 +88,12 @@ struct FnSwitches{
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
     }
+
+    static constexpr Self from_default(){
+        Self self;
+        self.reset();
+        return self;
+    }
 };
 
 
@@ -95,7 +101,7 @@ struct OpFlags{
     using Self = OpFlags;
 
 
-    uint32_t initial_dc_calibrate:1;
+    uint32_t dc_calibrate_unready:1;
     uint32_t initial_encoder_dirtest:1;
     uint32_t measure_resind:1;
     uint32_t measure_flux:1;
@@ -113,8 +119,8 @@ struct OpFlags{
 
 
 struct alignas(4) [[nodiscard]] DcCalibrateState{
-    std::array<uint32_t, 3> uvw_current_bits_offset_acc;
-    std::array<int32_t, 3> uvw_current_bits_offset;
+    std::array<int32_t, 3> uvw_bvalue_offset_acc;
+    std::array<int32_t, 3> uvw_bvalue_offset;
 
     size_t dc_cal_cnt;
     bool dc_cal_done;
@@ -167,16 +173,25 @@ struct alignas(4) [[nodiscard]] TemperatureState final{
     auto & ext3(this auto && self){return self.elements[3];}
 };
 
-struct alignas(4) [[nodiscard]] AllState{
-
-
+struct PathState{
     SecondOrderState<iq16> track_ref;
     SecondOrderState<iq16> rotor_rotation_state_var;
+};
+
+
+struct alignas(4) [[nodiscard]] FluxObserverState{
+    iq20 x1;
+    iq20 x2;
+    iq20 x1_slowlp;
+    iq20 x2_slowlp;
+    iq20 lem1;
+    iq20 lem2;
+};
+
+struct alignas(4) [[nodiscard]] AllState{
 
     iq20 torque_curr_cmd;
 
-    uq32 encoder_lap_turns;
-    iiq32 encoder_multilap_turns;
 
 
     Angular<uq32> openloop_elec_angle;
@@ -186,14 +201,16 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hybrid_elec_angle;
     Angular<uq32> selected_elec_angle;
 
+    uq32 encoder_turns;
+    iiq32 encoder_multilap_turns;
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_slowlp;
     UvwCoord<iq20> uvw_curr_fastlp;
 
 
-    DqCoord<iq20> dq_curr_setp;
     DqCoord<iq20> dq_curr_raw;
+    DqCoord<iq20> dq_curr_setp;
     // DqCoord<iq20> dq_curr_fastlp;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
@@ -222,6 +239,8 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 unblance_curr_abs_lp;
     DebounceState u_disconn_dbs;
     DebounceState v_disconn_dbs;
+
+    FluxObserverState flux_ob_state;
 
     size_t hfi_idx;
     bool hfi_is_neg_samp;

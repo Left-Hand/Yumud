@@ -17,7 +17,7 @@ static constexpr auto DEADTIME_NANOS = 120ns;
 
 
 // #region VOLTAGE
-static constexpr auto BUS_VOLT = iq16(24.0);
+static constexpr auto BUS_VOLT = iq16(12.0);
 static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 
 
@@ -25,8 +25,8 @@ static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)
 // reach svm max duty
 
-static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.08_iq20;
-static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.38_iq20;
+static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.03_iq20;
+static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.45_iq20;
 
 static constexpr iq20 CTRL_VOLT_LIMIT = BUS_VOLT * CTRL_MODU_DEPTH_LIMIT;
 static constexpr iq20 INV_CTRL_VOLT_LIMIT = 1 / CTRL_VOLT_LIMIT;
@@ -65,13 +65,13 @@ static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
 
 // using MotorProfile = MotorProfile_Ysc;
-using MotorProfile = MotorProfile_Gim4010;
+// using MotorProfile = MotorProfile_Gim4010;
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
 // using MotorProfile = MotorProfile_E800;
 // using MotorProfile = MotorProfile_Gkf2023;
-// using MotorProfile = MotorProfile_NidecFan;
+using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;
 // using MotorProfile = MotorProfile_NiuLiu;
 // using MotorProfile = MotorProfile_2207;
