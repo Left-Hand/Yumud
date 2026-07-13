@@ -180,10 +180,14 @@ struct PathState{
 
 
 struct alignas(4) [[nodiscard]] FluxObserverState{
+    iq20 prev_x1;
+    iq20 prev_x2;
     iq20 x1;
     iq20 x2;
     iq20 x1_slowlp;
     iq20 x2_slowlp;
+    iq20 x1_slowhp;
+    iq20 x2_slowhp;
     iq20 lem1;
     iq20 lem2;
 };
@@ -211,7 +215,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     DqCoord<iq20> dq_curr_raw;
     DqCoord<iq20> dq_curr_setp;
-    // DqCoord<iq20> dq_curr_fastlp;
+    DqCoord<iq20> dq_curr_fastlp;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
     AlphaBetaCoord<iq20> prev_alphabeta_curr_raw;

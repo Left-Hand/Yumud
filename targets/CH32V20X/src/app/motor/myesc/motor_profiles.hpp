@@ -80,7 +80,7 @@ struct MotorProfile_NidecFan{
     static constexpr auto FLUX_LINKAGE = iq20(50.4 * 1E-4);
     static constexpr auto PHASE_RESISTANCE_OHM = 0.07_iq20;
 
-    static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 800;
+    static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 400;
 
 };
 

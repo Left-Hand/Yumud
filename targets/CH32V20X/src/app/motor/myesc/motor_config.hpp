@@ -26,17 +26,17 @@ static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 // reach svm max duty
 
 static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.03_iq20;
-static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.45_iq20;
+static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.39_iq20;
 
 static constexpr iq20 CTRL_VOLT_LIMIT = BUS_VOLT * CTRL_MODU_DEPTH_LIMIT;
 static constexpr iq20 INV_CTRL_VOLT_LIMIT = 1 / CTRL_VOLT_LIMIT;
 // #endregion
 
 // #region OPA 
-static constexpr double SHUNT_RESISTANCE_OHMS = 0.006f;
+static constexpr double SHUNT_RESISTANCE_OHMS = 0.004f;
 static constexpr double HW_OPA_GAIN = 20;
-static constexpr double ONCHIP_OPA_GAIN = 1;
-static constexpr double OPA_GAIN = HW_OPA_GAIN * ONCHIP_OPA_GAIN;
+static constexpr double ONCHIP_ADC_OPA_GAIN = 1;
+static constexpr double OPA_GAIN = HW_OPA_GAIN * ONCHIP_ADC_OPA_GAIN;
 static constexpr double CURRENT_HALFSCALE_AMPS = 1.65 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
 // #endregion
 
@@ -49,7 +49,7 @@ static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_AMPS_PER_ADC_LSB_F
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
 
 
-static constexpr iq20 HFI_VOLT = HFI_MODU_DEPTH_LIMIT * BUS_VOLT;
+// static constexpr iq20 HFI_VOLT = HFI_MODU_DEPTH_LIMIT * BUS_VOLT;
 static constexpr float HALFWAVE_MICROS = 1000000.0 / (CHOPPER_FREQ * 2);
 static constexpr size_t TIMER_ARR_VALUE = 144000000 / (CHOPPER_FREQ * 2) - 1;
 static constexpr float ADC_SAMPLE_TICKS = (13.5 + 1.5) * 3;

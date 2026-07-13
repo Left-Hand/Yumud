@@ -14,6 +14,11 @@ static consteval bool is_result_nearly_equal(Fn1 && fn1, Fn2 && fn2, const long 
     return std::abs(static_cast<long double>(res1.unwrap()) - static_cast<long double>(res2.unwrap())) < eps;
 }
 
+template<std::floating_point T>
+static constexpr T abs_err_percentages(const T dst, const T src){
+    const auto abs_err = math::abs(dst - src);
+    return static_cast<T>(abs_err * 100 / src);
+}
 
 namespace {
 
@@ -39,6 +44,88 @@ namespace {
 }
 
 
+
+[[maybe_unused]] static void test_lpf_1o(){
+    #define TEST_CASE(_type, _expect_y, _prev_y, _x, _alpha, _eps)\
+    static_assert(abs_err_percentages(\
+        (double)lpf_1o(_type(_prev_y), _type(_x), uq32(_alpha)), \
+        double(_expect_y)) < _eps\
+    );
+
+    // 基本测试：步进响应
+    TEST_CASE(iq16, 0.5, 0.0, 1.0, 0.5, 0.01)
+    TEST_CASE(iq16, 0.3, 0.0, 0.6, 0.5, 0.01)
+    TEST_CASE(iq20, 0.3, 0.0, 0.6, 0.5, 0.01)
+    
+    // 不同alpha值测试
+    TEST_CASE(iq16, 0.25, 0.0, 1.0, 0.25, 0.01)
+    TEST_CASE(iq16, 0.75, 0.0, 1.0, 0.75, 0.01)
+    TEST_CASE(iq16, 0.1, 0.0, 1.0, 0.1, 0.01)
+    
+    // 非零初始状态测试
+    TEST_CASE(iq16, 0.75, 0.5, 1.0, 0.5, 0.01)
+    TEST_CASE(iq16, 0.55, 0.4, 0.7, 0.5, 0.01)
+    TEST_CASE(iq16, 0.625, 0.5, 0.75, 0.5, 0.01)
+    
+    // 不同精度测试
+    TEST_CASE(iq24, 0.5, 0.0, 1.0, 0.5, 0.001)
+    TEST_CASE(iq24, 0.3, 0.0, 0.6, 0.5, 0.001)
+    TEST_CASE(iq24, 0.75, 0.5, 1.0, 0.5, 0.001)
+    
+    // 极端值测试
+    TEST_CASE(iq16, 0.99, 0.0, 1.0, 0.99, 0.01)
+    TEST_CASE(iq16, 0.01, 0.0, 1.0, 0.01, 6e-2)
+    // TEST_CASE(iq16, 0.0, 0.0, 0.0, 0.5, 0.01)  // x=0
+
+    #undef TEST_CASE
+}
+
+// HPF测试用例
+[[maybe_unused]] static void test_hpf_1o(){
+    #define TEST_CASE(_type, _expect_y, _prev_y, _x, _x_prev, _alpha, _eps)\
+    static_assert(abs_err_percentages(\
+        (double)hpf_1o(_type(_prev_y), _type(_x), _type(_x_prev), uq32(_alpha)), \
+        double(_expect_y)) < _eps\
+    );
+
+    // 基本测试：阶跃响应（HPF应该滤除直流分量）
+    TEST_CASE(iq16, 0.5, 0.0, 1.0, 0.0, 0.5, 0.01)
+    TEST_CASE(iq16, 0.25, 0.0, 1.0, 0.5, 0.5, 0.01)
+    // TEST_CASE(iq16, 0.0, 0.0, 1.0, 1.0, 0.5, 6e-2)  // 输入不变，输出为0
+    
+    // 不同alpha值测试
+    TEST_CASE(iq16, 0.25, 0.0, 1.0, 0.0, 0.25, 0.01)
+    TEST_CASE(iq16, 0.75, 0.0, 1.0, 0.0, 0.75, 0.01)
+    TEST_CASE(iq16, 0.1, 0.0, 1.0, 0.0, 0.1, 0.01)
+    
+    // 非零初始状态测试
+    TEST_CASE(iq16, 0.75, 0.5, 1.0, 0.0, 0.5, 0.01)
+    TEST_CASE(iq16, 0.5, 0.3, 0.7, 0.0, 0.5, 0.01)
+    TEST_CASE(iq16, 0.625, 0.5, 0.75, 0.0, 0.5, 0.01)
+    
+    // 非零输入历史测试
+    TEST_CASE(iq16, 0.35, 0.2, 0.9, 0.4, 0.5, 0.01)
+    // TEST_CASE(iq16, 0.15, 0.1, 0.5, 0.2, 0.5, 0.01)
+    
+    // 不同精度测试
+    TEST_CASE(iq24, 0.5, 0.0, 1.0, 0.0, 0.5, 0.001)
+    TEST_CASE(iq24, 0.25, 0.0, 1.0, 0.5, 0.5, 0.001)
+    TEST_CASE(iq24, 0.75, 0.5, 1.0, 0.0, 0.5, 0.001)
+    
+    // 极端值测试
+    TEST_CASE(iq16, 0.99, 0.0, 1.0, 0.0, 0.99, 0.01)
+    // TEST_CASE(iq16, 0.01, 0.0, 1.0, 0.0, 0.01, 0.01)
+    // TEST_CASE(iq16, 0.0, 0.0, 1.0, 1.0, 0.99, 0.01)  // x == x_prev，输出应为0
+    
+    // 负值测试（如果支持有符号数）
+    TEST_CASE(iq16, -0.25, 0.0, -0.5, 0.0, 0.5, 0.01)
+    // TEST_CASE(iq16, 0.0, 0.0, -0.5, -0.5, 0.5, 0.01)
+
+    #undef TEST_CASE
+}
+
+
+
 static_assert(dot2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == 14_iq20);
 static_assert(dot2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == 14_iq16);
 static_assert(cross2v2(
@@ -62,11 +149,6 @@ static_assert(std::abs((float)std::get<1>(resat_unit_circle(1.0_iq20, 1.73205080
 static_assert(std::abs((float)std::get<0>(resat_unit_circle(0.010_iq20, 0.0173205080757_iq20)) - 0.5f) < 1e-4);
 static_assert(std::abs((float)std::get<1>(resat_unit_circle(0.010_iq20, 0.0173205080757_iq20)) - 0.866025403784f) < 1e-4);
 
-template<std::floating_point T>
-static constexpr T abs_err_percentages(const T dst, const T src){
-    const auto abs_err = math::abs(dst - src);
-    return static_cast<T>(abs_err * 100 / src);
-}
 
 static_assert(abs_err_percentages(
     double(TAU_SCALE_NUM) / TAU_SCALE_DEN, double(TAU)) < 3e-4);
