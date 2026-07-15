@@ -25,7 +25,7 @@ static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)
 // reach svm max duty
 
-static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.03_iq20;
+static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.06_iq20;
 static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.39_iq20;
 
 static constexpr iq20 CTRL_VOLT_LIMIT = BUS_VOLT * CTRL_MODU_DEPTH_LIMIT;

@@ -77,7 +77,7 @@ struct MotorProfile_NidecFan{
     static constexpr auto D_AXIS_INDUCTANCE_MH = iq20(137 * 1E-3);
 
     static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
-    static constexpr auto FLUX_LINKAGE = iq20(50.4 * 1E-4);
+    static constexpr auto FLUX_LINKAGE = iq20(20.4 * 1E-4);
     static constexpr auto PHASE_RESISTANCE_OHM = 0.07_iq20;
 
     static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 400;

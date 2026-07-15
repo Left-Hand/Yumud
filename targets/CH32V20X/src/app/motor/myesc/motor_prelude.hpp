@@ -190,6 +190,8 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
     iq20 x2_slowhp;
     iq20 lem1;
     iq20 lem2;
+    iq20 flux_err;
+    iq20 abs_lem;
 };
 
 struct alignas(4) [[nodiscard]] AllState{

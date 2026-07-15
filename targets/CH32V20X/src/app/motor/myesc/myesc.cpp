@@ -798,7 +798,7 @@ void myesc_main(){
             const auto R_iaib = R * iaib;
 
 
-            #if 1
+            #if 0
             // MXLEMMING
 
             #if 0
@@ -873,29 +873,57 @@ void myesc_main(){
             });
             #else
             // ORTEGA
+            // https://zhuanlan.zhihu.com/p/887911569
+
             const auto L_iaib = L * iaib;
-            const auto gamma_half = 10000;
+
+            // 反馈增益的设置是定为20000-100000之间调整
+            [[maybe_unused]] constexpr auto gamma_half = 70000;
+            constexpr auto gamma_half_dt = uq16(float(gamma_half) / FOC_FREQ);
+
             const auto lem1 = flux_ob_state.x1 - L_iaib[0];
             const auto lem2 = flux_ob_state.x2 - L_iaib[1];
-            auto err = math::square(lambda) - (math::square(lem1) + math::square(lem2));
+            // auto abs_lem = math::square(lem1) + math::square(lem2);
+            auto abs_lem = math::mag(lem1, lem2);
+            auto err = (lambda - abs_lem);
 
             if (err > 0) {
+                // err = err * 0.02_uq32;
                 err = 0;
             }
 
-            auto x1_dot = vavb[0] - R_iaib[0] + (lem1) * err * gamma_half;
-            auto x2_dot = vavb[1] - R_iaib[1] + (lem2) * err * gamma_half;
+            auto x1_delta = (vavb[0] - R_iaib[0]) * dt + (lem1) * err * gamma_half_dt;
+            auto x2_delta = (vavb[1] - R_iaib[1]) * dt + (lem2) * err * gamma_half_dt;
 
-            // flux_ob_state.x1 = CLAMP2(flux_ob_state.x1 + x1_dot * dt, lambda);
-            // flux_ob_state.x2 = CLAMP2(flux_ob_state.x2 + x2_dot * dt, lambda);
-            flux_ob_state.x1 += x1_dot * dt;
-            flux_ob_state.x2 += x2_dot * dt;
+            auto x1 = flux_ob_state.x1;
+            auto x2 = flux_ob_state.x2;
+            
+            x1 += x1_delta;
+            x2 += x2_delta;
+
+            flux_ob_state.x1_slowlp = lpf_10hz(flux_ob_state.x1_slowlp, lem1);
+            flux_ob_state.x2_slowlp = lpf_10hz(flux_ob_state.x2_slowlp, lem2);
+
+            flux_ob_state.x1 = x1;
+            flux_ob_state.x2 = x2;
+
             flux_ob_state.lem1 = lem1;
             flux_ob_state.lem2 = lem2;
 
+            flux_ob_state.flux_err = err;
+            flux_ob_state.abs_lem = abs_lem;
+
+            auto pll_input_sine = x2 - L_iaib[1];
+            auto pll_input_cosine = x1 - L_iaib[0];
+
+            if(math::abs(state.obs_pll_state.angluar_speed.to_turns()) > 30){
+                pll_input_sine -= flux_ob_state.x2_slowlp;
+                pll_input_cosine -= flux_ob_state.x1_slowlp;
+            }
+        
             PLL_COEFFS.iterate(state.obs_pll_state, {
-                iq16(40 * (lem2)),
-                iq16(40 * (lem1))
+                iq16(pll_input_sine) * 80,
+                iq16(pll_input_cosine) * 80
             });
             // PLL_COEFFS.iterate(state.obs_pll_state, {
             //     iq16(40 * (flux_ob_state.x2 - lem2)),
@@ -976,19 +1004,22 @@ void myesc_main(){
             iq20 d_volt_decouple = 0;
             iq20 q_volt_decouple = 0;
 
-            const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
+            [[maybe_unused]]  const bool cross_decoupling_enabled = fn_switches_.cross_decoupling_en;
             const bool is_speed_stable = true;
-            const auto omega = state.hfi_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
+            const auto omega = state.obs_pll_state.angluar_speed_integral.to_radians() * is_speed_stable;
 
             const auto phase_ind = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
-            if(cross_decoupling_enabled){
-            // if(true){
+            // if(cross_decoupling_enabled){
+
+            if(true){
                 d_volt_decouple -= phase_ind * state.dq_curr_raw.q * omega;
                 q_volt_decouple += phase_ind * state.dq_curr_raw.d * omega;
             }
 
-            const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
+            [[maybe_unused]] const bool bemf_decoupling_enabled = fn_switches_.bemf_decoupling_en;
+
             if(bemf_decoupling_enabled){
+            // if(true){
                 q_volt_decouple += MotorProfile::FLUX_LINKAGE * omega;
             }
 
@@ -1064,8 +1095,8 @@ void myesc_main(){
 
             // const bool hfi_enabled = true;
             const bool hfi_enabled = false;
-            // const bool hfi_use_spin = true;
-            const bool hfi_use_spin = false;
+            const bool hfi_use_spin = true;
+            // const bool hfi_use_spin = false;
 
 
 
@@ -1536,7 +1567,9 @@ void myesc_main(){
             // state.hfi_elec_angle.to_turns(),
             // nlf_ob_.state().eta_mf[0],
             // nlf_ob_.state().eta_mf[1],
-            state.openloop_elec_angle.to_turns(),
+            // state.openloop_elec_angle.to_turns(),
+            state.hfi_elec_angle.to_turns(),
+            state.observer_elec_angle.to_turns(),
             // state.hfi_pll_state.angle.to_turns(),
             // state.hfi_pll_state.angle.to_turns(),
             // state.hfi_pll_state.angluar_speed.to_turns(),
@@ -1589,8 +1622,10 @@ void myesc_main(){
             state.uvw_curr_raw.w,
             // math::atan2pu(state.flux_ob_state.x2,
             state.obs_pll_state.angluar_speed.to_turns(),
-            state.flux_ob_state.x1 - state.flux_ob_state.x1_slowlp,
-            state.flux_ob_state.x1_slowhp,
+            state.flux_ob_state.lem1,
+            state.flux_ob_state.lem2,
+            state.flux_ob_state.flux_err,
+            state.flux_ob_state.abs_lem,
             // state.flux_ob_state.x2,
             // state.flux_ob_state.x2_slowlp,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
