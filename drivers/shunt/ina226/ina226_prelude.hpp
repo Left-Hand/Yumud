@@ -12,7 +12,7 @@ namespace ymd::drivers{
 struct INA226_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x80 >> 1);
     // ASCII 的 TI。
-    static constexpr uint16_t VALID_MANU_ID = 0x5449;
+    static constexpr uint16_t VALID_MANU_ID = ('T') * 256 + 'I';
 
     // INA226
     static constexpr uint16_t VALID_CHIP_ID = 0x2260;
@@ -135,8 +135,8 @@ struct INA226_Prelude{
     };
 
 
-    struct [[nodiscard]] BusVoltageCode final{
-        using Self = BusVoltageCode;
+    struct [[nodiscard]] BusbarVoltageCode final{
+        using Self = BusbarVoltageCode;
         uint16_t bits;
 
         constexpr int32_t to_uv() const noexcept {
@@ -152,15 +152,7 @@ struct INA226_Prelude{
         }
     };
 
-    static constexpr AverageTimes times_to_avtimes(const uint16_t times){
-        const uint8_t temp = __builtin_ctz(times);
 
-        if(times <= 64){
-            return std::bit_cast<AverageTimes>(uint16_t(temp / 2));
-        }else{
-            return std::bit_cast<AverageTimes>(uint16_t(4 + (temp - 7))); 
-        }
-    } 
 };
 
 struct INA226_Regs:public INA226_Prelude{
@@ -180,27 +172,27 @@ struct INA226_Regs:public INA226_Prelude{
     struct R16_ShuntVolt:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         ShuntVoltageCode code;
-    }DEF_R16(shunt_volt_reg)
+    };
 
     struct R16_BusVolt:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
-        BusVoltageCode code;
-    }DEF_R16(bus_volt_reg)
+        BusbarVoltageCode code;
+    };
 
     struct R16_Power:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         int16_t bits;
-    }DEF_R16(power_reg)
+    };
 
     struct R16_Current:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         int16_t bits;
-    }DEF_R16(current_reg)
+    };
     
     struct R16_Calibration:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         int16_t bits;
-    }DEF_R16(calibration_reg)
+    };
     
     struct R16_Mask:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
@@ -227,12 +219,17 @@ struct INA226_Regs:public INA226_Prelude{
     struct R16_Manufacture:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0xfe};
         uint16_t bits;
-    }DEF_R16(manufacture_reg)
+    };
 
     struct R16_ChipId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0xff};
         uint16_t bits;
-    }DEF_R16(chip_id_reg)
+    };
+
+    constexpr void reset_initial_value(){
+        config_reg.rst = 0b0;
+        config_reg.__resv__ = 0b100;
+    }
 };
 
 

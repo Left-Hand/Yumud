@@ -118,23 +118,6 @@ public:
         _8_244ms
     };
 
-    struct [[nodiscard]] Config final{
-        ConversionTime shunt_conv_time;
-        ConversionTime bus_conv_time;
-        AverageTimes average_times;
-
-        static constexpr Config from_default() {
-            return Config{
-                .shunt_conv_time = ConversionTime::_140us, 
-                .bus_conv_time = ConversionTime::_140us, 
-                .average_times = AverageTimes::_1
-            };
-        }
-    };
-
-
-
-
     struct [[nodiscard]] ShuntVoltCode final{
         using Self = ShuntVoltCode;
 
@@ -225,9 +208,9 @@ public:
     };
 
 
-    struct [[nodiscard]] BusVoltCode final{
+    struct [[nodiscard]] BusbarVoltCode final{
         //lsb 8mv
-        using Self = BusVoltCode;
+        using Self = BusbarVoltCode;
         uint16_t bits;
 
         static constexpr Self from_mv(const int32_t mv){
@@ -314,7 +297,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
-        BusVoltCode code;
+        BusbarVoltCode code;
     };
 
     struct [[nodiscard]] R16_ShuntVolt2: public Reg16{
@@ -329,7 +312,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
-        BusVoltCode code;
+        BusbarVoltCode code;
     };
 
     struct [[nodiscard]] R16_ShuntVolt3: public Reg16{
@@ -343,7 +326,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
-        BusVoltCode code;
+        BusbarVoltCode code;
     };
 
     //0x07
@@ -434,7 +417,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     struct [[nodiscard]] R16_PowerValidUp:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
         static constexpr uint16_t RESET_VALUE = 0x2710;
-        BusVoltCode code;
+        BusbarVoltCode code;
     };
 
 
@@ -449,12 +432,12 @@ struct INA3221_Regs:public INA3221_Prelude {
     struct [[nodiscard]] R16_PowerValidLo:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x11};
         static constexpr uint16_t RESET_VALUE = 0x2328;
-        BusVoltCode code;
+        BusbarVoltCode code;
     };
 
     struct [[nodiscard]] R16_ManuId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0xfe};
-        static constexpr uint16_t KEY = 0x5449;
+        static constexpr uint16_t KEY = ('T') * 256 + 'I';
         uint16_t bits;
     };
 
@@ -510,40 +493,40 @@ public:
         i2c_drv_(i2c_drv){;}
     
     IResult<> read_reg(
-        const RegAddr addr, uint16_t & data
+        const RegAddr reg_addr, uint16_t & reg_val
     ){
-        if(const auto res = i2c_drv_.read_reg((addr), data, ENDIAN);
+        if(const auto res = i2c_drv_.read_reg((reg_addr), reg_val, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_reg(
-        const RegAddr addr, const uint16_t data
+        const RegAddr reg_addr, const uint16_t reg_val
     ){
-        if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
+        if(const auto res = (i2c_drv_.write_reg((reg_addr), reg_val, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> read_reg(
-        const RegAddr addr, int16_t & data
+        const RegAddr reg_addr, int16_t & reg_val
     ){
-        if(const auto res = (i2c_drv_.read_reg((addr), data, ENDIAN));
+        if(const auto res = (i2c_drv_.read_reg((reg_addr), reg_val, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_reg(
-        const RegAddr addr, const int16_t data
+        const RegAddr reg_addr, const int16_t reg_val
     ){
-        if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
+        if(const auto res = (i2c_drv_.write_reg((reg_addr), reg_val, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> read_bulk(
-        const RegAddr addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_bulk(uint8_t(addr), pbuf, ENDIAN);
+        const RegAddr reg_addr, std::span<uint16_t> pbuf){
+        if(const auto res = i2c_drv_.read_bulk(uint8_t(reg_addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

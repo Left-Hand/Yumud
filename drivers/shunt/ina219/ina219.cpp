@@ -35,7 +35,7 @@ IResult<> INA219::update(){
 
 
 IResult<> INA219::validate(){
-    // static constexpr uint16_t valid_manu_id = 0x5449;
+    // static constexpr uint16_t valid_manu_id = ('T') * 256 + 'I';
     // static constexpr uint16_t valid_chip_id = 0x2260;
     
     INA219_ASSERT(i2c_drv_.validate().is_ok(), "INA219 i2c lost");

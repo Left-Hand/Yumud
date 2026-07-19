@@ -21,11 +21,11 @@ static_assert(std::abs((float)Self::ShuntVoltCode(0xc180).to_volts() - (-0.08)) 
 // static_assert(Self::mv_to_svsum_code(-80) == 0xc180);
 // static_assert(Self::svsum_code_to_mv(0xc180) == -80);
 
-static_assert(Self::BusVoltCode::from_mv(32760).bits == 0x7ff8);
-static_assert(Self::BusVoltCode(0x7ff8).to_mv() == 32760);
+static_assert(Self::BusbarVoltCode::from_mv(32760).bits == 0x7ff8);
+static_assert(Self::BusbarVoltCode(0x7ff8).to_mv() == 32760);
 
-// static constexpr auto f = (float)Self::BusVoltCode(0x7ff8).to_volts();
-static_assert(std::abs((float)Self::BusVoltCode(0x7ff8).to_volts() - (32.76)) < 1E-4);
+// static constexpr auto f = (float)Self::BusbarVoltCode(0x7ff8).to_volts();
+static_assert(std::abs((float)Self::BusbarVoltCode(0x7ff8).to_volts() - (32.76)) < 1E-4);
 // static_assert( == 32760);
 
 

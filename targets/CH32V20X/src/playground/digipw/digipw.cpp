@@ -17,7 +17,6 @@
 
 #include "hal/analog/adc/hw_singleton.hpp"
 
-#include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/displayer/SSD1306/ssd1306.hpp"
 
 
@@ -150,9 +149,7 @@ void digipw_main(){
         .baudrate = hal::NearestFreq(100_KHz)
     });
 
-    
-    // INA226 ina226{SoftI2c};
-    // // ina226.init(10, 5);
+
 
     constexpr size_t CHOPPER_FREQ = 100'000;
     auto & timer = hal::timer1;

@@ -40,26 +40,40 @@ public:
 
     ~INA3221(){;}
 
-    IResult<bool> is_ready();
+    struct [[nodiscard]] Config final{
+        ConversionTime shunt_conv_time;
+        ConversionTime bus_conv_time;
+        AverageTimes average_times;
+
+        static constexpr Config from_default() {
+            return Config{
+                .shunt_conv_time = ConversionTime::_140us, 
+                .bus_conv_time = ConversionTime::_140us, 
+                .average_times = AverageTimes::_1
+            };
+        }
+    };
 
 
+    
     IResult<> init(const Config & cfg);
     IResult<> reconf(const Config & cfg);
     IResult<> update(const ChannelSelection ch_sel);
     IResult<> validate();
     IResult<> reset();
+    IResult<bool> is_ready();
     IResult<> set_average_times(const AverageTimes times);
-    IResult<> enable_measure_bus(const Enable en);
-    IResult<> enable_measure_shunt(const Enable en);
+    IResult<> enable_busbar_measure(const Enable en);
+    IResult<> enable_shunt_measure(const Enable en);
     IResult<> enable_continuous(const Enable en);
 
     IResult<> enable_channel(const ChannelSelection ch_sel, const Enable en);
 
-    IResult<> set_bus_conversion_time(const ConversionTime time);
+    IResult<> set_busbar_conversion_time(const ConversionTime time);
     IResult<> set_shunt_conversion_time(const ConversionTime time);
 
     IResult<ShuntVoltCode> get_shunt_volt_code(const ChannelSelection ch_sel);
-    IResult<BusVoltCode> get_bus_volt_code(const ChannelSelection ch_sel);
+    IResult<BusbarVoltCode> get_busbar_volt_code(const ChannelSelection ch_sel);
 
     IResult<> set_instant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);
     IResult<> set_constant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);
@@ -80,12 +94,12 @@ private:
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    IResult<> read_reg(const RegAddr reg_addr, auto & reg_data){
-        return transport_.read_reg(reg_addr, reg_data);
+    IResult<> read_reg(const RegAddr reg_addr, auto & reg_val){
+        return transport_.read_reg(reg_addr, reg_val);
     }
 
-    IResult<> write_reg(const RegAddr reg_addr, const auto reg_data){
-        return transport_.write_reg(reg_addr, reg_data);
+    IResult<> write_reg(const RegAddr reg_addr, const auto reg_val){
+        return transport_.write_reg(reg_addr, reg_val);
     }
 
 };

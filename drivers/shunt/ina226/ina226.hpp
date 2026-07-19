@@ -19,7 +19,7 @@ public:
                 .average_times = AverageTimes::_16,
                 .bus_conv_time = ConversionTime::_140us,
                 .shunt_conv_time = ConversionTime::_140us,
-                .sample_res_mohms = 10, // 0.01ohms
+                .sample_res_mohms = 5, // 0.005ohms
                 .max_current_ma = 10 * 1000 // 10A
             };
         }
@@ -46,10 +46,12 @@ public:
 
     IResult<> validate();
 
+    IResult<> soft_reset();
+
     IResult<> update();
 
 
-    IResult<BusVoltageCode> get_bus_voltage_code();
+    IResult<BusbarVoltageCode> get_busbar_voltage_code();
 
     IResult<ShuntVoltageCode> get_shunt_voltage_code();
 
@@ -59,31 +61,32 @@ public:
 
     IResult<> set_average_times(const AverageTimes times);
 
-    IResult<> set_bus_conversion_time(const ConversionTime time);
+    IResult<> set_busbar_conversion_time(const ConversionTime time);
 
     IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    IResult<> reset();
 
-    IResult<> enable_shunt_voltage_measure(const Enable en);
+    IResult<> enable_shunt_measure(const Enable en);
 
-    IResult<> enable_bus_voltage_measure(const Enable en);
+    IResult<> enable_busbar_measure(const Enable en);
 
     IResult<> enable_continuous_measure(const Enable en);
 
     IResult<> enable_alert_latch(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
-    INA226_Regs regs_ = {};
+
+    using Regset = INA226_Regs;
+    Regset regs_ = {};
     
     iq16 current_lsb_ma_ = iq16(0.2);
 
 
-    IResult<> write_reg(const RegAddr addr, const uint16_t data);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
 
-    IResult<> read_reg(const RegAddr addr, uint16_t & data);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
     
-    IResult<> read_reg(const RegAddr addr, int16_t & data);
+    IResult<> read_reg(const RegAddr reg_addr, int16_t & reg_val);
 
     template<typename T>
     IResult<> read_reg(T & reg){

@@ -13,8 +13,8 @@ using IResult = Result<T, Error>;
 
 
 
-static_assert(sizeof(Self::BusVoltageCode) == sizeof(uint16_t));
-static_assert(std::abs((float)Self::BusVoltageCode(0x0fa0).to_volts() - 16.0f) < 1E-4);
+static_assert(sizeof(Self::BusbarVoltageCode) == sizeof(uint16_t));
+static_assert(std::abs((float)Self::BusbarVoltageCode(0x0fa0).to_volts() - 16.0f) < 1E-4);
 
 
 using ShuntVoltCode = Self::ShuntVoltCode;

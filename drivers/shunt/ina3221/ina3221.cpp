@@ -65,7 +65,7 @@ IResult<> INA3221::enable_channel(const ChannelSelection ch_sel, const Enable en
 }
 
 
-IResult<> INA3221::set_bus_conversion_time(const ConversionTime time){
+IResult<> INA3221::set_busbar_conversion_time(const ConversionTime time){
     auto reg = RegCopy(regs_.config_reg);
     reg.bus_conv_time = time;
     return write_reg(reg);
@@ -100,7 +100,7 @@ IResult<Self::ShuntVoltCode> INA3221::get_shunt_volt_code(const ChannelSelection
     __builtin_unreachable();
 }
 
-IResult<Self::BusVoltCode> INA3221::get_bus_volt_code(const ChannelSelection ch_sel){
+IResult<Self::BusbarVoltCode> INA3221::get_busbar_volt_code(const ChannelSelection ch_sel){
     switch(ch_sel){
         case ChannelSelection::CH1:return Ok(regs_.busvolt1_reg.code);
         case ChannelSelection::CH2:return Ok(regs_.busvolt2_reg.code);
@@ -143,14 +143,14 @@ IResult<> INA3221::set_constant_ovc_threshold(
     return write_reg(reg_addr, volt_code.bits);
 }
 
-IResult<> INA3221::enable_measure_bus(const Enable en){
+IResult<> INA3221::enable_busbar_measure(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
     reg.bus_measure_en = (en == EN);
     return write_reg(reg);
 }
 
 
-IResult<> INA3221::enable_measure_shunt(const Enable en){
+IResult<> INA3221::enable_shunt_measure(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
     reg.shunt_measure_en = (en == EN);
     return write_reg(reg);
@@ -176,9 +176,9 @@ IResult<> INA3221::init(const Config & cfg){
         res.is_err()) return res;
     if(const auto res = this->enable_continuous(EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_measure_bus(EN);
+    if(const auto res = this->enable_busbar_measure(EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_measure_shunt(EN);
+    if(const auto res = this->enable_shunt_measure(EN);
         res.is_err()) return res;
 
     return Ok();

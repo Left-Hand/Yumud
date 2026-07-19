@@ -41,16 +41,16 @@ struct INA219_Prelude{
 
     enum class [[nodiscard]] HalfScale:uint8_t{
         _40mV = 0,
-        _80mV = 0,
-        _160mV = 0,
-        _320mV = 0,
+        _80mV = 1,
+        _160mV = 2,
+        _320mV = 3,
     };
 
 
     using RegAddr = uint8_t ;
 
 
-    struct [[nodiscard]] BusVoltageCode final{
+    struct [[nodiscard]] BusbarVoltageCode final{
         //lsb is 4mv
         uint16_t bits;
 
@@ -134,8 +134,8 @@ struct INA219_Regs:public INA219_Prelude{
         uint16_t __resv__:1;
         uint16_t bd:13;
 
-        constexpr BusVoltageCode volt_code() const noexcept {
-            return BusVoltageCode{bd};
+        constexpr BusbarVoltageCode volt_code() const noexcept {
+            return BusbarVoltageCode{bd};
         }
     }DEF_R16(bus_volt_reg)
 
@@ -145,7 +145,6 @@ struct INA219_Regs:public INA219_Prelude{
     }DEF_R16(power_reg)
 
 
-    
     struct [[nodiscard]] R16_Current:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         // CurrentCode code;

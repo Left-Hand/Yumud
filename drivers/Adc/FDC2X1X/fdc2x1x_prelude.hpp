@@ -219,7 +219,7 @@ struct [[nodiscard]] FDC1X2X_Regs:public FDC2X1X_Prelude{
     struct [[nodiscard]] R16_ManufacturerId:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x7E};
 
-        static constexpr uint16_t correct = 0x5449;
+        static constexpr uint16_t correct = ('T') * 256 + 'I';
         uint16_t id;
     };
 
