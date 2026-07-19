@@ -8,7 +8,7 @@
 using namespace ymd;
 using namespace ymd::str;
 
-#if 0
+#if 1
 
 namespace {
 
