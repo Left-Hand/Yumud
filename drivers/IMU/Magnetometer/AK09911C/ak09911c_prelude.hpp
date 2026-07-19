@@ -80,7 +80,7 @@ struct AK09911C_Prelude{
 };
 
 struct AK09911C_Regset : public AK09911C_Prelude{
-    struct R8_WIA1:public Reg8<>{
+    struct R8_WIA1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint8_t KEY = 0x48;
 
@@ -89,7 +89,7 @@ struct AK09911C_Regset : public AK09911C_Prelude{
 
     VALIDATE_R8(R8_WIA1)
 
-    struct R8_WIA2:public Reg8<>{
+    struct R8_WIA2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         static constexpr uint8_t KEY = 0x05;
 
@@ -98,19 +98,19 @@ struct AK09911C_Regset : public AK09911C_Prelude{
 
     VALIDATE_R8(R8_WIA2)
 
-    struct R8_INFO1:public Reg8<>{
+    struct R8_INFO1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t bits;
     } DEF_R8(info1_reg)
 
-    struct R8_INFO2:public Reg8<>{
+    struct R8_INFO2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t bits;
     } DEF_R8(info2_reg)
 
-    struct R8_ST1:public Reg8<>{
+    struct R8_ST1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
         uint8_t drdy:1;
@@ -126,7 +126,7 @@ struct AK09911C_Regset : public AK09911C_Prelude{
     REG16_QUICK_DEF(0x13, MagYReg, mag_y_reg);
     REG16_QUICK_DEF(0x15, MagZReg, mag_z_reg);
 
-    struct R8_ST2:public Reg8<>{
+    struct R8_ST2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
 
         uint8_t __resv__:3;
@@ -137,14 +137,14 @@ struct AK09911C_Regset : public AK09911C_Prelude{
 
     //cntl1 reg is a dummy reg, it is not listed here
 
-    struct R8_CNTL2:public Reg8<>{
+    struct R8_CNTL2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x31};
 
         Mode mode:5;
         uint8_t __resv__:3;
     } DEF_R8(cntl2_reg)
 
-    struct R8_CNTL3:public Reg8<>{
+    struct R8_CNTL3:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x32};
 
         uint8_t srst:1;
@@ -153,7 +153,7 @@ struct AK09911C_Regset : public AK09911C_Prelude{
 
     //test reg is a dummy reg, it is not listed here
 
-    struct _R8_ASA:public Reg8<>{
+    struct _R8_ASA:public Reg8{
         uint8_t bits;
     };
 

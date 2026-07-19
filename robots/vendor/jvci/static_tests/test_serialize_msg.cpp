@@ -9,7 +9,9 @@ using namespace ymd::robots::jvci;
 namespace {
 
 [[maybe_unused]] static void test_example_msgs() {
-    static constexpr auto factory = CanRequestFrameFactory{.node_id = NodeId::try_from_u8(0x01).unwrap()};
+    static constexpr auto factory = CanRequestFrameFactory{{
+        .node_id = NodeId::try_from_u8(0x01).unwrap()
+    }};
 
     // 1. 读取电源电压（寄存器0x0004，倍数×10，范围0-100V）
     // 请求帧ID:0x601，数据:`4B 00 04 00 00 00 00 00`；回复:`4B 00 04 00 00 78 00 00`（12.0V）

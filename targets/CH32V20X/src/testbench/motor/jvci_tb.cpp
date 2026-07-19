@@ -123,13 +123,13 @@ void jvci_main(){
     // ;
 
 
-    static constexpr jvci::CanRequestFrameFactory left_factory{
+    static constexpr jvci::CanRequestFrameFactory left_factory{{
         .node_id = jvci::NodeId::try_from_u8(NUM_LEFT_MOTOR_AXIS_ID).unwrap()
-    };
+    }};
 
-    static constexpr jvci::CanRequestFrameFactory right_factory{
+    static constexpr jvci::CanRequestFrameFactory right_factory{{
         .node_id = jvci::NodeId::try_from_u8(NUM_RIGHT_MOTOR_AXIS_ID).unwrap()
-    };
+    }};
 
 
     write_can_frame(left_factory.set_control_mode(jvci::ControlMode::Speed), 2ms);

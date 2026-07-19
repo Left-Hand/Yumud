@@ -16,12 +16,32 @@ static constexpr void bit_cursor_store_bits(
     const size_t data_width
 );
 
+static constexpr void bit_cursor_store_bit(
+    __restrict__ uint8_t * ptr,
+    const size_t bit_offset,
+    const bool bit
+){
+    const uint8_t mask = (1u << (bit_offset & 0b111));
+    if(bit){
+        ptr[bit_offset >> 3] |= mask;
+    }else{
+        ptr[bit_offset >> 3] &= ~mask;
+    }
+}
+
 static constexpr void bit_cursor_load_bits(
     __restrict__ const uint8_t * ptr,
     const size_t bit_offset,
     __restrict__ uint8_t * data,
     const size_t data_width
 );
+
+static constexpr bool bit_cursor_load_bit(
+    __restrict__ const uint8_t * ptr,
+    const size_t bit_offset
+){
+    return ptr[bit_offset >> 3] & (1u << (bit_offset & 0b111));
+}
 
 
 struct [[nodiscard]] BitCursor final {

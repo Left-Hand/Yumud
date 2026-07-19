@@ -32,7 +32,7 @@ template<typename T>
 RegCopy(T) -> RegCopy<T>;
 
 
-template<typename T, typename D = T>
+template<typename T>
 struct [[nodiscard]] RegBase{
 public:
     using underly_type = T;
@@ -136,8 +136,7 @@ public:
 };
 
 #define DEF_REG_TEMPLATE(name, T, as_fn)\
-template<typename D = T>\
-struct [[nodiscard]] name:public RegBase<T, D>{\
+struct [[nodiscard]] name:public RegBase<T>{\
 constexpr T as_fn() const noexcept {return std::bit_cast<T>(this->to_bits());}\
 };\
 
@@ -179,19 +178,19 @@ VALIDATE_R32(std::decay_t<decltype(name)>)\
 
 
 #define REG8_QUICK_DEF(addr, type, name)\
-struct type :public Reg8<>{\
+struct type :public Reg8{\
     static constexpr RegAddr REG_ADDR = RegAddr{addr}; \
     uint8_t bits;} DEF_R8(name)\
 
 
 #define REG16_QUICK_DEF(addr, type, name)\
-struct type :public Reg16<>{\
+struct type :public Reg16{\
     static constexpr RegAddr REG_ADDR = RegAddr{addr}; \
     uint16_t bits;} DEF_R16(name)\
 
 
 #define REG32_QUICK_DEF(addr, type, name)\
-struct type :public Reg32<>{\
+struct type :public Reg32{\
     static constexpr RegAddr REG_ADDR = RegAddr{addr}; \
     uint32_t bits;} DEF_R32(name)\
 

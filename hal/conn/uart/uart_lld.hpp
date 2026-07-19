@@ -25,7 +25,7 @@ void uart_enable_rcc(const Nth nth, const Enable en);
 
 void uart_set_remap(const Nth nth, const hal::UartRemap remap);
 
-Nth uart_to_nth(const uintptr_t inst_base);
+Nth uart_to_nth(const uintptr_t p_inst_base);
 static constexpr IRQn uart_calc_nvic_irqn(const Nth nth){
 
     switch(nth.count()){

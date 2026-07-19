@@ -164,7 +164,7 @@ IResult<> MP2980::set_output_volt(const uq10 output_volt){
 
 IResult<> MP2980::init(){
 
-    if(const auto res = set_feed_back_vref(0.5_r);
+    if(const auto res = set_feed_back_vref(0.5_iq16);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = enable_power_switching(EN);
         res.is_err()) return Err(res.unwrap_err());

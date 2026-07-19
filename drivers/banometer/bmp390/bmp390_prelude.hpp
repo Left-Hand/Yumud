@@ -52,21 +52,21 @@ static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1
 struct BMP390_Regset:public BMP390_Prelude{
 
 //0x00
-struct R8_ChipId:public Reg8<>{
+struct R8_ChipId:public Reg8{
     static constexpr uint8_t KEY = 0x33;
     uint8_t chip_id_nvm:4;
     uint8_t chip_id_fixed:4;
 };
 
 //0x01
-struct R8_RevId:public Reg8<>{
+struct R8_RevId:public Reg8{
     static constexpr uint8_t KEY = 0x33;
     uint8_t rev_id_minor:4;
     uint8_t rev_id_major:4;
 };
 
 //0x02
-struct R8_Err:public Reg8<>{
+struct R8_Err:public Reg8{
     uint8_t fatal_err:1;
     uint8_t cmd_err:1;
     uint8_t conf_err:1;
@@ -75,7 +75,7 @@ struct R8_Err:public Reg8<>{
 
 
 //0x03
-struct R8_Status:public Reg8<>{
+struct R8_Status:public Reg8{
     uint8_t :4;
     uint8_t cmd_rdy:1;
     uint8_t drdy_press:1;
@@ -85,14 +85,14 @@ struct R8_Status:public Reg8<>{
 
 
 //0x10
-struct R8_Event:public Reg8<>{
+struct R8_Event:public Reg8{
     uint8_t por_detected:1;
     uint8_t ift_act_pt:1;
     uint8_t :6;
 };
 
 //0x11
-struct R8_IntStatus:public Reg8<>{
+struct R8_IntStatus:public Reg8{
     uint8_t fwm_int:1;
     uint8_t ffull_int:1;
     uint8_t __resv__:1;
@@ -101,7 +101,7 @@ struct R8_IntStatus:public Reg8<>{
 };
 
 //0x17
-struct R8_FifoConfig2:public Reg8<>{
+struct R8_FifoConfig2:public Reg8{
     uint8_t fifo_mode:1;
     uint8_t fifo_stop_on_full:1;
     uint8_t fifo_time_en:1;
@@ -111,14 +111,14 @@ struct R8_FifoConfig2:public Reg8<>{
 };
 
 //0x18
-struct R8_FifoConfig3:public Reg8<>{
+struct R8_FifoConfig3:public Reg8{
     uint8_t fifo_subsampling:3;
     uint8_t data_select:2;
     uint8_t :3;
 };
 
 //0x19
-struct R8_IntCtrl:public Reg8<>{
+struct R8_IntCtrl:public Reg8{
     uint8_t int_od:1;
     uint8_t int_level:1;
     uint8_t int_latch:1;
@@ -130,7 +130,7 @@ struct R8_IntCtrl:public Reg8<>{
 };
 
 //0x1A
-struct R8_IfConf:public Reg8<>{
+struct R8_IfConf:public Reg8{
     uint8_t spi3:1;
     uint8_t i2c_wdt_en:1;
     uint8_t i2c_wdt_sel:1;
@@ -138,7 +138,7 @@ struct R8_IfConf:public Reg8<>{
 };
 
 //0x1b
-struct R8_PwrCtrl:public Reg8<>{
+struct R8_PwrCtrl:public Reg8{
     uint8_t press_en:1;
     uint8_t temp_en:1;
     uint8_t :2;
@@ -147,20 +147,20 @@ struct R8_PwrCtrl:public Reg8<>{
 };
 
 //0x1c
-struct R8_Osr:public Reg8<>{
+struct R8_Osr:public Reg8{
     uint8_t osr_p:3;
     uint8_t osr_t:3;
     uint8_t :2;
 };
 
 //0x1d
-// struct R8_Osr:public Reg8<>{
+// struct R8_Osr:public Reg8{
 //     uint8_t odr_sel:5;
 //     uint8_t :3;
 // };
 
 //0x1f
-// struct R8_Config:public Reg8<>{
+// struct R8_Config:public Reg8{
 //     uint8_t short_in:1;
 //     uint8_t iir_filter:3;
 //     uint8_t iir_filter:4;

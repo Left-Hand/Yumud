@@ -35,7 +35,7 @@ public:
     }
 
     void set_mode(const GpioMode mode) ;
-    __fast_inline void * inst() const noexcept {return inst_;} 
+    __fast_inline void * inst() const noexcept {return p_inst_;} 
     __fast_inline Nth nth() const noexcept {
         return Nth(__builtin_ctz(static_cast<uint16_t>(pin_nth_)));
     }
@@ -44,7 +44,7 @@ public:
 
     PortSource port() const ;
 private:
-    void * inst_;
+    void * p_inst_;
     const PinSource pin_nth_;
 
 

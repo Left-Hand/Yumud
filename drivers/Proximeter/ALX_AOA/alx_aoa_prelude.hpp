@@ -5,7 +5,7 @@
 #include "core/container/heapless_vector.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "algebra/vectors/spherical_coordinates.hpp"
+#include "middlewares/algebra/vectors/spherical_coordinates.hpp"
 
 namespace ymd::drivers::alx_aoa{
 

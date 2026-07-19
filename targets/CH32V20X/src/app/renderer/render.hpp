@@ -7,16 +7,16 @@
 #include "primitive/image/font/font.hpp"
 #include "primitive/image/painter/painter.hpp"
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/shapes/box_rect.hpp"
-#include "algebra/shapes/annular_sector.hpp"
-#include "algebra/shapes/rotated_rect.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/shapes/box_rect.hpp"
+#include "middlewares/algebra/shapes/annular_sector.hpp"
+#include "middlewares/algebra/shapes/rotated_rect.hpp"
 
 #include "middlewares/nvcv2/shape/shape.hpp"
 
-#include "algebra/regions/ray2.hpp"
-#include "algebra/regions/line2.hpp"
-#include "algebra/gesture/isometry2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
+#include "middlewares/algebra/regions/line2.hpp"
+#include "middlewares/algebra/gesture/isometry2.hpp"
 
 // static constexpr math::Vec2u CAMERA_SIZE = {94/2, 60/2};
 // static constexpr math::Vec2u CAMERA_SIZE = {94, 60};

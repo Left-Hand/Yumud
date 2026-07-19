@@ -14,7 +14,7 @@ namespace ymd::asciican::primitive{
 
 
 namespace operations{
-    struct [[nodiscard]] SendCanFrame{
+    struct [[nodiscard]] SendCanFrame final{
         hal::ClassicCanFrame frame;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanFrame & self){ 
@@ -22,7 +22,7 @@ namespace operations{
         }
     };
 
-    struct [[nodiscard]] SendString{
+    struct [[nodiscard]] SendString final{
         static constexpr size_t MAX_TEXT_LEN = 16;
 
         using IString = HeaplessString<MAX_TEXT_LEN> ;
@@ -42,7 +42,7 @@ namespace operations{
         }
     };
 
-    struct [[nodiscard]] SetSerialBaud{
+    struct [[nodiscard]] SetSerialBaud final{
         uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetSerialBaud & self){ 
@@ -50,7 +50,7 @@ namespace operations{
         }
     };
 
-    struct [[nodiscard]] SetCanBaud{
+    struct [[nodiscard]] SetCanBaud final{
         uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
@@ -58,21 +58,21 @@ namespace operations{
         }
     };
 
-    struct [[nodiscard]] Open{
+    struct [[nodiscard]] Open final{
         friend OutputStream & operator<<(OutputStream & os, const Open & self){ 
             (void)self;
             return os;
         }
     };
 
-    struct [[nodiscard]] Close{
+    struct [[nodiscard]] Close final{
         friend OutputStream & operator<<(OutputStream & os, const Close & self){ 
             (void)self;
             return os;
         }
     };
 
-    struct [[nodiscard]] SetTimestamp{
+    struct [[nodiscard]] SetTimestamp final{
         Enable enabled;
         friend OutputStream & operator<<(OutputStream & os, const SetTimestamp & self){ 
             return os << os.field("enabled")(self.enabled);
@@ -81,7 +81,7 @@ namespace operations{
 }
 
 
-struct [[nodiscard]] Operation:public Sumtype<
+struct [[nodiscard]] Operation final:public Sumtype <
     operations::SendCanFrame, 
     operations::SendString,
     operations::SetSerialBaud,

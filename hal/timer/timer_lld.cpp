@@ -16,12 +16,35 @@ using namespace ymd::hal;
 #define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
 // #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::Tim)>(x))
 
+namespace{
 
+template<typename T>
+static void reg_set_or_clear_bit(volatile T & reg, const T mask, const bool en){
+    if(en){
+        reg = static_cast<T>(reg) | static_cast<T>(mask);
+    }else{
+        reg = static_cast<T>(reg) & static_cast<T>(~mask);
+    }
+}
+
+template<typename T>
+[[nodiscard]] static bool reg_get_bit(const volatile T & reg, const T mask){
+    return static_cast<T>(reg) & mask;
+}
+
+
+}
 
 namespace ymd::lld{
 
-Nth timer_to_nth(const uintptr_t inst_base){
-    switch(inst_base){
+
+bool timer_is_up_counting(void * p_inst){
+    return reg_get_bit(SPL_INST(p_inst)->CTLR1, TIM_DIR) == 0;
+}
+
+
+Nth timer_to_nth(const uintptr_t p_inst_base){
+    switch(p_inst_base){
         #ifdef TIM1_PRESENT
         case TIM1_BASE: return Nth{1}; 
         #endif

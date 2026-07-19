@@ -247,19 +247,19 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
 
 
-    struct [[nodiscard]] R16_Status1:public Reg16<>{
+    struct [[nodiscard]] R16_Status1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         Status1 status;
     }DEF_R16(status1_reg)
 
-    struct [[nodiscard]] R16_Status2:public Reg16<>{
+    struct [[nodiscard]] R16_Status2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         Status2 status;
     }DEF_R16(status2_reg)
 
-    struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+    struct [[nodiscard]] R16_Ctrl1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint16_t clr_flt:1;
@@ -275,7 +275,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t __resv__:6;
     }DEF_R16(ctrl1_reg)
 
-    struct [[nodiscard]] R16_GateDriveHs:public Reg16<>{
+    struct [[nodiscard]] R16_GateDriveHs:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         IDriveN idrive_n_hs:4;
@@ -285,7 +285,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t __resv__:5;
     }DEF_R16(gate_drv_hs_reg)
 
-    struct [[nodiscard]] R16_GateDriveLs:public Reg16<>{
+    struct [[nodiscard]] R16_GateDriveLs:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         IDriveN idrive_n_ls:4;
@@ -296,7 +296,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t __resv__:5;
     }DEF_R16(gate_drv_ls_reg)
 
-    struct [[nodiscard]] R16_OcpCtrl:public Reg16<>{
+    struct [[nodiscard]] R16_OcpCtrl:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         VdsLevel vds_lvl:4;

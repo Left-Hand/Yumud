@@ -188,6 +188,8 @@
     - [x] cybergear
 
 
+- xtark:塔克创新
+
 - xxj:鑫械技
 
 - xynova:杭州曦诺未来科技有限公司

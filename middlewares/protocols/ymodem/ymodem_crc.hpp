@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <span>
-#include "algo/encrypt/crc_common.hpp"
+#include "middlewares/encrypt/crc_common.hpp"
 
 namespace ymd::ymodem{
 

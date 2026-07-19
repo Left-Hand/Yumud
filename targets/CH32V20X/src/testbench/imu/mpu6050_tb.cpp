@@ -88,7 +88,7 @@ using namespace ymd::drivers;
 
     Mahony mahony{{
         .kp = 2,
-        .ki = 0.3_r,
+        .ki = 0.3_iq16,
         .fs = 200
     }};
 

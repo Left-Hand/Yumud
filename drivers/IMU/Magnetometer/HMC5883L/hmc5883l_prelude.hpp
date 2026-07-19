@@ -54,7 +54,7 @@ struct HMC5883L_Prelude{
 struct HMC5883L_Regset:public HMC5883L_Prelude{
 
 
-    struct R8_ConfigA:public Reg8<>{
+    struct R8_ConfigA:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ConfigA;
         uint8_t measureMode:3;
         uint8_t dataRate:2;
@@ -62,20 +62,20 @@ struct HMC5883L_Regset:public HMC5883L_Prelude{
         uint8_t __resv__:1;
     }DEF_R8(config_a_reg)
 
-    struct R8_ConfigB:public Reg8<>{
+    struct R8_ConfigB:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ConfigB;
         uint8_t __resv__:5;
         Gain gain:3;
     }DEF_R8(config_b_reg)
 
-    struct R8_Mode:public Reg8<>{
+    struct R8_Mode:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Mode;
         Mode mode:2;
         uint8_t __resv__:5;
         uint8_t hs:1;
     }DEF_R8(mode_reg)
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Status;
         uint8_t ready:1;
         uint8_t lock:1;

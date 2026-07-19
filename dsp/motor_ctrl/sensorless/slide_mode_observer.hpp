@@ -32,9 +32,6 @@ public:
             z = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angular<iq20> angle() const noexcept {
-            return e.angle();
-        }
     };
     struct  Config{
         iq16 f_para;
@@ -49,8 +46,7 @@ public:
     }
 
     constexpr void reset(){
-        state_.reset();
-        turns_ = 0;
+        state.reset();
     }
 
 
@@ -58,48 +54,40 @@ public:
     // 更新函数
     constexpr void update(const Meas & meas){
 
-        const auto est_i = (f_para_ * state_.i) + (g_para_ * (meas.e - state_.e - state_.z));
+        const auto est_i = (f_para_ * state.i) + (g_para_ * (meas.e - state.e - state.z));
 
         // 当前电流误差
         const auto i_err = est_i - meas.i;
 
-        state_.z = i_err.map([this](auto x){return sat(x);});
+        state.z = i_err.map([this](auto x){return sat(x);});
 
-        state_.e = state_.e + (Kslf_ * (state_.z - state_.e));
-
-        turns_ = math::frac(math::atan2pu(-state_.e.alpha, state_.e.beta));
+        state.e = state.e + (kslf_ * (state.z - state.e));
     }
 
     constexpr void reconf(const Config & cfg){
         f_para_ = cfg.f_para;
         g_para_ = cfg.g_para;
-        Kslide_ = cfg.kslide;
-        Kslf_ = cfg.kslf;
+        kslide_ = cfg.kslide;
+        kslf_ = cfg.kslf;
     }
 
-
-    // 获取估计的转子角度
-    Angular<iq16> angle() const noexcept {return Angular<iq16>::from_turns(turns_);}
 
 private:
     iq16 f_para_ = 0;
     iq16 g_para_ = 0;
-    iq16 Kslide_ = 0;
-    iq16 Kslf_ = 0;
+    iq16 kslide_ = 0;
+    iq16 kslf_ = 0;
 public:
-    State state_;
-
-    iq16 turns_ = 0;
-
+    State state;
     // 滑模阈值
     static constexpr iq16 E0 = iq16(1.5);
     // 滑模阈值的倒数
     static constexpr iq16 invE0 = iq16(1/1.5);
 
     constexpr iq16 sat(const iq16 x) const noexcept {
-        if(x > E0) return Kslide_;
-        else if (x < -E0) return -Kslide_;
-        else return Kslide_ * x * invE0;
+        if(x > E0) return kslide_;
+        else if (x < -E0) return -kslide_;
+        else return kslide_ * x * invE0;
     }
 };
 

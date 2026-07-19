@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 
 #include "primitive/colors/color/color.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 
 #include "hal/conn/uart/hw_singleton.hpp"
@@ -108,8 +108,8 @@ void zdt_main(){
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = static_cast<iq16>(math::sin(clock::seconds()*0.7_r));
-        const auto d2 = static_cast<iq16>(math::sin(clock::seconds()*0.2_r));
+        const auto d1 = static_cast<iq16>(math::sin(clock::seconds()*0.7_iq16));
+        const auto d2 = static_cast<iq16>(math::sin(clock::seconds()*0.2_iq16));
         write_packet(factory1.set_angle(
             Angular<iq16>::from_turns(d1), 
             0

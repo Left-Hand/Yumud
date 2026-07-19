@@ -9,7 +9,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/i2c/i2cdrv.hpp"
 
-#include "algebra/regions/range2.hpp"
+#include "middlewares/algebra/regions/range2.hpp"
 
 
 

@@ -17,7 +17,7 @@
 #include "primitive/hid_input/segcode.hpp"
 #include "primitive/hid_input/button_input.hpp"
 
-#include "drivers/HID/ST1615/ST1615.hpp"
+#include "drivers/touch/ST1615/ST1615.hpp"
 
 
 

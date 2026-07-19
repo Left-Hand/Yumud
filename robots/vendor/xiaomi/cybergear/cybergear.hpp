@@ -1,64 +1,61 @@
 #pragma once
 
-#include "cybergear_primitive.hpp"
+#include "cybergear_prelude.hpp"
 
 
 namespace ymd::robots::cybergear{
 
+struct MitParams{
+    TorqueCode torque_code;
+    RadCode rad_code;
+    OmegaCode omega_code; 
+    KpCode kp_code; 
+    KdCode kd_code;
+};
 
-class CyberGearFactory{
+class [[nodiscard]] FrameFactory final{
 public:
-    struct MitParams{
-        TorqueCode torque_code;
-        RadCode rad_code;
-        OmegaCode omega_code; 
-        KpCode kp_code; 
-        KdCode kd_code;
+    struct State{
+        uint8_t host_id;
+        uint8_t node_id;
     };
 
+    State state;
 
-    uint8_t host_id;
-    uint8_t node_id;
-
-
-
-    constexpr hal::ClassicCanFrame request_mcu_id(){
-        const auto extid = CgId::from_parts(
-            cybergear::Command::GET_DEVICE_ID, host_id, node_id).to_extid();
+    constexpr hal::ClassicCanFrame request_mcu_id(this auto && self) noexcept {
 
         return hal::ClassicCanFrame::from_empty_data(
-            extid
+            CgId::from_parts(Command::GetDeviceId, self.state.host_id, self.state.node_id).to_extid()
         );
     }
 
-    constexpr hal::ClassicCanFrame ctrl(const MitParams & params){
-        TxContext tx_context = {};
+    constexpr hal::ClassicCanFrame ctrl(this auto && self, const MitParams & params) noexcept {
+        TxContext tx_context;
 
         tx_context.cmd_rad() = params.rad_code; 
         tx_context.cmd_omega() = params.omega_code;
         tx_context.cmd_kd() = params.kd_code;
         tx_context.cmd_kp() = params.kp_code;
 
-        const auto extid = CgId::from_parts(
-            cybergear::Command::SEND_CTRL1, 
+        const auto ext_id = CgId::from_parts(
+            Command::SendCtrl1, 
             params.torque_code.to_bits(), 
-            node_id).to_extid();
+            self.state.node_id).to_extid();
 
         return hal::ClassicCanFrame::from_parts(
-            extid,
+            ext_id,
             tx_context.to_can_payload()
         );
     }
 
-    constexpr hal::ClassicCanFrame enable(){
-        const auto extid = CgId::from_parts(cybergear::Command::EN_MOT, host_id, node_id).to_extid();
+    constexpr hal::ClassicCanFrame enable(this auto && self) noexcept {
         return hal::ClassicCanFrame::from_parts(
-            extid, 
+            CgId::from_parts(Command::EnableMotor, self.state.host_id, self.state.node_id).to_extid(),
             hal::ClassicCanPayload::from_u64(0)
         );
     }
 
-    constexpr hal::ClassicCanFrame disable(const bool clear_fault){
+    constexpr hal::ClassicCanFrame disable(this auto && self, const bool clear_fault) noexcept {
 
         uint64_t data_u64 = 0;
         data_u64 |= (clear_fault) ? 1u << 0 : 0;
@@ -66,43 +63,37 @@ public:
         // 正常运行时，data区需清0；
         // byte[0]=1 时：清故障；
         return hal::ClassicCanFrame::from_parts(
-            CgId::from_parts(cybergear::Command::DISEN_MOT, host_id, node_id).to_extid(), 
+            CgId::from_parts(Command::DisableMotor, self.state.host_id, self.state.node_id).to_extid(), 
             hal::ClassicCanPayload::from_u64(data_u64)
         );
     }
 
 
-    constexpr hal::ClassicCanFrame set_now_as_machine_home(){
-        static constexpr size_t LENGTH = 8;
-        static constexpr std::array<uint8_t, LENGTH> buffer = {
-            1,
-            0, 0, 0, 
-            0, 0, 0, 0
-        };
+    constexpr hal::ClassicCanFrame set_now_as_machine_home(this auto && self) noexcept {
 
-        const auto extid = CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, 
-            host_id, node_id).to_extid();
+        const auto ext_id = CgId::from_parts(Command::SetMachineHome, 
+            self.state.host_id, self.state.node_id).to_extid();
 
         return hal::ClassicCanFrame::from_parts(
-            extid, 
-            hal::ClassicCanPayload::from_u8x8(buffer)
+            ext_id, 
+            hal::ClassicCanPayload::from_u64(1u)
         );
     }
 
-    constexpr hal::ClassicCanFrame set_motor_node_id(const uint8_t new_node_id){
-        const auto extid = CgId::from_parts(
-            cybergear::Command::SET_CAN_ID, 
-            host_id | (new_node_id << 8), 
-            node_id
+    constexpr hal::ClassicCanFrame set_motor_node_id(this auto && self, const uint8_t new_node_id) noexcept {
+        const auto ext_id = CgId::from_parts(
+            Command::SetCanId, 
+            self.state.host_id | (new_node_id << 8), 
+            self.state.node_id
         ).to_extid();
 
         return hal::ClassicCanFrame::from_parts(
-            extid, 
+            ext_id, 
             hal::ClassicCanPayload::from_u64(0)
         );
     }
 
-    constexpr hal::ClassicCanFrame request_read_para(const uint16_t idx){
+    constexpr hal::ClassicCanFrame request_read_para(this auto && self, const uint16_t idx) noexcept {
         static constexpr size_t LENGTH = 8;
         std::array<uint8_t, LENGTH> buffer = {
             static_cast<uint8_t>(idx & 0xFF),
@@ -112,15 +103,16 @@ public:
         };
 
         return hal::ClassicCanFrame::from_parts(
-            CgId::from_parts(cybergear::Command::READ_PARA, host_id, node_id).to_extid(), 
+            CgId::from_parts(Command::ReadParam, self.state.host_id, self.state.node_id).to_extid(), 
             hal::ClassicCanPayload::from_u8x8(std::move(buffer))
         );
     }
 
     constexpr hal::ClassicCanFrame request_write_para(
+        this auto && self,
         const uint16_t idx, 
         const uint32_t param_bits
-    ){
+    ) noexcept {
 
         static constexpr size_t LENGTH = 8;
         std::array<uint8_t, LENGTH> buffer = {
@@ -135,7 +127,7 @@ public:
 
 
         return hal::ClassicCanFrame::from_parts(
-            CgId::from_parts(cybergear::Command::WRITE_PARA, host_id, node_id).to_extid(), 
+            CgId::from_parts(Command::WriteParam, self.state.host_id, self.state.node_id).to_extid(), 
             hal::ClassicCanPayload::from_u8x8(std::move(buffer))
         );
     }

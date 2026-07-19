@@ -50,27 +50,27 @@ enum class [[nodiscard]] Osr:uint8_t{
 };
 
 
-using Command = uint8_t;
+using CommandId = uint8_t;
 
 struct CommandFactory{
-    static constexpr Command SOFT_RESET  = Command(0x06);
-    static constexpr Command READ_PRESSURE_AND_TEMPERATURE  = Command(0x10);
-    static constexpr Command READ_ALTITUDE_AND_TEMPERATURE = Command(0x11);
-    static constexpr Command READ_PRESSURE = Command(0x30);
-    static constexpr Command READ_ALTITUDE = Command(0x31);
-    static constexpr Command READ_TEMPERATURE = Command(0x32);
-    static constexpr Command CALIBRATE_ANALOG = Command(0x28);
+    static constexpr CommandId SOFT_RESET  = CommandId(0x06);
+    static constexpr CommandId READ_PRESSURE_AND_TEMPERATURE  = CommandId(0x10);
+    static constexpr CommandId READ_ALTITUDE_AND_TEMPERATURE = CommandId(0x11);
+    static constexpr CommandId READ_PRESSURE = CommandId(0x30);
+    static constexpr CommandId READ_ALTITUDE = CommandId(0x31);
+    static constexpr CommandId READ_TEMPERATURE = CommandId(0x32);
+    static constexpr CommandId CALIBRATE_ANALOG = CommandId(0x28);
 
 
-    static constexpr Command read_reg(const uint8_t reg_addr){
+    static constexpr CommandId read_reg(const uint8_t reg_addr){
         return 0x80 | (reg_addr & 0b111111);
     }
 
-    static constexpr Command write_reg(const uint8_t reg_addr){
+    static constexpr CommandId write_reg(const uint8_t reg_addr){
         return 0xc0 | (reg_addr & 0b111111);
     }
 
-    static constexpr Command adc_convert(const ChannelSelection ch_sel, const Osr osr){
+    static constexpr CommandId adc_convert(const ChannelSelection ch_sel, const Osr osr){
         uint8_t command = 0x40; 
         command |= ((0b11 & static_cast<uint8_t>(ch_sel)) << 0); 
         command |= ((0b111 & static_cast<uint8_t>(osr)) << 2); 

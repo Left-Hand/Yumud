@@ -11,22 +11,34 @@ namespace ymd::hal{
 
 namespace ymd::drivers{
 
-class HX711 final{
-public:
+
+struct HX711_Prelude{
     enum class [[nodiscard]] ConvType:uint8_t{
         A128 = 1, B32 = 2, A64 = 3
     };
     static constexpr iq16 GRAVITY_G = iq16(9.8);
+};
+
+
+struct HX711_Transport{
+    hal::Gpio & sck_pin;
+    hal::Gpio & sdo_pin;
+
+    uint32_t read_data(const HX711_Prelude::ConvType conv_type);
+};
+
+
+
+
+class HX711 final:public HX711_Prelude{
+
 public:
     explicit HX711(
         hal::Gpio & sck_pin, 
         hal::Gpio & sdo_pin
     ):
-        sck_pin_(sck_pin), 
-        sdo_pin_(sdo_pin){;}
+        transport_(sck_pin, sdo_pin){;}
 
-
-    ~HX711(){;}
     void init();
     bool is_idle();
 
@@ -52,8 +64,7 @@ public:
         conv_type_ = convtype;
     }
 private:
-    hal::Gpio & sck_pin_;
-    hal::Gpio & sdo_pin_;
+    HX711_Transport transport_;
     ConvType conv_type_ = ConvType::A128;
 
     uint32_t last_bits_;
@@ -61,4 +72,5 @@ private:
     bool inversed = false;
     uint32_t read_data(void);
 };
+
 }

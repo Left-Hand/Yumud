@@ -5,7 +5,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/encoder/magnetic/MA730/ma730.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -39,7 +39,7 @@ void ma730_main(){
     }).examine();
 
     while(true){
-        ma730.update().examine();
-        DEBUG_PRINTLN(ma730.read_lap_angle().examine());
+        const auto angle = ma730.read_lap_angle().examine();
+        DEBUG_PRINTLN(angle.to_turns());
     }
 }

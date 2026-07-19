@@ -8,9 +8,9 @@
 #include "core/clock/time.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
-#include "algo/interpolation/Polynomial.hpp"
-#include "algebra/vectors/vec2.hpp"
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/interpolation/Polynomial.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 
 
 #include "core/math/realmath.hpp"

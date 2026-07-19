@@ -2,7 +2,7 @@
 
 #include "core/utils/Option.hpp"
 #include "core/string/view/string_view.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 using namespace ymd;
 

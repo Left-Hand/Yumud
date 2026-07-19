@@ -6,7 +6,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/vio/AW9523/aw9523.hpp"
+#include "drivers/ioexpand/AW9523/aw9523.hpp"
 
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"
@@ -52,7 +52,7 @@ void aw9523_main(){
         .examine();
 
     while(true){
-        const auto dutycycle = (0.5_r + 0.5_r * math::sin(clock::seconds()));
+        const auto dutycycle = (0.5_iq16 + 0.5_iq16 * math::sin(clock::seconds()));
         aw9523.set_led_current_dutycycle(
             hal::PinMask::from_u16(0xffff),
             dutycycle

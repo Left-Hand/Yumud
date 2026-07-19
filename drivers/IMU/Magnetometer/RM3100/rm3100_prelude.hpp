@@ -12,7 +12,7 @@
 
 #include "hal/conn/i2c/i2cdrv.hpp"
 
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 
 
 namespace ymd::drivers{

@@ -22,7 +22,7 @@ public:
     hal::Gpio & scl() {return scl_;}
     hal::Gpio & sda() {return scl_;}
 private:
-    void * inst_;
+    void * p_inst_;
     hal::Gpio scl_;
     hal::Gpio sda_;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bit_cursor.hpp"
 #include <cstdint>
 #include <span>
 
@@ -26,22 +27,9 @@ private:
             #endif
         }
 
-        const size_t start_bit = idx * 11;
-        const size_t byte0 = start_bit / 8;
-        const size_t bit_offset = start_bit % 8;
-
-        // 至少需要两个字节，最多三个
-        uint32_t combined = bytes[byte0];
-        if (byte0 + 1 < bytes.size()) {
-            combined |= static_cast<uint32_t>(bytes[byte0 + 1]) << 8;
-        }
-        if (byte0 + 2 < bytes.size()) {
-            combined |= static_cast<uint32_t>(bytes[byte0 + 2]) << 16;
-        }
-
-        // 从 combined 中提取从 bit_offset 开始的 11 位
-        const uint32_t shifted = combined >> bit_offset;
-        return static_cast<uint16_t>(shifted & 0x7FF);
+        std::array<uint8_t, 2> buf = {0, 0};
+        bit_cursor_load_bits(bytes.data(), idx * 11, buf.data(), 11);
+        return buf[0] | (buf[1] << 8);
     }
 
     static constexpr void set_u11_for_slice(
@@ -57,34 +45,12 @@ private:
             #endif
         }
 
-        const uint16_t masked_value = value & 0x7FF;
-        const size_t start_bit = idx * 11;
-        const size_t byte0 = start_bit / 8;
-        const size_t bit_offset = start_bit % 8;
+        const std::array<uint8_t, 2> buf = {
+            uint8_t(value & 0xff),
+            uint8_t((value >> 8) & 0x07)
+        };
 
-        // 读取最多3个字节到一个32位临时变量中
-        uint32_t combined = 0;
-        if (byte0 < bytes.size()) combined |= static_cast<uint32_t>(bytes[byte0]);
-        if (byte0 + 1 < bytes.size()) combined |= static_cast<uint32_t>(bytes[byte0 + 1]) << 8;
-        if (byte0 + 2 < bytes.size()) combined |= static_cast<uint32_t>(bytes[byte0 + 2]) << 16;
-
-        // 清除原来的11位
-        const uint32_t mask = 0x7FF << bit_offset;
-        combined &= ~mask;
-
-        // 写入新值
-        combined |= static_cast<uint32_t>(masked_value) << bit_offset;
-
-        // 写回字节（只写实际存在的字节）
-        if (byte0 < bytes.size()) {
-            bytes[byte0] = static_cast<uint8_t>(combined & 0xFF);
-        }
-        if (byte0 + 1 < bytes.size()) {
-            bytes[byte0 + 1] = static_cast<uint8_t>((combined >> 8) & 0xFF);
-        }
-        if (byte0 + 2 < bytes.size()) {
-            bytes[byte0 + 2] = static_cast<uint8_t>((combined >> 16) & 0xFF);
-        }
+        bit_cursor_store_bits(bytes.data(), idx * 11, buf.data(), 11);
     }
 
     friend class Proxy;

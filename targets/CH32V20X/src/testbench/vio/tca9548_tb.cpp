@@ -6,8 +6,8 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/vbus/TCA9548A/TCA9548A.hpp"
-#include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
+#include "drivers/busexpand/TCA9548A/TCA9548A.hpp"
+#include "drivers/imu/Axis6/MPU6050/MPU6050.hpp"
 
 
 using namespace ymd;

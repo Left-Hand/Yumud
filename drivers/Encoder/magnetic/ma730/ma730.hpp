@@ -1,0 +1,82 @@
+#pragma once
+
+#include "ma730_prelude.hpp"
+
+namespace ymd::drivers{
+
+
+class MA730 final:public MA730_Prelude{
+public:
+    struct Config{
+        RotateDirection direction;
+    };
+
+    explicit MA730(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit MA730(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
+
+
+    IResult<> init(const Config & cfg);
+
+    IResult<> set_zero_angle(const Angular<uq32> angle);
+    IResult<Angular<uq32>> read_lap_angle();
+
+    IResult<> set_trim_x(const uq16 k);
+
+    IResult<> set_trim_y(const uq16 k);
+
+    IResult<> set_trim(const uq16 am, const uq16 e);
+
+    IResult<> set_mag_threshold(
+        const MagThreshold low, const MagThreshold high);
+
+    IResult<> set_direction(const RotateDirection direction);
+    IResult<EncoderFaultBitFields> get_fault();
+
+    IResult<> set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
+
+    IResult<> set_pulse_per_turn(const uint16_t ppt);
+private:
+    hal::SpiDrv spi_drv_;
+    MA730_Regset regs_ = {};
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        uint16_t tx_bits = uint16_t(0x8000);
+        tx_bits |= (static_cast<uint16_t>(T::REG_ADDR) << 8);
+        tx_bits |= reg.to_bits();
+
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        reg.apply();
+        return Ok();
+    }
+
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        uint16_t rx_bits;
+
+        uint16_t tx_bits = uint16_t(0x4000);
+        tx_bits |= (static_cast<uint16_t>(T::REG_ADDR) << 8);
+
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if(const auto res = spi_drv_.read_single<uint16_t>(rx_bits);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if((rx_bits & 0xff) != 0x00) 
+            return Err(Error(Error::Kind::InvalidRxFormat));
+        reg.as_bits_mut() = (rx_bits >> 8);
+        return Ok();
+    }
+
+    IResult<uint16_t> direct_read();
+    
+    IResult<uint16_t> get_raw_data();
+    
+};
+
+};

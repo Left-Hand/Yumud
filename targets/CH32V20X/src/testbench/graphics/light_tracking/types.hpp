@@ -3,8 +3,8 @@
 #include "core/math/real.hpp"
 #include "float.h"
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/regions/ray3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/regions/ray3.hpp"
 
 using namespace ymd;
 

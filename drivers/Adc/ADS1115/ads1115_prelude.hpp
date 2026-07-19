@@ -103,12 +103,12 @@ struct ADS111X_Prelude{
 
 struct ADS111X_Regs:public ADS111X_Prelude{ 
 
-    struct R16_Conversion:public Reg16<>{
+    struct R16_Conversion:public Reg16{
         static constexpr RegAddr REG_ADDR = 0b00; 
         int16_t bits;
     };
 
-    struct R16_Config:public Reg16<>{
+    struct R16_Config:public Reg16{
         static constexpr RegAddr REG_ADDR = 0b01; 
 
 
@@ -126,12 +126,12 @@ struct ADS111X_Regs:public ADS111X_Prelude{
         uint16_t busy:1;
     };
 
-    struct R16_LowThresh:public Reg16<>{
+    struct R16_LowThresh:public Reg16{
         static constexpr RegAddr REG_ADDR = 0b10;
         int16_t bits;
     };
 
-    struct R16_HighThresh:public Reg16<>{
+    struct R16_HighThresh:public Reg16{
         static constexpr RegAddr REG_ADDR = 0b11; 
         int16_t bits;
     };

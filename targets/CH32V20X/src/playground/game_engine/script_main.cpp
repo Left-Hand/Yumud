@@ -12,8 +12,8 @@
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
-#include "algebra/regions/rect2.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/regions/rect2.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
@@ -21,7 +21,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 
 
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 #include "middlewares/raster/frame_buffer.hpp"
 #include "middlewares/repl/repl.hpp"

@@ -13,7 +13,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 #include "utils.hpp"
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
@@ -78,12 +78,12 @@ static constexpr RGB<iq16> get_relect_color(const int8_t i){
     switch(i){
         case 8:
         case 9:
-            return RGB<iq16>(0.05_r, 0.65_r, 0.05_r);
+            return RGB<iq16>(0.05_iq16, 0.65_iq16, 0.05_iq16);
         case 10:
         case 11:
-            return RGB<iq16>(0.65_r, 0.05_r, 0.05_r);
+            return RGB<iq16>(0.65_iq16, 0.05_iq16, 0.05_iq16);
         default:
-            return RGB<iq16>{0.65_r, 0.65_r, 0.65_r};
+            return RGB<iq16>{0.65_iq16, 0.65_iq16, 0.65_iq16};
     }
 }
 
@@ -229,7 +229,7 @@ static Option<RGB<iq16>> sample_light(
 ){
     const auto [u0, u1] = rand01_2();
 
-    const auto light_idx = u0 < 0.5_r ? 0 : 1;
+    const auto light_idx = u0 < 0.5_iq16 ? 0 : 1;
 
     const auto su = std::sqrt(u0);
 
@@ -342,7 +342,7 @@ static RGB<iq16> samplePixel(
         sample += 
         sampleRay(
             sample,
-            Ray3<iq16>::from_base_and_dir(eye,math::Vec3<iq16>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3<iq16>::from_base_and_dir(eye,math::Vec3<iq16>(ux - 0.5_iq16, 0.5_iq16 - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))
@@ -489,7 +489,7 @@ void light_tracking_main(void){
     [[maybe_unused]]
     auto fill_displayer = [&]{
         // const auto u = micros();
-        const auto st = math::sinpu(clock::seconds() * 2) * 0.5_r + 0.5_r;
+        const auto st = math::sinpu(clock::seconds() * 2) * 0.5_iq16 + 0.5_iq16;
         // displayer.setpos_unchecked({0,0});
         displayer.setarea_unchecked({math::Vec2u16{0,0}, math::Vec2u16{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){

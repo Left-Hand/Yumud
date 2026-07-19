@@ -206,8 +206,6 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * p_inst){
 };
 
 static void can_setup_interrupts(void * p_inst){
-
-
     //clear all interrupts
     {
         intrinsics::store_volatile_with_u32(&RAL_INST(p_inst)->TSTATR,
@@ -241,7 +239,7 @@ static void can_setup_interrupts(void * p_inst){
     CAN_ITConfig(SPL_INST(p_inst), it_mask, ENABLE);
 
     const auto inst_nth = lld::can_to_nth(reinterpret_cast<uintptr_t>(p_inst));
-    switch(inst_nth.count()){
+    switch(inst_nth){
         #ifdef CAN1_PRESENT
         case 1:
             //tx interrupt
@@ -310,7 +308,21 @@ static void can_setup_interrupts(void * p_inst){
     }
 }
 
+[[nodiscard]] Can::ErrorCode can_get_last_error(void * p_inst){
+    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst)->ERRSR.LEC);
+    return std::bit_cast<Can::ErrorCode>(bits);
+}
 
+[[nodiscard]] uint32_t can_get_aligned_bus_clk_freq(){
+    #if defined(CH32V203) || defined(CH32V303) || defined(CH32V307) || defined(CH32L103)
+    //所有的CAN外设都使用APB1时钟
+    return sys::clock::get_apb1_clk_freq();
+    #elif defined(CH32H417)
+    return sys::clock::get_ahb_clk_freq();
+    #else
+    #error "unsupported arch"
+    #endif
+}
 
 }
 
@@ -335,7 +347,7 @@ void Can::init(const Config & cfg){
     lld::can_reset(p_inst_);
     #endif
 
-    lld::can_enable_rcc(inst_nth_, EN);
+    lld::can_enable_rcc(inst_nth_.count(), EN);
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
         const auto & bit_timming = cfg.bit_timming;
@@ -386,7 +398,7 @@ void Can::init(const Config & cfg){
 
 
 void Can::deinit(){
-    lld::can_deinit(inst_nth_);
+    lld::can_enable_rcc(inst_nth_.count(), DISEN);
 };
 
 void Can::init_interrupts(){
@@ -399,11 +411,11 @@ void Can::alter_to_pins(const CanRemap remap){
 }
 
 void Can::enable_rcc(const Enable en){
-    lld::can_enable_rcc(inst_nth_, en);
+    lld::can_enable_rcc(inst_nth_.count(), en);
 }
 
 void Can::set_remap(const CanRemap remap){
-    lld::can_set_remap(inst_nth_, remap);
+    lld::can_set_remap(inst_nth_.count(), remap);
 }
 
 
@@ -474,10 +486,11 @@ uint8_t Can::get_tx_errcnt(){
     return static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.TEC);
 }
 
-Option<Can::Error> Can::last_error(){
-    const uint8_t bits = static_cast<uint8_t>(RAL_INST(p_inst_)->ERRSR.LEC);
-    if(bits == 0) return None;
-    return Some(std::bit_cast<Can::Error>(bits));
+
+
+
+Can::ErrorCode Can::last_error(){
+    return can_get_last_error(p_inst_);
 }
 
 
@@ -507,14 +520,7 @@ Result<void, Infallible> Can::set_filter_origin(
     return Ok();
 }
 
-uint32_t can_get_aligned_bus_clk_freq(){
-    #if defined(CH32V203) || defined(CH32V303) || defined(CH32V307) || defined(CH32L103)
-    //所有的CAN外设都使用APB1时钟
-    return sys::clock::get_apb1_clk_freq();
-    #elif defined(CH32H417)
-    return sys::clock::get_ahb_clk_freq();
-    #endif
-}
+
 
 
 uint32_t Can::get_aligned_bus_clk_freq(){
@@ -532,7 +538,8 @@ size_t Can::available(){
 
 Result<void, CanLibError> Can::try_write(const ClassicCanFrame & frame){
     // 注意这段代码不能改为直接往队列中存报文 
-    // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
+    // 因为如果没有报文被发送完成，报文发送完成中断一直不会被触发, 队列数据也就不会被外设消费
+    // 所以优先考虑向硬件中存入报文，硬件中存不下报文才存入队列中
 
     const uint32_t temp_tstar = intrinsics::load_volatile_to_u32(&(RAL_INST(p_inst_)->TSTATR));
 

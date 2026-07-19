@@ -39,20 +39,20 @@ struct AK8963_Prelude{
 
 struct AK8963_Regs:public AK8963_Prelude{ 
 
-    struct R8_WIA:public Reg8<>{
+    struct R8_WIA:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint8_t correct = 0x48;
 
         uint8_t bits;
     } DEF_R8(wia_reg)
 
-    struct R8_INFO:public Reg8<>{
+    struct R8_INFO:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t bits;
     } DEF_R8(info_reg)
 
-    struct R8_ST1:public Reg8<>{
+    struct R8_ST1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t drdy:1;
@@ -67,7 +67,7 @@ struct AK8963_Regs:public AK8963_Prelude{
     REG16_QUICK_DEF(0x05, MagYReg, mag_y_reg);
     REG16_QUICK_DEF(0x07, MagZReg, mag_z_reg);
 
-    struct R8_ST2:public Reg8<>{
+    struct R8_ST2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t __resv__:3;
@@ -76,7 +76,7 @@ struct AK8963_Regs:public AK8963_Prelude{
         uint8_t __resv2__:3;
     } DEF_R8(st2_reg)
 
-    struct R8_CNTL1:public Reg8<>{
+    struct R8_CNTL1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
 
         Mode mode:4;
@@ -84,14 +84,14 @@ struct AK8963_Regs:public AK8963_Prelude{
         uint8_t __resv__:3;
     } DEF_R8(cntl1_reg)
 
-    struct R8_CNTL2:public Reg8<>{
+    struct R8_CNTL2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0B};
 
         uint8_t srst:1;
         uint8_t __resv__:7;
     } DEF_R8(cntl2_reg)
 
-    struct R8_ASTC:public Reg8<>{
+    struct R8_ASTC:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
         uint8_t __resv__:6;
@@ -99,14 +99,14 @@ struct AK8963_Regs:public AK8963_Prelude{
         uint8_t __resv2__:1;
     } DEF_R8(astc_reg)
 
-    struct R8_I2CDIS:public Reg8<>{
+    struct R8_I2CDIS:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0F};
 
         static constexpr uint8_t key = 0b00011011;
         uint8_t bits;
     } DEF_R8(i2cdis_reg)
 
-    struct _R8_ASA:public Reg8<>{
+    struct _R8_ASA:public Reg8{
         uint8_t bits;
     };
 

@@ -11,7 +11,7 @@ public:
     };
 
 protected:
-    TIM_TypeDef * inst_;
+    TIM_TypeDef * p_inst_;
     volatile uint16_t & cvr1_;
     volatile uint16_t & cvr2_;
 

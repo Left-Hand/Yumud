@@ -13,10 +13,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        // 零输入时，所有占空比应该等于0.5
-        static_assert(std::abs(u - 0.5) < 1E-4);
-        static_assert(std::abs(v - 0.5) < 1E-4);
-        static_assert(std::abs(w - 0.5) < 1E-4);
+        static_assert(std::abs(u - 0.0) < 1E-4);
+        static_assert(std::abs(v - 0.0) < 1E-4);
+        static_assert(std::abs(w - 0.0) < 1E-4);
     }
 }
 
@@ -28,9 +27,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(std::abs(u - ((1.0 + std::sqrt(3) / 2) * 0.5)) < 1E-4);
-        static_assert(std::abs(v - ((1.0 - std::sqrt(3) / 2) * 0.5)) < 1E-4);
-        static_assert(std::abs(w - ((1.0 - std::sqrt(3) / 2) * 0.5)) < 1E-4);
+        static_assert(std::abs(u - ((+ std::sqrt(3) / 2) * 0.5)) < 1E-4);
+        static_assert(std::abs(v - ((- std::sqrt(3) / 2) * 0.5)) < 1E-4);
+        static_assert(std::abs(w - ((- std::sqrt(3) / 2) * 0.5)) < 1E-4);
     }
 }
 
@@ -42,12 +41,13 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        // 验证占空比在有效范围内 [0, 1]
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
-        // 验证中点在0.5附近
-        static_assert(std::abs((u + v + w) / 3.0 - 0.5) < 0.2);
+        // 验证占空比在有效范围内 [-0.5, 0.5]
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
+
+        // 验证中点在0.0附近
+        static_assert(std::abs((u + v + w) / 3.0 - 0.0) < 0.2);
     }
 }
 
@@ -59,9 +59,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
     }
 }
 
@@ -73,9 +73,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
     }
 }
 
@@ -87,9 +87,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
     }
 }
 
@@ -101,9 +101,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
     }
 }
 
@@ -115,9 +115,9 @@ namespace{
         static constexpr float v = (float)uvw.v;
         static constexpr float w = (float)uvw.w;
 
-        static_assert(u >= 0.0 && u <= 1.0);
-        static_assert(v >= 0.0 && v <= 1.0);
-        static_assert(w >= 0.0 && w <= 1.0);
+        static_assert(u >= -0.5 && u <= 0.5);
+        static_assert(v >= -0.5 && v <= 0.5);
+        static_assert(w >= -0.5 && w <= 0.5);
     }
 }
 
@@ -136,10 +136,10 @@ namespace{
         static constexpr float v2 = (float)uvw2.v;
         static constexpr float w2 = (float)uvw2.w;
 
-        // 互补占空比应该加起来等于1
-        static_assert(std::abs((u1 + u2) - 1.0) < 1E-3);
-        static_assert(std::abs((v1 + v2) - 1.0) < 1E-3);
-        static_assert(std::abs((w1 + w2) - 1.0) < 1E-3);
+        // 互补占空比应该加起来等于0
+        static_assert(std::abs((u1 + u2) - 0.0) < 1E-3);
+        static_assert(std::abs((v1 + v2) - 0.0) < 1E-3);
+        static_assert(std::abs((w1 + w2) - 0.0) < 1E-3);
     }
 }
 

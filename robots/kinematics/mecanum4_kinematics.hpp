@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algebra/gesture/twist2.hpp"
+#include "middlewares/algebra/gesture/twist2.hpp"
 
 namespace ymd::robots::kinematics{
 template<arithmetic T>

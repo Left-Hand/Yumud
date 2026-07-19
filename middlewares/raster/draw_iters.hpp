@@ -4,20 +4,20 @@
 #include "primitive/image/image.hpp"
 
 
-#include "algebra/regions/rect2.hpp"
-#include "algebra/vectors/quat.hpp"
-#include "algebra/shapes/bresenham_iter.hpp"
-#include "algebra/shapes/rotated_rect.hpp"
-#include "algebra/shapes/box_rect.hpp"
-#include "algebra/regions/segment2.hpp"
-#include "algebra/shapes/triangle2.hpp"  
-#include "algebra/shapes/line_iter.hpp"
-#include "algebra/shapes/annular_sector.hpp"
-#include "algebra/shapes/horizon_spectrum.hpp"
-#include "algebra/shapes/triangle2.hpp"
-#include "algebra/shapes/oval2.hpp"
-#include "algebra/shapes/gridmap2.hpp"
-#include "algebra/shapes/rounded_rect2.hpp"
+#include "middlewares/algebra/regions/rect2.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
+#include "middlewares/algebra/shapes/bresenham_iter.hpp"
+#include "middlewares/algebra/shapes/rotated_rect.hpp"
+#include "middlewares/algebra/shapes/box_rect.hpp"
+#include "middlewares/algebra/regions/segment2.hpp"
+#include "middlewares/algebra/shapes/triangle2.hpp"  
+#include "middlewares/algebra/shapes/line_iter.hpp"
+#include "middlewares/algebra/shapes/annular_sector.hpp"
+#include "middlewares/algebra/shapes/horizon_spectrum.hpp"
+#include "middlewares/algebra/shapes/triangle2.hpp"
+#include "middlewares/algebra/shapes/oval2.hpp"
+#include "middlewares/algebra/shapes/gridmap2.hpp"
+#include "middlewares/algebra/shapes/rounded_rect2.hpp"
 
 
 #include "frame_buffer.hpp"
@@ -444,8 +444,8 @@ struct DemoShapeFactory{
     auto make_segment2() const noexcept {
         auto shape = math::Segment2<uint16_t>{
             math::Vec2u16{
-                uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_r))), 
-                uint16_t(80 + 20 * iq16(math::sinpu(now_secs * 0.2_r)))},
+                uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_iq16))), 
+                uint16_t(80 + 20 * iq16(math::sinpu(now_secs * 0.2_iq16)))},
             math::Vec2u16{50,80}
         };
         return shape;
@@ -484,7 +484,7 @@ struct DemoShapeFactory{
 
     auto make_circle2() const noexcept {
         auto shape = math::Circle2<uint16_t>{
-            math::Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
+            math::Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_iq16))), 80}, 6};
         return shape;
     }
 
@@ -498,7 +498,7 @@ struct DemoShapeFactory{
     auto make_rounded_rect2_moving() const noexcept {
         auto shape = RoundedRect2<uint16_t>{
             .bounding_rect = math::Rect2u{
-                math::Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
+                math::Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_iq16))), 80}, 
                 math::Vec2u16{90, 30}
             }, 
             .radius = 8
@@ -556,13 +556,13 @@ struct DemoShapeFactory{
 
     auto make_annular_sector() const noexcept {
         const auto shape = AnnularSector<uint16_t, iq16>{
-            .center = {uint16_t(160 + 79.2_r * iq16(math::sinpu(now_secs * 0.2_r))), 80},
+            .center = {uint16_t(160 + 79.2_iq16 * iq16(math::sinpu(now_secs * 0.2_iq16))), 80},
             .radius_range = {8, 12},
             .angle_range = AngularRange<iq16>::from_start_and_interval(
                 Angular<iq16>::from_degrees(60 + now_secs * 120), 
                 Angular<iq16>::from_degrees(LERP(
                     50, 310, 
-                    iq16(math::sinpu(now_secs * 0.4_r)) * 0.5_iq16 + 0.5_iq16
+                    iq16(math::sinpu(now_secs * 0.4_iq16)) * 0.5_iq16 + 0.5_iq16
                 ))
             )
         };
@@ -571,7 +571,7 @@ struct DemoShapeFactory{
 
     // auto make_sector() const noexcept {
     //     const auto shape = Sector<uint16_t, iq16>{
-    //         .center = {uint16_t(160 + 80 * math::sinpu(now_secs * 0.2_r)), 80},
+    //         .center = {uint16_t(160 + 80 * math::sinpu(now_secs * 0.2_iq16)), 80},
     //         .radius = 12,
     //         .angle_range = {
     //             Angular<iq16>::from_degrees(60 + now_secs * 120), 

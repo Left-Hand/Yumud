@@ -3,7 +3,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/realmath.hpp"
 
-#include "algebra/regions/range2.hpp"
+#include "middlewares/algebra/regions/range2.hpp"
 
 #include "meta_utils.hpp"
 #include "calibrate_utils.hpp"
@@ -42,9 +42,9 @@ struct MotorTaskPrelude{
     DEF_FRIEND_DERIVE_DEBUG(ServiceError)
 
     // static constexpr auto DUTYCYCLE = 0.3_r;
-    static constexpr auto CALIBRATE_DUTYCYCLE = 0.3_r;
-    static constexpr auto STALL_DUTYCYCLE = 0.3_r;
-    static constexpr auto BEEP_DUTYCYCLE = 0.3_r;
+    static constexpr auto CALIBRATE_DUTYCYCLE = 0.3_iq16;
+    static constexpr auto STALL_DUTYCYCLE = 0.3_iq16;
+    static constexpr auto BEEP_DUTYCYCLE = 0.3_iq16;
 
     static constexpr size_t MICROSTEPS_PER_SECTOR = 256;
 
@@ -134,7 +134,7 @@ struct MotorTaskPrelude{
         constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> meas_angle){
             tick_cnt_++;
             const auto expected_angle = ticks_to_linear_angle(tick_cnt_);
-            const auto [s,c] = math::sincospu(0.25_r * math::sinpu(expected_angle.to_turns() * freq_));
+            const auto [s,c] = math::sincospu(0.25_iq16 * math::sinpu(expected_angle.to_turns() * freq_));
             return digipw::AlphaBetaCoord<iq16>{
                 .alpha = BEEP_DUTYCYCLE * 2,
                 .beta = s * BEEP_DUTYCYCLE * 2
@@ -259,8 +259,8 @@ struct MotorTaskPrelude{
     };
 
 struct CoilCheckTasksPrelude:public MotorTaskPrelude{
-    static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_r;
-    static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_r;
+    static constexpr auto MINIMAL_MOVING_THRESHOLD = 0.003_iq16;
+    static constexpr auto MINIMAL_STALL_THRESHOLD = 0.0003_iq16;
     static constexpr auto STALL_CHECK_TICKS = 80u;
     static constexpr auto MOVE_CHECK_TICKS = 1600u;
     static constexpr auto STALL_TICKS = 1000u;
@@ -341,14 +341,14 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
 
             const auto duty = math::sinpu(LERP(
                 iq16(tick_cnt_) / MOVE_CHECK_TICKS,
-                -0.5_r, 0.5_r
+                -0.5_iq16, 0.5_iq16
             )) * STALL_DUTYCYCLE;
 
             auto make_duty = [&]() -> digipw::AlphaBetaCoord<iq16>{
                 if(is_beta_){
-                    return {static_cast<iq16>(duty), 0};
+                    return {static_cast<iq16>(duty), 0_iq16};
                 }else{
-                    return {0, static_cast<iq16>(duty)};
+                    return {0_iq16, static_cast<iq16>(duty)};
                 }
             };
             tick_cnt_++;
@@ -622,12 +622,12 @@ auto make_calibrate_configs = [](
         // ,
         CalibrateTasksPrelude::CalibrateRotateTask::Config{
             .table = forward_calibrate_table,
-            .delta_position = 1_r
+            .delta_position = 1_iq16
         },
 
         CalibrateTasksPrelude::CalibrateRotateTask::Config{
             .table = backward_calibrate_table,
-            .delta_position = -1_r
+            .delta_position = -1_iq16
         }
 
 

@@ -1,16 +1,5 @@
 #pragma once
 
-#include <tuple>
-
-#include "core/io/regs.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/Errno.hpp"
-
-#include "core/math/real.hpp"
-#include "core/math/realmath.hpp"
-
-#include "hal/conn/i2c/i2cdrv.hpp"
-
 //参考资料：
 // https://blog.csdn.net/qq_44016222/article/details/142312501
 
@@ -21,6 +10,16 @@
 // DFN封装尺寸为2.5×2.5 mm²，高度为0.9 mm，可集成到各种应用中。
 // 此外，2.15 V至5.5 V的宽电源电压范围保证了与不同组装情况的兼容性。
 
+
+
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/Errno.hpp"
+
+#include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
+
+#include "hal/conn/i2c/i2cdrv.hpp"
 
 
 namespace ymd::drivers{

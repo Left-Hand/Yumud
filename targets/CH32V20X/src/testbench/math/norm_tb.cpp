@@ -3,8 +3,8 @@
 #include "core/math/fixed/fixed.hpp"
 
 
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 using namespace ymd;
 
@@ -23,11 +23,11 @@ auto build_norm_vec3_from_quat(
 using namespace ymd;
 
 void test_q14(){
-    constexpr iq14 a = 1_r;
-    constexpr iq14 b = 0.5_r;
+    constexpr iq14 a = 1_iq16;
+    constexpr iq14 b = 0.5_iq16;
     constexpr auto c = a * b;
 
-    static_assert(c == 0.5_r);
+    static_assert(c == 0.5_iq16);
 }   
 
 #if 0

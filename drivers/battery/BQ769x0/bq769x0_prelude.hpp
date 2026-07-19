@@ -187,7 +187,7 @@ enum class [[nodiscard]] CoulombCounterMode : uint8_t{
 
 struct BQ769x0_Regset:public BQ769x0_Prelude{
 //0x00 - SYS_STAT 系统状态寄存器 (R/W)
-struct R8_SysStat : public Reg8<R8_SysStat> {
+struct R8_SysStat : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::SysStat;
 
     uint8_t ocd : 1; // 放电过流故障标志 (写1清零)
@@ -201,7 +201,7 @@ struct R8_SysStat : public Reg8<R8_SysStat> {
 } DEF_R8(sys_stat_reg);
 
 //0x01 - CELLBAL1 电池均衡寄存器1 (R/W)
-struct R8_CellBal1 : public Reg8<R8_CellBal1> {
+struct R8_CellBal1 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::CellBal1;
 
     uint8_t reserved0 : 1; // 保留位
@@ -214,7 +214,7 @@ struct R8_CellBal1 : public Reg8<R8_CellBal1> {
 } DEF_R8(cell_bal1_reg);
 
 //0x02 - CELLBAL2 电池均衡寄存器2 (R/W) [BQ76930/40]
-struct R8_CellBal2 : public Reg8<R8_CellBal2> {
+struct R8_CellBal2 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::CellBal2;
 
     uint8_t reserved0 : 1; // 保留位
@@ -227,7 +227,7 @@ struct R8_CellBal2 : public Reg8<R8_CellBal2> {
 } DEF_R8(cell_bal2_reg);
 
 //0x03 - CELLBAL3 电池均衡寄存器3 (R/W) [BQ76940]
-struct R8_CellBal3 : public Reg8<R8_CellBal3> {
+struct R8_CellBal3 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::CellBal3;
 
     uint8_t reserved0_1 : 2; // 保留位
@@ -240,7 +240,7 @@ struct R8_CellBal3 : public Reg8<R8_CellBal3> {
 } DEF_R8(cell_bal3_reg);
 
 //0x04 - SYS_CTRL1 系统控制寄存器1 (R/W)
-struct R8_SysCtrl1 : public Reg8<R8_SysCtrl1> {
+struct R8_SysCtrl1 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::SysCtrl1;
 
     uint8_t shut_b : 1; // 关断控制位B
@@ -253,7 +253,7 @@ struct R8_SysCtrl1 : public Reg8<R8_SysCtrl1> {
 } DEF_R8(sys_ctrl1_reg);
 
 //0x05 - SYS_CTRL2 系统控制寄存器2 (R/W)
-struct R8_SysCtrl2 : public Reg8<R8_SysCtrl2> {
+struct R8_SysCtrl2 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::SysCtrl2;
 
     uint8_t chg_on : 1; // 充电控制: 0-关 1-开
@@ -266,7 +266,7 @@ struct R8_SysCtrl2 : public Reg8<R8_SysCtrl2> {
 } DEF_R8(sys_ctrl2_reg);
 
 //0x06 - PROTECT1 保护寄存器1 (R/W)
-struct R8_Protect1 : public Reg8<R8_Protect1> {
+struct R8_Protect1 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::Protect1;
 
     ScdThreshold scd_t : 3; // SCD阈值配置位 [2:0]
@@ -277,7 +277,7 @@ struct R8_Protect1 : public Reg8<R8_Protect1> {
 } DEF_R8(protect1_reg);
 
 //0x07 - PROTECT2 保护寄存器2 (R/W)
-struct R8_Protect2 : public Reg8<R8_Protect2> {
+struct R8_Protect2 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::Protect2;
 
     OcdThreshold ocd_t : 4; // OCD阈值配置位 [3:0]
@@ -286,7 +286,7 @@ struct R8_Protect2 : public Reg8<R8_Protect2> {
 } DEF_R8(protect2_reg);
 
 //0x08 - PROTECT3 保护寄存器3 (R/W)
-struct R8_Protect3 : public Reg8<R8_Protect3> {
+struct R8_Protect3 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::Protect3;
 
     uint8_t reserved0 : 1; // 保留位 (内部调试)
@@ -298,7 +298,7 @@ struct R8_Protect3 : public Reg8<R8_Protect3> {
 } DEF_R8(protect3_reg);
 
 //0x09 - OV_TRIP 过压阈值寄存器 (R/W)
-struct R8_OvTrip : public Reg8<R8_OvTrip> {
+struct R8_OvTrip : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::OvTrip;
 
     uint8_t ov_t0 : 1; // 过压阈值位0
@@ -312,7 +312,7 @@ struct R8_OvTrip : public Reg8<R8_OvTrip> {
 } DEF_R8(ov_trip_reg);
 
 //0x0A - UV_TRIP 欠压阈值寄存器 (R/W)
-struct R8_UvTrip : public Reg8<R8_UvTrip> {
+struct R8_UvTrip : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::UvTrip;
 
     uint8_t uv_t0 : 1; // 欠压阈值位0
@@ -326,7 +326,7 @@ struct R8_UvTrip : public Reg8<R8_UvTrip> {
 } DEF_R8(uv_trip_reg);
 
 //0x0B - CC_CFG 库仑计配置寄存器 (R/W)
-struct R8_CcCfg : public Reg8<R8_CcCfg> {
+struct R8_CcCfg : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::CcCfg;
 
     uint8_t cc_cfg0 : 1; // 库仑计配置位0
@@ -339,7 +339,7 @@ struct R8_CcCfg : public Reg8<R8_CcCfg> {
 } DEF_R8(cc_cfg_reg);
 
 //0x0C-0x29 - 电池电压寄存器 (只读，高低字节组合)
-struct R16_CellVolt : public Reg16<R16_CellVolt> {
+struct R16_CellVolt : public Reg16 {
     // static constexpr RegAddr REG_ADDR_HI = RegAddr::CellVoltHi;
 
     // static constexpr RegAddr REG_ADDR_LO = RegAddr::CellVoltLo;
@@ -349,7 +349,7 @@ struct R16_CellVolt : public Reg16<R16_CellVolt> {
 } DEF_R16(cell_volt_reg);
 
 //0x2A-0x2B - BAT_HI/LO 总电池电压寄存器 (只读)
-struct R16_BatVolt : public Reg16<R16_BatVolt> {
+struct R16_BatVolt : public Reg16 {
     // static constexpr RegAddr REG_ADDR_HI = RegAddr::BatVoltHi;
 
     // static constexpr RegAddr REG_ADDR_LO = RegAddr::BatVoltLo;
@@ -358,7 +358,7 @@ struct R16_BatVolt : public Reg16<R16_BatVolt> {
 } DEF_R16(bat_volt_reg);
 
 //0x2C-0x31 - 温度寄存器 (只读，高低字节组合)
-struct R16_Temp : public Reg16<R16_Temp> {
+struct R16_Temp : public Reg16 {
     // static constexpr RegAddr REG_ADDR_HI = RegAddr::TempHi;
 
     // static constexpr RegAddr REG_ADDR_LO = RegAddr::TempLo;
@@ -368,7 +368,7 @@ struct R16_Temp : public Reg16<R16_Temp> {
 } DEF_R16(temp_reg);
 
 //0x32-0x33 - CC_HI/LO 库仑计计数寄存器 (只读)
-struct R16_CcCount : public Reg16<R16_CcCount> {
+struct R16_CcCount : public Reg16 {
     // static constexpr RegAddr REG_ADDR_HI = RegAddr::CcCountHi;
 
     // static constexpr RegAddr REG_ADDR_LO = RegAddr::CcCountLo;
@@ -377,7 +377,7 @@ struct R16_CcCount : public Reg16<R16_CcCount> {
 } DEF_R16(cc_count_reg);
 
 //0x50 - ADCGAIN1 ADC增益寄存器1 (只读)
-struct R8_AdcGain1 : public Reg8<R8_AdcGain1> {
+struct R8_AdcGain1 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::AdcGain1;
 
     uint8_t reserved0_1 : 2; // 保留位
@@ -387,7 +387,7 @@ struct R8_AdcGain1 : public Reg8<R8_AdcGain1> {
 } DEF_R8(adc_gain1_reg);
 
 //0x51 - ADCOFFSET ADC偏移量寄存器 (只读)
-struct R8_AdcOffset : public Reg8<R8_AdcOffset> {
+struct R8_AdcOffset : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::AdcOffset;
 
     uint8_t adc_offset0 : 1; // ADC偏移量位0
@@ -401,7 +401,7 @@ struct R8_AdcOffset : public Reg8<R8_AdcOffset> {
 } DEF_R8(adc_offset_reg);
 
 //0x59 - ADCGAIN2 ADC增益寄存器2 (只读)
-struct R8_AdcGain2 : public Reg8<R8_AdcGain2> {
+struct R8_AdcGain2 : public Reg8 {
     static constexpr RegAddr REG_ADDR = RegAddr::AdcGain2;
 
     uint8_t reserved0_4 : 5; // 保留位

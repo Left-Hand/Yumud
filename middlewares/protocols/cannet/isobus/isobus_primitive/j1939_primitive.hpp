@@ -53,19 +53,19 @@ struct alignas(4) [[nodiscard]] Pgn final{
     uint32_t bits;
 
     constexpr auto pdu_specific(this auto && self) {
-        return make_bitfield_proxy<0, 8, PsField>(self.bits);
+        return make_bitfield_proxy<0, 8, PsField>(&self.bits);
     }
 
     constexpr auto pdu_format(this auto && self) {
-        return make_bitfield_proxy<8, 16, PduFormat>(self.bits);
+        return make_bitfield_proxy<8, 16, PduFormat>(&self.bits);
     }
 
     constexpr auto data_page(this auto && self) {
-        return make_bitfield_proxy<16, 17, bool>(self.bits);
+        return make_bitfield_proxy<16, 17, bool>(&self.bits);
     }
 
     constexpr auto extended_data_page(this auto && self) {
-        return make_bitfield_proxy<17, 18, bool>(self.bits);
+        return make_bitfield_proxy<17, 18, bool>(&self.bits);
     }
 };
 

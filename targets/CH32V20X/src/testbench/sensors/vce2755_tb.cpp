@@ -5,7 +5,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/encoder/MagEnc/VCE2755/vce2755.hpp"
+#include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -43,8 +43,8 @@ void vce2755_main(){
     }).examine();
 
     while(true){
-        vce2755.update().examine();
-        const auto lap_angle = vce2755.read_lap_angle().examine();
+        const auto angle_packet = vce2755.update().examine();
+        const auto lap_angle = angle_packet.parse().unwrap();
         DEBUG_PRINTLN(
             lap_angle.to_turns(),
             static_cast<int32_t>(lap_angle.to_turns().to_bits() >> (32 - 18))

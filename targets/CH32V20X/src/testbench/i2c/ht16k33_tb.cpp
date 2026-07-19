@@ -18,8 +18,8 @@
 #include "primitive/hid_input/segcode.hpp"
 #include "primitive/hid_input/button_input.hpp"
 
-#include "drivers/HID/TM1637/TM1637.hpp"
-#include "drivers/HID/HT16K33/HT16K33.hpp"
+#include "drivers/matscan/TM1637/TM1637.hpp"
+#include "drivers/matscan/HT16K33/HT16K33.hpp"
 
 
 

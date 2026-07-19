@@ -81,13 +81,13 @@ void pfm_zvs_main(){
     while(true){
         const auto t = clock::seconds();
         const auto st = math::sinpu(t * 100);
-        pwm_p.set_dutycycle(st * 0.4_r + 0.5_r);
+        pwm_p.set_dutycycle(st * 0.4_iq16 + 0.5_iq16);
 
         static constexpr auto arr_base = 144_MHz / 20_KHz;
-        const auto arr = uint16_t(arr_base * (1 + 0.5_r * st));
+        const auto arr = uint16_t(arr_base * (1 + 0.5_iq16 * st));
         timer.set_arr(arr);
 
-        const auto dead_zone_ns = Nanoseconds(uint16_t(1000 * (1 + 0.5_r * st)));
+        const auto dead_zone_ns = Nanoseconds(uint16_t(1000 * (1 + 0.5_iq16 * st)));
 
         #if 0
         timer.bdtr().set_deadzone(dead_zone_ns);

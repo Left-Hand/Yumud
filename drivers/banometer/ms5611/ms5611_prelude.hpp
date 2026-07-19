@@ -18,7 +18,10 @@
 namespace ymd::drivers{
 
 struct MS5611_Prelude{
-static constexpr auto I2C_DEFAULT_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xee >> 1);
+
+// CSB 的反补码 即 CSB 引脚接高电平时， 地址为 1110 110+(读写位)
+// CSB 的反补码 即 CSB 引脚接低电平时， 地址为 1110 111+(读写位)
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1110'110);
 static constexpr uint8_t D1_ADDR = 0x48;
 static constexpr uint8_t D2_ADDR = 0x58;
 static constexpr uint8_t RESET_COMMAND = 0x1e;
@@ -26,6 +29,22 @@ static constexpr uint8_t RESET_COMMAND = 0x1e;
 struct [[nodiscard]] Coeffs final{
     std::array<uint16_t, 6> c_table;
 
+    struct [[nodiscard]] Product final{
+        int64_t off;
+        int64_t sens;
+        int32_t temp;
+        int32_t pressure;
+
+        [[nodiscard]] constexpr float pressure_mbar() const noexcept {
+            return static_cast<float>(pressure) / 100.0f;
+        }
+
+        [[nodiscard]] constexpr float temperature_c() const noexcept {
+            return static_cast<float>(temp) / 100.0f;
+        }
+    };
+
+    
     struct [[nodiscard]] Intermediate final{
         uint32_t d1;
         int32_t dt;
@@ -67,20 +86,6 @@ struct [[nodiscard]] Coeffs final{
         };
     }
     
-    struct [[nodiscard]] Product final{
-        int64_t off;
-        int64_t sens;
-        int32_t temp;
-        int32_t pressure;
-
-        [[nodiscard]] constexpr float pressure_mbar() const noexcept {
-            return static_cast<float>(pressure) / 100.0f;
-        }
-
-        [[nodiscard]] constexpr float temperature_c() const noexcept {
-            return static_cast<float>(temp) / 100.0f;
-        }
-    };
 
     constexpr Product calc_product(const Intermediate intermediate) const noexcept {
         const int64_t off = (static_cast<uint32_t>(c_table[1]) << 16) + 
@@ -111,31 +116,31 @@ static constexpr Osr MS5611_OSR2048 = Osr{0b0011};
 static constexpr Osr MS5611_OSR4096 = Osr{0b0100};
 
 
-using Command = uint8_t;
+using CommandId = uint8_t;
 
 struct [[nodiscard]] CommandFactory{
 
-    static constexpr Command MS5611_COMMAND_RESET                      = Command{0x1E};        /**< reset command */
-    static constexpr Command MS5611_COMMAND_PRESSURE                   = Command{0x40};        /**< d1 convert command */
-    static constexpr Command MS5611_COMMAND_TEMPERATURE                = Command{0x50};        /**< d2 convert command */
-    static constexpr Command MS5611_COMMAND_ADC_READ                   = Command{0x00};        /**< adc read command */
-    static constexpr Command MS5611_COMMAND_PROM_READ_ADDRESS_0        = Command{0xA0};        /**< prom read address 0 command */
+    static constexpr CommandId MS5611_COMMAND_RESET                      = CommandId{0x1E};        /**< reset command */
+    static constexpr CommandId MS5611_COMMAND_PRESSURE                   = CommandId{0x40};        /**< d1 convert command */
+    static constexpr CommandId MS5611_COMMAND_TEMPERATURE                = CommandId{0x50};        /**< d2 convert command */
+    static constexpr CommandId MS5611_COMMAND_ADC_READ                   = CommandId{0x00};        /**< adc read command */
+    static constexpr CommandId MS5611_COMMAND_PROM_READ_ADDRESS_0        = CommandId{0xA0};        /**< prom read address 0 command */
 
-    static constexpr Command adc_read(){return MS5611_COMMAND_ADC_READ;}
+    static constexpr CommandId adc_read(){return MS5611_COMMAND_ADC_READ;}
 
-    static constexpr Command read_prom(const uint8_t addr){
+    static constexpr CommandId read_prom(const uint8_t addr){
         return MS5611_COMMAND_PROM_READ_ADDRESS_0 | ((addr & 0b111) << 1);
     }
 
-    static constexpr Command convert_d1(const Osr osr){
+    static constexpr CommandId convert_d1(const Osr osr){
         return MS5611_COMMAND_PRESSURE | (osr.bits & 0x0f);
     }
 
-    static constexpr Command convert_d2(const Osr osr){
+    static constexpr CommandId convert_d2(const Osr osr){
         return MS5611_COMMAND_TEMPERATURE | (osr.bits & 0x0f);
     }
 
-    static constexpr Command reset(){
+    static constexpr CommandId reset(){
         return MS5611_COMMAND_RESET;
     }
 };
@@ -143,10 +148,10 @@ struct [[nodiscard]] CommandFactory{
 struct [[nodiscard]] CrcBuilder final{
     using Self = CrcBuilder;
 
-    uint16_t n_rem;
-
     static constexpr Self from_default(){
-        return Self{.n_rem = 0};
+        Self self;
+        self.checksum = 0;
+        return self;
     }
 
 
@@ -158,19 +163,37 @@ struct [[nodiscard]] CrcBuilder final{
             const uint16_t rhs = ((byte & 0x8000U) != 0)
                 ? 0x3000 : 0x0000;
 
-            self.n_rem = (self.n_rem << 1) ^ rhs;
+            self.checksum = (self.checksum << 1) ^ rhs;
         }
         return *this;
     }
 
     constexpr uint16_t finalize() const noexcept {
         Self self = *this;
-        self.n_rem = (0x000F & (n_rem >> 12));                                /* get rem */
-        self.n_rem ^= 0x00;  
-        return self.n_rem;
+        self.checksum = (0x000F & (checksum >> 12));                                /* get rem */
+        self.checksum ^= 0x00;  
+        return self.checksum;
     }
+
+private:
+    uint16_t checksum;
 };
 
+
+enum class [[nodiscard]] Error_Kind{
+    ChipIdMismatch,
+    NoPressure
 };
+
+DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+
+};
+
+
+
 
 }

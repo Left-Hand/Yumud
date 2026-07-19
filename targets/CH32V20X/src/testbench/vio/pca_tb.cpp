@@ -6,7 +6,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/vio/PCA9685/pca9685.hpp"
+#include "drivers/ioexpand/PCA9685/pca9685.hpp"
 
 using namespace ymd;
 
@@ -15,36 +15,6 @@ using namespace ymd::drivers;
 #define SCL_PIN hal::PD<2>()
 #define SDA_PIN hal::PC<12>()
 
-// class PCA9685Channel final{
-// public:
-//     PCA9685Channel(PCA9685 & pca, const Nth nth):
-//         pca_(pca), nth_(nth){;}
-    
-//     PCA9685Channel(const PCA9685Channel & other) = delete;
-//     PCA9685Channel(PCA9685Channel && other) = delete;
-    
-
-//     friend class PCA9685;
-
-//     void set_dutycycle(const iq16 dutycycle){
-//         pca_.set_pwm(nth_, 0, uint16_t(dutycycle << 12)).unwrap();
-//     }
-//     __fast_inline void set() {this->set_dutycycle(iq16(1));}
-//     __fast_inline void clr() {this->set_dutycycle(iq16(0));}
-//     __fast_inline void write(const BoolLevel val){
-//         this->set_dutycycle(iq16(int(val.to_bool())));
-//     }
-
-//     BoolLevel read() const;
-
-//     __fast_inline Nth nth() const noexcept {return nth_;}
-
-//     void set_mode(const hal::GpioMode mode){}
-// private:
-//     PCA9685 & pca_;
-//     Nth nth_;
-
-// };
 
 void pca_tb(OutputStream & logger){
     auto scl_pin_ = SCL_PIN;
@@ -58,7 +28,7 @@ void pca_tb(OutputStream & logger){
     PCA9685 pca{&i2c};
     pca.init({
         .freq = servo_freq, 
-        .trim = 1.09_r
+        .trim = 1.09_iq16
     }).unwrap();
 
     // auto pwm1 = PCA9685Channel(pca, 0_nth);

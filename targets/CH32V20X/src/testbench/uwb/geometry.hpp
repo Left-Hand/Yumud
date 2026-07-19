@@ -1,11 +1,11 @@
 #pragma once
 
-#include "algebra/vectors/vec2.hpp"
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/polar.hpp"
-#include "algebra/vectors/spherical_coordinates.hpp"
-#include "algebra/shapes/circle2.hpp"
-#include "algebra/regions/ray2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/polar.hpp"
+#include "middlewares/algebra/vectors/spherical_coordinates.hpp"
+#include "middlewares/algebra/shapes/circle2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
 
 namespace ymd::geometry { 
 

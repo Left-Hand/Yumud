@@ -87,7 +87,7 @@ IResult<uint32_t> _parse_dual_char(const char c1, const char c2){
 
 
 [[nodiscard]] static constexpr 
-IResult<hal::CanStdId> parse_std_id(const StringView str){
+IResult<hal::CanStdId> _parse_std_id(const StringView str){
     if(str.length() == 0)
         RAISE_ERR(Error::NoArg);
 
@@ -194,7 +194,7 @@ IResult<uint32_t> _parse_id_u32(const StringView str){
         return _parse_ext_id(str).
             map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
     } else {
-        return parse_std_id(str).
+        return _parse_std_id(str).
             map([](const hal::CanStdId id) -> uint32_t{return id.to_u11();}); 
     }
 };
@@ -426,10 +426,10 @@ namespace{
 static_assert(parse_payload("11x", 1).unwrap_err() == Error::OddPayloadLength);
 static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
 static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
-static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
-static_assert(parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
-static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
-static_assert(parse_std_id("9sc").unwrap_err() == Error::InvalidCharInHex);
+static_assert(_parse_std_id("123").unwrap().to_u11() == 0x123);
+static_assert(_parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
+static_assert(_parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
+static_assert(_parse_std_id("9sc").unwrap_err() == Error::InvalidCharInHex);
 
 // Additional tests for hex conversion functions
 static_assert(_char2digit('0').unwrap() == 0);

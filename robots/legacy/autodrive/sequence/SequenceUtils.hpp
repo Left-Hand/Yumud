@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "algebra/regions/ray2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
 
 namespace ymd::robots{
 

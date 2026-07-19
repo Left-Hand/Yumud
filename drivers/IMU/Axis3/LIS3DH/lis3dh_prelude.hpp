@@ -42,14 +42,14 @@ struct LIS3DH_Prelude{
 
 struct LIS3DH_Regset:public LIS3DH_Prelude{
 
-    struct R8_WhoAmI:public Reg8<>{
+    struct R8_WhoAmI:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0F}; 
         static constexpr uint8_t KEY = 0x11;
         uint8_t data;
     };
 
 
-    struct R8_Ctrl1:public Reg8<>{
+    struct R8_Ctrl1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x20};
         uint8_t bdu:1;
         uint8_t drdy_pulse:1;
@@ -60,7 +60,7 @@ struct LIS3DH_Regset:public LIS3DH_Prelude{
         uint8_t norm_mod_en:1;
     }DEF_R8(ctrl1_reg)
 
-    struct _R8_Int1Ctrl:public Reg8<>{
+    struct _R8_Int1Ctrl:public Reg8{
 
         uint8_t __resv__:2;
         uint8_t int_ext:1;
@@ -78,7 +78,7 @@ struct LIS3DH_Regset:public LIS3DH_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x22};
     }DEF_R8(int2_ctrl_reg)
 
-    struct R8_Ctrl4:public Reg8<>{
+    struct R8_Ctrl4:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x23};
         
         uint8_t __resv__:1;
@@ -90,7 +90,7 @@ struct LIS3DH_Regset:public LIS3DH_Prelude{
         uint8_t dsp_lp_type:1;
     }DEF_R8(ctrl4_reg)
 
-    struct R8_Ctrl5:public Reg8<>{
+    struct R8_Ctrl5:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x24};
         uint8_t fifo_spi_hs_on:1;
         uint8_t __resv__:7;
@@ -98,7 +98,7 @@ struct LIS3DH_Regset:public LIS3DH_Prelude{
 
     REG16_QUICK_DEF(0x25, R16_OutTemp, out_temp_reg)
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x27};
         uint8_t x_drdy:1;
         uint8_t y_drdy:1;
@@ -114,13 +114,13 @@ struct LIS3DH_Regset:public LIS3DH_Prelude{
     REG16_QUICK_DEF(0x2A, R16_OutY, out_y_reg)
     REG16_QUICK_DEF(0x2C, R16_OutZ, out_z_reg)
 
-    struct R8_FifoCtrl:public Reg8<>{
+    struct R8_FifoCtrl:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x2E};
         uint8_t fifo_threshold:5;
         uint8_t fifo_mode:3;
     }DEF_R8(fifo_ctrl_reg)
 
-    struct R8_FifoSrc:public Reg8<>{
+    struct R8_FifoSrc:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x27};
         uint8_t fss:6;
         uint8_t ovrn:1;

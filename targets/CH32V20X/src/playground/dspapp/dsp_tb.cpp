@@ -333,19 +333,19 @@ void dsp_main(){
     auto sig_in = [](const iq16 t){
         // return math::sinpu(75 * t);
         // return math::sinpu(15 * t);
-        return iq16(math::frac(75 * t)) * 0.2_r;
+        return iq16(math::frac(75 * t)) * 0.2_iq16;
     };
 
     #endif
 
     // auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
     auto && bpf = make_butterworth_bandpass<iq16, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
-    // auto && sig_proc = make_tunning_filter<T>(1.0_r);
+    // auto && sig_proc = make_tunning_filter<T>(1.0_iq16);
 
     static constexpr size_t BUFFER_SIZE = 512;
     auto buffer = std::vector<iq16>(BUFFER_SIZE);
     auto && allpass = dsp::CombAllpass<iq16>(std::span(buffer));
-    allpass.set_delay_ticks(10.6_r);
+    allpass.set_delay_ticks(10.6_iq16);
     auto && sig_proc = [&](const iq16 t){
         const auto bpf_out = bpf(t);
         return allpass(bpf_out);

@@ -2,7 +2,6 @@
 
 #include <initializer_list>
 #include "hal/sysmisc/nvic/nvic.hpp"
-#include "channels/injected_channel.hpp"
 #include "adc_utils.hpp"
 
 #if defined(ADC1_PRESENT) || defined(ADC2_PRESENT)
@@ -21,55 +20,6 @@ class DmaChannel;
 struct Adc_Prelude{
     using Callback = std::function<void(AdcEvent)>;
 
-    struct CTLR1{
-        uint32_t AWDCH:5;
-        uint32_t EOCIE:1;
-        uint32_t AWDIE:1;
-        uint32_t JEOCIE:1;
-
-        uint32_t SCAN:1;
-        uint32_t AWDSGL:1;
-        uint32_t JAUTO:1;
-        uint32_t DISCEN:1;
-        uint32_t JDISCEN:1;
-        uint32_t DISCNUM:3;
-
-        uint32_t DUALMOD:4;
-        uint32_t __RESV1__:2;
-        uint32_t JAWDEN:1;
-        uint32_t AWDEN:1;
-
-        uint32_t TKENABLE:1;
-        uint32_t TKITUNE:1;
-        uint32_t BUFEN:1;
-        uint32_t PGA:2;
-        uint32_t __RESV2__:3;
-    };
-
-
-    struct CTLR2{
-        uint32_t ADON:1;
-        uint32_t CONT:1;
-        uint32_t CAL:1;
-        uint32_t RSTCAL:1;
-        uint32_t __RESV1__:4;
-
-        uint32_t DMA:1;
-        uint32_t __RESV2__:2;
-        uint32_t ALIGN:1;
-        uint32_t JEXTSEL:3;
-        uint32_t JEXTTRIG:1;
-
-        uint32_t __RESV3__:1;
-        uint32_t EXTSEL:3;
-        uint32_t EXTTRIG:1;
-        uint32_t JSWSTART:1;
-        uint32_t SWSTART:1;
-        uint32_t TSVREFE:1;
-
-        uint32_t __RESV4__:8;
-    };
-
 
     using Pga = AdcPga;
     using RegularTrigger = AdcRegularTrigger;
@@ -86,7 +36,7 @@ struct [[nodiscard]] AdcChannelConfig{
     using SampleCycles = AdcSampleCycles;
 
     ChannelSelection ch_sel;
-    SampleCycles cycles;
+    SampleCycles sample_cycles;
 };
 
 struct AdcIrqHandler{
@@ -97,14 +47,7 @@ struct AdcIrqHandler{
 class AdcPrimary: public Adc_Prelude{
 public:
     explicit AdcPrimary(void * inst):
-        inst_(inst),
-        injected_channels_{
-            AdcInjectedChannel(inst_, 1),
-            AdcInjectedChannel(inst_, 2),
-            AdcInjectedChannel(inst_, 3),
-            AdcInjectedChannel(inst_, 4)
-        }{;}
-
+        p_inst_(inst){;}
 
     struct Config{
         Mode mode = Mode::Independent;
@@ -114,12 +57,6 @@ public:
         const std::initializer_list<AdcChannelConfig> & regular_list,
         const std::initializer_list<AdcChannelConfig> & injected_list, 
         const Config & cfg);
-
-    template<size_t I>
-    requires ((I >= 1) and (I <= 4))
-    AdcInjectedChannel & inj(){
-        return injected_channels_[I - 1];
-    }
 
 
     void set_regular_channels(const std::initializer_list<AdcChannelConfig> & regular_list);
@@ -172,39 +109,24 @@ public:
 
     void sw_start_injected(const bool force = false);
 
-    [[nodiscard]] bool is_regular_idle();
-
-    [[nodiscard]] bool is_injected_idle();
-
-    [[nodiscard]] bool is_idle();
-
     void enable_dma(const Enable en);
 
-    uint16_t get_conv_result();
+    uint16_t regular_conv_result();
+    uint16_t injected_conv_result(const size_t rank);
 
 protected:
-    void * inst_;
+    void * p_inst_;
     Callback event_callback_;
 
     bool left_aligned_ = false;
 
-    int16_t cali_data_;
-
-    uint8_t num_regular_ = 0;
-    uint8_t num_injected_ = 0;
-
-    AdcInjectedChannel injected_channels_[4];
-
+    uint16_t cali_data_;
 
     [[nodiscard]] uint32_t get_max_value() const noexcept {
         // return ((1 << 12) - 1) << (left_aligned_ ? 4 : 4);
         if(left_aligned_) return 0xFFFF;
         else return 0x0FFF;
     }
-
-    void set_regular_count(const uint8_t cnt);
-
-    void set_injected_count(const uint8_t cnt);
 
     void set_regular_sample_cycles(const ChannelSelection sel, const SampleCycles sample_cycles);
     void enable_singleshot(const Enable en);
@@ -238,8 +160,8 @@ protected:
 };
 
 
-struct [[nodiscard]] TemperatureCompensator final{ 
-    using Self = TemperatureCompensator;
+struct [[nodiscard]] TemperatureTrimer final{ 
+    using Self = TemperatureTrimer;
 
     static constexpr uintptr_t REFER_VOLT_BASE = 0x1FFFF720;
     static constexpr float COEFF1 = (-3300.0 * 10 / 4096 / 43);
@@ -258,7 +180,7 @@ struct [[nodiscard]] TemperatureCompensator final{
         };
     }
     
-    constexpr iq16 comp_u12(const uint16_t x) const noexcept {
+    constexpr iq16 parse_u12(const uint16_t x) const noexcept {
         constexpr uint16_t K = static_cast<uint16_t>(-COEFF1 * 65536);
         return iq16::from_bits(b.to_bits() - (K * x)); 
     }

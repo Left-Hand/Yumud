@@ -67,18 +67,18 @@ struct [[nodiscard]] alignas(4) IqLnIntermediate final{
 
     template<size_t Q>
     __attribute__((always_inline, const, optimize( "-Ofast" )))
-    constexpr int32_t into_bits() const noexcept {
-        int32_t iq_n_result = iq30_result >> (30 - Q);
+    constexpr int32_t into_bits(this Self self) noexcept {
+        int32_t iq_n_result = self.iq30_result >> (30 - Q);
         /*
         * Add exp * ln(2) to the iqN result. This will never saturate since we
         * check for the minimum value at the start of the function. Negative
         * exponents require seperate handling to allow for an extra bit with the
         * unsigned data type.
         */
-        if (exp > 0) {
-            iq_n_result += intrinsics::mul32hu(UQ32_LN2, ((int32_t)exp << Q));
+        if (self.exp > 0) {
+            iq_n_result += intrinsics::mul32hu(UQ32_LN2, ((int32_t)self.exp << Q));
         } else {
-            iq_n_result -= intrinsics::mul32hu(UQ32_LN2, (((uint32_t) - exp) << Q));
+            iq_n_result -= intrinsics::mul32hu(UQ32_LN2, (((uint32_t) - self.exp) << Q));
         }
 
         return iq_n_result;

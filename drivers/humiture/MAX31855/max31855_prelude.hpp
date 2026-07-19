@@ -48,7 +48,11 @@ struct MAX31855_Prelude{
 
     static_assert(sizeof(MAX31855_Packet) == 4);
 
-    using IResult = Result<MAX31855_Packet, hal::HalError>;
+
+    using Error = hal::HalError;
+
+    template<typename T>
+    using IResult = Result<T, Error>;
 };
 
 

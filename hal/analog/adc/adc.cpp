@@ -14,23 +14,93 @@ using namespace ymd::hal;
 #define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, ADC_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::ADC_Def)>(x))
 
+// #define ADC_ASSERT(cond, ...) if(bool(cond) == false) PANIC{__VA_ARGS__};
+#define ADC_ASSERT(cond, ...)
+
+static constexpr size_t MAX_REGULAR_CHANNELS = 16;
+static constexpr size_t MAX_INJECTED_CHANNELS = 4;
+
+using CTLR1 = ral::R32_ADC_CTLR1;
+using CTLR2 = ral::R32_ADC_CTLR2;
+
+void adc_set_regular_trigger(void * p_inst, const AdcRegularTrigger trigger){
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
+    tempreg.EXTSEL = static_cast<uint8_t>(trigger);
+    tempreg.EXTTRIG = (trigger != AdcRegularTrigger::SOFT);
+    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+}
+
+void adc_set_injected_trigger(void * p_inst, const AdcInjectedTrigger trigger){
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst)->CTLR2);
+    tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
+    tempreg.JEXTTRIG = (trigger != AdcInjectedTrigger::SOFT);
+    SPL_INST(p_inst)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+}
+
+
+void adc_set_regular_count(void * p_inst, const uint8_t count){
+    ADC_ASSERT(count <= MAX_REGULAR_CHANNELS);
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR1>(SPL_INST(p_inst)->CTLR1);
+    tempreg.DISCNUM = count - 1;
+    SPL_INST(p_inst)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
+}
+
+void adc_set_injected_count(void * p_inst, const uint8_t count){
+    ADC_ASSERT(count <= MAX_INJECTED_CHANNELS);
+    auto tempreg = std::bit_cast<ral::R32_ADC_ISQR>(SPL_INST(p_inst)->ISQR);
+    tempreg.JL = count - 1;
+    SPL_INST(p_inst)->ISQR = std::bit_cast<uint32_t>(tempreg);
+}
+
+
+
+void adc_configure_regular_channel(void * p_inst, const size_t rank, const AdcChannelConfig & cfg){
+    ADC_ASSERT(rank != 0);
+    ADC_ASSERT(rank <= MAX_REGULAR_CHANNELS);
+
+    #if 1
+    ADC_RegularChannelConfig(
+        SPL_INST(p_inst),
+        static_cast<uint8_t>(cfg.ch_sel),
+        rank,
+        static_cast<uint8_t>(cfg.sample_cycles)
+    );
+    #else
+
+    uint8_t ch = std::bit_cast<uint8_t>(cfg.ch_sel);
+    uint8_t offset = ((ch > 10) ? ch - 10 : ch) * 3;
+    volatile uint32_t & reg = ((ch > 10) ? SPL_INST(p_inst)->SAMPTR2 : SPL_INST(p_inst)->SAMPTR1);
+
+    auto convert_mask = [&](uint32_t tempreg) -> uint32_t {
+        tempreg &= ~(uint32_t(0b111 << offset));
+        tempreg |= (std::bit_cast<uint8_t>(cfg.sample_cycles) << offset);
+        return tempreg;
+    };
+
+    reg = convert_mask(static_cast<uint32_t>(reg));
+    #endif
+}
+
+void adc_configure_injected_channel(void * p_inst, const size_t rank, const AdcChannelConfig & cfg){
+    ADC_ASSERT(rank != 0, rank);
+    ADC_ASSERT(rank <= MAX_INJECTED_CHANNELS, rank);
+
+    ADC_InjectedChannelConfig(
+        SPL_INST(p_inst),
+        static_cast<uint8_t>(cfg.ch_sel),
+        rank,
+        static_cast<uint8_t>(cfg.sample_cycles)
+    );
+}
 
 void AdcPrimary::set_regular_channels(
     const std::initializer_list<AdcChannelConfig> & regular_list
 ){ 
-    set_regular_count(regular_list.size());
-    uint8_t i = 0;
-    for(const auto & regular_cfg : regular_list){
-        i++;
-        ADC_RegularChannelConfig(
-            SPL_INST(inst_),
-            static_cast<uint8_t>(regular_cfg.ch_sel),
-            i,
-            static_cast<uint8_t>(regular_cfg.cycles)
-        );
+    adc_set_regular_count(p_inst_, regular_list.size());
+    for(size_t i = 0; i < regular_list.size(); i++){
+        auto & regular_cfg = regular_list.begin()[i];
+        adc_configure_regular_channel(p_inst_, i + 1, regular_cfg);
         adc::details::install_pin(regular_cfg.ch_sel);
-
-        if(i > 16) break;
     }
 }
 
@@ -38,31 +108,25 @@ void AdcPrimary::set_regular_channels(
 void AdcPrimary::set_injected_channels(
     const std::initializer_list<AdcChannelConfig> & injected_list
 ){
-    {
-        set_injected_count(injected_list.size());
-        uint8_t i = 0;
-        for(const auto & injected_cfg : injected_list){
-            i++;
+    adc_set_injected_count(p_inst_, injected_list.size());
+    // uint8_t idx = 0;
+    for(size_t i = 0; i < injected_list.size(); i++){
+        const auto & injected_cfg  = injected_list.begin()[i];
 
-            ADC_InjectedChannelConfig(
-                SPL_INST(inst_),
-                static_cast<uint8_t>(injected_cfg.ch_sel),
-                i,
-                static_cast<uint8_t>(injected_cfg.cycles));
+        adc_configure_injected_channel(p_inst_, i + 1, injected_cfg);
 
-            ADC_SetInjectedOffset(
-                SPL_INST(inst_), 
-                ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),
-                
-                // offset can`t be negative
-                static_cast<uint16_t>(std::max<int>(cali_data_, 0))
-            ); 
-            adc::details::install_pin(injected_cfg.ch_sel);
-
-            if(i > 4) break;
-        }
+        ADC_SetInjectedOffset(
+            SPL_INST(p_inst_), 
+            ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i),
+            
+            // offset can`t be negative
+            static_cast<uint16_t>(cali_data_)
+        ); 
+        adc::details::install_pin(injected_cfg.ch_sel);
     }
 }
+
+
 void AdcPrimary::init(
     const std::initializer_list<AdcChannelConfig> & regular_list,
     const std::initializer_list<AdcChannelConfig> & injected_list, 
@@ -72,7 +136,7 @@ void AdcPrimary::init(
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);	
-    ADC_DeInit(SPL_INST(inst_));
+    ADC_DeInit(SPL_INST(p_inst_));
 
     const ADC_InitTypeDef ADC_InitStructure = {
         .ADC_Mode = ADC_Mode_Independent,
@@ -85,8 +149,9 @@ void AdcPrimary::init(
         .ADC_Pga = ADC_Pga_1,
     };
 
-    ADC_Init(SPL_INST(inst_), &ADC_InitStructure);
+    ADC_Init(SPL_INST(p_inst_), &ADC_InitStructure);
 
+    #if 0
     bool temp_verf_activation = [&]{
         auto channel_is_temp_or_vref = [](const ChannelSelection ch_sel){
             return ch_sel == ChannelSelection::TEMP or
@@ -102,12 +167,13 @@ void AdcPrimary::init(
         }
         return false;
     }();
+    #endif
 
 
     set_regular_channels(regular_list);
     set_injected_channels(injected_list);
 
-    if(temp_verf_activation) enable_temp_vref(EN);
+    enable_temp_vref(EN);
 
     if(std::max(injected_list.size(), regular_list.size()) > 1){
         enable_scan(EN);  
@@ -116,157 +182,127 @@ void AdcPrimary::init(
     }
 
 
-    ADC_ExternalTrigConvCmd(SPL_INST(inst_), ENABLE);
-    ADC_ExternalTrigInjectedConvCmd(SPL_INST(inst_), ENABLE);
+    ADC_ExternalTrigConvCmd(SPL_INST(p_inst_), ENABLE);
+    ADC_ExternalTrigInjectedConvCmd(SPL_INST(p_inst_), ENABLE);
 
-    ADC_DMACmd(SPL_INST(inst_), DISABLE);
+    ADC_DMACmd(SPL_INST(p_inst_), DISABLE);
     
-    ADC_ClearITPendingBit(SPL_INST(inst_), ADC_IT_JEOC | ADC_IT_AWD | ADC_IT_EOC);
+    ADC_ClearITPendingBit(SPL_INST(p_inst_), ADC_IT_JEOC | ADC_IT_AWD | ADC_IT_EOC);
     
-    ADC_AutoInjectedConvCmd(SPL_INST(inst_), ENABLE);
+    ADC_AutoInjectedConvCmd(SPL_INST(p_inst_), ENABLE);
 
-    ADC_Cmd(SPL_INST(inst_), ENABLE);
+    ADC_Cmd(SPL_INST(p_inst_), ENABLE);
 
     {
-        ADC_BufferCmd(SPL_INST(inst_), DISABLE);
-        ADC_ResetCalibration(SPL_INST(inst_));
-        while(ADC_GetResetCalibrationStatus(SPL_INST(inst_)));
-        ADC_StartCalibration(SPL_INST(inst_));
-        while(ADC_GetCalibrationStatus(SPL_INST(inst_)));
-        cali_data_ = Get_CalibrationValue(SPL_INST(inst_));
+        ADC_BufferCmd(SPL_INST(p_inst_), DISABLE);
+        // ADC_ResetCalibration(SPL_INST(p_inst_));
+        // while(ADC_GetResetCalibrationStatus(SPL_INST(p_inst_)));
+        // ADC_StartCalibration(SPL_INST(p_inst_));
+        // while(ADC_GetCalibrationStatus(SPL_INST(p_inst_)));
+        cali_data_ = Get_CalibrationValue(SPL_INST(p_inst_));
+        ADC_BufferCmd(SPL_INST(p_inst_), ENABLE);
     }
-
-    ADC_BufferCmd(SPL_INST(inst_), ENABLE);
 }
 
 
 void AdcPrimary::set_mode(const Mode mode){
-    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(inst_)->CTLR1);
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR1>(SPL_INST(p_inst_)->CTLR1);
     tempreg.DUALMOD = std::bit_cast<uint8_t>(mode);
-    SPL_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 };
 
 void AdcPrimary::set_pga(const Pga pga){
-    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(inst_)->CTLR1);
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR1>(SPL_INST(p_inst_)->CTLR1);
     tempreg.PGA = std::bit_cast<uint8_t>(pga);
-    SPL_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_continous(const Enable en){
-    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
+    auto tempreg = std::bit_cast<ral::R32_ADC_CTLR2>(SPL_INST(p_inst_)->CTLR2);
     tempreg.CONT = (en == EN);
-    SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
+
+uint16_t AdcPrimary::regular_conv_result(){
+    return SPL_INST(p_inst_)->RDATAR;
+}
+uint16_t AdcPrimary::injected_conv_result(const size_t rank){
+    switch(rank){
+        case 1: return SPL_INST(p_inst_)->IDATAR1;
+        case 2: return SPL_INST(p_inst_)->IDATAR2;
+        case 3: return SPL_INST(p_inst_)->IDATAR3;
+        case 4: return SPL_INST(p_inst_)->IDATAR4;
+    }
+    __builtin_abort();
+}
+
+
+void adc_enable_auto_inject(void * p_inst, const Enable en){
+    ADC_AutoInjectedConvCmd(SPL_INST(p_inst), (en == EN));
+}
 void AdcPrimary::enable_auto_inject(const Enable en){
-    ADC_AutoInjectedConvCmd(SPL_INST(inst_), (en == EN));
+    adc_enable_auto_inject(p_inst_, en);
 }
 
 
 void AdcPrimary::enable_right_align(const Enable en){
-    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
+    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(p_inst_)->CTLR2);
     tempreg.ALIGN = en == DISEN;
-    SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
     left_aligned_ = (en == DISEN);
 }
 
+
+
+
 void AdcPrimary::set_regular_trigger(const RegularTrigger trigger){
-    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
-    tempreg.EXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.EXTTRIG = (trigger != RegularTrigger::SW);
-    SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+    adc_set_regular_trigger(p_inst_, trigger);
 }
 
 void AdcPrimary::set_injected_trigger(const InjectedTrigger trigger){
-    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
-    tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
-    tempreg.JEXTTRIG = (trigger != InjectedTrigger::SW);
-    SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+    adc_set_injected_trigger(p_inst_, trigger);
 }
 
 void AdcPrimary::set_wdt_threshold(const uint16_t low,const uint16_t high){
-    SPL_INST(inst_)->WDLTR = std::clamp<uint32_t>(low, 0u, get_max_value());
-    SPL_INST(inst_)->WDHTR = std::clamp<uint32_t>(high, 0u, get_max_value());
+    SPL_INST(p_inst_)->WDLTR = std::clamp<uint32_t>(low, 0u, get_max_value());
+    SPL_INST(p_inst_)->WDHTR = std::clamp<uint32_t>(high, 0u, get_max_value());
 }
 
 
 
 void AdcPrimary::sw_start_regular(const bool force){
-    if(force) set_regular_trigger(RegularTrigger::SW);
-    ADC_SoftwareStartConvCmd(SPL_INST(inst_), true);
+    if(force) set_regular_trigger(RegularTrigger::SOFT);
+    ADC_SoftwareStartConvCmd(SPL_INST(p_inst_), true);
 }
 
 void AdcPrimary::sw_start_injected(const bool force){
-    if(force) set_injected_trigger(InjectedTrigger::SW);
-    ADC_SoftwareStartInjectedConvCmd(SPL_INST(inst_), true);
-}
-
-[[nodiscard]] bool AdcPrimary::is_regular_idle(){
-    return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
-}
-
-[[nodiscard]] bool AdcPrimary::is_injected_idle(){
-    return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
-}
-
-[[nodiscard]] bool AdcPrimary::is_idle(){
-    return (is_regular_idle() && is_injected_idle());
+    if(force) set_injected_trigger(InjectedTrigger::SOFT);
+    ADC_SoftwareStartInjectedConvCmd(SPL_INST(p_inst_), true);
 }
 
 void AdcPrimary::enable_dma(const Enable en){
-    // ADC_DMACmd(SPL_INST(inst_), (en == EN));
-    RAL_INST(inst_)->CTLR2.DMA = (en == EN);
-}
-
-uint16_t AdcPrimary::get_conv_result(){
-    return SPL_INST(inst_)->RDATAR;
-}
-
-
-void AdcPrimary::set_regular_count(const uint8_t cnt){
-    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(inst_)->CTLR1);
-    tempreg.DISCNUM = cnt;
-    SPL_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-    num_regular_ = cnt;
-}
-
-void AdcPrimary::set_injected_count(const uint8_t cnt){
-    ADC_InjectedSequencerLengthConfig(SPL_INST(inst_), cnt);
-    num_injected_ = cnt;
-}
-
-void AdcPrimary::set_regular_sample_cycles(const ChannelSelection ch_sel,  const SampleCycles sample_cycles){
-    uint8_t ch = std::bit_cast<uint8_t>(ch_sel);
-    uint8_t offset = ((ch > 10) ? ch - 10 : ch) * 3;
-    volatile uint32_t & reg = ((ch > 10) ? SPL_INST(inst_)->SAMPTR2 : SPL_INST(inst_)->SAMPTR1);
-
-    auto convert_mask = [&](uint32_t tempreg) -> uint32_t {
-        tempreg &= ~(uint32_t(0b111 << offset));
-        tempreg |= (std::bit_cast<uint8_t>(sample_cycles) << offset);
-        return tempreg;
-    };
-
-    reg = convert_mask(static_cast<uint32_t>(reg));
+    RAL_INST(p_inst_)->CTLR2.DMA = (en == EN);
 }
 
 void AdcPrimary::enable_singleshot(const Enable en){
-    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(inst_)->CTLR1);
+    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(p_inst_)->CTLR1);
     tempreg.DISCEN = (en == EN);
-    SPL_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_scan(const Enable en){
-    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(inst_)->CTLR1);
+    auto tempreg = std::bit_cast<CTLR1>(SPL_INST(p_inst_)->CTLR1);
     tempreg.SCAN = (en == EN);
-    SPL_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_temp_vref(const Enable en){
-    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(inst_)->CTLR2);
+    auto tempreg = std::bit_cast<CTLR2>(SPL_INST(p_inst_)->CTLR2);
     tempreg.TSVREFE = (en == EN);
-    SPL_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
+    SPL_INST(p_inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::dyn_enable_interrupt(const AdcIT I, const Enable en){
-    ADC_ITConfig(SPL_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
+    ADC_ITConfig(SPL_INST(p_inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }

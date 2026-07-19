@@ -31,13 +31,13 @@ struct IST8310_Regset:public IST8310_Prelude{
     // 在大疆的开发手册中找到了寄存器的手册
 
 
-    struct R8_WhoAmI:public Reg8<>{
+    struct R8_WhoAmI:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         static constexpr uint8_t KEY = 0x10;
         uint8_t bits;
     };
 
-    struct R8_Status1:public Reg8<>{
+    struct R8_Status1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t drdy:1;
@@ -46,7 +46,7 @@ struct IST8310_Regset:public IST8310_Prelude{
     }DEF_R8(status1_reg)
 
     //小端
-    struct R16_AxisX:public Reg16<>{
+    struct R16_AxisX:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         int16_t bits;
@@ -54,7 +54,7 @@ struct IST8310_Regset:public IST8310_Prelude{
 
 
     //小端
-    struct R16_AxisY:public Reg16<>{
+    struct R16_AxisY:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         int16_t bits;
@@ -62,13 +62,13 @@ struct IST8310_Regset:public IST8310_Prelude{
 
     //小端
 
-    struct R16_AxisZ:public Reg16<>{
+    struct R16_AxisZ:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
         int16_t bits;
     }DEF_R16(axis_z_reg)
 
-    struct R8_Status2:public Reg8<>{
+    struct R8_Status2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t __resv__:3;
@@ -76,7 +76,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         uint8_t __resv2__:4;
     }DEF_R8(status2_reg)
 
-    struct R8_Ctrl1:public Reg8<>{
+    struct R8_Ctrl1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
 
         //1:工作 0:休眠
@@ -85,7 +85,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         uint8_t __resv__:6;
     }DEF_R8(ctrl1_reg)
 
-    struct R8_Ctrl2:public Reg8<>{
+    struct R8_Ctrl2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0B};
 
         //1:重启 0:不重启
@@ -96,7 +96,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         uint8_t __resv2__:4;
     }DEF_R8(ctrl2_reg)
 
-    struct R8_SelfTest:public Reg8<>{
+    struct R8_SelfTest:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
         uint8_t __resv__:6;
@@ -107,7 +107,7 @@ struct IST8310_Regset:public IST8310_Prelude{
     }DEF_R8(self_test_reg)
 
 
-    struct R16_Temp:public Reg8<>{
+    struct R16_Temp:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1C};
         
         //TODO 全网找不到温度怎么算
@@ -125,7 +125,7 @@ struct IST8310_Regset:public IST8310_Prelude{
 
     }DEF_R16(temp_reg)
 
-    struct R8_Average:public Reg8<>{
+    struct R8_Average:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
 
         AverageTimes x_and_z_times:3;

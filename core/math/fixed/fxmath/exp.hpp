@@ -8,6 +8,7 @@ namespace ymd::fxmath{
 namespace details{
 
 struct alignas(4) [[nodiscard]] ExpIntermediate final{
+    using Self = ExpIntermediate;
 
     uint32_t uiq32_fractional;
     uint32_t uiqn_integer_result;
@@ -55,7 +56,7 @@ struct alignas(4) [[nodiscard]] ExpIntermediate final{
 
 
     __attribute__((always_inline,  optimize( "-Ofast" )))
-    [[nodiscard]] constexpr uint32_t into_bits() const noexcept {
+    [[nodiscard]] constexpr uint32_t into_bits(this Self self) noexcept {
 
         /*
         * Initialize the coefficient pointer to the Taylor Series iq30 coefficients
@@ -67,7 +68,7 @@ struct alignas(4) [[nodiscard]] ExpIntermediate final{
         uint32_t uiq31_fractional_result = (*piq31_coeffs++);
         /* Compute exp^(uiq31Fractional). */
         for (size_t i = 0; i < EXP_COEFFS_TABLE_SIZE; i++) {
-            uiq31_fractional_result = intrinsics::mul32hu(uiq32_fractional, uiq31_fractional_result);
+            uiq31_fractional_result = intrinsics::mul32hu(self.uiq32_fractional, uiq31_fractional_result);
             uiq31_fractional_result += (piq31_coeffs[i]);
         }
 
@@ -75,7 +76,7 @@ struct alignas(4) [[nodiscard]] ExpIntermediate final{
         * Multiply the integer result in iqN format and the fractional result in
         * iq31 format to obtain the result in iqN format.
         */
-        return intrinsics::mul32hu(uiqn_integer_result, uiq31_fractional_result);
+        return intrinsics::mul32hu(self.uiqn_integer_result, uiq31_fractional_result);
     }
 };
 

@@ -17,7 +17,7 @@
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa.hpp"
 
-#include "algebra/regions/ray2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 #include <random>
 

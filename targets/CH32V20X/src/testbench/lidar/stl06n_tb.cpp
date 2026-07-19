@@ -6,7 +6,6 @@
 #include "core/utils/zero.hpp"
 #include "core/async/timer.hpp"
 
-// #include "core/mem/o1heap/o1heap_alloc.hpp"
 #include "core/mem/o1heap/o1heap_alloc.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/utils/split_iter.hpp"
@@ -18,7 +17,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Proximeter/STL06N/stl06n_lidar.hpp"
+#include "drivers/lidar/STL06N/stl06n_lidar.hpp"
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
@@ -280,7 +279,7 @@ void stl06n_main(){
 
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
                 [](const PackedLidarPoint & a, const PackedLidarPoint & b){ 
-                    return a.distance_code.millis < b.distance_code.millis; });
+                    return a.distance_code.bits < b.distance_code.bits; });
             })
             // | std::views::filter([i = 0](const auto&) mutable { 
             //     return (i++) % 4 == 0; 

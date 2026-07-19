@@ -11,7 +11,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
-#include "algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/errno.hpp"
@@ -195,21 +195,21 @@ struct MLX90393_Prelude{
      */
     static constexpr iq16 TCONV_LUT[8][4] = {
         /* DIG_FILT = 0 */
-        {1.27_r, 1.84_r, 3.00_r, 5.30_r},
+        {1.27_iq16, 1.84_iq16, 3.00_iq16, 5.30_iq16},
         /* DIG_FILT = 1 */
-        {1.46_r, 2.23_r, 3.76_r, 6.84_r},
+        {1.46_iq16, 2.23_iq16, 3.76_iq16, 6.84_iq16},
         /* DIG_FILT = 2 */
-        {1.84_r, 3.00_r, 5.30_r, 9.91_r},
+        {1.84_iq16, 3.00_iq16, 5.30_iq16, 9.91_iq16},
         /* DIG_FILT = 3 */
-        {2.61_r, 4.53_r, 8.37_r, 16.05_r},
+        {2.61_iq16, 4.53_iq16, 8.37_iq16, 16.05_iq16},
         /* DIG_FILT = 4 */
-        {4.15_r, 7.60_r, 14.52_r, 28.34_r},
+        {4.15_iq16, 7.60_iq16, 14.52_iq16, 28.34_iq16},
         /* DIG_FILT = 5 */
-        {7.22_r, 13.75_r, 26.80_r, 52.92_r},
+        {7.22_iq16, 13.75_iq16, 26.80_iq16, 52.92_iq16},
         /* DIG_FILT = 6 */
-        {13.36_r, 26.04_r, 51.38_r, 102.07_r},
+        {13.36_iq16, 26.04_iq16, 51.38_iq16, 102.07_iq16},
         /* DIG_FILT = 7 */
-        {25.65_r, 50.61_r, 100.53_r, 200.37_r},
+        {25.65_iq16, 50.61_iq16, 100.53_iq16, 200.37_iq16},
     };
 
     static constexpr uint32_t get_conv_time_ms(const Filter _dig_filt, OverSampling _osr){
@@ -218,7 +218,7 @@ struct MLX90393_Prelude{
 };
 
 struct MLX90393_Regset:public MLX90393_Prelude{
-    struct R16_Conf1:public Reg16<>{
+    struct R16_Conf1:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         HallConf hall_conf:4;
@@ -228,7 +228,7 @@ struct MLX90393_Regset:public MLX90393_Prelude{
         uint16_t reserved:7;
     }DEF_R16(conf1_reg)
 
-    struct R16_Conf2:public Reg16<>{
+    struct R16_Conf2:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         BurstDataRate burst_datarate:6;
@@ -240,7 +240,7 @@ struct MLX90393_Regset:public MLX90393_Prelude{
         uint16_t trig_int:1;
     }DEF_R16(conf2_reg)
 
-    struct R16_Conf3:public Reg16<>{
+    struct R16_Conf3:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         OverSampling osr:2;
         Filter digit_filter:3;

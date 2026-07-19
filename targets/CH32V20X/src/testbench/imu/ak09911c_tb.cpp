@@ -36,7 +36,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
     auto measure = [&](){
         aku.update().examine();
         const auto dir = aku.read_mag().examine();
-        rotation = rotation.slerp(math::Quat<iq24>::from_direction(dir), 0.05_r);
+        rotation = rotation.slerp(math::Quat<iq24>::from_direction(dir), 0.05_iq16);
     };
 
     auto & timer = hal::timer1;

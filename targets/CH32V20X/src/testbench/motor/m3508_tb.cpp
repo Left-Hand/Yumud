@@ -7,7 +7,7 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/conn/can/hw_singleton.hpp"
 
-#include "algebra/transforms/Basis.hpp"
+#include "middlewares/algebra/transforms/Basis.hpp"
 
 #include "robots/vendor/dji/c620/c620.hpp"
 #include "robots/vendor/dji/dr16/dr16.hpp"

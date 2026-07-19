@@ -1,7 +1,7 @@
 #pragma once
 
-#include "algebra/vectors/complex.hpp"
-#include "algebra/vectors/polar.hpp"
+#include "middlewares/algebra/vectors/complex.hpp"
+#include "middlewares/algebra/vectors/polar.hpp"
 
 namespace ymd::dsp{
 

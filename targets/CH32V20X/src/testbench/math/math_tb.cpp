@@ -10,18 +10,18 @@
 
 #include "hal/conn/sdi/sdi.hpp"
 
-#include "algebra/regions/plane.hpp"
-#include "algebra/regions/aabb.hpp"
-#include "algebra/regions/segment2.hpp"
-#include "algebra/regions/line2.hpp"
-#include "algebra/regions/ray2.hpp"
+#include "middlewares/algebra/regions/plane.hpp"
+#include "middlewares/algebra/regions/aabb.hpp"
+#include "middlewares/algebra/regions/segment2.hpp"
+#include "middlewares/algebra/regions/line2.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
 
-#include "algebra/transforms/transform3d.hpp"
-#include "algebra/transforms/transform2d.hpp"
+#include "middlewares/algebra/transforms/transform3d.hpp"
+#include "middlewares/algebra/transforms/transform2d.hpp"
 
-#include "algebra/shapes/Arc2.hpp"
-#include "algebra/shapes/Bezier2.hpp"
-#include "algebra/regions/perspective_rect.hpp"
+#include "middlewares/algebra/shapes/Arc2.hpp"
+#include "middlewares/algebra/shapes/Bezier2.hpp"
+#include "middlewares/algebra/regions/perspective_rect.hpp"
 
 
 #include "robots/kinematics/scara5_kinematics.hpp"
@@ -113,7 +113,7 @@ void math_main(){
     }, 10000);
 
     while(true){
-        DEBUG_PRINTLN(H, map_uv(H, {0.5_r, 0.5_r}), elapsed, n);
+        DEBUG_PRINTLN(H, map_uv(H, {0.5_iq16, 0.5_iq16}), elapsed, n);
         clock::delay(5ms);
     }
     #endif
@@ -240,18 +240,18 @@ void math_main(){
     print("abc:", line.abc());
     print("angle:", line.orientation);
     print("abs", line.abs());
-    print("dist", line.distance_to(math::Vec2<iq16>{0.5_r, 0.5_r}));
-    print("dist", line.distance_to(math::Vec2<iq16>{0.5_r, 0.4_r}));
+    print("dist", line.distance_to(math::Vec2<iq16>{0.5_iq16, 0.5_iq16}));
+    print("dist", line.distance_to(math::Vec2<iq16>{0.5_iq16, 0.4_iq16}));
     print("intersection", line.intersection(
         Line::from_point_and_angle(
             math::Vec2<iq16>{0,0}, 
-            Angular<iq16>::from_radians(math::atan(iq16(0.3333_r)))
+            Angular<iq16>::from_radians(math::atan(iq16(0.3333_iq16)))
         ),
         0.00001_iq16
     ));
-    print("foot", line.foot_of(math::Vec2<iq16>{0, 0.5_r}));
-    print("mirror", line.mirror(math::Vec2<iq16>{0, 0.5_r}));
-    print("perpendicular", line.perpendicular(math::Vec2<iq16>{0, 0.5_r}));
+    print("foot", line.foot_of(math::Vec2<iq16>{0, 0.5_iq16}));
+    print("mirror", line.mirror(math::Vec2<iq16>{0, 0.5_iq16}));
+    print("perpendicular", line.perpendicular(math::Vec2<iq16>{0, 0.5_iq16}));
     // print("orthogonal_with", line.is_orthogonal_with(
     //     Line::from_point_and_angle(math::Vec2<iq16>{0,0}, Angular<iq16>::QUARTER), 
         // Angular<iq16>::from_turns(iq16(1e-6))));

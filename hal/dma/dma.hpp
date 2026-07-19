@@ -110,7 +110,7 @@ public:
     [[nodiscard]] bool is_transfer_onhalf();
 
 public:
-    void * inst_;
+    void * p_inst_;
     
     const Nth dma_nth_;
     const Nth ch_sel_nth_;
@@ -147,7 +147,7 @@ public:
         const WordSize mem_wordsize, 
         const WordSize periph_wordsize
     ){ 
-        auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
+        auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(p_inst_);
         intrinsics::modify_reg32(&dma_ch->CFGR, [&](auto reg){
             reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
             reg.PSIZE = static_cast<uint8_t>(periph_wordsize);

@@ -8,7 +8,7 @@
 #include "primitive/arithmetic/angular.hpp"
 #include "primitive/can/can_frame.hpp"
 
-#include "algebra/regions/range2.hpp"
+#include "middlewares/algebra/regions/range2.hpp"
 
 
 namespace ymd::robots::zdtmotor{

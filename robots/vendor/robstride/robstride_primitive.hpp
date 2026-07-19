@@ -27,7 +27,7 @@ enum class [[nodiscard]] DeMsgError:uint8_t{
     PayloadNot8Bytes,
 };
 
-enum class [[nodiscard]] Command:uint8_t{
+enum class [[nodiscard]] CommandId:uint8_t{
     GetDeviceId = 0,// 4.1.1@37
     MotionControl = 1,//4.1.2@37
     Feedback = 2,
@@ -138,14 +138,14 @@ struct [[nodiscard]] NodeId final{
 };
 
 
-static constexpr Option<Command> try_into_command(const uint8_t b){ 
+static constexpr Option<CommandId> try_into_command(const uint8_t b){ 
     //TODO
-    return Some(static_cast<Command>(b));
+    return Some(static_cast<CommandId>(b));
 }
 
 struct [[nodiscard]] CanIdFields final{
     using Self = CanIdFields;
-    Command command;
+    CommandId command;
     uint16_t arg1;
     uint8_t arg2;
 

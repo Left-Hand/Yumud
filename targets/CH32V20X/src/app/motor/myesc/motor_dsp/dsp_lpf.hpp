@@ -10,6 +10,13 @@
 // https://zhuanlan.zhihu.com/p/1941084187869282361
 namespace ymd::dsp{
 
+static constexpr size_t TAU_SCALE_SHIFT = 9;
+static constexpr size_t TAU_SCALE_NUM = 3217;
+static constexpr size_t TAU_SCALE_DEN = 1 << TAU_SCALE_SHIFT;
+
+static constexpr size_t INV_TAU_SCALE_SHIFT = 10;
+static constexpr size_t INV_TAU_SCALE_NUM = 163;
+static constexpr size_t INV_TAU_SCALE_DEN = 1 << INV_TAU_SCALE_SHIFT;
 
 static consteval int64_t pow2_to_i64(const long double x, size_t n){
     const uint64_t i = uint64_t(1) << n;
@@ -31,85 +38,123 @@ static constexpr Angular<float> calc_lpf_phaseshift_f32(uint32_t fc, uint32_t f)
 }
 
 
-static constexpr Result<math::fixed<32, uint32_t>, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
-    constexpr size_t SHIFT_BITS = 9;
-    constexpr size_t MAX_FREQ = (1u << (32u - SHIFT_BITS)) / 8;  // div 8 for margin
+static constexpr Result<uq32, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
+    // 计算 alpha = 2π·fc / (fs + 2π·fc)
     
-    // 参数检查
     if(fs == 0) return Err(StringView("fs cannot be zero"));
-    if(fs >= MAX_FREQ) return Err(StringView("fs overflow")); 
-    if(fc >= MAX_FREQ) return Err(StringView("fc overflow"));
     if(fc * 2 >= fs) return Err(StringView("nyquist failed"));
 
-    // 使用安全的乘法，防止中间溢出
-    const uint64_t pow2_32_SHIFT = static_cast<uint64_t>(1) << (32 + SHIFT_BITS);
-    const uint64_t pow2_SHIFT = static_cast<uint64_t>(1) << SHIFT_BITS;
+    const uint32_t num = fc * TAU_SCALE_NUM;     // 2π·fc
+    const uint32_t den = fs * TAU_SCALE_DEN + fc * TAU_SCALE_NUM;  // fs + 2π·fc
     
-    // 计算分子：fs * 2^(32+SHIFT_BITS)
-    const uint64_t num = static_cast<uint64_t>(fs) * pow2_32_SHIFT;
-    
-    // 计算分母：fs * 2^SHIFT_BITS + fc * TAU * 2^SHIFT_BITS
-    const uint64_t fs_term = static_cast<uint64_t>(fs) * pow2_SHIFT;
-    
-    // 确保 TAU 有足够的精度和适当的缩放
-    constexpr uint64_t TAU_SCALED = static_cast<uint64_t>(TAU * (1ull << SHIFT_BITS) + 0.5);
-    const uint64_t fc_term = static_cast<uint64_t>(fc) * TAU_SCALED;
-    
-    const uint64_t den = fs_term + fc_term;
-    
-    // 防止除零
-    if(den == 0) return Err(StringView("denominator is zero"));
-    
-    return Ok(math::fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>(num / den)));
+    const uq32 alpha = uq32::from_bits(num) / uq32::from_bits(den);
+    return Ok(alpha);
 }
 
 
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> lpf_1o(
+    const math::fixed<Q, int32_t> y_prev,  // y[n-1]
+    const math::fixed<Q, int32_t> x,       // x[n]
+    const uq32 alpha
+){
+    return y_prev + (x - y_prev) * alpha;
+}
+
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> leaky_1o(
+    const math::fixed<Q, int32_t> y_prev,  // y[n-1]
+    const math::fixed<Q, int32_t> x,       // x[n]
+    const uq32 alpha
+){
+    return x + (y_prev - x) * alpha;
+}
+
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> lpf_1o_inplace(
+    math::fixed<Q, int32_t> & y_state, 
+    const math::fixed<Q, int32_t> x, 
+    const uq32 alpha
+){
+    y_state = lpf_1o(y_state, x, alpha);
+}
+
+// 一阶HPF滤波函数（非原地）
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> hpf_1o(
+    const math::fixed<Q, int32_t> y_prev,  // y[n-1] 上一时刻输出
+    const math::fixed<Q, int32_t> x,       // x[n] 当前输入
+    const math::fixed<Q, int32_t> x_prev,  // x[n-1] 上一时刻输入
+    const uq32 alpha
+){
+    // 一阶HPF差分方程：y[n] = alpha * (y[n-1] + x[n] - x[n-1])
+    // 或者等价形式：y[n] = alpha * y[n-1] + alpha * (x[n] - x[n-1])
+    // 更常用的形式：y[n] = alpha * (y[n-1] + x[n] - x[n-1])
+    return (y_prev + x - x_prev) * alpha;
+}
+
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> hpf_1o_delta(
+    const math::fixed<Q, int32_t> y_prev,  // y[n-1] 上一时刻输出
+    const math::fixed<Q, int32_t> x_delta, 
+    const uq32 alpha
+){
+    int32_t a = (y_prev + x_delta).to_bits();
+    int32_t h32 = intrinsics::mul32hsu(a, alpha.to_bits());
+    // uint32_t l32 = intrinsics::mul32(a, alpha.to_bits());
+    // return math::fixed<Q, int32_t>::from_bits(h32 + bool(l32 >= 0x8000'0000 ));
+    return math::fixed<Q, int32_t>::from_bits(h32 + 1);
+}
+
+#if 0
+template<size_t Q>
+__always_inline static constexpr math::fixed<Q, int32_t> hpf_1o_delta(
+    const math::fixed<Q, int32_t> y_prev,      // y[n-1]
+    const math::fixed<Q, int32_t> x_delta,   // x[n] - x[n-1]
+    const uq32 alpha                           // 接近1的定点数，例如 0.9999
+) {
+    // 使用 int64_t 作为中间累加器，彻底防止数值溢出
+    int64_t y_prev_raw = static_cast<int64_t>(y_prev.raw());      // 上一时刻输出
+    int64_t alpha_raw = static_cast<int64_t>(alpha.raw());        // 系数
+
+    // 计算差分（此处不要直接截断，用64位保存微小值）
+    int64_t delta_x = x_delta.to_bits();
+
+    // 正确的差分方程： y[n] = alpha * y[n-1] + alpha * (x[n] - x[n-1])
+    // 为了防止 alpha 乘法溢出，先除以 Q 格式的基数（即 2^Q）
+    // 注意：这里的 alpha 是 (0,1) 的小数，乘以 raw 值后再右移 Q 位
+    int64_t term1 = (alpha_raw * y_prev_raw) >> 32;   // alpha * y[n-1]
+    int64_t term2 = (alpha_raw * delta_x) >> 32;      // alpha * (x[n] - x[n-1])
+
+    int64_t y_raw = term1 + term2;
+
+    // --- 关键步骤：抗积分饱和（Anti-windup） ---
+    // 钳位到 int32_t 范围内，防止溢出
+    if (y_raw > INT32_MAX) y_raw = INT32_MAX;
+    if (y_raw < INT32_MIN) y_raw = INT32_MIN;
+
+    // 返回定点数
+    return math::fixed<Q, int32_t>(static_cast<int32_t>(y_raw));
+}
+#endif
+
+// 一阶HPF滤波函数（原地版本，只保存输出状态）
+template<size_t Q>
+static constexpr math::fixed<Q, int32_t> hpf_1o_inplace(
+    math::fixed<Q, int32_t> & y_state,   // y[n-1] 输入上一时刻输出，输出更新为当前时刻输出
+    const math::fixed<Q, int32_t> x,     // x[n] 当前输入
+    const math::fixed<Q, int32_t> x_prev, // x[n-1] 上一时刻输入
+    const uq32 alpha
+){
+    // 计算当前输出并更新状态
+    y_state = hpf_1o(y_state, x, x_prev, alpha);
+    return y_state;
+}
 
 static constexpr Angular<uq32> calc_lpf_phaseshift_uq32(iq16 fc, iq16 f) {
     const auto turns = atan2pu(static_cast<iq16>(f), static_cast<iq16>(fc));
     return Angular<uq32>::from_turns(math::pu_to_uq32(turns));
 }
-
-
-//y[n] = alpha * x[n] + beta * y[n-1]
-template<size_t Q>
-static constexpr math::fixed<Q, int32_t> lpf_1o(
-    const math::fixed<Q, int32_t> x_state, 
-    const math::fixed<Q, int32_t> x_new, 
-    const uq32 alpha
-){
-    const uq32 beta = uq32::from_bits(~alpha.to_bits());
-    using acc_t = std::conditional_t<std::is_signed_v<int32_t>, int64_t, uint64_t>;
-    return math::fixed<Q, int32_t>::from_bits(
-        int32_t((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) >> 32)
-        + int32_t((static_cast<acc_t>(x_state.to_bits()) * beta.to_bits()) >> 32)
-    );
-}
-
-struct Lpf1o{
-    struct Config{
-        uint32_t fs;
-        uint32_t fc;
-
-        constexpr Result<Lpf1o, StringView> try_into_precomputed() const noexcept {
-            // const ((fs) << (9 + 32u)) / ((fs << 9) + static_cast<uint32_t>(TAU * (1u << 9)) * fc);
-            const uq16 num = static_cast<uq16>(fs);
-            const uq16 den = static_cast<uq16>(fs) + static_cast<uq16>(TAU) * static_cast<uq16>(fc);
-            return Ok(Lpf1o{
-                .alpha = static_cast<uq32>(num / den)
-            });
-        }
-    };
-
-    math::fixed<32, uint32_t> alpha;
-
-    template<size_t Q>
-    void iterate(const math::fixed<Q, int32_t> state, const math::fixed<Q, int32_t> input){
-        lpf_1o(state, input, alpha);
-    }
-};
-
-
 
 
 

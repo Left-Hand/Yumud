@@ -7,7 +7,7 @@
 #include "core/clock/clock.hpp"
 
 #include "core/utils/cpp_stl/hive.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 
 #include "hal/conn/uart/hw_singleton.hpp"

@@ -5,7 +5,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
-#include "drivers/encoder/MagEnc/KTH7823/KTH7823.hpp"
+#include "drivers/encoder/magnetic/KTH7823/KTH7823.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -39,8 +39,8 @@ void kth7823_main(){
     };
 
     while(true){
-        mag_enc.update().examine();
-        DEBUG_PRINTLN(mag_enc.read_lap_angle().examine());
+        const auto lap_angle = mag_enc.read_lap_angle().examine();
+        DEBUG_PRINTLN(lap_angle.to_turns());
         clock::delay(10ms);
     }
 }

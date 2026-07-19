@@ -6,128 +6,173 @@
 
 namespace ymd::robots::jvci{
 
+struct FrameFactoryBackend{
+    struct State{
+        NodeId node_id;
+    };
+    
+    static constexpr hal::ClassicCanFrame convert(const hal::ClassicCanFrame & frame){
+        return frame.clone();
+    }
+};
 
-struct [[nodiscard]] CanRequestFrameFactory final{
+template<typename Backend>
+struct [[nodiscard]] CanApiFacade final{
 public:
     using U8X8 = std::array<uint8_t, 8>;
 
-    const NodeId node_id;
+    using State = typename Backend::State;
+
+    State state;
 
 /// ========== 读取方法 ==========
 
     /// 读取电源电压（寄存器0x0004，倍数×10，范围0-100V）
-    constexpr hal::ClassicCanFrame read_power_voltage() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg16, RegAddr::PowerVoltage));
+    constexpr hal::ClassicCanFrame read_power_voltage(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg16, RegAddr::PowerVoltage));
+        return Backend::convert(frame);
     }
 
     /// 读取母线电流（寄存器0x0005，倍数×100，范围±20A）
-    constexpr hal::ClassicCanFrame read_bus_current() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg16, RegAddr::BusCurrent));
+    constexpr hal::ClassicCanFrame read_bus_current(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg16, RegAddr::BusCurrent));
+        return Backend::convert(frame);
     }
 
     /// 读取实时速度（寄存器0x0006，倍数×100，范围±10000rpm）
-    constexpr hal::ClassicCanFrame read_real_speed() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg32, RegAddr::RealSpeedH));
+    constexpr hal::ClassicCanFrame read_real_speed(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg32, RegAddr::RealSpeedH));
+        return Backend::convert(frame);
     }
 
     /// 读取实时位置（寄存器0x0008，倍数×100，范围-11796120°~11796480°）
-    constexpr hal::ClassicCanFrame read_real_position() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg32, RegAddr::RealPositionL));
+    constexpr hal::ClassicCanFrame read_real_position(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg32, RegAddr::RealPositionL));
+        return Backend::convert(frame);
     }
 
     /// 读取驱动器温度（寄存器0x000A，倍数×10，范围0-150°C）
-    constexpr hal::ClassicCanFrame read_driver_temperature() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg16, RegAddr::DriverTemperature));
+    constexpr hal::ClassicCanFrame read_driver_temperature(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg16, RegAddr::DriverTemperature));
+        return Backend::convert(frame);
     }
 
     /// 读取电机温度（寄存器0x000B，倍数×10，范围0-150°C）
-    constexpr hal::ClassicCanFrame read_motor_temperature() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg16, RegAddr::MotorTemperature));
+    constexpr hal::ClassicCanFrame read_motor_temperature(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg16, RegAddr::MotorTemperature));
+        return Backend::convert(frame);
     }
 
     /// 读取错误信息（寄存器0x000C，32bit）
-    constexpr hal::ClassicCanFrame read_error_info() const noexcept {
-        return make_can_frame(make_read_context(Command::ReadReg32, RegAddr::ErrorInfoH));
+    constexpr hal::ClassicCanFrame read_error_info(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_read_context(Command::ReadReg32, RegAddr::ErrorInfoH));
+        return Backend::convert(frame);
     }
 
     /// ========== 写入方法 ==========
 
     /// 设置力矩（寄存器0x0020，倍数×100，范围±100Nm）
-    constexpr hal::ClassicCanFrame set_torque(const TorqueCode code) const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::SetTorque, code));
+    constexpr hal::ClassicCanFrame set_torque(this auto && self, 
+        const TorqueCode code
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::SetTorque, code));
+        return Backend::convert(frame);
     }
 
     /// 设置速度（寄存器0x0022，倍数×100，范围±10000rpm）
-    constexpr hal::ClassicCanFrame set_speed(const SpeedCode code) const noexcept {
-        return make_can_frame(make_write_32_context(RegAddr::SetSpeedH, code));
+    constexpr hal::ClassicCanFrame set_speed(this auto && self, 
+        const SpeedCode code
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_32_context(RegAddr::SetSpeedH, code));
+        return Backend::convert(frame);
     }
 
     /// 设置绝对位置（寄存器0x0023，倍数×100，范围-11796120°~11796480°）
-    constexpr hal::ClassicCanFrame set_absolute_position(const PositionCode code) const noexcept {
-        return make_can_frame(make_write_32_context(RegAddr::SetAbsPositionH, code));
+    constexpr hal::ClassicCanFrame set_absolute_position(this auto && self, 
+        const PositionCode code
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_32_context(RegAddr::SetAbsPositionH, code));
+        return Backend::convert(frame);
     }
 
     /// 设置相对位置（寄存器0x0025，倍数×100，范围-11796120°~11796480°）
-    constexpr hal::ClassicCanFrame set_relative_position(const PositionCode code) const noexcept {
-        return make_can_frame(make_write_32_context(RegAddr::SetRelPositionH, code));
+    constexpr hal::ClassicCanFrame set_relative_position(this auto && self, 
+        const PositionCode code
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_32_context(RegAddr::SetRelPositionH, code));
+        return Backend::convert(frame);
     }
 
     /// 设置低速（寄存器0x0027，倍数×100，范围±300rpm）
-    constexpr hal::ClassicCanFrame set_low_speed(const LowSpeedCode code) const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::SetLowSpeed, code));
+    constexpr hal::ClassicCanFrame set_low_speed(this auto && self, 
+        const LowSpeedCode code
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::SetLowSpeed, code));
+        return Backend::convert(frame);
     }
 
     /// ========== 控制模式与状态 ==========
 
     /// 切换控制模式（寄存器0x0060，范围0-5）
-    constexpr hal::ClassicCanFrame set_control_mode(const ControlMode mode) const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::ControlMode, mode));
+    constexpr hal::ClassicCanFrame set_control_mode(this auto && self, 
+        const ControlMode mode
+    ) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::ControlMode, mode));
+        return Backend::convert(frame);
     }
 
     /// 进入空闲状态（寄存器0x00A0，写入1执行）
-    constexpr hal::ClassicCanFrame idle_state() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::IdleState, uint16_t(1)));
+    constexpr hal::ClassicCanFrame idle_state(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::IdleState, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// ========== 校准与初始化 ==========
 
     /// 校准电机（寄存器0x00A1，写入1执行）
-    constexpr hal::ClassicCanFrame calibrate_motor() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::CalibrateMotor, uint16_t(1)));
+    constexpr hal::ClassicCanFrame calibrate_motor(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::CalibrateMotor, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// 进入闭环（寄存器0x00A2，写入1执行）
-    constexpr hal::ClassicCanFrame enter_close_loop() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::EnterCloseLoop, uint16_t(1)));
+    constexpr hal::ClassicCanFrame enter_close_loop(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::EnterCloseLoop, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// ========== 参数管理 ==========
 
     /// 擦除参数（寄存器0x00A3，写入1执行）
-    constexpr hal::ClassicCanFrame erase_param() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::EraseParam, uint16_t(1)));
+    constexpr hal::ClassicCanFrame erase_param(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::EraseParam, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// 保存参数（寄存器0x00A4，写入1执行）
-    constexpr hal::ClassicCanFrame save_param() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::SaveParam, uint16_t(1)));
+    constexpr hal::ClassicCanFrame save_param(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::SaveParam, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// 重启驱动器（寄存器0x00A5，写入1执行，重启约1.5秒）
-    constexpr hal::ClassicCanFrame restart_driver() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::RestartDriver, uint16_t(1)));
+    constexpr hal::ClassicCanFrame restart_driver(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::RestartDriver, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// ========== 原点设置 ==========
 
     /// 设置原点（寄存器0x00A6，写入1执行，保存偏置角并重启）
-    constexpr hal::ClassicCanFrame set_origin() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::SetOrigin, uint16_t(1)));
+    constexpr hal::ClassicCanFrame set_origin(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::SetOrigin, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// 设置临时原点（寄存器0x00A7，写入1执行，立即执行不保存）
-    constexpr hal::ClassicCanFrame set_temp_origin() const noexcept {
-        return make_can_frame(make_write_16_context(RegAddr::SetTempOrigin, uint16_t(1)));
+    constexpr hal::ClassicCanFrame set_temp_origin(this auto && self) noexcept {
+        auto frame = self.make_can_frame(make_write_16_context(RegAddr::SetTempOrigin, uint16_t(1)));
+        return Backend::convert(frame);
     }
 
     /// ========== 特殊指令 ==========
@@ -167,7 +212,7 @@ private:
     /// 将缓冲区打包为 CAN 标准帧 直接传值
     constexpr hal::ClassicCanFrame make_can_frame(const U8X8 buf) const noexcept {
         return hal::ClassicCanFrame::from_parts(
-            make_request_canid(node_id),
+            make_request_canid(state.node_id),
             hal::ClassicCanPayload::from_u8x8(buf)
         );
     }
@@ -271,4 +316,7 @@ private:
         return make_write_context(Command::WriteReg32, reg_addr, std::bit_cast<uint32_t>(code));
     }
 };
+
+
+using CanRequestFrameFactory = CanApiFacade<FrameFactoryBackend>;
 }

@@ -35,7 +35,7 @@ class [[nodiscard]] Can final{
 public:
     using BaudRate = CanBaudrate;
     using WiringMode = CanWiringMode;
-    using Error = CanError;
+    using ErrorCode = CanErrorCode;
     using LibError = CanLibError;
 
     using EventCallback = std::function<void(CanEvent)>;
@@ -107,7 +107,7 @@ public:
     [[nodiscard]] uint8_t get_rx_errcnt();
 
     //获取[可能的]发生的错误
-    [[nodiscard]] Option<CanError> last_error();
+    [[nodiscard]] CanErrorCode last_error();
 
     //总线是否已经离线
     [[nodiscard]] bool is_busoff();

@@ -3,7 +3,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/HID/ps2_joystick/ps2_joystick.hpp"
+#include "robots/vendor/misc/ps2_joystick/ps2_joystick.hpp"
 
 #if 0
 

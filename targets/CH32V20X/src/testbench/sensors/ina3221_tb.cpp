@@ -7,7 +7,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Adc/INA3221/ina3221.hpp"
+#include "drivers/shunt/ina3221/ina3221.hpp"
 
 
 using namespace ymd;
@@ -51,7 +51,7 @@ void ina3221_main(){
         ina.update(INA3221::ChannelSelection::CH2).examine();
         ina.update(INA3221::ChannelSelection::CH3).examine();
         DEBUG_PRINTLN(
-            ina.get_bus_volt_code(ch).examine().to_mv(), 
+            ina.get_busbar_volt_code(ch).examine().to_mv(), 
             ina.get_shunt_volt_code(ch).examine().to_volts() * iq16(INV_SHUNT_RES)
         );
         clock::delay(1ms);

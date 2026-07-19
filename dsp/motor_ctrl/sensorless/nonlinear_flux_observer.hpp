@@ -12,7 +12,7 @@ namespace ymd::dsp::motor_ctl{
 class NonlinearFluxObserver final{
 public:
     struct [[nodiscard]] Precomputed final{
-        iq16 phase_resistance;
+        iq16 phase_resistance_ohm;
         iq20 temp1;
         iq12 pm_flux_sqr_mf_2;
         iq16 phase_inductance_mf;
@@ -20,8 +20,8 @@ public:
 
     struct [[nodiscard]] Config final{
         uint32_t fs;
-        iq20 phase_inductance;
-        iq16 phase_resistance;
+        iq20 phase_inductance_mh;
+        iq16 phase_resistance_ohm;
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
 
@@ -29,11 +29,11 @@ public:
             auto & cfg = *this;
             const iq12 pm_flux_sqr_mf_2 = math::square(iq12(cfg.pm_flux_linkage * cfg.fs));
             const iq20 temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
-            const iq16 phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
+            const iq16 phase_inductance_mf = (cfg.phase_inductance_mh * cfg.fs * uq32(1e-3));
             
             
             Precomputed coeffs{
-                .phase_resistance = phase_resistance,
+                .phase_resistance_ohm = phase_resistance_ohm,
                 .temp1 = temp1,
                 .pm_flux_sqr_mf_2 = pm_flux_sqr_mf_2,
                 .phase_inductance_mf = phase_inductance_mf
@@ -44,8 +44,8 @@ public:
 
     struct [[nodiscard]] ConfigF32 final{
         uint32_t fs;
-        float phase_inductance;
-        float phase_resistance;
+        float phase_inductance_mh;
+        float phase_resistance_ohm;
         float observer_gain; // [rad/s]
         float pm_flux_linkage; // [V / (rad/s)]
 
@@ -53,11 +53,11 @@ public:
             auto & cfg = *this;
             const float pm_flux_sqr_mf_2 = math::square((cfg.pm_flux_linkage * cfg.fs));
             const float temp1 = (cfg.observer_gain / pm_flux_sqr_mf_2);
-            const float phase_inductance_mf = (cfg.phase_inductance * cfg.fs);
+            const float phase_inductance_mf = (cfg.phase_inductance_mh * cfg.fs * 1e-3f);
             
             
             Precomputed coeffs;
-            coeffs.phase_resistance = coeffs.phase_resistance.from(phase_resistance);
+            coeffs.phase_resistance_ohm = coeffs.phase_resistance_ohm.from(phase_resistance_ohm);
             coeffs.temp1 = coeffs.temp1.from(temp1);
             coeffs.pm_flux_sqr_mf_2 = coeffs.pm_flux_sqr_mf_2.from(pm_flux_sqr_mf_2);
             coeffs.phase_inductance_mf = coeffs.phase_inductance_mf.from(phase_inductance_mf);
@@ -68,14 +68,14 @@ public:
 
     struct [[nodiscard]] State final{
         std::array<iq16, 2> flux_state_mf;        // [Vs * Fs]
+        std::array<iq16, 2> eta_mf;        // [Vs * Fs]
         std::array<iq16, 2> v_alphabeta_last; // [V]
-        uq32 turns;                   // [rad]
 
         static constexpr State zero() {
             return State{
                 .flux_state_mf = {0, 0},
+                .eta_mf = {0, 0},
                 .v_alphabeta_last = {0, 0},
-                .turns = 0
             };
         }
 
@@ -121,12 +121,12 @@ public:
             static_cast<iq16>((alphabeta_curr)[1]), 
         };
         // alpha-beta vector operations
-        iq16 eta_mf[2];
+        std::array<iq16, 2> eta_mf;
 
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
             // flux dynamics (prediction)
-            iq16 x_dot = -precomputed_.phase_resistance * I_alphabeta[i] + state_.v_alphabeta_last[i];
+            iq16 x_dot = -precomputed_.phase_resistance_ohm * I_alphabeta[i] + state_.v_alphabeta_last[i];
             // integrate prediction to current timestep
             state_.flux_state_mf[i] += x_dot;
 
@@ -156,12 +156,7 @@ public:
         state_.v_alphabeta_last[0] = static_cast<iq16>((alphabeta_volt)[0]);
         state_.v_alphabeta_last[1] = static_cast<iq16>((alphabeta_volt)[1]);
 
-        // phase_ = atan2(eta_mf[1], eta_mf[0]);
-        state_.turns = math::atan2pu(eta_mf[1], eta_mf[0]);
-    }
-
-    constexpr Angular<uq32> angle() const noexcept {
-        return Angular<uq32>::from_turns(state_.turns);
+        state_.eta_mf = eta_mf;
     }
 
     constexpr const State & state() const noexcept {

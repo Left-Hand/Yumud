@@ -32,84 +32,44 @@ public:
             e = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angular<iq20> angle() const noexcept {
-            return e.angle();
+        constexpr Angular<uq32> angle() const noexcept {
+            return Angular<uq32>::from_turns(math::atan2pu(e.beta, e.alpha));
         }
     };
 
-    constexpr explicit LuenbergerObserver(const Config & cfg){
-        reconf(cfg);
-        reset();
-    }
+    struct Coeffs{
+        iq20 Tr_L;
+        iq20 T_L ;
+        iq20 l1T ;
+        iq20 l2T ;
 
-    constexpr void reconf(const Config & cfg){
-        //exp 43
-        auto & self = *this;
-        const auto R = cfg.phase_resistance;
-        const auto L = cfg.phase_inductance;
-        const auto dt = iq20(1) / cfg.fs;
+        static constexpr Coeffs from(const Config & cfg){
+            //exp 43
+            Coeffs self;
+            const auto R = cfg.phase_resistance;
+            const auto L = cfg.phase_inductance;
+            const auto dt = uq32::from_rcp(cfg.fs);
 
-        self.Tr_L = iq20(- dt * R / L);
-        self.T_L  = iq20(dt / L);
-        self.l1T  = iq20(dt * R / L - 2);
-        self.l2T  = iq20(L * cfg.fs);
-    }
+            self.Tr_L = iq20(- R / L) * dt;
+            self.T_L  = iq20(L) * dt;
+            self.l1T  = iq20(R / L) * dt - 2;
+            self.l2T  = iq20(L * cfg.fs);
 
-    constexpr void reset(){
-        state_.reset();
-    }
+            return self;
+        }
+
+        constexpr void iterate(State & state, const State & meas) const noexcept {
+            //exp 43
+    
+            const auto err_i = state.i - meas.i;
+            state.i += Tr_L * state.i + T_L * (meas.e - state.e) + l1T * err_i; 
+            state.e += l2T * err_i;
+        }
+    };
 
 
-    constexpr void update(const State & meas){
-        state_ = iterator_state(meas);
-    }
 
-    constexpr const State & state() const noexcept {
-        return state_;
-    }
-
-public:
-    State state_;
-    iq20 turns_ = 0;
-
-    iq20 Tr_L = 0;
-    iq20 T_L  = 0;
-    iq20 l1T  = 0;
-    iq20 l2T  = 0;
-
-private:
-    constexpr State iterator_state(const State & meas) const noexcept {
-        const auto err_i = state_.i - meas.i;
-        const auto next_i = (1 + Tr_L) * state_.i + T_L * (meas.e - state_.e) + l1T * err_i; 
-        const auto next_e = state_.e + l2T * err_i;
-        return State{next_i, next_e};
-    }
 };
-
-
-// class LesObserver{
-// public:
-//     LesObserver(const uint fc, const iq20 b0, const iq20 wc):
-//         fc_(fc), b0_(b0), wo_(3 * wc){;}
-
-//     void update(const iq20 w_meas, const iq20 qcurr_ref){
-//         const iq20 err = w_hat_ - w_meas;
-
-//         const iq20 last_f_ = f_;
-
-//         w_hat_ += last_f_ - 2 * wo_ * err + b0_ * qcurr_ref / fc_;
-//         f_ += - (wo_ * wo_) * err / fc_;
-//     }
-// private:
-//     uint fc_;
-//     iq20 b0_;
-//     iq20 wo_;
-
-//     iq20 w_hat_ = 0;
-//     iq20 f_ = 0;
-// };
-
-
 
 
 }

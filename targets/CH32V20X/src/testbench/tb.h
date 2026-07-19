@@ -6,7 +6,6 @@ namespace ymd{
 
     class OutputStream;
     class InputStream;
-    class IOStream;
 }
 
 namespace ymd::hal{
@@ -33,9 +32,7 @@ void filter_tb(ymd::OutputStream & logger);
 
 void pmdc_tb();
 
-void lds14_tb(ymd::IOStream & logger,ymd::hal::Uart & uart);
 void gpio_tb(ymd::hal::GpioIntf & gpio);
-// void pca_tb(ymd::IOStream & logger);
 void pca_main();
 void st77xx_tb(ymd::hal::SpiBase & spi);
 
@@ -43,9 +40,6 @@ void joystick_main();
 
 void dma_tb(ymd::OutputStream & logger, ymd::hal::DmaChannel & channel);
 
-void ch9141_tb(ymd::IOStream & logger, ymd::hal::Uart & uart);
-
-void can_tb(ymd::IOStream & logger, ymd::hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 

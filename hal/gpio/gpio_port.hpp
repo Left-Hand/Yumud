@@ -6,12 +6,12 @@
 namespace ymd::hal{
 class GpioPort final: public GpioPortIntf{
 protected:
-    void * inst_;
+    void * p_inst_;
 
     friend class Gpio;
 public:
     GpioPort(void * inst):
-        inst_(inst){;}
+        p_inst_(inst){;}
 
     void init();
     void enable_rcc(const Enable en);

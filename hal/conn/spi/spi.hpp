@@ -33,8 +33,8 @@ public:
     void enable_hw_cs(const Enable en);
 
     [[nodiscard]] __fast_inline HalResult fast_blocking_write(const uint16_t data){
-        while ((inst_->STATR.TXE) == false);
-        inst_->DATAR.DR = data;
+        while ((p_inst_->STATR.TXE) == false);
+        p_inst_->DATAR.DR = data;
 
         return HalResult::Ok();
     }
@@ -49,11 +49,11 @@ public:
     }
     
     [[nodiscard]] __fast_inline uint32_t blocking_transceive(const uint32_t data_tx){
-        while ((inst_->STATR.TXE) == false);
-        inst_->DATAR.DR = data_tx;
+        while ((p_inst_->STATR.TXE) == false);
+        p_inst_->DATAR.DR = data_tx;
 
-        while ((inst_->STATR.RXNE) == false);
-        const uint32_t data_rx = inst_->DATAR.DR;
+        while ((p_inst_->STATR.RXNE) == false);
+        const uint32_t data_rx = p_inst_->DATAR.DR;
         return data_rx;
     }
 
@@ -68,11 +68,11 @@ public:
     }
 
     [[nodiscard]] bool is_busy(){
-        return inst_->STATR.BSY;
+        return p_inst_->STATR.BSY;
     }
 
 private:
-    ral::SPI_Def * inst_ = nullptr;
+    ral::SPI_Def * p_inst_ = nullptr;
     Nth inst_nth_;
     Callback callback_ = nullptr;
     bool hw_cs_enabled_ = false;

@@ -227,7 +227,7 @@ void enum_main(){
         };
 
         static constexpr uint16_t u1 = 10;
-        static constexpr iq10 q1 = 0.1_r;
+        static constexpr iq10 q1 = 0.1_iq16;
         static constexpr auto r1 = func1(u1, q1);
 
         static constexpr auto bytes = tmp::serialize_args_to_bytes(u1, q1);

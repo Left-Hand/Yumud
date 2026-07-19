@@ -104,10 +104,14 @@ uint32_t _ticks_to_nanos(const uint32_t num_ticks){
 
 [[nodiscard]] static __attribute__((always_inline)) constexpr 
 uint32_t _ticks_to_micros(const uint32_t num_ticks){
-
-    constexpr uint32_t MUL_FACTOR = 65536 / TICK_CNTS_PER_US;
-    return (static_cast<uint32_t>((num_ticks * MUL_FACTOR) >> 16));
+    constexpr size_t S = 20;
+    constexpr uint32_t MUL_FACTOR = (1u << S) / TICK_CNTS_PER_US + 1;
+    return (static_cast<uint32_t>((num_ticks * MUL_FACTOR) >> S));
 }
+
+static_assert(_ticks_to_micros(0U) == 0);
+static_assert(_ticks_to_micros(144U) == 1);
+static_assert(_ticks_to_micros(144000U) == 1000);
 
 [[nodiscard]] static
 uint32_t _get_systick_cnt(){

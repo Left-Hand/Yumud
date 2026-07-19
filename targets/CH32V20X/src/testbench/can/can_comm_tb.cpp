@@ -8,15 +8,12 @@
 
 using namespace ymd;
 
-void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
+void can_tb( hal::Can & can, bool is_tx){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
         .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
-
-    hal::PC<13>().outpp();
-    hal::PC<14>().outpp();
 
     {
         const uint32_t id = 0x1314;
@@ -27,13 +24,13 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
 
         // constexpr auto a = sizeof(frame);
         auto payload = frame.payload_bytes();
-        logger.println(id, payload);
+        DEBUG_PRINTLN(id, payload);
 
     }
 
     {
-        iq16 data = 0.09_r;
-        iq16 data2 = 0.99_r;
+        iq16 data = 0.09_iq16;
+        iq16 data2 = 0.99_iq16;
         uint32_t id = 0x5678;
         const auto frame = hal::ClassicCanFrame::from_parts(
             hal::CanExtId::from_bits(id), 
@@ -41,7 +38,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         );
         // frame.load(data);
         // auto read = frame.to_vector();
-        logger.println(id, frame.length(), frame.payload_bytes());
+        DEBUG_PRINTLN(id, frame.length(), frame.payload_bytes());
 
         // auto read2 = frame.to_vector();
         // auto read2 = frame.to_array<8>();
@@ -49,9 +46,9 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             hal::CanExtId::from_bits(id), 
             hal::ClassicCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(data2.to_bits()))
         );
-        logger.println(id, frame2.length(), frame2.payload_bytes());
+        DEBUG_PRINTLN(id, frame2.length(), frame2.payload_bytes());
         for(uint8_t i = 0; i < frame2.length(); i++){
-            logger.println(frame2.payload_bytes()[i]);
+            DEBUG_PRINTLN(frame2.payload_bytes()[i]);
         }
 
         while(true);
@@ -67,7 +64,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             can.try_write(frame).examine();
 
 
-            logger.println("err", 
+            DEBUG_PRINTLN("err", 
                 can.get_tx_errcnt(), 
                 can.get_rx_errcnt(), 
                 can.is_busoff(), 
@@ -78,17 +75,17 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
 
             while(can.available()){
                 hal::ClassicCanFrame frame_r = can.try_read().unwrap().clone();
-                logger.println("rx", frame_r);
+                DEBUG_PRINTLN("rx", frame_r);
             }
 
             cnt++;
             clock::delay(200ms);
             hal::PC<13>().write(~hal::PC<13>().read());
         }else{
-            logger.println("ava", can.available());
+            DEBUG_PRINTLN("ava", can.available());
             while(can.available()){
                 const hal::ClassicCanFrame frame_r = can.try_read().unwrap().clone();
-                logger.println("rx", frame_r);
+                DEBUG_PRINTLN("rx", frame_r);
             }
 
             const auto frame = hal::ClassicCanFrame::from_parts(

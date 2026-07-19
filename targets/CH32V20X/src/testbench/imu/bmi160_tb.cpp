@@ -9,7 +9,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"
 
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 

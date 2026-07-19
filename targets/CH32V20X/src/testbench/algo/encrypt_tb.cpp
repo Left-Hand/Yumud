@@ -10,11 +10,11 @@
 #include "core/utils/Result.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
-#include "algo/encrypt/base64.hpp"
-#include "algo/encrypt/sha256.hpp"
-#include "algo/encrypt/aes.hpp"
-#include "algo/encrypt/lz77.hpp"
-#include "algo/encrypt/curve25519.hpp"
+#include "middlewares/encrypt/base64.hpp"
+#include "middlewares/encrypt/sha256.hpp"
+#include "middlewares/encrypt/aes.hpp"
+#include "middlewares/encrypt/lz77.hpp"
+#include "middlewares/encrypt/curve25519.hpp"
 
 using namespace ymd;
 using namespace ymd::encrypt;

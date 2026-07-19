@@ -63,26 +63,26 @@ struct SC8721_Prelude{
 };
 
 struct SC8721_Regs:public SC8721_Prelude{
-    struct R8_CSO:public Reg8<>{
+    struct R8_CSO:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t cso_set;
     }DEF_R8(cso_reg)
 
-    struct R8_SlopeComp:public Reg8<>{
+    struct R8_SlopeComp:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t slop_comp:1;
         uint8_t __resv1__:7;
     }DEF_R8(slope_comp_reg)
 
-    struct R8_VoutSetMsb:public Reg8<>{//msb
+    struct R8_VoutSetMsb:public Reg8{//msb
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t vout_set_msb;
     }DEF_R8(vout_set_msb_reg)
 
-    struct R8_VoutSetLsb:public Reg8<>{//msb
+    struct R8_VoutSetLsb:public Reg8{//msb
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         uint8_t vout_set_lsb:2;
@@ -92,7 +92,7 @@ struct SC8721_Regs:public SC8721_Prelude{
         uint8_t __resv1__:3;
     }DEF_R8(vout_set_lsb_reg)
 
-    struct R8_GlobalCtrl:public Reg8<>{//msb
+    struct R8_GlobalCtrl:public Reg8{//msb
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         uint8_t __resv1__:1;
@@ -101,7 +101,7 @@ struct SC8721_Regs:public SC8721_Prelude{
         uint8_t __resv2__:5;
     }DEF_R8(global_ctrl_reg)
 
-    struct R8_SysSet:public Reg8<>{//msb
+    struct R8_SysSet:public Reg8{//msb
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         uint8_t __resv1__:4;
@@ -111,14 +111,14 @@ struct SC8721_Regs:public SC8721_Prelude{
         uint8_t en_pwm:1;
     }DEF_R8(sys_set_reg)
 
-    struct R8_FreqSet:public Reg8<>{
+    struct R8_FreqSet:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         uint8_t freq_set:2;
         uint8_t __resv1__:6;
     }DEF_R8(freq_set_reg)
 
-    struct R8_Status1:public Reg8<>{
+    struct R8_Status1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
         uint8_t ocp:1;
@@ -129,7 +129,7 @@ struct SC8721_Regs:public SC8721_Prelude{
         uint8_t vout_short:1;
     }DEF_R8(status1_reg)
 
-    struct R8_Status2:public Reg8<>{
+    struct R8_Status2:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
 
         uint8_t __resv1__:1;

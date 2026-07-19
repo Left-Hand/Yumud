@@ -151,8 +151,6 @@ void svpwm3_main(){
 
     adc.enable_auto_inject(DISEN);
 
-    auto & inj = adc.inj<1>();
-
     auto trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
 
@@ -175,12 +173,12 @@ void svpwm3_main(){
         
         const auto now_secs = clock::seconds() * iq16(5 * TAU);
         const auto [st,ct] = math::sincos(now_secs);
-        const auto [u, v, w] = digipw::SVM({iq16(st) * 0.5_r, iq16(ct) * 0.5_r});
+        const auto [u, v, w] = digipw::SVM({iq16(st) * 0.5_iq16, iq16(ct) * 0.5_iq16});
 
         pwm_u.set_dutycycle(u);
         pwm_v.set_dutycycle(v);
         pwm_w.set_dutycycle(w);
 
-        DEBUG_PRINTLN_IDLE(st, ct, inj.get_perunit());
+        DEBUG_PRINTLN_IDLE(st, ct, hal::adc1.injected_conv_result(1));
     }
 }

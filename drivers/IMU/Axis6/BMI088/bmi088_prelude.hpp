@@ -65,7 +65,7 @@ struct BMI088_AccRegs:public BMI088_Prelude{
 
     REG8_QUICK_DEF(0x01, AccChipId, acc_chipid_reg);
 
-    struct R8_AccErr:public Reg8<>{
+    struct R8_AccErr:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t fatal_err:1;
@@ -74,7 +74,7 @@ struct BMI088_AccRegs:public BMI088_Prelude{
         uint8_t xg_st:3;
     }DEF_R8(acc_err_reg)
 
-    struct R8_AccStatus:public Reg8<>{
+    struct R8_AccStatus:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         const uint8_t __resv__:7;
         uint8_t drdy_acc:1 = 0;
@@ -87,37 +87,37 @@ struct BMI088_AccRegs:public BMI088_Prelude{
     REG8_QUICK_DEF(0x19,  R8_SensorTime1, sensor_t1_reg);
     REG8_QUICK_DEF(0x1A,  R8_SensorTime2, sensor_t2_reg);
 
-    struct R8_AccIntStatus1:public Reg8<>{
+    struct R8_AccIntStatus1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1D};
         const uint8_t __resv__:7 = 0;
         uint8_t acc_drdy:1 = 0;
     }DEF_R8(acc_intstat1_reg)
 
-    struct R8_TempratureMsb:public Reg8<>{
+    struct R8_TempratureMsb:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x22};
         uint8_t bits;
     }DEF_R8(temp_msb_reg)
 
-    struct R8_TempratureLsb:public Reg8<>{
+    struct R8_TempratureLsb:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x23};
         uint8_t bits;
     }DEF_R8(temp_lsb_reg)
 
 
-    struct R8_AccConf:public Reg8<>{
+    struct R8_AccConf:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x40};
 
         uint8_t acc_odr:4;
         uint8_t acc_bwp:4;
     }DEF_R8(acc_conf_reg)
 
-    struct R8_AccFs:public Reg8<>{
+    struct R8_AccFs:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
         uint8_t acc_range:2;
         const uint8_t __resv__:6 = 0;
     }DEF_R8(acc_range_reg)
 
-    struct _R8_IoCtrl:public Reg8<>{
+    struct _R8_IoCtrl:public Reg8{
         uint8_t __resv1__:1;
         uint8_t int_lvl:1;
         uint8_t int_od:1;
@@ -134,7 +134,7 @@ struct BMI088_AccRegs:public BMI088_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x54};
     }DEF_R8(int2_ctrl_reg)
 
-    struct R8_Int1Mapbuf:public Reg8<>{
+    struct R8_Int1Mapbuf:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x56};
         uint8_t __resv1__:2;
         uint8_t int1_drdy:1;
@@ -154,7 +154,7 @@ struct BMI088_GyrRegs:public BMI088_Prelude{
     REG16_QUICK_DEF(0x04, R8_AccYReg, gyr_y_reg);
     REG16_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
     
-    struct R8_GyroIntStatus1:public Reg8<>{
+    struct R8_GyroIntStatus1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
         const uint8_t __resv__:7 = 0;
         uint8_t gyro_drdy:1 = 0;
@@ -166,7 +166,7 @@ struct BMI088_GyrRegs:public BMI088_Prelude{
     REG8_QUICK_DEF(0x14, R8_SoftReset, soft_reset_reg);
     REG8_QUICK_DEF(0x15, R8_GyroIntCtrl, gyro_intctrl_reg);
 
-    struct R8_Int3Int4Conf:public Reg8<>{
+    struct R8_Int3Int4Conf:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x16};
         uint8_t int3_lvl:1;
         uint8_t int3_od:1;
@@ -177,7 +177,7 @@ struct BMI088_GyrRegs:public BMI088_Prelude{
 
     REG8_QUICK_DEF(0x18, R8_Int3Int4IoMap, int34_iomap_reg);
 
-    struct R8_GyroSelfTest:public Reg8<>{
+    struct R8_GyroSelfTest:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x3c};
         uint8_t trig_bist:1;
         uint8_t bist_rdy:1;

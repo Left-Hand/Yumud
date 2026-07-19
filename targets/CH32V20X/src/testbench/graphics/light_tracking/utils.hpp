@@ -5,12 +5,12 @@
 
 #include "types.hpp"
 #include "core/clock/time.hpp"
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 
 static constexpr auto vec3_compMax(auto v) {return MAX(v.x,v.y,v.z);}
 static constexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
 
-static constexpr auto eye     = math::Vec3<iq16>(0.0_r, 1.0_r, 3.5_r);
+static constexpr auto eye     = math::Vec3<iq16>(0.0_iq16, 1.0_iq16, 3.5_iq16);
 
 static constexpr auto lightColor = RGB<iq16>{80, 80, 80};
 
@@ -36,11 +36,11 @@ static constexpr iq16 INV_LCD_H = iq16(1) / LCD_H;
 
 static constexpr size_t max_depth = 2;
 static constexpr size_t spp  = 1;
-static constexpr iq16 inv_spp  = 1.0_r/spp;
+static constexpr iq16 inv_spp  = 1.0_iq16/spp;
 
 
-static constexpr iq16 INV_PI       = 0.318310_r;
-static constexpr iq16 EPSILON      = 0.001_r;
-static constexpr iq16 light_area   = 0.1893_r;
+static constexpr iq16 INV_PI       = 0.318310_iq16;
+static constexpr iq16 EPSILON      = 0.001_iq16;
+static constexpr iq16 light_area   = 0.1893_iq16;
 static constexpr uint alpha       = 45;
 

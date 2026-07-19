@@ -10,11 +10,11 @@
 #include "core/utils/nth.hpp"
 
 
-#include "algebra/regions/ray2.hpp"
-#include "algebra/vectors/vec3.hpp"
-#include "algebra/vectors/quat.hpp"
-#include "algebra/regions/plane.hpp"
-#include "algebra/shapes/sphere.hpp"
+#include "middlewares/algebra/regions/ray2.hpp"
+#include "middlewares/algebra/vectors/vec3.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
+#include "middlewares/algebra/regions/plane.hpp"
+#include "middlewares/algebra/shapes/sphere.hpp"
 
 namespace ymd::robots::kinematics{
 

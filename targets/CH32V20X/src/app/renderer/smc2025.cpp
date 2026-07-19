@@ -13,7 +13,7 @@
 #include "hal/conn/i2c/soft/soft_i2c.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "algebra/vectors/quat.hpp"
+#include "middlewares/algebra/vectors/quat.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 #include "primitive/image/painter/painter.hpp"
@@ -24,7 +24,7 @@
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
-#include "drivers/Display/ST7789/st7789.hpp"
+#include "drivers/displayer/ST7789/st7789.hpp"
 
 #include "render.hpp"
 #include "scenes.hpp"
@@ -267,7 +267,7 @@ void smc2025_main(){
             // .rotation = math::UnitComplex<iq16>::from_radians(now_secs + iq16(1 / TAU) * math::sinpu(now_secs)),
             // .translation = math::Vec2<iq16>(0, -1.5_r) + math::Vec2<iq16>(-1.9_r, 0).rotated(Angular<iq16>::from_radians(now_secs)), 
             .rotation = math::UnitComplex<iq16>::from_angle(yaw_angle),
-            .translation = math::Vec2<iq16>(0, -1.5_r), 
+            .translation = math::Vec2<iq16>(0, -1.5_iq16), 
         };
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
@@ -278,7 +278,7 @@ void smc2025_main(){
         // const auto gray_img = Scenes::render_scene2({pose, 0.07_r});
         const auto gray_img = Scenes::render_scene1({
             .pose = pose, 
-            .zoom = 0.02_r
+            .zoom = 0.02_iq16
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_uticks = clock::micros() - begin_us;

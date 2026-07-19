@@ -10,7 +10,7 @@
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 #include "drivers/Storage/Flash/W25QXX/w25q16.hpp"
 
-#include "algo/random/random_generator.hpp"
+#include "dsp/random/random_generator.hpp"
 
 #include "core/math/real.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"

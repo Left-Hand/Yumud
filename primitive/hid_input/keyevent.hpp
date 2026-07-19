@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "algebra/vectors/vec2.hpp"
+#include "middlewares/algebra/vectors/vec2.hpp"
 
 
 

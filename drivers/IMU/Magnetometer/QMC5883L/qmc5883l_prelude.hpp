@@ -60,7 +60,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         int16_t z;
     };
 
-    struct R8_Status:public Reg8<>{
+    struct R8_Status:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::Status;
 
         uint8_t ready:1;
@@ -69,13 +69,13 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         uint8_t __resv__:5;
     };
 
-    struct R16_Temperature:public Reg16<>{
+    struct R16_Temperature:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr::Tempature;
 
         uint16_t bits;
     };
 
-    struct R8_ConfigA:public Reg8<>{
+    struct R8_ConfigA:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ConfigA;
         uint8_t measure_mode:2;
         Odr odr:2;
@@ -83,7 +83,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         OverSampleRatio ovs_ratio:2;
     };
 
-    struct R8_ConfigB:public Reg8<>{
+    struct R8_ConfigB:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ConfigB;
 
         uint8_t int_en:1;
@@ -93,13 +93,13 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         
     };
 
-    struct R8_ResetPeriod:public Reg8<>{
+    struct R8_ResetPeriod:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ResetPeriod;
 
         uint8_t bits;
     };
 
-    struct R8_ChipId:public Reg8<>{
+    struct R8_ChipId:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr::ChipID;
 
         uint8_t bits;

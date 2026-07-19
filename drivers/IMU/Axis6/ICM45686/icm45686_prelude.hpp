@@ -82,7 +82,7 @@ struct ICM45686_Prelude{
 
 struct ICM45686_Regs:public ICM45686_Prelude{
 
-    struct R8_Int1Config0:public Reg8<>{
+    struct R8_Int1Config0:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x16};
 
         uint8_t en_fifo_full:1;
@@ -95,7 +95,7 @@ struct ICM45686_Regs:public ICM45686_Prelude{
         uint8_t en_reset_done:1;
     };
 
-    struct R8_Int1Config1:public Reg8<>{
+    struct R8_Int1Config1:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
 
         uint8_t en_pll_rdy:1;

@@ -7,7 +7,7 @@
 #include "FFT.hpp"
 
 #include "core/math/realmath.hpp"
-#include "algebra/vectors/complex.hpp"
+#include "middlewares/algebra/vectors/complex.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "func_eval.hpp"
@@ -250,7 +250,7 @@ void fft_main(){
         std::vector<T> ret;
         constexpr auto modu_freq = iq16(8.97) / N;
         constexpr auto carry_freq = iq16(56.97) / N;
-        constexpr auto modu_depth = 0.4_r;
+        constexpr auto modu_depth = 0.4_iq16;
         for(size_t i = 0; i < N; ++i){
             ret.push_back(T(math::sinpu(carry_freq * i) * (1 + modu_depth * math::sinpu(modu_freq * i))));
         }
