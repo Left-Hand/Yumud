@@ -11,7 +11,7 @@
 
 #include "middlewares/algebra/vectors/quat.hpp"
 
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+#include "drivers/imu/BMI160/bmi160.hpp"
 
 using namespace ymd;
 

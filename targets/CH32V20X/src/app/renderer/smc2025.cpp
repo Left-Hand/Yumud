@@ -22,8 +22,8 @@
 #include "middlewares/nvcv2/pixels/pixels.hpp"
 
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
-#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
+#include "drivers/imu/MPU6050/mpu6050.hpp"
+#include "drivers/imu/QMC5883L/qmc5883l.hpp"
 #include "drivers/displayer/ST7789/st7789.hpp"
 
 #include "render.hpp"

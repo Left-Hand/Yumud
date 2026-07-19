@@ -13,7 +13,7 @@
 #include "robots/gesture/mahony.hpp"
 #include "robots/gesture/mag_cali.hpp"
 
-#include "drivers/IMU/Magnetometer/MMC5983/MMC5983.hpp"
+#include "drivers/imu/MMC5983/MMC5983.hpp"
 #include "core/container/heapless_vector.hpp"
 
 
