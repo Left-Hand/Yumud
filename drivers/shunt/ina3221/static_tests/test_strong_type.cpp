@@ -1,4 +1,4 @@
-#include "ina3221.hpp"
+#include "../ina3221.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

@@ -40,11 +40,38 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
+#define DEF_CALC_CAL(sample_res_mohms, max_current_ma)\
+    uint32_t(0.00512 * 32768 * 1000 * 1000) / (sample_res_mohms * max_current_ma)
 
+static constexpr Option<int16_t> calc_cal(
+    const uint32_t sample_res_mohms, 
+    const uint32_t max_current_ma
+){
+    constexpr uint32_t mask = 0x7fff;
+    const uint32_t cal = DEF_CALC_CAL(sample_res_mohms, max_current_ma);
 
-IResult<> INA226::set_average_times(const uint16_t times){
-    return set_average_times(Self::times_to_avtimes(times));
+    if(cal > mask) return None;
+    return Some(int16_t(cal & mask));
 }
+
+[[maybe_unused]] static void test_calc(){
+    #define TEST_CASE(sample_res_mohms, max_current_ma)\
+    {\
+        static constexpr auto flt_val = DEF_CALC_CAL(float(sample_res_mohms), float(max_current_ma));\
+        static constexpr auto int_val = calc_cal(sample_res_mohms, max_current_ma).unwrap();\
+        static_assert(math::abs(flt_val - int_val) < 2.0f);\
+    }\
+
+    TEST_CASE(6, 6000)
+    TEST_CASE(6, 16000)
+    TEST_CASE(1, 16000)
+    TEST_CASE(100, 16000)
+
+    #undef TEST_CASE
+}
+
+#undef DEF_CALC_CAL
+
 
 IResult<> INA226::set_average_times(const AverageTimes times){
     auto reg = RegCopy(regs_.config_reg);
@@ -79,6 +106,8 @@ IResult<> INA226::set_shunt_conversion_time(const ConversionTime time){
 IResult<Self::BusVoltageCode> INA226::get_bus_voltage_code(){
     return Ok(regs_.bus_volt_reg.code);
 }
+
+
 IResult<Self::ShuntVoltageCode> INA226::get_shunt_voltage_code(){
     return Ok(regs_.shunt_volt_reg.code);
 }
@@ -119,26 +148,24 @@ IResult<> INA226::init(const Config & cfg){
         res.is_err()) return res;
     if(const auto res = enable_shunt_voltage_measure(EN);
         res.is_err()) return res;
-    if(const auto res = set_scale(cfg.sample_res_mohms, cfg.max_current_a);
+    if(const auto res = set_scale(cfg.sample_res_mohms, cfg.max_current_ma);
         res.is_err()) return res;
     return Ok();
 }
 
-IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_current_a){
-    INA226_DEBUG(sample_res_mohms, max_current_a);
+
+IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_current_ma){
+    INA226_DEBUG(sample_res_mohms, max_current_ma);
     
-    INA226_ASSERT(max_current_a < (std::numeric_limits<uint32_t>::max() / 1000));
-    uint32_t max_current_ma = uint32_t(max_current_a) * 1000u;
     current_lsb_ma_ = iq16(iq15::from_bits(max_current_ma));
-    // INA226_DEBUG(current_lsb_ma_, sample_res_mohms * max_current_a);
-
-
-    // const uint32_t cal = uint32_t(0.00512 * 32768) / (sample_res_ohms * max_current_ma);
-    const uint32_t cal = uint32_t(0.00512 * 32768 * 1000) / (sample_res_mohms * max_current_a);
-    const uint16_t cal_masked = cal & 0x7fff;
-    INA226_ASSERT(static_cast<uint32_t>(cal_masked) == cal);
 
     {
+        const auto cal = ({
+            const auto may_cal = calc_cal(sample_res_mohms, max_current_ma);
+            if(may_cal.is_none()) return Err(Error::SolveFailed);
+            may_cal.unwrap();
+        });
+
         auto reg = RegCopy(regs_.calibration_reg);
         reg.as_bits_mut() = int16_t(cal);
         if(const auto res = write_reg(reg);
@@ -153,9 +180,13 @@ IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_
 IResult<> INA226::reset(){
     auto reg = RegCopy(regs_.config_reg);
     reg.rst = 1;
-    const auto res = write_reg(reg);
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+
+    // this bit self-clears by hardware after the reset is complete. The reset bit will always read as 0.
     reg.rst = 0;
-    return res;
+    reg.apply();
+    return Ok();
 }
 
 IResult<> INA226::enable_shunt_voltage_measure(const Enable en){
@@ -178,7 +209,7 @@ IResult<> INA226::enable_continuous_measure(const Enable en){
 
 IResult<> INA226::enable_alert_latch(const Enable en){
     auto  reg = RegCopy(regs_.mask_reg);
-    reg.alert_latch_enable = (en == EN);
+    reg.alert_latch_en = (en == EN);
     return write_reg(reg);
 }
 

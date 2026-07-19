@@ -20,7 +20,7 @@ struct INA226_Prelude{
     enum class Error_Kind{
         ChipIdVerifyFailed,
         ManuIdVerifyFailed,
-        ResTooBig
+        SolveFailed
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -205,7 +205,7 @@ struct INA226_Regs:public INA226_Prelude{
     struct R16_Mask:public Reg16{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
-        uint16_t alert_latch_enable:1;
+        uint16_t alert_latch_en:1;
         uint16_t alert_polarity:1;
         uint16_t math_overflow:1;
         uint16_t conv_ready_flag:1;

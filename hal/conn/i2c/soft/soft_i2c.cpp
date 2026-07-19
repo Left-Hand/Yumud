@@ -32,9 +32,9 @@ HalResult SoftI2c::wait_ack(){
     bool ovt = false;
 
     #ifndef SOFT_I2C_DISCARD_ACK
-    const auto m = clock::micros();
+    const auto entry_micros = clock::micros();
     while(sda_pin().read() == HIGH){
-        if(clock::micros() - m >= 
+        if(clock::micros() - entry_micros >= 
         #if SOFT_I2C_TEST_TIMEOUT
             SOFT_I2C_TEST_TIMEOUT
         #else

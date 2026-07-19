@@ -7,12 +7,22 @@ namespace ymd::drivers{
 class INA226 final:public INA226_Prelude{
 public:
     
-    struct Config{
-        const uint32_t average_times = 16;
-        const ConversionTime bus_conv_time = ConversionTime::_140us;
-        const ConversionTime shunt_conv_time = ConversionTime::_140us;
+    struct [[nodiscard]] Config final{
+        const AverageTimes average_times;
+        const ConversionTime bus_conv_time;
+        const ConversionTime shunt_conv_time;
         const uint32_t sample_res_mohms;
-        const uint32_t max_current_a;
+        const uint32_t max_current_ma;
+
+        static constexpr Config from_default(){
+            return Config{
+                .average_times = AverageTimes::_16,
+                .bus_conv_time = ConversionTime::_140us,
+                .shunt_conv_time = ConversionTime::_140us,
+                .sample_res_mohms = 10, // 0.01ohms
+                .max_current_ma = 10 * 1000 // 10A
+            };
+        }
     };
 
 
@@ -34,13 +44,10 @@ public:
 
     IResult<> init(const Config & cfg);
 
-    IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_a);
-
     IResult<> validate();
 
     IResult<> update();
 
-    IResult<> set_average_times(const uint16_t times);
 
     IResult<BusVoltageCode> get_bus_voltage_code();
 
@@ -90,6 +97,8 @@ private:
         reg.apply();
         return Ok();
     }
+
+    IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_amps);
 };
 
 

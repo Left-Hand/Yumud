@@ -873,11 +873,10 @@ void myesc_main(){
             });
             #else
             // ORTEGA
-            // https://zhuanlan.zhihu.com/p/887911569
-
+            
             const auto L_iaib = L * iaib;
-
-            // 反馈增益的设置是定为20000-100000之间调整
+            
+            // https://zhuanlan.zhihu.com/p/887911569 反馈增益的设置是定为20000-100000之间调整
             [[maybe_unused]] constexpr auto gamma_half = 70000;
             constexpr auto gamma_half_dt = uq16(float(gamma_half) / FOC_FREQ);
 
@@ -888,7 +887,6 @@ void myesc_main(){
             auto err = (lambda - abs_lem);
 
             if (err > 0) {
-                // err = err * 0.02_uq32;
                 err = 0;
             }
 
