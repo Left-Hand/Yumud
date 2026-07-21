@@ -48,14 +48,14 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
 
     [[nodiscard]] static constexpr AlphaBetaCoord from_uvw(const UvwCoord<T> & uvw){
         return AlphaBetaCoord{
-            .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
-            .beta = (uvw.v - uvw.w) * _sqrt3_by_3
+            .alpha = (uvw.u - math::mean(uvw.v, uvw.w)) * TWO_BY_3, 
+            .beta = (uvw.v - uvw.w) * SQRT3_BY_3
         };
     };
 
     [[nodiscard]] constexpr UvwCoord<T> to_uvw() const noexcept {
-        const auto half_alpha = (alpha >> 1);
-        const auto half_sqrt3_beta = beta * _sqrt3_by_2;
+        const auto half_alpha = math::mean(alpha, T(0));
+        const auto half_sqrt3_beta = beta * SQRT3_BY_2;
         return UvwCoord<T>{
             .u = alpha,
             .v = ((half_sqrt3_beta) - half_alpha),
@@ -166,9 +166,10 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     }
 
 private:
-    static constexpr uq32 _2_by_3 = static_cast<T>(2.0/3);
-    static constexpr uq32 _sqrt3_by_3 = static_cast<T>(1.73205080757 / 3);
-    static constexpr uq32 _sqrt3_by_2 = static_cast<T>(1.73205080757 / 2);
+    using factor_type = std::conditional_t<tmp::is_fixed_point_v<T>, uq32, T>;
+    static constexpr factor_type TWO_BY_3 = factor_type(2.0/3);
+    static constexpr factor_type SQRT3_BY_3 = factor_type(1.73205080757 / 3);
+    static constexpr factor_type SQRT3_BY_2 = factor_type(1.73205080757 / 2);
 };
 
 template<typename T>
@@ -191,26 +192,28 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaZeroCoord final{
 
     [[nodiscard]] static constexpr AlphaBetaZeroCoord from_uvw(const UvwCoord<T> & uvw){
         return AlphaBetaCoord{
-            .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
-            .beta = (uvw.v - uvw.w) * _sqrt3_by_3,
-            .zero = (uvw.u + uvw.v + uvw.w) * _sqrt2_by_2
+            .alpha = (uvw.u - math::mean(uvw.v, uvw.w)) * TWO_BY_3, 
+            .beta = (uvw.v - uvw.w) * SQRT3_BY_3,
+            .zero = (uvw.u + uvw.v + uvw.w) * SQRT2_BY_2
         };
     };
 
     [[nodiscard]] constexpr UvwCoord<T> to_uvw() const noexcept {
-        const auto zero_sqrt2_by_2 = zero * _sqrt2_by_2;
+        const auto half_alpha = math::mean(alpha, T(0));
+        const auto zero_sqrt2_by_2 = zero * SQRT2_BY_2;
         return UvwCoord<T>{
             .u = alpha + zero_sqrt2_by_2,
-            .v = ((beta * _sqrt3_by_2) + zero_sqrt2_by_2 - (alpha >> 1)),
-            .w = ((-beta * _sqrt3_by_2) + zero_sqrt2_by_2 - (alpha >> 1))
+            .v = ((beta * SQRT3_BY_2) + zero_sqrt2_by_2 - half_alpha),
+            .w = ((-beta * SQRT3_BY_2) + zero_sqrt2_by_2 - half_alpha)
         };
     }
 
 private:
-    static constexpr uq32 _2_by_3 = static_cast<uq32>(2.0/3);
-    static constexpr uq32 _sqrt3_by_3 = static_cast<uq32>(1.73205080757 / 3);
-    static constexpr uq32 _sqrt3_by_2 = static_cast<uq32>(1.73205080757 / 2);
-    static constexpr uq32 _sqrt2_by_2 = static_cast<uq32>(math::sqrt(T(2)) / 2);
+    using factor_type = std::conditional_t<tmp::is_fixed_point_v<T>, uq32, T>;
+    static constexpr factor_type TWO_BY_3 = static_cast<factor_type>(2.0/3);
+    static constexpr factor_type SQRT3_BY_3 = static_cast<factor_type>(1.73205080757 / 3);
+    static constexpr factor_type SQRT3_BY_2 = static_cast<factor_type>(1.73205080757 / 2);
+    static constexpr factor_type SQRT2_BY_2 = static_cast<factor_type>(1.41421356237 / 2);
 };
 
 

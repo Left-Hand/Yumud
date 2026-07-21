@@ -28,9 +28,6 @@
 #include "dsp/controller/adrc/linear/leso2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 
-#include "digipw/SVPWM/svpwm3.hpp"
-#include "digipw/prelude/abdq.hpp"
-
 using namespace ymd;
 
 //电机控制频率
