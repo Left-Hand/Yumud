@@ -233,15 +233,6 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
         return {};
     }
 
-    template<typename U>
-    [[nodiscard]] static constexpr DqCoord from_alphabeta(
-        const AlphaBetaCoord<T> & ab, 
-        const Rotation2<U> rot
-    ){
-        DqCoord self;
-        details::inv_rotate(self, ab, rot);
-        return self;
-    }
 
 
     [[nodiscard]] constexpr T operator [](const size_t idx) const noexcept {

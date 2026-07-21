@@ -18,7 +18,6 @@
 #include "drivers/Proximeter/ALX_AOA/alx_aoa.hpp"
 
 #include "middlewares/algebra/regions/ray2.hpp"
-#include "digipw/SVPWM/svpwm3.hpp"
 #include <random>
 
 using namespace ymd;

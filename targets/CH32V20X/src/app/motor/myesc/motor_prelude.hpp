@@ -24,23 +24,6 @@ enum class [[nodiscard]] MagneticStructure{
 };
 
 
-enum class [[nodiscard]] ElecAngleSource:uint8_t{
-    Openloop = 0,
-    Hall,
-    Hfi,
-    MagEncoder,
-    AbzEncoder
-};
-
-enum class [[nodiscard]] SenlessObserverMethod:uint8_t{
-    Lbg,
-    Smo,
-    NlFlux
-};
-
-enum class [[nodiscard]] HfiMethod:uint8_t{
-    
-};
 
 struct alignas(4) TimerTick{
     // int16_t bits;
@@ -62,28 +45,50 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT1 = 2;
 static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 
 
-static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 120ns;
+// static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 120ns;
 // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 400ns;
 // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 1000ns;
 
-struct FnSwitches{
+enum class [[nodiscard]] HfiMethod:uint8_t{
+    Disabled,
+    Spin,
+    PulseV1,
+    PulseV2
+};
+
+enum class [[nodiscard]] ElecAngleSource:uint8_t{
+    Openloop = 0,
+    // Hall,
+    Observer,
+    Hfi,
+    MagEncoder,
+    AbzEncoder
+};
+
+
+
+
+struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
     uint32_t initial_dc_calibrate_en : 1;
-    uint32_t initial_encoder_dirtest_en : 1;
-    uint32_t initial_tone_music : 1;
-    uint32_t res_temp_compensate_source : 2;
+
+    uint32_t res_temperature_source : 2;
+    uint32_t fet_temperature_source : 2;
     uint32_t deadtime_compensate_en : 1;
+    uint32_t harmonic_suppression_en : 1;
+
     uint32_t cross_decoupling_en : 1;
     uint32_t bemf_decoupling_en : 1;
 
-    uint32_t hfi_en : 1;
+
     uint32_t flux_observer_en : 1;
 
-    uint32_t fet_temperature_sensor_equipped : 1;
-    uint32_t rotor_temperature_sensor_equipped : 1;
-    uint32_t busbar_voltage_sensor_equipped : 1;
-    uint32_t busbar_current_sensor_equipped : 1;
+    uint32_t mtpa_en : 1;
+    uint32_t mtpv_en : 1;
+
+    HfiMethod hfi_method:3;
+    ElecAngleSource elec_angle_source : 3;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -97,7 +102,7 @@ struct FnSwitches{
 };
 
 
-struct OpFlags{
+struct alignas(4) [[nodiscard]] OpFlags{
     using Self = OpFlags;
 
 
@@ -151,8 +156,8 @@ struct alignas(4) [[nodiscard]] DebounceState final{
 };
 
 struct alignas(4) [[nodiscard]] DeadcompState final{
-    std::array<int8_t, 3> uvw_sign;
-    std::array<bool, 3> uvw_strong;
+    alignas(4) std::array<int8_t, 3> uvw_sign;
+    alignas(4) std::array<bool, 3> uvw_strong;
 };
 
 struct Temperature{
@@ -161,6 +166,13 @@ struct Temperature{
     constexpr iq16 to_celsius() const {
         return celsius;
     }
+};
+
+struct alignas(4) [[nodiscard]] HarmonicState final{
+    iq20 id6c;
+    iq20 iq6c;
+    iq20 id6s;
+    iq20 iq6s;
 };
 
 
@@ -201,6 +213,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     Angular<uq32> openloop_elec_angle;
+    iq16 openloop_elec_speed;
     Angular<uq32> encoder_elec_angle;
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
@@ -211,15 +224,25 @@ struct alignas(4) [[nodiscard]] AllState{
     iiq32 encoder_multilap_turns;
 
     UvwCoord<iq20> uvw_curr_raw;
+    UvwCoord<iq20> uvw_curr_ref;
     UvwCoord<iq20> uvw_curr_slowlp;
     UvwCoord<iq20> uvw_curr_fastlp;
 
 
     DqCoord<iq20> dq_curr_raw;
-    DqCoord<iq20> dq_curr_setp;
+    DqCoord<iq20> dq_curr_ref;
     DqCoord<iq20> dq_curr_fastlp;
+    
+    DqCoord<iq20> dq5_curr_raw;
+    DqCoord<iq20> dq7_curr_raw;
+
+    DqCoord<iq20> dq5_curr_lp;
+    DqCoord<iq20> dq7_curr_lp;
+
+    HarmonicState harmonic_state;
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
+    AlphaBetaCoord<iq20> alphabeta_curr_ref;
     AlphaBetaCoord<iq20> prev_alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
 

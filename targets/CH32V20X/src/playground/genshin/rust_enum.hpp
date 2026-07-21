@@ -4,7 +4,6 @@
 #include "core/clock/time.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/utils/Match.hpp"
-#include "digipw/SVPWM/svpwm3.hpp"
 
 using namespace ymd;
 

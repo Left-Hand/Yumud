@@ -64,7 +64,7 @@ struct MotorProfile_E800{
     static constexpr auto FLUX_LINKAGE = iq20(88.4 * 1E-4);
     static constexpr auto PHASE_RESISTANCE_OHM = 0.125_iq20;
 
-    static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 600;
+    static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 900;
 
 };
 
