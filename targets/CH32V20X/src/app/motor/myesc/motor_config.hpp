@@ -6,13 +6,13 @@
 namespace ymd::myesc{
 
 
-static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
-// static constexpr uint32_t CHOPPER_FREQ = 25_KHz;
+// static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
+static constexpr uint32_t CHOPPER_FREQ = 25_KHz;
 // static constexpr uint32_t CHOPPER_FREQ = 10_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 static constexpr auto DEADTIME_NANOS = 120ns;
-// static constexpr auto DEADTIME_NANOS = 1720ns;
+// static constexpr auto DEADTIME_NANOS = 2720ns;
 
 
 
@@ -65,11 +65,12 @@ static constexpr size_t DC_CAL_TIMES = 32 * 128;
 
 
 // using MotorProfile = MotorProfile_Ysc;
-// using MotorProfile = MotorProfile_Gim4010;
+using MotorProfile = MotorProfile_Gim4010;
+
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
 // using MotorProfile = MotorProfile_3505;
-using MotorProfile = MotorProfile_E800;
+// using MotorProfile = MotorProfile_E800;
 // using MotorProfile = MotorProfile_Gkf2023;
 // using MotorProfile = MotorProfile_NidecFan;
 // using MotorProfile = MotorProfile_36BLDB;

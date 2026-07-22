@@ -173,6 +173,11 @@ struct alignas(4) [[nodiscard]] HarmonicState final{
     iq20 iq6c;
     iq20 id6s;
     iq20 iq6s;
+
+    std::array<iq20, 4> integrals;
+
+    iq20 delta_vd6_in;
+    iq20 delta_vq6_in;
 };
 
 
@@ -207,20 +212,22 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
+    SecondOrderState<iq16> rotor_rotation_state_var;
 
     iq20 torque_curr_cmd;
 
-
-
     Angular<uq32> openloop_elec_angle;
     iq16 openloop_elec_speed;
-    Angular<uq32> encoder_elec_angle;
+
+    Angular<uq32> elec_angle;
+    iq16 elec_speed;
+    Angular<uq32> sensed_elec_angle;
+    iq16 sensed_elec_speed;
+
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
-    Angular<uq32> hybrid_elec_angle;
-    Angular<uq32> selected_elec_angle;
 
-    uq32 encoder_turns;
+    Angular<uq32> prev_encoder_mech_angle;
     iiq32 encoder_multilap_turns;
 
     UvwCoord<iq20> uvw_curr_raw;
@@ -294,11 +301,8 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 spinhfi_bin2_real_response_slowlp;
     iq20 spinhfi_bin2_imag_response_slowlp;
 
-    uq32 observer_hybrid_ratio;
-
-
     dsp::PllState hfi_pll_state;
-    dsp::PllState obs_pll_state;
+    dsp::PllState observer_pll_state;
 
     TemperatureState temperature_state;
 

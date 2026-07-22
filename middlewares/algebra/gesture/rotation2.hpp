@@ -51,7 +51,7 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     [[nodiscard]] constexpr 
-    Vec2<T> operator*(const Vec2<T>& v) const noexcept {
+    Vec2<T> rotate(const Vec2<T>& v) const noexcept {
         return Vec2<T>(
             cosine_ * v.x - sine_ * v.y,
             sine_ * v.x + cosine_ * v.y
@@ -59,7 +59,7 @@ struct [[nodiscard]] Rotation2 final{
     }
 
     [[nodiscard]] constexpr 
-    Rotation2 operator*(const Rotation2& other) const noexcept {
+    Rotation2 rotate(const Rotation2& other) const noexcept {
         // 三角函数公式：sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
         //             cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
         return Rotation2{
@@ -68,15 +68,14 @@ struct [[nodiscard]] Rotation2 final{
         };
     }
 
-    // [[nodiscard]] constexpr 
-    // Rotation2 operator + (const Angular<T> & angle) const noexcept {
-    //     return *this * Rotation2::from_angle(angle);
-    // }
+    [[nodiscard]] constexpr 
+    Rotation2 inv_rotate(const Rotation2& other) const noexcept {
+        return Rotation2{
+            sine_ * other.cosine_ - cosine_ * other.sine_,
+            cosine_ * other.cosine_ + sine_ * other.sine_
+        };
+    }
 
-    // [[nodiscard]] constexpr 
-    // Rotation2 operator - (const Angular<T> & angle) const noexcept {
-    //     return *this * (Rotation2::from_angle(angle).inverse());
-    // }
 
     [[nodiscard]] constexpr 
     Rotation2 operator -() const noexcept {

@@ -61,29 +61,34 @@ namespace ymd{
 
 namespace details{
 template<typename First>
-constexpr First max_helper(const First & value) {
+__attribute__((always_inline)) constexpr First 
+max_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
-constexpr First max_helper(const First & first,const Second & second,const Rest & ... rest){
+__attribute__((always_inline)) constexpr First 
+max_helper(const First & first,const Second & second,const Rest & ... rest){
     First max_value = first > First(second) ? first : First(second);
     return max_helper(max_value, rest...);
 }
 
 template<typename First>
-constexpr First min_helper(const First & value) {
+__attribute__((always_inline)) constexpr First 
+min_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
-constexpr First min_helper(const First & first,const Second & second,const Rest &... rest) {
+__attribute__((always_inline)) constexpr First 
+min_helper(const First & first,const Second & second,const Rest &... rest) {
     First min_value = first < First(second) ? first : First(second);
     return min_helper(min_value, rest...);
 }
 
 template<typename T>
-constexpr T __clamp_tmpl(const T x, const auto mi, const auto ma) {
+__attribute__((always_inline)) constexpr T 
+__clamp_tmpl(const T x, const auto mi, const auto ma) {
     if((x > static_cast<T>(ma))) [[unlikely]]
         return static_cast<T>(ma);
     if((x < static_cast<T>(mi))) [[unlikely]]
@@ -95,15 +100,17 @@ constexpr T __clamp_tmpl(const T x, const auto mi, const auto ma) {
 }
 
 template<typename ... Ts >
-static constexpr auto MAX(Ts && ... args){return details::max_helper(std::forward<Ts>(args)...);}
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+auto MAX(Ts && ... args){return details::max_helper(std::forward<Ts>(args)...);}
 
 template<typename ... Ts >
-static constexpr auto MIN(Ts && ... args){return details::min_helper(std::forward<Ts>(args)...);}
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+auto MIN(Ts && ... args){return details::min_helper(std::forward<Ts>(args)...);}
 
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-static constexpr T ABS(const T a){
+[[nodiscard]] __attribute__((always_inline)) constexpr T ABS(const T a){
     return (a < 0) ? -a : a;
 }
 
@@ -111,16 +118,17 @@ static constexpr T ABS(const T a){
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-static constexpr T SIGN(const T a){
+[[nodiscard]] __attribute__((always_inline)) constexpr T SIGN(const T a){
     return (a < 0) ? T(-1) : T(1);
 }
 
-static constexpr bool IN_RANGE(auto x,auto a,auto b) {return((a < b) ? (x >= a && x < b) : (x < a && x >= b));}
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+bool IN_RANGE(auto x,auto a,auto b) {return((a < b) ? (x >= a && x < b) : (x < a && x >= b));}
 
 
 template <typename T, typename U>
 requires std::is_arithmetic_v<U>
-static constexpr T LERP(const T & a, const T & b, const U & x){
+[[nodiscard]] __attribute__((always_inline)) constexpr T LERP(const T & a, const T & b, const U & x){
     return T((U(U(1) - x) * a) + (x * b));
 }
 
@@ -128,7 +136,7 @@ static constexpr T LERP(const T & a, const T & b, const U & x){
 
 
 template <typename T, typename U, typename V>
-static constexpr T INVLERP(const U & _a, const V & _b, const T& t){
+[[nodiscard]] __attribute__((always_inline)) constexpr T INVLERP(const U & _a, const V & _b, const T& t){
     T a = static_cast<T>(_a);
     T b = static_cast<T>(_b);
     return (t - a) / (b - a);
@@ -136,13 +144,17 @@ static constexpr T INVLERP(const U & _a, const V & _b, const T& t){
 
 
 
-static constexpr auto CLAMP(auto x,auto mi,auto ma){return details::__clamp_tmpl(x, mi, ma);}
-static constexpr auto CLAMP2(auto x, auto ma){ return details::__clamp_tmpl(x, -ma, ma);}
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+auto CLAMP(auto x,auto mi,auto ma){return details::__clamp_tmpl(x, mi, ma);}
+
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+auto CLAMP2(auto x, auto ma){ return details::__clamp_tmpl(x, -ma, ma);}
 
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-constexpr T STEP_TO(const T x,const T y, const T s){
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+T STEP_TO(const T x,const T y, const T s){
     T err = y-x;
     if(err > s){
         return x + s;
@@ -155,7 +167,8 @@ constexpr T STEP_TO(const T x,const T y, const T s){
 
 
 template<typename T>
-constexpr T LSHIFT(const T x, const int s){
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+T LSHIFT(const T x, const int s){
     if (s >= 0){
         return x << s;
     }else{
@@ -165,7 +178,8 @@ constexpr T LSHIFT(const T x, const int s){
 
 
 template<typename T>
-constexpr T RSHIFT(const T x, const int s){
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+T RSHIFT(const T x, const int s){
     if (s >= 0){
         return x >> s;
     }else{
@@ -173,11 +187,13 @@ constexpr T RSHIFT(const T x, const int s){
     }
 }
 
-[[nodiscard]] static constexpr uint32_t NEXT_POWER_OF_2(const uint32_t x) {
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+uint32_t NEXT_POWER_OF_2(const uint32_t x) {
     return ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))));
 }
 
-[[nodiscard]] static constexpr uint32_t PREV_POWER_OF_2(const uint32_t x) {
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+uint32_t PREV_POWER_OF_2(const uint32_t x) {
     return (1 << (31 - __builtin_clz(x)));
 }
 

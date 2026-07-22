@@ -101,18 +101,19 @@ struct VCE2755_Prelude{
         _180deg = 0b110,
     };
 
-    enum class [[nodiscard]] BandWidth:uint8_t{ 
+
+    enum class [[nodiscard]] WeakMagAlarmThreshold:uint8_t{
+        OneEighth = 0b00,
+        Quarter = 0b01,
+        Half = 0b10,
+        Disabled = 0b11
+    };
+
+    enum class [[nodiscard]] FilterBandwidth:uint8_t{ 
         _8BW0 = 0b011001,
         _4BW0 = 0b100011,
         _2BW0 = 0b101101,
         _BW0  = 0b110111,
-    };
-
-    enum class [[nodiscard]] WeakMagAlarmLevel:uint8_t{
-        OneEighth,
-        Quarter,
-        Half,
-        Disabled
     };
 
 
@@ -308,12 +309,13 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     struct [[nodiscard]] R8_Bandwidth:public Reg8 {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4d};
         
-        BandWidth bandwidth:6;
-        WeakMagAlarmLevel weak_mag_alarm_lvl:2;
+        FilterBandwidth filter_bandwidth:6;
+        WeakMagAlarmThreshold weak_mag_alarm_threshold:2;
     };
 
     VALIDATE_R8(R8_Bandwidth)
 
+    R8_Bandwidth bandwidth_reg;
 
 };
 

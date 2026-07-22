@@ -70,3 +70,16 @@ IResult<uint8_t> VCE2755::get_package_code(){
         res.is_err()) return Err(res.unwrap_err());
     return Ok(chip_id_reg.code);
 }
+
+
+IResult<> VCE2755::set_filter_bandwidth(const FilterBandwidth bw){
+    auto reg = RegCopy(regs_.bandwidth_reg);
+    reg.filter_bandwidth = bw;
+    return write_reg(reg);
+}
+
+IResult<> VCE2755::set_mag_weak_alarm_threshold(const WeakMagAlarmThreshold th){
+    auto reg = RegCopy(regs_.bandwidth_reg);
+    reg.weak_mag_alarm_threshold = th;
+    return write_reg(reg);
+}

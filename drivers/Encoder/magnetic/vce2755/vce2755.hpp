@@ -30,8 +30,14 @@ namespace ymd::drivers{
 class VCE2755 final:
     public VCE2755_Prelude{
 public:
-    struct Config{
+    struct [[nodiscard]] Config final{
         RotateDirection direction;
+
+        static constexpr Config from_default(){
+            return Config{
+                .direction = CCW
+            };
+        }
     };
 
     explicit VCE2755(const hal::SpiDrv & spi_drv):
@@ -47,9 +53,14 @@ public:
 
     IResult<uint8_t> get_package_code();
 
+    IResult<> set_filter_bandwidth(const FilterBandwidth bw);
+    IResult<> set_mag_weak_alarm_threshold(const WeakMagAlarmThreshold th);
+
+
 private:
     hal::SpiDrv spi_drv_;
-    VCE2755_Regset regs_ = {};
+    using Regset = VCE2755_Regset;
+    Regset regs_ = {};
 
 
     IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
