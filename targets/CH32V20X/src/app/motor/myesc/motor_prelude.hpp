@@ -49,6 +49,12 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 400ns;
 // static constexpr auto MOS_1C840L_500MA_BEST_DEADTIME_NS = 1000ns;
 
+
+enum class [[nodiscard]] LoopWiring:uint8_t{
+    SeriesPi,
+    Mit
+};
+
 enum class [[nodiscard]] HfiMethod:uint8_t{
     Disabled,
     Spin,
@@ -89,6 +95,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
 
     HfiMethod hfi_method:3;
     ElecAngleSource elec_angle_source : 3;
+    LoopWiring loop_wiring : 3;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -101,6 +108,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     }
 };
 
+static_assert(sizeof(FnSwitches) <= 4);
 
 struct alignas(4) [[nodiscard]] OpFlags{
     using Self = OpFlags;

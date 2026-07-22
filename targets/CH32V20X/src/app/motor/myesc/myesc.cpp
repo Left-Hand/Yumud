@@ -943,8 +943,8 @@ void myesc_main(){
             };
 
             // static constexpr auto example_pattern = ExamplePattern::Levels;
-            // static constexpr auto example_pattern = ExamplePattern::Sine;
-            static constexpr auto example_pattern = ExamplePattern::Saw;
+            static constexpr auto example_pattern = ExamplePattern::Sine;
+            // static constexpr auto example_pattern = ExamplePattern::Saw;
             
             const auto [x1_path, x2_path] = [&] -> std::tuple<iq16, iq16>{
                 if constexpr(example_pattern == ExamplePattern::Sine){
@@ -980,18 +980,10 @@ void myesc_main(){
             const auto torque_curr_step_limit = iq20(0.1);
             const auto torque_curr_limit = iq20(2.0);
 
+            const auto loop_wiring = fn_switches.loop_wiring;
 
-            enum class LoopType:uint8_t{
-                SeriesPi,
-                Mit
-            };
-
-            const auto loop_type = LoopType::SeriesPi;
-
-
-
-            switch(loop_type){
-                case LoopType::Mit:{
+            switch(loop_wiring){
+                case LoopWiring::Mit:{
                     const iq20 kp = 16.7_iq16;
                     const iq20 kd = 0.26_iq16;
 
@@ -1006,7 +998,7 @@ void myesc_main(){
                     break;
                 }
 
-                case LoopType::SeriesPi:{
+                case LoopWiring::SeriesPi:{
                     const iq20 kpp = 10.0_iq20;
                     const iq20 kp = 1.0_iq20;
                     const iq20 ki = 6.66_iq20;
@@ -1018,11 +1010,10 @@ void myesc_main(){
                     state.torque_curr_integral = state.torque_curr_integral + CLAMP2(ki_discrete * e2, torque_curr_step_limit);
 
                     auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
-                    state.torque_curr_cmd = CLAMP2(desired_torque_curr_cmd, torque_curr_limit);
+                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, CLAMP2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
                     state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
                     break;
                 }
-
             }
             
         }
@@ -1660,6 +1651,10 @@ void myesc_main(){
                 fn_switches_.elec_angle_source = ElecAngleSource(s);
             }),
 
+            script::make_function(StringView("lpw"), [&](const uint8_t s){
+                fn_switches_.loop_wiring = LoopWiring(s);
+            }),
+
             script::make_function(StringView("cde"), [&](const bool en){
                 fn_switches_.cross_decoupling_en = en;
             }),
@@ -1667,6 +1662,7 @@ void myesc_main(){
             script::make_function(StringView("hse"), [&](const bool en){
                 fn_switches_.harmonic_suppression_en = en;
             })
+            
         );
 
         repl_server.invoke(list);
