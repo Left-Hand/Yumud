@@ -214,6 +214,7 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
 struct alignas(4) [[nodiscard]] AllState{
     SecondOrderState<iq16> rotor_rotation_state_var;
 
+    iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
 
     Angular<uq32> openloop_elec_angle;
@@ -227,8 +228,7 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
-    Angular<uq32> prev_encoder_mech_angle;
-    iiq32 encoder_multilap_turns;
+    iiq32 encoder_absolute_multilap_turns;
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;
