@@ -52,7 +52,8 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 
 enum class [[nodiscard]] LoopWiring:uint8_t{
     SeriesPi,
-    Mit
+    Mit,
+    SeriesAdrc,
 };
 
 enum class [[nodiscard]] HfiMethod:uint8_t{
@@ -189,6 +190,11 @@ struct alignas(4) [[nodiscard]] HarmonicState final{
 };
 
 
+struct alignas(4) [[nodiscard]] SpeedEsoState final{
+    iq20 f_est;
+    iq20 speed_est;
+};
+
 struct alignas(4) [[nodiscard]] TemperatureState final{
     std::array<Temperature, 4> elements;
 
@@ -311,6 +317,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     dsp::PllState hfi_pll_state;
     dsp::PllState observer_pll_state;
+    SpeedEsoState speed_eso_state;
 
     TemperatureState temperature_state;
 

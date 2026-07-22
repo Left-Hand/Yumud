@@ -943,8 +943,8 @@ void myesc_main(){
             };
 
             // static constexpr auto example_pattern = ExamplePattern::Levels;
-            static constexpr auto example_pattern = ExamplePattern::Sine;
-            // static constexpr auto example_pattern = ExamplePattern::Saw;
+            // static constexpr auto example_pattern = ExamplePattern::Sine;
+            static constexpr auto example_pattern = ExamplePattern::Saw;
             
             const auto [x1_path, x2_path] = [&] -> std::tuple<iq16, iq16>{
                 if constexpr(example_pattern == ExamplePattern::Sine){
@@ -982,6 +982,7 @@ void myesc_main(){
 
             const auto loop_wiring = fn_switches.loop_wiring;
 
+
             switch(loop_wiring){
                 case LoopWiring::Mit:{
                     const iq20 kp = 16.7_iq16;
@@ -999,6 +1000,7 @@ void myesc_main(){
                 }
 
                 case LoopWiring::SeriesPi:{
+                    // iterate_series_adrc();
                     const iq20 kpp = 10.0_iq20;
                     const iq20 kp = 1.0_iq20;
                     const iq20 ki = 6.66_iq20;
@@ -1012,6 +1014,26 @@ void myesc_main(){
                     auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
                     state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, CLAMP2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
                     state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
+                    break;
+                }
+
+                case LoopWiring::SeriesAdrc:{
+                    const iq20 kpp = 10.0_iq20;
+                    constexpr iq20 b0 = 200.1_iq20;
+                    constexpr iq20 inv_b0 = 1 / b0;
+                    constexpr size_t wc = 40;
+                    constexpr size_t wo = 3 * wc;
+                    constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
+
+                    const auto x2_ref = CLAMP2(kpp * (x1_path - now_x1), 1000) + x2_path;
+
+                    auto & eso_state = state.speed_eso_state;
+
+                    const auto iq = CLAMP2((wc * (x2_ref - eso_state.speed_est)  - eso_state.f_est) * inv_b0, torque_curr_limit);
+                    eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
+                    eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
+
+                    state.torque_curr_cmd = iq;
                     break;
                 }
             }
@@ -1824,8 +1846,8 @@ void myesc_main(){
             // state.harmonic_state.vq6c_integral,
             // state.harmonic_state.vq6s_integral,
 
-            state.harmonic_state.delta_vd6_in,
-            state.harmonic_state.delta_vq6_in,
+            // state.harmonic_state.delta_vd6_in,
+            // state.harmonic_state.delta_vq6_in,
             // tmrticks_to_us(state.isr_entry_tick),
             // tmrticks_to_us(state.isr_exit_tick),
             // state.busbar_curr_lp,
@@ -1851,14 +1873,16 @@ void myesc_main(){
             // state.flux_ob_state.abs_lem,
             // state.flux_ob_state.x2,
             // state.flux_ob_state.x2_slowlp,
-            state.sensed_elec_angle.to_turns(),
-            state.busbar_curr_lp,
+            // state.sensed_elec_angle.to_turns(),
+            // state.busbar_curr_lp,
             state.torque_curr_cmd,
+            state.speed_eso_state.speed_est,
             // state..to_turns(),
             // state.sensed_elec_speed,
             math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             state.rotor_rotation_state_var.x2,
+            
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)
