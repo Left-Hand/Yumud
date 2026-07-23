@@ -5,13 +5,14 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = AS5047::Error;
+using Self = AS5047;
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-
+static_assert(Self::make_read_addr_packet(0x3fff).bits == 0xffff);
 
 
 

@@ -477,6 +477,9 @@ static void setup_drv8323(){
 }
 
 void myesc_main(){
+    //等待板载外围原件稳定（如SPI编码器）
+    clock::delay(12ms);
+
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
@@ -497,20 +500,9 @@ void myesc_main(){
     // DEBUGGER.force_sync(EN);
 
 
+
     clock::delay(2ms);
 
-
-
-    // #region 初始化定时器
-
-    setup_timer();
-    hal::PA<6>().inflt();
-
-    stop_pwm();
-    //确保pwm完全停止
-    clock::delay(2ms);
-
-    // #endregion 初始化定时器
 
     // #region 初始化ADC
 
@@ -518,6 +510,19 @@ void myesc_main(){
     setup_adc();
 
     // #endregion
+
+    // #region 初始化定时器
+
+    setup_timer();
+    hal::PA<6>().inflt();
+
+    stop_pwm();
+
+    //确保pwm完全停止
+    clock::delay(2ms);
+
+    // #endregion 初始化定时器
+
     auto timming_watch_pin_ = hal::PA<12>();
     timming_watch_pin_.outpp();
 
@@ -543,6 +548,15 @@ void myesc_main(){
 
     mag_encoder_.init(Default).examine();
     mag_encoder_.set_filter_bandwidth(VCE2755::FilterBandwidth::_8BW0).examine();
+
+    auto mag_encoder_get_angle = [&] -> Angular<uq32>{
+        return mag_encoder_.get_angle().examine().parse().unwrap();
+    };
+
+    for(size_t i = 0; i < 100; i++){
+        (void)mag_encoder_get_angle();
+        clock::delay(100us);
+    }
     // mag_encoder_.set_filter_bandwidth(VCE2755::FilterBandwidth::_BW0).examine();
     #endif
 
@@ -874,7 +888,7 @@ void myesc_main(){
             {
                 const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
                 const auto pole_pairs = 14u;
-                const auto encoder_mech_angle = mag_encoder_.get_angle().examine().parse().unwrap();
+                const auto encoder_mech_angle = mag_encoder_get_angle();
 
                 state.encoder_absolute_multilap_turns = uq32_wrapped_update(state.encoder_absolute_multilap_turns, encoder_mech_angle.to_turns());
                 ENCODER_LTD.iterate(
@@ -944,7 +958,7 @@ void myesc_main(){
             state.dq_curr_raw = dq_curr_raw;
         }
 
-        if(1){
+        if(0){
 
             static constexpr auto example_pattern = 
                 ExamplePathPattern::Sine
@@ -1875,12 +1889,10 @@ void myesc_main(){
             // state.uvw_curr_raw.v,
             // state.uvw_curr_raw.w
         );
-        // clock::delay(4ms);
 
         poll_led_blink();
         // toggle_red_led();
         // repl_service_poller();
-        // clock::delay(2ms);
     }
 
 }
