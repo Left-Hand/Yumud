@@ -79,9 +79,9 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
     uint32_t initial_dc_calibrate_en : 1;
+    uint32_t phase_invert_en : 1;
 
-    uint32_t res_temperature_source : 2;
-    uint32_t fet_temperature_source : 2;
+
     uint32_t deadtime_compensate_en : 1;
     uint32_t harmonic_suppression_en : 1;
 
@@ -97,6 +97,9 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     HfiMethod hfi_method:3;
     ElecAngleSource elec_angle_source : 3;
     LoopWiring loop_wiring : 3;
+
+    uint32_t res_temperature_source : 2;
+    uint32_t fet_temperature_source : 2;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -265,7 +268,6 @@ struct alignas(4) [[nodiscard]] AllState{
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_ref;
     AlphaBetaCoord<iq20> prev_alphabeta_curr_raw;
-    AlphaBetaCoord<iq20> alphabeta_curr_fastlp;
 
 
     DqCoord<iq20> dq_volt_integral;
@@ -323,6 +325,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     TimerTick isr_entry_tick;
+    TimerTick encoder_get_done_tick;
     TimerTick isr_exit_tick;
 
 

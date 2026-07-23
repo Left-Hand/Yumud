@@ -59,9 +59,7 @@ using namespace ymd::myesc;
 
 #define DBG_UART hal::usart2
 
-
 using Leso = ymd::dsp::adrc::MotorLeso;
-constexpr uq32 TSAMPLE = uq32::from_rcp(FOC_FREQ);
 
 
 
@@ -130,12 +128,49 @@ static constexpr math::fixed<Q, int32_t> lpf_allpass(
 }
 
 
+// __fast_inline
+__no_inline
+static constexpr int32_t clamp2_i32(const int32_t x, const int32_t side){
+    
+    if (__builtin_expect(x < -side, 0)) {
+        return -side;
+    }
+    if (__builtin_expect(x > side, 0)) {
+        return side;
+    }
+    return x;
+} 
+
+
+template<size_t Q>
+__fast_inline
+static constexpr math::fixed<Q, int32_t> my_clamp2(math::fixed<Q, int32_t> x, math::fixed<Q, int32_t> side){
+    const auto y_bits = clamp2_i32(x.to_bits(), side.to_bits());
+    return math::fixed<Q, int32_t>::from_bits(y_bits);
+}
+
+template<size_t Q>
+__fast_inline
+static constexpr math::fixed<Q, int32_t> my_clamp2(math::fixed<Q, int32_t> x, int32_t side){
+    const auto y_bits = clamp2_i32(x.to_bits(), side << Q);
+    return math::fixed<Q, int32_t>::from_bits(y_bits);
+}
+
 static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
     .fc = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ,
     .phase_inductance_mh = MotorProfile::PHASE_INDUCTANCE_MH,
     .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
 };
+
+
+static constexpr uq32 TSAMPLE = uq32::from_rcp(FOC_FREQ);
+static constexpr iq20 HW_TORQUE_CURRENT_LIMIT = 
+    std::min(
+        CURRENT_HALFSCALE_AMPS, 
+        iq20(BUSBAR_VOLT) * uq32(0.666) / MotorProfile::PHASE_RESISTANCE_OHM
+    ) * uq32(0.8);
+
 
 static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_precomputed().unwrap();
 
@@ -165,7 +200,7 @@ static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last
     return state + diff;
 }
 
-
+// __no_inline
 static constexpr iiq32 uq32_wrapped_update(
     iiq32 prev_absolute_position, 
     uq32 lap_position
@@ -198,6 +233,7 @@ static constexpr iiq32 uq32_wrapped_update(
 }
 
 enum class [[nodiscard]] ExamplePathPattern:uint8_t{
+    Stop,
     Sine,
     Saw,
     Stairs
@@ -206,6 +242,9 @@ enum class [[nodiscard]] ExamplePathPattern:uint8_t{
 __no_inline static constexpr std::tuple<iq16, iq16> 
 calc_demo_path(const uq16 now_secs, const ExamplePathPattern example_pattern){
     switch(example_pattern){
+        case ExamplePathPattern::Stop:{
+            return {0, 0};
+        }
         case ExamplePathPattern::Sine:{
             constexpr auto omega = 1_iq16;
             constexpr auto side_amplitude = 1.4_iq16;
@@ -386,7 +425,7 @@ static void setup_timer(){
 
 
 
-static TimerTick get_timer_tick(){
+static TimerTick get_timer_tick() {
     auto * inst = TIM_INST;
     if(lld::timer_is_up_counting(inst)){
         return TimerTick{
@@ -401,16 +440,17 @@ static TimerTick get_timer_tick(){
     }
 };
 
-static void set_uvw_dutycycle(const UvwCoord<iq16> & dutycycle){
+static void set_uvw_dutycycle(UvwCoord<iq16> dutycycle, const bool phase_invert_en){
     auto * inst = TIM_INST;
-    // const uint16_t arr = static_cast<uint16_t>(inst->ATRLR);
     
     const uint16_t half_arr = TIMER_ARR_VALUE >> 1;
+    if(phase_invert_en) std::swap(dutycycle.v, dutycycle.w);
     
     auto convert = [&](const iq16 channel_dutycycle) -> uint16_t{
         return uint16_t(int32_t((channel_dutycycle.to_bits() * TIMER_ARR_VALUE) >> 16) + half_arr);
     };
 
+    
     inst->CH1CVR = convert(dutycycle.template get<0>());
     inst->CH2CVR = convert(dutycycle.template get<1>());
     inst->CH3CVR = convert(dutycycle.template get<2>());
@@ -547,6 +587,7 @@ void myesc_main(){
     };
 
     mag_encoder_.init(Default).examine();
+    mag_encoder_.set_direction(CW).examine();
     mag_encoder_.set_filter_bandwidth(VCE2755::FilterBandwidth::_8BW0).examine();
 
     auto mag_encoder_get_angle = [&] -> Angular<uq32>{
@@ -627,13 +668,13 @@ void myesc_main(){
         //#region 力矩转电流
 
         [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
-        [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 1.2_iq16;
 
     };
 
 
-    [[maybe_unused]] auto process_current_sense = [&](AllState & state){
-        const auto uvw_bvalue = get_adc_uvw_bvalue();
+    [[maybe_unused]] auto process_current_sense = [&](AllState & state, FnSwitches fn_switches){
+        auto uvw_bvalue = get_adc_uvw_bvalue();
+
         
         auto & dc_state = state.dc_calibrate_state;
 
@@ -661,8 +702,9 @@ void myesc_main(){
                     .beta = s * LOW_HFI_DUTYCYCLE
                 };
 
-                set_uvw_dutycycle(SVM(alphabeta_dutycycle * iq16(1.5)));
+                state.uvw_dutycycle_genout = (SVM(alphabeta_dutycycle * iq16(1.5)));
             }
+
             return;
         }
 
@@ -679,6 +721,10 @@ void myesc_main(){
                 (int32_t(uvw_bvalue[2]) - int32_t(dc_state.uvw_bvalue_offset[2])),
         };
 
+        if(fn_switches.phase_invert_en){
+            std::swap(state.uvw_curr_raw[1], state.uvw_curr_raw[2]);
+        }
+
         state.uvw_curr_fastlp[0] = lpf_1000hz(state.uvw_curr_fastlp[0], state.uvw_curr_raw[0]);
         state.uvw_curr_fastlp[1] = lpf_1000hz(state.uvw_curr_fastlp[1], state.uvw_curr_raw[1]);
         state.uvw_curr_fastlp[2] = lpf_1000hz(state.uvw_curr_fastlp[2], state.uvw_curr_raw[2]);
@@ -692,13 +738,15 @@ void myesc_main(){
         // );
 
 
+        state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_genout));
+        state.busbar_curr_lp = lpf_50hz(state.busbar_curr_lp, state.busbar_curr_raw);
+        
         state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
-        state.alphabeta_curr_fastlp = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_fastlp);
         //#endregion
     };
 
 
-    [[maybe_unused]] auto process_disturb_ob_loop = [&](AllState & state){
+    [[maybe_unused]] auto process_disturb_ob_loop = [&](AllState & state, const FnSwitches fn_switches){
 
     };
 
@@ -743,8 +791,8 @@ void myesc_main(){
             x1 += (vavb[0] - R_iaib[0]) * TSAMPLE - L * (iaib[0] - prev_iaib[0]);
             x2 += (vavb[1] - R_iaib[1]) * TSAMPLE - L * (iaib[1] - prev_iaib[1]);
 
-            x1 = CLAMP2(x1, lambda);
-            x2 = CLAMP2(x2, lambda);
+            x1 = my_clamp2(x1, lambda);
+            x2 = my_clamp2(x2, lambda);
 
             flux_ob_state.x1_slowlp = lpf_10hz(flux_ob_state.x1_slowlp, x1);
             flux_ob_state.x2_slowlp = lpf_10hz(flux_ob_state.x2_slowlp, x2);
@@ -765,8 +813,8 @@ void myesc_main(){
             const auto x1_delta = (vavb[0] - R_iaib[0]) * TSAMPLE - L * (iaib[0] - prev_iaib[0]);
             const auto x2_delta = (vavb[1] - R_iaib[1]) * TSAMPLE - L * (iaib[1] - prev_iaib[1]);
 
-            x1 = CLAMP2(x1 + x1_delta, lambda);
-            x2 = CLAMP2(x2 + x2_delta, lambda);
+            x1 = my_clamp2(x1 + x1_delta, lambda);
+            x2 = my_clamp2(x2 + x2_delta, lambda);
 
             flux_ob_state.x1_slowlp = lpf_10hz(flux_ob_state.x1_slowlp, x1);
             flux_ob_state.x2_slowlp = lpf_10hz(flux_ob_state.x2_slowlp, x2);
@@ -825,8 +873,8 @@ void myesc_main(){
                 err = 0;
             }
 
-            auto x1_delta = (vavb[0] - R_iaib[0]) * dt + (lem1) * err * gamma_half_dt;
-            auto x2_delta = (vavb[1] - R_iaib[1]) * dt + (lem2) * err * gamma_half_dt;
+            auto x1_delta = (vavb[0] - R_iaib[0]) * TSAMPLE + (lem1) * err * gamma_half_dt;
+            auto x2_delta = (vavb[1] - R_iaib[1]) * TSAMPLE + (lem2) * err * gamma_half_dt;
 
             auto x1 = flux_ob_state.x1;
             auto x2 = flux_ob_state.x2;
@@ -888,9 +936,8 @@ void myesc_main(){
             {
                 const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
                 const auto pole_pairs = 14u;
-                const auto encoder_mech_angle = mag_encoder_get_angle();
-
-                state.encoder_absolute_multilap_turns = uq32_wrapped_update(state.encoder_absolute_multilap_turns, encoder_mech_angle.to_turns());
+                const auto encoder_mech_angle = make_angular_from_turns(
+                    uq32::from_bits(uint32_t(state.encoder_absolute_multilap_turns.to_bits())));
                 ENCODER_LTD.iterate(
                     state.rotor_rotation_state_var,
                     {fixed_downcast<16>(state.encoder_absolute_multilap_turns), 0}
@@ -958,10 +1005,11 @@ void myesc_main(){
             state.dq_curr_raw = dq_curr_raw;
         }
 
-        if(0){
+        if(1){
 
             static constexpr auto example_pattern = 
-                ExamplePathPattern::Sine
+                // ExamplePathPattern::Sine
+                ExamplePathPattern::Saw
             ;
 
             const auto [x1_path, x2_path] = calc_demo_path(now_secs, example_pattern);
@@ -969,8 +1017,8 @@ void myesc_main(){
 
             const auto now_x1 = math::fixed_downcast<16>(state.rotor_rotation_state_var.x1);
             const auto now_x2 = state.rotor_rotation_state_var.x2;
-            const auto torque_curr_step_limit = iq20(0.1);
-            const auto torque_curr_limit = iq20(2.0);
+            const auto torque_curr_step_limit = iq20(0.02);
+            const auto torque_curr_limit = iq20(3.0);
 
             const auto loop_wiring = fn_switches.loop_wiring;
 
@@ -980,11 +1028,11 @@ void myesc_main(){
                     const iq20 kp = 16.7_iq16;
                     const iq20 kd = 0.26_iq16;
 
-                    const iq16 e1 = CLAMP2(x1_path - now_x1, 100);
-                    const iq16 e2 = CLAMP2(x2_path - now_x2, 1000);
+                    const iq16 e1 = my_clamp2(x1_path - now_x1, 100);
+                    const iq16 e2 = my_clamp2(x2_path - now_x2, 1000);
                     
                     iq20 torque_curr_cmd = (kp * e1) + (kd * e2);
-                    torque_curr_cmd = CLAMP2(torque_curr_cmd, torque_curr_limit);
+                    torque_curr_cmd = my_clamp2(torque_curr_cmd, torque_curr_limit);
 
                     state.torque_curr_integral = 0;
                     state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
@@ -997,13 +1045,14 @@ void myesc_main(){
                     const iq20 ki = 4.66_iq20;
                     const auto ki_discrete = ki / FOC_FREQ;
 
-                    const auto x2_ref = CLAMP2(kpp * (x1_path - now_x1), 1000);
-                    const iq16 e2 = CLAMP2((x2_ref + x2_path) - now_x2, 1000);
+                    const iq16 x2_ref = my_clamp2(kpp * (x1_path - now_x1), 1000);
+                    // const iq16 x2_ref = 0;
+                    const iq16 e2 = my_clamp2((x2_ref + x2_path) - now_x2, 1000);
 
-                    state.torque_curr_integral = state.torque_curr_integral + CLAMP2(ki_discrete * e2, torque_curr_step_limit);
+                    state.torque_curr_integral = state.torque_curr_integral + my_clamp2(ki_discrete * e2, torque_curr_step_limit);
 
                     auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
-                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, CLAMP2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
+                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, my_clamp2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
                     state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
                     break;
                 }
@@ -1016,11 +1065,11 @@ void myesc_main(){
                     constexpr size_t wo = 3 * wc;
                     constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
 
-                    const auto x2_ref = CLAMP2(kpp * (x1_path - now_x1), 1000) + x2_path;
+                    const auto x2_ref = my_clamp2(kpp * (x1_path - now_x1), 1000) + x2_path;
 
                     auto & eso_state = state.speed_eso_state;
 
-                    const auto iq = CLAMP2((wc * (x2_ref - eso_state.speed_est)  - eso_state.f_est) * inv_b0, torque_curr_limit);
+                    const auto iq = my_clamp2((wc * (x2_ref - eso_state.speed_est)  - eso_state.f_est) * inv_b0, torque_curr_limit);
                     eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
                     eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
 
@@ -1154,7 +1203,7 @@ void myesc_main(){
 
                 #define RUN_PI_CONTROLLER(v, i)\
                 const iq20 i##_err = (0-i);\
-                v##_integral = CLAMP2(v##_integral + i##_err * ki_discrete, iq20(0.7));\
+                v##_integral = my_clamp2(v##_integral + i##_err * ki_discrete, iq20(0.7));\
                 [[maybe_unused]] auto v = v##_integral + kp * i##_err;\
 
                 RUN_PI_CONTROLLER(vs5c, is5c)
@@ -1207,7 +1256,7 @@ void myesc_main(){
 
                 #define RUN_PI_CONTROLLER(v, i)\
                 const iq20 i##_err = (0-i);\
-                v##_integral = CLAMP2(v##_integral + i##_err * ki_discrete, iq20(0.4));\
+                v##_integral = my_clamp2(v##_integral + i##_err * ki_discrete, iq20(0.4));\
                 auto v = v##_integral + kp * i##_err;\
 
                 RUN_PI_CONTROLLER(vd6c, id6c)
@@ -1290,7 +1339,7 @@ void myesc_main(){
                     + d_curr_err * kp + 
                     state.dq_volt_integral.d
                 ;
-                dq_volt_ctrl.d = CLAMP2(d_volt_desired, d_volt_limit);
+                dq_volt_ctrl.d = my_clamp2(d_volt_desired, d_volt_limit);
                 state.dq_volt_integral.d += (dq_volt_ctrl.d - d_volt_desired);
             }
             
@@ -1301,7 +1350,7 @@ void myesc_main(){
                     + q_curr_err * kp 
                     + state.dq_volt_integral.q
                 ;
-                dq_volt_ctrl.q = CLAMP2(q_volt_desired, q_volt_limit);
+                dq_volt_ctrl.q = my_clamp2(q_volt_desired, q_volt_limit);
                 state.dq_volt_integral.q += (dq_volt_ctrl.q - q_volt_desired);
             }
 
@@ -1309,7 +1358,7 @@ void myesc_main(){
         }
 
 
-        const auto inv_busbar_volt = INV_BUS_VOLT;
+        const auto inv_busbar_volt = INV_BUSBAR_VOLT;
         const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
 
         
@@ -1506,7 +1555,7 @@ void myesc_main(){
             }
 
             state.alphabeta_dutycycle_final = alphabeta_dutycycle_final;
-            state.alphabeta_volt_final = alphabeta_dutycycle_final * BUS_VOLT;
+            state.alphabeta_volt_final = alphabeta_dutycycle_final * BUSBAR_VOLT;
         }
 
 
@@ -1595,25 +1644,38 @@ void myesc_main(){
 
         }
 
-        set_uvw_dutycycle(state.uvw_dutycycle_genout);
 
-
-        state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_genout));
-        state.busbar_curr_lp = lpf_10hz(state.busbar_curr_lp, state.busbar_curr_raw);
 
     };
 
     auto jeoc_isr = [&]{
         auto  & state = all_state_;
+
+        //do clone, avoid external modify during isr
+        const auto fn_switches = fn_switches_;
+
         timming_watch_pin_.set_high();
 
 
         state.isr_entry_tick = get_timer_tick();
 
-        process_current_sense(state);
+        if(true){
+        // if(false){
+            const auto encoder_mech_angle = mag_encoder_get_angle();
+            state.encoder_absolute_multilap_turns = uq32_wrapped_update(
+                state.encoder_absolute_multilap_turns, encoder_mech_angle.to_turns());
+        }
+
+        state.encoder_get_done_tick = get_timer_tick();
+
+        process_current_sense(state, fn_switches);
         if(not op_flags_.dc_calibrate_unready){
-            process_mechanical_loop(state, fn_switches_);
-            process_torque_loop(state, fn_switches_);
+            process_mechanical_loop(state, fn_switches);
+            process_torque_loop(state, fn_switches);
+        }
+
+        {
+            set_uvw_dutycycle(state.uvw_dutycycle_genout, fn_switches.phase_invert_en);
         }
 
         state.isr_exit_tick = get_timer_tick();
@@ -1677,6 +1739,10 @@ void myesc_main(){
 
             script::make_function(StringView("hse"), [&](const bool en){
                 fn_switches_.harmonic_suppression_en = en;
+            }),
+
+            script::make_function(StringView("ivt"), [&](const bool en){
+                fn_switches_.phase_invert_en = en;
             })
             
         );
@@ -1699,7 +1765,7 @@ void myesc_main(){
         // {
             const auto offset = state.spinhfi_bin0_real_response;
             const auto amp = math::mag(state.spinhfi_bin2_real_response, state.spinhfi_bin2_imag_response) * 2;
-            static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_MODU_DEPTH_LIMIT * BUS_VOLT));
+            static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_MODU_DEPTH_LIMIT * BUSBAR_VOLT));
             [[maybe_unused]] const auto lq_est_mh = iq20(1000.0 / factor) / (offset - amp);
             [[maybe_unused]] const auto ld_est_mh = iq20(1000.0 / factor) / (offset + amp);
         // }
@@ -1764,14 +1830,13 @@ void myesc_main(){
             
             // lq_est_mh,
             // ld_est_mh,
-            // mag_volt * inv_mag_curr * 0.666666_iq16,
+
             
             // state.openloop_elec_angle.to_turns(),
             // state.hfi_elec_angle.to_turns(),
             // state.uvw_dutycycle_genout,
             // state.uvw_dutycycle_deadcomp,
             // state.deadcomp_state.uvw_sign,
-            // state.alphabeta_curr_fastlp.to_uvw().u,
             // state.pulsehfi_q_response,
             // state.alphabeta_curr_raw.length(),
             // state.dq_volt_ctrl.length(),
@@ -1847,8 +1912,7 @@ void myesc_main(){
             // state.busbar_curr_lp,
             // state.dq_curr_raw.q,
             // state.dq_curr_raw.d,
-            // state.flux_ob_state.x1,
-            // state.flux_ob_state.x2,
+
             // state.flux_ob_state.lem1,
             // state.flux_ob_state.lem2,
             // state.uvw_dutycycle_genout,
@@ -1876,8 +1940,13 @@ void myesc_main(){
             math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             state.rotor_rotation_state_var.x2,
-            
-            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
+            // mag_volt * inv_mag_curr,
+            state.busbar_curr_lp * BUSBAR_VOLT,
+            state.flux_ob_state.x1,
+            state.flux_ob_state.x2,
+            // state.busbar_curr_raw,
+            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick),
+            tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)
             // timer.oc<4>().cvr(),

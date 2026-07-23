@@ -97,18 +97,18 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         uint32_t high = static_cast<uint32_t>(uiiq_n_input_x >> 32);
         uint32_t low  = static_cast<uint32_t>(uiiq_n_input_x);
 
-        int32_t bit_pos;   // 当前 64 位值中最高 1 的位置 (0 … 63)
+        int32_t leading_bit_pos;   // 当前 64 位值中最高 1 的位置 (0 … 63)
         if (high != 0) [[likely]] {
-            bit_pos = 63 - __builtin_clz(high);
+            leading_bit_pos = 63 - __builtin_clz(high);
         } else {
-            bit_pos = 31 - __builtin_clz(low);   // low 一定非零（已排除 0）
+            leading_bit_pos = 31 - __builtin_clz(low);   // low 一定非零（已排除 0）
         }
 
-        // ---------- 3. 目标最高位位置：与 bit_pos 同奇偶，30 或 31 ----------
-        int32_t target = 30 + (bit_pos & 1);
+        // ---------- 3. 目标最高位位置：与 leading_bit_pos 同奇偶，30 或 31 ----------
+        int32_t target = 30 + (leading_bit_pos & 1);
 
         // ---------- 4. 计算偶数移位量，一次性完成规范化 ----------
-        int32_t shift = bit_pos - target;   // 正数：右移；负数：左移
+        int32_t shift = leading_bit_pos - target;   // 正数：右移；负数：左移
         int32_t k;                         // 移 2 位的次数
         if (shift >= 0) {
             uiiq_n_input_x >>= shift;
@@ -138,9 +138,9 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
-    static constexpr IqSqrtIntermediate from_sqsum(uint64_t ui64Sum) {
+    static constexpr IqSqrtIntermediate from_sqsum(uint64_t ui64_sum) {
 
-        if (ui64Sum == 0) [[unlikely]]
+        if (ui64_sum == 0) [[unlikely]]
             return {0, 0};
 
         int32_t i16_exponent;
@@ -156,23 +156,24 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         *  利用 __builtin_clz 一次计算所需移位次数，消除循环。
         * ------------------------------------------------------------
         */
-        uint32_t high = static_cast<uint32_t>(ui64Sum >> 32);
-        uint32_t low  = static_cast<uint32_t>(ui64Sum);
+        uint32_t high = static_cast<uint32_t>(ui64_sum >> 32);
+        uint32_t low  = static_cast<uint32_t>(ui64_sum);
 
-        int32_t bit_pos;                          // 整个64位数中最高1的位置 (0 … 63)
+        int32_t leading_bit_pos;                          // 整个64位数中最高1的位置 (0 … 63)
         if (high != 0) [[likely]] {
             // 高32位非零：最高位位于高32位内
-            bit_pos = 63 - __builtin_clz(high);
+            leading_bit_pos = 63 - __builtin_clz(high);
         } else {
             // 高32位为零，但整个数非零：最高位位于低32位内
-            bit_pos = 31 - __builtin_clz(low);
+            leading_bit_pos = 31 - __builtin_clz(low);
         }
 
+        #if 0
         // 目标：最高位移至第62位（高32位 ≥ 0x40000000 对应64位的第62位）
-        // 需要左移的位数 = 62 - bit_pos，每次移2位 → 次数 k = ceil((62 - bit_pos)/2)
-        int32_t k = (62 - bit_pos + 1) / 2;       // 向上取整，且保证非负
+        // 需要左移的位数 = 62 - bit_pos，每次移2位 → 次数 k = ceil((62 - leading_bit_pos)/2)
+        int32_t k = (62 - leading_bit_pos + 1) / 2;       // 向上取整，且保证非负
         if (k > 0) {
-            ui64Sum <<= (2 * k);             // 整体左移
+            ui64_sum <<= (2 * k);             // 整体左移
             if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
                 i16_exponent -= k;            // 左移使数值变大，幅度指数减小
             } else {
@@ -182,24 +183,41 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
 
         /* 此时高32位一定 ≥ 0x40000000，截取高32位作为iq32格式数值 */
         return {
-            static_cast<uint32_t>(ui64Sum >> 32),
+            static_cast<uint32_t>(ui64_sum >> 32),
             i16_exponent
         };
+
+        #else
+        // 目标：最高位移至第62位（高32位 ≥ 0x40000000 对应64位的第62位）
+        // 需要左移的位数 = 62 - bit_pos，每次移2位 → 次数 k = ceil((62 - leading_bit_pos)/2)
+        uint32_t k = (63 - leading_bit_pos) / 2;       // 向上取整，且保证非负
+        ui64_sum <<= (2 * k);             // 整体左移
+        if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
+            i16_exponent -= k;            // 左移使数值变大，幅度指数减小
+        } else {
+            i16_exponent += k;            // 逆幅度指数增大
+        }
+
+        /* 此时高32位一定 ≥ 0x40000000，截取高32位作为iq32格式数值 */
+        return {
+            static_cast<uint32_t>(ui64_sum >> 32),
+            i16_exponent
+        };
+        #endif
 
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
-    [[nodiscard]] constexpr uint32_t compute() && {
-        if(uiq32_input == 0) [[unlikely]]
+    [[nodiscard]] constexpr uint32_t compute(this auto self) {
+        if(self.uiq32_input == 0) [[unlikely]]
             return 0;
 
-        uint32_t uiq30_guess;
-
+        if(self.uiq32_input < (32u << 25)) __builtin_unreachable();
 
         /* Use left most byte as index into lookup table (range: 32-128) */
-        uiq30_guess = static_cast<uint32_t>(IQ14SQRT_LOOKUP[
-            uint32_t(((uiq32_input >> 25) - 32))
+        uint32_t uiq30_guess = static_cast<uint32_t>(IQ14SQRT_LOOKUP[
+            uint32_t(((self.uiq32_input >> 25) - 32))
         ]) << 16;
 
         /*
@@ -235,7 +253,7 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
             auto newton_iter = [&]() __attribute__((always_inline, optimize( "-Ofast" ))){
                 if(uiq30_guess & 0x80000000) __builtin_unreachable();
                 const uint32_t uiq31_guess = uiq30_guess << 1;
-                uint32_t uiq32_temp = intrinsics::mul32hu(uiq32_input, uiq31_guess);
+                uint32_t uiq32_temp = intrinsics::mul32hu(self.uiq32_input, uiq31_guess);
                 uint32_t uiq31_temp = (0xC0000000 - intrinsics::mul32hu(uiq32_temp, uiq31_guess));
                 uiq30_guess = intrinsics::mul32hu(uiq31_guess, uiq31_temp);
             };
@@ -254,27 +272,27 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         if constexpr(STRATEGY == SqrtNormStrategy::SQRT || STRATEGY == SqrtNormStrategy::MAG) {
             /*
             * uiq30_guess contains the inverse square root approximation, multiply
-            * by uiq32_input to get square root result.
+            * by self.uiq32_input to get square root result.
             */
             if(uiq30_guess & 0x80000000) __builtin_unreachable();
-            uiq31_result = (uint64_t(uiq30_guess << 1) * (uiq32_input)) >> 32;
+            uiq31_result = (uint64_t(uiq30_guess << 1) * (self.uiq32_input)) >> 32;
 
 
             /*
             * Shift the result right by 31 - Q.
             */
-            i16_exponent -= (31 - Q);
+            self.i16_exponent -= (31 - Q);
 
             /* Saturate value for any shift larger than 1 (only need this for mag) */
             if constexpr(STRATEGY == SqrtNormStrategy::MAG) {
-                if (i16_exponent > 0) {
+                if (self.i16_exponent > 0) [[unlikely]] {
                     return 0x7fffffff;
                 }
             }
 
             /* Shift left by 1 check only needed for iq30 and iq31 mag/sqrt */
             if constexpr(Q >= 30) {
-                if (i16_exponent > 0) {
+                if (self.i16_exponent > 0) {
                     uiq31_result <<= 1;
                     return uiq31_result;
                 }
@@ -287,39 +305,31 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
             * Shift the result right by 31 - Q, add one since we use the uiq30
             * result without shifting.
             */
-            i16_exponent = i16_exponent - (31 - Q) + 1;
+            self.i16_exponent = self.i16_exponent - (31 - Q) + 1;
             uiq31_result = uiq30_guess;
 
             /* Saturate any positive non-zero exponent for isqrt. */
-            if (i16_exponent > 0) {
+            if (self.i16_exponent > 0) [[unlikely]]{
                 return 0x7fffffff;
             }
         }
 
 
         /* Shift uiq31_result right by -exponent —— 使用 clz 优化 */
-        int32_t shift = -i16_exponent;
-        if (shift <= 0) {
+        if (self.i16_exponent >= 0) {
             return uiq31_result;
         }
-
+        
+        int32_t shift = -self.i16_exponent;
+        
         /* 若结果为 0 则直接返回（防御性编程） */
         if (uiq31_result == 0) [[unlikely]] {
             return 0;
         }
 
-        /* 利用 clz 获取有效位宽，若移位量 ≥ 位宽则结果必为 0 */
-        int32_t bits = 32 - __builtin_clz(uiq31_result);
-        if (shift >= bits) {
-            return 0;
-        }
-
         /* 一次性右移，并保持原舍入逻辑：最后 1 位做加 1 后右移，之前各位无舍入 */
-        if (shift > 1) {
-            return ((uiq31_result >> (shift - 1)) + 1) >> 1;
-        } else {  /* shift == 1 */
-            return (uiq31_result + 1) >> 1;
-        }
+        const uint32_t half_rounder = 1u << (shift - 1);
+        return (uiq31_result + half_rounder) >> shift;
     }
 private:
 };

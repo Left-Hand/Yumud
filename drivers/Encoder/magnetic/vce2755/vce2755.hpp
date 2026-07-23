@@ -53,6 +53,7 @@ public:
 
     IResult<uint8_t> get_package_code();
 
+    IResult<> set_direction(const RotateDirection dir);
     IResult<> set_filter_bandwidth(const FilterBandwidth bw);
     IResult<> set_mag_weak_alarm_threshold(const WeakMagAlarmThreshold th);
 

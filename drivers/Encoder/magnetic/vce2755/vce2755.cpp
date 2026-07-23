@@ -72,6 +72,12 @@ IResult<uint8_t> VCE2755::get_package_code(){
 }
 
 
+IResult<> VCE2755::set_direction(const RotateDirection dir){
+    auto reg = RegSet::R8_Direction{};
+    reg.is_ccw = dir == CCW;
+    return write_reg(reg.REG_ADDR, reg.to_bits());
+}
+
 IResult<> VCE2755::set_filter_bandwidth(const FilterBandwidth bw){
     auto reg = RegCopy(regs_.bandwidth_reg);
     reg.filter_bandwidth = bw;
