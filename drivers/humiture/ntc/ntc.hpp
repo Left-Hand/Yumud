@@ -29,9 +29,13 @@ struct [[nodiscard]] NtcCalculator final {
         };
     }
 
+    [[nodiscard]] constexpr iq16 kohms_to_invkelvin(const uq16 rt_kohms) const {
+        const iq16 inv_kelvin = iq16(INV_T0_KELVIN) + math::ln(rt_kohms * inv_r0_kohms) * inv_b0;
+        return inv_kelvin;
+    }
     // NTC电阻值 → 温度 (°C)
     [[nodiscard]] constexpr iq16 kohms_to_celsius(const uq16 rt_kohms) const {
-        const iq16 inv_kelvin = iq16(INV_T0_KELVIN) + math::ln(rt_kohms * inv_r0_kohms) * inv_b0;
+        const auto inv_kelvin = kohms_to_invkelvin(rt_kohms);
         return (1 / inv_kelvin) - iq16(KELVIN_OFFSET);
     }
 };
@@ -52,9 +56,13 @@ struct [[nodiscard]] NtcCalculatorF final {
         };
     }
 
+    [[nodiscard]] constexpr float kohms_to_invkelvin(const float rt_kohms) const {
+        const float inv_kelvin = float(INV_T0_KELVIN) + math::ln(rt_kohms * inv_r0_kohms) * inv_b0;
+        return inv_kelvin;
+    }
     // NTC电阻值 → 温度 (°C)
     [[nodiscard]] constexpr float kohms_to_celsius(const float rt_kohms) const {
-        const float inv_kelvin = INV_T0_KELVIN + math::ln(rt_kohms * inv_r0_kohms) * inv_b0;
+        const auto inv_kelvin = kohms_to_invkelvin(rt_kohms);
         return (1.0f / inv_kelvin) - KELVIN_OFFSET;
     }
 };
