@@ -44,7 +44,7 @@
 #include "core/sdk.hpp"
 
 
-#include "drivers/humiture/ntc/ntc.hpp"
+
 
 
 using namespace ymd;
@@ -488,7 +488,7 @@ void myesc_main(){
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.build_config()
-        .set_eps(5)
+        .set_eps(4)
         .set_splitter(",")
         .no_brackets(EN)
         .no_fieldname(EN)
@@ -1671,7 +1671,6 @@ void myesc_main(){
     };
     
     all_state_.torque_curr_cmd = 0.0_iq20;
-    static constexpr auto NTC_CALC = drivers::NtcCalculator::from_b0r0(3950, 100);
 
     while(true){
         auto & state = all_state_;
@@ -1696,7 +1695,6 @@ void myesc_main(){
             [[maybe_unused]] const auto inv_mag_curr = math::inv_mag(state.alphabeta_curr_raw[0], state.alphabeta_curr_raw[1]);
         // }
 
-        [[maybe_unused]] const auto inv_k = NTC_CALC.kohms_to_invkelvin(now_secs);
         if(true)DEBUG_PRINTLN(
             // die_celsius_,
             // s, c, 
@@ -1807,7 +1805,7 @@ void myesc_main(){
             // math::atan2pu(state.alphabeta_curr_raw[0], state.alphabeta_curr_raw[1]),
             // state.alphabeta_curr_raw[0] / state.alphabeta_curr_raw[1],
             // state.uvw_curr_ref,
-            // state.alphabeta_curr_raw,
+            state.alphabeta_curr_raw,
             // state.alphabeta_curr_ref,
             // state.alphabeta_curr_raw,
             // state.dq5_curr_lp,
@@ -1857,14 +1855,14 @@ void myesc_main(){
             // state.flux_ob_state.x2_slowlp,
             // state.sensed_elec_angle.to_turns(),
             // state.busbar_curr_lp,
-            // state.torque_curr_cmd,
-            // state.speed_eso_state.speed_est,
+            state.torque_curr_cmd,
+            state.speed_eso_state.speed_est,
             // state..to_turns(),
             // state.sensed_elec_speed,
-            // math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
+            math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
             // state.prev_encoder_mech_angle.to_turns(),
-            // state.rotor_rotation_state_var.x2,
-            // math::ln(now_secs),
+            state.rotor_rotation_state_var.x2,
+            
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)

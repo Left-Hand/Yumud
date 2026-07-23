@@ -2,6 +2,8 @@
 
 #include "core/math/realmath.hpp"
 
+// http://www.mcnic.com/rmjsq/ 有方便的计算器可以用来求解ABC系数或者B值
+
 namespace ymd::math{
 static constexpr float ln(const float x){
     return std::logf(x);
@@ -14,6 +16,8 @@ static constexpr float INV_T0_KELVIN = 1.0f / T0_KELVIN;
 
 
 namespace ymd::drivers{
+
+
 // 使用 B 参数公式实现 NTC 温度计算
 struct [[nodiscard]] NtcCalculator final {
 
@@ -43,7 +47,7 @@ struct [[nodiscard]] NtcCalculator final {
 
 // 使用 B 参数公式实现 NTC 温度计算
 struct [[nodiscard]] NtcCalculatorF final {
-
+    // \frac{1}{\frac{1}{298.15}+\log\left(\frac{x}{100}\right)\frac{1}{3950}}-273.15
 
     float inv_b0;          // 1 / B0 (B常数倒数)
     float inv_r0_kohms;    // 1 / R0 (25°C时电阻倒数)

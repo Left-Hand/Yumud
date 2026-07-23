@@ -28,7 +28,6 @@ struct MotorProfile_Ysc{
 
     // static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 2400;
     static constexpr uint32_t PREFERD_CURRENT_CUTOFF_FREQ = 400;
-    static constexpr auto LESO_B0 = 30;
 
 
 };
@@ -108,7 +107,7 @@ struct MotorProfile_Gim4010{
     static constexpr auto FLUX_LINKAGE = iq20(73.4 * 1E-4);
 
 
-    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 800;
+    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 600;
 };
 // struct MotorProfile_Gkf2023{
 //     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
