@@ -49,7 +49,7 @@ public:
 
 
     IResult<> init(const Config & cfg);
-    IResult<AnglePacket> update();
+    IResult<AnglePacket> get_angle();
 
     IResult<uint8_t> get_package_code();
 

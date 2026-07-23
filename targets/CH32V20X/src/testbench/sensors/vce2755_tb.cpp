@@ -43,7 +43,7 @@ void vce2755_main(){
     }).examine();
 
     while(true){
-        const auto angle_packet = vce2755.update().examine();
+        const auto angle_packet = vce2755.get_angle().examine();
         const auto lap_angle = angle_packet.parse().unwrap();
         DEBUG_PRINTLN(
             lap_angle.to_turns(),

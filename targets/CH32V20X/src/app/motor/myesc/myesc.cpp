@@ -197,23 +197,45 @@ static constexpr iiq32 uq32_wrapped_update(
     #endif
 }
 
-// static_assert(std::get<0>(iiq32_depart(iiq32(1.1))).to_bits() == uq32(0.1).to_bits());
-// static_assert(std::get<1>(iiq32_depart(iiq32(1.1))) == 1);
+enum class [[nodiscard]] ExamplePathPattern:uint8_t{
+    Sine,
+    Saw,
+    Stairs
+};
 
-// static_assert(std::get<0>(iiq32_depart(iiq32(-100.1))).to_bits() == uq32(0.9).to_bits());
-// static_assert(std::get<1>(iiq32_depart(iiq32(-100.1))) == -101);
+__no_inline static constexpr std::tuple<iq16, iq16> 
+calc_demo_path(const uq16 now_secs, const ExamplePathPattern example_pattern){
+    switch(example_pattern){
+        case ExamplePathPattern::Sine:{
+            constexpr auto omega = 1_iq16;
+            constexpr auto side_amplitude = 1.4_iq16;
 
-// static_assert(std::get<0>(iiq32_depart(iiq32(100.1))).to_bits() == uq32(0.1).to_bits());
-// static_assert(std::get<1>(iiq32_depart(iiq32(100.1))) == 100);
+            const auto [s,c] = math::sincos(omega * now_secs);
+            return {
+                side_amplitude * iq16(s),
+                side_amplitude * omega * iq16(c)
+            };
+        }
+        case ExamplePathPattern::Saw:{
+            // const auto [s,c] = math::sincos(omega * now_secs);
 
-// static_assert(uq32_wrapped_update(iiq32(1.1), 0.7_uq32).to_bits() == iiq32(0.7).to_bits());
-
-// static_assert(uq32_wrapped_update(iiq32(1.1), 0.50_uq32).to_bits() == iiq32(1.5).to_bits());
-
-// static_assert(uq32_wrapped_update(iiq32(1.1), 0.30_uq32).to_bits() == iiq32(1.3).to_bits());
-// static_assert(uq32_wrapped_update(iiq32(0.1), 0.25_uq32).to_bits() == iiq32(0.25).to_bits());
-// static_assert(uq32_wrapped_update(iiq32(-1.1), 0.80_uq32).to_bits() == iiq32(-1.2).to_bits());
-
+            constexpr auto freq = 0.2_iq16;
+            constexpr auto amplitude = 4.8_iq16;
+            constexpr auto slew_rate = amplitude * freq;
+            return {math::frac(now_secs * freq) * amplitude, slew_rate};
+        }
+        case ExamplePathPattern::Stairs:{
+            constexpr auto freq = 0.3_iq16;
+            constexpr size_t num_steps = 6;
+            constexpr auto half_amplitude = 0.4_iq16;
+            constexpr auto step = half_amplitude * 2/ num_steps;
+            const auto s = iq16(math::sinpu(now_secs * freq));
+            return {(math::floor(s * (num_steps / 2)) * step), 0};
+        }
+    }
+    //unreachable
+    return {0, 0};
+};
 
 
 static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
@@ -564,18 +586,6 @@ void myesc_main(){
 
     // #endregion
 
-    #if 0
-    static constexpr iq16 f_para = 1 - MotorProfile::PHASE_RESISTANCE_OHM / (MotorProfile::PHASE_INDUCTANCE_MH * FOC_FREQ / 1000);
-    static constexpr iq16 g_para = 1 / (MotorProfile::PHASE_INDUCTANCE_MH * FOC_FREQ / 1000);
-    [[maybe_unused]] auto smo_sensorless_ob_ = dsp::motor_ctl::SlideModeObserver{
-        dsp::motor_ctl::SlideModeObserver::Config{
-            .f_para = f_para,
-            .g_para = g_para,
-            .kslide = 0.22_iq16,
-            .kslf = 0.6_iq16,
-        }
-    };
-    #endif
 
     using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
 
@@ -864,7 +874,7 @@ void myesc_main(){
             {
                 const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
                 const auto pole_pairs = 14u;
-                const auto encoder_mech_angle = mag_encoder_.update().examine().parse().unwrap();
+                const auto encoder_mech_angle = mag_encoder_.get_angle().examine().parse().unwrap();
 
                 state.encoder_absolute_multilap_turns = uq32_wrapped_update(state.encoder_absolute_multilap_turns, encoder_mech_angle.to_turns());
                 ENCODER_LTD.iterate(
@@ -936,43 +946,11 @@ void myesc_main(){
 
         if(1){
 
-            enum class ExamplePattern{
-                Sine,
-                Saw,
-                Levels
-            };
+            static constexpr auto example_pattern = 
+                ExamplePathPattern::Sine
+            ;
 
-            // static constexpr auto example_pattern = ExamplePattern::Levels;
-            // static constexpr auto example_pattern = ExamplePattern::Sine;
-            static constexpr auto example_pattern = ExamplePattern::Saw;
-            
-            const auto [x1_path, x2_path] = [&] -> std::tuple<iq16, iq16>{
-                if constexpr(example_pattern == ExamplePattern::Sine){
-                    constexpr auto omega = 1_iq16;
-                    constexpr auto side_amplitude = 1.4_iq16;
-
-                    const auto [s,c] = math::sincos(omega * now_secs);
-                    return {
-                        side_amplitude * iq16(s),
-                        side_amplitude * omega * iq16(c)
-                    };
-                }else if constexpr(example_pattern == ExamplePattern::Saw){
-                    // const auto [s,c] = math::sincos(omega * now_secs);
-
-                    constexpr auto freq = 0.2_iq16;
-                    constexpr auto amplitude = 4.8_iq16;
-                    constexpr auto slew_rate = amplitude * freq;
-                    return {math::frac(now_secs * freq) * amplitude, slew_rate};
-                }else if constexpr(example_pattern == ExamplePattern::Levels){
-                    constexpr auto freq = 0.3_iq16;
-                    constexpr size_t num_steps = 6;
-                    constexpr auto half_amplitude = 0.4_iq16;
-                    constexpr auto step = half_amplitude * 2/ num_steps;
-                    const auto s = iq16(math::sinpu(now_secs * freq));
-                    return {(math::floor(s * (num_steps / 2)) * step), 0};
-                }
-            }();
-            // const auto targ = 10_iq20 + iq16(math::sin(now_secs)) * 3.4_iq20;
+            const auto [x1_path, x2_path] = calc_demo_path(now_secs, example_pattern);
 
 
             const auto now_x1 = math::fixed_downcast<16>(state.rotor_rotation_state_var.x1);
@@ -1000,10 +978,9 @@ void myesc_main(){
                 }
 
                 case LoopWiring::SeriesPi:{
-                    // iterate_series_adrc();
-                    const iq20 kpp = 10.0_iq20;
-                    const iq20 kp = 1.0_iq20;
-                    const iq20 ki = 22.66_iq20;
+                    const iq20 kpp = 25.0_iq20;
+                    const iq20 kp = 0.2_iq20;
+                    const iq20 ki = 4.66_iq20;
                     const auto ki_discrete = ki / FOC_FREQ;
 
                     const auto x2_ref = CLAMP2(kpp * (x1_path - now_x1), 1000);

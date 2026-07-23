@@ -33,8 +33,8 @@ private:
 
     uint16_t get_position_data();
 
-    IResult<> write_reg(const uint16_t addr, const uint8_t data);
-    IResult<> read_reg(const uint16_t addr, uint8_t & data);
+    IResult<> write_reg(const uint16_t reg_addr, const uint8_t reg_val);
+    IResult<> read_reg(const uint16_t reg_addr, uint8_t & reg_val);
 
 };
 

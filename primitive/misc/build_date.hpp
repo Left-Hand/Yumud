@@ -22,7 +22,7 @@ struct [[nodiscard]] Month final{
 
     Kind kind;
 
-    static constexpr Option<Month> from_str(const StringView str){
+    static constexpr Option<Month> try_from_str(const StringView str){
         // Parse month abbreviation (first 3 chars)
 
         for (uint8_t m = 0; m < 12; ++m) {
@@ -94,10 +94,10 @@ struct [[nodiscard]] Date final{
     Day day;
 
     static consteval Date from_comptime(){
-        return from_str(StringView(__DATE__)).unwrap();
+        return try_from_str(StringView(__DATE__)).unwrap();
     }
 
-    static constexpr Option<Date> from_str(const StringView str) {
+    static constexpr Option<Date> try_from_str(const StringView str) {
         if(str.length() < 10) return None;
         // Parse day (next 2 chars, space-padded)
         uint8_t d = (str[4] == ' ') ? 
@@ -109,7 +109,7 @@ struct [[nodiscard]] Date final{
                         (str[9] - '0') * 10 +
                         (str[10] - '0');
         
-        const auto may_month = Month::from_str(str.substr_by_range(0,3).unwrap());
+        const auto may_month = Month::try_from_str(str.substr_by_range(0,3).unwrap());
         if(may_month.is_none()) return None;
         return Some(Date{y, may_month.unwrap(), d});
     }
@@ -178,7 +178,7 @@ struct [[nodiscard]] Time final{
         };
     }
 
-    static constexpr Option<Time> from_str(const StringView str){
+    static constexpr Option<Time> try_from_str(const StringView str){
         //TODO
         return None;
     }

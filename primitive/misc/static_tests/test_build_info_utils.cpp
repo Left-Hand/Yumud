@@ -2,7 +2,9 @@
 
 using namespace ymd;
 
+static constexpr uint8_t MAX_DAYS_THIS_MONTH[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 namespace{
+
 
 
 [[maybe_unused]] static void test_date(){
@@ -134,5 +136,62 @@ namespace{
     TEST_CASE("12:59:00", 12, 59, 0)
 
     #undef TEST_CASE
+}
+
+
+// Helper: Check if a year is a leap year
+static constexpr bool is_leap_year(const uint16_t year) {
+    // Gregorian calendar leap year rules:
+    // Year divisible by 4, but not by 100, unless also divisible by 400
+    return (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0);
+}
+
+// Helper: Get the number of days in a month
+static constexpr uint8_t days_in_month(const uint16_t year, const uint8_t month) {
+    return MAX_DAYS_THIS_MONTH[month] + (month == 2 && is_leap_year(year));
+}
+
+
+
+static constexpr bool is_month_valid(const uint8_t month){
+    return (month > 0 && month < 13);
+}
+
+// Main validation function with magic tricks
+static constexpr bool is_date_valid(const uint16_t year, const uint8_t month, const uint8_t day) {
+    bool month_valid = is_month_valid(month);
+    if(not month_valid) return false;
+
+
+    uint8_t max_days = days_in_month(year, month);
+    
+    bool day_valid = (day > 0) && (day <= max_days);
+    return day_valid;
+}
+
+
+// Test function to verify at compile time
+static constexpr void test_valid_dates() {
+    static_assert(is_date_valid(2024, 1, 1), "Jan 1 2024 should be valid");
+    static_assert(is_date_valid(2024, 2, 29), "Feb 29 2024 should be valid (leap year)");
+    static_assert(is_date_valid(2024, 12, 31), "Dec 31 2024 should be valid");
+    static_assert(is_date_valid(2000, 2, 29), "Feb 29 2000 should be valid (century leap)");
+    static_assert(is_date_valid(1900, 2, 28), "Feb 28 1900 should be valid (century non-leap)");
+    static_assert(is_date_valid(2023, 4, 30), "Apr 30 2023 should be valid");
+    static_assert(is_date_valid(2023, 6, 30), "Jun 30 2023 should be valid");
+    static_assert(is_date_valid(2023, 9, 30), "Sep 30 2023 should be valid");
+    static_assert(is_date_valid(2023, 11, 30), "Nov 30 2023 should be valid");
+    
+    // Invalid dates
+    static_assert(!is_date_valid(2024, 2, 30), "Feb 30 should be invalid");
+    static_assert(!is_date_valid(2024, 13, 1), "Month 13 should be invalid");
+    static_assert(!is_date_valid(2024, 0, 1), "Month 0 should be invalid");
+    static_assert(!is_date_valid(2024, 1, 32), "Day 32 should be invalid");
+    static_assert(!is_date_valid(2023, 2, 29), "Feb 29 2023 should be invalid (non-leap)");
+    static_assert(!is_date_valid(1900, 2, 29), "Feb 29 1900 should be invalid (century non-leap)");
+    static_assert(!is_date_valid(2024, 4, 31), "Apr 31 should be invalid");
+    static_assert(!is_date_valid(2024, 6, 31), "Jun 31 should be invalid");
+    static_assert(!is_date_valid(2024, 9, 31), "Sep 31 should be invalid");
+    static_assert(!is_date_valid(2024, 11, 31), "Nov 31 should be invalid");
 }
 }
