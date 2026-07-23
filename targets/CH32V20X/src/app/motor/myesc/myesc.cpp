@@ -994,8 +994,8 @@ void myesc_main(){
                     iq20 torque_curr_cmd = (kp * e1) + (kd * e2);
                     torque_curr_cmd = CLAMP2(torque_curr_cmd, torque_curr_limit);
 
-                    state.torque_curr_integral = STEP_TO(state.torque_curr_integral, torque_curr_cmd, torque_curr_step_limit);
-                    state.torque_curr_cmd = state.torque_curr_integral;
+                    state.torque_curr_integral = 0;
+                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
                     break;
                 }
 
@@ -1003,7 +1003,7 @@ void myesc_main(){
                     // iterate_series_adrc();
                     const iq20 kpp = 10.0_iq20;
                     const iq20 kp = 1.0_iq20;
-                    const iq20 ki = 6.66_iq20;
+                    const iq20 ki = 22.66_iq20;
                     const auto ki_discrete = ki / FOC_FREQ;
 
                     const auto x2_ref = CLAMP2(kpp * (x1_path - now_x1), 1000);
@@ -1021,7 +1021,7 @@ void myesc_main(){
                     const iq20 kpp = 10.0_iq20;
                     constexpr iq20 b0 = 200.1_iq20;
                     constexpr iq20 inv_b0 = 1 / b0;
-                    constexpr size_t wc = 40;
+                    constexpr size_t wc = 36;
                     constexpr size_t wo = 3 * wc;
                     constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
 
@@ -1051,7 +1051,10 @@ void myesc_main(){
             };
 
 
+
             iq20 d_curr_ref = 0;
+            
+            // iq20 d_curr_ref = -0.4_iq20 * math::abs(state.torque_curr_cmd);
             iq20 q_curr_ref = state.torque_curr_cmd;
             
             const bool do_mtpa = fn_switches.mtpa_en;

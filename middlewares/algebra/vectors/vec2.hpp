@@ -276,8 +276,10 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
 
         return ret;
     }
-    [[nodiscard]] constexpr bool is_normalized() const noexcept {
-            return (math::abs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
+    [[nodiscard]] constexpr bool is_normalized(const T espilon) const noexcept {
+        return (math::abs(length_squared() + T(-1)) <= espilon);
+    }
+
     [[nodiscard]] constexpr T length() const noexcept {
         return math::mag(x,y);
     }

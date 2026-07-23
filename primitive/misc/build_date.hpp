@@ -4,6 +4,7 @@
 #include "core/string/view/string_view.hpp"
 #include "core/utils/serde/serde.hpp"
 #include "core/math_defs.hpp"
+#include "build_info_utils.hpp"
 #include <utility>
 
 namespace ymd{
@@ -25,9 +26,9 @@ struct [[nodiscard]] Month final{
         // Parse month abbreviation (first 3 chars)
 
         for (uint8_t m = 0; m < 12; ++m) {
-            if (str[0] == MONTH_STR[m][0] && 
-                str[1] == MONTH_STR[m][1] && 
-                str[2] == MONTH_STR[m][2]) {
+            if (str[0] == MONTH_DICT[m][0] && 
+                str[1] == MONTH_DICT[m][1] && 
+                str[2] == MONTH_DICT[m][2]) {
                 return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
             }
         }
@@ -54,7 +55,7 @@ struct [[nodiscard]] Month final{
 
 
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
-        const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
+        const auto str = MONTH_DICT[std::bit_cast<uint8_t>(self.kind) - 1];
         return os << StringView(str,3);
     }
 
@@ -62,11 +63,11 @@ private:
     template<size_t... Is>
     static constexpr std::array<uint32_t, sizeof...(Is)> 
     make_month_hashes(std::index_sequence<Is...>) {
-        return {{hash(Month::MONTH_STR[Is])...}};
+        return {{hash(Month::MONTH_DICT[Is])...}};
     }
 
     using SmallString = const char *;
-    static constexpr std::array<const char *, 12> MONTH_STR = {
+    static constexpr std::array<const char *, 12> MONTH_DICT = {
         "Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"
     };

@@ -108,7 +108,7 @@ struct MotorProfile_Gim4010{
     static constexpr auto FLUX_LINKAGE = iq20(73.4 * 1E-4);
 
 
-    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 1200;
+    static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 800;
 };
 // struct MotorProfile_Gkf2023{
 //     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;

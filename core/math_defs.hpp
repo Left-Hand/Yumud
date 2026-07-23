@@ -7,11 +7,6 @@
 #include "string.h"
 
 namespace ymd{
-#define CMP_EPSILON 0.001
-#define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
-
-#define CMP_NORMALIZE_TOLERANCE 0.001
-#define CMP_POINT_IN_PLANE_EPSILON 0.001
 
 #ifndef LN2
 #define LN2 0.6931471805599453094172321215
@@ -62,33 +57,33 @@ namespace ymd{
 namespace details{
 template<typename First>
 __attribute__((always_inline)) constexpr First 
-max_helper(const First & value) {
+__max_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
 __attribute__((always_inline)) constexpr First 
-max_helper(const First & first,const Second & second,const Rest & ... rest){
+__max_helper(const First & first,const Second & second,Rest && ... rest){
     First max_value = first > First(second) ? first : First(second);
-    return max_helper(max_value, rest...);
+    return __max_helper(max_value, rest...);
 }
 
 template<typename First>
 __attribute__((always_inline)) constexpr First 
-min_helper(const First & value) {
+__min_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
 __attribute__((always_inline)) constexpr First 
-min_helper(const First & first,const Second & second,const Rest &... rest) {
+__min_helper(const First & first,const Second & second,Rest &&... rest) {
     First min_value = first < First(second) ? first : First(second);
-    return min_helper(min_value, rest...);
+    return __min_helper(min_value, rest...);
 }
 
 template<typename T>
 __attribute__((always_inline)) constexpr T 
-__clamp_tmpl(const T x, const auto mi, const auto ma) {
+__clamp_helper(const T x, const auto mi, const auto ma) {
     if((x > static_cast<T>(ma))) [[unlikely]]
         return static_cast<T>(ma);
     if((x < static_cast<T>(mi))) [[unlikely]]
@@ -101,11 +96,11 @@ __clamp_tmpl(const T x, const auto mi, const auto ma) {
 
 template<typename ... Ts >
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-auto MAX(Ts && ... args){return details::max_helper(std::forward<Ts>(args)...);}
+auto MAX(Ts && ... args){return details::__max_helper(std::forward<Ts>(args)...);}
 
 template<typename ... Ts >
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-auto MIN(Ts && ... args){return details::min_helper(std::forward<Ts>(args)...);}
+auto MIN(Ts && ... args){return details::__min_helper(std::forward<Ts>(args)...);}
 
 
 template <typename T>
@@ -145,10 +140,10 @@ template <typename T, typename U, typename V>
 
 
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-auto CLAMP(auto x,auto mi,auto ma){return details::__clamp_tmpl(x, mi, ma);}
+auto CLAMP(auto x,auto mi,auto ma){return details::__clamp_helper(x, mi, ma);}
 
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-auto CLAMP2(auto x, auto ma){ return details::__clamp_tmpl(x, -ma, ma);}
+auto CLAMP2(auto x, auto ma){ return details::__clamp_helper(x, -ma, ma);}
 
 
 template <typename T>
@@ -211,38 +206,6 @@ uint32_t PREV_POWER_OF_2(const uint32_t x) {
 static constexpr double DEG2RAD_RATIO = (TAU / 360);
 static constexpr double RAD2DEG_RATIO = (360 / TAU);
 
-static constexpr uint16_t BUILT_YEAR = []{
-    return static_cast<uint16_t>(((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'));
-}();
-static constexpr uint8_t BUILT_MONTH = []{
-    return (
-        __DATE__[0] == 'J' && __DATE__[1] == 'a' && __DATE__[2] == 'n' ? 1 :
-        __DATE__[0] == 'F' ? 2 :
-        __DATE__[0] == 'M' && __DATE__[2] == 'r' ? 3 :
-        __DATE__[0] == 'A' && __DATE__[1] == 'p' ? 4 :
-        __DATE__[0] == 'M' ?  5 :
-        __DATE__[0] == 'J' && __DATE__[1] == 'u' ? 6 :
-        __DATE__[0] == 'J' ? 7 :
-        __DATE__[0] == 'A' ? 8 :
-        __DATE__[0] == 'S' ? 9 :
-        __DATE__[0] == 'O' ? 10 : 11
-    );
-}();
 
-static constexpr uint8_t BUILT_DAY = []{
-    return ((__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + (__DATE__[5]-'0'));
-}();
-
-static constexpr uint8_t BUILT_HOUR = []{
-    return ((__TIME__[0]-'0') * 10 + __TIME__[1]-'0');
-}();
-
-static constexpr uint8_t BUILT_MINUTE = []{
-    return((__TIME__[3]-'0') * 10 + __TIME__[4]-'0');
-}();
-
-static constexpr uint8_t BUILT_SECOND = []{
-    return((__TIME__[6]-'0') * 10 + __TIME__[7]-'0');
-}();
 
 }
