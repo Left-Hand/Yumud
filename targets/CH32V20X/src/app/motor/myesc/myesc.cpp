@@ -127,9 +127,19 @@ static constexpr math::fixed<Q, int32_t> lpf_allpass(
     return x_new;
 }
 
+__fast_inline
+static constexpr int32_t clamp_i32(const int32_t x, const int32_t mi, const int32_t ma){
+    
+    if (__builtin_expect(x < mi, 0)) {
+        return mi;
+    }
+    if (__builtin_expect(x > ma, 0)) {
+        return ma;
+    }
+    return x;
+} 
 
-// __fast_inline
-__no_inline
+__fast_inline
 static constexpr int32_t clamp2_i32(const int32_t x, const int32_t side){
     
     if (__builtin_expect(x < -side, 0)) {
@@ -147,6 +157,17 @@ __fast_inline
 static constexpr math::fixed<Q, int32_t> my_clamp2(math::fixed<Q, int32_t> x, math::fixed<Q, int32_t> side){
     const auto y_bits = clamp2_i32(x.to_bits(), side.to_bits());
     return math::fixed<Q, int32_t>::from_bits(y_bits);
+}
+
+template<size_t Q>
+__fast_inline
+static constexpr math::fixed<Q, int32_t> my_step_to(
+    math::fixed<Q, int32_t> x, 
+    math::fixed<Q, int32_t> y, 
+    math::fixed<Q, int32_t> step
+){
+    const auto x_bits = clamp_i32(y.to_bits(), x.to_bits() - step.to_bits(), x.to_bits() + step.to_bits());
+    return math::fixed<Q, int32_t>::from_bits(x_bits);
 }
 
 template<size_t Q>
@@ -244,40 +265,32 @@ static iq16 tmrticks_to_us(const TimerTick tick){
 }
 
 
-static constexpr iq16 sat_left(const iq16 x){
-    // p(x) = (((((-0.125)x + (-0.125))x + 0)x + (-0.5))x + 0)x + 1
-    iq16 result = -0.125_iq16;           // x^5 系数
-    result = result * x - 0.125_iq16;      // x^4 系数
-    result = result * x ;        // x^3 系数（0）
-    result = result * x - 0.5_iq16;        // x^2 系数
-    result = result * x;        // x^1 系数（0）
-    result = result * x + 1.0_iq16;        // 常数项
-    return result;
-}
+//一个数值稳定(可证明)用于求解sqrt(1 - (x)^2)的函数
+//令δ(x) = sqrt(1 - (x)^2) - f(x), 可满足δ(x)恒大于0，同时使得δ(x)在考虑性能的同时足够小
+//可用于对二维向量需要限定模长大小(缩放到单位圆形)的场合已知一边求解另一边
+__no_inline static constexpr uq32 mysat(const uq32 x){
+    // \left(-0.125x-0.125\right)x^{4}-\frac{1}{2}x^{2}
 
-static constexpr iq16 sat_right(const iq16 x){
-    iq16 result = -20 * x * x + 33.62992_iq16 * x - 13.634_iq16;
-    return result;
-}
+    const uint32_t x_u32 = x.to_bits();
+    const uint32_t x2_u32 = intrinsics::mul32hu(x_u32, x_u32);
+    const uint32_t x4_u32 = intrinsics::mul32hu(x2_u32, x2_u32);
 
+    uint32_t res1 = (1 << (32 - 3));
 
-static constexpr iq16 mysat0(const iq16 x){
-    if(x < 0) return 1;
-    if(x > 1) return 0;
+    // -0.125x-0.125
+    res1 = intrinsics::mul32hu(res1, x_u32) + (1 << (32 - 3));
+    // \left(-0.125x-0.125\right)x
+    res1 = intrinsics::mul32hu(res1, x4_u32);
 
-    return math::sqrt(1 - x * x);
-}
+    res1 += (x2_u32 >> 1);
+    res1 = ~res1;
+    
+    const uint32_t one_minus_x4_u32 = ~x4_u32;
+    const uint32_t x8_u32 = intrinsics::mul32hu(x4_u32, x4_u32);
+    uint32_t res2 = one_minus_x4_u32;
+    res2 += intrinsics::mul32hu(x8_u32 >> 1, one_minus_x4_u32);
 
-static constexpr iq16 mysat(const iq16 x){
-    if(x < 0) return 1;
-    if(x > 1) return 0;
-    auto res = sat_left(x);
-
-    if(x > 0.88_iq16){
-        res = std::min(res, sat_right(x));
-        res = std::max(res, 0_iq16);
-    }
-    return res;
+    return uq32::from_bits(std::min(res1, res2));
 }
 
 struct CasOp{
@@ -482,7 +495,13 @@ void myesc_main(){
         .force_sync(EN)
         .finalize();
     // DEBUGGER.force_sync(EN);
-
+    // while(true){
+    //     const auto now_secs = clock::seconds();
+    //     const auto frac_secs = math::frac(now_secs);
+    //     // DEBUG_PRINTLN(clock::millis());
+    //     // DEBUG_PRINTLN(sat_left2(uq32(now_secs)));
+    //     DEBUG_PRINTLN(mysat(frac_secs), mysat(uq32(frac_secs)));
+    // }
 
 
     clock::delay(2ms);
@@ -979,7 +998,7 @@ void myesc_main(){
                     torque_curr_cmd = my_clamp2(torque_curr_cmd, torque_curr_limit);
 
                     state.torque_curr_integral = 0;
-                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
+                    state.torque_curr_cmd = my_step_to(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
                     break;
                 }
 
@@ -996,7 +1015,7 @@ void myesc_main(){
                     state.torque_curr_integral = state.torque_curr_integral + my_clamp2(ki_discrete * e2, torque_curr_step_limit);
 
                     auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
-                    state.torque_curr_cmd = STEP_TO(state.torque_curr_cmd, my_clamp2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
+                    state.torque_curr_cmd = my_step_to(state.torque_curr_cmd, my_clamp2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
                     state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
                     break;
                 }
@@ -1288,7 +1307,7 @@ void myesc_main(){
             }
             
             {
-                const iq20 q_volt_limit = CTRL_VOLT_LIMIT * mysat(iq16(math::abs(dq_volt_ctrl.d) * INV_CTRL_VOLT_LIMIT));
+                const iq20 q_volt_limit = CTRL_VOLT_LIMIT * mysat(uq32(math::abs(dq_volt_ctrl.d) * INV_CTRL_VOLT_LIMIT));
                 const iq20 q_volt_desired = 
                     dq_volt_ff.q 
                     + q_curr_err * kp 
