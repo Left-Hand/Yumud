@@ -5,95 +5,93 @@
 
 namespace ymd::fxmath::details{
 enum class [[nodiscard]] SqrtNormStrategy {
-    SQRT,   // from_u64 with SqrtNormStrategy::SQRT
-    ISQRT,  // from_u64 with SqrtNormStrategy::ISQRT
-    MAG,    // from_sqsum with SqrtNormStrategy::MAG
-    IMAG    // from_sqsum with SqrtNormStrategy::IMAG
+    SQRT,   // from_u64_nonzero with SqrtNormStrategy::SQRT
+    ISQRT,  // from_u64_nonzero with SqrtNormStrategy::ISQRT
+    MAG,    // from_sqsum64u_nonzero with SqrtNormStrategy::MAG
+    IMAG    // from_sqsum64u_nonzero with SqrtNormStrategy::IMAG
 };
 
 
 
 struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
+    // ≥ 0x40000000
     uint32_t uiq32_input;
-    int32_t i16_exponent;
+
+    int32_t i32_exponent;
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
-    static constexpr IqSqrtIntermediate from_u32(uint32_t iq_n_input_x) {
-        if(iq_n_input_x == 0) [[unlikely]]
-            return {0, 0};
-        int32_t i16_exponent;
+    static constexpr IqSqrtIntermediate from_u32_nonzero(uint32_t iqn_input_x) {
+        if(iqn_input_x == 0) __builtin_unreachable();
+        int32_t i32_exponent;
 
         /* If the Q gives an odd starting exponent make it even. */
         if constexpr((32 - Q) % 2 == 1) {
-            iq_n_input_x <<= 1;
+            iqn_input_x <<= 1;
             /* Start with positive exponent for sqrt */
             if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
-                i16_exponent = ((32 - Q) - 1) >> 1;
+                i32_exponent = ((32 - Q) - 1) >> 1;
             }
             /* start with negative exponent for isqrt */
             else {
-                i16_exponent = -(((32 - Q) - 1) >> 1);
+                i32_exponent = -(((32 - Q) - 1) >> 1);
             }
         } else {
             /* start with positive exponent for sqrt */
             if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
-                i16_exponent = (32 - Q) >> 1;
+                i32_exponent = (32 - Q) >> 1;
             }
             /* start with negative exponent for isqrt */
             else {
-                i16_exponent = -((32 - int32_t(Q)) >> 1);
+                i32_exponent = -((32 - int32_t(Q)) >> 1);
             }
         }
 
         /* Save input as unsigned iq32. */
         uint32_t uiq32_input;
 
-        if (iq_n_input_x < 0x40000000) [[likely]] {
-            int32_t leading_zeros = __builtin_clz(iq_n_input_x);
-            int32_t shifts_needed = leading_zeros / 2;  // 直接使用leadingZeros/2
+        if (iqn_input_x < 0x40000000) [[likely]] {
+            int32_t leading_zeros = __builtin_clz(iqn_input_x);
+            int32_t shifts_needed = leading_zeros / 2;
             
-            uiq32_input = iq_n_input_x << (2 * shifts_needed);
+            uiq32_input = iqn_input_x << (2 * shifts_needed);
             if constexpr(STRATEGY != SqrtNormStrategy::ISQRT) {
-                i16_exponent -= shifts_needed;
+                i32_exponent -= shifts_needed;
             } else {
-                i16_exponent += shifts_needed;
+                i32_exponent += shifts_needed;
             }
         }else{
-            uiq32_input = iq_n_input_x;
+            uiq32_input = iqn_input_x;
         }
 
-        return {
-            uiq32_input,
-            i16_exponent
+        return { 
+            .uiq32_input = uiq32_input, 
+            .i32_exponent = i32_exponent 
         };
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
-    static constexpr IqSqrtIntermediate from_u64(uint64_t uiiq_n_input_x) {
-        if (uiiq_n_input_x == 0) [[unlikely]]
-            return {0, 0};
+    static constexpr IqSqrtIntermediate from_u64_nonzero(uint64_t uiiq_n_input_x) {
+        if(uiiq_n_input_x == 0) __builtin_unreachable();
 
-        int32_t i16_exponent;
+        int32_t i32_exponent;
 
-        // ---------- 1. 奇偶校正与指数初始化（完全保留原逻辑）----------
         if constexpr ((32 - Q) % 2 == 1) {
             uiiq_n_input_x <<= 1;
             if constexpr (STRATEGY == SqrtNormStrategy::SQRT) {
-                i16_exponent = ((32 - Q) - 1) >> 1;
-            } else {   // 包含 ISQRT 和 MAG（原代码如此，保持原样）
-                i16_exponent = -(((32 - Q) - 1) >> 1);
+                i32_exponent = ((32 - Q) - 1) >> 1;
+            } else {
+                i32_exponent = -(((32 - Q) - 1) >> 1);
             }
         } else {
             if constexpr (STRATEGY == SqrtNormStrategy::SQRT) {
-                i16_exponent = (32 - Q) >> 1;
+                i32_exponent = (32 - Q) >> 1;
             } else {
-                i16_exponent = -((32 - int32_t(Q)) >> 1);
+                i32_exponent = -((32 - int32_t(Q)) >> 1);
             }
         }
 
-        // ---------- 2. 仿照 from_sqnum：一次 clz 得到最高位位置 ----------
         uint32_t high = static_cast<uint32_t>(uiiq_n_input_x >> 32);
         uint32_t low  = static_cast<uint32_t>(uiiq_n_input_x);
 
@@ -115,39 +113,43 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
             k = shift >> 1;
             if constexpr (STRATEGY == SqrtNormStrategy::SQRT || 
                         STRATEGY == SqrtNormStrategy::MAG) {
-                i16_exponent += k;      // 右移 → 数值变小 → 指数增大
+                i32_exponent += k;      // 右移 → 数值变小 → 指数增大
             } else {                  // ISQRT
-                i16_exponent -= k;      // 右移 → 逆幅度数值变大 → 指数减小
+                i32_exponent -= k;      // 右移 → 逆幅度数值变大 → 指数减小
             }
         } else {
             uiiq_n_input_x <<= -shift;
             k = (-shift) >> 1;
             if constexpr (STRATEGY == SqrtNormStrategy::SQRT || 
                         STRATEGY == SqrtNormStrategy::MAG) {
-                i16_exponent -= k;      // 左移 → 数值变大 → 指数减小
+                i32_exponent -= k;      // 左移 → 数值变大 → 指数减小
             } else {                  // ISQRT
-                i16_exponent += k;      // 左移 → 逆幅度数值变小 → 指数增大
+                i32_exponent += k;      // 左移 → 逆幅度数值变小 → 指数增大
             }
         }
 
         // ---------- 5. 低 32 位即为规范化后的 iq32 数值 ----------
         uint32_t uiq32_input = static_cast<uint32_t>(uiiq_n_input_x);
         // 此时 uiq32_input 一定 ≥ 0x40000000（可加断言）
-        return { uiq32_input, i16_exponent };
+        if(uiq32_input < 0x40000000) __builtin_unreachable();
+
+        return { 
+            .uiq32_input = uiq32_input, 
+            .i32_exponent = i32_exponent 
+        };
     }
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
-    static constexpr IqSqrtIntermediate from_sqsum(uint64_t ui64_sum) {
+    static constexpr IqSqrtIntermediate from_sqsum64u_nonzero(uint64_t ui64_sum) {
 
-        if (ui64_sum == 0) [[unlikely]]
-            return {0, 0};
+        if (ui64_sum == 0) __builtin_unreachable();
 
-        int32_t i16_exponent;
+        int32_t i32_exponent;
         if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
-            i16_exponent = (32 - int32_t(Q));      // 幅度：指数初始为正
+            i32_exponent = (32 - int32_t(Q));      // 幅度：指数初始为正
         } else {
-            i16_exponent = (int32_t(Q) - 32);      // 逆幅度：指数初始为负
+            i32_exponent = (int32_t(Q) - 32);      // 逆幅度：指数初始为负
         }
 
         /* ------------------------------------------------------------
@@ -175,16 +177,16 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         if (k > 0) {
             ui64_sum <<= (2 * k);             // 整体左移
             if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
-                i16_exponent -= k;            // 左移使数值变大，幅度指数减小
+                i32_exponent -= k;            // 左移使数值变大，幅度指数减小
             } else {
-                i16_exponent += k;            // 逆幅度指数增大
+                i32_exponent += k;            // 逆幅度指数增大
             }
         }
 
         /* 此时高32位一定 ≥ 0x40000000，截取高32位作为iq32格式数值 */
         return {
             static_cast<uint32_t>(ui64_sum >> 32),
-            i16_exponent
+            i32_exponent
         };
 
         #else
@@ -193,15 +195,15 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         uint32_t k = (63 - leading_bit_pos) / 2;       // 向上取整，且保证非负
         ui64_sum <<= (2 * k);             // 整体左移
         if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
-            i16_exponent -= k;            // 左移使数值变大，幅度指数减小
+            i32_exponent -= k;            // 左移使数值变大，幅度指数减小
         } else {
-            i16_exponent += k;            // 逆幅度指数增大
+            i32_exponent += k;            // 逆幅度指数增大
         }
 
         /* 此时高32位一定 ≥ 0x40000000，截取高32位作为iq32格式数值 */
         return {
-            static_cast<uint32_t>(ui64_sum >> 32),
-            i16_exponent
+            .uiq32_input = static_cast<uint32_t>(ui64_sum >> 32),
+            .i32_exponent = i32_exponent
         };
         #endif
 
@@ -210,14 +212,14 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((optimize( "-Ofast" )))
     [[nodiscard]] constexpr uint32_t compute(this auto self) {
-        if(self.uiq32_input == 0) [[unlikely]]
-            return 0;
+        const uint32_t uiq32_input = self.uiq32_input;
+        int32_t i32_exponent = self.i32_exponent;
 
-        if(self.uiq32_input < (32u << 25)) __builtin_unreachable();
+        if(uiq32_input < (32u << 25)) __builtin_unreachable();
 
         /* Use left most byte as index into lookup table (range: 32-128) */
         uint32_t uiq30_guess = static_cast<uint32_t>(IQ14SQRT_LOOKUP[
-            uint32_t(((self.uiq32_input >> 25) - 32))
+            uint32_t(((uiq32_input >> 25) - 32))
         ]) << 16;
 
         /*
@@ -250,21 +252,24 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         *     root(x) = x * 1/root(x)
         */
         {
-            auto newton_iter = [&]() __attribute__((always_inline, optimize( "-Ofast" ))){
-                if(uiq30_guess & 0x80000000) __builtin_unreachable();
-                const uint32_t uiq31_guess = uiq30_guess << 1;
-                uint32_t uiq32_temp = intrinsics::mul32hu(self.uiq32_input, uiq31_guess);
-                uint32_t uiq31_temp = (0xC0000000 - intrinsics::mul32hu(uiq32_temp, uiq31_guess));
-                uiq30_guess = intrinsics::mul32hu(uiq31_guess, uiq31_temp);
-            };
+            #define NEWTON_ITER\
+            {\
+                if(uiq30_guess & 0x80000000) __builtin_unreachable();\
+                const uint32_t uiq31_guess = uiq30_guess << 1;\
+                uint32_t uiq32_temp = intrinsics::mul32hu(uiq32_input, uiq31_guess);\
+                uint32_t uiq31_temp = (0xC0000000 - intrinsics::mul32hu(uiq32_temp, uiq31_guess));\
+                uiq30_guess = intrinsics::mul32hu(uiq31_guess, uiq31_temp);\
+            }\
 
             /* Iterate through Newton-Raphson algorithm. */
-            newton_iter();
-            newton_iter();
+            NEWTON_ITER;
+            NEWTON_ITER;
             
             if constexpr (Q >= 24) {
-                newton_iter();
+                NEWTON_ITER;
             }
+
+            #undef NEWTON_ITER
         }
 
         uint32_t uiq31_result;
@@ -272,27 +277,27 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
         if constexpr(STRATEGY == SqrtNormStrategy::SQRT || STRATEGY == SqrtNormStrategy::MAG) {
             /*
             * uiq30_guess contains the inverse square root approximation, multiply
-            * by self.uiq32_input to get square root result.
+            * by uiq32_input to get square root result.
             */
             if(uiq30_guess & 0x80000000) __builtin_unreachable();
-            uiq31_result = (uint64_t(uiq30_guess << 1) * (self.uiq32_input)) >> 32;
+            uiq31_result = intrinsics::mul32hu((uiq30_guess << 1), (uiq32_input));
 
 
             /*
             * Shift the result right by 31 - Q.
             */
-            self.i16_exponent -= (31 - Q);
+            i32_exponent -= (31 - Q);
 
             /* Saturate value for any shift larger than 1 (only need this for mag) */
             if constexpr(STRATEGY == SqrtNormStrategy::MAG) {
-                if (self.i16_exponent > 0) [[unlikely]] {
-                    return 0x7fffffff;
+                if (i32_exponent > 0) [[unlikely]] {
+                    return 0xffffffff;
                 }
             }
 
             /* Shift left by 1 check only needed for iq30 and iq31 mag/sqrt */
             if constexpr(Q >= 30) {
-                if (self.i16_exponent > 0) {
+                if (i32_exponent > 0) {
                     uiq31_result <<= 1;
                     return uiq31_result;
                 }
@@ -305,71 +310,69 @@ struct alignas(4) [[nodiscard]] IqSqrtIntermediate final{
             * Shift the result right by 31 - Q, add one since we use the uiq30
             * result without shifting.
             */
-            self.i16_exponent = self.i16_exponent - (31 - Q) + 1;
+            i32_exponent = i32_exponent - (31 - Q) + 1;
             uiq31_result = uiq30_guess;
 
             /* Saturate any positive non-zero exponent for isqrt. */
-            if (self.i16_exponent > 0) [[unlikely]]{
-                return 0x7fffffff;
+            if (i32_exponent > 0) [[unlikely]]{
+                return 0xffffffff;
             }
         }
 
 
         /* Shift uiq31_result right by -exponent —— 使用 clz 优化 */
-        if (self.i16_exponent >= 0) {
+        if (i32_exponent >= 0) {
             return uiq31_result;
         }
         
-        int32_t shift = -self.i16_exponent;
-        
+        int32_t shift = -i32_exponent;
+
         /* 若结果为 0 则直接返回（防御性编程） */
         if (uiq31_result == 0) [[unlikely]] {
             return 0;
         }
 
-        /* 一次性右移，并保持原舍入逻辑：最后 1 位做加 1 后右移，之前各位无舍入 */
         const uint32_t half_rounder = 1u << (shift - 1);
         return (uiq31_result + half_rounder) >> shift;
     }
-private:
 };
 
 
 template<size_t Q>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> sqrt32u(const math::fixed<Q, uint32_t> x){
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> sqrt32u_nonzero(const math::fixed<Q, uint32_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_u32<Q, SqrtNormStrategy::SQRT>(
+        IqSqrtIntermediate::template from_u32_nonzero<Q, SqrtNormStrategy::SQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::SQRT>()
     );
 }
 
 template<size_t Q>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> inv_sqrt32u(const math::fixed<Q, uint32_t> x){
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> inv_sqrt32u_nonzero(const math::fixed<Q, uint32_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_u32<Q, SqrtNormStrategy::ISQRT>(
+        IqSqrtIntermediate::template from_u32_nonzero<Q, SqrtNormStrategy::ISQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::ISQRT>()
     );
 }
 
 template<size_t Q>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> sqrt64u(const math::fixed<Q, uint64_t> x){
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> sqrt64u_nonzero(const math::fixed<Q, uint64_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_u64<Q, SqrtNormStrategy::SQRT>(
+        IqSqrtIntermediate::template from_u64_nonzero<Q, SqrtNormStrategy::SQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::SQRT>()
     );
 }
 
 template<size_t Q>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> inv_sqrt64u(const math::fixed<Q, uint64_t> x){
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> inv_sqrt64u_nonzero(const math::fixed<Q, uint64_t> x){
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_u64<Q, SqrtNormStrategy::ISQRT>(
+        IqSqrtIntermediate::template from_u64_nonzero<Q, SqrtNormStrategy::ISQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::ISQRT>()
     );
@@ -377,8 +380,8 @@ constexpr math::fixed<Q, uint32_t> inv_sqrt64u(const math::fixed<Q, uint64_t> x)
 
 // 计算单个值的平方（辅助函数）
 template<typename T>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr uint64_t square_value(const T& val) {
+__attribute__((always_inline, const, optimize( "-Ofast" )))
+constexpr uint64_t __square_value(const T val) {
     using extended_t = std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>;
     auto bits = static_cast<extended_t>(val.to_bits());
     return static_cast<uint64_t>(bits * bits);
@@ -387,31 +390,27 @@ constexpr uint64_t square_value(const T& val) {
 // 使用折叠表达式计算多个值的平方和
 template<typename... Args>
 requires (sizeof...(Args) > 0)
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr uint64_t sum_of_squares(Args&&... args) {
+__attribute__((always_inline, const, optimize( "-Ofast" )))
+constexpr uint64_t __sum_of_squares(Args ... args) {
 
-    return (square_value(args) + ...);
+    return (__square_value(args) + ...);
 
 }
 
-// 支持任意数量参数的模长计算
-template<typename D, size_t Q, typename... Args>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> mag32(math::fixed<Q, D> first, Args&&... rest) {
-    uint64_t sum = sum_of_squares(first, rest...);
+template<size_t Q>
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> mag_sqsum64u_nonzero(uint64_t sum) {
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_sqsum<Q, SqrtNormStrategy::MAG>(sum)
+        IqSqrtIntermediate::template from_sqsum64u_nonzero<Q, SqrtNormStrategy::MAG>(sum)
         .template compute<Q, SqrtNormStrategy::MAG>()
     );
 }
 
-// 支持任意数量参数的逆模长计算
-template<typename D, size_t Q, typename... Args>
-__attribute__((always_inline, optimize( "-Ofast" )))
-constexpr math::fixed<Q, uint32_t> inv_mag32(math::fixed<Q, D> first, Args&&... rest) {
-    uint64_t sum = sum_of_squares(first, rest...);
+template<size_t Q>
+__attribute__((const, optimize( "-Ofast" )))
+constexpr math::fixed<Q, uint32_t> inv_mag_sqsum64u_nonzero(uint64_t sum) {
     return math::fixed<Q, uint32_t>::from_bits(
-        IqSqrtIntermediate::template from_sqsum<Q, SqrtNormStrategy::IMAG>(sum)
+        IqSqrtIntermediate::template from_sqsum64u_nonzero<Q, SqrtNormStrategy::IMAG>(sum)
         .template compute<Q, SqrtNormStrategy::IMAG>()
     );
 }
@@ -423,95 +422,101 @@ constexpr math::fixed<Q, uint32_t> inv_mag32(math::fixed<Q, D> first, Args&&... 
 namespace ymd::math{
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, int32_t> sqrt(const fixed<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0) __builtin_trap();
-    return fixed<Q, int32_t>(fxmath::details::sqrt32u(
+    return fixed<Q, int32_t>(fxmath::details::sqrt32u_nonzero(
         fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
     ));
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, int32_t> ssqrt(const fixed<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0){
-        return -fixed<Q, int32_t>(fxmath::details::sqrt32u(
+        return -fixed<Q, int32_t>(fxmath::details::sqrt32u_nonzero(
             fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(-x.to_bits()))
         ));
     }else{
-        return fixed<Q, int32_t>(fxmath::details::sqrt32u(
+        return fixed<Q, int32_t>(fxmath::details::sqrt32u_nonzero(
             fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
         ));
     }
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, uint32_t> sqrt(const fixed<Q, uint32_t> x){
     if(x.to_bits() == 0) return 0;
-    return fixed<Q, uint32_t>(fxmath::details::sqrt32u(x));
+    return fixed<Q, uint32_t>(fxmath::details::sqrt32u_nonzero(x));
 }
 
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, int32_t> sqrt(const fixed<Q, int64_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0) __builtin_trap();
-    return fixed<Q, int32_t>(fxmath::details::sqrt64u(
+    return fixed<Q, int32_t>(fxmath::details::sqrt64u_nonzero(
         fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(x.to_bits()))
     ));
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, int32_t> ssqrt(const fixed<Q, int64_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0){
-        return -fixed<Q, int32_t>(fxmath::details::sqrt64u(
+        return -fixed<Q, int32_t>(fxmath::details::sqrt64u_nonzero(
             fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(-x.to_bits()))
         ));
     }else{
-        return fixed<Q, int32_t>(fxmath::details::sqrt64u(
+        return fixed<Q, int32_t>(fxmath::details::sqrt64u_nonzero(
             fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(x.to_bits()))
         ));
     }
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, uint32_t> sqrt(const fixed<Q, uint64_t> x){
     if(x.to_bits() == 0) return 0;
-    return fixed<Q, uint32_t>(fxmath::details::sqrt64u(x));
+    return fixed<Q, uint32_t>(fxmath::details::sqrt64u_nonzero(x));
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, int32_t> inv_sqrt(const fixed<Q, int32_t> x){
-    return fixed<Q, int32_t>(fxmath::details::inv_sqrt32u(
+    if(x.to_bits() == 0) return 0;
+    return fixed<Q, int32_t>(fxmath::details::inv_sqrt32u_nonzero(
         fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
     ));
 }
 
 template<size_t Q>
-constexpr __attribute__((const))
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
 fixed<Q, uint32_t> inv_sqrt(const fixed<Q, uint32_t> x){
-    return fixed<Q, uint32_t>(fxmath::details::inv_sqrt32u<Q>(x));
+    if(x.to_bits() == 0) return 0;
+    return fixed<Q, uint32_t>(fxmath::details::inv_sqrt32u_nonzero<Q>(x));
 }
 
 
 template<typename D, size_t Q, typename... Args>
-constexpr __attribute__((const))
-fixed<Q, uint32_t> mag(const fixed<Q, D> first, Args&&... rest) {
-    return fixed<Q, uint32_t>(fxmath::details::mag32(first, rest...));
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
+fixed<Q, uint32_t> mag(const fixed<Q, D> first, Args ... rest) {
+    uint64_t sum = fxmath::details::__sum_of_squares(first, rest...);
+    if(sum == 0) return 0;
+    return fxmath::details::mag_sqsum64u_nonzero<Q>(sum);
 }
 
 template<typename D, size_t Q, typename... Args>
-constexpr __attribute__((const))
-fixed<Q, uint32_t> inv_mag(const fixed<Q, D> first, Args&&... rest) {
-    return fixed<Q, uint32_t>(fxmath::details::inv_mag32(first, rest...));
+constexpr __attribute__((always_inline, const, optimize( "-Ofast" )))
+fixed<Q, uint32_t> inv_mag(const fixed<Q, D> first, Args ... rest) {
+    uint64_t sum = fxmath::details::__sum_of_squares(first, rest...);
+    if(sum == 0) return 0;
+    return fxmath::details::inv_mag_sqsum64u_nonzero<Q>(sum);
 }
 
 }

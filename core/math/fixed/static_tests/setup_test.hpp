@@ -14,7 +14,7 @@ using namespace ymd::literals;
 
 
 
-template<std::floating_point T>
+template<typename T>
 static constexpr T abs_err(const T a, const T b){
     if(a > b) return a - b;
     return b - a;

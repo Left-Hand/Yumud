@@ -190,9 +190,18 @@ public:
     fixed from (const std::floating_point auto fv){
         const D bits = [&]() -> D{
             if(std::is_constant_evaluated()){
+                // if constexpr((std::is_signed_v<D> == false)){
+                //     if(fv < 0) 
+                //     __builtin_unreachable();
+                // }
                 return D(static_cast<long double>(fv) * uint64_t(uint64_t(1) << Q));
             }
-            return static_cast<D>(fxmath::details::_IQFtoN(fv, Q));
+
+            int32_t ret_bits = fxmath::details::_IQFtoN(fv, Q);
+            if constexpr((std::is_signed_v<D> == false)){
+                if(ret_bits < 0) ret_bits = 0;
+            }
+            return static_cast<D>(ret_bits);
         }();
         return fixed{bits_ctor{
             bits
@@ -494,327 +503,31 @@ bool operator == (const fixed<Q1, D1> & self, const fixed<Q2, D2> & other) {
     return (self <=> other) == 0;  // 注意这里复用 self <=> other
 }
 
-
-template<size_t Q1, size_t Q2, 
-    typename D1, typename D2, 
-    typename D = tmp::extended_mul_underlying_t<D1, D2>
-    >
-static constexpr auto extended_mul(const fixed<Q1, D1> a, const fixed<Q2, D2> b) 
--> fixed<Q1 + Q2, D>{
-    return fixed<Q1 + Q2, D>::from_bits(static_cast<D>(a.to_bits()) * static_cast<D>(b.to_bits()));
-}
-
-
-template<size_t Q1, size_t Q2>
-static constexpr fixed<Q1, int32_t> sat(
-    const fixed<Q1, int32_t> x, const fixed<Q2, int32_t> k
-){
-    const auto kx = extended_mul(x, k);
-    constexpr auto mask = (std::numeric_limits<uint64_t>::max() << (Q1 + Q2));
-    if(kx.to_bits() & mask){
-        if(kx < 0) return -1;
-        else return 1;
-    }else{
-        return fixed<Q1, int32_t>::from_bits(kx.to_bits() >> Q2);
-    }
-}
-
 #if 0
-template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
-[[nodiscard]] __attribute__((always_inline))
+template<size_t Q, typename D, typename U = std::make_unsigned_t<D>> static [[n
+    odiscard]] __attribute__((const, always_inline))
 constexpr fixed<Q, U> abs(const fixed<Q, D> x){
     const auto bits = x.to_bits();
     return fixed<Q, U>::from_bits(static_cast<U>(bits > 0 ? bits : -bits));
 }
 #else
 template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> abs(const fixed<Q, D> x){
+[[nodiscard]] __attribute__((const, always_inline)) static constexpr 
+fixed<Q, D> abs(const fixed<Q, D> x){
     const auto bits = x.to_bits();
     return fixed<Q, D>::from_bits(static_cast<D>(bits > 0 ? bits : -bits));
 }
 #endif
 
 template<size_t Q, typename D>
-static constexpr fixed<Q, D> closer_to_zero(const fixed<Q, D> a, const fixed<Q, D> b){
-    if constexpr(std::is_signed_v<D>){
-        if(math::abs(a) < math::abs(b)){
-            return a;
-        }else{
-            return b;
-        }
-    }else{
-        if(a < b){
-            return a;
-        }else{
-            return b;
-        }
-    }
-}
-
-
-
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr bool signbit(const fixed<Q, D> x){
+[[nodiscard]] __attribute__((const, always_inline)) static constexpr 
+bool signbit(const fixed<Q, D> x){
     constexpr D SIGN_MASK = static_cast<D>(static_cast<D>(1) << size_t(sizeof(D) * 8 - 1));
     return static_cast<bool>(x.to_bits() & SIGN_MASK);
 }
 
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> sign(const fixed<Q, D> x){
-    static_assert(fixed<Q, D>(-1) != fixed<Q, D>(1));
-    if((x)) [[likely]]return fixed<Q, D>(x > 0 ? 1 : -1);
-    else return fixed<Q, D>(0);
 }
 
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> mod(const fixed<Q, D> a, const fixed<Q, D> b){
-    return fixed<Q, D>(fixed<Q, D>::from_bits(a.to_bits() % b.to_bits()));
-}
-
-template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, U> fposmod(const fixed<Q, D> a, const fixed<Q, D> b){
-    constexpr size_t SHIFT = size_t(sizeof(D) * 8 - 1);
-    const D rem = std::bit_cast<D>(a.to_bits() % b.to_bits());
-    const D is_negative = static_cast<D>(rem >> SHIFT);  // 符号位扩展（0 或 -1）
-    return fixed<Q, U>::from_bits(static_cast<U>(rem + static_cast<U>(b.to_bits() & is_negative)));
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> lerp(const fixed<Q, D> x, const fixed<Q, D> a, const fixed<Q, D> b){
-    return a * (1 - x) + b * x;
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> mean(const fixed<Q, D> a, const fixed<Q, D> b){
-    return fixed<Q, D>(fixed<Q, D>::from_bits((a.to_bits() + b.to_bits()) >> 1));}
-
-template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, U> frac(const fixed<Q, D> x){
-    constexpr U MASK = static_cast<U>((uint64_t(1u) << Q) - 1);
-    return fixed<Q, U>::from_bits(static_cast<U>(static_cast<U>(x.to_bits()) & MASK));
-}
-
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr D floor_int(const fixed<Q, D> x){
-    return static_cast<D>(x.to_bits() >> Q);}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr D ceil_int(const fixed<Q, D> x){
-    constexpr D MASK = (1 << Q) - 1;
-    return static_cast<D>((x.to_bits() >> Q) + bool(x.to_bits() & MASK));
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr D round_int(const fixed<Q, D> x){
-    constexpr D MASK = (1 << (Q - 1));
-    return static_cast<D>((x.to_bits() + MASK) >> Q);
-}
-
-template<typename T, size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr T floor_cast(const fixed<Q, D> x){
-    if constexpr(std::is_integral_v<T>){
-        return static_cast<T>(floor_int(x));
-    }else{
-        return static_cast<T>(x);
-    }
-}
-
-template<typename T, size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr T ceil_cast(const fixed<Q, D> x){
-    if constexpr(std::is_integral_v<T>){
-        return static_cast<T>(ceil_int(x));
-    }else{
-        return static_cast<T>(x);
-    }
-}
-
-template<typename T, size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr T round_cast(const fixed<Q, D> x){
-    if constexpr(std::is_integral_v<T>){
-        return static_cast<T>(round_int(x));
-    }else{
-        return static_cast<T>(x);
-    }
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> floor(const fixed<Q, D> x){
-    return floor_int(x);
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> ceil(const fixed<Q, D> x){
-    return ceil_int(x);
-}
-
-
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> round(const fixed<Q, D> x){
-    return round_int(x);
-}
-
-
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> square(const fixed<Q, D> x) {
-    return x * x;
-}
-
-
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed<Q, D> cubic(const fixed<Q, D> x) {
-    return x * x * x;
-}
-
-
-template<size_t Q, typename D>
-static __attribute__((always_inline)) constexpr 
-fixed<Q, D> errmod(const fixed<Q, D> x, const fixed<Q, D> s) {
-    const auto s_by_2 = s >> 1;
-    fixed<Q, D> value = mod(x, s);
-    if (value > s_by_2) {
-        value -= s;
-    } else if (value <= -s_by_2) {
-        value += s;
-    }
-    return value;
-}
-
-template<size_t Q_to, size_t Q_from, typename D>
-static __attribute__((always_inline)) constexpr  
-fixed<Q_to, int32_t> fixed_downcast(const fixed<Q_from, D> val){
-    return fixed<Q_to, int32_t>::from_bits(static_cast<int32_t>(val.to_bits() >> (Q_from - Q_to)));
-}
-
-
-template<size_t Q, typename D>
-[[nodiscard]] bool is_equal_approx(
-    const fixed<Q, D> a, 
-    const fixed<Q, D> b,
-    const fixed<Q, D> epsilon
-) {
-    // Check for exact equality first, required to handle "infinity" values.
-    if (a - b == D(0)) {
-        return true;
-    }
-    // Then check for approximate equality.
-    fixed<Q, D> tolerance = fixed<Q, D>() * (a < 0 ? -a : a);
-    if (tolerance < fixed<Q, D>(epsilon)) {
-        tolerance = fixed<Q, D>(epsilon);
-    }
-    return ((a - b < 0) ? b - a : a - b) < tolerance;
-}
-
-template<size_t Q, typename D>
-[[nodiscard]] bool is_equal_approx_ratio(
-    const fixed<Q, D> a, 
-    const fixed<Q, D> b, 
-    fixed<Q, D> epsilon, 
-    fixed<Q, D> min_epsilon
-){
-
-    fixed<Q, D> diff = ymd::math::abs(a - b);
-    if (diff == 0 || diff < min_epsilon) {
-        return true;
-    }
-    fixed<Q, D> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
-    diff = diff / avg_size;
-    return diff < epsilon;
-}
-
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-fixed<32, uint32_t> pu_to_uq32(const fixed<Q, D> x){
-    if constexpr(std::is_signed_v<D>){
-        return fixed<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()) << (32 - Q));
-    } else {
-        return fixed<32, uint32_t>::from_bits(x.to_bits() << (32 - Q));
-    }
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-fixed<32, uint32_t> rad_to_uq32(const fixed<Q, D> x){
-    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(M_PI * 2));
-
-    auto conv_positive = [&]{
-        return fixed<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
-    };
-
-    auto conv_negative = [&]{
-        return fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
-    };
-
-    if constexpr(std::is_signed_v<D>){
-        if(x >= 0) return conv_positive();
-        return conv_negative();
-    } else {
-        return conv_positive();
-    }
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-fixed<32, uint32_t> deg_to_uq32(const fixed<Q, D> x){
-    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(180 * 2));
-
-    auto conv_positive = [&]{
-        return fixed<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
-    };
-
-    auto conv_negative = [&]{
-        return fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
-    };
-
-    if constexpr(std::is_signed_v<D>){
-        if(x >= 0) return conv_positive();
-        return conv_negative();
-    } else {
-        return conv_positive();
-    }
-}
-
-__attribute__((always_inline)) constexpr 
-math::fixed<29, int32_t> uq32_to_rad(const math::fixed<32, uint32_t> x){
-
-    constexpr uint64_t uq29_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (29)) * static_cast<long double>(M_PI * 2));
-
-    return math::fixed<29, int32_t>::from_bits(
-        (static_cast<uint64_t>(std::bit_cast<int32_t>(x.to_bits())) * uq29_tau_bits) >> 32);
-}
-
-
-
-}
 
 
 
@@ -855,8 +568,11 @@ namespace std{
     };
 
     template<size_t Q, typename D>
-    __attribute__((always_inline)) constexpr auto signbit(const ymd::math::fixed<Q, D> iq)  {
-        return ymd::math::signbit(iq);}
+    [[nodiscard]] __attribute__((always_inline)) constexpr bool 
+    signbit(const ymd::math::fixed<Q, D> x)  {
+        constexpr D SIGN_MASK = static_cast<D>(static_cast<D>(1) << size_t(sizeof(D) * 8 - 1));
+        return static_cast<bool>(x.to_bits() & SIGN_MASK);
+    }
     
     template<size_t Q, typename D>
     struct make_signed<ymd::math::fixed<Q, D>>{

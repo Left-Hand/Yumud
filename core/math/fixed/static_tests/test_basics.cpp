@@ -37,7 +37,8 @@ static_assert((iq16(-1919) / 2u).to_bits()  == iq16(-1919.0/2).to_bits());
 
 static_assert(1919 / iq16(2)  == iq16(1919.0/2));
 static_assert(1919 / uq16(2)  == iq16(1919.0/2));
-static_assert(-1919 / iq16(2)  == iq16(-1919.0/2));
+static_assert((-1919 / iq16(2)).to_bits()  == iq16(-1919.0/2).to_bits());
+static_assert((iq16(-1919) / iq16(2)).to_bits()  == iq16(-1919.0/2).to_bits());
 
 static_assert((iq16(19) / iq16(2)).to_bits() == iq16(19/2.0).to_bits());
 constexpr auto _19BY2_BITS_1 = iq16(19/2.0).to_bits();

@@ -6,7 +6,7 @@
 namespace ymd::fxmath::details{
 
     /* div */
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
         0x7F, 0x7D, 0x7B, 0x79, 0x78, 0x76, 0x74, 0x73,
         0x71, 0x6F, 0x6E, 0x6D, 0x6B, 0x6A, 0x68, 0x67,
         0x66, 0x65, 0x63, 0x62, 0x61, 0x60, 0x5F, 0x5E,
@@ -17,7 +17,7 @@ namespace ymd::fxmath::details{
         0x44, 0x43, 0x43, 0x42, 0x42, 0x41, 0x41, 0x40, 0x40};
 
         
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr auto IQ31_SINCOS_TABLE = []
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr auto IQ31_SINCOS_TABLE = []
     {
         /* cos */
         // 2^{31}\cdot\cos\left(\frac{i}{64}\right)
@@ -64,7 +64,7 @@ namespace ymd::fxmath::details{
     }();
 
     /* Asin */
-    // FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<int32_t, 17 * 5>  IQ29ASIN_COEFFS = {
+    // DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<int32_t, 17 * 5>  IQ29ASIN_COEFFS = {
     //     3149732, 89392309, 962, 536870908, 0,
     //     9526495, 88593699, 40416, 536870004, 8,
     //     16138900, 86937495, 197996, 536863257, 118,
@@ -84,7 +84,7 @@ namespace ymd::fxmath::details{
     //     287669673, -300718733, 226205346, 475423960, 6452123 // repeat last set
     // };
 
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr int32_t IQ29ASIN_COEFFS[17][5] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr int32_t IQ29ASIN_COEFFS[17][5] = {
         {3149732, 89392309, 962, 536870908, 0},
         {9526495, 88593699, 40416, 536870004, 8},
         {16138900, 86937495, 197996, 536863257, 118},
@@ -105,7 +105,7 @@ namespace ymd::fxmath::details{
     };
 
     /* atan */
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<std::array<int32_t, 4>, 33> IQ32ATAN_COEFFS = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<std::array<int32_t, 4>, 33> IQ32ATAN_COEFFS = {
         std::array<int32_t, 4>{-227484580,    -9261,      683565333,      0,},
         std::array<int32_t, 4>{-224831707,    -276221,        683574534,      -108,},
         std::array<int32_t, 4>{-219602897,    -1274081,       683638558,      -1488,},
@@ -142,7 +142,7 @@ namespace ymd::fxmath::details{
     };
 
     
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<uint32_t, 11> IQ31EXP_COEFFS = []{
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<uint32_t, 11> IQ31EXP_COEFFS = []{
         /* exp */
         // \frac{2^{30}}{\left(10-i\right)!}
         constexpr uint32_t IQ30EXP_COEFFS[11] = {
@@ -160,14 +160,14 @@ namespace ymd::fxmath::details{
 
     static constexpr size_t EXP_COEFFS_TABLE_SIZE = 10;
 
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t _IQNexp_min[30] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t _IQNexp_min[30] = {
         0xffffffff, 0xfffffffb, 0xfffffff0, 0xffffffd4, 0xffffff92, 0xfffffef6,
         0xfffffd93, 0xfffffa75, 0xfffff386, 0xffffe447, 0xffffc301, 0xffff7aeb,
         0xfffedfa7, 0xfffd92f1, 0xfffacd29, 0xfff4e8df, 0xffe86ed9, 0xffce17ea,
         0xff96a442, 0xff223163, 0xfe2e3482, 0xfc300c7d, 0xf8075fed, 0xef5d4dc1,
         0xdd57b752, 0xb7e9a644, 0x80000000, 0x80000000, 0x80000000, 0x80000000};
 
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t _IQNexp_max[30] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t _IQNexp_max[30] = {
         0x00000029, 0x00000050, 0x0000009b, 0x0000012b, 0x00000240, 0x00000455,
         0x00000851, 0x00000ff1, 0x00001e7f, 0x00003a39, 0x00006ee7, 0x0000d2b7,
         0x00018f40, 0x0002f224, 0x00058b90, 0x000a65af, 0x0013687a, 0x00240b2c,
@@ -175,12 +175,12 @@ namespace ymd::fxmath::details{
         0x0851591f, 0x0ddce9df, 0x162e42fe, 0x2145647e, 0x2c5c85fd, 0x2c5c85fd};
 
     // \ln\left(2\right)i
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint16_t _IQNexp_offset[30] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint8_t _IQNexp_offset[30] = {
         0, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8,
         9, 9, 10, 11, 11, 12, 13, 13, 14,
         15, 15, 16, 17, 18, 18, 19, 20, 20};
 
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<uint32_t, 22> _IQNexp_lookup[] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr std::array<uint32_t, 22> _IQNexp_lookup[] = {
     std::array<uint32_t, 22>{
         0x00000004, 0x0000000A, 0x0000001D, 0x00000050, 0x000000DA, 0x00000251,
         0x0000064D, 0x00001122, 0x00002E93, 0x00007E9C, 0x00015829, 0x0003A788,
@@ -365,11 +365,11 @@ namespace ymd::fxmath::details{
 
 
     /* log */
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t IQNLOG_MIN[5] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t IQNLOG_MIN[5] = {
         0x00000010, 0x00015FC3, 0x00960AAE, 0x08A95552, 0x2F16AC6D
     };
 
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t IQ30LOG_COEFFS[15] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint32_t IQ30LOG_COEFFS[15] = {
         0xfb6db6db, 0x04ec4ec4, 0xfaaaaaab, 0x05d1745d, 0xf999999a,
         0x071c71c7, 0xf8000000, 0x09249249, 0xf5555556, 0x0ccccccc,
         0xf0000000, 0x15555555, 0xe0000000, 0x40000000, 0x00000000
@@ -378,7 +378,7 @@ namespace ymd::fxmath::details{
     static constexpr size_t LOG_COEFFS_TABLE_SIZE = 15;
 
     /* sqrt */
-    FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint16_t IQ14SQRT_LOOKUP[96] = {
+    DEF_FXMATH_ATTRIBUTE_HOT_TABLE static constexpr uint16_t IQ14SQRT_LOOKUP[96] = {
         0x7f02, 0x7d19, 0x7b46, 0x7986, 0x77d9, 0x763d, 0x74b2, 0x7335,
         0x71c7, 0x7066, 0x6f11, 0x6dc8, 0x6c8b, 0x6b58, 0x6a2f, 0x690f,
         0x67f8, 0x66ea, 0x65e4, 0x64e5, 0x63ee, 0x62fe, 0x6214, 0x6131,

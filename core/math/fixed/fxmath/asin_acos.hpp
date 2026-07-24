@@ -85,7 +85,9 @@ constexpr math::fixed<29, int32_t> asin31(uint32_t uiq31_input){
             uiq31_input = uiq31_input_temp >> 1;
 
             /* Calculate sqrt((1 - uiq31_input)/2) */
-            uiq31_input = fxmath::details::sqrt32u<31>(math::fixed<31, int32_t>::from_bits(uiq31_input)).to_bits();
+            if(uiq31_input != 0){
+                uiq31_input = fxmath::details::sqrt32u_nonzero<31>(math::fixed<31, int32_t>::from_bits(uiq31_input)).to_bits();
+            }
 
             /* Flag that the transformation was used. */
             is_acos = true;

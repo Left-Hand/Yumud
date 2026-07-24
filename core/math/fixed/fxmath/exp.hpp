@@ -19,13 +19,13 @@ struct alignas(4) [[nodiscard]] ExpIntermediate final{
         static_assert(Q <= 30, "out of table range");
 
         constexpr const auto & iqNLookupTable = _IQNexp_lookup[Q - 1];
-        constexpr uint32_t ui8_integer_offset = _IQNexp_offset[Q - 1];
+        constexpr uint32_t integer_offset = _IQNexp_offset[Q - 1];
 
         uint32_t uiq32_fractional;
         uint32_t uiqn_integer_result;
 
         /* Offset the integer portion and lookup the integer result. */
-        uiqn_integer_result = iqNLookupTable[(iqn_input >> Q) + ui8_integer_offset];
+        uiqn_integer_result = iqNLookupTable[(iqn_input >> Q) + integer_offset];
 
         /* Input is negative. */
         if (iqn_input < 0) {
