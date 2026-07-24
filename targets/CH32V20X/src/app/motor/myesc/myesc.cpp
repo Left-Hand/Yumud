@@ -269,6 +269,7 @@ static iq16 tmrticks_to_us(const TimerTick tick){
 //令δ(x) = sqrt(1 - (x)^2) - f(x), 可满足δ(x)恒大于0，同时使得δ(x)在考虑性能的同时足够小
 //可用于对二维向量需要限定模长大小(缩放到单位圆形)的场合已知一边求解另一边
 __no_inline static constexpr uq32 mysat(const uq32 x){
+    // \left(1-x^{4}\right)+\frac{1}{2}x^{8}\cdot\left(1-x^{4}\right)
     // \left(-0.125x-0.125\right)x^{4}-\frac{1}{2}x^{2}
 
     const uint32_t x_u32 = x.to_bits();

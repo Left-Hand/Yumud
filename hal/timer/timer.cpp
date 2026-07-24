@@ -11,6 +11,16 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::hal::timer;
 
+template<typename T>
+static void reg_set_or_clear_bit(volatile T & reg, const T mask, const bool en){
+    if(en){
+        reg = static_cast<T>(reg) | static_cast<T>(mask);
+    }else{
+        reg = static_cast<T>(reg) & static_cast<T>(~mask);
+    }
+}
+
+
 
 #ifdef TIM_DEBUG
 __inline void TIM_ASSERT(bool x){
@@ -27,7 +37,7 @@ __inline void TIM_ASSERT(bool x){
     std::remove_const_t<b *>>\
 
 #define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
-#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+// #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::)>(x))
 
 
 
@@ -457,14 +467,6 @@ void BasicTimer::set_count_mode(const TimerCountMode mode){
     SPL_INST(p_inst_)->CTLR1 = tmpcr1;
 }
 
-template<typename T>
-static void reg_set_or_clear_bit(volatile T & reg, const T mask, const bool en){
-    if(en){
-        reg = static_cast<T>(reg) | static_cast<T>(mask);
-    }else{
-        reg = static_cast<T>(reg) & static_cast<T>(~mask);
-    }
-}
 
 template<typename T>
 [[nodiscard]] static bool reg_get_bit(const volatile T & reg, const T mask){
@@ -659,33 +661,48 @@ void BasicTimer::enable_cc_ctrl_sync(const Enable en){
 }
 
 
-#define TRY_HANDLE_AND_CLEAR_IT(it_status, I)\
-if((it_status & static_cast<uint16_t>(I))) {\
+static constexpr uint16_t VALID_INTERRUPT_FLAG_MASK = 0x00ff;
+
+#define TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, I)\
+if((pending_intr_flag & static_cast<uint16_t>(I))) {\
+    static constexpr uint16_t INVERTED_FLAG_MASK = ~(static_cast<uint16_t>(I) & VALID_INTERRUPT_FLAG_MASK);\
     invoke_callback(I); \
-    TIM_ClearITPendingBit(SPL_INST(p_inst_), uint8_t(I)); \
+    SPL_INST(p_inst_)->INTFR = INVERTED_FLAG_MASK;\
+    pending_intr_flag &= INVERTED_FLAG_MASK;\
+    if(pending_intr_flag == 0) [[likely]] return;\
     return;\
 }\
 
-void AdvancedTimer::on_cc_interrupt(){
-    const uint16_t it_status = SPL_INST(p_inst_)->INTFR;
+void AdvancedTimer::isr_cc(){
+    uint16_t pending_intr_flag = 
+        static_cast<uint16_t>(SPL_INST(p_inst_)->INTFR)
+        & static_cast<uint16_t>(SPL_INST(p_inst_)->DMAINTENR) & VALID_INTERRUPT_FLAG_MASK
+    ;
 
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC2);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC3);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC4);
+    if(pending_intr_flag == 0) [[unlikely]] return;
+
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC1);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC2);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC3);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC4);
 }
 
 void BasicTimer::isr_common(){
-    const uint16_t it_status = SPL_INST(p_inst_)->INTFR;
+    uint16_t pending_intr_flag = 
+        static_cast<uint16_t>(SPL_INST(p_inst_)->INTFR)
+        & static_cast<uint16_t>(SPL_INST(p_inst_)->DMAINTENR) & VALID_INTERRUPT_FLAG_MASK
+    ;
 
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Update);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC1);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC2);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC3);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::CC4);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::COM);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Trigger);
-    TRY_HANDLE_AND_CLEAR_IT(it_status, IT::Break);
+    if(pending_intr_flag == 0) [[unlikely]] return;
+
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::Update);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC1);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC2);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC3);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::CC4);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::COM);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::Trigger);
+    TRY_HANDLE_FLAG_OR_RETURN(pending_intr_flag, IT::Break);
 }
 
 void AdvancedTimer::set_repeat_times(const uint16_t rep){
