@@ -1,6 +1,9 @@
 #include "setup_test.hpp"
 #include "../fxmath/div.hpp"
 
+
+
+
 namespace {
 
 
@@ -12,6 +15,7 @@ namespace {
     static_assert(div32u<16>(20000u << 16, 1u << 16) == 20000u << 16);
     static_assert(div32u<5>(32768 << 5, 1 << 5) == 32768 << 5);
 
+    // static_assert((iq16(-1919) / iq16(2)).to_bits()  == iq16(-1919.0/2).to_bits());
     static_assert(div32u<0>(32768 << 0, 1 << 0) == 32768 << 0);
 
     static_assert(abs_err(0.25f, (float)(uq32::from_bits(1000 * 8) / uq32::from_bits(32000))) <= 1e-4);
@@ -29,7 +33,7 @@ namespace {
     static_assert(div32i<10>(32768 << 10, -1 << 10) == -32768 << 10);
     static_assert(div32i<16>(20000 << 16, -1 << 16) == -20000 << 16);
     static_assert(div32i<5>(32768 << 5, -1 << 5) == -32768 << 5);
-
+    static_assert(div32i<16>(-1919 << 16, 2 << 16) == -62881792);
     static_assert(div32i<0>(32768 << 0, -1 << 0) == -32768 << 0);
     static_assert(div32i<31>(
         std::numeric_limits<int32_t>::max(), 
@@ -66,6 +70,19 @@ static constexpr uint32_t fit_table(uint32_t x){
 #endif
 
 
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+uint32_t __mpyf_ul(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
+
+
+
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
 
 template<size_t Q, bool IS_SIGNED>
 __attribute__((const, optimize( "-Ofast" )))
@@ -220,22 +237,22 @@ constexpr int32_t _iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 
 
     /* 1st iteration */
-    uint32_t ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    uint32_t ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 2nd iteration */
-    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 3rd iteration */
-    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* Multiply 1/uiq31Input2 and uiqNInput1. */
-    uiqNResult = intrinsics::__mpyf_ul(uiq30Guess, uiqNInput1);
+    uiqNResult = __mpyf_ul(uiq30Guess, uiqNInput1);
 
 
     /* Saturate, add the sign and return. */

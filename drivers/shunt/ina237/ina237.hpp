@@ -73,6 +73,8 @@ public:
 
     IResult<iq16> get_power();
 
+    IResult<TemperatureCode> get_temperature();
+
     IResult<BusbarVoltageCode> get_busbar_voltage_code();
 
     IResult<ShuntValue> get_shunt_voltage_code();
@@ -92,7 +94,7 @@ public:
         const Option<BusbarVoltageCode> mi, 
         const Option<BusbarVoltageCode> ma);
 
-
+    IResult<> set_temperature_alert_threshold(const TemperatureCode ma);
 private:
     hal::I2cDrv i2c_drv_;
 

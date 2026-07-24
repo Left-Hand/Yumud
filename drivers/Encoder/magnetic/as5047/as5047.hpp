@@ -33,8 +33,8 @@ private:
 
     uint16_t get_angle_bits();
 
-    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
-    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
+    IResult<> write_reg(const Packet write_addr_pkt, const uint16_t reg_val);
+    IResult<> read_reg(const Packet write_addr_pkt, uint16_t & reg_val);
 
 };
 

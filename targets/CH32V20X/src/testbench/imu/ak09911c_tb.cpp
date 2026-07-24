@@ -9,7 +9,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/IMU/Magnetometer/AK09911C/AK09911C.hpp"
+#include "drivers/imu/AK09911C/AK09911C.hpp"
 
 #include "robots/gesture/mahony.hpp"
 

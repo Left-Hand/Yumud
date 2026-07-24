@@ -85,7 +85,7 @@ struct Plane {
 
 	__fast_inline bool is_point_over(const math::Vec3<T> &p_point) const; ///< Point is over plane
 	__fast_inline T distance_to(const math::Vec3<T> &p_point) const;
-	__fast_inline bool has_point(const math::Vec3<T> &p_point,const T p_tolerance = static_cast<T>(CMP_EPSILON)) const;
+	__fast_inline bool has_point(const math::Vec3<T> &p_point,const T p_tolerance = static_cast<T>(1e-4)) const;
 
 	/* intersections */
 
@@ -236,7 +236,7 @@ bool Plane<T>::intersects_ray(const math::Vec3<T> &p_from, const math::Vec3<T> &
 
 	T dist = (normal.dot(p_from) - d) / den;
 
-	if (dist > (T)CMP_EPSILON) { //this is a ray, before the emitting pos (p_from) doesn't exist
+	if (dist > (T)1e-4) { //this is a ray, before the emitting pos (p_from) doesn't exist
 
 		return false;
 	}
@@ -257,7 +257,7 @@ bool Plane<T>::intersects_segment(const math::Vec3<T> &p_begin, const math::Vec3
 	}
 
 	T dist = (normal.dot(p_begin) - d) / den;
-	if (dist < static_cast<T>(-CMP_EPSILON) or dist > static_cast<T>(1.0f + CMP_EPSILON)) {
+	if (dist < static_cast<T>(-1e-4) or dist > static_cast<T>(1.0f + 1e-4)) {
 		return false;
 	}
 

@@ -163,7 +163,7 @@ public:
 	bool is_equal_approx(const Basis<T> & other) const;
 	// For complicated reasons, the second argument is always discarded. See #45062.
 	bool is_equal_approx(const Basis<T> &a, const Basis<T> &b) const noexcept { return is_equal_approx(a); }
-	bool is_equal_approx_ratio(const Basis<T> &a, const Basis<T> &b, T p_epsilon = CMP_EPSILON) const;
+	bool is_equal_approx_ratio(const Basis<T> &a, const Basis<T> &b, T p_epsilon = 1e-4) const;
 
 	bool operator==(const Basis<T> &p_matrix) const;
 	bool operator!=(const Basis<T> &p_matrix) const;
@@ -485,7 +485,7 @@ Basis<T> Basis<T>::diagonalize() {
 
 	size_t ite = 0;
 	Basis<T> acc_rot;
-	while (off_matrix_norm_2 > CMP_EPSILON && ite++ < ite_max) {
+	while (off_matrix_norm_2 > 1e-4 && ite++ < ite_max) {
 		T el01_2 = (*this)[0][1] * (*this)[0][1];
 		T el02_2 = (*this)[0][2] * (*this)[0][2];
 		T el12_2 = (*this)[1][2] * (*this)[1][2];
@@ -757,8 +757,8 @@ math::Vec3<T> Basis<T>::get_euler_xyz() const noexcept {
 
 	math::Vec3<T> euler;
 	T sy = (*this)[0][2];
-	if (sy < (T(1 - CMP_EPSILON))) {
-		if (sy > -(T(1 - CMP_EPSILON))) {
+	if (sy < (T(1 - 1e-4))) {
+		if (sy > -(T(1 - 1e-4))) {
 			// is this a pure Y rotation?
 			if ((*this)[1][0] == 0 && (*this)[0][1] == 0 && (*this)[1][2] == 0 && (*this)[2][1] == 0 && (*this)[1][1] == 1) {
 				// return the simplest form (human friendlier in editor and scripts)
@@ -815,8 +815,8 @@ math::Vec3<T> Basis<T>::get_euler_xzy() const noexcept {
 
 	math::Vec3<T> euler;
 	T sz = (*this)[0][1];
-	if (sz < (1 - CMP_EPSILON)) {
-		if (sz > -(1 - CMP_EPSILON)) {
+	if (sz < (1 - 1e-4)) {
+		if (sz > -(1 - 1e-4)) {
 			euler.x = atan2f((*this)[2][1], (*this)[1][1]);
 			euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 			euler.z = asinf(-sz);
@@ -859,8 +859,8 @@ math::Vec3<T> Basis<T>::get_euler_yzx() const noexcept {
 
 	math::Vec3<T> euler;
 	T sz = (*this)[1][0];
-	if (sz < (1 - CMP_EPSILON)) {
-		if (sz > -(1 - CMP_EPSILON)) {
+	if (sz < (1 - 1e-4)) {
+		if (sz > -(1 - 1e-4)) {
 			euler.x = atan2f(-(*this)[1][2], (*this)[1][1]);
 			euler.y = atan2f(-(*this)[2][0], (*this)[0][0]);
 			euler.z = asinf(sz);
@@ -909,8 +909,8 @@ math::Vec3<T> Basis<T>::get_euler_yxz() const noexcept {
 
 	T m12 = (*this)[1][2];
 
-	if (m12 < (1 - CMP_EPSILON)) {
-		if (m12 > -(1 - CMP_EPSILON)) {
+	if (m12 < (1 - 1e-4)) {
+		if (m12 > -(1 - 1e-4)) {
 			// is this a pure X rotation?
 			if ((*this)[1][0] == 0 && (*this)[0][1] == 0 && (*this)[0][2] == 0 && (*this)[2][0] == 0 && (*this)[0][0] == 1) {
 				// return the simplest form (human friendlier in editor and scripts)
@@ -966,8 +966,8 @@ math::Vec3<T> Basis<T>::get_euler_zxy() const noexcept {
 	//        -cx*sy            sx                    cx*cy
 	math::Vec3<T> euler;
 	T sx = (*this)[2][1];
-	if (sx < (1 - CMP_EPSILON)) {
-		if (sx > -(1 - CMP_EPSILON)) {
+	if (sx < (1 - 1e-4)) {
+		if (sx > -(1 - 1e-4)) {
 			euler.x = asinf(sx);
 			euler.y = atan2f(-(*this)[2][0], (*this)[2][2]);
 			euler.z = atan2f(-(*this)[0][1], (*this)[1][1]);
@@ -1009,8 +1009,8 @@ math::Vec3<T> Basis<T>::get_euler_zyx() const noexcept {
 	//        -sy               cy*sx                 cy*cx
 	math::Vec3<T> euler;
 	T sy = (*this)[2][0];
-	if (sy < (1 - CMP_EPSILON)) {
-		if (sy > -(1 - CMP_EPSILON)) {
+	if (sy < (1 - 1e-4)) {
+		if (sy > -(1 - 1e-4)) {
 			euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 			euler.y = asinf(-sy);
 			euler.z = atan2f((*this)[1][0], (*this)[0][0]);

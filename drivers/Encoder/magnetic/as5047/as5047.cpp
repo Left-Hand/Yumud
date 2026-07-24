@@ -1,64 +1,46 @@
 #include "AS5047.hpp"
+#include <bit>
 
 
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = AS5047::Error;
+using Self = AS5047;
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-namespace {
-struct [[nodiscard]] Packet final{
-    uint16_t addr_:14;
-    union{
-        uint16_t read_:1;
-        uint16_t ef:1;
-    };
-    uint16_t parity_:1;
-
-    static constexpr bool calc_parity(const uint16_t bits){
-        int count = 0;
-        for (int i = 0; i < 16; ++i) {
-            if (bits & (1 << i)) {
-                count++;
-            }
-        }
-        return (count % 2 == 0) ? true : false;
-    }
-};
-
-}
+static_assert(Self::make_read_addr_packet(0x3fff).bits == 0xffff);
 
 
-IResult<> AS5047::write_reg(const RegAddr reg_addr, const uint8_t reg_val){
-    (void)(reg_addr);
-    (void)(reg_val);
-    // WRFormat format = {
-    //     .reg_addr = reg_addr,
-    //     .type = 0b0110
-    // };
 
-    // spi_drv_.write_single(format, CONT);
+// https://blog.csdn.net/Mark_md/article/details/119645201
+// SPI读角度流程：
+// 1、AS5047P和MCU上电。
+// 2、上电后至少延时等待tpon=10ms。才可以发送有效数据。
+// 3、循环读 ANGLECOM寄存器(0x3FFF)，得到 uint16 的数据。PARD位校验无误后，将其转换为转子的实际角度。
 
-    // spi_drv_.write_single(reg_val);
-    TODO();
+
+IResult<> AS5047::write_reg(const Packet write_addr_pkt, const uint16_t reg_val){
+
+    if(const auto res = spi_drv_.write_single<uint16_t>(write_addr_pkt.bits, CONT);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = spi_drv_.write_single<uint16_t>(make_write_data_packet(reg_val).bits);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 
-IResult<> AS5047::read_reg(const RegAddr reg_addr, uint8_t & reg_val){
-    (void)(reg_addr);
-    (void)(reg_val);
-    // WRFormat format = {
-    //     .reg_addr = reg_addr,
-    //     .type = 0b0011
-    // };
+IResult<> AS5047::read_reg(Packet addr_pkt, uint16_t & reg_val){
+    addr_pkt = writepkt_to_readpkt(addr_pkt);
 
-    // spi_drv_.write_single(format, CONT);
-    // spi_drv_.read_single(reg_val);
-    TODO();
+    if(const auto res = spi_drv_.write_single<uint16_t>(addr_pkt.bits, CONT);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = spi_drv_.write_single<uint16_t>(make_write_data_packet(reg_val).bits);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

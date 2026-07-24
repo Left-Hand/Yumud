@@ -123,23 +123,24 @@ struct [[nodiscard]] Priority final{
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self) noexcept { 
         switch(self.count){
-            case 0: return os << StringView("Exceptional");
-            case 1: return os << StringView("Immediate");
-            case 2: return os << StringView("Fast");
-            case 3: return os << StringView("High");
-            case 4: return os << StringView("Nominal");
-            case 5: return os << StringView("Low");
-            case 6: return os << StringView("Slow");
-            case 7: return os << StringView("Optional");
+            case 0: return os << "Exceptional";
+            case 1: return os << "Immediate";
+            case 2: return os << "Fast";
+            case 3: return os << "High";
+            case 4: return os << "Nominal";
+            case 5: return os << "Low";
+            case 6: return os << "Slow";
+            case 7: return os << "Optional";
         }
-        return os << StringView("Unknown");
+        return os << "Unknown";
     }
 };
 
 struct [[nodiscard]] MessageFrameHeader final{
     using Self = MessageFrameHeader;
 
-    struct Fields{
+    uint32_t bits;
+    struct [[nodiscard]] BitFields final{
         uint32_t source_node_id:7;
         const uint32_t __service_else_message__:1;
         uint32_t subject_id:16;
@@ -165,18 +166,16 @@ struct [[nodiscard]] MessageFrameHeader final{
     }
 
     [[nodiscard]] constexpr Priority priority() const noexcept {
-        return Priority::from_bits(std::bit_cast<Fields>(bits).priority);
+        return Priority::from_bits(std::bit_cast<BitFields>(bits).priority);
     }
 
     [[nodiscard]] NodeId source_node_id() const noexcept {
-        return NodeId::from_u7(std::bit_cast<Fields>(bits).source_node_id);
+        return NodeId::from_u7(std::bit_cast<BitFields>(bits).source_node_id);
     }
 
     [[nodiscard]] SubjectId subject_id() const noexcept {
-        return SubjectId::from_u16(std::bit_cast<Fields>(bits).subject_id);
+        return SubjectId::from_u16(std::bit_cast<BitFields>(bits).subject_id);
     }
-private:
-    uint32_t bits;
 
     friend class Header;
 };
@@ -184,6 +183,17 @@ private:
 struct [[nodiscard]] AnonymousMessageFrameHeader final{
     using Self = AnonymousMessageFrameHeader;   
 
+    uint32_t bits;
+
+    struct BitFields{
+        uint32_t source_node_id:7;
+        uint32_t __hwzero_service_else_message__:1;
+        uint32_t message_type_id_:2;
+        uint32_t discriminator:14;
+        uint32_t priority:5;
+        uint32_t :3;
+    };
+
     static constexpr Self from_bits(const uint32_t bits){
         return std::bit_cast<Self>(bits);
     }
@@ -201,24 +211,21 @@ struct [[nodiscard]] AnonymousMessageFrameHeader final{
 
 
     [[nodiscard]] constexpr Priority priority() const noexcept {
-        return Priority(priority_);
+        return Priority(std::bit_cast<BitFields>(bits).priority);
     }
 
     [[nodiscard]] NodeId source_id() const noexcept {
-        return NodeId::from_bits(static_cast<uint8_t>(source_node_id_));
+        return NodeId::from_bits(static_cast<uint8_t>(std::bit_cast<BitFields>(bits).source_node_id));
     }
-private:
-    uint32_t source_node_id_:7;
-    const uint32_t __service_else_message__:1 = 0;
-    uint32_t message_type_id_:2;
-    uint32_t discriminator:14;
-    uint32_t priority_:5;
-    uint32_t :3;
+
+
 };
 
 struct [[nodiscard]] ServiceFrameHeader final{
     using Self = ServiceFrameHeader;
 
+    uint32_t bits;
+
     static constexpr Self from_bits(const uint32_t bits){
         return std::bit_cast<Self>(bits);
     }
@@ -235,29 +242,30 @@ struct [[nodiscard]] ServiceFrameHeader final{
     }
 
     [[nodiscard]] constexpr Priority priority() const noexcept {
-        return Priority(priority_);
+        return Priority(std::bit_cast<BitFields>(bits).priority);
     }
 
 
     constexpr NodeId dest_id() const noexcept {
-        return NodeId::from_bits(static_cast<uint8_t>(dest_node_id_));
+        return NodeId::from_bits(static_cast<uint8_t>(std::bit_cast<BitFields>(bits).dest_node_id_));
     }
 
     [[nodiscard]] constexpr bool is_request() const noexcept {
-        return request_else_response_;
+        return std::bit_cast<BitFields>(bits).request_else_response_;
     }
 
     [[nodiscard]] NodeId source_id() const noexcept {
-        return NodeId::from_bits(static_cast<uint8_t>(source_node_id_));
+        return NodeId::from_bits(static_cast<uint8_t>(std::bit_cast<BitFields>(bits).source_node_id));
     }
-private:
-    uint32_t source_node_id_:7;
-    const uint32_t __service_else_message__:1 = 1;
-    uint32_t dest_node_id_:7;
-    uint32_t request_else_response_:1;
-    uint32_t service_type_id_:8;
-    uint32_t priority_:5;
-    uint32_t :3;
+    struct BitFields{
+        uint32_t source_node_id:7;
+        uint32_t __hwone_service_else_message__:1;
+        uint32_t dest_node_id_:7;
+        uint32_t request_else_response_:1;
+        uint32_t service_type_id_:8;
+        uint32_t priority:5;
+        uint32_t :3;
+    };
 
     friend class Header;
 

@@ -4,6 +4,7 @@
 #include "core/string/view/string_view.hpp"
 #include "core/utils/serde/serde.hpp"
 #include "core/math_defs.hpp"
+#include "build_info_utils.hpp"
 #include <utility>
 
 namespace ymd{
@@ -21,13 +22,13 @@ struct [[nodiscard]] Month final{
 
     Kind kind;
 
-    static constexpr Option<Month> from_str(const StringView str){
+    static constexpr Option<Month> try_from_str(const StringView str){
         // Parse month abbreviation (first 3 chars)
 
         for (uint8_t m = 0; m < 12; ++m) {
-            if (str[0] == MONTH_STR[m][0] && 
-                str[1] == MONTH_STR[m][1] && 
-                str[2] == MONTH_STR[m][2]) {
+            if (str[0] == MONTH_DICT[m][0] && 
+                str[1] == MONTH_DICT[m][1] && 
+                str[2] == MONTH_DICT[m][2]) {
                 return Some(Month{std::bit_cast<Kind>(uint8_t(m + 1))});
             }
         }
@@ -54,7 +55,7 @@ struct [[nodiscard]] Month final{
 
 
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
-        const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
+        const auto str = MONTH_DICT[std::bit_cast<uint8_t>(self.kind) - 1];
         return os << StringView(str,3);
     }
 
@@ -62,11 +63,11 @@ private:
     template<size_t... Is>
     static constexpr std::array<uint32_t, sizeof...(Is)> 
     make_month_hashes(std::index_sequence<Is...>) {
-        return {{hash(Month::MONTH_STR[Is])...}};
+        return {{hash(Month::MONTH_DICT[Is])...}};
     }
 
     using SmallString = const char *;
-    static constexpr std::array<const char *, 12> MONTH_STR = {
+    static constexpr std::array<const char *, 12> MONTH_DICT = {
         "Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"
     };
@@ -93,10 +94,10 @@ struct [[nodiscard]] Date final{
     Day day;
 
     static consteval Date from_comptime(){
-        return from_str(StringView(__DATE__)).unwrap();
+        return try_from_str(StringView(__DATE__)).unwrap();
     }
 
-    static constexpr Option<Date> from_str(const StringView str) {
+    static constexpr Option<Date> try_from_str(const StringView str) {
         if(str.length() < 10) return None;
         // Parse day (next 2 chars, space-padded)
         uint8_t d = (str[4] == ' ') ? 
@@ -108,7 +109,7 @@ struct [[nodiscard]] Date final{
                         (str[9] - '0') * 10 +
                         (str[10] - '0');
         
-        const auto may_month = Month::from_str(str.substr_by_range(0,3).unwrap());
+        const auto may_month = Month::try_from_str(str.substr_by_range(0,3).unwrap());
         if(may_month.is_none()) return None;
         return Some(Date{y, may_month.unwrap(), d});
     }
@@ -177,7 +178,7 @@ struct [[nodiscard]] Time final{
         };
     }
 
-    static constexpr Option<Time> from_str(const StringView str){
+    static constexpr Option<Time> try_from_str(const StringView str){
         //TODO
         return None;
     }

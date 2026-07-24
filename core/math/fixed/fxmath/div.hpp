@@ -5,7 +5,18 @@
 
 namespace ymd::fxmath::details{
 
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+uint32_t __mpyf_ul(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
 
+
+
+
+[[nodiscard]] __attribute__((__always_inline__)) constexpr 
+int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){
+    return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
+}
 
 template<size_t Q, bool IS_SIGNED>
 __attribute__((const, optimize( "-Ofast" )))
@@ -160,22 +171,22 @@ constexpr int32_t iqn_div_impl(int32_t iqNInput1, int32_t iqNInput2)
 
 
     /* 1st iteration */
-    uint32_t ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    uint32_t ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 2nd iteration */
-    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* 3rd iteration */
-    ui30Temp = intrinsics::__mpyf_ul(uiq30Guess, uiq31Input2);
+    ui30Temp = __mpyf_ul(uiq30Guess, uiq31Input2);
     ui30Temp = -((uint32_t)ui30Temp - 0x80000000);
-    uiq30Guess = intrinsics::__mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
+    uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui30Temp << 1);
 
     /* Multiply 1/uiq31Input2 and uiqNInput1. */
-    uiqNResult = intrinsics::__mpyf_ul(uiq30Guess, uiqNInput1);
+    uiqNResult = __mpyf_ul(uiq30Guess, uiqNInput1);
 
 
     /* Saturate, add the sign and return. */

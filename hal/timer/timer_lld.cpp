@@ -28,7 +28,7 @@ static void reg_set_or_clear_bit(volatile T & reg, const T mask, const bool en){
 }
 
 template<typename T>
-[[nodiscard]] static bool reg_get_bit(const volatile T & reg, const T mask){
+[[nodiscard]] static bool reg_get_bit(const T  reg, const T mask){
     return static_cast<T>(reg) & mask;
 }
 
@@ -39,7 +39,8 @@ namespace ymd::lld{
 
 
 bool timer_is_up_counting(void * p_inst){
-    return reg_get_bit(SPL_INST(p_inst)->CTLR1, TIM_DIR) == 0;
+    auto p_reg = (volatile uint16_t *)(&SPL_INST(p_inst)->CTLR1);
+    return reg_get_bit(uint16_t(*p_reg), uint16_t(TIM_DIR)) == 0;
 }
 
 

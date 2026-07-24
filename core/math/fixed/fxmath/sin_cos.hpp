@@ -2,6 +2,7 @@
 
 #include "port.hpp"
 #include "constants.hpp"
+#include "angleop.hpp"
 #include <tuple>
 
 
@@ -264,7 +265,9 @@ constexpr IqSincosIntermediate make_sincospu_intermdeiate(uint32_t uq32_x_pu_bit
     const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
     
     //将x由锯齿波变为三角波 即单位圆左侧时进行镜像反转
-    const uint32_t inverse_mask = intrinsics::bmask32(sect_num & 0b1);
+
+    //condtional 0xffffffff mask
+    const uint32_t inverse_mask = static_cast<uint32_t>(-int32_t(sect_num & 0b1));
     uq32_x_pu_bits = (uq32_x_pu_bits ^ inverse_mask);
 
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块

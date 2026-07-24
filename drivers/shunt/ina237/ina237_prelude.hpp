@@ -127,15 +127,35 @@ struct [[nodiscard]] INA237_Prelude{
 
     };
 
+    [[nodiscard]] static constexpr uint16_t celsius_encode(const iq20 celsius){
+        // 转换因子：125m°C/LSB。
+        int16_t bits = int16_t(celsius * 8);
+        return uint16_t(bits << 4);
+    }
+
+    static constexpr iq20 celsius_decode(const uint16_t bits){
+        constexpr auto factor = uq20(0.125);
+        const int16_t int_val = int16_t(bits) >> 4;
+        return int32_t(int_val) * factor;
+    }
+
     struct [[nodiscard]] TemperatureCode final{
         // 设置用于比较值的阈值，以检测过热测量值。二进制补码值。
         // 在此字段中输入的值直接与 DIETEMP 寄存器中的值进行比较，以确
         // 定是否存在过热情况。转换因子：125m°C/LSB。
 
+        using Self = TemperatureCode;
+
         uint16_t bits;
+
+        static constexpr Self from_celsius(const iq20 celsius){
+            return Self{.bits = celsius_encode(celsius)};
+        }
+
+        constexpr iq20 to_celsius() const {
+            return celsius_decode(bits);
+        }
     };
-
-
 };
 
 
@@ -238,10 +258,7 @@ struct INA237_Regs:public INA237_Prelude{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
         static constexpr uint16_t RESET_VALUE = 0x0000;
 
-        // 15-0
-        // DIETEMP R 0h 内部芯片温度测量。二进制补码值
-
-        uint16_t DIETEMP:16;
+        TemperatureCode code;
     };
 
 

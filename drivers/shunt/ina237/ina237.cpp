@@ -40,6 +40,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
+
 // ====================
 // === equations
 // ====================
@@ -127,12 +128,27 @@ static constexpr uint32_t calc_cal_range0(
         #undef TEST_CASE
     }
 
+
+    {
+        auto calc_err = [&] (const float celsius) consteval -> float{
+            const auto code = Self::celsius_encode(iq20(celsius));
+            const auto recovery = (float)Self::celsius_decode(code);
+            return std::abs(celsius - recovery);
+        };
+
+        static_assert(calc_err(2.0f) < 1e-4);
+        static_assert(calc_err(12.0f) < 1e-4);
+        static_assert(calc_err(222.25f) < 1e-4);
+        static_assert(calc_err(-22.0f) < 1e-4);
+        static_assert(calc_err(13.75f) < 1e-4);
+    }
 }
 
 #undef DEF_CALC_CAL
 #undef DEF_CALC_CURRLSB
 
 }
+
 
 #define DEF_IS_RANGE0 (bool(regs_.config_reg.ADCRANGE == 0))
 
@@ -256,6 +272,14 @@ IResult<iq16> INA237::get_power(){
     return Ok(reg.bits * current_lsb_ma_ / 5000);
 }
 
+IResult<INA237::TemperatureCode> INA237::get_temperature(){
+    auto reg = Regset::R16_DieTemp{};
+    if(const auto res = this->read_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok(reg.code);
+}
+
 IResult<Self::BusbarVoltageCode> INA237::get_busbar_voltage_code(){
     auto reg = Regset::R16_Vbus{};
     if(const auto res = this->read_reg(reg);
@@ -295,8 +319,8 @@ IResult<> INA237::set_shunt_alert_threshold(
 
 
     return Ok();
-
 }
+
 
 IResult<> INA237::set_busbar_alert_threshold(
     const Option<BusbarVoltageCode> mi, 
@@ -316,6 +340,11 @@ IResult<> INA237::set_busbar_alert_threshold(
     }
 
     return Ok();
+}
+
+
+IResult<> INA237::set_temperature_alert_threshold(const TemperatureCode ma){
+    return write_reg(Regset::R16_TempLimit::REG_ADDR, ma.bits);
 }
 
 IResult<> INA237::set_average_times(const AverageTimes times){

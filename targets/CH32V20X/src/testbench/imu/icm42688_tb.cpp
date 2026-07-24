@@ -10,7 +10,7 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
+#include "drivers/imu/ICM42688/icm42688.hpp"
 #include "robots/gesture/mahony.hpp"
 
 using namespace ymd;

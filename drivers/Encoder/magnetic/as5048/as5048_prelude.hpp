@@ -93,7 +93,7 @@ struct AS5048A_Regset:public AS5048_Prelude{
 
 
 struct AS5048B_Regset:public AS5048_Prelude{
-    using RegAddr = uint8_t;
+    using RegAddr = uint16_t;
 
     struct [[nodiscard]] R8_ProgrammingControl:public Reg8{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0003};
@@ -129,12 +129,12 @@ struct AS5048B_Regset:public AS5048_Prelude{
     };
 
     struct [[nodiscard]] R8_Agc:public Reg8{
-        static constexpr RegAddr REG_ADDR = RegAddr{0xfa};
+        static constexpr RegAddr REG_ADDR = RegAddr{0x3ffa};
         uint8_t agc_value;
     };
 
     struct [[nodiscard]] R8_Diagnostics:public Reg8{
-        static constexpr RegAddr REG_ADDR = RegAddr{0xfb};
+        static constexpr RegAddr REG_ADDR = RegAddr{0x3ffb};
         uint8_t ocf:1;
         uint8_t cof:1;
         uint8_t comp_low:1;
@@ -144,12 +144,12 @@ struct AS5048B_Regset:public AS5048_Prelude{
 
 
     struct [[nodiscard]] R16_Magnitude:public Reg16{
-        static constexpr RegAddr REG_ADDR = RegAddr{0xfc};
+        static constexpr RegAddr REG_ADDR = RegAddr{0x3ffc};
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_Angle:public Reg16{
-        static constexpr RegAddr REG_ADDR = RegAddr{0xff};
+        static constexpr RegAddr REG_ADDR = RegAddr{0x3fff};
         uint16_t bits;
     };
 };

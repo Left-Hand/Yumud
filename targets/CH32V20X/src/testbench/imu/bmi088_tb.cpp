@@ -6,7 +6,7 @@
 #include "hal/conn/spi/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "drivers/IMU/Axis6/BMI088/BMI088.hpp"
+#include "drivers/imu/BMI088/BMI088.hpp"
 
 #include "robots/gesture/mahony.hpp"
 #include "hal/conn/uart/hw_singleton.hpp"

@@ -131,7 +131,7 @@ struct [[nodiscard]] Quat{
 
         T d = v0.dot(v1);
 
-        if (math::abs(d) > T(1) - T(CMP_EPSILON)) {
+        if (math::abs(d) > T(1) - T(1e-4)) {
             const auto axis = n0.get_any_perpendicular();
             return from_xyzw(axis.x, axis.y, axis.z, T(0));
         } else {
@@ -154,7 +154,7 @@ struct [[nodiscard]] Quat{
         T dot_product = default_dir.dot(normalized_dir);
         
         // If the vectors are nearly parallel, return the identity quaternion
-        if (math::abs(dot_product) > T(1) - T(CMP_EPSILON)) {
+        if (math::abs(dot_product) > T(1) - T(1e-4)) {
             return IDENTITY;
         }
         
@@ -316,7 +316,7 @@ struct [[nodiscard]] Quat{
 
         // calculate coefficients
 
-        if ((T(1) - cosom) > T(CMP_EPSILON)) {
+        if ((T(1) - cosom) > T(1e-4)) {
             // standard case (slerp)
             omega = math::acos(cosom);
             sinom = math::sin(omega);

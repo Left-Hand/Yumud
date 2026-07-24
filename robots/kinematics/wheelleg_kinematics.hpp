@@ -34,7 +34,7 @@ protected:
     constexpr auto d2_inverse_leg(const math::Vec2<T> & foot_position) const noexcept {
         auto knee_temp = (square(cfg_.thigh_length) + square(cfg_.shin_length) - foot_position.length_squareared()) / 
             (2 * cfg_.thigh_length * cfg_.shin_length);
-        if(ABS(knee_temp) > 1 + T(CMP_EPSILON)) return std::nullopt;
+        if(ABS(knee_temp) > 1 + T(1e-4)) return std::nullopt;
         
         auto knee_rad = acos(
             knee_temp
@@ -43,7 +43,7 @@ protected:
         auto hip_temp = (square(cfg_.thigh_length) + foot_position.length_squareared() - square(cfg_.shin_length)) / 
             (2 * cfg_.thigh_length * foot_position.length());
 
-        if(ABS(hip_temp) > 1 + T(CMP_EPSILON)) return std::nullopt;
+        if(ABS(hip_temp) > 1 + T(1e-4)) return std::nullopt;
 
         auto hip_rad = acos(
             hip_temp

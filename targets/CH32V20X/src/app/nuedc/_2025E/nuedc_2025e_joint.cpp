@@ -19,7 +19,7 @@
 
 
 #include "drivers/encoder/magnetic/MA730/ma730.hpp"
-#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
+#include "drivers/imu/bmi160/bmi160.hpp"
 #include "drivers/gatedrv/MP6540/mp6540.hpp"
 
 #include "middlewares/algebra/vectors/quat.hpp"

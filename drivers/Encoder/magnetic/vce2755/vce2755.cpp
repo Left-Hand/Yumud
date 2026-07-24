@@ -51,7 +51,7 @@ static_assert(calc_crc4(0x00001) == 0x03);
 
 
 
-IResult<VCE2755::AnglePacket> VCE2755::update(){
+IResult<VCE2755::AnglePacket> VCE2755::get_angle(){
     AnglePacket angle_packet;
     if(const auto res = read_bulk(AnglePacket::BASE_ADDR, std::span(angle_packet.bytes));
         res.is_err()) return Err(res.unwrap_err());
@@ -69,4 +69,23 @@ IResult<uint8_t> VCE2755::get_package_code(){
     if(const auto res = read_reg(chip_id_reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(chip_id_reg.code);
+}
+
+
+IResult<> VCE2755::set_direction(const RotateDirection dir){
+    auto reg = RegSet::R8_Direction{};
+    reg.is_ccw = dir == CCW;
+    return write_reg(reg.REG_ADDR, reg.to_bits());
+}
+
+IResult<> VCE2755::set_filter_bandwidth(const FilterBandwidth bw){
+    auto reg = RegCopy(regs_.bandwidth_reg);
+    reg.filter_bandwidth = bw;
+    return write_reg(reg);
+}
+
+IResult<> VCE2755::set_mag_weak_alarm_threshold(const WeakMagAlarmThreshold th){
+    auto reg = RegCopy(regs_.bandwidth_reg);
+    reg.weak_mag_alarm_threshold = th;
+    return write_reg(reg);
 }
