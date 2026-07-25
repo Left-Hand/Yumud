@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/math/fixed/fixed.hpp"
+#include "core/math/fixed/fxmath/sqrt.hpp"
 
 namespace ymd::math{
 
@@ -83,4 +84,20 @@ static constexpr uq32 sat_ucircle(const uq32 x){
     return uq32::from_bits(std::min(res1, res2));
 }
 
+
+template<size_t Q>
+static constexpr math::fixed<Q, uint32_t> heightleg(
+    const math::fixed<Q, int32_t> hypotenuse,
+    const math::fixed<Q, int32_t> baseside
+){
+    const auto hypotenuse_sq64 = uint64_t(int64_t(hypotenuse.to_bits()) * hypotenuse.to_bits());
+    const auto baseside_sq64 = uint64_t(int64_t(baseside.to_bits()) * baseside.to_bits());
+    if(hypotenuse_sq64 <= baseside_sq64) return 0;
+
+    return math::fixed<Q, uint32_t>::from_bits(
+        fxmath::details::IqSqrtIntermediate::template 
+            from_sqsum64u_nonzero<Q, fxmath::details::SqrtNormStrategy::MAG>(hypotenuse_sq64 - baseside_sq64)
+        .template compute<Q, fxmath::details::SqrtNormStrategy::MAG>()
+    );
+}
 }

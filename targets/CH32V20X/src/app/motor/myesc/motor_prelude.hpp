@@ -267,6 +267,11 @@ struct alignas(4) [[nodiscard]] AllState{
 
     HarmonicState harmonic_state;
 
+    
+    iq20 mtpa_d_curr;
+    iq20 mtpa_q_curr;
+
+
     AlphaBetaCoord<iq20> alphabeta_curr_raw;
     AlphaBetaCoord<iq20> alphabeta_curr_ref;
     AlphaBetaCoord<iq20> prev_alphabeta_curr_raw;

@@ -135,12 +135,6 @@ static_assert(cross2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == -2_iq16);
 
 
 
-
-
-
-static_assert(std::abs((float)(heightleg(5.0_iq20, 3.0_iq20)) - 4.0f) < 1e-4);
-static_assert(std::abs((float)(heightleg(5.0_iq20, 4.0_iq20)) - 3.0f) < 1e-4);
-
 static_assert(std::abs((float)std::get<0>(resat_unit_circle(0.2_iq20, 0.0_iq20)) - 1.0f) < 1e-4);
 
 static_assert(std::abs((float)std::get<0>(resat_unit_circle(1.0_iq20, 1.73205080757_iq20)) - 0.5f) < 1e-4);

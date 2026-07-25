@@ -26,21 +26,6 @@ resat_unit_circle(
     return {a ,b};
 }
 
-template<size_t Q>
-static constexpr math::fixed<Q, uint32_t> heightleg(
-    const math::fixed<Q, int32_t> hypotenuse,
-    const math::fixed<Q, int32_t> baseside
-){
-    const auto hypotenuse_sq64 = uint64_t(int64_t(hypotenuse.to_bits()) * hypotenuse.to_bits());
-    const auto baseside_sq64 = uint64_t(int64_t(baseside.to_bits()) * baseside.to_bits());
-    if(hypotenuse_sq64 <= baseside_sq64) return 0;
-
-    return math::fixed<Q, uint32_t>::from_bits(
-        fxmath::details::IqSqrtIntermediate::template 
-            from_sqsum64u_nonzero<Q, fxmath::details::SqrtNormStrategy::MAG>(hypotenuse_sq64 - baseside_sq64)
-        .template compute<Q, fxmath::details::SqrtNormStrategy::MAG>()
-    );
-}
 
 
 static constexpr uint32_t lerp_pu_bits(uint32_t a0, uint32_t b, uint32_t ratio){

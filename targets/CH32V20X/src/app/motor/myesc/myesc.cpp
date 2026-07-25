@@ -213,7 +213,7 @@ static constexpr iq16 tmrticks_to_us(const TimerTick tick){
 #define TIM_INST TIM1
 #define ADC_INST ADC1
 
-static void setup_adc(){
+__no_inline static void setup_adc(){
 
     hal::adc1.init({
             {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
@@ -381,99 +381,52 @@ static void setup_drv8323(){
 }
 
 
+[[maybe_unused]] __no_inline 
+static void process_current_sense(
+    AllState & state, 
+    FnSwitches fn_switches, 
+    std::array<int32_t, 3U> uvw_bvalue
+){
+    
+    auto & dc_state = state.dc_calibrate_state;
 
+    state.uvw_curr_raw = UvwCoord<iq20>{
+        .u = CURRENT_AMPS_PER_ADC_LSB *
+            (int32_t(uvw_bvalue[0]) - int32_t(dc_state.uvw_bvalue_offset[0])),
+        .v = CURRENT_AMPS_PER_ADC_LSB *
+            (int32_t(uvw_bvalue[1]) - int32_t(dc_state.uvw_bvalue_offset[1])),
+        .w = CURRENT_AMPS_PER_ADC_LSB *
+            (int32_t(uvw_bvalue[2]) - int32_t(dc_state.uvw_bvalue_offset[2])),
+    };
 
-
-static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
-    //#region 力矩转电流
-
-    [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
-
-    [[maybe_unused]] const auto now_secs = clock::seconds();
-
-    static constexpr auto example_pattern = 
-        // ExamplePathPattern::Sine
-        // ExamplePathPattern::Stop
-        ExamplePathPattern::Stairs
-    ;
-
-    const auto [x1_path, x2_path] = calc_demo_path(now_secs, example_pattern);
-
-
-    const auto now_x1 = math::fixed_downcast<16>(state.rotor_rotation_state_var.x1);
-    const auto now_x2 = state.rotor_rotation_state_var.x2;
-    const auto torque_curr_step_limit = iq20(0.02);
-    const auto torque_curr_limit = iq20(3.0);
-
-    const auto loop_wiring = fn_switches.loop_wiring;
-
-    static constexpr iq16 e1_limit = 100;
-    static constexpr iq16 e2_limit = 1000;
-
-    switch(loop_wiring){
-        case LoopWiring::Mit:{
-            const iq20 kp = 18.7_iq16;
-            const iq20 kd = 0.26_iq16;
-
-            const iq16 e1 = math::clamp2(x1_path - now_x1, e1_limit);
-            const iq16 e2 = math::clamp2(x2_path - now_x2, e2_limit);
-            
-            iq20 torque_curr_cmd = (kp * e1) + (kd * e2);
-            torque_curr_cmd = math::clamp2(torque_curr_cmd, torque_curr_limit);
-
-            state.torque_curr_integral = 0;
-            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
-            break;
-        }
-
-        case LoopWiring::SeriesPi:{
-            const iq20 kpp = 25.0_iq20;
-            const iq20 kp = 0.2_iq20;
-            const iq20 ki = 4.66_iq20;
-            const auto ki_discrete = ki / FOC_FREQ;
-
-            const iq16 x2_ref = math::clamp2(iq16(kpp * (x1_path - now_x1)), e2_limit);
-            // const iq16 x2_ref = 0;
-            const iq16 e2 = math::clamp2((x2_ref + x2_path) - now_x2, e2_limit);
-
-            state.torque_curr_integral = state.torque_curr_integral + math::clamp2(ki_discrete * e2, torque_curr_step_limit);
-
-            auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
-            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, math::clamp2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
-            state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
-            break;
-        }
-
-        case LoopWiring::SeriesAdrc:{
-            const iq20 kpp = 10.0_iq20;
-            constexpr iq20 b0 = 200.1_iq20;
-            constexpr iq20 inv_b0 = 1 / b0;
-            constexpr size_t wc = 36;
-            constexpr size_t wo = 3 * wc;
-            constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
-
-            const auto x2_ref = math::clamp2(iq16(kpp * (x1_path - now_x1)), e2_limit) + x2_path;
-
-            auto & eso_state = state.speed_eso_state;
-
-            const auto iq = math::clamp2(iq20((wc * (x2_ref - eso_state.speed_est) - eso_state.f_est) * inv_b0), torque_curr_limit);
-            eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
-            eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
-
-            state.torque_curr_cmd = iq;
-            break;
-        }
+    if(fn_switches.phase_invert_en){
+        std::swap(state.uvw_curr_raw[1], state.uvw_curr_raw[2]);
     }
+
+    state.uvw_curr_fastlp[0] = lpf_1000hz(state.uvw_curr_fastlp[0], state.uvw_curr_raw[0]);
+    state.uvw_curr_fastlp[1] = lpf_1000hz(state.uvw_curr_fastlp[1], state.uvw_curr_raw[1]);
+    state.uvw_curr_fastlp[2] = lpf_1000hz(state.uvw_curr_fastlp[2], state.uvw_curr_raw[2]);
+
+    // state.u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
+    // state.v_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[1], state.uvw_curr_raw[0] + state.uvw_curr_raw[2]));
+    
+    // state.unblance_curr_abs_lp = lpf_50hz(
+    //     state.unblance_curr_abs_lp,
+    //     math::abs(state.uvw_curr_raw.numeric_sum())
+    // );
+
+
+    state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_genout));
+    state.busbar_curr_lp = lpf_50hz(state.busbar_curr_lp, state.busbar_curr_raw);
+    
+    state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
+    //#endregion
 };
 
 
 
 
-[[maybe_unused]] static void process_disturb_ob_loop(AllState & state, const FnSwitches fn_switches){
-
-};
-
-
+[[maybe_unused]] __no_inline 
 static void process_position_sense(AllState & state, const FnSwitches fn_switches){
 
 
@@ -702,7 +655,98 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
 };
 
 
-static void process_torque_loop(AllState & state, const FnSwitches fn_switches){
+[[maybe_unused]] __no_inline 
+static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
+    //#region 力矩转电流
+
+    [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
+
+    [[maybe_unused]] const auto now_secs = clock::seconds();
+
+    static constexpr auto example_pattern = 
+        // ExamplePathPattern::Sine
+        // ExamplePathPattern::Stop
+        ExamplePathPattern::Stairs
+    ;
+
+    const auto [x1_path, x2_path] = calc_demo_path(now_secs, example_pattern);
+
+
+    const auto now_x1 = math::fixed_downcast<16>(state.rotor_rotation_state_var.x1);
+    const auto now_x2 = state.rotor_rotation_state_var.x2;
+    const auto torque_curr_step_limit = iq20(0.02);
+    const auto torque_curr_limit = iq20(6.0);
+
+    const auto loop_wiring = fn_switches.loop_wiring;
+
+    static constexpr iq16 e1_limit = 100;
+    static constexpr iq16 e2_limit = 1000;
+
+    switch(loop_wiring){
+        case LoopWiring::Mit:{
+            const iq20 kp = 18.7_iq16;
+            const iq20 kd = 0.26_iq16;
+
+            const iq16 e1 = math::clamp2(x1_path - now_x1, e1_limit);
+            const iq16 e2 = math::clamp2(x2_path - now_x2, e2_limit);
+            
+            iq20 torque_curr_cmd = (kp * e1) + (kd * e2);
+            torque_curr_cmd = math::clamp2(torque_curr_cmd, torque_curr_limit);
+
+            state.torque_curr_integral = 0;
+            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
+            break;
+        }
+
+        case LoopWiring::SeriesPi:{
+            const iq20 kpp = 25.0_iq20;
+            const iq20 kp = 0.2_iq20;
+            const iq20 ki = 4.66_iq20;
+            const auto ki_discrete = ki / FOC_FREQ;
+
+            const iq16 x2_ref = math::clamp2(iq16(kpp * (x1_path - now_x1)), e2_limit);
+            // const iq16 x2_ref = 0;
+            const iq16 e2 = math::clamp2((x2_ref + x2_path) - now_x2, e2_limit);
+
+            state.torque_curr_integral = state.torque_curr_integral + math::clamp2(ki_discrete * e2, torque_curr_step_limit);
+
+            auto desired_torque_curr_cmd = state.torque_curr_integral + kp * e2;
+            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, math::clamp2(desired_torque_curr_cmd, torque_curr_limit), torque_curr_step_limit);
+            state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
+            break;
+        }
+
+        case LoopWiring::SeriesAdrc:{
+            const iq20 kpp = 10.0_iq20;
+            constexpr iq20 b0 = 200.1_iq20;
+            constexpr iq20 inv_b0 = 1 / b0;
+            constexpr size_t wc = 36;
+            constexpr size_t wo = 3 * wc;
+            constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
+
+            const auto x2_ref = math::clamp2(iq16(kpp * (x1_path - now_x1)), e2_limit) + x2_path;
+
+            auto & eso_state = state.speed_eso_state;
+
+            const auto iq = math::clamp2(iq20((wc * (x2_ref - eso_state.speed_est) - eso_state.f_est) * inv_b0), torque_curr_limit);
+            eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
+            eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
+
+            state.torque_curr_cmd = iq;
+            break;
+        }
+    }
+};
+
+
+
+
+[[maybe_unused]] __no_inline static void process_disturb_ob_loop(AllState & state, const FnSwitches fn_switches){
+
+};
+
+
+__no_inline static void process_torque_loop(AllState & state, const FnSwitches fn_switches){
 
     const auto elec_angle = state.elec_angle;
     const auto elec_speed = state.elec_speed;
@@ -726,26 +770,66 @@ static void process_torque_loop(AllState & state, const FnSwitches fn_switches){
 
     {
 
-        enum class [[nodiscard]] DqCurrentSource:uint8_t{
-            IdAlwaysZero,
-            IdAlwaysZeroRamped,
-            Independent,
-            IndependentRamped,
-            Torque,
-        };
+        // enum class [[nodiscard]] DqCurrentSource:uint8_t{
+        //     IdAlwaysZero,
+        //     IdAlwaysZeroRamped,
+        //     Independent,
+        //     IndependentRamped,
+        //     Torque,
+        // };
 
 
 
         iq20 d_curr_ref = 0;
         
         // iq20 d_curr_ref = -0.4_iq20 * math::abs(state.torque_curr_cmd);
-        iq20 q_curr_ref = state.torque_curr_cmd;
+        const auto tc_ref = state.torque_curr_cmd;
+        iq20 q_curr_ref = tc_ref;
         
-        const bool do_mtpa = fn_switches.mtpa_en;
+
+
+        // const bool do_mtpa = fn_switches.mtpa_en;
         const bool do_mtpv = fn_switches.mtpv_en;
 
         //TODO mtpa
-        if(do_mtpa){
+        // if(do_mtpa){
+        if(true){
+            constexpr auto ld_lq_diff = MotorProfile::Q_AXIS_INDUCTANCE_MH - MotorProfile::D_AXIS_INDUCTANCE_MH;
+
+            constexpr auto lambda = 1000 * MotorProfile::FLUX_LINKAGE;
+
+
+
+            #if 0
+            // \frac{\left(l-\sqrt{l^{2}+8\cdot\left(d\right)^{2}x^{2}}\right)}{4d}
+            constexpr auto inv_4_ld_lq_diff = 1 / (4 * ld_lq_diff);
+            constexpr auto ld_lq_diff_x2sqr2 = ld_lq_diff * iq20(2.828);
+
+            const auto d_curr_set_tmp = (lambda - math::mag(lambda, ld_lq_diff_x2sqr2 * (tc_ref))) * inv_4_ld_lq_diff;
+
+			const auto q_curr_set_tmp = [&] -> iq20{
+                // if(math::abs(d_curr_set_tmp) > math::abs(tc_ref)) return 0;
+                iq20 abs_iq = math::heightleg(tc_ref, d_curr_set_tmp);
+                return (tc_ref < 0) ? -abs_iq : abs_iq;
+            }();
+
+            #else
+            //use taylor
+            // -\frac{d}{l}x^{2}
+            // x-\frac{d^{2}}{2l^{2}}x^{3}
+            constexpr auto taylor_d_curr_coeff = -ld_lq_diff / lambda;
+            constexpr auto taylor_iq_coeff = 2 * math::square(ld_lq_diff / lambda);
+
+            const auto approx_tc_ref = iq12(tc_ref);
+            const auto approx_tc_ref_2 = math::square(approx_tc_ref);
+            const auto approx_tc_ref_3 = approx_tc_ref_2 * (approx_tc_ref);
+
+            d_curr_ref = taylor_d_curr_coeff * approx_tc_ref_2 ;
+            q_curr_ref = tc_ref - iq20(taylor_iq_coeff * (approx_tc_ref_3));
+            #endif
+
+            state.mtpa_d_curr = d_curr_ref;
+            state.mtpa_q_curr = q_curr_ref;
         }
 
         //TODO mtpv
@@ -1430,53 +1514,13 @@ void myesc_main(){
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.harmonic_suppression_en = 0;
+    fn_switches_.elec_angle_source = ElecAngleSource::MagEncoder;
+    fn_switches_.loop_wiring = LoopWiring::Mit;
 
     auto p_all_state_ = std::make_unique<AllState>();
     AllState & all_state_ = *p_all_state_;
     all_state_.reset();
-
-
-
-    [[maybe_unused]] auto process_current_sense = [&](
-        AllState & state, 
-        FnSwitches fn_switches, 
-        std::array<int32_t, 3U> uvw_bvalue
-    ){
-        
-        auto & dc_state = state.dc_calibrate_state;
-
-        state.uvw_curr_raw = UvwCoord<iq20>{
-            .u = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_bvalue[0]) - int32_t(dc_state.uvw_bvalue_offset[0])),
-            .v = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_bvalue[1]) - int32_t(dc_state.uvw_bvalue_offset[1])),
-            .w = CURRENT_AMPS_PER_ADC_LSB *
-                (int32_t(uvw_bvalue[2]) - int32_t(dc_state.uvw_bvalue_offset[2])),
-        };
-
-        if(fn_switches.phase_invert_en){
-            std::swap(state.uvw_curr_raw[1], state.uvw_curr_raw[2]);
-        }
-
-        state.uvw_curr_fastlp[0] = lpf_1000hz(state.uvw_curr_fastlp[0], state.uvw_curr_raw[0]);
-        state.uvw_curr_fastlp[1] = lpf_1000hz(state.uvw_curr_fastlp[1], state.uvw_curr_raw[1]);
-        state.uvw_curr_fastlp[2] = lpf_1000hz(state.uvw_curr_fastlp[2], state.uvw_curr_raw[2]);
-
-        // state.u_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[0], state.uvw_curr_raw[1] + state.uvw_curr_raw[2]));
-        // state.v_disconn_dbs.add_sample(judge_is_disconn(state.uvw_curr_raw[1], state.uvw_curr_raw[0] + state.uvw_curr_raw[2]));
-        
-        // state.unblance_curr_abs_lp = lpf_50hz(
-        //     state.unblance_curr_abs_lp,
-        //     math::abs(state.uvw_curr_raw.numeric_sum())
-        // );
-
-
-        state.busbar_curr_raw = (state.uvw_curr_raw.dot(state.uvw_dutycycle_genout));
-        state.busbar_curr_lp = lpf_50hz(state.busbar_curr_lp, state.busbar_curr_raw);
-        
-        state.alphabeta_curr_raw = AlphaBetaCoord<iq20>::from_uvw(state.uvw_curr_raw);
-        //#endregion
-    };
+    all_state_.torque_curr_cmd = 0.0_iq20;
 
 
 
@@ -1614,7 +1658,7 @@ void myesc_main(){
         repl_server.invoke(list);
     };
     
-    all_state_.torque_curr_cmd = 0.0_iq20;
+
 
     while(true){
         auto & state = all_state_;
@@ -1748,7 +1792,7 @@ void myesc_main(){
             // math::atan2pu(state.alphabeta_curr_raw[0], state.alphabeta_curr_raw[1]),
             // state.alphabeta_curr_raw[0] / state.alphabeta_curr_raw[1],
             // state.uvw_curr_ref,
-            state.alphabeta_curr_raw,
+            // state.alphabeta_curr_raw,
             // state.alphabeta_curr_ref,
             // state.alphabeta_curr_raw,
             // state.dq5_curr_lp,
@@ -1797,20 +1841,22 @@ void myesc_main(){
             // state.flux_ob_state.x2_slowlp,
             // state.sensed_elec_angle.to_turns(),
             // state.busbar_curr_lp,
-            state.torque_curr_cmd,
-            state.speed_eso_state.speed_est,
-            // state..to_turns(),
+            // state.torque_curr_cmd,
+            // state.dq_curr_raw,
+            state.dq_curr_ref,
+            // state.speed_eso_state.speed_est,
+            // state.to_turns(),
             // state.sensed_elec_speed,
             math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             state.rotor_rotation_state_var.x2,
-            mag_volt * inv_mag_curr,
+            // mag_volt * inv_mag_curr,
             // state.busbar_curr_lp * BUSBAR_VOLT,
-            state.flux_ob_state.x1,
-            state.flux_ob_state.x2,
+            // state.flux_ob_state.x1,
+            // state.flux_ob_state.x2,
             // state.busbar_curr_raw,
-            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick),
-            tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
+            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
+            // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
 
             // uint16_t(TIM_INST->ATRLR)
             // timer.oc<4>().cvr(),
