@@ -30,9 +30,9 @@ constexpr math::fixed<Q, int32_t> dft32_bin0(
 static constexpr auto SINCOS_32STEP_TABLE = []{
     using T = int32_t;
 
-    static constexpr size_t Q = 15;
+    static constexpr size_t Q = 31;
     static constexpr size_t NUM_STEPS = 32;
-    std::array<std::array<math::fixed<15, T>, 2>, NUM_STEPS> table;
+    std::array<std::array<math::fixed<31, T>, 2>, NUM_STEPS> table;
     uq32 x = 0;
     constexpr uq32 delta = uq32::from_rcp(NUM_STEPS);
     for(size_t i = 0; i < NUM_STEPS; i++){

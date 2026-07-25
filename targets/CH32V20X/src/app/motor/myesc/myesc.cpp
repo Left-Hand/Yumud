@@ -734,16 +734,14 @@ void myesc_main(){
 
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
-        // static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, PLL_FC, PLL_ZETA);
-        // static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 105, 2.0_iq16);
-        // static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 405, 2.0_iq16);
-        // static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 65, 2.0_iq16);
-        static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 65, 2.0_iq16);
-        // static constexpr auto SENSORLESS_PLL_COEFFS = dsp::PllCoeffs::from_fsfc(FOC_FREQ, 45, 2.0_iq16);
+        static constexpr size_t SENSORLESS_PLL_FC = 65;
+        static constexpr auto SENSORLESS_PLL_COEFFS = 
+            dsp::PllCoeffs::from_fsfc(FOC_FREQ, SENSORLESS_PLL_FC, 2.0_iq16);
 
 
 
-        if(0){//sensorless observer
+        // if(1){//sensorless observer
+        if(false){//sensorless observer
             constexpr auto L = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
             constexpr auto R = MotorProfile::PHASE_RESISTANCE_OHM;
             constexpr auto lambda = MotorProfile::FLUX_LINKAGE;
@@ -841,8 +839,8 @@ void myesc_main(){
 
             const auto lem1 = flux_ob_state.x1 - L_iaib[0];
             const auto lem2 = flux_ob_state.x2 - L_iaib[1];
-            // auto abs_lem = math::square(lem1) + math::square(lem2);
-            auto abs_lem = math::mag(lem1, lem2);
+            auto abs_lem = math::square(lem1) + math::square(lem2);
+            // auto abs_lem = math::mag(lem1, lem2);
             auto err = (lambda - abs_lem);
 
             if (err > 0) {
@@ -879,7 +877,7 @@ void myesc_main(){
             }
         
             SENSORLESS_PLL_COEFFS.iterate(state.observer_pll_state, {
-                iq16(pll_input_sine) * 80,
+                iq16(pll_input_sine) * 80, 
                 iq16(pll_input_cosine) * 80
             });
             // SENSORLESS_PLL_COEFFS.iterate(state.observer_pll_state, {
@@ -1335,7 +1333,7 @@ void myesc_main(){
 
 
         const auto inv_busbar_volt = INV_BUSBAR_VOLT;
-        const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3) >> 1;
+        const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3u) >> 1;
 
         
         {//hfi
@@ -1916,8 +1914,8 @@ void myesc_main(){
             math::fixed_downcast<16>(state.rotor_rotation_state_var.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             state.rotor_rotation_state_var.x2,
-            // mag_volt * inv_mag_curr,
-            state.busbar_curr_lp * BUSBAR_VOLT,
+            mag_volt * inv_mag_curr,
+            // state.busbar_curr_lp * BUSBAR_VOLT,
             state.flux_ob_state.x1,
             state.flux_ob_state.x2,
             // state.busbar_curr_raw,

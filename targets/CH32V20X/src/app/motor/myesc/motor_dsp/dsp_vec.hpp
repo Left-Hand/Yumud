@@ -1,34 +1,10 @@
 #pragma once
 
 #include "core/math/fixed/fixed.hpp"
+#include "core/math/rotate.hpp"
 
 namespace ymd::dsp{
 
-//a * b + c * d
-template<size_t Q1, typename D1, size_t Q2, typename D2>
-static constexpr math::fixed<Q1, D1> dot2v2(
-    const math::fixed<Q1, D1> v1x, const math::fixed<Q2, D2> v2x,
-    const math::fixed<Q1, D1> v1y, const math::fixed<Q2, D2> v2y
-){
-    using ED = tmp::extended_mul_underlying_t<D1, D2>;
-    ED bits = 0;
-    bits += static_cast<ED>(v1x.to_bits()) * static_cast<ED>(v2x.to_bits());
-    bits += static_cast<ED>(v1y.to_bits()) * static_cast<ED>(v2y.to_bits());
-    return math::fixed<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
-}
-
-//a * d - b * c
-template<size_t Q1, typename D1, size_t Q2, typename D2>
-static constexpr math::fixed<Q1, D1> cross2v2(
-    const math::fixed<Q1, D1> v1x, const math::fixed<Q2, D2> v2x,
-    const math::fixed<Q1, D1> v1y, const math::fixed<Q2, D2> v2y
-){
-    using ED = tmp::extended_mul_underlying_t<D1, D2>;
-    ED bits = 0;
-    bits += static_cast<ED>(v1x.to_bits()) * static_cast<ED>(v2y.to_bits());
-    bits -= static_cast<ED>(v2x.to_bits()) * static_cast<ED>(v1y.to_bits());
-    return math::fixed<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
-}
 
 template<size_t Q>
 static constexpr void inplace_resat_unit_circle(

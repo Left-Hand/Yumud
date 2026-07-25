@@ -17,8 +17,8 @@ static constexpr auto DEADTIME_NANOS = 120ns;
 
 
 // #region VOLTAGE
-static constexpr auto BUSBAR_VOLT = iq16(24.0);
-static constexpr auto INV_BUSBAR_VOLT = 1 / BUSBAR_VOLT;
+static constexpr auto BUSBAR_VOLT = iq20(24.0);
+static constexpr auto INV_BUSBAR_VOLT = uq32(1 / BUSBAR_VOLT);
 
 
 //should below 1/sqrt(3):
@@ -29,7 +29,7 @@ static constexpr iq20 HFI_MODU_DEPTH_LIMIT = 0.06_iq20;
 static constexpr iq20 CTRL_MODU_DEPTH_LIMIT = 0.39_iq20;
 
 static constexpr iq20 CTRL_VOLT_LIMIT = BUSBAR_VOLT * CTRL_MODU_DEPTH_LIMIT;
-static constexpr iq20 INV_CTRL_VOLT_LIMIT = 1 / CTRL_VOLT_LIMIT;
+static constexpr uq32 INV_CTRL_VOLT_LIMIT = uq32(1 / CTRL_VOLT_LIMIT);
 // #endregion
 
 // #region OPA 
