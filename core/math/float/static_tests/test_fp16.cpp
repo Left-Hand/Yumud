@@ -49,6 +49,7 @@ namespace {
         // 边界值测试
         constexpr auto min_normal = fp16(0.000061f);  // ≈ 2^-14（最小规范数）
         constexpr auto max_normal = fp16(65504.0f);   // 最大规范值
+        static_assert(min_normal.to_bits() == 0x03ff);
         static_assert(max_normal.to_bits() == 0x7BFF);
 
         // 符号位保留性测试（往返验证）

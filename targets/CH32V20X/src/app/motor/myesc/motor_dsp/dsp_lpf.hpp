@@ -52,22 +52,72 @@ static constexpr Result<uq32, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint3
 }
 
 
-template<size_t Q>
-__always_inline static constexpr math::fixed<Q, int32_t> lpf_1o(
-    const math::fixed<Q, int32_t> y_prev,  // y[n-1]
-    const math::fixed<Q, int32_t> x,       // x[n]
-    const uq32 alpha
+
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_i32_uq32(
+    const int32_t a, 
+    const int32_t b, 
+    const uq32 ratio
 ){
-    return y_prev + (x - y_prev) * alpha;
+    return a + intrinsics::mul32hsu(b - a, ratio.to_bits());
+}
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_u32_uq32(
+    const uint32_t a, 
+    const uint32_t b, 
+    const uq32 ratio
+){
+    return a + intrinsics::mul32hu(b - a, ratio.to_bits());
+}
+
+
+template<typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D lerp_int_uq32(
+    const D a, const D b, const uq32 ratio
+){
+    if constexpr(std::is_signed_v<D>){
+        return lerp_i32_uq32(static_cast<int32_t>(a), static_cast<int32_t>(b), ratio);
+    }else{
+        return lerp_u32_uq32(static_cast<uint32_t>(a), static_cast<uint32_t>(b), ratio);
+    }
+}
+
+template<size_t Q, typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> lerp_fixed_uq32(
+    const math::fixed<Q, D> a, 
+    const math::fixed<Q, D> b, 
+    const uq32 ratio
+){
+    const auto y_bits = lerp_int_uq32(a.to_bits(), b.to_bits(), ratio);
+    return math::fixed<Q, D>::from_bits(y_bits);
+}
+
+template<size_t Q, typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> lerp_fixed(
+    const math::fixed<Q, D> a, 
+    const math::fixed<Q, D> b, 
+    const math::fixed<Q, D> ratio
+){
+    const auto ratio_uq32 = uq32::from_bits(ratio.to_bits() << (32u - Q));
+    return lerp_fixed_uq32(a, b, ratio_uq32);
 }
 
 template<size_t Q>
-__always_inline static constexpr math::fixed<Q, int32_t> leaky_1o(
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, int32_t> lpf_1o(
     const math::fixed<Q, int32_t> y_prev,  // y[n-1]
     const math::fixed<Q, int32_t> x,       // x[n]
     const uq32 alpha
 ){
-    return x + (y_prev - x) * alpha;
+    return lerp_fixed_uq32(y_prev, x, alpha);
 }
 
 template<size_t Q>

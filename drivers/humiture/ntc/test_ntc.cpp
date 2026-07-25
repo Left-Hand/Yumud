@@ -183,6 +183,166 @@ static constexpr SteinhartHartParams fitting_sh_params(
 #endif
 
 
+
+
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_i32_uq32(
+    const int32_t a, 
+    const int32_t b, 
+    const uq32 ratio
+){
+    return a + intrinsics::mul32hsu(b - a, ratio.to_bits());
+}
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_u32_uq32(
+    const uint32_t a, 
+    const uint32_t b, 
+    const uq32 ratio
+){
+    return a + intrinsics::mul32hu(b - a, ratio.to_bits());
+}
+
+
+template<typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D lerp_int_uq32(
+    const D a, const D b, const uq32 ratio
+){
+    if constexpr(std::is_signed_v<D>){
+        return lerp_i32_uq32(static_cast<int32_t>(a), static_cast<int32_t>(b), ratio);
+    }else{
+        return lerp_u32_uq32(static_cast<uint32_t>(a), static_cast<uint32_t>(b), ratio);
+    }
+}
+
+
+
+struct alignas(4) [[nodiscard]] FracIndex final{
+    uq32 frac;
+    uint32_t index;
+};
+
+struct alignas(4) [[nodiscard]] TableLengthInfo final{
+    uint32_t len;
+    uint32_t lg2_len;
+
+    static constexpr TableLengthInfo from(size_t len){
+        if(not std::has_single_bit(len)) __builtin_trap();
+        return TableLengthInfo{
+            .len = len,
+            .lg2_len = uint32_t(__builtin_clz(len - 1))
+        };
+    }
+};
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+constexpr FracIndex pu_ratio_to_fracindex(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.lg2_len));
+    const uq32 frac = ratio * len_info.len;
+    return {frac, index};
+}
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+[[nodiscard]] constexpr uint32_t 
+pu_ratio_to_nearest_roundback_index(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.lg2_len));
+    const uq32 frac = ratio * len_info.len;
+
+    //uppround
+    return (index + bool(frac.to_bits() >> 31)) & (len_info.len - 1);
+}
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_roundback(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.lg2_len));
+    const uq32 frac = ratio * len_info.len;
+
+    const D value = table_data[index];
+
+    const uint32_t next_index = (index + 1) & (len_info.len - 1);
+    const D next_value = table_data[next_index];
+
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_roundback(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    return invlerp_table_roundback<D>(&table_data->bits, len_info,ratio);
+}
+
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_nonround(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.lg2_len));
+    const uq32 frac = ratio * len_info.len;
+    
+    const D value = table_data[index];
+
+    uint32_t next_index = (index + 1);
+    if((next_index) >= len_info.len) return value;
+
+    const D next_value = table_data[next_index];
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_nonround(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    return invlerp_table_nonround<D>(&table_data->bits, len_info,ratio);
+}
+
+
+
+
+[[maybe_unused]] static void test_invtable_int(){
+
+    {
+        static constexpr size_t TABLE_SIZE = 4;
+        static constexpr int32_t TABLE[TABLE_SIZE] = {4,5,7,8};
+
+        static constexpr auto LEN_INFO = TableLengthInfo::from(TABLE_SIZE);
+
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.25_uq32) == 5);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.375_uq32) == 6);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.5_uq32) == 7);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.75_uq32) == 8);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.875_uq32) == 6);
+
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.124_uq32) == 0);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.126_uq32) == 1);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.874_uq32) == 3);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.876_uq32) == 0);
+    }
+
+    {
+        static constexpr size_t TABLE_SIZE = 4;
+        static constexpr int32_t TABLE[TABLE_SIZE] = {4,5,7,8};
+
+        static constexpr auto LEN_INFO = TableLengthInfo::from(TABLE_SIZE);
+
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.25_uq32) == 5);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.375_uq32) == 6);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.5_uq32) == 7);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.75_uq32) == 8);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.875_uq32) == 8);
+    }
+
+}
+
+
+
 // Apache 2.0
 // https://github.com/mjbots/moteus/tree/main/fw/thermistor.h
 // 32点插值表计算温度
@@ -190,61 +350,56 @@ static constexpr SteinhartHartParams fitting_sh_params(
 // 前提是桥臂另一侧定值电阻和R0较为接近，即25°C时位于中性点位
 
 static constexpr size_t THERMISTOR_TABLE_SIZE = 32;
-static constexpr size_t MAX_CONV_VALUE = 4096;
 
-static constexpr float calc_thermistor_table_element(const NtcCalculatorF & ntc_calc, const float rt_kohms){
-    return ntc_calc.kohms_to_celsius(rt_kohms);
-}
-
-
-
-static constexpr void init_thermistor_table(
-    std::span<float, THERMISTOR_TABLE_SIZE> table,
+template<typename D>
+static constexpr void init_thermistor_lookup_table(
+    std::span<D, THERMISTOR_TABLE_SIZE> table,
     const NtcCalculatorF & ntc_calc,
     const float rdiv_kohms // The resistor divider pair.
 ){
     for(size_t i = 1; i < THERMISTOR_TABLE_SIZE; i++){
         const float norm_v = float(i) / THERMISTOR_TABLE_SIZE;
         float rt_kohms = rdiv_kohms / norm_v - rdiv_kohms;
-        table[i] = calc_thermistor_table_element(ntc_calc, rt_kohms);
-    }   
-
+        table[i] = static_cast<D>(ntc_calc.kohms_to_celsius(rt_kohms));
+    }
     table[0] = table[1];
 }
 
-static constexpr std::array<float, THERMISTOR_TABLE_SIZE> make_thermistor_table(
-    const NtcCalculatorF & ntc_calc,
-    const float rdiv_kohms // The resistor divider pair.
-){
-    std::array<float, THERMISTOR_TABLE_SIZE> table;
-    init_thermistor_table(table, ntc_calc, rdiv_kohms);
-    return table;
+template<typename D>
+static constexpr D invlerp_thermistor_table(
+    std::span<const D, THERMISTOR_TABLE_SIZE> table, 
+    uint16_t adc_raw
+) {
+    constexpr auto LEN_INFO = TableLengthInfo::from(THERMISTOR_TABLE_SIZE);
+
+    constexpr size_t ADC_SHIFT = 20;//32 - log2(4096)
+
+    const uq32 pu_ratio = uq32::from_bits(uint32_t(adc_raw) << ADC_SHIFT);
+    return invlerp_table_nonround(table.data(), LEN_INFO, pu_ratio);
 }
 
-
-static constexpr float inv_table(const std::span<const float, THERMISTOR_TABLE_SIZE> table, uint16_t adc_raw) {
-    constexpr int adc_max = 4096;
-    constexpr int adc_step = adc_max / THERMISTOR_TABLE_SIZE;
-    const size_t offset_idx = std::max<size_t>(
-        1, std::min<size_t>(
-            table.size() - 2,
-            adc_raw / adc_step));
-    const int16_t this_adc_value = offset_idx * adc_step;
-    const float temp1 = table[offset_idx];
-    const float temp2 = table[offset_idx + 1];
-    const auto lerp_ratio = static_cast<float>(adc_raw - this_adc_value) / adc_step;
-    return temp1 + (temp2 - temp1) * lerp_ratio;
-}
 
 [[maybe_unused]] static void test_thermistor_table(){
     {
         static constexpr auto ntc = drivers::NtcCalculatorF::from_b0r0(3950, 100);
-        static constexpr auto thermistor_table = make_thermistor_table(ntc, 100);
 
-        static constexpr auto c25 = inv_table(std::span(thermistor_table), 2048);
-        static_assert(c25 == 25.0f);
+        using D = int32_t;
+        static constexpr auto thermistor_table = []{
+            std::array<D, THERMISTOR_TABLE_SIZE> table;
+            init_thermistor_lookup_table<D>(std::span(table), ntc, 100);
+            return table;
+        }();
+
+        static constexpr auto c25 = invlerp_thermistor_table(std::span(thermistor_table), 2048);
+        static_assert((float)c25 == 25.0f);
     }
 }
+
+
+
+
+
+
 // // B参数转Steinhart-Hart
 // static constexpr SteinhartHartParams b0r0_to_abc(const float b0, const float r0){
 //     constexpr float T0 = 298.15f;

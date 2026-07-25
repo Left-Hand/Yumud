@@ -19,7 +19,7 @@ extern "C"{
  * @return the address of source memory
  */
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
-void *memset(void *s, int c, unsigned int count);
+[[maybe_unused]] void *memset(void *s, int c, unsigned int count);
 
 // from rt-thread
 // SPDX-License-Identifier: Apache-2.0
@@ -35,7 +35,10 @@ void *memset(void *s, int c, unsigned int count);
  * @return the address of destination memory
  */
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
-void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count);
+[[maybe_unused]] void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count);
+
+__attribute__((used, externally_visible, optimize( "-Ofast" )))
+[[maybe_unused]] void *memmove(void * dst, const void * src, unsigned int count);
 
 
 #ifdef __cplusplus

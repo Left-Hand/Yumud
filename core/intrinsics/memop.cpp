@@ -2,11 +2,11 @@
 
 
 void *memset(void *s, int c, unsigned int count){
-#if 1
 
     static constexpr int LBLOCKSIZE      = (int)(sizeof(long));
-#define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
-#define TOO_SMALL(LEN)  ((LEN) < LBLOCKSIZE)
+
+    #define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
+    #define TOO_SMALL(LEN)  ((LEN) < LBLOCKSIZE)
 
     unsigned int i;
     char *m = (char *)s;
@@ -57,16 +57,13 @@ void *memset(void *s, int c, unsigned int count){
 
 #undef UNALIGNED
 #undef TOO_SMALL
-#endif
 }
 
 
-void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count)
-{
-#if 1
+void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count){
+    #define UNALIGNED(X, Y) \
+        (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
 
-#define UNALIGNED(X, Y) \
-    (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
     static constexpr int BIGBLOCKSIZE    = (sizeof (long) << 2);
     static constexpr int LITTLEBLOCKSIZE = (sizeof (long));
 
@@ -107,5 +104,98 @@ void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int co
 
     return dst;
 #undef UNALIGNED
-#endif
+}
+
+
+#include <stddef.h>
+
+void *memmove(void *dst, const void *src, size_t count) {
+    #define UNALIGNED(X, Y) \
+        (((long)(X) & (sizeof(long) - 1)) | ((long)(Y) & (sizeof(long) - 1)))
+    
+    static const int BIGBLOCKSIZE = (sizeof(long) << 2);
+    static const int LITTLEBLOCKSIZE = sizeof(long);
+    
+    char *d = (char *)dst;
+    const char *s = (const char *)src;
+    int len = (int)count;
+    
+    /* 反向拷贝：目标在源后面且重叠 */
+    if (d > s && d < s + count) {
+        /* 从尾部开始 */
+        d += len;
+        s += len;
+        
+        /* 块拷贝优化（反向） */
+        if (!(len < BIGBLOCKSIZE) && !UNALIGNED(s - count, d - count)) {
+            long *ld = (long *)d;
+            const long *ls = (const long *)s;
+            
+            /* 处理不对齐的尾部 */
+            int tail = len % LITTLEBLOCKSIZE;
+            while (tail--) {
+                *--d = *--s;
+                len--;
+            }
+            
+            /* 重新赋值指针 */
+            ld = (long *)d;
+            ls = (const long *)s;
+            
+            /* 4倍块反向拷贝 */
+            while (len >= BIGBLOCKSIZE) {
+                *--ld = *--ls;
+                *--ld = *--ls;
+                *--ld = *--ls;
+                *--ld = *--ls;
+                len -= BIGBLOCKSIZE;
+            }
+            
+            /* 单块反向拷贝 */
+            while (len >= LITTLEBLOCKSIZE) {
+                *--ld = *--ls;
+                len -= LITTLEBLOCKSIZE;
+            }
+            
+            d = (char *)ld;
+            s = (const char *)ls;
+        }
+        
+        /* 逐字节反向拷贝 */
+        while (len--) {
+            *--d = *--s;
+        }
+    } 
+    /* 正向拷贝：不重叠或目标在源前面 */
+    else {
+        /* 块拷贝优化（正向） */
+        if (!(len < BIGBLOCKSIZE) && !UNALIGNED(s, d)) {
+            long *ld = (long *)d;
+            const long *ls = (const long *)s;
+            
+            while (len >= BIGBLOCKSIZE) {
+                *ld++ = *ls++;
+                *ld++ = *ls++;
+                *ld++ = *ls++;
+                *ld++ = *ls++;
+                len -= BIGBLOCKSIZE;
+            }
+            
+            while (len >= LITTLEBLOCKSIZE) {
+                *ld++ = *ls++;
+                len -= LITTLEBLOCKSIZE;
+            }
+            
+            d = (char *)ld;
+            s = (const char *)ls;
+        }
+        
+        /* 逐字节正向拷贝 */
+        while (len--) {
+            *d++ = *s++;
+        }
+    }
+    
+    return dst;
+    #undef UNALIGNED
 }

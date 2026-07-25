@@ -282,3 +282,4 @@ static_assert(abs_err_percentages(1.0f, 1.01f) < 1.1f);
 }
 
 }
+

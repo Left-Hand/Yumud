@@ -64,6 +64,7 @@ using Leso = ymd::dsp::adrc::MotorLeso;
 
 
 template<size_t FC, size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
     const math::fixed<Q, int32_t> x_state,
     const math::fixed<Q, int32_t> x_new
@@ -78,6 +79,7 @@ constexpr auto ALPHA_1HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 1).unwrap();
 constexpr auto ALPHA_01HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ * 10, 1).unwrap();
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_10hz(
     math::fixed<Q, int32_t> x_state,
     const math::fixed<Q, int32_t> x_new
@@ -86,6 +88,7 @@ static constexpr math::fixed<Q, int32_t> lpf_10hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_100hz(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -93,6 +96,7 @@ static constexpr math::fixed<Q, int32_t> lpf_100hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_50hz(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -100,6 +104,7 @@ static constexpr math::fixed<Q, int32_t> lpf_50hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_1000hz(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -107,6 +112,7 @@ static constexpr math::fixed<Q, int32_t> lpf_1000hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_2000hz(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -114,6 +120,7 @@ static constexpr math::fixed<Q, int32_t> lpf_2000hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_500hz(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
@@ -121,13 +128,15 @@ static constexpr math::fixed<Q, int32_t> lpf_500hz(
 }
 
 template<size_t Q>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_allpass(
     math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new
 ){
     return x_new;
 }
 
-__fast_inline
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr int32_t clamp_i32(const int32_t x, const int32_t mi, const int32_t ma){
     
     if (__builtin_expect(x < mi, 0)) {
@@ -139,7 +148,7 @@ static constexpr int32_t clamp_i32(const int32_t x, const int32_t mi, const int3
     return x;
 } 
 
-__fast_inline
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr int32_t clamp2_i32(const int32_t x, const int32_t side){
     
     if (__builtin_expect(x < -side, 0)) {
@@ -153,14 +162,14 @@ static constexpr int32_t clamp2_i32(const int32_t x, const int32_t side){
 
 
 template<size_t Q>
-__fast_inline
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> my_clamp2(math::fixed<Q, int32_t> x, math::fixed<Q, int32_t> side){
     const auto y_bits = clamp2_i32(x.to_bits(), side.to_bits());
     return math::fixed<Q, int32_t>::from_bits(y_bits);
 }
 
 template<size_t Q>
-__fast_inline
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> my_step_to(
     math::fixed<Q, int32_t> x, 
     math::fixed<Q, int32_t> y, 
@@ -171,7 +180,7 @@ static constexpr math::fixed<Q, int32_t> my_step_to(
 }
 
 template<size_t Q>
-__fast_inline
+__always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> my_clamp2(math::fixed<Q, int32_t> x, int32_t side){
     const auto y_bits = clamp2_i32(x.to_bits(), side << Q);
     return math::fixed<Q, int32_t>::from_bits(y_bits);
@@ -183,6 +192,37 @@ static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfi
     .phase_inductance_mh = MotorProfile::PHASE_INDUCTANCE_MH,
     .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
 };
+
+
+//一个数值稳定(可证明)用于求解sqrt(1 - (x)^2)的函数
+//令δ(x) = sqrt(1 - (x)^2) - f(x), 可满足δ(x)恒大于0，同时使得δ(x)在考虑性能的同时足够小
+//可用于对二维向量需要限定模长大小(缩放到单位圆形)的场合已知一边求解另一边
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr uq32 mysat(const uq32 x){
+    // \left(1-x^{4}\right)+\frac{1}{2}x^{8}\cdot\left(1-x^{4}\right)
+    // \left(-0.125x-0.125\right)x^{4}-\frac{1}{2}x^{2}
+
+    const uint32_t x_u32 = x.to_bits();
+    const uint32_t x2_u32 = intrinsics::mul32hu(x_u32, x_u32);
+    const uint32_t x4_u32 = intrinsics::mul32hu(x2_u32, x2_u32);
+
+    uint32_t res1 = (1 << (32 - 3));
+
+    // -0.125x-0.125
+    res1 = intrinsics::mul32hu(res1, x_u32) + (1 << (32 - 3));
+    // \left(-0.125x-0.125\right)x
+    res1 = intrinsics::mul32hu(res1, x4_u32);
+
+    res1 += (x2_u32 >> 1);
+    res1 = ~res1;
+    
+    const uint32_t one_minus_x4_u32 = ~x4_u32;
+    const uint32_t x8_u32 = intrinsics::mul32hu(x4_u32, x4_u32);
+    uint32_t res2 = one_minus_x4_u32;
+    res2 += intrinsics::mul32hu(x8_u32 >> 1, one_minus_x4_u32);
+
+    return uq32::from_bits(std::min(res1, res2));
+}
 
 
 static constexpr uq32 TSAMPLE = uq32::from_rcp(FOC_FREQ);
@@ -252,12 +292,12 @@ static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
 
 
 
-static iq16 _tmrticks_to_us(const int32_t counter_value){
+static constexpr iq16 _tmrticks_to_us(const int32_t counter_value){
     static constexpr uint32_t factor = (1ull << 32) * (1.0 / 144);
     return iq16::from_bits(int32_t((int64_t(counter_value) * factor) >> 16));
 }
 
-static iq16 tmrticks_to_us(const TimerTick tick){
+static constexpr iq16 tmrticks_to_us(const TimerTick tick){
     int32_t counter_value = int32_t(tick.counter_value);
     if(tick.is_up_counting) counter_value = TIMER_ARR_VALUE + counter_value;
     else counter_value = TIMER_ARR_VALUE - counter_value;
@@ -265,34 +305,6 @@ static iq16 tmrticks_to_us(const TimerTick tick){
 }
 
 
-//一个数值稳定(可证明)用于求解sqrt(1 - (x)^2)的函数
-//令δ(x) = sqrt(1 - (x)^2) - f(x), 可满足δ(x)恒大于0，同时使得δ(x)在考虑性能的同时足够小
-//可用于对二维向量需要限定模长大小(缩放到单位圆形)的场合已知一边求解另一边
-__no_inline static constexpr uq32 mysat(const uq32 x){
-    // \left(1-x^{4}\right)+\frac{1}{2}x^{8}\cdot\left(1-x^{4}\right)
-    // \left(-0.125x-0.125\right)x^{4}-\frac{1}{2}x^{2}
-
-    const uint32_t x_u32 = x.to_bits();
-    const uint32_t x2_u32 = intrinsics::mul32hu(x_u32, x_u32);
-    const uint32_t x4_u32 = intrinsics::mul32hu(x2_u32, x2_u32);
-
-    uint32_t res1 = (1 << (32 - 3));
-
-    // -0.125x-0.125
-    res1 = intrinsics::mul32hu(res1, x_u32) + (1 << (32 - 3));
-    // \left(-0.125x-0.125\right)x
-    res1 = intrinsics::mul32hu(res1, x4_u32);
-
-    res1 += (x2_u32 >> 1);
-    res1 = ~res1;
-    
-    const uint32_t one_minus_x4_u32 = ~x4_u32;
-    const uint32_t x8_u32 = intrinsics::mul32hu(x4_u32, x4_u32);
-    uint32_t res2 = one_minus_x4_u32;
-    res2 += intrinsics::mul32hu(x8_u32 >> 1, one_minus_x4_u32);
-
-    return uq32::from_bits(std::min(res1, res2));
-}
 
 struct CasOp{
     std::atomic<uint32_t> value;
