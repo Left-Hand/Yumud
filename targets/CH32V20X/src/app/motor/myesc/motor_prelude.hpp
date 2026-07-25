@@ -239,6 +239,8 @@ struct alignas(4) [[nodiscard]] AllState{
 
     Angular<uq32> elec_angle;
     iq16 elec_speed;
+    // math::Rotation2<iq31> elec_sincos;
+
     Angular<uq32> sensed_elec_angle;
     iq16 sensed_elec_speed;
 
