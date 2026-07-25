@@ -1,7 +1,7 @@
 #pragma once
 
 #include "dsp/controller/adrc/prelude.hpp"
-
+#include "core/math/mul.hpp"
 
 namespace ymd::dsp::adrc{
 
@@ -101,13 +101,14 @@ public:
         // 临界二阶阻尼系统
         
         // G(s) = 1 / (s ^ 2 + 2 * r * s + r ^ 2)
-        const auto x1_now_q16 = math::fixed_downcast<16>(x1_now);
+        // const auto x1_now_q16 = math::fixed_downcast<16>(x1_now);
+        const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
 
         [[maybe_unused]] const iq16 e1 = ref[0] - x1_now_q16;
         [[maybe_unused]] const iq16 e2 = ref[1] - x2_now;
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, coeffs_.dt));
-        x2_now = x2_now + math::fixed_downcast<16>(
+        x2_now = x2_now + math::comp_downcast<16>(
             extended_mul(iq16(2 * e2), coeffs_.r_by_fs) 
             + extended_mul(iq16(e1), coeffs_.r2_by_fs));
     }

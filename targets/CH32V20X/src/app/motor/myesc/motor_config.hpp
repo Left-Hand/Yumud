@@ -63,7 +63,8 @@ static constexpr float ADC_SAMPLE_TRIM_DUTYCYCLE = ADC_SAMPLE_ELAPSED_MICROS / H
 static constexpr float PWMGEN_MAX_DUTYCYCLE = 1.0f - ADC_SAMPLE_TRIM_DUTYCYCLE;
 static constexpr size_t ADC_SAMPLE_TRIM_CC_VALUE = (TIMER_ARR_VALUE + 1) * ADC_SAMPLE_TRIM_DUTYCYCLE;
 
-static constexpr size_t DC_CAL_TIMES = 32 * 128;
+static constexpr size_t LG2_DC_CAL_TIMES = 5 + 7;
+static constexpr size_t DC_CAL_TIMES = 1 << LG2_DC_CAL_TIMES;
 
 
 // using MotorProfile = MotorProfile_Ysc;

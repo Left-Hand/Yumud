@@ -229,7 +229,9 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    SecondOrderState<iq16> rotor_rotation_state_var;
+    SecondOrderState<iq16> encoder_x1x2;
+    SecondOrderState<iq16> curve_x1x2;
+    std::array<iq16, 2> traj_x1x2;
 
     iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
@@ -270,6 +272,7 @@ struct alignas(4) [[nodiscard]] AllState{
     
     iq20 mtpa_d_curr;
     iq20 mtpa_q_curr;
+    iq20 backcalc_torque_curr;
 
 
     AlphaBetaCoord<iq20> alphabeta_curr_raw;

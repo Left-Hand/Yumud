@@ -6,7 +6,7 @@
 #include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "dsp_vec.hpp"
-
+#include "core/math/mul.hpp"
 
 namespace ymd::dsp{
 
