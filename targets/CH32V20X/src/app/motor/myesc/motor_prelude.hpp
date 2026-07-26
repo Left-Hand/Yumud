@@ -51,13 +51,13 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 
 
 enum class [[nodiscard]] LoopWiring:uint8_t{
-    SeriesPi,
+    SeriesPi = 0,
     Mit,
     SeriesAdrc,
 };
 
 enum class [[nodiscard]] HfiMethod:uint8_t{
-    Disabled,
+    Disabled = 0,
     Spin,
     PulseV1,
     PulseV2
@@ -72,7 +72,11 @@ enum class [[nodiscard]] ElecAngleSource:uint8_t{
     AbzEncoder
 };
 
-
+enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
+    Disabled = 0,
+    UseX1AndZero,
+    UseX1AndX2,
+};
 
 
 struct alignas(4) [[nodiscard]] FnSwitches{
@@ -100,6 +104,8 @@ struct alignas(4) [[nodiscard]] FnSwitches{
 
     uint32_t res_temperature_source : 2;
     uint32_t fet_temperature_source : 2;
+
+    TrajSmoothMethod traj_smooth_method : 2;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -232,6 +238,7 @@ struct alignas(4) [[nodiscard]] CurveState{
     iiq32 x1;
     iq16 x2;
     iq16 x3;
+    iq16 u;
 };
 
 struct alignas(4) [[nodiscard]] TrajState{

@@ -87,7 +87,7 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             // const auto [s,c] = math::sincos(omega * now_secs);
 
             constexpr auto freq = 0.5_iq16;
-            constexpr auto amplitude = 4.8_iq16;
+            constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
             return {math::frac(now_secs * freq) * amplitude, slew_rate};
         }
@@ -179,9 +179,10 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-[[maybe_unused]] static constexpr auto HP_LTD2O = Ltd2o::try_from({
+static constexpr size_t HIGHFREQ_LTD2O_R = 800;
+[[maybe_unused]] static constexpr auto HIGHFREQ_LTD_2O = Ltd2o::try_from({
     .fs = FOC_FREQ, 
-    .r = 800
+    .r = HIGHFREQ_LTD2O_R
 }).unwrap();
 
 
@@ -193,8 +194,8 @@ static constexpr iq16 E2_LIMIT = 1000;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = FhanPrecomputed<iq16>::from({
-    .r = 264.5_iq10,
-    .h = 0.01_iq10,
+    .r = 204.5_iq16,
+    .h = 0.003_iq16,
 });
 
 
@@ -617,7 +618,7 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
             const auto pole_pairs = 14u;
             const auto encoder_mech_angle = make_angular_from_turns(
                 uq32::from_bits(uint32_t(state.encoder_absolute_multilap_turns.to_bits())));
-            HP_LTD2O.iterate(
+            HIGHFREQ_LTD_2O.iterate(
                 state.encoder_x1x2,
                 {fixed_downcast<16>(state.encoder_absolute_multilap_turns), 0}
             );
@@ -670,7 +671,7 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
 
 
 [[maybe_unused]] __no_inline 
-static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_switches){
+static void process_traj_generate(AllState & state, [[maybe_unused]] FnSwitches fn_switches){
     #if 1
     [[maybe_unused]] const auto now_secs = clock::seconds();
 
@@ -684,9 +685,20 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
     state.traj_state = calc_demo_traj(now_secs, demo_pattern);
     #endif
 
-    #if 1
-    // traj_smooth_state
-    {
+}
+
+
+[[maybe_unused]] __no_inline 
+static void process_traj_shape(AllState & state, FnSwitches fn_switches){
+
+    const auto traj_smooth_method = fn_switches.traj_smooth_method;
+    const bool traj_frontend_smooth_en = traj_smooth_method != TrajSmoothMethod::Disabled;
+    
+    if(traj_frontend_smooth_en){
+        //启用此项 为轨迹规划器提供准确的前馈速度 使得规划输出与原始位置信号几乎零迟滞
+
+        const bool use_input_x2 = traj_smooth_method == TrajSmoothMethod::UseX1AndX2;
+
         const auto & traj_state = state.traj_state;
         auto & now_state = state.traj_smooth_state;
 
@@ -696,27 +708,34 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
         const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
 
         const iq16 e1 = traj_state.x1 - x1_now_q16;
-        const iq16 e2 = traj_state.x2 - x2_now;
+        const iq16 e2 = (use_input_x2 ? traj_state.x2 : iq16(0)) - x2_now;
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
         x2_now = x2_now + math::comp_downcast<16>(
-            extended_mul(iq16(2 * e2), HP_LTD2O.r_by_fs) 
-            + extended_mul(iq16(e1), HP_LTD2O.r2_by_fs));
+            extended_mul(iq16(2 * e2), HIGHFREQ_LTD_2O.r_by_fs) 
+            + extended_mul(iq16(e1), HIGHFREQ_LTD_2O.r2_by_fs));
+    }else{
+        state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)state.traj_state.x1.to_bits() << 16);
+
+        //无前馈速度
+        state.traj_smooth_state.x2 = 0;
     }
-    #else
-    state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)state.traj_state.x1.to_bits() << 16);
-    state.traj_smooth_state.x2 = 0;
-    #endif
 
     {
+        //基于fhan的梯形速度规划
         const auto & traj_state = state.traj_smooth_state;
         auto & curve_state = state.curve_state;
 
         const iq16 x1_now = math::fixed_downcast<16>(curve_state.x1);
         const iq16 x2_now = curve_state.x2;
 
-        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1);
         const iq16 x2_traj = traj_state.x2;
+
+        const bool do_x1_comp = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
+
+        //使用终值定理得到无静差时补偿量为x2 * 2/r
+        const iq16 x1_comp = do_x1_comp ? (x2_traj * uq32(2.0 / HIGHFREQ_LTD2O_R)) : iq16(0);
+        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1) + x1_comp;
         
         const iq16 e1 = x1_traj - x1_now;
         const iq16 e2 = x2_traj - x2_now;
@@ -730,9 +749,9 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
 
         curve_state.x1 = next_x1;
         curve_state.x2 = next_x2;
-        curve_state.x3 = lpf_500hz(curve_state.x3, delta_x2 * FOC_FREQ);
+        curve_state.x3 = math::closer_to_zero(u, lpf_2000hz(curve_state.x3, delta_x2 * FOC_FREQ));
+        curve_state.u = u;
     }
-
 }
 
 
@@ -759,7 +778,7 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
     const iq20 ka = 0.001_iq20;
     const auto x3comp_torque_curr = ka * state.curve_state.x3;
 
-    const iq20 kf = 0.03_iq20;
+    const iq20 kf = 0.01_iq20;
     const auto x2comp_torque_curr = kf * state.curve_state.x2;
 
 
@@ -767,14 +786,13 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
-            // const iq20 kpp = 35.0_iq20;
             const iq20 kpp = 65.0_iq20;
-            const iq20 kp = 0.5_iq20;
-            const iq20 ki = 7.66_iq20;
+            // const iq20 kp = 1.2_iq20;
+            const iq20 kp = 3.0_iq20;
+            const iq20 ki = 8.66_iq20;
             const auto ki_discrete = ki / FOC_FREQ;
 
             const iq16 x2_ref = compmul_clamp2((curve_x1 - now_x1), kpp, E2_LIMIT);
-            // const iq16 x2_ref = 0;
             const iq16 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, E2_LIMIT);
 
             state.torque_curr_integral = state.torque_curr_integral + compmul_clamp2(ki_discrete, e2, torque_curr_step_limit);
@@ -1612,6 +1630,7 @@ void myesc_main(){
     fn_switches_.harmonic_suppression_en = 0;
     fn_switches_.elec_angle_source = ElecAngleSource::MagEncoder;
     fn_switches_.loop_wiring = LoopWiring::SeriesPi;
+    fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndZero;
 
     auto p_all_state_ = std::make_unique<AllState>();
     AllState & all_state_ = *p_all_state_;
@@ -1675,6 +1694,7 @@ void myesc_main(){
 
         }else{
             process_position_sense(state, fn_switches);
+            process_traj_generate(state, fn_switches);
             process_traj_shape(state, fn_switches);
             process_mechanical_loop(state, fn_switches);
             process_current_loop(state, fn_switches);
@@ -1958,10 +1978,8 @@ void myesc_main(){
             // state.flux_ob_state.x1,
             // state.flux_ob_state.x2,
             state.torque_curr_cmd,
-            state.torque_curr_x3comp,
-            // state.backcalc_torque_curr,
-            state.busbar_curr_lp,
             state.curve_state.x3,
+            state.curve_state.u,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
 
