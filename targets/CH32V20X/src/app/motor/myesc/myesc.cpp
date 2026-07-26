@@ -67,7 +67,7 @@ enum class [[nodiscard]] DemoTrajPattern:uint8_t{
     Stairs
 };
 
-__no_inline static constexpr std::tuple<iq16, iq16> 
+__no_inline static constexpr TrajState
 calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
     switch(demo_pattern){
         case DemoTrajPattern::Stop:{
@@ -186,14 +186,14 @@ using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
 
 
-static constexpr iq16 CURVE_X2_LIMIT = 10;
+static constexpr iq16 CURVE_X2_LIMIT = 15;
 
 static constexpr iq16 E1_LIMIT = 100;
 static constexpr iq16 E2_LIMIT = 1000;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = FhanPrecomputed<iq16>::from({
-    .r = 164.5_iq10,
+    .r = 264.5_iq10,
     .h = 0.01_iq10,
 });
 
@@ -671,7 +671,7 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
 
 [[maybe_unused]] __no_inline 
 static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_switches){
-    #if 0
+    #if 1
     [[maybe_unused]] const auto now_secs = clock::seconds();
 
     static constexpr auto demo_pattern = 
@@ -684,7 +684,7 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
     state.traj_state = calc_demo_traj(now_secs, demo_pattern);
     #endif
 
-    
+    #if 1
     // traj_smooth_state
     {
         const auto & traj_state = state.traj_state;
@@ -703,6 +703,10 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
             extended_mul(iq16(2 * e2), HP_LTD2O.r_by_fs) 
             + extended_mul(iq16(e1), HP_LTD2O.r2_by_fs));
     }
+    #else
+    state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)state.traj_state.x1.to_bits() << 16);
+    state.traj_smooth_state.x2 = 0;
+    #endif
 
     {
         const auto & traj_state = state.traj_smooth_state;
@@ -722,27 +726,13 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
         const auto next_x1 = curve_state.x1 + extended_mul(curve_state.x2, TSAMPLE);
         const auto next_x2 = math::clamp2(curve_state.x2 + u * TSAMPLE, CURVE_X2_LIMIT);
 
+        const auto delta_x2 = next_x2 - curve_state.x2;
+
         curve_state.x1 = next_x1;
         curve_state.x2 = next_x2;
+        curve_state.x3 = lpf_500hz(curve_state.x3, delta_x2 * FOC_FREQ);
     }
 
-    {
-        auto & curve_state = state.curve_state;
-        auto & now_state = state.est_curve_x3_state;
-
-        auto & x1_now = now_state.x1;
-        auto & x2_now = now_state.x2;
-
-        const iq16 e1 = curve_state.x2 - x1_now;
-        const iq16 e2 = 0 - x2_now;
-
-        x1_now = x1_now + (x2_now * TSAMPLE);
-        x2_now = x2_now + math::comp_downcast<16>(
-            extended_mul(iq16(2 * e2), HP_LTD2O.r_by_fs) 
-            + extended_mul(iq16(e1), HP_LTD2O.r2_by_fs));
-
-        curve_state.x3 = x2_now;
-    }
 }
 
 
@@ -766,9 +756,14 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
-    const iq20 ka = 0.007_iq20;
-    const auto x3_torque_curr = ka * state.curve_state.x3;
-    state.torque_curr_x3comp = x3_torque_curr;
+    const iq20 ka = 0.001_iq20;
+    const auto x3comp_torque_curr = ka * state.curve_state.x3;
+
+    const iq20 kf = 0.03_iq20;
+    const auto x2comp_torque_curr = kf * state.curve_state.x2;
+
+
+    state.torque_curr_x3comp = x3comp_torque_curr;
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
@@ -786,7 +781,8 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
             auto desired_torque_curr_cmd = state.torque_curr_integral 
                 + compmul(kp, e2)
-                + x3_torque_curr
+                + x2comp_torque_curr
+                + x3comp_torque_curr
             ;
 
             auto next_torque_curr_cmd = math::clamp2(desired_torque_curr_cmd, torque_curr_limit);
@@ -797,14 +793,15 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
         }
 
         case LoopWiring::Mit:{
-            const iq20 kp = 18.7_iq16;
+            const iq20 kp = 12.7_iq16;
             const iq20 kd = 0.26_iq16;
 
             const iq16 e1 = math::clamp2(curve_x1 - now_x1, E1_LIMIT);
             const iq16 e2 = math::clamp2(curve_x2 - now_x2, E2_LIMIT);
             
             iq20 torque_curr_cmd = (kp * e1) + (kd * e2)
-                + x3_torque_curr
+                + x2comp_torque_curr
+                + x3comp_torque_curr
             ;
             torque_curr_cmd = math::clamp2(torque_curr_cmd, torque_curr_limit);
 
@@ -816,6 +813,8 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
 
         case LoopWiring::SeriesAdrc:{
+            #if 0
+            //rubbish
             const iq20 kpp = 10.0_iq20;
             constexpr iq20 b0 = 200.1_iq20;
             constexpr iq20 inv_b0 = 1 / b0;
@@ -832,6 +831,7 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
 
             state.torque_curr_cmd = iq;
+            #endif
             break;
         }
     }
@@ -1948,10 +1948,11 @@ void myesc_main(){
             // state.speed_eso_state.speed_est,
             // state.to_turns(),
             // state.sensed_elec_speed,
+            state.traj_state.x1,
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_x1x2.x1),
             // state.prev_encoder_mech_angle.to_turns(),
-            state.encoder_x1x2.x2,
+            // state.encoder_x1x2.x2,
             // mag_volt * inv_mag_curr,
             // state.busbar_curr_lp * BUSBAR_VOLT,
             // state.flux_ob_state.x1,

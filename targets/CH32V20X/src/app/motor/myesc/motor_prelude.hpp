@@ -250,7 +250,6 @@ struct alignas(4) [[nodiscard]] AllState{
     CurveState curve_state;
     HpTrajState traj_smooth_state;
     TrajState traj_state;
-    TrajState est_curve_x3_state;
 
     iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
