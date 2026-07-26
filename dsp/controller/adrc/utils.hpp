@@ -35,18 +35,32 @@ struct FhanPrecomputed;
 
 template<>
 struct [[nodiscard]] FhanPrecomputed<iq16>{
+
+
+    iq16 r;
+    iq16 h;
+    iq16 d;
+    iq16 d0;
+    uq16 inv_h;
+    uq16 inv_d;
+
+
     struct [[nodiscard]] Config{
         uq16 r;
         uq16 h;
     };
 
-    constexpr explicit FhanPrecomputed(const Config & cfg):
-        r(cfg.r),
-        h(cfg.h),
-        d(cfg.r * cfg.h),
-        d0(iq16(cfg.r * cfg.h) * cfg.h),
-        inv_h(1 / cfg.h),
-        inv_d(1 / iq16(cfg.r * cfg.h)){;}
+    static constexpr FhanPrecomputed from(const Config & cfg){
+        FhanPrecomputed self;
+        self.r = (cfg.r);
+        self.h = (cfg.h);
+        self.d = (cfg.r * cfg.h);
+        self.d0 = (iq16(cfg.r * cfg.h) * cfg.h);
+        self.inv_h = (1 / cfg.h);
+        self.inv_d = (1 / iq16(cfg.r * cfg.h));
+        return self;
+    }
+
 
     [[nodiscard]] constexpr iq16 operator()(
         const std::array<iq16, 2> e
@@ -79,12 +93,6 @@ struct [[nodiscard]] FhanPrecomputed<iq16>{
 
     }
 
-    iq16 r;
-    iq16 h;
-    iq16 d;
-    iq16 d0;
-    uq16 inv_h;
-    uq16 inv_d;
 };
 
 

@@ -228,13 +228,33 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
     iq20 abs_lem;
 };
 
+struct alignas(4) [[nodiscard]] CurveState{
+    iiq32 x1;
+    iq16 x2;
+    iq16 x3;
+};
+
+struct alignas(4) [[nodiscard]] TrajState{
+    iq16 x1;
+    iq16 x2;
+};
+
+struct alignas(4) [[nodiscard]] HpTrajState{
+    iiq32 x1;
+    iq16 x2;
+};
+
+
 struct alignas(4) [[nodiscard]] AllState{
     SecondOrderState<iq16> encoder_x1x2;
-    SecondOrderState<iq16> curve_x1x2;
-    std::array<iq16, 2> traj_x1x2;
+    CurveState curve_state;
+    HpTrajState traj_smooth_state;
+    TrajState traj_state;
+    TrajState est_curve_x3_state;
 
     iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
+    iq20 torque_curr_x3comp;
 
     Angular<uq32> openloop_elec_angle;
     iq16 openloop_elec_speed;

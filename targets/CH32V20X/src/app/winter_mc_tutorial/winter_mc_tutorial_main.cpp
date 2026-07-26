@@ -155,7 +155,7 @@ void winter_mc_tutorial_main(){
 
     using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
     using state2o = dsp::SecondOrderState<iq16>;
-    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = MC_FREQ, .r = 80}.try_into_precomputed().unwrap()};
+    auto rotor_ltd = ltd2o::try_from({.fs = MC_FREQ, .r = 80}).unwrap();
 
     state2o meas_rotor_state_var = {0, 0};
     iq16 meas_rotor_x1 = 0;

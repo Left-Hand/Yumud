@@ -60,6 +60,52 @@ using namespace ymd::myesc;
 #define DBG_UART hal::usart2
 
 
+enum class [[nodiscard]] DemoTrajPattern:uint8_t{
+    Stop,
+    Sine,
+    Saw,
+    Stairs
+};
+
+__no_inline static constexpr std::tuple<iq16, iq16> 
+calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
+    switch(demo_pattern){
+        case DemoTrajPattern::Stop:{
+            return {0, 0};
+        }
+        case DemoTrajPattern::Sine:{
+            constexpr auto omega = 1_iq16;
+            constexpr auto side_amplitude = 1.4_iq16;
+
+            const auto [s,c] = math::sincos(omega * now_secs);
+            return {
+                side_amplitude * iq16(s),
+                side_amplitude * omega * iq16(c)
+            };
+        }
+        case DemoTrajPattern::Saw:{
+            // const auto [s,c] = math::sincos(omega * now_secs);
+
+            constexpr auto freq = 0.5_iq16;
+            constexpr auto amplitude = 4.8_iq16;
+            constexpr auto slew_rate = amplitude * freq;
+            return {math::frac(now_secs * freq) * amplitude, slew_rate};
+        }
+        case DemoTrajPattern::Stairs:{
+            constexpr auto freq = 0.3_iq16;
+            constexpr size_t num_steps = 6;
+            constexpr auto half_amplitude = 0.4_iq16;
+            constexpr auto step = half_amplitude * 2/ num_steps;
+            const auto s = iq16(math::sinpu(now_secs * freq));
+            return {(math::floor(s * (num_steps / 2)) * step), 0};
+        }
+    }
+    //unreachable
+    return {0, 0};
+};
+
+
+
 template<size_t FC, size_t Q>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
@@ -133,67 +179,25 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-[[maybe_unused]] static constexpr Ltd2o ENCODER_LTD{
-    Ltd2o::Config{
-    .fs = FOC_FREQ, .r = 800
-}.try_into_precomputed().unwrap()
-};
-
-using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
+[[maybe_unused]] static constexpr auto HP_LTD2O = Ltd2o::try_from({
+    .fs = FOC_FREQ, 
+    .r = 800
+}).unwrap();
 
 
-[[maybe_unused]] static constexpr auto CURVE_NLTD = Nltd2o::Config{
-    .fs = FOC_FREQ,
-    // .r = 87.5_iq10,
+
+static constexpr iq16 CURVE_X2_LIMIT = 10;
+
+static constexpr iq16 E1_LIMIT = 100;
+static constexpr iq16 E2_LIMIT = 1000;
+
+
+[[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = FhanPrecomputed<iq16>::from({
     .r = 164.5_iq10,
     .h = 0.01_iq10,
-    .x2_limit = 10
-}.try_into_precomputed().unwrap();
+});
 
 
-enum class [[nodiscard]] DemoTrajPattern:uint8_t{
-    Stop,
-    Sine,
-    Saw,
-    Stairs
-};
-
-__no_inline static constexpr std::tuple<iq16, iq16> 
-calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
-    switch(demo_pattern){
-        case DemoTrajPattern::Stop:{
-            return {0, 0};
-        }
-        case DemoTrajPattern::Sine:{
-            constexpr auto omega = 1_iq16;
-            constexpr auto side_amplitude = 1.4_iq16;
-
-            const auto [s,c] = math::sincos(omega * now_secs);
-            return {
-                side_amplitude * iq16(s),
-                side_amplitude * omega * iq16(c)
-            };
-        }
-        case DemoTrajPattern::Saw:{
-            // const auto [s,c] = math::sincos(omega * now_secs);
-
-            constexpr auto freq = 0.5_iq16;
-            constexpr auto amplitude = 4.8_iq16;
-            constexpr auto slew_rate = amplitude * freq;
-            return {math::frac(now_secs * freq) * amplitude, slew_rate};
-        }
-        case DemoTrajPattern::Stairs:{
-            constexpr auto freq = 0.3_iq16;
-            constexpr size_t num_steps = 6;
-            constexpr auto half_amplitude = 0.4_iq16;
-            constexpr auto step = half_amplitude * 2/ num_steps;
-            const auto s = iq16(math::sinpu(now_secs * freq));
-            return {(math::floor(s * (num_steps / 2)) * step), 0};
-        }
-    }
-    //unreachable
-    return {0, 0};
-};
 
 
 static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
@@ -613,7 +617,7 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
             const auto pole_pairs = 14u;
             const auto encoder_mech_angle = make_angular_from_turns(
                 uq32::from_bits(uint32_t(state.encoder_absolute_multilap_turns.to_bits())));
-            ENCODER_LTD.iterate(
+            HP_LTD2O.iterate(
                 state.encoder_x1x2,
                 {fixed_downcast<16>(state.encoder_absolute_multilap_turns), 0}
             );
@@ -665,7 +669,6 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
 };
 
 
-
 [[maybe_unused]] __no_inline 
 static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_switches){
     #if 0
@@ -678,9 +681,68 @@ static void process_traj_shape(AllState & state, [[maybe_unused]] FnSwitches fn_
         DemoTrajPattern::Saw
     ;
 
-    state.traj_x1x2 = calc_demo_traj(now_secs, demo_pattern);
+    state.traj_state = calc_demo_traj(now_secs, demo_pattern);
     #endif
-    CURVE_NLTD.iterate(state.curve_x1x2, state.traj_x1x2);
+
+    
+    // traj_smooth_state
+    {
+        const auto & traj_state = state.traj_state;
+        auto & now_state = state.traj_smooth_state;
+
+        auto & x1_now = now_state.x1;
+        auto & x2_now = now_state.x2;
+
+        const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
+
+        const iq16 e1 = traj_state.x1 - x1_now_q16;
+        const iq16 e2 = traj_state.x2 - x2_now;
+
+        x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
+        x2_now = x2_now + math::comp_downcast<16>(
+            extended_mul(iq16(2 * e2), HP_LTD2O.r_by_fs) 
+            + extended_mul(iq16(e1), HP_LTD2O.r2_by_fs));
+    }
+
+    {
+        const auto & traj_state = state.traj_smooth_state;
+        auto & curve_state = state.curve_state;
+
+        const iq16 x1_now = math::fixed_downcast<16>(curve_state.x1);
+        const iq16 x2_now = curve_state.x2;
+
+        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1);
+        const iq16 x2_traj = traj_state.x2;
+        
+        const iq16 e1 = x1_traj - x1_now;
+        const iq16 e2 = x2_traj - x2_now;
+
+        const auto u = CURVE_NLTD_FHAN({e1, e2});
+
+        const auto next_x1 = curve_state.x1 + extended_mul(curve_state.x2, TSAMPLE);
+        const auto next_x2 = math::clamp2(curve_state.x2 + u * TSAMPLE, CURVE_X2_LIMIT);
+
+        curve_state.x1 = next_x1;
+        curve_state.x2 = next_x2;
+    }
+
+    {
+        auto & curve_state = state.curve_state;
+        auto & now_state = state.est_curve_x3_state;
+
+        auto & x1_now = now_state.x1;
+        auto & x2_now = now_state.x2;
+
+        const iq16 e1 = curve_state.x2 - x1_now;
+        const iq16 e2 = 0 - x2_now;
+
+        x1_now = x1_now + (x2_now * TSAMPLE);
+        x2_now = x2_now + math::comp_downcast<16>(
+            extended_mul(iq16(2 * e2), HP_LTD2O.r_by_fs) 
+            + extended_mul(iq16(e1), HP_LTD2O.r2_by_fs));
+
+        curve_state.x3 = x2_now;
+    }
 }
 
 
@@ -689,8 +751,6 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
     //#region 力矩转电流
 
     [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
-    static constexpr iq16 e1_limit = 100;
-    static constexpr iq16 e2_limit = 1000;
 
 
 
@@ -698,15 +758,17 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
     const auto now_x2 = state.encoder_x1x2.x2;
 
 
-    const auto curve_x1 = math::fixed_downcast<16>(state.curve_x1x2.x1);
-    const auto curve_x2 = state.curve_x1x2.x2;
+    const auto curve_x1 = math::fixed_downcast<16>(state.curve_state.x1);
+    const auto curve_x2 = state.curve_state.x2;
 
     constexpr auto torque_curr_step_limit = iq20(0.02);
     constexpr auto torque_curr_limit = iq20(6.0);
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
-
+    const iq20 ka = 0.007_iq20;
+    const auto x3_torque_curr = ka * state.curve_state.x3;
+    state.torque_curr_x3comp = x3_torque_curr;
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
@@ -716,13 +778,16 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             const iq20 ki = 7.66_iq20;
             const auto ki_discrete = ki / FOC_FREQ;
 
-            const iq16 x2_ref = compmul_clamp2((curve_x1 - now_x1), kpp, e2_limit);
+            const iq16 x2_ref = compmul_clamp2((curve_x1 - now_x1), kpp, E2_LIMIT);
             // const iq16 x2_ref = 0;
-            const iq16 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, e2_limit);
+            const iq16 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, E2_LIMIT);
 
             state.torque_curr_integral = state.torque_curr_integral + compmul_clamp2(ki_discrete, e2, torque_curr_step_limit);
 
-            auto desired_torque_curr_cmd = state.torque_curr_integral + compmul(kp, e2);
+            auto desired_torque_curr_cmd = state.torque_curr_integral 
+                + compmul(kp, e2)
+                + x3_torque_curr
+            ;
 
             auto next_torque_curr_cmd = math::clamp2(desired_torque_curr_cmd, torque_curr_limit);
             next_torque_curr_cmd = (3 * state.torque_curr_cmd + next_torque_curr_cmd) >> 2;
@@ -735,10 +800,12 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             const iq20 kp = 18.7_iq16;
             const iq20 kd = 0.26_iq16;
 
-            const iq16 e1 = math::clamp2(curve_x1 - now_x1, e1_limit);
-            const iq16 e2 = math::clamp2(curve_x2 - now_x2, e2_limit);
+            const iq16 e1 = math::clamp2(curve_x1 - now_x1, E1_LIMIT);
+            const iq16 e2 = math::clamp2(curve_x2 - now_x2, E2_LIMIT);
             
-            iq20 torque_curr_cmd = (kp * e1) + (kd * e2);
+            iq20 torque_curr_cmd = (kp * e1) + (kd * e2)
+                + x3_torque_curr
+            ;
             torque_curr_cmd = math::clamp2(torque_curr_cmd, torque_curr_limit);
 
             state.torque_curr_integral = 0;
@@ -756,7 +823,7 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             constexpr size_t wo = 3 * wc;
             constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
 
-            const auto x2_ref = math::clamp2(iq16(kpp * (curve_x1 - now_x1)), e2_limit) + curve_x2;
+            const auto x2_ref = math::clamp2(iq16(kpp * (curve_x1 - now_x1)), E2_LIMIT) + curve_x2;
 
             auto & eso_state = state.speed_eso_state;
 
@@ -1544,7 +1611,7 @@ void myesc_main(){
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.harmonic_suppression_en = 0;
     fn_switches_.elec_angle_source = ElecAngleSource::MagEncoder;
-    fn_switches_.loop_wiring = LoopWiring::Mit;
+    fn_switches_.loop_wiring = LoopWiring::SeriesPi;
 
     auto p_all_state_ = std::make_unique<AllState>();
     AllState & all_state_ = *p_all_state_;
@@ -1669,7 +1736,7 @@ void myesc_main(){
             }),
 
             script::make_function(StringView("tj1"), [&](const iq16 x){
-                all_state_.traj_x1x2[0] = x;
+                all_state_.traj_state.x1 = x;
             }),
             
             // script::make_function(StringView("cde"), [&](const bool en){
@@ -1877,11 +1944,11 @@ void myesc_main(){
             // state.busbar_curr_lp,
             // state.torque_curr_cmd,
             // state.dq_curr_raw,
-            state.dq_curr_ref,
+            // state.dq_curr_ref,
             // state.speed_eso_state.speed_est,
             // state.to_turns(),
             // state.sensed_elec_speed,
-            math::fixed_downcast<16>(state.curve_x1x2.x1),
+            math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_x1x2.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             state.encoder_x1x2.x2,
@@ -1890,8 +1957,10 @@ void myesc_main(){
             // state.flux_ob_state.x1,
             // state.flux_ob_state.x2,
             state.torque_curr_cmd,
+            state.torque_curr_x3comp,
             // state.backcalc_torque_curr,
             state.busbar_curr_lp,
+            state.curve_state.x3,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
 
