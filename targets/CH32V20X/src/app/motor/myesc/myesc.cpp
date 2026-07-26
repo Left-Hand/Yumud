@@ -678,8 +678,8 @@ static void process_traj_generate(AllState & state, [[maybe_unused]] FnSwitches 
     static constexpr auto demo_pattern = 
         // DemoTrajPattern::Sine
         // DemoTrajPattern::Stop
-        // DemoTrajPattern::Stairs
-        DemoTrajPattern::Saw
+        DemoTrajPattern::Stairs
+        // DemoTrajPattern::Saw
     ;
 
     state.traj_state = calc_demo_traj(now_secs, demo_pattern);
@@ -1971,6 +1971,7 @@ void myesc_main(){
             state.traj_state.x1,
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_x1x2.x1),
+            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_x1x2.x1),
             // state.prev_encoder_mech_angle.to_turns(),
             // state.encoder_x1x2.x2,
             // mag_volt * inv_mag_curr,
