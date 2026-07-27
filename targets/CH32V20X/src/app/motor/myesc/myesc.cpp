@@ -90,7 +90,7 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             constexpr auto freq = 0.5_iq16;
             constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
-            return {math::frac(now_secs * freq) * amplitude, slew_rate};
+            return {-iq16(math::frac(now_secs * freq)) * amplitude, -slew_rate};
         }
         case DemoTrajPattern::Stairs:{
             constexpr auto freq = 0.3_iq16;
@@ -180,10 +180,10 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-static constexpr size_t HIGHFREQ_LTD2O_R = 800;
-[[maybe_unused]] static constexpr auto HIGHFREQ_LTD_2O = Ltd2o::try_from({
+static constexpr size_t HIGHFREQ_ENCODER_LTD2O_R = 1200;
+[[maybe_unused]] static constexpr auto HIGHFREQ_ENCODER_LTD_2O = Ltd2o::try_from({
     .fs = FOC_FREQ, 
-    .r = HIGHFREQ_LTD2O_R
+    .r = HIGHFREQ_ENCODER_LTD2O_R
 }).unwrap();
 
 
@@ -224,6 +224,13 @@ static constexpr iq16 tmrticks_to_us(const TimerTick tick){
     return _tmrticks_to_us(counter_value);
 }
 
+[[nodiscard]] static constexpr size_t 
+warp_index(const size_t x, const size_t len){
+    size_t next = x;
+    if(next > len) 
+        next -= len;
+    return next;
+};
 
 
 #define TIM_INST TIM1
@@ -617,17 +624,19 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
         {
             const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
             const auto pole_pairs = 14u;
+
             const auto encoder_mech_angle = make_angular_from_turns(
-                uq32::from_bits(uint32_t(state.encoder_absolute_multilap_turns.to_bits())));
-            HIGHFREQ_LTD_2O.iterate(
-                state.encoder_x1x2,
-                {fixed_downcast<16>(state.encoder_absolute_multilap_turns), 0}
+                uq32::from_bits(uint32_t(state.encoder_abs_turns64.to_bits())));
+
+            HIGHFREQ_ENCODER_LTD_2O.iterate(
+                state.encoder_state_2o,
+                {fixed_downcast<16>(state.encoder_abs_turns64), 0}
             );
 
 
             state.sensed_elec_angle = (encoder_mech_angle + encoder_offset_base) * pole_pairs;
 
-            const auto mech_speed = state.encoder_x1x2.x2;
+            const auto mech_speed = state.encoder_state_2o.x2;
             state.sensed_elec_speed = mech_speed * pole_pairs;
 
         }
@@ -679,8 +688,8 @@ static void process_traj_generate(AllState & state, [[maybe_unused]] FnSwitches 
     static constexpr auto demo_pattern = 
         // DemoTrajPattern::Sine
         // DemoTrajPattern::Stop
-        DemoTrajPattern::Stairs
-        // DemoTrajPattern::Saw
+        // DemoTrajPattern::Stairs
+        DemoTrajPattern::Saw
     ;
 
     state.traj_state = calc_demo_traj(now_secs, demo_pattern);
@@ -688,35 +697,7 @@ static void process_traj_generate(AllState & state, [[maybe_unused]] FnSwitches 
 
 }
 
-struct differentiator_int64_t{
-	std::array<int64_t, 5> z;
 
-    constexpr void init(){
-        std::fill(z.begin(), z.end(), 0);
-    }
-};
-
-
-constexpr int64_t differential_int64(differentiator_int64_t & self, int64_t x)
-{
-    int64_t min = self.z[0];
-
-    for(int i = 0; i < 4; i++)
-    {
-        self.z[i] = self.z[i + 1];
-        if(self.z[i] < min) min = self.z[i];
-    }
-
-    min = x < min ? x : min;
-    self.z[4] = x;
-
-    const auto a = self.z[0] - min;
-    const auto b = self.z[1] - min;
-    const auto c = self.z[3] - min;
-    const auto d = self.z[4] - min;
-
-    return (-d + 8 * c - 8 * b + a) / 12;
-}
 
 static constexpr size_t pow2(const size_t x){
     return __builtin_ctz(x);
@@ -750,8 +731,8 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
         x2_now = x2_now + math::comp_downcast<16>(
-            extended_mul(iq16(2 * e2), HIGHFREQ_LTD_2O.r_by_fs) 
-            + extended_mul(iq16(e1), HIGHFREQ_LTD_2O.r2_by_fs));
+            extended_mul(iq16(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
+            + extended_mul(iq16(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
     }else{
         state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)state.traj_state.x1.to_bits() << 16);
 
@@ -772,7 +753,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
         const bool do_x1_comp = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
         //使用终值定理得到无静差时补偿量为x2 * 2/r
-        const iq16 x1_comp = do_x1_comp ? (x2_traj * uq32(2.0 / HIGHFREQ_LTD2O_R)) : iq16(0);
+        const iq16 x1_comp = do_x1_comp ? (x2_traj * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R)) : iq16(0);
         const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1) + x1_comp;
         
         const iq16 e1 = x1_traj - x1_now;
@@ -801,9 +782,17 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
 
 
-    const auto now_x1 = math::fixed_downcast<16>(state.encoder_x1x2.x1);
-    const auto now_x2 = state.encoder_x1x2.x2;
+    const auto now_x2 = state.encoder_state_2o.x2;
 
+    constexpr bool is_x2_noisy = true;
+
+    auto now_x1 = math::fixed_downcast<16>(state.encoder_state_2o.x1);
+
+    if(not is_x2_noisy){
+        now_x1 += (now_x2 * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R));
+    }
+
+    // state.differ_out = differential_int64(state.differ, now_x1.to_bits());
 
     const auto curve_x1 = math::fixed_downcast<16>(state.curve_state.x1);
     const auto curve_x2 = state.curve_state.x2;
@@ -1665,6 +1654,7 @@ void myesc_main(){
 
     OpFlags op_flags_;
     op_flags_.dc_calibrate_unready = true;
+    op_flags_.sideshaft_calibrate_unready = true;
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.harmonic_suppression_en = 0;
@@ -1680,31 +1670,90 @@ void myesc_main(){
 
 
     auto jeoc_isr = [&]{
+
+        static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
+        static constexpr size_t ENCODER_SIDESHAFT_EPS_TABLE_LENGTH = POLE_PAIRS * 6;
+        static_assert(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH < ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY);
+        static constexpr size_t SIDESHAFT_CALIBRATE_OVERSAMPLES = 16;
+        static constexpr size_t STEPS_PER_CELL_PER_REV = 256 * 2;
+        static constexpr size_t SAMPLE_DURATION_STEPS = STEPS_PER_CELL_PER_REV / SIDESHAFT_CALIBRATE_OVERSAMPLES;
+        static constexpr size_t REVS_PER_DIRECTION = 2;
+        static constexpr size_t STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+        
+        // static constexpr bool do_sideshaft_calibrate = false;
+        static constexpr bool sideshaft_compensate = true;
+        // static constexpr bool sideshaft_compensate = fn_switches.sideshaft_compenstate_en;
         auto  & state = all_state_;
 
         //do clone, avoid external modify during isr
-        const volatile uint32_t orignal_fn_switches_bits = std::bit_cast<uint32_t>(fn_switches_);
-        const auto fn_switches = std::bit_cast<FnSwitches>(uint32_t(orignal_fn_switches_bits));
+        const volatile uint32_t fn_switches_bits = std::bit_cast<uint32_t>(fn_switches_);
+        const auto fn_switches = std::bit_cast<FnSwitches>(uint32_t(fn_switches_bits));
+
+        // const volatile uint32_t op_flags_bits = std::bit_cast<uint32_t>(op_flags_);
+        // const auto op_flags = std::bit_cast<FnSwitches>(uint32_t(op_flags_bits));
+        auto & op_flags = op_flags_;
 
         timming_watch_pin_.set_high();
 
 
         state.isr_entry_tick = get_timer_tick();
 
-        if(true){
+
+        const bool sideshaft_calibrate_done = !op_flags.sideshaft_calibrate_unready;
+        const bool do_sideshaft_calibrate = sideshaft_compensate and (!sideshaft_calibrate_done);
+
+        #if 1
+        // if(true){
         // if(false){
-            const auto encoder_mech_angle = mag_encoder_get_angle();
-            state.encoder_absolute_multilap_turns = uq32_wrapped_update(
-                state.encoder_absolute_multilap_turns, encoder_mech_angle.to_turns());
-        }
+        const auto encoder_mech_angle_uncompensated = mag_encoder_get_angle();
+
+        auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
+            return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
+        };
+
+        auto steps_to_turns = [](const size_t steps) -> uq32{
+            const size_t rem = steps % STEPS_PER_REV;
+            constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / STEPS_PER_REV) + 1);
+            return rem * FACTOR;
+        };
+
+
+
+        auto calc_encoder_eps = [](const iq32 * table_data, const uq32 raw_turns) -> iq32{
+            auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, raw_turns.to_bits());
+            const auto frac = (raw_turns * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+
+            auto next_index = warp_index(index + 1, ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+
+            static constexpr size_t RIGHT_SHIFTS = pow2(SIDESHAFT_CALIBRATE_OVERSAMPLES * REVS_PER_DIRECTION);
+            const auto now_cell_value = table_data[index];
+            const auto next_cell_value = table_data[next_index];
+
+            const auto table_eps = lerp_fixed_uq32(now_cell_value, next_cell_value, frac) >> RIGHT_SHIFTS;
+            return table_eps;
+        };
+
+        const auto encoder_mech_angle = [&](const iq32 * table_data, uq32 raw_turns) -> Angular<uq32>{
+            if(sideshaft_calibrate_done & fn_switches.sideshaft_compenstate_en){
+            // if(false){
+                const auto table_eps = calc_encoder_eps(table_data, raw_turns);
+                raw_turns = raw_turns + table_eps;
+            }
+            return make_angular_from_turns<uq32>(raw_turns);
+        }(state.encoder_calibrate_state.eps_table.data(), encoder_mech_angle_uncompensated.to_turns());
+
+        state.encoder_abs_turns64 = uq32_wrapped_update(
+            state.encoder_abs_turns64, encoder_mech_angle.to_turns());
+        #endif
 
         state.encoder_get_done_tick = get_timer_tick();
+
 
         const auto uvw_bvalue = get_adc_uvw_bvalue();
         process_current_sense(state, fn_switches, uvw_bvalue);
 
 
-        if(op_flags_.dc_calibrate_unready){
+        if(op_flags.dc_calibrate_unready){
             auto & dc_state = state.dc_calibrate_state;
             dc_state.uvw_bvalue_offset_acc = {
                 std::get<0>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<0>(uvw_bvalue)),
@@ -1718,7 +1767,7 @@ void myesc_main(){
                     int32_t(std::get<1>(dc_state.uvw_bvalue_offset_acc) >> LG2_DC_CAL_TIMES),
                     int32_t(std::get<2>(dc_state.uvw_bvalue_offset_acc) >> LG2_DC_CAL_TIMES)
                 };
-                op_flags_.dc_calibrate_unready = false;
+                op_flags.dc_calibrate_unready = false;
             }
 
             {
@@ -1735,38 +1784,27 @@ void myesc_main(){
         }else{
             process_position_sense(state, fn_switches);
 
-            
-            // static constexpr bool do_ENCODER_SIDESHAFT_calibrate = false;
-            static constexpr bool do_ENCODER_SIDESHAFT_calibrate = true;
-
-            if(not do_ENCODER_SIDESHAFT_calibrate){
+            if(not do_sideshaft_calibrate){
                 process_traj_generate(state, fn_switches);
                 process_traj_shape(state, fn_switches);
                 process_mechanical_loop(state, fn_switches);
             }
 
 
-            if(do_ENCODER_SIDESHAFT_calibrate){
+            if(do_sideshaft_calibrate){
                 {
-                    static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
-                    static constexpr size_t LG2_STEPS_CURRENT_RAMP = 12u;
 
-                    static constexpr size_t REVS_PER_DIRECTION = 2;
-                    static constexpr size_t ENCODER_SIDESHAFT_EPS_TABLE_LENGTH = 14 * 6 * 4;
-                    static_assert(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH < ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY);
-                    static constexpr size_t OVERSAMPLES = 16;
-                    static constexpr size_t STEPS_PER_CELL_PER_REV = 256;
-                    static constexpr size_t SAMPLE_DURATION_STEPS = STEPS_PER_CELL_PER_REV / OVERSAMPLES;
+                    static constexpr size_t LG2_STEPS_CURRENT_RAMP = 14u;
 
-                    static constexpr size_t STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
                     static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / STEPS_PER_REV);
                     [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(STEPS_PER_REV) / FOC_FREQ;
+                    [[maybe_unused]] static constexpr float SECONDS_RAMP = double(1 << LG2_STEPS_CURRENT_RAMP) / FOC_FREQ;
 
                     using Counter = EncoderNonlinearCalibrateCounter;
                     using Stage = EncoderNonlinearCalibrateStage;
                     
-                    constexpr auto override_fn_switches = ENCODER_SIDESHAFT_CALIBRATE_SWITCHES;
-                    constexpr iq20 calibrate_curr_limit = iq20(1.0); 
+                    constexpr auto override_fn_switches = SIDESHAFT_CALIBRATE_SWITCHES;
+                    constexpr iq20 calibrate_curr_limit = iq20(2.0); 
                     constexpr iq20 torque_curr_delta = calibrate_curr_limit >> LG2_STEPS_CURRENT_RAMP;
                     
                     auto & ec_state = state.encoder_calibrate_state;
@@ -1789,22 +1827,9 @@ void myesc_main(){
                         ec_state.counter = counter.bits;
                     });
 
-                    auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
-                        return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
-                    };
 
-                    auto steps_to_turns = [](const size_t steps) -> uq32{
-                        const size_t rem = steps % STEPS_PER_REV;
-                        constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / STEPS_PER_REV) + 1);
-                        return rem * FACTOR;
-                    };
 
-                    auto warp_index = [](const size_t x, const size_t len) -> size_t{
-                        size_t next = x;
-                        if(next > len) 
-                            next -= len;
-                        return next;
-                    };
+                    const auto encoder_mech_turns = encoder_mech_angle_uncompensated.to_turns();
 
                     switch(now_stage){
                         case Stage::Start:{
@@ -1834,6 +1859,37 @@ void myesc_main(){
                             next_stage = Stage::Forward;
                             next_count_value = now_count_value + 1;
                             if(next_count_value >= STEPS_PER_REV * REVS_PER_DIRECTION){
+                                next_stage = Stage::Backward;
+                                next_count_value = 0;
+                            }
+
+                            const auto now_steps = now_count_value;
+
+                            const auto cmd_mech_turns = ec_state.cmd_mech_turns = steps_to_turns(now_steps);
+                            
+                            const auto mech_eps = warp_encoder_err(cmd_mech_turns, encoder_mech_turns);
+
+                            const auto frac = (encoder_mech_turns * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+                            const auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, encoder_mech_turns.to_bits());
+
+                            const auto table_index = warp_index(index + (frac >= 0.5_uq32), ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+
+                            if(now_count_value % (SAMPLE_DURATION_STEPS) == 0){
+                                ec_state.eps_table[table_index] += mech_eps;
+                            }
+
+                            ec_state.torque_curr = calibrate_curr_limit;
+                            ec_state.debug.mech_eps_before = mech_eps;
+                            ec_state.debug.index = table_index;
+                            break;
+                        }
+                        
+                        case Stage::Backward:{
+                            next_stage = Stage::Backward;
+                            next_count_value = now_count_value + 1;
+
+                            if(next_count_value >= STEPS_PER_REV * REVS_PER_DIRECTION){
+                            // if(next_count_value >= 0){
                                 next_stage = Stage::Complete;
                                 next_count_value = 0;
                             }
@@ -1841,63 +1897,21 @@ void myesc_main(){
                             const auto now_steps = now_count_value;
 
                             const auto cmd_mech_turns = ec_state.cmd_mech_turns = steps_to_turns(now_steps);
-                            const auto enc_meas_mech_turns = uq32::from_bits(state.encoder_x1x2.x1.to_bits() & UINT32_MAX);
                             
-                            const auto mech_eps = ec_state.debug.mech_eps_before = warp_encoder_err(cmd_mech_turns, enc_meas_mech_turns);
+                            const auto table_eps = calc_encoder_eps(ec_state.eps_table.data(), encoder_mech_turns);
+                            [[maybe_unused]] const auto enc_mech_turns_after = encoder_mech_turns + table_eps;
 
-                            const auto frac = (enc_meas_mech_turns * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-                            const auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, enc_meas_mech_turns.to_bits());
+                            ec_state.debug.mech_eps_before = warp_encoder_err(cmd_mech_turns, encoder_mech_turns);
+                            ec_state.debug.mech_eps_after = warp_encoder_err(cmd_mech_turns, enc_mech_turns_after);
 
-                            const auto table_index = warp_index(index + (frac >= 0.5_uq32), ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-                            // const auto table_index = warp_index(index, ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-
-                            if(now_count_value % (SAMPLE_DURATION_STEPS) == 0){
-                                ec_state.eps_table[table_index] += mech_eps;
-                            }
                             ec_state.torque_curr = calibrate_curr_limit;
-                            
-                            ec_state.debug.index = table_index;
+
                             break;
                         }
-                        
                         case Stage::Complete:{
-                            next_stage = Stage::Complete;
-                            next_count_value = now_count_value + 1;
-
-                            const auto now_steps = now_count_value;
-
-                            const auto cmd_mech_turns = ec_state.cmd_mech_turns = steps_to_turns(now_steps);
-                            const auto enc_meas_mech_turns = uq32::from_bits(state.encoder_x1x2.x1.to_bits() & UINT32_MAX);
-                            
-                            // [[maybe_unused]] const auto table_index = pu_ratio_to_nearest_roundback_index(ENC_CALI_LENINFO, enc_meas_mech_turns);
-
-                            const auto frac = (enc_meas_mech_turns * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-                            auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, enc_meas_mech_turns.to_bits());
-                            // index = warp_index(index + 1, ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-
-                            auto next_index = warp_index(index + 1, ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-
-                            static constexpr size_t RIGHT_SHIFTS = pow2(OVERSAMPLES * REVS_PER_DIRECTION);
-                            const auto now_cell_value = ec_state.eps_table[index];
-                            const auto next_cell_value = ec_state.eps_table[next_index];
-
-
-                            const auto table_eps = lerp_fixed_uq32(now_cell_value, next_cell_value, frac) >> RIGHT_SHIFTS;
-                            [[maybe_unused]] const auto enc_mech_turns_after = enc_meas_mech_turns + table_eps;
-
-                            ec_state.debug.mech_eps_before = warp_encoder_err(cmd_mech_turns, enc_meas_mech_turns);
-                            // ec_state.debug.mech_eps_after = warp_encoder_err(cmd_mech_turns, enc_mech_turns_after);
-                            // ec_state.debug.mech_eps_after = warp_encoder_err(cmd_mech_turns, enc_mech_turns_after);
-                            ec_state.debug.mech_eps_after = table_eps;
-
-
-                            ec_state.torque_curr = calibrate_curr_limit;
-                            ec_state.debug.frac = frac;
-                            ec_state.debug.index = index;
-
+                            op_flags.sideshaft_calibrate_unready = false;
                             break;
                         }
-                        
                         case Stage::Failed:{
                             break;
                         }
@@ -1974,9 +1988,9 @@ void myesc_main(){
                 all_state_.traj_state.x1 = x;
             }),
             
-            // script::make_function(StringView("cde"), [&](const bool en){
-            //     fn_switches_.cross_decoupling_en = en;
-            // }),
+            script::make_function(StringView("sce"), [&](const bool en){
+                fn_switches_.sideshaft_compenstate_en = en;
+            }),
 
             // script::make_function(StringView("hse"), [&](const bool en){
             //     fn_switches_.harmonic_suppression_en = en;
@@ -1996,8 +2010,6 @@ void myesc_main(){
     
 
 
-    differentiator_int64_t diff;
-    diff.init();
     while(true){
         auto & state = all_state_;
 
@@ -2199,11 +2211,10 @@ void myesc_main(){
         if(false)DEBUG_PRINTLN(
             state.traj_state.x1,
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_x1x2.x1),
-            iq16::from_bits(int32_t(differential_int64(diff, state.curve_state.x1.to_bits()) >> 6)),
-            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_x1x2.x1),
-            // state.prev_encoder_mech_angle.to_turns(),
-            state.encoder_x1x2.x2,
+            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
+            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            state.encoder_state_2o.x2,
             // mag_volt * inv_mag_curr,
             // state.busbar_curr_lp * BUSBAR_VOLT,
             // state.flux_ob_state.x1,
@@ -2217,9 +2228,15 @@ void myesc_main(){
 
         auto & ec_state = state.encoder_calibrate_state;
         if(true)DEBUG_PRINTLN(
-            uq32::from_bits(state.encoder_x1x2.x1.to_bits() & UINT32_MAX),
-            ec_state.cmd_mech_turns,
-            state.encoder_x1x2.x2,
+            state.traj_state.x1,
+            math::fixed_downcast<16>(state.curve_state.x1),
+            // math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            uq32::from_bits((state.encoder_abs_turns64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
+            // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
+            // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
+            state.encoder_state_2o.x2,
+            // uq32::from_bits(state.encoder_state_2o.x1.to_bits() & UINT32_MAX),
+            // ec_state.cmd_mech_turns,
             ec_state.debug.mech_eps_before,
             ec_state.debug.mech_eps_after,
             // ec_state.torque_curr,

@@ -83,6 +83,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
     uint32_t phase_invert_en : 1;
+    uint32_t sideshaft_compenstate_en : 1;
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t harmonic_suppression_en : 1;
@@ -120,7 +121,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
 static_assert(sizeof(FnSwitches) <= 4);
 
 
-static constexpr auto ENCODER_SIDESHAFT_CALIBRATE_SWITCHES = []{
+static constexpr auto SIDESHAFT_CALIBRATE_SWITCHES = []{
     FnSwitches switches;
     switches.reset();
     return switches;
@@ -134,7 +135,7 @@ struct alignas(4) [[nodiscard]] OpFlags{
     uint32_t initial_encoder_dirtest:1;
     uint32_t measure_resind:1;
     uint32_t measure_flux:1;
-    uint32_t encoder_calibrate:1;
+    uint32_t sideshaft_calibrate_unready:1;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -205,10 +206,11 @@ struct alignas(4) [[nodiscard]] HarmonicState final{
 };
 
 
-struct alignas(4) [[nodiscard]] SpeedEsoState final{
-    iq20 f_est;
-    iq20 speed_est;
-};
+// struct alignas(4) [[nodiscard]] SpeedEsoState final{
+//     iq20 f_est;
+//     iq20 speed_est;
+// };
+
 
 struct alignas(4) [[nodiscard]] TemperatureState final{
     std::array<Temperature, 4> elements;
@@ -236,6 +238,7 @@ enum class [[nodiscard]] EncoderNonlinearCalibrateStage:uint8_t{
     Ramp,
     // CurrentRise,
     Forward,
+    Backward,
     Complete,
     Failed = 0x0f,
 };
@@ -312,7 +315,7 @@ struct alignas(4) [[nodiscard]] HpTrajState{
 
 
 struct alignas(4) [[nodiscard]] AllState{
-    SecondOrderState<iq16> encoder_x1x2;
+    SecondOrderState<iq16> encoder_state_2o;
     CurveState curve_state;
     HpTrajState traj_smooth_state;
     TrajState traj_state;
@@ -334,7 +337,7 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
-    iiq32 encoder_absolute_multilap_turns;
+    iiq32 encoder_abs_turns64;
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;
@@ -414,7 +417,9 @@ struct alignas(4) [[nodiscard]] AllState{
     
     dsp::PllState hfi_pll_state;
     dsp::PllState observer_pll_state;
-    SpeedEsoState speed_eso_state;
+    // differentiator_int64_t differ;
+    // int64_t differ_out;
+    // SpeedEsoState speed_eso_state;
     
     TemperatureState temperature_state;
     
