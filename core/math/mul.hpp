@@ -53,6 +53,8 @@ static constexpr math::fixed<Q, int32_t> compmul_clamp2(
 }
 
 static_assert(compmul(4.0_iq20, 3.0_iq16).to_bits() == 12 << 20);
+static_assert(compmul(14.0_iq20, 3.0_iq16).to_bits() == 42 << 20);
+static_assert(compmul(14.0_iq20, -3.0_iq16).to_bits() == -42 << 20);
 static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 13_iq20).to_bits() == 12 << 20);
 static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 6_iq20).to_bits() == 6 << 20);
 

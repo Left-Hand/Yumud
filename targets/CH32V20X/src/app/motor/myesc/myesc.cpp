@@ -87,7 +87,7 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
         case DemoTrajPattern::Saw:{
             // const auto [s,c] = math::sincos(omega * now_secs);
 
-            constexpr auto freq = 0.5_iq16;
+            constexpr auto freq = 0.2_iq16;
             constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
             return {-iq16(math::frac(now_secs * freq)) * amplitude, -slew_rate};
@@ -188,14 +188,14 @@ static constexpr size_t HIGHFREQ_ENCODER_LTD2O_R = 1200;
 
 
 
-static constexpr int32_t CURVE_X2_LIMIT = 10;
+static constexpr int32_t CURVE_X2_LIMIT = 4;
 
 static constexpr int32_t E1_LIMIT = 100;
 static constexpr int32_t E2_LIMIT = 1000;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = FhanPrecomputed<iq16>::from({
-    .r = 204.5_iq16,
+    .r = 44.5_iq16,
     .h = 0.003_iq16,
 });
 
@@ -450,8 +450,7 @@ static void process_current_sense(
 
 
 [[maybe_unused]] __no_inline 
-static void process_position_sense(AllState & state, const FnSwitches fn_switches){
-
+static void process_observer_sense(AllState & state, const FnSwitches fn_switches){
 
 
     // if(1){//sensorless observer
@@ -608,6 +607,12 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
         );
     }
 
+}
+
+[[maybe_unused]] __no_inline 
+static void process_position_sense(AllState & state, const FnSwitches fn_switches){
+
+
     {
         
         auto iterate_openloop_angle = [&]{
@@ -622,6 +627,79 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
         };
 
         {
+            //anti cogging encoder harmonic, n = POLE_PAIRS * 6
+
+            // y_hat = hat_theta + hat_b1 * np.sin(n * hat_theta) + hat_b2 * np.cos(n * hat_theta)
+            // e = theta_meas - y_hat
+            // hat_theta += (z2_f + l1 * e) * dt
+            // l2dt = l2 * dt
+            // hat_b1 += e * (np.sin(n * hat_theta)) * l2dt
+            // hat_b2 += e * (np.cos(n * hat_theta)) * l2dt
+
+            static constexpr size_t POLE_PAIRS = MotorProfile::POLE_PAIRS * 2;
+            // static constexpr size_t POLE_PAIRS_6X = POLE_PAIRS * 6;
+            static constexpr size_t POLE_PAIRS_6X = POLE_PAIRS;
+            [[maybe_unused]] static constexpr iq32 MAX_B = iq32((1.0 / TAU / POLE_PAIRS_6X));
+            [[maybe_unused]] constexpr float MAX_B_f = float(MAX_B);
+            // [[maybe_unused]] static constexpr iq20 MAX_B = iq20((1.0 / TAU / POLE_PAIRS) * 0.8);
+            // [[maybe_unused]] static constexpr iq32 MAX_B = iq32(1.0);
+
+            auto & peac_state = state.peac_state;
+
+            #if 0
+            static constexpr size_t L1 = 115;
+            static constexpr size_t L2 = 8;
+            #else
+            static constexpr size_t L1 = 115;
+            // static constexpr size_t L2 = 2;
+            static constexpr auto ALPHA = uq32(0.000001);
+            #endif
+
+            // static constexpr uq32 L1DT = uq32(float(L1) / FOC_FREQ);
+
+
+            const uq32 harm_turns = uq32::from_bits(peac_state.hat_turns.to_bits() & UINT32_MAX) 
+                * (POLE_PAIRS_6X); 
+
+            std::tie(peac_state.harm_s, peac_state.harm_c) = math::sincospu(harm_turns);
+
+            #if 0
+            const iq32 harm = iq32::from_bits(
+                + intrinsics::mul32hss(peac_state.hat_b1.to_bits(), harm_s.to_bits())
+                + intrinsics::mul32hss(peac_state.hat_b2.to_bits(), harm_c.to_bits())
+            ) << 1;
+            #else
+            // const iq20 harm = peac_state.hat_b1 * harm_s + peac_state.hat_b2 * harm_c;
+            const iq32 harm = peac_state.hat_b2 * peac_state.harm_s;
+            #endif
+
+            iq32 e = iq32(math::fixed_downcast<24>(state.encoder_abs_turns64) - math::fixed_downcast<24>(peac_state.hat_turns))
+                - iq32(harm);
+
+            peac_state.debug.e = e;
+            peac_state.harm = harm;
+            peac_state.debug.harm_turns = harm_turns;
+
+            // const iq32 e_l1dt = l1dt * e;
+            // const iq32 e_l2dt = l2dt * e;
+
+            [[maybe_unused]] const auto now_x2 = state.encoder_state_2o.x2;
+
+            // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
+            peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 20_iq20) * TSAMPLE).to_bits() << 12);
+
+            // static constexpr uq32 ALPHA = calc_lpf;
+            // peac_state.hat_b1 += math::compmul(e, harm_s * ALPHA);
+            peac_state.hat_b2 += math::compmul(e, iq24(peac_state.harm_s * ALPHA));
+            // peac_state.hat_b1 += math::compmul(e, harm_s);
+            // peac_state.hat_b2 += math::compmul(e, harm_c);
+
+            // peac_state.hat_b1 = clamp2(peac_state.hat_b1, MAX_B);
+            peac_state.hat_b2 = math::clamp2(peac_state.hat_b2, MAX_B);
+
+        }
+
+        {
             const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
             const auto pole_pairs = MotorProfile::POLE_PAIRS;
 
@@ -633,9 +711,9 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
             auto & x1_now = state_2o.x1;
             auto & x2_now = state_2o.x2;
 
-            const auto x1_now_q20 = math::comp_downcast<20>(x1_now);
+            const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
 
-            const iq20 e1 = math::clamp2(fixed_downcast<20>(state.encoder_abs_turns64) - x1_now_q20, E1_LIMIT);
+            const iq16 e1 = math::clamp2(fixed_downcast<16>(state.encoder_abs_turns64) - x1_now_q16, E1_LIMIT);
             const iq20 e2 = - x2_now;
 
 
@@ -814,7 +892,7 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
-    const iq20 ka = 0.001_iq20;
+    const iq20 ka = 0.002_iq20;
     const auto x3comp_torque_curr = ka * state.curve_state.x3;
 
     const iq20 kf = 0.01_iq20;
@@ -828,7 +906,7 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             const iq20 kpp = 65.0_iq20;
             // const iq20 kp = 1.2_iq20;
             constexpr iq20 kp = 0.4_iq20;
-            constexpr iq20 ki = 8.66_iq20;
+            constexpr iq20 ki = 4.66_iq20;
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
             const iq20 x2_ref = compmul_clamp2(iq20(curve_x1 - now_x1), kpp, E2_LIMIT);
@@ -1677,7 +1755,8 @@ void myesc_main(){
 
     auto op_flags_ = OpFlags::from_default();
     op_flags_.dc_calibrate_unready = true;
-    op_flags_.sideshaft_calibrate_unready = false;
+    // op_flags_.sideshaft_calibrate_unready = false;
+    op_flags_.sideshaft_calibrate_unready = true;
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.current_harmonic_suppression_en = 0;
@@ -2253,26 +2332,26 @@ void myesc_main(){
 
         // auto & ec_state = state.encoder_calibrate_state;
         if(true)DEBUG_PRINTLN(
-            state.traj_state.x1,
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            math::fixed_downcast<16>(state.encoder_abs_turns64),
+            math::fixed_downcast<16>(state.peac_state.hat_turns),
+            math::fixed_downcast<16>(state.encoder_abs_turns64) - math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
+
             // uq32::from_bits((state.encoder_abs_turns64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
             // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
-            state.encoder_state_2o.x2,
-            (state.curve_state.x2),
-            // uq32::from_bits(state.encoder_state_2o.x1.to_bits() & UINT32_MAX),
-            // ec_state.cmd_mech_turns,
-            // ec_state.debug.mech_eps_before,
-            // ec_state.debug.mech_eps_after,
-            // ec_state.torque_curr,
-            // ec_state.debug.index,
-            // (uint8_t)EncoderNonlinearCalibrateCounter{ec_state.counter}.stage().get(),
-            // EncoderNonlinearCalibrateCounter{ec_state.counter}.count_value().get(),
-            state.torque_curr_cmd,
-            state.pi_x2_ref,
-            state.pi_e2,
-            state.torque_curr_integral,
+            // state.encoder_state_2o.x2,
+            // (state.curve_state.x2),
+            // state.peac_state.hat_b1,
+            state.peac_state.hat_b2 * 100,
+            // state.peac_state.debug.e,
+            state.peac_state.harm * 100,
+            // state.peac_state.debug.harm_turns,
+            // state.peac_state.harm_c,
+            // math::fixed_downcast<20>(state.encoder_abs_turns64),
+            // iq20(math::fixed_downcast<20>(state.encoder_abs_turns64 - state.peac_state.hat_turns)),
+            // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 

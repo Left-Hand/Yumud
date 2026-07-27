@@ -272,7 +272,7 @@ struct alignas(4) EncoderNonlinearCalibrateCounter{
 };
 
 
-struct alignas(4) [[nodiscard]] EncoderNonlinearCalibrateState{
+struct alignas(4) [[nodiscard]] EncoderCalibrateState{
     std::array<EncoderClibrateEps, ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY> eps_table;
 
 
@@ -324,6 +324,23 @@ struct alignas(4) [[nodiscard]] TrajState{
 struct alignas(4) [[nodiscard]] HpState2o{
     iiq32 x1;
     iq20 x2;
+};
+
+
+struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState{
+    iiq32 hat_turns;
+    iq32 hat_b1;
+    iq32 hat_b2;
+    iq31 harm_c;
+    iq31 harm_s;
+    iq32 harm;
+
+    struct Debug{
+        uq32 harm_turns;
+        iq24 e;
+    };
+
+    Debug debug;
 };
 
 
@@ -442,9 +459,8 @@ struct alignas(4) [[nodiscard]] AllState{
     TimerTick encoder_get_done_tick;
     TimerTick isr_exit_tick;
     
-    EncoderNonlinearCalibrateState encoder_calibrate_state;
-
-
+    EncoderCalibrateState encoder_calibrate_state;
+    ProctiveEncoderAnticoggingState peac_state;
 
     void reset(){
         #pragma GCC diagnostic push

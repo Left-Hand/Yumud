@@ -16,12 +16,13 @@ t_const = T_total - 2*t_acc     # 匀速时间 = 4s (若为正)
 # ---------- 扰动参数 ----------
 n = 84
 b = 0.002
-phi = np.pi / 6                 # 任意相位
+# phi = np.pi / 6                 # 任意相位
+phi = np.pi/2                 # 任意相位
 b1_true = b * np.cos(phi)
 b2_true = b * np.sin(phi)
 
 # ---------- 观测器增益 ----------
-l1 = 115.0                       # 自适应观测器位置增益
+l1 = 1115.0                       # 自适应观测器位置增益
 l2 = 7.3                        # 参数增益
 
 # LESO 带宽 (rad/s) —— 高于运动频率即可
@@ -77,6 +78,9 @@ def get_trapezoid(t, v_max, a_max, T_total):
         theta = 0.5 * a_max * t_acc**2 + v_max * t_const + 0.5 * v_max**2 / a_max
     return theta, v
 
+def lerp(a, b, r):
+    return a + (b - a) * r
+
 # ========== 主循环 ==========
 for i, ti in enumerate(t):
     # ----- 真实轨迹 -----
@@ -86,13 +90,17 @@ for i, ti in enumerate(t):
     theta_meas = theta_true + b1_true * np.sin(n * theta_true) + b2_true * np.cos(n * theta_true)
 
     # ===== 自适应观测器 (已知真实速度作为前馈) =====
-    y_hat = hat_theta + hat_b1 * np.sin(n * hat_theta) + hat_b2 * np.cos(n * hat_theta)
-    e = theta_meas - y_hat
+    s = np.sin(n * hat_theta)
+    c = np.cos(n * hat_theta)
+    harm = hat_b2 * c
+    # y_hat = hat_theta + 
+    e = theta_meas - hat_theta - harm
+    # hat_theta += (z2_f + l1 * e) * dt
     # hat_theta += (z2_f + l1 * e) * dt
     hat_theta += (z2_f + l1 * e) * dt
     l2dt = l2 * dt
-    hat_b1 += e * (np.sin(n * hat_theta)) * l2dt
-    hat_b2 += e * (np.cos(n * hat_theta)) * l2dt
+    # hat_b1 = lerp(hat_b1, hat_b1 + e * (s), 0.0025)
+    hat_b2 = lerp(hat_b2, hat_b2 + e * (c), 0.0025)
 
     # ===== LESO 1: 输入为滤波后的 hat_theta =====
     e1 = z1_f - hat_theta
@@ -100,7 +108,7 @@ for i, ti in enumerate(t):
     z2_f += (- beta2 * e1) * dt     # u=0
 
     # ===== LESO 2: 输入为原始 theta_meas (对比) =====
-    e2 = z1_raw - theta_meas
+    e2 = z1_raw - theta_meas + harm
     z1_raw += (z2_raw - beta1 * e2) * dt
     z2_raw += (- beta2 * e2) * dt
 
