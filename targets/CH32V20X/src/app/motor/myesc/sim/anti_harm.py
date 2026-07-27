@@ -26,9 +26,8 @@ l2 = 0.3                        # 参数增益
 
 # LESO 带宽 (rad/s) —— 高于运动频率即可
 wo = 30.0
-beta1 = 3.0 * wo
-beta2 = 3.0 * wo**2
-beta3 = wo**3
+beta1 = 2.0 * wo
+beta2 = wo**2
 
 # ========== 初始化状态 ==========
 theta_true = 0.0
@@ -39,11 +38,9 @@ hat_b2 = 0.0
 # LESO (用于滤波后信号)
 z1_f = 0.0
 z2_f = 0.0
-z3_f = 0.0
 # LESO (用于原始信号，对比)
 z1_raw = 0.0
 z2_raw = 0.0
-z3_raw = 0.0
 
 # 存储变量
 theta_true_vec = np.zeros(N)
@@ -98,14 +95,12 @@ for i, ti in enumerate(t):
     # ===== LESO 1: 输入为滤波后的 hat_theta =====
     e1 = z1_f - hat_theta
     z1_f += (z2_f - beta1 * e1) * dt
-    z2_f += (z3_f - beta2 * e1) * dt     # u=0
-    z3_f += (-beta3 * e1) * dt
+    z2_f += (- beta2 * e1) * dt     # u=0
 
     # ===== LESO 2: 输入为原始 theta_meas (对比) =====
     e2 = z1_raw - theta_meas
     z1_raw += (z2_raw - beta1 * e2) * dt
-    z2_raw += (z3_raw - beta2 * e2) * dt
-    z3_raw += (-beta3 * e2) * dt
+    z2_raw += (- beta2 * e2) * dt
 
     # ----- 存储 -----
     theta_true_vec[i] = theta_true
