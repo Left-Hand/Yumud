@@ -79,6 +79,36 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
 };
 
 
+struct alignas(4) [[nodiscard]] OpFlags{
+    using Self = OpFlags;
+
+
+    uint32_t dc_calibrate_unready:1;
+    uint32_t initial_encoder_dirtest:1;
+    uint32_t measure_resind:1;
+    uint32_t measure_flux:1;
+    uint32_t sideshaft_calibrate_unready:1;
+
+    constexpr void reset(){
+        *this = std::bit_cast<Self>(uint32_t(0));
+    }
+
+    constexpr bool any() const {
+        return std::bit_cast<uint32_t>(*this) != 0;
+    }
+
+    static constexpr Self zero(){
+        Self self;
+        self.reset();
+        return self;
+    }
+
+    static constexpr Self from_default(){
+        return zero();
+    }
+};
+
+
 struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
@@ -86,7 +116,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     uint32_t sideshaft_compenstate_en : 1;
 
     uint32_t deadtime_compensate_en : 1;
-    uint32_t harmonic_suppression_en : 1;
+    uint32_t current_harmonic_suppression_en : 1;
 
     uint32_t cross_decoupling_en : 1;
     uint32_t bemf_decoupling_en : 1;
@@ -127,24 +157,6 @@ static constexpr auto SIDESHAFT_CALIBRATE_SWITCHES = []{
     return switches;
 }();
 
-struct alignas(4) [[nodiscard]] OpFlags{
-    using Self = OpFlags;
-
-
-    uint32_t dc_calibrate_unready:1;
-    uint32_t initial_encoder_dirtest:1;
-    uint32_t measure_resind:1;
-    uint32_t measure_flux:1;
-    uint32_t sideshaft_calibrate_unready:1;
-
-    constexpr void reset(){
-        *this = std::bit_cast<Self>(uint32_t(0));
-    }
-
-    constexpr bool any() const {
-        return std::bit_cast<uint32_t>(*this) != 0;
-    }
-};
 
 
 
@@ -358,7 +370,8 @@ struct alignas(4) [[nodiscard]] AllState{
 
     HarmonicState harmonic_state;
 
-    
+    iq20 pi_x2_ref;
+    iq20 pi_e2;
     iq20 mtpa_d_curr;
     iq20 mtpa_q_curr;
     iq20 backcalc_torque_curr;

@@ -188,7 +188,7 @@ static constexpr size_t HIGHFREQ_ENCODER_LTD2O_R = 1200;
 
 
 
-static constexpr int32_t CURVE_X2_LIMIT = 15;
+static constexpr int32_t CURVE_X2_LIMIT = 10;
 
 static constexpr int32_t E1_LIMIT = 100;
 static constexpr int32_t E2_LIMIT = 1000;
@@ -806,8 +806,6 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
         now_x1 += (now_x2 * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R));
     }
 
-    // state.differ_out = differential_int64(state.differ, now_x1.to_bits());
-
     const auto curve_x1 = math::fixed_downcast<16>(state.curve_state.x1);
     const auto curve_x2 = state.curve_state.x2;
 
@@ -829,14 +827,17 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
         case LoopWiring::SeriesPi:{
             const iq20 kpp = 65.0_iq20;
             // const iq20 kp = 1.2_iq20;
-            const iq20 kp = 3.0_iq20;
-            const iq20 ki = 8.66_iq20;
-            const auto ki_discrete = ki / FOC_FREQ;
+            constexpr iq20 kp = 0.4_iq20;
+            constexpr iq20 ki = 8.66_iq20;
+            constexpr auto ki_discrete = ki / FOC_FREQ;
 
             const iq20 x2_ref = compmul_clamp2(iq20(curve_x1 - now_x1), kpp, E2_LIMIT);
-            const iq20 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, E2_LIMIT);
 
-            state.torque_curr_integral = state.torque_curr_integral + compmul_clamp2(ki_discrete, e2, torque_curr_step_limit);
+            state.pi_x2_ref = x2_ref;
+            // state.pi_x2_ref = curve_x1 - now_x1;
+            // const iq20 x2_ref = 0;
+            const iq20 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, E2_LIMIT);
+            state.pi_e2 = e2;
 
             auto desired_torque_curr_cmd = state.torque_curr_integral 
                 + compmul(kp, e2)
@@ -847,7 +848,15 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             auto next_torque_curr_cmd = math::clamp2(desired_torque_curr_cmd, torque_curr_limit);
             next_torque_curr_cmd = (3 * state.torque_curr_cmd + next_torque_curr_cmd) >> 2;
             state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, next_torque_curr_cmd, torque_curr_step_limit);
-            state.torque_curr_integral += (state.torque_curr_cmd - desired_torque_curr_cmd);
+
+            auto torque_curr_integral_delta = 
+                e2 * ki_discrete
+                // + (state.torque_curr_cmd - desired_torque_curr_cmd)
+            ;
+            state.torque_curr_integral += math::clamp2(
+                torque_curr_integral_delta,
+                torque_curr_step_limit
+            );
             break;
         }
 
@@ -912,7 +921,7 @@ void process_harmonic_suppression(
     const FnSwitches fn_switches,
     iq16 elec_speed
 ){
-    // if(fn_switches.harmonic_suppression_en){
+    // if(fn_switches.current_harmonic_suppression_en){
     // if(true){
     if(false){
         // Analysis and Control of Current Harmonic in IPMSMField-Oriented Control System
@@ -1204,7 +1213,7 @@ void process_current_loop(
             // +
         ;
 
-        if(fn_switches.harmonic_suppression_en){
+        if(fn_switches.current_harmonic_suppression_en){
             dq_volt_ff.d += state.harmonic_state.delta_vd6_in;
             dq_volt_ff.q += state.harmonic_state.delta_vq6_in;
         }
@@ -1666,15 +1675,16 @@ void myesc_main(){
     // #endregion
 
 
-    OpFlags op_flags_;
+    auto op_flags_ = OpFlags::from_default();
     op_flags_.dc_calibrate_unready = true;
-    // op_flags_.sideshaft_calibrate_unready = true;
+    op_flags_.sideshaft_calibrate_unready = false;
 
     auto fn_switches_ = FnSwitches::from_default();
-    fn_switches_.harmonic_suppression_en = 0;
+    fn_switches_.current_harmonic_suppression_en = 0;
     fn_switches_.elec_angle_source = ElecAngleSource::MagEncoder;
     fn_switches_.loop_wiring = LoopWiring::SeriesPi;
-    fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndZero;
+    // fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndZero;
+    fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndX2;
     // fn_switches_.traj_smooth_method = TrajSmoothMethod::Disabled;
 
     auto p_all_state_ = std::make_unique<AllState>();
@@ -2008,7 +2018,7 @@ void myesc_main(){
             }),
 
             // script::make_function(StringView("hse"), [&](const bool en){
-            //     fn_switches_.harmonic_suppression_en = en;
+            //     fn_switches_.current_harmonic_suppression_en = en;
             // }),
 
             // script::make_function(StringView("ivt"), [&](const bool en){
@@ -2241,23 +2251,28 @@ void myesc_main(){
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 
-        auto & ec_state = state.encoder_calibrate_state;
+        // auto & ec_state = state.encoder_calibrate_state;
         if(true)DEBUG_PRINTLN(
             state.traj_state.x1,
             math::fixed_downcast<16>(state.curve_state.x1),
-            // math::fixed_downcast<16>(state.encoder_state_2o.x1),
-            uq32::from_bits((state.encoder_abs_turns64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
+            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            // uq32::from_bits((state.encoder_abs_turns64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
             // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
             state.encoder_state_2o.x2,
+            (state.curve_state.x2),
             // uq32::from_bits(state.encoder_state_2o.x1.to_bits() & UINT32_MAX),
             // ec_state.cmd_mech_turns,
-            ec_state.debug.mech_eps_before,
-            ec_state.debug.mech_eps_after,
+            // ec_state.debug.mech_eps_before,
+            // ec_state.debug.mech_eps_after,
             // ec_state.torque_curr,
-            ec_state.debug.index,
+            // ec_state.debug.index,
             // (uint8_t)EncoderNonlinearCalibrateCounter{ec_state.counter}.stage().get(),
             // EncoderNonlinearCalibrateCounter{ec_state.counter}.count_value().get(),
+            state.torque_curr_cmd,
+            state.pi_x2_ref,
+            state.pi_e2,
+            state.torque_curr_integral,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 

@@ -49,7 +49,7 @@ static constexpr math::fixed<Q, int32_t> compmul_clamp2(
     const math::fixed<P, int32_t> rhs,
     const int32_t ma
 ){
-    return compmul_clamp2(lhs, rhs, math::fixed<Q, int32_t>::from_bits(ma));
+    return compmul_clamp2(lhs, rhs, math::fixed<Q, int32_t>::from_bits(ma << Q));
 }
 
 static_assert(compmul(4.0_iq20, 3.0_iq16).to_bits() == 12 << 20);
