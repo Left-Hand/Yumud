@@ -4,7 +4,7 @@
 #include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
 #include "motor_leso.hpp"
 #include "motor_dsp/dsp_pll.hpp"
-
+#include "core/utils/bits/bitfield_proxy.hpp"
 
 
 namespace ymd::myesc{
@@ -82,9 +82,7 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
 struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
-    uint32_t initial_dc_calibrate_en : 1;
     uint32_t phase_invert_en : 1;
-
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t harmonic_suppression_en : 1;
@@ -102,23 +100,31 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     ElecAngleSource elec_angle_source : 3;
     LoopWiring loop_wiring : 3;
 
-    uint32_t res_temperature_source : 2;
-    uint32_t fet_temperature_source : 2;
-
     TrajSmoothMethod traj_smooth_method : 2;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
     }
 
-    static constexpr Self from_default(){
+    static constexpr Self zero(){
         Self self;
         self.reset();
         return self;
     }
+
+    static constexpr Self from_default(){
+        return zero();
+    }
 };
 
 static_assert(sizeof(FnSwitches) <= 4);
+
+
+static constexpr auto ENCODER_SIDESHAFT_CALIBRATE_SWITCHES = []{
+    FnSwitches switches;
+    switches.reset();
+    return switches;
+}();
 
 struct alignas(4) [[nodiscard]] OpFlags{
     using Self = OpFlags;
@@ -213,9 +219,62 @@ struct alignas(4) [[nodiscard]] TemperatureState final{
     auto & ext3(this auto && self){return self.elements[3];}
 };
 
-struct PathState{
+struct alignas(4) [[nodiscard]] PathState{
     SecondOrderState<iq16> track_ref;
     SecondOrderState<iq16> rotor_rotation_state_var;
+};
+
+
+static constexpr size_t LG2_ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY = 9;
+static constexpr size_t ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY = 1u << LG2_ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY;
+
+using EncoderClibrateEps = iq32;
+
+enum class [[nodiscard]] EncoderNonlinearCalibrateStage:uint8_t{
+    Start,
+    // Idle,
+    Ramp,
+    // CurrentRise,
+    Forward,
+    Complete,
+    Failed = 0x0f,
+};
+
+struct alignas(4) EncoderNonlinearCalibrateCounter{
+    uint32_t bits;
+
+    [[nodiscard]] constexpr auto stage(this auto && self) {
+        return make_bitfield_proxy<28, 32, EncoderNonlinearCalibrateStage>(&self.bits);
+    }
+
+    // [[nodiscard]] constexpr auto specifier(this auto && self) {
+    //     return make_bitfield_proxy<24, 28, uint8_t>(&self.bits);
+    // }
+
+    [[nodiscard]] constexpr auto count_value(this auto && self) {
+        return make_bitfield_proxy<0, 28, uint32_t>(&self.bits);
+    }
+};
+
+
+struct alignas(4) [[nodiscard]] EncoderNonlinearCalibrateState{
+    std::array<EncoderClibrateEps, ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY> eps_table;
+
+
+
+    uint32_t counter;
+    uq32 cmd_mech_turns;
+    iq20 torque_curr;
+    // uint32_t step_count;
+
+    struct alignas(4) [[nodiscard]] Debug{
+        size_t index;
+        uq32 frac;
+        iq32 mech_eps_before;
+        iq32 mech_eps_after;
+    };
+
+    Debug debug;
 };
 
 
@@ -352,17 +411,20 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 spinhfi_bin2_imag_response;
     iq20 spinhfi_bin2_real_response_slowlp;
     iq20 spinhfi_bin2_imag_response_slowlp;
-
+    
     dsp::PllState hfi_pll_state;
     dsp::PllState observer_pll_state;
     SpeedEsoState speed_eso_state;
-
+    
     TemperatureState temperature_state;
-
-
+    
+    
     TimerTick isr_entry_tick;
     TimerTick encoder_get_done_tick;
     TimerTick isr_exit_tick;
+    
+    EncoderNonlinearCalibrateState encoder_calibrate_state;
+
 
 
     void reset(){

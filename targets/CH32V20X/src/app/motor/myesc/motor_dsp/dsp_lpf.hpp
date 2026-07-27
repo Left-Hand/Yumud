@@ -110,6 +110,121 @@ static constexpr math::fixed<Q, D> lerp_fixed(
     return lerp_fixed_uq32(a, b, ratio_uq32);
 }
 
+
+
+
+struct alignas(4) [[nodiscard]] FracIndex final{
+    uq32 frac;
+    uint32_t index;
+};
+
+struct alignas(4) [[nodiscard]] TableLengthInfo final{
+    uint32_t len;
+    uint32_t leading_zeros;
+
+    static constexpr TableLengthInfo from_len(size_t len){
+        if(not std::has_single_bit(len)) __builtin_trap();
+        return TableLengthInfo{
+            .len = len,
+            .leading_zeros = uint32_t(__builtin_clz(len - 1))
+        };
+    }
+
+    static constexpr TableLengthInfo from_lg2_len(size_t lg2_len){
+        return TableLengthInfo{
+            .len = 1u << lg2_len,
+            .leading_zeros = 32 - lg2_len
+        };
+    }
+};
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+constexpr FracIndex pu_ratio_to_fracindex(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    return {frac, index};
+}
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+[[nodiscard]] constexpr uint32_t 
+pu_ratio_to_nearest_roundback_index(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    //uppround
+    return (index + bool(frac.to_bits() >> 31)) & (len_info.len - 1);
+}
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_roundback(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    const D value = table_data[index];
+
+    const uint32_t next_index = (index + 1) & (len_info.len - 1);
+    const D next_value = table_data[next_index];
+
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_roundback(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    const math::fixed<Q, D> value = table_data[index];
+
+    const uint32_t next_index = (index + 1) & (len_info.len - 1);
+    const math::fixed<Q, D>  next_value = table_data[next_index];
+
+    return lerp_fixed_uq32(value, next_value, frac);
+}
+
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_nonround(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    
+    const D value = table_data[index];
+
+    uint32_t next_index = (index + 1);
+    if((next_index) >= len_info.len) return value;
+
+    const D next_value = table_data[next_index];
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_nonround(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    
+    const D value = table_data[index];
+
+    uint32_t next_index = (index + 1);
+    if((next_index) >= len_info.len) return value;
+
+    const D next_value = table_data[next_index];
+    return lerp_fixed_uq32(value, next_value, frac);
+}
+
+
+
+
+
+
 template<size_t Q>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, int32_t> lpf_1o(

@@ -68,7 +68,7 @@ static constexpr size_t DC_CAL_TIMES = 1 << LG2_DC_CAL_TIMES;
 
 
 // using MotorProfile = MotorProfile_Ysc;
-using MotorProfile = MotorProfile_Gim4010;
+using MotorProfile = MotorProfile_Gim4310;
 
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
