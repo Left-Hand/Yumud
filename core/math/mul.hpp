@@ -43,6 +43,15 @@ static constexpr math::fixed<Q, int32_t> compmul_clamp2(
     return math::fixed<Q, int32_t>::from_bits(bits);
 }
 
+template<size_t Q, size_t P>
+static constexpr math::fixed<Q, int32_t> compmul_clamp2(
+    const math::fixed<Q, int32_t> lhs,
+    const math::fixed<P, int32_t> rhs,
+    const int32_t ma
+){
+    return compmul_clamp2(lhs, rhs, math::fixed<Q, int32_t>::from_bits(ma));
+}
+
 static_assert(compmul(4.0_iq20, 3.0_iq16).to_bits() == 12 << 20);
 static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 13_iq20).to_bits() == 12 << 20);
 static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 6_iq20).to_bits() == 6 << 20);

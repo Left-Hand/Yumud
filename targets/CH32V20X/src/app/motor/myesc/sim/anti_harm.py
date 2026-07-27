@@ -2,30 +2,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ========== 仿真参数 ==========
-dt = 0.0002                     # 采样步长 (s)
-T_total = 6.0                   # 总时间
+dt = 1/ 25000                     # 采样步长 (s)
+T_total = 1.0                   # 总时间
 t = np.arange(0, T_total, dt)
 N = len(t)
 
 # ---------- 运动参数（梯形速度） ----------
-v_max = 2.0                     # 最大速度 (rad/s)
-a_max = 2.0                     # 加速度 (rad/s²)
+v_max = 12.0                     # 最大速度 (rad/s)
+a_max = 100.0                     # 加速度 (rad/s²)
 t_acc = v_max / a_max           # 加速时间 = 1s
 t_const = T_total - 2*t_acc     # 匀速时间 = 4s (若为正)
 
 # ---------- 扰动参数 ----------
 n = 84
-b = 0.01
-phi = np.pi / 4                 # 任意相位
+b = 0.002
+phi = np.pi / 6                 # 任意相位
 b1_true = b * np.cos(phi)
 b2_true = b * np.sin(phi)
 
 # ---------- 观测器增益 ----------
-l1 = 15.0                       # 自适应观测器位置增益
-l2 = 0.3                        # 参数增益
+l1 = 115.0                       # 自适应观测器位置增益
+l2 = 7.3                        # 参数增益
 
 # LESO 带宽 (rad/s) —— 高于运动频率即可
-wo = 30.0
+wo = 800.0
 beta1 = 2.0 * wo
 beta2 = wo**2
 
@@ -88,9 +88,11 @@ for i, ti in enumerate(t):
     # ===== 自适应观测器 (已知真实速度作为前馈) =====
     y_hat = hat_theta + hat_b1 * np.sin(n * hat_theta) + hat_b2 * np.cos(n * hat_theta)
     e = theta_meas - y_hat
-    hat_theta += (omega_true + l1 * e) * dt
-    hat_b1 += (l2 * np.sin(n * hat_theta) * e) * dt
-    hat_b2 += (l2 * np.cos(n * hat_theta) * e) * dt
+    # hat_theta += (z2_f + l1 * e) * dt
+    hat_theta += (z2_f + l1 * e) * dt
+    l2dt = l2 * dt
+    hat_b1 += e * (np.sin(n * hat_theta)) * l2dt
+    hat_b2 += e * (np.cos(n * hat_theta)) * l2dt
 
     # ===== LESO 1: 输入为滤波后的 hat_theta =====
     e1 = z1_f - hat_theta

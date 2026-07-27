@@ -298,8 +298,8 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
 
 struct alignas(4) [[nodiscard]] CurveState{
     iiq32 x1;
-    iq16 x2;
-    iq16 x3;
+    iq20 x2;
+    iq20 x3;
     iq16 u;
 };
 
@@ -308,16 +308,17 @@ struct alignas(4) [[nodiscard]] TrajState{
     iq16 x2;
 };
 
-struct alignas(4) [[nodiscard]] HpTrajState{
+
+struct alignas(4) [[nodiscard]] HpState2o{
     iiq32 x1;
-    iq16 x2;
+    iq20 x2;
 };
 
 
 struct alignas(4) [[nodiscard]] AllState{
-    SecondOrderState<iq16> encoder_state_2o;
+    HpState2o encoder_state_2o;
     CurveState curve_state;
-    HpTrajState traj_smooth_state;
+    HpState2o traj_smooth_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
