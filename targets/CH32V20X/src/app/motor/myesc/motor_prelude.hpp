@@ -381,20 +381,25 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 torque_curr_x3comp;
 
     Angular<uq32> openloop_elec_angle;
-    iq16 openloop_elec_speed;
+    iq20 openloop_elec_speed;
 
     Angular<uq32> elec_angle;
-    iq16 elec_speed;
+    iq20 elec_speed;
 
     Angular<uq32> sensed_elec_angle;
-    iq16 sensed_elec_speed;
+    iq20 sensed_elec_speed;
 
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
     iiq32 encoder_abs_position64;
+    iiq32 encoder_rel_position64;
+    uq32 encoder_initial_position_raw;
     uq32 encoder_initial_position;
-    alignas(4) bool encoder_initial_position_recorded;
+    struct alignas(4) {
+        bool is_encoder_initial_position_recorded;
+        uint8_t encoder_correct_method_signature;
+    };
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;

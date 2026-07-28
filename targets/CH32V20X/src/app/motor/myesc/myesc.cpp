@@ -75,17 +75,17 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             return {0, 0};
         }
         case DemoTrajPattern::Sine:{
-            constexpr auto omega = 1_iq16;
+            constexpr auto omega_rads = 1_iq16;
             constexpr auto side_amplitude = 1.4_iq16;
 
-            const auto [s,c] = math::sincos(omega * now_secs);
+            const auto [s,c] = math::sincos(omega_rads * now_secs);
             return {
                 side_amplitude * iq16(s),
-                side_amplitude * omega * iq16(c)
+                side_amplitude * omega_rads * iq16(c)
             };
         }
         case DemoTrajPattern::Saw:{
-            // const auto [s,c] = math::sincos(omega * now_secs);
+            // const auto [s,c] = math::sincos(omega_rads * now_secs);
 
             constexpr auto freq = 0.2_iq16;
             constexpr auto amplitude = 5.0_iq16;
@@ -450,7 +450,7 @@ static void process_current_sense(
 
 
 [[maybe_unused]] __no_inline 
-static void process_observer_sense(AllState & state, const FnSwitches fn_switches){
+static void process_observer_calc(AllState & state, const FnSwitches fn_switches){
 
 
     // if(1){//sensorless observer
@@ -609,7 +609,7 @@ static void process_observer_sense(AllState & state, const FnSwitches fn_switche
 }
 
 [[maybe_unused]] __no_inline 
-static void process_encoder_sense(AllState & state, const FnSwitches fn_switches){
+static void process_encoder_calc(AllState & state, const FnSwitches fn_switches){
 
     #if 0
     {
@@ -696,28 +696,25 @@ static void process_encoder_sense(AllState & state, const FnSwitches fn_switches
     #endif
 
     {
-        const auto encoder_offset_base = make_angular_from_turns(0.053571_uq32);
+        const auto encoder_position_offset = 0.946429_uq32;
         const auto pole_pairs = MotorProfile::POLE_PAIRS;
 
-        auto encoder_abs_position64_comped = state.encoder_abs_position64;
+        auto encoder_abs_position64 = state.encoder_abs_position64;
 
         if(fn_switches.encoder_harmonic_suppression_en){
-            // encoder_mech_angle = Angular<uq32>::from_turns(encoder_mech_angle.to_turns() + state.peac_state.harm);
-            encoder_abs_position64_comped += iiq32::from_bits(state.peac_state.harm.to_bits());
+            encoder_abs_position64 += iiq32::from_bits(state.peac_state.harm.to_bits());
         }
 
-
+        state.encoder_rel_position64 = encoder_abs_position64 
+            - iiq32::from_bits(state.encoder_initial_position.to_bits());
 
         auto & state_2o = state.encoder_state_2o;
 
         auto & x1_now = state_2o.x1;
         auto & x2_now = state_2o.x2;
+        
 
-        const iq16 e1 = math::clamp2(fixed_downcast<16>(
-            encoder_abs_position64_comped 
-            - iiq32::from_bits(state.encoder_initial_position.to_bits()) 
-            - x1_now), 
-            E1_LIMIT);
+        const iq16 e1 = math::clamp2(fixed_downcast<16>(state.encoder_rel_position64 - x1_now), E1_LIMIT);
 
         const iq20 e2 = - x2_now;
 
@@ -727,10 +724,9 @@ static void process_encoder_sense(AllState & state, const FnSwitches fn_switches
             extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
             + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
 
-        auto encoder_mech_angle = make_angular_from_turns(
-            uq32::from_bits(uint32_t(encoder_abs_position64_comped.to_bits())));
+        auto encoder_abs_position32 = uq32::from_bits(uint32_t(encoder_abs_position64.to_bits()));
 
-        state.sensed_elec_angle = (encoder_mech_angle + encoder_offset_base) * pole_pairs;
+        state.sensed_elec_angle = Angular<uq32>::from_turns((encoder_abs_position32 - encoder_position_offset) * pole_pairs);
 
         const auto mech_speed = state.encoder_state_2o.x2;
         state.sensed_elec_speed = mech_speed * pole_pairs;
@@ -739,7 +735,7 @@ static void process_encoder_sense(AllState & state, const FnSwitches fn_switches
 }
 
 [[maybe_unused]] __no_inline 
-static void process_position_sense(AllState & state, const FnSwitches fn_switches){
+static void process_position_calc(AllState & state, const FnSwitches fn_switches){
 
 
     {
@@ -757,7 +753,7 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
 
 
 
-        std::tie(state.elec_angle, state.elec_speed) = [&] -> std::tuple<Angular<uq32>, iq16>{
+        std::tie(state.elec_angle, state.elec_speed) = [&] -> std::tuple<Angular<uq32>, iq20>{
             switch(fn_switches.elec_angle_source){
                 case ElecAngleSource::Openloop:{
                     iterate_openloop_angle();
@@ -770,20 +766,20 @@ static void process_position_sense(AllState & state, const FnSwitches fn_switche
                     const auto elec_angle = state.observer_elec_angle;
 
                     //use integral instead
-                    const auto elec_speed = state.observer_pll_state.angluar_speed_integral.to_turns();
+                    const auto elec_speed = (iq20)state.observer_pll_state.angluar_speed_integral.to_turns();
                     return {elec_angle, elec_speed};
                 }
                 
                 
                 case ElecAngleSource::Hfi:{
                     const auto elec_angle = state.hfi_elec_angle;
-                    const auto elec_speed = iq16(0);
+                    const auto elec_speed = iq20(0);
                     return {elec_angle, elec_speed};
                 }
                 
                 case ElecAngleSource::MagEncoder:
                 case ElecAngleSource::AbzEncoder:
-                    process_encoder_sense(state, fn_switches);
+                    process_encoder_calc(state, fn_switches);
                     const auto elec_angle = state.sensed_elec_angle;
                     const auto elec_speed = state.sensed_elec_speed;
                     return {elec_angle, elec_speed};
@@ -831,7 +827,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
     if(traj_frontend_smooth_en){
         //启用此项 为轨迹规划器提供准确的前馈速度 使得规划输出与原始位置信号几乎零迟滞
 
-        const bool use_input_x2 = traj_smooth_method == TrajSmoothMethod::UseX1AndX2;
+        const bool use_traj_x2 = traj_smooth_method == TrajSmoothMethod::UseX1AndX2;
 
         const auto & traj_state = state.traj_state;
         auto & now_state = state.traj_smooth_state;
@@ -842,7 +838,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
         const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
 
         auto & x1_ref = traj_state.x1;
-        auto x2_ref = (use_input_x2 ? traj_state.x2 : iq16(0));
+        auto x2_ref = (use_traj_x2 ? traj_state.x2 : iq16(0));
 
         const iq20 e1 = math::clamp2(x1_ref - x1_now_q16, E1_LIMIT);
         const iq20 e2 = math::clamp2(x2_ref - x2_now, E2_LIMIT);
@@ -1152,7 +1148,7 @@ void process_harmonic_suppression(
 
             constexpr auto L = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
             // constexpr auto R = MotorProfile::PHASE_RESISTANCE_OHM;
-            const auto dec_factor = kp * phi_s - 6 * elec_omega * L;
+            const auto dec_factor = kp * phi_s - 6 * elec_omega_rads * L;
 
             vd6c += id6s * dec_factor;
             vd6s -= id6c * dec_factor;
@@ -1195,7 +1191,7 @@ void process_current_loop(
     iq16 elec_speed,
     iq20 tc_ref
 ){
-    const auto elec_omega = elec_speed * iq16(TAU);
+    const auto elec_omega_rads = elec_speed * iq16(TAU);
 
     const auto elec_sincos = math::Rotation2<iq31>::from_angle(elec_angle);
 
@@ -1285,7 +1281,7 @@ void process_current_loop(
         iq20 q_volt_decouple = 0;
 
         const bool is_speed_stable = true;
-        const auto omega = elec_omega * is_speed_stable;
+        const auto omega_rads = elec_omega_rads * is_speed_stable;
         
         const auto phase_ind = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
         
@@ -1293,14 +1289,14 @@ void process_current_loop(
         const bool cross_decoupling_enabled = fn_switches.cross_decoupling_en;
 
         if(cross_decoupling_enabled){
-            d_volt_decouple -= phase_ind * state.dq_curr_raw.q * omega;
-            q_volt_decouple += phase_ind * state.dq_curr_raw.d * omega;
+            d_volt_decouple -= phase_ind * state.dq_curr_raw.q * omega_rads;
+            q_volt_decouple += phase_ind * state.dq_curr_raw.d * omega_rads;
         }
 
         const bool bemf_decoupling_enabled = fn_switches.bemf_decoupling_en;
 
         if(bemf_decoupling_enabled){
-            q_volt_decouple += MotorProfile::FLUX_LINKAGE * omega;
+            q_volt_decouple += MotorProfile::FLUX_LINKAGE * omega_rads;
         }
 
         state.dq_volt_decouple.d = d_volt_decouple;
@@ -1865,22 +1861,47 @@ void myesc_main(){
             return table_eps;
         };
 
-        const auto encoder_position = [&](const iq32 * table_data, uq32 raw_turns) -> uq32{
+
+        auto correct_encoder_position = [&](const iq32 * table_data, uq32 raw_turns) -> uq32{
             if(sideshaft_calibrate_done & fn_switches.sideshaft_compenstate_en){
-            // if(false){
                 const auto table_eps = calc_encoder_eps(table_data, raw_turns);
                 return raw_turns + table_eps;
             }else{
                 return raw_turns;
             }
-        }(state.encoder_calibrate_state.eps_table.data(), encoder_position_raw);
+        };
 
-        if(not state.encoder_initial_position_recorded){
-            state.encoder_initial_position = encoder_position;
+        
+        const auto encoder_position = correct_encoder_position(
+            state.encoder_calibrate_state.eps_table.data(), encoder_position_raw);
+            
+        #if 0
+
+        auto calc_encoder_correct_method_signature = [&] -> uint8_t{
+            return 0xf0 | sideshaft_calibrate_done;
+        };
+
+
+        const auto encoder_correct_method_signature = calc_encoder_correct_method_signature();
+
+        if(state.encoder_correct_method_signature != encoder_correct_method_signature){
+            state.encoder_initial_position = correct_encoder_position(
+                state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_position_raw);
+                
+                state.encoder_correct_method_signature = encoder_correct_method_signature;
+            }
+        #else
+            
+        state.encoder_initial_position = correct_encoder_position(
+            state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_position_raw);
+        #endif
+
+
+        if(not state.is_encoder_initial_position_recorded){
+            state.encoder_initial_position_raw = encoder_position_raw;
             state.encoder_abs_position64 = iiq32::from_bits(encoder_position.to_bits());
-            state.encoder_initial_position_recorded = true;
+            state.is_encoder_initial_position_recorded = true;
         }else{
-
             state.encoder_abs_position64 = uq32_wrapped_update(
                 state.encoder_abs_position64, encoder_position);
         }
@@ -1923,7 +1944,7 @@ void myesc_main(){
             }
 
         }else{
-            process_position_sense(state, fn_switches);
+            process_position_calc(state, fn_switches);
 
             if(not do_sideshaft_calibrate){
                 process_traj_generate(state, fn_switches);
@@ -2374,13 +2395,12 @@ void myesc_main(){
 
         // auto & ec_state = state.encoder_calibrate_state;
         if(true)DEBUG_PRINTLN(
-            // math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_abs_position64),
-            math::fixed_downcast<16>(state.encoder_abs_position64 - iiq32::from_bits(state.encoder_initial_position.to_bits())),
+            math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.encoder_rel_position64),
             // math::fixed_downcast<16>(state.peac_state.hat_turns),
-            math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_abs_position64) - math::fixed_downcast<16>(state.curve_state.x1),
-            // uq32::from_bits((state.encoder_abs_position64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
+            // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
+            // uq32::from_bits((state.encoder_rel_position64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
             // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
             state.encoder_state_2o.x2,
@@ -2394,8 +2414,8 @@ void myesc_main(){
             bool(fn_switches_.encoder_harmonic_suppression_en),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
-            // math::fixed_downcast<20>(state.encoder_abs_position64),
-            // iq20(math::fixed_downcast<20>(state.encoder_abs_position64 - state.peac_state.hat_turns)),
+            // math::fixed_downcast<20>(state.encoder_rel_position64),
+            // iq20(math::fixed_downcast<20>(state.encoder_rel_position64 - state.peac_state.hat_turns)),
             // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
