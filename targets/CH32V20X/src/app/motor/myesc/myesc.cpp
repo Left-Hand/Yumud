@@ -188,7 +188,7 @@ static constexpr size_t HIGHFREQ_ENCODER_LTD2O_R = 1200;
 
 
 
-static constexpr int32_t CURVE_X2_LIMIT = 4;
+static constexpr int32_t CURVE_X2_LIMIT = 8;
 
 static constexpr int32_t E1_LIMIT = 100;
 static constexpr int32_t E2_LIMIT = 1000;
@@ -837,11 +837,11 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
 
         const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
 
-        auto & x1_ref = traj_state.x1;
-        auto x2_ref = (use_traj_x2 ? traj_state.x2 : iq16(0));
+        auto & ref_x1 = traj_state.x1;
+        auto ref_x2 = (use_traj_x2 ? traj_state.x2 : iq16(0));
 
-        const iq20 e1 = math::clamp2(x1_ref - x1_now_q16, E1_LIMIT);
-        const iq20 e2 = math::clamp2(x2_ref - x2_now, E2_LIMIT);
+        const iq20 e1 = math::clamp2(ref_x1 - x1_now_q16, E1_LIMIT);
+        const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
         x2_now = x2_now + math::comp_downcast<20>(
@@ -911,11 +911,11 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
     const auto curve_x2 = state.curve_state.x2;
 
     constexpr auto torque_curr_step_limit = iq20(0.02);
-    constexpr auto torque_curr_limit = iq20(6.0);
+    constexpr auto torque_curr_limit = iq20(4.5);
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
-    const iq20 ka = 0.002_iq20;
+    const iq20 ka = 0.0012_iq20;
     const auto x3comp_torque_curr = ka * state.curve_state.x3;
 
     const iq20 kf = 0.01_iq20;
@@ -926,18 +926,18 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
-            const iq20 kpp = 65.0_iq20;
+            const int32_t kpp = 12;
             // const iq20 kp = 1.2_iq20;
-            constexpr iq20 kp = 0.4_iq20;
+            constexpr iq20 kp = 0.6_iq20;
             constexpr iq20 ki = 4.66_iq20;
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
-            const iq20 x2_ref = compmul_clamp2(iq20(curve_x1 - now_x1), kpp, E2_LIMIT);
+            const iq20 ref_x2 = math::clamp2(iq20(math::clamp2((curve_x1 - now_x1), E1_LIMIT)) * kpp, E2_LIMIT);
 
-            state.pi_x2_ref = x2_ref;
-            // state.pi_x2_ref = curve_x1 - now_x1;
-            // const iq20 x2_ref = 0;
-            const iq20 e2 = math::clamp2((x2_ref + curve_x2) - now_x2, E2_LIMIT);
+            state.pi_ref_x2 = ref_x2;
+            // state.pi_ref_x2 = curve_x1 - now_x1;
+            // const iq20 ref_x2 = 0;
+            const iq20 e2 = math::clamp2((ref_x2 + curve_x2) - now_x2, E2_LIMIT);
             state.pi_e2 = e2;
 
             auto desired_torque_curr_cmd = state.torque_curr_integral 
@@ -946,18 +946,20 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
                 + x3comp_torque_curr
             ;
 
-            auto next_torque_curr_cmd = math::clamp2(desired_torque_curr_cmd, torque_curr_limit);
-            next_torque_curr_cmd = (3 * state.torque_curr_cmd + next_torque_curr_cmd) >> 2;
-            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, next_torque_curr_cmd, torque_curr_step_limit);
+            desired_torque_curr_cmd = math::clamp2(desired_torque_curr_cmd, torque_curr_limit);
+            desired_torque_curr_cmd = (3 * state.torque_curr_cmd + desired_torque_curr_cmd) >> 2;
+            state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, desired_torque_curr_cmd, torque_curr_step_limit);
 
             auto torque_curr_integral_delta = 
                 e2 * ki_discrete
-                // + (state.torque_curr_cmd - desired_torque_curr_cmd)
+                + (state.torque_curr_cmd - desired_torque_curr_cmd)
             ;
-            state.torque_curr_integral += math::clamp2(
+            auto torque_curr_integral = state.torque_curr_integral + math::clamp2(
                 torque_curr_integral_delta,
                 torque_curr_step_limit
             );
+
+            state.torque_curr_integral = math::clamp2(torque_curr_integral, torque_curr_limit);
             break;
         }
 
@@ -991,11 +993,11 @@ static void process_mechanical_loop(AllState & state, FnSwitches fn_switches){
             constexpr size_t wo = 3 * wc;
             constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
 
-            const auto x2_ref = math::clamp2(iq16(kpp * (curve_x1 - now_x1)), E2_LIMIT) + curve_x2;
+            const auto ref_x2 = math::clamp2(iq16(kpp * (curve_x1 - now_x1)), E2_LIMIT) + curve_x2;
 
             auto & eso_state = state.speed_eso_state;
 
-            const auto iq = math::clamp2(iq20((wc * (x2_ref - eso_state.speed_est) - eso_state.f_est) * inv_b0), torque_curr_limit);
+            const auto iq = math::clamp2(iq20((wc * (ref_x2 - eso_state.speed_est) - eso_state.f_est) * inv_b0), torque_curr_limit);
             eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
             eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
 
@@ -2405,13 +2407,13 @@ void myesc_main(){
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
             state.encoder_state_2o.x2,
             // (state.curve_state.x2),
-            state.peac_state.hat_b1,
-            state.peac_state.hat_b2,
+            // state.peac_state.hat_b1,
+            // state.peac_state.hat_b2,
             // state.peac_state.debug.e,
             // state.peac_state.harm * 100,
             // state.encoder_state_2o.x2,
-            state.peac_state.debug.e,
-            bool(fn_switches_.encoder_harmonic_suppression_en),
+            state.pi_ref_x2,
+            state.torque_curr_integral,
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
             // math::fixed_downcast<20>(state.encoder_rel_position64),

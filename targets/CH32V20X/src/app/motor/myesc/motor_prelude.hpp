@@ -419,7 +419,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     HarmonicState harmonic_state;
 
-    iq20 pi_x2_ref;
+    iq20 pi_ref_x2;
     iq20 pi_e2;
     iq20 mtpa_d_curr;
     iq20 mtpa_q_curr;
