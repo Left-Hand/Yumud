@@ -859,19 +859,36 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
         const auto & traj_state = state.traj_smooth_state;
         auto & curve_state = state.curve_state;
 
-        const iq16 x1_now = math::fixed_downcast<16>(curve_state.x1);
-        const auto x2_now = curve_state.x2;
+        iq16 x1_curve_now = math::fixed_downcast<16>(curve_state.x1);
 
         const iq20 x2_traj = traj_state.x2;
 
-        const bool do_x1_comp = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
+        const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
         //使用终值定理得到无静差时补偿量为x2 * 2/r
-        const iq16 x1_comp = do_x1_comp ? iq16(x2_traj * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R)) : iq16(0);
-        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1) + x1_comp;
+        const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R)) : iq16(0);
+        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1) + x1_traj_comp;
         
-        const iq16 e1 = math::clamp2(x1_traj - x1_now, E1_LIMIT);
-        const iq20 e2 = math::clamp2(x2_traj - x2_now, E2_LIMIT);
+        iq16 e1 = math::clamp2(x1_traj - x1_curve_now, E1_LIMIT);
+
+        const bool curve_retrack_en = true;
+        static constexpr auto RETRACK_E1_THRESHOLD = 0.4_iq16;
+        static constexpr auto RETRACK_LEAD_X1 = 0.1_iq16;
+
+        if(curve_retrack_en){
+            const auto x1_now = math::fixed_downcast<16>(state.encoder_state_2o.x1);
+            if(math::abs(x1_curve_now - x1_now) > RETRACK_E1_THRESHOLD){
+                const auto x1_curve_retrack = math::step_to(x1_now, x1_traj, RETRACK_LEAD_X1);
+                const auto x2_curve_retrack = state.encoder_state_2o.x2;
+
+                const auto x1_curve_retrack64 = iiq32::from_bits(int64_t(x1_curve_retrack.to_bits()) << 16);
+                curve_state.x1 = x1_curve_retrack64;
+                curve_state.x2 = x2_curve_retrack;
+                e1 = x1_traj - x1_curve_retrack;
+            }
+        }
+        
+        const iq20 e2 = math::clamp2(x2_traj - curve_state.x2, E2_LIMIT);
 
         const auto u = CURVE_NLTD_FHAN({e1, iq16(e2)});
 
@@ -2397,8 +2414,10 @@ void myesc_main(){
 
         // auto & ec_state = state.encoder_calibrate_state;
         if(true)DEBUG_PRINTLN(
+            math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_rel_position64),
+            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            // state.curve_state.debug.x1_retrack,
             // math::fixed_downcast<16>(state.peac_state.hat_turns),
             // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),

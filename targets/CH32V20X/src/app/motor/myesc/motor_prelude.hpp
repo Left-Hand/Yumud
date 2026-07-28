@@ -314,6 +314,13 @@ struct alignas(4) [[nodiscard]] CurveState{
     iq20 x2;
     iq20 x3;
     iq16 u;
+
+    // struct Debug{
+    //     iq16 x1_retrack;
+    //     iiq32 x1_retrack64;
+    // };
+
+    // Debug debug;
 };
 
 struct alignas(4) [[nodiscard]] TrajState{
