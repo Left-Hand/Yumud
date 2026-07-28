@@ -97,7 +97,7 @@ for i, ti in enumerate(t):
     e = theta_meas - hat_theta - harm
     # hat_theta += (z2_f + l1 * e) * dt
     # hat_theta += (z2_f + l1 * e) * dt
-    hat_theta += (z2_f + l1 * e) * dt
+    hat_theta += (z2_raw + l1 * e) * dt
     l2dt = l2 * dt
     # hat_b1 = lerp(hat_b1, hat_b1 + e * (s), 0.0025)
     hat_b2 = lerp(hat_b2, hat_b2 + e * (c), 0.0025)

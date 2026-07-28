@@ -117,7 +117,8 @@ struct alignas(4) [[nodiscard]] FnSwitches{
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t current_harmonic_suppression_en : 1;
-
+    uint32_t encoder_harmonic_suppression_en : 1;
+    
     uint32_t cross_decoupling_en : 1;
     uint32_t bemf_decoupling_en : 1;
 
@@ -329,6 +330,7 @@ struct alignas(4) [[nodiscard]] HpState2o{
 
 struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState{
     iiq32 hat_turns;
+    iq20 hat_speed;
     iq32 hat_b1;
     iq32 hat_b2;
     iq31 harm_c;
@@ -343,6 +345,30 @@ struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState{
     Debug debug;
 };
 
+struct alignas(4) [[nodiscard]] HfiState{
+    size_t hfi_idx;
+    alignas(4) bool hfi_is_neg_samp;
+
+    iq20 hfi_response;
+    Angular<uq16> prev_hfi_lap_angle2x;
+    Angular<iq16> hfi_multilap_angle2x;
+
+    iq20 pulsehfi_d_response;
+    iq20 pulsehfi_q_response;
+
+    iq20 spinhfi_bin0_real_response_acc;
+    iq20 spinhfi_bin0_real_response;
+
+    iq20 spinhfi_bin1_real_response;
+    iq20 spinhfi_bin1_imag_response;
+
+    iq20 spinhfi_bin2_real_response_acc;
+    iq20 spinhfi_bin2_imag_response_acc;
+    iq20 spinhfi_bin2_real_response;
+    iq20 spinhfi_bin2_imag_response;
+    iq20 spinhfi_bin2_real_response_slowlp;
+    iq20 spinhfi_bin2_imag_response_slowlp;
+};
 
 struct alignas(4) [[nodiscard]] AllState{
     HpState2o encoder_state_2o;
@@ -359,7 +385,6 @@ struct alignas(4) [[nodiscard]] AllState{
 
     Angular<uq32> elec_angle;
     iq16 elec_speed;
-    // math::Rotation2<iq31> elec_sincos;
 
     Angular<uq32> sensed_elec_angle;
     iq16 sensed_elec_speed;
@@ -367,7 +392,9 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
-    iiq32 encoder_abs_turns64;
+    iiq32 encoder_abs_position64;
+    uq32 encoder_initial_position;
+    alignas(4) bool encoder_initial_position_recorded;
 
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;
@@ -418,41 +445,18 @@ struct alignas(4) [[nodiscard]] AllState{
 
 
     iq20 unblance_curr_abs_lp;
-    DebounceState u_disconn_dbs;
-    DebounceState v_disconn_dbs;
+
 
     FluxObserverState flux_ob_state;
 
-    size_t hfi_idx;
-    bool hfi_is_neg_samp;
-
-    iq20 hfi_response;
-    Angular<uq16> prev_hfi_lap_angle2x;
-    Angular<iq16> hfi_multilap_angle2x;
-
-    iq20 pulsehfi_d_response;
-    iq20 pulsehfi_q_response;
-
-    iq20 spinhfi_bin0_real_response_acc;
-    iq20 spinhfi_bin0_real_response;
-
-    iq20 spinhfi_bin1_real_response;
-    iq20 spinhfi_bin1_imag_response;
-
-    iq20 spinhfi_bin2_real_response_acc;
-    iq20 spinhfi_bin2_imag_response_acc;
-    iq20 spinhfi_bin2_real_response;
-    iq20 spinhfi_bin2_imag_response;
-    iq20 spinhfi_bin2_real_response_slowlp;
-    iq20 spinhfi_bin2_imag_response_slowlp;
-    
+    HfiState hfi_state;
     dsp::PllState hfi_pll_state;
     dsp::PllState observer_pll_state;
-    // differentiator_int64_t differ;
-    // int64_t differ_out;
-    // SpeedEsoState speed_eso_state;
     
     TemperatureState temperature_state;
+
+    DebounceState u_disconn_dbs;
+    DebounceState v_disconn_dbs;
     
     
     TimerTick isr_entry_tick;
