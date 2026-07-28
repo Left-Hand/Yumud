@@ -113,7 +113,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
     uint32_t phase_invert_en : 1;
-    uint32_t sideshaft_compenstate_en : 1;
+
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t current_harmonic_suppression_en : 1;
@@ -128,11 +128,17 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     uint32_t mtpa_en : 1;
     uint32_t mtpv_en : 1;
 
+    uint32_t sideshaft_compenstate_en : 1;
+    uint32_t override_position_bigkp_en : 1;
+    uint32_t damping_forwardfeedback_en : 1;
+    uint32_t interia_forwardfeedback_en : 1;
+
     HfiMethod hfi_method:3;
     ElecAngleSource elec_angle_source : 3;
     LoopWiring loop_wiring : 3;
 
     TrajSmoothMethod traj_smooth_method : 2;
+    uint32_t curve_retrack_e1big_en : 1;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -386,6 +392,7 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
     iq20 torque_curr_x3comp;
+    iq20 torque_curr_veryslowlp;
 
     Angular<uq32> openloop_elec_angle;
     iq20 openloop_elec_speed;
