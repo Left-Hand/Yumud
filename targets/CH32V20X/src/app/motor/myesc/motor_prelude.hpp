@@ -1,7 +1,6 @@
 #pragma once
 
-#include "drivers/encoder/magnetic/MT6825/mt6825.hpp"
-#include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
+
 #include "motor_leso.hpp"
 #include "motor_dsp/dsp_pll.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"

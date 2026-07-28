@@ -1,5 +1,9 @@
 #include "memop.h"
+#include <stddef.h>
 
+void memset_word_aligned(uint32_t * s, uint32_t c, unsigned int quantity){
+
+}
 
 void *memset(void *s, int c, unsigned int count){
 
@@ -107,7 +111,7 @@ void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int co
 }
 
 
-#include <stddef.h>
+
 
 void *memmove(void *dst, const void *src, size_t count) {
     #define UNALIGNED(X, Y) \

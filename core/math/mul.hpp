@@ -8,12 +8,12 @@ template<size_t Q1, size_t Q2,
     typename D1, typename D2, 
     typename D = tmp::extended_mul_underlying_t<D1, D2>
     >
-static constexpr fixed<Q1 + Q2, D> compmul_extended(const fixed<Q1, D1> a, const fixed<Q2, D2> b) {
+static constexpr fixed<Q1 + Q2, D> roundlsb_mul_extended(const fixed<Q1, D1> a, const fixed<Q2, D2> b) {
     return fixed<Q1 + Q2, D>::from_bits(static_cast<D>(a.to_bits()) * static_cast<D>(b.to_bits()));
 }
 
 template<size_t Q, size_t P>
-static constexpr fixed<Q, int32_t> comp_downcast(
+static constexpr fixed<Q, int32_t> roundlsb_downcast(
     const math::fixed<P, int64_t> x
 ){
     int32_t bits = int32_t(x.to_bits() >> (P - Q - 1));
@@ -22,7 +22,7 @@ static constexpr fixed<Q, int32_t> comp_downcast(
 }
 
 template<size_t Q, size_t P>
-static constexpr math::fixed<Q, int32_t> compmul(
+static constexpr math::fixed<Q, int32_t> roundlsb_mul(
     const math::fixed<Q, int32_t> lhs,
     const math::fixed<P, int32_t> rhs
 ){
@@ -32,7 +32,7 @@ static constexpr math::fixed<Q, int32_t> compmul(
 }
 
 template<size_t Q, size_t P>
-static constexpr math::fixed<Q, int32_t> compmul_clamp2(
+static constexpr math::fixed<Q, int32_t> roundlsb_mul_clamp2(
     const math::fixed<Q, int32_t> lhs,
     const math::fixed<P, int32_t> rhs,
     const math::fixed<Q, int32_t> ma
@@ -44,19 +44,19 @@ static constexpr math::fixed<Q, int32_t> compmul_clamp2(
 }
 
 template<size_t Q, size_t P>
-static constexpr math::fixed<Q, int32_t> compmul_clamp2(
+static constexpr math::fixed<Q, int32_t> roundlsb_mul_clamp2(
     const math::fixed<Q, int32_t> lhs,
     const math::fixed<P, int32_t> rhs,
     const int32_t ma
 ){
-    return compmul_clamp2(lhs, rhs, math::fixed<Q, int32_t>::from_bits(ma << Q));
+    return roundlsb_mul_clamp2(lhs, rhs, math::fixed<Q, int32_t>::from_bits(ma << Q));
 }
 
-static_assert(compmul(4.0_iq20, 3.0_iq16).to_bits() == 12 << 20);
-static_assert(compmul(14.0_iq20, 3.0_iq16).to_bits() == 42 << 20);
-static_assert(compmul(14.0_iq20, -3.0_iq16).to_bits() == -42 << 20);
-static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 13_iq20).to_bits() == 12 << 20);
-static_assert(compmul_clamp2(4.0_iq20, 3.0_iq16, 6_iq20).to_bits() == 6 << 20);
+static_assert(roundlsb_mul(4.0_iq20, 3.0_iq16).to_bits() == 12 << 20);
+static_assert(roundlsb_mul(14.0_iq20, 3.0_iq16).to_bits() == 42 << 20);
+static_assert(roundlsb_mul(14.0_iq20, -3.0_iq16).to_bits() == -42 << 20);
+static_assert(roundlsb_mul_clamp2(4.0_iq20, 3.0_iq16, 13_iq20).to_bits() == 12 << 20);
+static_assert(roundlsb_mul_clamp2(4.0_iq20, 3.0_iq16, 6_iq20).to_bits() == 6 << 20);
 
 
 }

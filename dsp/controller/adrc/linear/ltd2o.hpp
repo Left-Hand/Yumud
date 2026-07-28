@@ -90,13 +90,13 @@ public:
         
         // G(s) = 1 / (s ^ 2 + 2 * r * s + r ^ 2)
         // const auto x1_now_q16 = math::fixed_downcast<16>(x1_now);
-        const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
+        const auto x1_now_q16 = math::roundlsb_downcast<16>(x1_now);
 
         [[maybe_unused]] const iq16 e1 = ref[0] - x1_now_q16;
         [[maybe_unused]] const iq16 e2 = ref[1] - x2_now;
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, dt));
-        x2_now = x2_now + math::comp_downcast<16>(
+        x2_now = x2_now + math::roundlsb_downcast<16>(
             extended_mul(iq16(2 * e2), r_by_fs) 
             + extended_mul(iq16(e1), r2_by_fs));
     }

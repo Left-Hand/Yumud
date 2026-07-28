@@ -15,7 +15,8 @@
 #include "hal/dma/dma.hpp"
 
 
-
+#include "drivers/encoder/magnetic/MT6825/mt6825.hpp"
+#include "drivers/encoder/magnetic/VCE2755/vce2755.hpp"
 #include "drivers/gatedrv/DRV832X/DRV8323h.hpp"
 
 #include "middlewares/repl/repl.hpp"
@@ -24,29 +25,25 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
-#include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
-#include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
-#include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
+// #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
+// #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
+// #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
 
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
-#include "dsp/filter/firstorder/lpf.hpp"
-#include "dsp/filter/butterworth/band.hpp"
+// #include "dsp/filter/butterworth/band.hpp"
 
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_fft32.hpp"
-
 #include "motor_dsp/dsp_pi.hpp"
-
 #include "motor_config.hpp"
 
-#include "core/sdk.hpp"
-
 #include "core/math/clamp.hpp"
-#include "core/math/float/fp8.hpp"
-#include "core/math/float/bf16.hpp"
+// #include "core/math/float/fp8.hpp"
+// #include "core/math/float/bf16.hpp"
 
+#include "core/sdk.hpp"
 
 
 
@@ -730,16 +727,16 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
         peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((peac_state.hat_speed * TSAMPLE).to_bits() << 12);
         // peac_state.hat_speed = peac_state.hat_speed + (math::clamp2(e * L1, 200_iq20)) * TSAMPLE;
-        peac_state.hat_speed = peac_state.hat_speed + math::comp_downcast<20>(
+        peac_state.hat_speed = peac_state.hat_speed + math::roundlsb_downcast<20>(
                 extended_mul(iq20(2 * (-peac_state.hat_speed)), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
                 + extended_mul(iq20(e), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
 
         // static constexpr uq32 ALPHA = calc_lpf;
-        // peac_state.hat_b1 += math::compmul(e, harm_s * ALPHA);
-        peac_state.hat_b1 += math::compmul(iq32(peac_state.harm_s * ALPHA), 1000 * e);
-        peac_state.hat_b2 += math::compmul(iq32(peac_state.harm_c * ALPHA), 1000 * e);
-        // peac_state.hat_b1 += math::compmul(e, harm_s);
-        // peac_state.hat_b2 += math::compmul(e, harm_c);
+        // peac_state.hat_b1 += math::roundlsb_mul(e, harm_s * ALPHA);
+        peac_state.hat_b1 += math::roundlsb_mul(iq32(peac_state.harm_s * ALPHA), 1000 * e);
+        peac_state.hat_b2 += math::roundlsb_mul(iq32(peac_state.harm_c * ALPHA), 1000 * e);
+        // peac_state.hat_b1 += math::roundlsb_mul(e, harm_s);
+        // peac_state.hat_b2 += math::roundlsb_mul(e, harm_c);
 
         peac_state.hat_b1 = math::clamp2(peac_state.hat_b1, MAX_B);
         peac_state.hat_b2 = math::clamp2(peac_state.hat_b2, MAX_B);
@@ -772,7 +769,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
 
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
-        x2_now = x2_now + math::comp_downcast<20>(
+        x2_now = x2_now + math::roundlsb_downcast<20>(
             extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
             + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
 
@@ -881,7 +878,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
         auto & x1_now = now_state.x1;
         auto & x2_now = now_state.x2;
 
-        const auto x1_now_q16 = math::comp_downcast<16>(x1_now);
+        const auto x1_now_q16 = math::roundlsb_downcast<16>(x1_now);
 
         auto & ref_x1 = traj_state.x1;
         auto ref_x2 = (use_traj_x2 ? traj_state.x2 : iq16(0));
@@ -890,7 +887,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
         const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
-        x2_now = x2_now + math::comp_downcast<20>(
+        x2_now = x2_now + math::roundlsb_downcast<20>(
             extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
             + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
     }else{
@@ -1011,7 +1008,7 @@ static void process_mechanical_loop(
             state.pi_e2 = e2;
 
             auto desired_torque_curr_cmd = state.torque_curr_integral 
-                + compmul(kp, e2)
+                + roundlsb_mul(kp, e2)
                 + x2comp_torque_curr
                 + x3comp_torque_curr
             ;
