@@ -1,10 +1,10 @@
-#include "heapless_string.hpp"
+#include "../heapless_string.hpp"
 
 using namespace ymd;
 
 
 namespace{
-#if 0
+#if 1
 [[maybe_unused]] static void static_test(){
     constexpr auto str = HeaplessString<10>("Hello");
     constexpr auto str2 = []{

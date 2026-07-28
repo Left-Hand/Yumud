@@ -14,6 +14,8 @@
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_pll.hpp"
 
+#include "core/string/owned/thrifty_string.hpp"
+
 using namespace ymd;
 
 
@@ -41,6 +43,22 @@ struct [[nodiscard]] SinCosCorrector{
 
     };
 };
+
+// struct alignas(4) [[nodiscard]] ShortString8 final{
+//     using Self = ShortString8;
+
+//     static constexpr size_t CAPACITY = 8;
+
+//     uint64_t bits;
+
+//     template<size_t N>
+//     static constexpr from(const char (&str)[N]){
+//         std::array<char, 8> chars;
+        
+//     }
+// };
+
+using ShortString8 = ThriftyInlineString<8>;
 
 
 void sincospll_main(){
