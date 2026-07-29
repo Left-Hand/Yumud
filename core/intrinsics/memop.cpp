@@ -1,8 +1,30 @@
 #include "memop.h"
 #include <stddef.h>
 
-void memset_word_aligned(uint32_t * s, uint32_t c, unsigned int quantity){
+void * memset_word_aligned(unsigned long * s, unsigned long c, unsigned int count){
+    static constexpr int LBLOCKSIZE      = (int)(sizeof(long));
 
+    #define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
+    #define TOO_SMALL(LEN)  ((LEN) < LBLOCKSIZE)
+
+
+
+    while (count >= LBLOCKSIZE * 4){
+        *s++ = c;
+        *s++ = c;
+        *s++ = c;
+        *s++ = c;
+        count -= 4 * LBLOCKSIZE;
+    }
+
+    while (count >= LBLOCKSIZE){
+        *s++ = c;
+        count -= LBLOCKSIZE;
+    }
+#undef UNALIGNED
+#undef TOO_SMALL
+
+    return (void *)(s);
 }
 
 void *memset(void *s, int c, unsigned int count){

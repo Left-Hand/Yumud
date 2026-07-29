@@ -6,6 +6,9 @@
 extern "C"{
 #endif
 
+__attribute__((used, externally_visible, optimize( "-Ofast" )))
+void * memset_word_aligned(unsigned long * s, unsigned long c, unsigned int count);
+
 // from rt-thread
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,7 +22,7 @@ extern "C"{
  * @return the address of source memory
  */
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
-[[maybe_unused]] void *memset(void *s, int c, unsigned int count);
+void *memset(void *s, int c, unsigned int count);
 
 // from rt-thread
 // SPDX-License-Identifier: Apache-2.0
@@ -35,10 +38,10 @@ __attribute__((used, externally_visible, optimize( "-Ofast" )))
  * @return the address of destination memory
  */
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
-[[maybe_unused]] void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count);
+void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count);
 
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
-[[maybe_unused]] void *memmove(void * dst, const void * src, unsigned int count);
+void *memmove(void * dst, const void * src, unsigned int count);
 
 
 #ifdef __cplusplus

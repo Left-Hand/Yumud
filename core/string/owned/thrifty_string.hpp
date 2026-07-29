@@ -49,15 +49,16 @@ struct alignas(4) [[nodiscard]] ThriftyInlineString final{
     static_assert(N >= 3);
     static_assert(N < 256);
 
-    alignas(4) std::array<char, N> buffer;
+
 
     static constexpr Option<Self> try_from_sv(std::string_view str) noexcept {
         if (str.length() > N || str.length() > 255) return None;
         // 尾部约束检查
+        auto * str_back = static_cast<const char *>(str.data() + str.length());
         if (str.length() == N) {
-            if (str[N-2] == '\0' || str[N-1] == '\0') return None;
+            if (str_back[-2] == '\0' || str_back[-1] == '\0') return None;
         } else if (str.length() == N-1) {
-            if (str[N-2] == '\0') return None;
+            if (str_back[-2] == '\0') return None;
         }
         ThriftyInlineString self;
         if (std::is_constant_evaluated()){
@@ -95,5 +96,8 @@ struct alignas(4) [[nodiscard]] ThriftyInlineString final{
     [[nodiscard]] constexpr std::string_view view() const noexcept {
         return std::string_view{data(), length()};
     }
+
+private:
+    alignas(4) std::array<char, N> buffer;
 };
 }

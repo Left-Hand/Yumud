@@ -8,10 +8,10 @@ int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
     
-    myesc_main();
+    // myesc_main();
     // cas_main();
     // vce2755_main();
-    // sincospll_main();
+    sincospll_main();
     // steadywin_main();
     // sincos_main();
     // jvci_main();

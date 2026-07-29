@@ -45,6 +45,8 @@
 
 #include "core/sdk.hpp"
 
+#include "core/string/owned/thrifty_string.hpp"
+#include "core/intrinsics/memop.h"
 
 
 using namespace ymd;
@@ -1722,6 +1724,122 @@ void process_current_loop(
     }
 };
 
+
+template<typename Derived, typename Record>
+struct [[nodiscard]] alignas(size_t) ProfilerBase {
+    Record* data;
+    size_t length;
+    size_t capacity;
+
+    template<typename Allocator>
+    static Option<Derived &> try_from_arena_allocate(Allocator& alloc, size_t capacity) noexcept {
+        const size_t nbytes = sizeof(Derived) + capacity * sizeof(Record);
+        auto* allocated = static_cast<uint8_t*>(alloc.allocate(nbytes));
+        if (!allocated) return None;
+        // 对齐偏移（假设 allocated 已满足最大对齐）
+        const size_t offset = (sizeof(Derived) + alignof(Record) - 1) & ~(alignof(Record) - 1);
+        auto* p_this = new (allocated) Derived{};
+        p_this->data = reinterpret_cast<Record*>(allocated + offset);
+        p_this->length = 0;
+        p_this->capacity = capacity;
+        return Some(p_this);
+    }
+
+    const Record& nth_record(size_t index) const noexcept {
+        if (index >= length) __builtin_abort();
+        return data[index];
+    }
+
+    const Option<Record&> try_nth_record(size_t index) const noexcept {
+        if (index >= length) return None;
+        return &data[index];
+    }
+
+    void reset(){length = 0;}
+
+    Record * begin() noexcept {return data;}
+    Record * end() noexcept {return data + length;}
+    const Record * begin() const noexcept {return data;}
+    const Record * end() const noexcept {return data + length;}
+
+protected:
+    // 禁止复制/移动
+    ProfilerBase() = default;
+    ~ProfilerBase() = default;
+    ProfilerBase(const ProfilerBase&) = delete;
+    ProfilerBase& operator=(const ProfilerBase&) = delete;
+    ProfilerBase(ProfilerBase&&) = delete;
+    ProfilerBase& operator=(ProfilerBase&&) = delete;
+};
+
+
+using ShortString8 = ThriftyInlineString<8>;
+
+struct [[nodiscard]] alignas(size_t) MyRecord final{
+    using Id = ShortString8;
+    
+    ShortString8 name;
+    TimerTick entry;
+    TimerTick exit;
+
+    MyRecord(ShortString8 _name, TimerTick _entry, TimerTick _exit):
+        name(_name), entry(_entry), exit(_exit){;}
+
+    __attribute__((always_inline)) 
+    MyRecord(const MyRecord & other){
+        const auto p_dst = reinterpret_cast<uint32_t *>(this);
+        const auto p_src = reinterpret_cast<const uint32_t *>(&other);
+        p_dst[0] = p_src[0];
+        p_dst[1] = p_src[1];
+        p_dst[2] = p_src[2];
+        p_dst[3] = p_src[3];
+    }
+        
+    friend OutputStream & operator <<(OutputStream & ostm, MyRecord & self){
+        return ostm << self.name.view() << tmrticks_to_us(self.entry) << tmrticks_to_us(self.exit);
+    }
+};
+
+struct MyProfiler : public ProfilerBase<MyProfiler, MyRecord> {
+    Result<void, void> try_push_record(MyRecord&& record) {
+        if (length >= capacity) return Err();
+        new (&data[length]) MyRecord(std::move(record));  // 构造
+        ++length;
+        return Ok();
+    }
+};
+
+
+struct [[nodiscard]] alignas(size_t) ArenaAllocater final{
+    uint8_t * data;
+    uint8_t * cursor;
+    uint8_t * end;
+
+    static ArenaAllocater from(std::span<uint8_t> buffer){
+        ArenaAllocater self;
+        self.data = buffer.data();
+        self.cursor = self.data;
+        self.end = self.data + buffer.size();
+        return self;
+    }
+
+    constexpr size_t length() const {
+        return end - cursor;
+    }
+
+    constexpr uint8_t * allocate(const size_t nbytes){
+        if(cursor + nbytes > end) return nullptr;
+        auto ret = cursor;
+        cursor += nbytes;
+        return ret;
+    } 
+};
+
+__no_inline auto  profiler_push_record(MyProfiler & profiler, MyRecord && record){
+    return profiler.try_push_record(std::move(record));
+}
+
+
 void myesc_main(){
     //等待板载外围原件稳定（如SPI编码器）
     clock::delay(12ms);
@@ -1866,12 +1984,20 @@ void myesc_main(){
 
     fn_switches_.curve_retrack_e1big_en = true;
 
-    auto p_all_state_ = std::make_unique<AllState>();
-    AllState & all_state_ = *p_all_state_;
+    static constexpr size_t HEAP_ARENA_SIZE = 4096;
+    auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
+    auto alloc = ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
+
+
+    auto & all_state_ = *reinterpret_cast<AllState *>(alloc.allocate(sizeof(AllState)));
     all_state_.reset();
     all_state_.torque_curr_cmd = 0.0_iq20;
 
+    // auto & profiler_ = MyProfiler::try_from_arena_allocate(alloc, 8).unwrap();
 
+    // profiler_.reset();
+    // profiler_push_record(profiler_, MyRecord{ShortString8::try_from_cstr("MyTick00").unwrap(), get_timer_tick(), get_timer_tick()}).unwrap();
+    // profiler_push_record(profiler_, MyRecord{ShortString8::try_from_cstr("wtf").unwrap(), get_timer_tick(), get_timer_tick()}).unwrap();
 
     auto jeoc_isr = [&]{
 
@@ -2480,6 +2606,14 @@ void myesc_main(){
             int32_t bits = intrinsics::mul32hsu(curr_err.to_bits(), 1u << 24);
             return int16_t(bits);
         };
+
+        #if 0
+        if(false) DEBUG_PRINTLN(
+            profiler_.try_nth_record(0),
+            profiler_.try_nth_record(1)
+        );
+        #endif
+
         if(true)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
