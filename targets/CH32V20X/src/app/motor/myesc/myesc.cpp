@@ -47,7 +47,8 @@
 
 #include "core/string/owned/thrifty_string.hpp"
 #include "core/intrinsics/memop.h"
-
+#include "core/mem/arena.hpp"
+#include "roundtrip_traj_generator.hpp"
 
 using namespace ymd;
 
@@ -74,7 +75,7 @@ enum class [[nodiscard]] DemoTrajPattern:uint8_t{
 };
 
 __no_inline static constexpr TrajState
-calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
+calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
     switch(demo_pattern){
         case DemoTrajPattern::Stop:{
             return {0, 0};
@@ -83,7 +84,7 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             constexpr auto speed = 0.03_iq16;
 
             return {
-                speed * now_secs,
+                speed * t,
                 speed
             };
         }
@@ -92,7 +93,7 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             static constexpr auto abs_delta = iq32(1.0 / 65536 / 16);
             static iiq32 position = 0;
             static constexpr int flip_duration = 32;
-            const bool is_forward = int(now_secs) % (flip_duration * 2) < flip_duration;
+            const bool is_forward = int(t) % (flip_duration * 2) < flip_duration;
 
             constexpr iq32 abs_speed = iq32(abs_delta * FOC_FREQ);
             [[maybe_unused]] constexpr float abs_speed_f = (float)abs_speed;
@@ -114,26 +115,26 @@ calc_demo_traj(const uq16 now_secs, const DemoTrajPattern demo_pattern){
             constexpr auto speed = 1_iq16;
             constexpr auto side_amplitude = 1.4_iq16;
 
-            const auto [s,c] = math::sincos(speed * now_secs);
+            const auto [s,c] = math::sincos(speed * t);
             return {
                 side_amplitude * iq16(s),
                 side_amplitude * speed * iq16(c)
             };
         }
         case DemoTrajPattern::Saw:{
-            // const auto [s,c] = math::sincos(speed * now_secs);
+            // const auto [s,c] = math::sincos(speed * t);
 
             constexpr auto freq = 0.2_iq16;
             constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
-            return {-iq16(math::frac(now_secs * freq)) * amplitude, -slew_rate};
+            return {-iq16(math::frac(t * freq)) * amplitude, -slew_rate};
         }
         case DemoTrajPattern::Stairs:{
             constexpr auto freq = 0.3_iq16;
             constexpr size_t num_steps = 6;
             constexpr auto half_amplitude = 0.4_iq16;
             constexpr auto step = half_amplitude * 2/ num_steps;
-            const auto s = iq16(math::sinpu(now_secs * freq));
+            const auto s = iq16(math::sinpu(t * freq));
             return {(math::floor(s * (num_steps / 2)) * step), 0};
         }
     }
@@ -843,28 +844,13 @@ static void process_position_calc(AllState & state, const FnSwitches fn_switches
 
 
 [[maybe_unused]] __no_inline 
-static void process_traj_generate(AllState & state, [[maybe_unused]] FnSwitches fn_switches){
-    #if 1
-    [[maybe_unused]] const auto now_secs = clock::seconds();
-
-    static constexpr auto demo_pattern = 
-        // DemoTrajPattern::Sine
-        // DemoTrajPattern::Stop
-        // DemoTrajPattern::Stairs
-        // DemoTrajPattern::Saw
-        DemoTrajPattern::Triangle
-    ;
-
-    state.traj_state = calc_demo_traj(now_secs, demo_pattern);
-    #endif
-
-}
-
-
-
-
-[[maybe_unused]] __no_inline 
-static void process_traj_shape(AllState & state, FnSwitches fn_switches){
+static void process_traj_shape(
+    AllState & state, 
+    FnSwitches fn_switches,
+    const iq16 traj_x1,
+    const iq20 traj_x2,
+    [[maybe_unused]] const iq20 traj_x3
+){
 
     const auto traj_smooth_method = fn_switches.traj_smooth_method;
     const bool traj_frontend_smooth_en = traj_smooth_method != TrajSmoothMethod::Disabled;
@@ -874,7 +860,6 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
 
         const bool use_traj_x2 = traj_smooth_method == TrajSmoothMethod::UseX1AndX2;
 
-        const auto & traj_state = state.traj_state;
         auto & now_state = state.traj_smooth_state;
 
         auto & x1_now = now_state.x1;
@@ -882,8 +867,8 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
 
         const auto x1_now_q16 = math::roundlsb_downcast<16>(x1_now);
 
-        auto & ref_x1 = traj_state.x1;
-        auto ref_x2 = (use_traj_x2 ? traj_state.x2 : iq16(0));
+        auto & ref_x1 = traj_x1;
+        auto ref_x2 = (use_traj_x2 ? traj_x2 : iq20(0));
 
         const iq20 e1 = math::clamp2(ref_x1 - x1_now_q16, E1_LIMIT);
         const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
@@ -893,7 +878,7 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
             extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
             + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
     }else{
-        state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)state.traj_state.x1.to_bits() << 16);
+        state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)traj_x1.to_bits() << 16);
 
         //无前馈速度
         state.traj_smooth_state.x2 = 0;
@@ -901,18 +886,18 @@ static void process_traj_shape(AllState & state, FnSwitches fn_switches){
 
     {
         //基于fhan的梯形速度规划
-        const auto & traj_state = state.traj_smooth_state;
+        const auto & traj_hp_state = state.traj_smooth_state;
         auto & curve_state = state.curve_state;
 
         iq16 x1_curve_now = math::fixed_downcast<16>(curve_state.x1);
 
-        const iq20 x2_traj = traj_state.x2;
+        const iq20 x2_traj = traj_hp_state.x2;
 
         const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
         //使用终值定理得到无静差时补偿量为x2 * 2/r
         const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R)) : iq16(0);
-        const iq16 x1_traj = math::fixed_downcast<16>(traj_state.x1) + x1_traj_comp;
+        const iq16 x1_traj = math::fixed_downcast<16>(traj_hp_state.x1) + x1_traj_comp;
         
         iq16 e1 = math::clamp2(x1_traj - x1_curve_now, E1_LIMIT);
 
@@ -1810,30 +1795,7 @@ struct MyProfiler : public ProfilerBase<MyProfiler, MyRecord> {
 };
 
 
-struct [[nodiscard]] alignas(size_t) ArenaAllocater final{
-    uint8_t * data;
-    uint8_t * cursor;
-    uint8_t * end;
 
-    static ArenaAllocater from(std::span<uint8_t> buffer){
-        ArenaAllocater self;
-        self.data = buffer.data();
-        self.cursor = self.data;
-        self.end = self.data + buffer.size();
-        return self;
-    }
-
-    constexpr size_t length() const {
-        return end - cursor;
-    }
-
-    constexpr uint8_t * allocate(const size_t nbytes){
-        if(cursor + nbytes > end) return nullptr;
-        auto ret = cursor;
-        cursor += nbytes;
-        return ret;
-    } 
-};
 
 __no_inline auto  profiler_push_record(MyProfiler & profiler, MyRecord && record){
     return profiler.try_push_record(std::move(record));
@@ -1861,15 +1823,6 @@ void myesc_main(){
         .no_fieldname(EN)
         .force_sync(EN)
         .finalize();
-    // DEBUGGER.force_sync(EN);
-    // while(true){
-    //     const auto now_secs = clock::seconds();
-    //     const auto frac_secs = math::frac(now_secs);
-    //     // DEBUG_PRINTLN(clock::millis());
-    //     // DEBUG_PRINTLN(sat_left2(uq32(now_secs)));
-    //     DEBUG_PRINTLN(mysat(frac_secs), mysat(uq32(frac_secs)));
-    // }
-
 
     clock::delay(2ms);
 
@@ -1986,7 +1939,7 @@ void myesc_main(){
 
     static constexpr size_t HEAP_ARENA_SIZE = 4096;
     auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
-    auto alloc = ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
+    auto alloc = mem::ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
 
 
     auto & all_state_ = *reinterpret_cast<AllState *>(alloc.allocate(sizeof(AllState)));
@@ -2149,8 +2102,42 @@ void myesc_main(){
             process_position_calc(state, fn_switches);
 
             if(not do_sideshaft_calibrate){
-                process_traj_generate(state, fn_switches);
-                process_traj_shape(state, fn_switches);
+                [[maybe_unused]] const auto now_secs = clock::seconds();
+
+                #if 0
+                static constexpr auto demo_pattern = 
+                    // DemoTrajPattern::Sine
+                    // DemoTrajPattern::Stop
+                    // DemoTrajPattern::Stairs
+                    // DemoTrajPattern::Saw
+                    DemoTrajPattern::Triangle
+                ;
+
+                auto traj_state = calc_demo_traj(now_secs, demo_pattern);
+                auto traj_x1 = traj_state.x1;
+                auto traj_x2 = traj_state.x2;
+                auto traj_x3 = 0_iq20;
+                #else
+                static uint32_t tick = 0;
+                tick++;
+                if(tick >= FOC_FREQ * 80) tick = 0;
+
+                static constexpr auto RBTRIP_PARAS = motioner::RoundtripParaments{
+                    .fs = FOC_FREQ,
+                    .revs_per_direction = 2, 
+                    .ticks_per_rev = STEPS_PER_REV * 8,
+                    .x1_initial = int64_t(INT32_MIN) * 7, 
+                };
+
+                static constexpr auto roundtrip_state = motioner::RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
+                auto res = roundtrip_state.calc_roundtrip_curve(tick);
+
+                auto traj_x1 = iq16::from_bits(res.x1.to_bits() >> 16);
+                auto traj_x2 = res.x2;
+                auto traj_x3 = res.x3;
+
+                #endif
+                process_traj_shape(state, fn_switches, traj_x1, traj_x2, traj_x3);
 
                 const auto curve_x1 = math::fixed_downcast<16>(state.curve_state.x1);
                 const auto curve_x2 = state.curve_state.x2;

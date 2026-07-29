@@ -39,109 +39,8 @@ struct NoiseGenerator{
 };
 
 
-static constexpr iq16 downcast_position(int64_t x){
-    const auto frac = uint32_t(x);
-    const auto revs = int32_t(x >> 32);
-    return iq16::from_bits((revs << 16) | (frac >> 16));
-}
-
-void rbtrip_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
-    hal::usart2.init({
-        .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz),
-        // .baudrate = hal::NearestFreq(6000000),
-        .tx_strategy = CommStrategy::Blocking,
-    });
-    DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.build_config()
-        .set_eps(5)
-        .set_splitter(",")
-        .no_brackets(EN)
-        .no_fieldname(EN)
-        .force_sync(EN)
-        .finalize();
-
-
-    hal::timer2.init({
-        .remap = hal::TIM2_REMAP_A0_A1_A2_A3,
-        .count_freq =  hal::NearestFreq(F_SAMPLE),
-        .count_mode = hal::TimerCountMode::Up
-    }).unwrap().dont_alter_to_pins();
-    hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
-    hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
-
-    // static constexpr float x2_f = (float(F_SAMPLE) / TICKS_PER_REV);
-    // static constexpr float acc_dt = float(1u << 12) / F_SAMPLE;
-    // static constexpr float x3_f = x2_f / acc_dt;
-    // static constexpr float x3_f = float(F_SAMPLE) * F_SAMPLE / (1 << 12) / TICKS_PER_REV;
-    // static constexpr uint32_t b = (1ull << 32) / TICKS_PER_REV;
-    // static constexpr auto x3_iq = iq20::from_bits((int64_t(b) * F_SAMPLE * F_SAMPLE) >> 24);
-    // static constexpr auto x3_iq_f = float(x3_iq);
-    static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 4;
-    static constexpr auto RBTRIP_PARAS = RoundtripParaments{
-        .fs = F_SAMPLE,
-        .revs_per_direction = 8, 
-        .ticks_per_rev = TICKS_PER_REV,
-        .x1_initial = int64_t(INT32_MIN) * 7, 
-    };
-
-    static constexpr auto roundtrip_state = RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
-    iiq32 x1;
-    RoundtripStage stage;
-    uint32_t t_stagelocal = 0;
-    iq20 x2;
-    iq20 x3;
-
-    auto isr_fn = [&]{
-        static uint32_t t_counter = 0;
-        t_counter++;
-        const uint32_t t = (t_counter < 20000) ? 0 : (t_counter - 20000);
-        auto res = roundtrip_state.calc_roundtrip_curve(t);
-        x1 = res.x1;
-        x2 = res.x2;
-        x3 = res.x3;
-        stage = res.stage;
-        t_stagelocal = res.t_stagelocal;
-    };
-
-    Microseconds isr_elapsed_us_ = 0us;
-
-    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
-        switch(event){
-            case hal::TimerEvent::Update:{
-                const auto begin_us = clock::micros();
-                isr_fn();
-                isr_elapsed_us_ = clock::micros() - begin_us;
-                break;
-            }
-            default:
-                break;
-        }
-    });
-
-    hal::timer2.start();
-
-    while(true){
-        DEBUG_PRINTLN(
-            // iq16(frac) + iq16(revs),
-            downcast_position(x1.to_bits()),
-            // iq20::from_bits((int64_t(roundtrip_state.b) * F_SAMPLE) >> 12),
-            x2,
-            x3,
-            downcast_position(roundtrip_state.p64_0),
-            downcast_position(roundtrip_state.p64_a),
-            downcast_position(roundtrip_state.p64_b),
-            // t_stagelocal,
-            // uint8_t(stage),
-            isr_elapsed_us_.count()
-        );
-    }
-}
-
 
 void sincospll_main(){
-    rbtrip_main();
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -320,6 +219,109 @@ void sincospll_main(){
             // measured_cosine_,
             isr_elapsed_us_.count()
 
+        );
+    }
+}
+
+
+
+
+static constexpr iq16 downcast_position(int64_t x){
+    const auto frac = uint32_t(x);
+    const auto revs = int32_t(x >> 32);
+    return iq16::from_bits((revs << 16) | (frac >> 16));
+}
+
+[[maybe_unused]] void rbtrip_main(){
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
+        // .baudrate = hal::NearestFreq(6000000),
+        .tx_strategy = CommStrategy::Blocking,
+    });
+    DEBUGGER.retarget(&DEBUGGER_INST);
+    DEBUGGER.build_config()
+        .set_eps(5)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
+
+
+    hal::timer2.init({
+        .remap = hal::TIM2_REMAP_A0_A1_A2_A3,
+        .count_freq =  hal::NearestFreq(F_SAMPLE),
+        .count_mode = hal::TimerCountMode::Up
+    }).unwrap().dont_alter_to_pins();
+    hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
+    hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
+
+    // static constexpr float x2_f = (float(F_SAMPLE) / TICKS_PER_REV);
+    // static constexpr float acc_dt = float(1u << 12) / F_SAMPLE;
+    // static constexpr float x3_f = x2_f / acc_dt;
+    // static constexpr float x3_f = float(F_SAMPLE) * F_SAMPLE / (1 << 12) / TICKS_PER_REV;
+    // static constexpr uint32_t b = (1ull << 32) / TICKS_PER_REV;
+    // static constexpr auto x3_iq = iq20::from_bits((int64_t(b) * F_SAMPLE * F_SAMPLE) >> 24);
+    // static constexpr auto x3_iq_f = float(x3_iq);
+    static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 4;
+    static constexpr auto RBTRIP_PARAS = RoundtripParaments{
+        .fs = F_SAMPLE,
+        .revs_per_direction = 8, 
+        .ticks_per_rev = TICKS_PER_REV,
+        .x1_initial = int64_t(INT32_MIN) * 7, 
+    };
+
+    static constexpr auto roundtrip_state = RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
+    iiq32 x1;
+    RoundtripStage stage;
+    uint32_t t_stagelocal = 0;
+    iq20 x2;
+    iq20 x3;
+
+    auto isr_fn = [&]{
+        static uint32_t t_counter = 0;
+        t_counter++;
+        const uint32_t t = (t_counter < 20000) ? 0 : (t_counter - 20000);
+        auto res = roundtrip_state.calc_roundtrip_curve(t);
+        x1 = res.x1;
+        x2 = res.x2;
+        x3 = res.x3;
+        stage = res.stage;
+        t_stagelocal = res.t_stagelocal;
+    };
+
+    Microseconds isr_elapsed_us_ = 0us;
+
+    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
+        switch(event){
+            case hal::TimerEvent::Update:{
+                const auto begin_us = clock::micros();
+                isr_fn();
+                isr_elapsed_us_ = clock::micros() - begin_us;
+                break;
+            }
+            default:
+                break;
+        }
+    });
+
+    hal::timer2.start();
+
+    while(true){
+        DEBUG_PRINTLN(
+            // iq16(frac) + iq16(revs),
+            downcast_position(x1.to_bits()),
+            // iq20::from_bits((int64_t(roundtrip_state.b) * F_SAMPLE) >> 12),
+            x2,
+            x3,
+            downcast_position(roundtrip_state.p64_0),
+            downcast_position(roundtrip_state.p64_a),
+            downcast_position(roundtrip_state.p64_b),
+            // t_stagelocal,
+            // uint8_t(stage),
+            isr_elapsed_us_.count()
         );
     }
 }
