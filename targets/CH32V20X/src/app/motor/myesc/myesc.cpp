@@ -24,11 +24,6 @@
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
-
-// #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
-// #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
-// #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
-
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 // #include "dsp/filter/butterworth/band.hpp"
@@ -230,11 +225,13 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-static constexpr size_t HIGHFREQ_ENCODER_LTD2O_R = 1200;
-[[maybe_unused]] static constexpr auto HIGHFREQ_ENCODER_LTD_2O = Ltd2o::try_from({
+static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
+[[maybe_unused]] static constexpr auto HIGHCUTOFF_ENCODER_LTD2O = Ltd2o::try_from({
     .fs = FOC_FREQ, 
-    .r = HIGHFREQ_ENCODER_LTD2O_R
+    .r = HIGHCUTOFF_ENCODER_LTD2O_R
 }).unwrap();
+
+static constexpr auto rdt = float(HIGHCUTOFF_ENCODER_LTD2O_R) / FOC_FREQ;
 
 
 static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
@@ -731,15 +728,15 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((peac_state.hat_speed * TSAMPLE).to_bits() << 12);
         // peac_state.hat_speed = peac_state.hat_speed + (math::clamp2(e * L1, 200_iq20)) * TSAMPLE;
         peac_state.hat_speed = peac_state.hat_speed + math::roundlsb_downcast<20>(
-                extended_mul(iq20(2 * (-peac_state.hat_speed)), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
-                + extended_mul(iq20(e), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
+                extended_mul(iq20(2 * (-peac_state.hat_speed)), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
+                + extended_mul(iq20(e), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
 
         // static constexpr uq32 ALPHA = calc_lpf;
-        // peac_state.hat_b1 += math::roundlsb_mul(e, harm_s * ALPHA);
-        peac_state.hat_b1 += math::roundlsb_mul(iq32(peac_state.harm_s * ALPHA), 1000 * e);
-        peac_state.hat_b2 += math::roundlsb_mul(iq32(peac_state.harm_c * ALPHA), 1000 * e);
-        // peac_state.hat_b1 += math::roundlsb_mul(e, harm_s);
-        // peac_state.hat_b2 += math::roundlsb_mul(e, harm_c);
+        // peac_state.hat_b1 += math::mul_roundlsb(e, harm_s * ALPHA);
+        peac_state.hat_b1 += math::mul_roundlsb(iq32(peac_state.harm_s * ALPHA), 1000 * e);
+        peac_state.hat_b2 += math::mul_roundlsb(iq32(peac_state.harm_c * ALPHA), 1000 * e);
+        // peac_state.hat_b1 += math::mul_roundlsb(e, harm_s);
+        // peac_state.hat_b2 += math::mul_roundlsb(e, harm_c);
 
         peac_state.hat_b1 = math::clamp2(peac_state.hat_b1, MAX_B);
         peac_state.hat_b2 = math::clamp2(peac_state.hat_b2, MAX_B);
@@ -773,8 +770,8 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
         x2_now = x2_now + math::roundlsb_downcast<20>(
-            extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
-            + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
+            extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
+            + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
 
         auto encoder_abs_position32 = uq32::from_bits(uint32_t(encoder_abs_position64.to_bits()));
 
@@ -875,8 +872,8 @@ static void process_traj_shape(
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
         x2_now = x2_now + math::roundlsb_downcast<20>(
-            extended_mul(iq20(2 * e2), HIGHFREQ_ENCODER_LTD_2O.r_by_fs) 
-            + extended_mul(iq20(e1), HIGHFREQ_ENCODER_LTD_2O.r2_by_fs));
+            extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
+            + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
     }else{
         state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)traj_x1.to_bits() << 16);
 
@@ -896,7 +893,7 @@ static void process_traj_shape(
         const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
         //使用终值定理得到无静差时补偿量为x2 * 2/r
-        const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R)) : iq16(0);
+        const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
         const iq16 x1_traj = math::fixed_downcast<16>(traj_hp_state.x1) + x1_traj_comp;
         
         iq16 e1 = math::clamp2(x1_traj - x1_curve_now, E1_LIMIT);
@@ -953,14 +950,7 @@ static void process_mechanical_loop(
 
     const auto now_x2 = state.encoder_state_2o.x2;
 
-    constexpr bool is_x2_noisy = true;
-
     auto now_x1 = math::fixed_downcast<16>(state.encoder_state_2o.x1);
-
-    if(not is_x2_noisy){
-        now_x1 += (now_x2 * uq32(2.0 / HIGHFREQ_ENCODER_LTD2O_R));
-    }
-
 
     constexpr auto torque_curr_step_limit = iq20(0.02);
     constexpr auto torque_curr_limit = iq20(4.5);
@@ -971,22 +961,22 @@ static void process_mechanical_loop(
     const auto x3comp_torque_curr = ka * curve_x3 * fn_switches.interia_forwardfeedback_en;
 
     const iq20 kf = 0.01_iq20;
-    const auto x2comp_torque_curr = kf * curve_x1 * fn_switches.damping_forwardfeedback_en;
+    const auto x2comp_torque_curr = kf * curve_x2 * fn_switches.damping_forwardfeedback_en;
 
 
     state.torque_curr_x3comp = x3comp_torque_curr;
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
-            const int32_t kpp_normal = 12;
-            const int32_t kpp_big = 120;
-            const int32_t kpp = fn_switches.override_position_bigkp_en ? kpp_big : kpp_normal;
+            const iq20 kpp_normal = 12;
+            const iq20 kpp_big = 120;
+            const iq20 kpp = fn_switches.override_position_bigkp_en ? kpp_big : kpp_normal;
             // const iq20 kp = 1.2_iq20;
             constexpr iq20 kp = 0.6_iq20;
             constexpr iq20 ki = 4.66_iq20;
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
-            const iq20 ref_x2 = math::clamp2(iq20(math::clamp2((curve_x1 - now_x1), E1_LIMIT)) * kpp, E2_LIMIT);
+            const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(curve_x1 - now_x1, kpp, E2_LIMIT));
 
             state.pi_ref_x2 = ref_x2;
             // state.pi_ref_x2 = curve_x1 - now_x1;
@@ -995,7 +985,7 @@ static void process_mechanical_loop(
             state.pi_e2 = e2;
 
             auto desired_torque_curr_cmd = state.torque_curr_integral 
-                + roundlsb_mul(kp, e2)
+                + math::mul_roundlsb(kp, e2)
                 + x2comp_torque_curr
                 + x3comp_torque_curr
             ;
@@ -1032,31 +1022,6 @@ static void process_mechanical_loop(
 
             state.torque_curr_integral = 0;
             state.torque_curr_cmd = math::step_to(state.torque_curr_cmd, torque_curr_cmd, torque_curr_step_limit);
-            break;
-        }
-
-
-
-        case LoopWiring::SeriesAdrc:{
-            #if 0
-            //rubbish
-            const iq20 kpp = 10.0_iq20;
-            constexpr iq20 b0 = 200.1_iq20;
-            constexpr iq20 inv_b0 = 1 / b0;
-            constexpr size_t wc = 36;
-            constexpr size_t wo = 3 * wc;
-            constexpr uq32 wo2t = (wo * wo) * TSAMPLE;
-
-            const auto ref_x2 = math::clamp2(iq16(kpp * (curve_x1 - now_x1)), E2_LIMIT) + curve_x2;
-
-            auto & eso_state = state.speed_eso_state;
-
-            const auto iq = math::clamp2(iq20((wc * (ref_x2 - eso_state.speed_est) - eso_state.f_est) * inv_b0), torque_curr_limit);
-            eso_state.speed_est += (eso_state.f_est - 2 * wo * (eso_state.speed_est - now_x2) + b0 * iq) * TSAMPLE;
-            eso_state.f_est += -(eso_state.speed_est - now_x2) * wo2t;
-
-            state.torque_curr_cmd = iq;
-            #endif
             break;
         }
     }
@@ -1936,6 +1901,8 @@ void myesc_main(){
     fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndX2;
 
     fn_switches_.curve_retrack_e1big_en = true;
+    fn_switches_.damping_forwardfeedback_en = true;
+    fn_switches_.interia_forwardfeedback_en = true;
 
     static constexpr size_t HEAP_ARENA_SIZE = 4096;
     auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
@@ -2104,7 +2071,7 @@ void myesc_main(){
             if(not do_sideshaft_calibrate){
                 [[maybe_unused]] const auto now_secs = clock::seconds();
 
-                #if 0
+                #if 1
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
                     // DemoTrajPattern::Stop
@@ -2605,11 +2572,12 @@ void myesc_main(){
             math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_state_2o.x1),
-            uq32::from_bits(state.encoder_abs_position64.to_bits() & UINT32_MAX) * POLE_PAIRS * 6 * 8,
+
+            // uq32::from_bits(state.encoder_abs_position64.to_bits() & UINT32_MAX) * POLE_PAIRS * 6 * 8,
             // state.curve_state.debug.x1_retrack,
             // math::fixed_downcast<16>(state.peac_state.hat_turns),
             // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
-            // math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
             // uq32::from_bits((state.encoder_rel_position64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
             // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),

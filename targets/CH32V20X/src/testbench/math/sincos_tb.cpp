@@ -281,65 +281,7 @@ void play_func(Fn && fn){
 // #define MAY_INLINE __attribute__((always_inline)) constexpr
 // #define MAY_INLINE 
 
-#if 0
-__attribute__((always_inline))
-static int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
-    #if 0
-    int32_t res;
-    int32_t tC, tSh, t2S, th;
-    
-    
-    __asm__ (
-        "mulhsu  %[tC], %[C], %[t]       \n\t"  // tC = C*t
-        "srli    %[th], %[t], 1          \n\t"  // th = t/2
-        "mulhsu  %[tSh], %[S], %[th]     \n\t"  // tSh = S*(t/2)
-        "add     %[S], %[S], %[tC]       \n\t"  // S = S + C*t
-        "mulhsu  %[t2S], %[tSh], %[t]    \n\t"  // t2S = S*(t/2)*t = S*t²/2
-        "sub     %[res], %[S], %[t2S]    \n\t"  // res = S + C*t - S*t²/2
-        : [res] "=r" (res),
-          [S] "+r" (S),
-          [tC] "=&r" (tC),
-          [tSh] "=&r" (tSh),
-          [t2S] "=&r" (t2S),
-          [th] "=&r" (th)
-        : [t] "r" (t),
-          [C] "r" (C)
-        : "cc"
-    );
-    
-    return res;
-    #else
-    return t + S +C;
-    #endif
-}
-#else
 
-
-__attribute__((always_inline))
-static constexpr int32_t taylor_2o_perfect(uint32_t t, int32_t S, int32_t C) {
-    // 计算 C*t
-    int32_t tC = intrinsics::mul32hsu(C, t);
-    
-    // 计算 t/2
-    uint32_t th = t >> 1;
-    
-    // 计算 S*(t/2)
-    int32_t tSh = intrinsics::mul32hsu(S, th);
-    
-    // S = S + C*t
-    S = S + tC;
-    
-    // 计算 S*t²/2 = [S*(t/2)] * t
-    int32_t t2S = intrinsics::mul32hsu(tSh, t);
-    
-    // 最终结果: S + C*t - S*t²/2
-    int32_t res = S - t2S;
-    
-    return res;
-}
-
-
-#endif
 
 // 常数：1/3 和 1/6 的Q31表示
 static constexpr uint32_t ONE_THIRD_Q31 = 0x15555555;  // (1/3) 的Q31近似

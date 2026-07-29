@@ -2,6 +2,8 @@
 
 #include "dsp/controller/adrc/prelude.hpp"
 #include "core/math/mul.hpp"
+#include "core/math/fixed/fixed.hpp"
+#include "core/math/fixed/fxmath.hpp"
 
 namespace ymd::dsp::adrc{
 
@@ -39,11 +41,14 @@ public:
     //采样间隔时间
     uq32 dt;
 
+    //2 / r
+    uq32 two_inv_r;
+    
     // r / fs
-    uq32 r_by_fs;
+    uq32 r_dt;
 
     // r^2 / fs
-    uq16 r2_by_fs;
+    uq16 r2_dt;
 
 
     struct [[nodiscard]] Config{
@@ -63,17 +68,29 @@ public:
             return Err(StringView("r >= 65536"));
         if(cfg.r >= cfg.fs) [[unlikely]]
             return Err(StringView("r >= fs"));
+        if(cfg.r < 4) [[unlikely]]
+            return Err(StringView("r < 4"));
+
+        #if 0
+        const auto dt = uq32::from_bits(fxmath::details::div32u<32>(1, cfg.fs));
+        const auto two_inv_r = uq32::from_bits(fxmath::details::div32u<32>(2, cfg.r));
+        const auto r_dt = dt * cfg.r;
+        const auto r2_dt = uq16::from_bits(uint32_t(uint64_t(cfg.r) * cfg.r * dt.to_bits()) >> 16);
+        #else
 
         const auto dt = std::numeric_limits<uq32>::max() / cfg.fs;
-        const auto r_by_fs = uq32::from_bits(static_cast<uint32_t>(
+        const auto two_inv_r = (std::numeric_limits<uq32>::max() / cfg.r) << 1;
+        const auto r_dt = uq32::from_bits(static_cast<uint32_t>(
             uint64_t(cfg.r) * uint64_t(uint64_t(1) << 32) / cfg.fs));
-        const auto r2_by_fs = uq16::from_bits(static_cast<uint32_t>(
+        const auto r2_dt = uq16::from_bits(static_cast<uint32_t>(
             uint64_t(cfg.r)  * uint64_t(cfg.r) * uint64_t(uint64_t(1) << 16) / cfg.fs));
+        #endif
 
         return Ok(Self{
-            dt,
-            r_by_fs,
-            r2_by_fs
+            .dt =       dt,
+            .two_inv_r =     two_inv_r,
+            .r_dt =     r_dt,
+            .r2_dt =        r2_dt
         });
     }
 
@@ -97,14 +114,15 @@ public:
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, dt));
         x2_now = x2_now + math::roundlsb_downcast<16>(
-            extended_mul(iq16(2 * e2), r_by_fs) 
-            + extended_mul(iq16(e1), r2_by_fs));
+            extended_mul(iq16(2 * e2), r_dt) 
+            + extended_mul(iq16(e1), r2_dt));
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
         return os << os.field("dt")(self.dt) << os.splitter() 
-            << os.field("r_by_fs")(self.r_by_fs) << os.splitter()
-            << os.field("r2_by_fs")(self.r2_by_fs);
+            << os.field("two_inv_r")(self.two_inv_r) << os.splitter()
+            << os.field("r_dt")(self.r_dt) << os.splitter()
+            << os.field("r2_dt")(self.r2_dt);
     }
 
 };

@@ -1,13 +1,14 @@
 #pragma once
 
 #include "motor_profiles.hpp"
+#include <cstdint>
 
 
 namespace ymd::myesc{
 
 
 // static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
-static constexpr uint32_t CHOPPER_FREQ = 25_KHz;
+static constexpr uint32_t CHOPPER_FREQ = 25000;
 // static constexpr uint32_t CHOPPER_FREQ = 10_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 

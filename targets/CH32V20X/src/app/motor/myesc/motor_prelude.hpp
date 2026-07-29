@@ -52,7 +52,6 @@ static constexpr uint32_t RES_TEMP_COMPENSATE_SOURCE_EXT2 = 3;
 enum class [[nodiscard]] LoopWiring:uint8_t{
     SeriesPi = 0,
     Mit,
-    SeriesAdrc,
 };
 
 enum class [[nodiscard]] HfiMethod:uint8_t{
@@ -77,6 +76,50 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
     UseX1AndX2,
 };
 
+struct alignas(4) [[nodiscard]] AlertFlags{
+    uint32_t phase_u_disconn:1;
+    uint32_t sense_u_noisy:1;
+    uint32_t sense_u_levellow:1;
+    uint32_t sense_u_levelhigh:1;
+    
+    uint32_t phase_v_disconn:1;
+    uint32_t sense_v_noisy:1;
+    uint32_t sense_v_levellow:1;
+    uint32_t sense_v_levelhigh:1;
+
+    uint32_t phase_w_disconn:1;
+    uint32_t sense_w_noisy:1;
+    uint32_t sense_w_levellow:1;
+    uint32_t sense_w_levelhigh:1;
+
+    uint32_t busbar_under_voltage:1;
+    uint32_t busbar_over_voltage:1;
+    uint32_t regen_power_rising:1;
+    uint32_t unblance_curr_high:1;
+
+    uint32_t resistance_abnormal_high:1;
+    uint32_t resistance_abnormal_low:1;
+    uint32_t inductance_abnormal_high:1;
+    uint32_t inductance_abnormal_low:1;
+
+    uint32_t rotor_overheat:1;
+    uint32_t pcba_overheat:1;
+    uint32_t ntc_levellow:1;
+    uint32_t ntc_levelhigh:1;
+
+    uint32_t encoder_angle_noisy:1;
+    uint32_t encoder_magweak:1;
+    uint32_t encoder_highspeed:1;
+    uint32_t encoder_frequently_crc_err:1;
+    uint32_t encoder_frequently_jitter:1;
+
+
+    uint32_t distburnce_too_big:1;
+
+
+};
+
+static_assert(sizeof(AlertFlags) <= 4);
 
 struct alignas(4) [[nodiscard]] OpFlags{
     using Self = OpFlags;
