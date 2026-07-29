@@ -9,66 +9,76 @@ class OutputStream;
 
 namespace ymd::hal::timer{
 
-namespace details{
-//pure function, easy test
+namespace utils{
+
+
 static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
 	const uint32_t periph_freq, 
-	const uint32_t count_freq, 
+	const uint32_t expected_freq, 
 	std::pair<uint16_t, uint16_t> arr_range
 ){
-    const auto [min_arr, max_arr] = arr_range;
-    const uint32_t target_div = periph_freq / count_freq;
+    const uint32_t min_arr = std::get<0>(arr_range);
+    const uint32_t max_arr = std::get<1>(arr_range);
+
+    if (min_arr > max_arr) __builtin_abort();
+
+    const uint32_t target_div = periph_freq / expected_freq;
     
-    auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
-        return std::clamp(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+    auto calc_psc_from_arr = [target_div](const uint32_t arr) -> uint32_t {
+        //use signed for extended calculation
+        return uint32_t(std::clamp((int(target_div) / (int(arr) + 1)) - 1, 0, 0xFFFF));
     };
 
     [[maybe_unused]]
-    auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
-        return std::clamp(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+    auto calc_arr_from_psc = [target_div](const uint32_t psc) -> uint32_t {
+        //use signed for extended calculation
+        return uint32_t(std::clamp(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF));
     };
     
-    auto calc_freq_from_arr_and_psc = [periph_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
-        return periph_freq / (arr + 1) / (psc + 1);
+    auto calc_freq_from_arr_and_psc = [periph_freq](const uint32_t arr, const uint32_t psc) -> uint32_t {
+        return periph_freq / ((arr + 1) * (psc + 1));
     };
     
     const auto min_psc = calc_psc_from_arr(max_arr);
     const auto max_psc = calc_psc_from_arr(min_arr);
 
-    if (min_arr > max_arr) __builtin_abort();
     
     struct Best{
-        uint16_t arr;
-        uint16_t psc;
+        uint32_t arr;
+        uint32_t psc;
         uint32_t freq_err;
     };
     
     Best best{max_arr, min_psc, UINT32_MAX};
-    for(int arr = max_arr; arr >= min_arr; arr--){
+    for(uint32_t arr = max_arr; arr >= min_arr; arr--){
         const auto expect_psc = calc_psc_from_arr(arr);
         if((expect_psc >= max_psc) or (expect_psc < min_psc)) continue;
         
-        std::optional<uint32_t> last_freq_;
+        uint32_t prev_freq = 0;
+        bool prev_freq_valid = false;
 
-        for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
+        const uint32_t lower_psc = uint32_t(std::max<int32_t>(expect_psc - 2, 0));
+        for(uint32_t psc = lower_psc; psc < expect_psc + 2; psc++){
+
             const uint32_t freq = calc_freq_from_arr_and_psc(arr, psc);
-            if(last_freq_.has_value()){
-                if((int32_t(last_freq_.value()) - int32_t(count_freq)) * (int32_t(freq) - int32_t(count_freq)) < 0) break;
+            if(prev_freq_valid){
+                if((int32_t(prev_freq) - int32_t(expected_freq)) * (int32_t(freq) - int32_t(expected_freq)) < 0) break;
             }else{
-                last_freq_ = freq;
+                prev_freq = freq;
+                prev_freq_valid = true;
             }
-            // const uint32_t freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
-            const uint32_t freq_err = freq < count_freq ? 
-                uint32_t(count_freq - freq) : uint32_t(freq - count_freq);
+
+            const uint32_t freq_err = freq < expected_freq ? 
+                uint32_t(expected_freq - freq) : uint32_t(freq - expected_freq);
             if(freq_err < best.freq_err){
                 if(freq_err == 0) return {uint16_t(arr), psc};
-                best = {uint16_t(arr), uint16_t(psc), freq_err};
+                best = {uint32_t(arr), uint32_t(psc), freq_err};
             }
         }
     }
     
     if(best.freq_err == UINT32_MAX) __builtin_abort();
-    return {best.arr, best.psc};
+    return {uint16_t(best.arr), uint16_t(best.psc)};
 }
 }
 
@@ -78,13 +88,13 @@ struct [[nodiscard]] ArrAndPsc{
     uint16_t arr;
     uint16_t psc;
 
-    static constexpr ArrAndPsc from_nearest_count_freq(
+    static constexpr ArrAndPsc from_nearest_freq(
         const uint32_t periph_freq,
-        const uint32_t count_freq,
+        const uint32_t expected_freq,
         std::pair<uint16_t, uint16_t> arr_range
     ){
         ArrAndPsc ret;
-        std::tie(ret.arr, ret.psc) = details::calc_best_arr_and_psc(periph_freq, count_freq, arr_range);
+        std::tie(ret.arr, ret.psc) = utils::calc_best_arr_and_psc(periph_freq, expected_freq, arr_range);
         return ret;
     }
 

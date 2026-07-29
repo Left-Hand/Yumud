@@ -13,9 +13,11 @@
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_pll.hpp"
+#include "roundtrip_traj_generator.hpp"
 
 
 using namespace ymd;
+using namespace ymd::motioner;
 
 
 
@@ -23,261 +25,19 @@ static constexpr size_t F_SAMPLE = 25000;
 static constexpr auto DT = uq32::from_rcp(F_SAMPLE);
 
 
-[[maybe_unused]] static uint32_t generate_noise(){
-    static uint32_t seed = 0;
-    seed = seed * 214013 + 2531011;
-    return seed;
-}
+struct NoiseGenerator{
+    uint32_t seed;
 
-
-struct [[nodiscard]] SinCosCorrector{
-    struct Config{
-
-    };
-};
-
-// struct alignas(size_t) [[nodiscard]] ShortString8 final{
-//     using Self = ShortString8;
-
-//     static constexpr size_t CAPACITY = 8;
-
-//     uint64_t bits;
-
-//     template<size_t N>
-//     static constexpr from(const char (&str)[N]){
-//         std::array<char, 8> chars;
-        
-//     }
-// };
-
-
-struct RoundtripParaments{
-    int64_t p_0;
-
-    //每个方向需要旋转的圈数
-    uint32_t revs_per_direction;
-
-    //转动一周消耗的时刻数
-    uint32_t ticks_per_rev;
-};
-
-
-enum class [[nodiscard]] RoundtripStage:uint8_t{
-    InitialAcc,
-    ForwardEntryBuffering,
-    ForwardSpin,
-    ForwardExitBuffering,
-    ForwardDeacc,
-    BackwardAcc,
-    BackwardEntryBuffering,
-    BackwardSpin,
-    BackwardExitBuffering,
-    BackwardDeacc,
-};
-
-struct [[nodiscard]] alignas(size_t) RoundtripPollResult{
-    int64_t position;
-    iq20 speed;
-    uint32_t t_stagelocal : 24;
-    RoundtripStage stage : 8;
-};
-
-static_assert(sizeof(RoundtripPollResult) == 16);
-
-static consteval int64_t make_position_from_turns(const float turns){
-    return int64_t(static_cast<long double>(turns) * (1ull << 32));
-}
-
-struct [[nodiscard]] alignas(size_t) RoundtripState final {
-    using Self = RoundtripState;
-
-
-
-    // 常量定义（保持不变）
-    static constexpr uint32_t LG2_T_ACC = 12;
-    static constexpr uint32_t LG2_K = LG2_T_ACC + 1;
-    static constexpr uint32_t T_ACC = 1u << LG2_T_ACC;
-    static constexpr int64_t BUFFERING_POSDIFF = make_position_from_turns(1.0f / 16);
-
-    int64_t p_0;
-    int64_t p_a;      // 加速结束位置
-    int64_t p_b;      // 缓冲结束位置（正向匀速开始）
-
-    
-    uint32_t a;       // 速度系数
-    uint32_t revs_per_direction;// 总圈数
-    
-    // === 精简后的时间参数（仅保留4个） ===
-    uint32_t t_buff_outer;   // 外缓冲耗时
-    uint32_t t_buff_inner;   // 内缓冲耗时
-    uint32_t t_spin;         // 匀速段耗时（fullrevs * t_rev）
-
-    __attribute__((optimize( "-Ofast" )))
-    constexpr int64_t calc_linear_deltax1(const uint32_t t_diff) const {
-        return int64_t(a) * int64_t(t_diff);
-    };
-
-    __attribute__((optimize("-Ofast")))
-    constexpr iq20 calc_linear_x2(const uint32_t t_diff) const {
-        // 匀速段速度恒定
-        // v = a * F_SAMPLE >> 12
-        return iq20::from_bits((int64_t(a) * F_SAMPLE) >> LG2_T_ACC);
+    static constexpr NoiseGenerator from_default(){
+        return NoiseGenerator{0};
     }
 
-    __attribute__((optimize("-Ofast")))
-    constexpr iq20 calc_acc_x2(const uint32_t t_diff) const {
-        const uint64_t v = uint64_t(t_diff) * a * F_SAMPLE;
-        return iq20::from_bits(int32_t(int64_t(v >> 24)));
-    }
-
-    __attribute__((optimize( "-Ofast" )))
-    constexpr int64_t calc_acc_deltax1(const uint32_t t_diff) const {
-        const uint64_t squ_t_diff = uint64_t(t_diff) * t_diff;
-        return (squ_t_diff * a) >> LG2_K;
-    };
-
-    static constexpr Self from(const RoundtripParaments & para){
-        Self self;
-        self.init(para);
-        return self;
-    }
-
-    // 优化后的初始化
-    __attribute__((optimize("-Os")))
-    constexpr void init(const RoundtripParaments & para) {
-        revs_per_direction = para.revs_per_direction;
-        a = (UINT32_MAX / para.ticks_per_rev) + 1;
-
-        // 计算位置
-        const int64_t p_acc = calc_acc_deltax1(T_ACC);
-        p_0 = para.p_0;
-        p_a = para.p_0 + p_acc;
-        p_b = ceil_position(p_a + BUFFERING_POSDIFF);
-
-
-        // 计算时间参数
-        t_buff_outer = ((p_b - p_a) * para.ticks_per_rev) >> 32;
-        t_buff_inner = (BUFFERING_POSDIFF * para.ticks_per_rev) >> 32;
-        t_spin = revs_per_direction * para.ticks_per_rev;
-    }
-
-    // === 性能优化后的轨迹计算 ===
-    __no_inline __attribute__((optimize("-Os")))
-    constexpr RoundtripPollResult calc_roundtrip_curve(const uint32_t t) const {
-        // 计算总时间
-        const uint32_t t_acc = T_ACC;
-        const uint32_t half_t_total = (t_acc + t_buff_outer + t_spin + t_buff_inner + t_acc);
-        const uint32_t t_total = half_t_total << 1;
-
-        int64_t p_d;      // 正向匀速结束位置
-        int64_t p_e;      // 减速开始位置
-        p_d = position_add_revs(p_b, revs_per_direction);
-        p_e = p_d + BUFFERING_POSDIFF;
-        
-        // 判断正向还是反向
-        const bool is_forward = t < half_t_total;
-
-        const uint32_t t_half = is_forward ? t : (t_total - t);
-        
-        // 在半个周期内计算位置
-        int64_t p;
-        iq20 speed = 0;
-        RoundtripStage stage;
-        uint32_t t_stagelocal;
-        
-        uint32_t t_base = 0;
-        if(t >= t_total){
-            p = p_0;
-            stage = RoundtripStage::BackwardDeacc;
-            t_stagelocal = t - t_total;
-        } else if (t_base += t_acc; t_half < t_base) {
-            // 阶段1: 加速
-            t_stagelocal = t_half;
-            p = p_0 + calc_acc_deltax1(t_stagelocal);
-            speed = calc_acc_x2(t_stagelocal);
-            stage = is_forward ? RoundtripStage::InitialAcc : RoundtripStage::BackwardDeacc;
-            
-        } else if (t_base += t_buff_outer; t_half < t_base) {
-            // 阶段2: 外缓冲
-            t_stagelocal = t_half - t_acc;
-            const uint32_t t_reversed = (t_acc + t_buff_outer) - t_half;
-            p = p_b - calc_linear_deltax1(t_reversed);
-            speed = calc_linear_x2(t_reversed);
-            stage = is_forward ? RoundtripStage::ForwardEntryBuffering 
-                            : RoundtripStage::BackwardExitBuffering;
-            
-        } else if (t_base += t_spin; t_half < t_base) {
-            // 阶段3: 匀速
-            t_stagelocal = t_half - (t_acc + t_buff_outer);
-            p = p_b + calc_linear_deltax1(t_stagelocal);
-            speed = calc_linear_x2(t_stagelocal);
-            stage = is_forward ? RoundtripStage::ForwardSpin 
-                            : RoundtripStage::BackwardSpin;
-            
-        } else if (t_base += t_buff_inner; t_half < t_base) {
-            // 阶段4: 内缓冲
-            t_stagelocal = t_half - (t_acc + t_buff_outer + t_spin);
-            p = p_d + calc_linear_deltax1(t_stagelocal);
-            speed = calc_linear_x2(t_stagelocal);
-            stage = is_forward ? RoundtripStage::ForwardExitBuffering 
-                            : RoundtripStage::BackwardEntryBuffering;
-            
-        } else {
-            // 阶段5: 减速（包含后半段的反向加速）
-            t_stagelocal = t_half - (t_acc + t_buff_outer + t_spin + t_buff_inner);
-            if (t_stagelocal < t_acc) {
-                // 减速段
-                p = p_e + calc_linear_deltax1(t_stagelocal) 
-                    - calc_acc_deltax1(t_stagelocal);
-
-                speed = calc_linear_x2(t_stagelocal) - calc_acc_x2(t_stagelocal);
-                stage = is_forward ? RoundtripStage::ForwardDeacc 
-                                : RoundtripStage::BackwardAcc;
-            } else {
-                // 反向加速段（实际上已经过了中点）
-                const uint32_t t_after_deacc = t_stagelocal - t_acc;
-                if (is_forward) {
-                    // 正向的后半段：进入反向加速
-                    p = p_e + calc_acc_deltax1(t_after_deacc) 
-                        - calc_linear_deltax1(t_acc + t_after_deacc);
-                    speed = calc_acc_x2(t_after_deacc) - calc_linear_x2(t_acc + t_after_deacc);
-                    stage = RoundtripStage::BackwardAcc;
-                    t_stagelocal = t_after_deacc;
-                } else {
-                    // 反向的后半段：回到起点
-                    p = p_0;
-                    speed = 0;
-                    stage = RoundtripStage::BackwardDeacc;
-                    t_stagelocal = t_after_deacc;
-                }
-            }
-        }
-        
-
-        if(not is_forward){
-            speed = -speed;
-        }
-
-        return RoundtripPollResult{
-            .position = p,
-            .speed = speed,
-            .t_stagelocal = t_stagelocal,
-            .stage = stage
-        };
-    }
-private:
-    static constexpr int64_t position_add_revs(int64_t x, int32_t n_revs) {
-        const uint32_t frac = uint32_t(x & UINT32_MAX);
-        const int32_t revs = int32_t(x >> 32);
-        return int64_t(int64_t(revs + n_revs) << 32) | frac;
-    }
-
-    static constexpr int64_t ceil_position(int64_t x) {
-        const uint32_t frac = uint32_t(x & UINT32_MAX);
-        const int32_t revs = int32_t(x >> 32);
-        return int64_t(int64_t(revs + bool(frac)) << 32);
+    constexpr uint32_t next() noexcept {
+        seed = seed * 214013 + 2531011;
+        return seed;
     }
 };
+
 
 static constexpr iq16 downcast_position(int64_t x){
     const auto frac = uint32_t(x);
@@ -295,7 +55,7 @@ void rbtrip_main(){
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.build_config()
-        .set_eps(4)
+        .set_eps(5)
         .set_splitter(",")
         .no_brackets(EN)
         .no_fieldname(EN)
@@ -311,26 +71,36 @@ void rbtrip_main(){
     hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
 
-    static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 64;
     // static constexpr float x2_f = (float(F_SAMPLE) / TICKS_PER_REV);
+    // static constexpr float acc_dt = float(1u << 12) / F_SAMPLE;
+    // static constexpr float x3_f = x2_f / acc_dt;
+    // static constexpr float x3_f = float(F_SAMPLE) * F_SAMPLE / (1 << 12) / TICKS_PER_REV;
+    // static constexpr uint32_t b = (1ull << 32) / TICKS_PER_REV;
+    // static constexpr auto x3_iq = iq20::from_bits((int64_t(b) * F_SAMPLE * F_SAMPLE) >> 24);
+    // static constexpr auto x3_iq_f = float(x3_iq);
+    static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 4;
     static constexpr auto RBTRIP_PARAS = RoundtripParaments{
-        .p_0 = int64_t(INT32_MIN) * 7, 
-        .revs_per_direction = 2, 
-        .ticks_per_rev = TICKS_PER_REV
+        .fs = F_SAMPLE,
+        .revs_per_direction = 8, 
+        .ticks_per_rev = TICKS_PER_REV,
+        .x1_initial = int64_t(INT32_MIN) * 7, 
     };
-    static constexpr auto roundtrip_state = RoundtripState::from(RBTRIP_PARAS);
-    int64_t x1;
+
+    static constexpr auto roundtrip_state = RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
+    iiq32 x1;
     RoundtripStage stage;
     uint32_t t_stagelocal = 0;
-    iq20 speed;
+    iq20 x2;
+    iq20 x3;
 
     auto isr_fn = [&]{
         static uint32_t t_counter = 0;
         t_counter++;
         const uint32_t t = (t_counter < 20000) ? 0 : (t_counter - 20000);
         auto res = roundtrip_state.calc_roundtrip_curve(t);
-        x1 = res.position;
-        speed = res.speed;
+        x1 = res.x1;
+        x2 = res.x2;
+        x3 = res.x3;
         stage = res.stage;
         t_stagelocal = res.t_stagelocal;
     };
@@ -355,14 +125,15 @@ void rbtrip_main(){
     while(true){
         DEBUG_PRINTLN(
             // iq16(frac) + iq16(revs),
-            downcast_position(x1),
-            downcast_position(roundtrip_state.p_0),
-            downcast_position(roundtrip_state.p_a),
-            downcast_position(roundtrip_state.p_b),
-            // iq20::from_bits((int64_t(roundtrip_state.a) * F_SAMPLE) >> 12),
-            speed,
-            t_stagelocal,
-            uint8_t(stage),
+            downcast_position(x1.to_bits()),
+            // iq20::from_bits((int64_t(roundtrip_state.b) * F_SAMPLE) >> 12),
+            x2,
+            x3,
+            downcast_position(roundtrip_state.p64_0),
+            downcast_position(roundtrip_state.p64_a),
+            downcast_position(roundtrip_state.p64_b),
+            // t_stagelocal,
+            // uint8_t(stage),
             isr_elapsed_us_.count()
         );
     }
@@ -416,7 +187,11 @@ void sincospll_main(){
     pll_state_.reset();
 
     static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(F_SAMPLE, 70, 1.7_iq16);
+    auto noise_generator_ = NoiseGenerator::from_default();
 
+    auto generate_noise = [&]() -> uint32_t{
+        return noise_generator_.next();
+    };
 
     Microseconds isr_elapsed_us_ = 0us;
     // [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
@@ -449,7 +224,7 @@ void sincospll_main(){
             const auto mock_cosine= (mock_angle_ + (Angular<uq32>::from_turns(uq32(0.33333333)))).sin();
             #endif
 
-            [[maybe_unused]] const auto [noise_sine_, noise_cosine_] = [] -> std::tuple<iq16, iq16>{
+            [[maybe_unused]] const auto [noise_sine_, noise_cosine_] = [&] -> std::tuple<iq16, iq16>{
                 const uint32_t noise = generate_noise();
                 const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x1ffF));
                 const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x1ffF));
