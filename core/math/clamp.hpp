@@ -27,7 +27,7 @@ static constexpr int32_t clamp2_int(const int32_t x, const int32_t side){
 
 template<size_t Q, typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
-static constexpr math::fixed<Q, int32_t> step_to(
+static constexpr math::fixed<Q, D> step_to(
     math::fixed<Q, D> x, 
     math::fixed<Q, D> y, 
     math::fixed<Q, D> step

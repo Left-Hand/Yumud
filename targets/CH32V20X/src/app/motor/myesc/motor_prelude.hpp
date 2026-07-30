@@ -267,11 +267,6 @@ struct alignas(4) [[nodiscard]] HarmonicState final{
 };
 
 
-// struct alignas(4) [[nodiscard]] SpeedEsoState final{
-//     iq20 f_est;
-//     iq20 speed_est;
-// };
-
 
 struct alignas(4) [[nodiscard]] TemperatureState final{
     std::array<Temperature, 4> elements;
@@ -280,11 +275,6 @@ struct alignas(4) [[nodiscard]] TemperatureState final{
     auto & ext1(this auto && self){return self.elements[1];}
     auto & ext2(this auto && self){return self.elements[2];}
     auto & ext3(this auto && self){return self.elements[3];}
-};
-
-struct alignas(4) [[nodiscard]] PathState{
-    SecondOrderState<iq16> track_ref;
-    SecondOrderState<iq16> rotor_rotation_state_var;
 };
 
 
@@ -342,7 +332,7 @@ struct alignas(4) [[nodiscard]] EncoderCalibrateState{
 };
 
 
-struct alignas(4) [[nodiscard]] FluxObserverState{
+struct alignas(4) [[nodiscard]] FluxObserverState final{
     iq20 prev_x1;
     iq20 prev_x2;
     iq20 x1;
@@ -357,33 +347,26 @@ struct alignas(4) [[nodiscard]] FluxObserverState{
     iq20 abs_lem;
 };
 
-struct alignas(4) [[nodiscard]] CurveState{
+struct alignas(4) [[nodiscard]] CurveState final{
     iiq32 x1;
     iq20 x2;
     iq20 x3;
     iq16 u;
-
-    // struct Debug{
-    //     iq16 x1_retrack;
-    //     iiq32 x1_retrack64;
-    // };
-
-    // Debug debug;
 };
 
-struct alignas(4) [[nodiscard]] TrajState{
-    iq16 x1;
-    iq16 x2;
-};
-
-
-struct alignas(4) [[nodiscard]] HpState2o{
+struct alignas(4) [[nodiscard]] TrajState final{
     iiq32 x1;
     iq20 x2;
 };
 
 
-struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState{
+struct alignas(4) [[nodiscard]] HpState2o final{
+    iiq32 x1;
+    iq20 x2;
+};
+
+
+struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState final{
     iiq32 hat_turns;
     iq20 hat_speed;
     iq32 hat_b1;
@@ -489,7 +472,6 @@ struct alignas(4) [[nodiscard]] AllState{
 
     DqCoord<iq20> dq_volt_integral;
     DqCoord<iq20> dq_volt_ctrl;
-    // DqCoord<iq20> dq_dutycycle_gen;
     DqCoord<iq20> dq_volt_decouple;
 
     AlphaBetaCoord<iq20> alphabeta_dutycycle_hfi;

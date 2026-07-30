@@ -69,6 +69,17 @@ enum class [[nodiscard]] DemoTrajPattern:uint8_t{
     Triangle
 };
 
+
+
+
+template<size_t Q, typename D>
+requires(sizeof(D) == 4)
+static constexpr iiq32 make_iiq32(const math::fixed<Q, D> x){
+    const D bits = x.to_bits();
+    constexpr size_t LEFT_SHIFTS = 32 - Q;
+    return iiq32::from_bits(int64_t(bits) << LEFT_SHIFTS);
+} 
+
 __no_inline static constexpr TrajState
 calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
     switch(demo_pattern){
@@ -79,8 +90,8 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             constexpr auto speed = 0.03_iq16;
 
             return {
-                speed * t,
-                speed
+                make_iiq32(speed * t),
+                iq20(speed)
             };
         }
 
@@ -102,7 +113,7 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
 
             position += iiq32::from_bits(delta.to_bits());
             return {
-                fixed_downcast<16>(position),
+                position,
                 iq20(speed)
             };
         }
@@ -112,7 +123,7 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
 
             const auto [s,c] = math::sincos(speed * t);
             return {
-                side_amplitude * iq16(s),
+                make_iiq32(side_amplitude * iq16(s)),
                 side_amplitude * speed * iq16(c)
             };
         }
@@ -122,7 +133,7 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             constexpr auto freq = 0.2_iq16;
             constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
-            return {-iq16(math::frac(t * freq)) * amplitude, -slew_rate};
+            return {make_iiq32(-iq16(math::frac(t * freq)) * amplitude), -slew_rate};
         }
         case DemoTrajPattern::Stairs:{
             constexpr auto freq = 0.3_iq16;
@@ -130,7 +141,10 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             constexpr auto half_amplitude = 0.4_iq16;
             constexpr auto step = half_amplitude * 2/ num_steps;
             const auto s = iq16(math::sinpu(t * freq));
-            return {(math::floor(s * (num_steps / 2)) * step), 0};
+            return {
+                make_iiq32((math::floor(s * (num_steps / 2)) * step)), 
+                0
+            };
         }
     }
     //unreachable
@@ -763,7 +777,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         auto & x2_now = state_2o.x2;
         
 
-        const iq16 e1 = math::clamp2(fixed_downcast<16>(state.encoder_rel_position64 - x1_now), E1_LIMIT);
+        const iq20 e1 = math::clamp2(fixed_downcast<20>(state.encoder_rel_position64 - x1_now), E1_LIMIT);
 
         const iq20 e2 = - x2_now;
 
@@ -844,7 +858,7 @@ static void process_position_calc(AllState & state, const FnSwitches fn_switches
 static void process_traj_shape(
     AllState & state, 
     FnSwitches fn_switches,
-    const iq16 traj_x1,
+    const iiq32 traj_x1,
     const iq20 traj_x2,
     [[maybe_unused]] const iq20 traj_x3
 ){
@@ -862,12 +876,10 @@ static void process_traj_shape(
         auto & x1_now = now_state.x1;
         auto & x2_now = now_state.x2;
 
-        const auto x1_now_q16 = math::roundlsb_downcast<16>(x1_now);
-
-        auto & ref_x1 = traj_x1;
+        auto ref_x1 = traj_x1;
         auto ref_x2 = (use_traj_x2 ? traj_x2 : iq20(0));
 
-        const iq20 e1 = math::clamp2(ref_x1 - x1_now_q16, E1_LIMIT);
+        const iq20 e1 = math::clamp2(fixed_downcast<20>(ref_x1 - x1_now), E1_LIMIT);
         const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
@@ -875,8 +887,7 @@ static void process_traj_shape(
             extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
             + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
     }else{
-        state.traj_smooth_state.x1 = iiq32::from_bits((int64_t)traj_x1.to_bits() << 16);
-
+        state.traj_smooth_state.x1 = traj_x1.to_bits();
         //无前馈速度
         state.traj_smooth_state.x2 = 0;
     }
@@ -886,17 +897,15 @@ static void process_traj_shape(
         const auto & traj_hp_state = state.traj_smooth_state;
         auto & curve_state = state.curve_state;
 
-        iq16 x1_curve_now = math::fixed_downcast<16>(curve_state.x1);
-
         const iq20 x2_traj = traj_hp_state.x2;
 
         const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
         //使用终值定理得到无静差时补偿量为x2 * 2/r
         const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
-        const iq16 x1_traj = math::fixed_downcast<16>(traj_hp_state.x1) + x1_traj_comp;
+        const iiq32 x1_traj = traj_hp_state.x1 + make_iiq32(x1_traj_comp);
         
-        iq16 e1 = math::clamp2(x1_traj - x1_curve_now, E1_LIMIT);
+        auto e1 = math::clamp2(fixed_downcast<20>(x1_traj - curve_state.x1), E1_LIMIT);
 
         const bool curve_retrack_e1big_en = fn_switches.curve_retrack_e1big_en;
         const bool do_curve_retrack_when_needed = curve_retrack_e1big_en;
@@ -904,21 +913,20 @@ static void process_traj_shape(
         static constexpr auto RETRACK_LEAD_X1 = 0.1_iq16;
 
         if(do_curve_retrack_when_needed){
-            const auto x1_now = math::fixed_downcast<16>(state.encoder_state_2o.x1);
-            if(math::abs(x1_curve_now - x1_now) > RETRACK_E1_THRESHOLD){
-                const auto x1_curve_retrack = math::step_to(x1_now, x1_traj, RETRACK_LEAD_X1);
+            const auto x1_now = state.encoder_state_2o.x1;
+            if(math::abs(e1) > RETRACK_E1_THRESHOLD){
+                const iiq32 x1_curve_retrack = math::step_to(x1_now, x1_traj, make_iiq32(RETRACK_LEAD_X1));
                 const auto x2_curve_retrack = state.encoder_state_2o.x2;
 
-                const auto x1_curve_retrack64 = iiq32::from_bits(int64_t(x1_curve_retrack.to_bits()) << 16);
-                curve_state.x1 = x1_curve_retrack64;
+                curve_state.x1 = x1_curve_retrack;
                 curve_state.x2 = x2_curve_retrack;
-                e1 = x1_traj - x1_curve_retrack;
+                e1 = fixed_downcast<20>(x1_traj - x1_curve_retrack);
             }
         }
         
         const iq20 e2 = math::clamp2(x2_traj - curve_state.x2, E2_LIMIT);
 
-        const auto u = CURVE_NLTD_FHAN({e1, iq16(e2)});
+        const auto u = CURVE_NLTD_FHAN({iq16(e1), iq16(e2)});
 
         const auto next_x1 = curve_state.x1 + iiq32(extended_mul(curve_state.x2, TSAMPLE));
         const auto next_x2 = math::clamp2(curve_state.x2 + iq20(u) * TSAMPLE, CURVE_X2_LIMIT);
@@ -938,7 +946,7 @@ static void process_traj_shape(
 static void process_mechanical_loop(
     AllState & state, 
     FnSwitches fn_switches,
-    const iq16 curve_x1,
+    const iiq32 curve_x1,
     const iq20 curve_x2,
     const iq20 curve_x3
 ){
@@ -950,7 +958,7 @@ static void process_mechanical_loop(
 
     const auto now_x2 = state.encoder_state_2o.x2;
 
-    auto now_x1 = math::fixed_downcast<16>(state.encoder_state_2o.x1);
+    const auto & now_x1 = state.encoder_state_2o.x1;
 
     constexpr auto torque_curr_step_limit = iq20(0.02);
     constexpr auto torque_curr_limit = iq20(4.5);
@@ -976,11 +984,9 @@ static void process_mechanical_loop(
             constexpr iq20 ki = 4.66_iq20;
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
-            const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(curve_x1 - now_x1, kpp, E2_LIMIT));
+            const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1 - now_x1), kpp, E2_LIMIT));
 
             state.pi_ref_x2 = ref_x2;
-            // state.pi_ref_x2 = curve_x1 - now_x1;
-            // const iq20 ref_x2 = 0;
             const iq20 e2 = math::clamp2((ref_x2 + curve_x2) - now_x2, E2_LIMIT);
             state.pi_e2 = e2;
 
@@ -1011,7 +1017,7 @@ static void process_mechanical_loop(
             const iq20 kp = 12.7_iq16;
             const iq20 kd = 0.26_iq16;
 
-            const iq20 e1 = iq20(math::clamp2(curve_x1 - now_x1, E1_LIMIT));
+            const iq20 e1 = iq20(math::clamp2(fixed_downcast<20>(curve_x1 - now_x1), E1_LIMIT));
             const iq20 e2 = iq20(math::clamp2(curve_x2 - now_x2, E2_LIMIT));
             
             iq20 torque_curr_cmd = (kp * e1) + (kd * e2)
@@ -1900,7 +1906,7 @@ void myesc_main(){
     // fn_switches_.traj_smooth_method = TrajSmoothMethod::Disabled;
     fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndX2;
 
-    fn_switches_.curve_retrack_e1big_en = true;
+    fn_switches_.curve_retrack_e1big_en = false;
     fn_switches_.damping_forwardfeedback_en = true;
     fn_switches_.interia_forwardfeedback_en = true;
 
@@ -1928,7 +1934,7 @@ void myesc_main(){
         static constexpr size_t STEPS_PER_CELL_PER_REV = 256 * 2;
         static constexpr size_t SAMPLE_DURATION_STEPS = STEPS_PER_CELL_PER_REV / SIDESHAFT_CALIBRATE_OVERSAMPLES;
         static constexpr size_t REVS_PER_DIRECTION = 2;
-        static constexpr size_t STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+        static constexpr size_t CALIBRATE_STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
         
         // static constexpr bool do_sideshaft_calibrate = false;
         static constexpr bool sideshaft_compensate = true;
@@ -1962,8 +1968,8 @@ void myesc_main(){
         };
 
         auto steps_to_turns = [](const size_t steps) -> uq32{
-            const size_t rem = steps % STEPS_PER_REV;
-            constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / STEPS_PER_REV) + 1);
+            const size_t rem = steps % CALIBRATE_STEPS_PER_REV;
+            constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / CALIBRATE_STEPS_PER_REV) + 1);
             return rem * FACTOR;
         };
 
@@ -2071,7 +2077,7 @@ void myesc_main(){
             if(not do_sideshaft_calibrate){
                 [[maybe_unused]] const auto now_secs = clock::seconds();
 
-                #if 1
+                #if 0
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
                     // DemoTrajPattern::Stop
@@ -2091,22 +2097,23 @@ void myesc_main(){
 
                 static constexpr auto RBTRIP_PARAS = motioner::RoundtripParaments{
                     .fs = FOC_FREQ,
-                    .revs_per_direction = 2, 
-                    .ticks_per_rev = STEPS_PER_REV * 8,
-                    .x1_initial = -7_iiq32, 
+                    // .revs_per_direction = 2, 
+                    .uniform_ticks = 2 * CALIBRATE_STEPS_PER_REV,
+                    .ticks_per_rev = CALIBRATE_STEPS_PER_REV,
+                    .x1_initial = iiq32(-7), 
                 };
 
                 static constexpr auto ROUNDTRIP_CALC = motioner::RoundtripTrajGenerator::from(RBTRIP_PARAS);
                 auto samp_point = ROUNDTRIP_CALC.sample_tick(tick);
 
-                auto traj_x1 = iq16::from_bits(samp_point.x1.to_bits() >> 16);
+                auto traj_x1 = samp_point.x1;
                 auto traj_x2 = samp_point.x2;
                 auto traj_x3 = samp_point.x3;
 
                 #endif
                 process_traj_shape(state, fn_switches, traj_x1, traj_x2, traj_x3);
 
-                const auto curve_x1 = math::fixed_downcast<16>(state.curve_state.x1);
+                const auto curve_x1 = state.curve_state.x1;
                 const auto curve_x2 = state.curve_state.x2;
                 const auto curve_x3 = state.curve_state.x3;
                 process_mechanical_loop(state, fn_switches, curve_x1, curve_x2, curve_x3);
@@ -2118,8 +2125,8 @@ void myesc_main(){
 
                     static constexpr size_t LG2_STEPS_CURRENT_RAMP = 14u;
 
-                    static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / STEPS_PER_REV);
-                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(STEPS_PER_REV) / FOC_FREQ;
+                    static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / CALIBRATE_STEPS_PER_REV);
+                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(CALIBRATE_STEPS_PER_REV) / FOC_FREQ;
                     [[maybe_unused]] static constexpr float SECONDS_RAMP = double(1 << LG2_STEPS_CURRENT_RAMP) / FOC_FREQ;
 
                     using Counter = EncoderNonlinearCalibrateCounter;
@@ -2179,7 +2186,7 @@ void myesc_main(){
                         case Stage::Forward:{
                             next_stage = Stage::Forward;
                             next_count_value = now_count_value + 1;
-                            if(next_count_value >= STEPS_PER_REV * REVS_PER_DIRECTION){
+                            if(next_count_value >= CALIBRATE_STEPS_PER_REV * REVS_PER_DIRECTION){
                                 next_stage = Stage::Backward;
                                 next_count_value = 0;
                             }
@@ -2209,7 +2216,7 @@ void myesc_main(){
                             next_stage = Stage::Backward;
                             next_count_value = now_count_value + 1;
 
-                            if(next_count_value >= STEPS_PER_REV * REVS_PER_DIRECTION){
+                            if(next_count_value >= CALIBRATE_STEPS_PER_REV * REVS_PER_DIRECTION){
                             // if(next_count_value >= 0){
                                 next_stage = Stage::Complete;
                                 next_count_value = 0;
@@ -2306,7 +2313,7 @@ void myesc_main(){
             }),
 
             script::make_function(StringView("tj1"), [&](const iq16 x){
-                all_state_.traj_state.x1 = x;
+                all_state_.traj_state.x1 = make_iiq32(x);
             }),
             
             script::make_function(StringView("sce"), [&](const bool en){
@@ -2536,7 +2543,7 @@ void myesc_main(){
             // state.uvw_curr_raw.w
 
         if(false)DEBUG_PRINTLN(
-            state.traj_state.x1,
+            math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_state_2o.x1),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
