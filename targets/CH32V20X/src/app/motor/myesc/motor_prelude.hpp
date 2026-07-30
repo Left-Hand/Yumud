@@ -171,7 +171,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     uint32_t mtpv_en : 1;
 
     uint32_t sideshaft_compenstate_en : 1;
-    uint32_t override_position_bigkp_en : 1;
+    uint32_t override_big_position_kp : 1;
     uint32_t damping_forwardfeedback_en : 1;
     uint32_t interia_forwardfeedback_en : 1;
 
@@ -180,7 +180,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     LoopWiring loop_wiring : 3;
 
     TrajSmoothMethod traj_smooth_method : 2;
-    uint32_t curve_retrack_e1big_en : 1;
+    uint32_t auto_curve_retrack_en : 1;
 
     constexpr void reset(){
         *this = std::bit_cast<Self>(uint32_t(0));
@@ -350,13 +350,14 @@ struct alignas(4) [[nodiscard]] FluxObserverState final{
 struct alignas(4) [[nodiscard]] CurveState final{
     iiq32 x1;
     iq20 x2;
-    iq20 x3;
+    iq16 x3;
     iq16 u;
 };
 
 struct alignas(4) [[nodiscard]] TrajState final{
     iiq32 x1;
     iq20 x2;
+    iq16 x3;
 };
 
 
@@ -506,8 +507,16 @@ struct alignas(4) [[nodiscard]] AllState{
     TimerTick encoder_get_done_tick;
     TimerTick isr_exit_tick;
     
-    EncoderCalibrateState encoder_calibrate_state;
     ProctiveEncoderAnticoggingState peac_state;
+    uint32_t retrack_count;
+
+    struct Debug{
+    };
+
+    Debug debug;
+
+    EncoderCalibrateState encoder_calibrate_state;
+
 
     void reset(){
         #pragma GCC diagnostic push

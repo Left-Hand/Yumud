@@ -7,7 +7,7 @@ namespace ymd::math{
 
 template<typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
-static constexpr int32_t clamp_int(const int32_t x, const int32_t mi, const int32_t ma){
+static constexpr D clamp_int(const D x, const D mi, const D ma){
     if (__builtin_expect(x < mi, 0)) {
         return mi;
     }
@@ -20,7 +20,7 @@ static constexpr int32_t clamp_int(const int32_t x, const int32_t mi, const int3
 
 template<typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
-static constexpr int32_t clamp2_int(const int32_t x, const int32_t side){
+static constexpr D clamp2_int(const D x, const D side){
     return clamp_int<D>(x, -side, side);
 }
 
@@ -38,19 +38,18 @@ static constexpr math::fixed<Q, D> step_to(
 
 template<size_t Q, typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
-static constexpr math::fixed<Q, D> clamp2(math::fixed<Q, D> x, D side){
-    const auto y_bits = clamp2_int<D>(x.to_bits(), side << Q);
+static constexpr math::fixed<Q, D> clamp2(math::fixed<Q, D> x, D ma){
+    const auto y_bits = clamp2_int<D>(x.to_bits(), ma << Q);
     return math::fixed<Q, D>::from_bits(y_bits);
 }
 
 
 template<size_t Q, typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
-static constexpr math::fixed<Q, D> clamp2(math::fixed<Q, D> x, math::fixed<Q, D> side){
-    const auto y_bits = clamp2_int<D>(x.to_bits(), side.to_bits());
+static constexpr math::fixed<Q, D> clamp2(math::fixed<Q, D> x, math::fixed<Q, D> ma){
+    const auto y_bits = clamp2_int<D>(x.to_bits(), ma.to_bits());
     return math::fixed<Q, D>::from_bits(y_bits);
 }
-
 
 
 

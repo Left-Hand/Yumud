@@ -80,18 +80,64 @@ static constexpr iiq32 make_iiq32(const math::fixed<Q, D> x){
     return iiq32::from_bits(int64_t(bits) << LEFT_SHIFTS);
 } 
 
+
+template<size_t Q_final, typename D_final, size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q_final, D_final> 
+sub_clamp2_downcast(math::fixed<Q, D> lhs, math::fixed<Q, D> rhs, math::fixed<Q_final, D_final> ma){
+    constexpr size_t RIGHT_SHIFTS = Q - Q_final;
+    D y_bits = D((lhs.to_bits() - rhs.to_bits()));
+    const D ma_bits = D(ma.to_bits()) << RIGHT_SHIFTS;
+    if(y_bits > ma_bits) y_bits = ma_bits;
+    if(y_bits < -ma_bits) y_bits = -ma_bits;
+    return math::fixed<Q_final, D_final>::from_bits(y_bits >> RIGHT_SHIFTS);
+}
+
+static_assert(sub_clamp2_downcast(iiq32(1000), iiq32(-200), iq20(1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast(iiq32(6000), iiq32(-800), iq20(1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast(iiq32(-6000), iiq32(-800), iq20(1000)).to_bits() == iq20(-1000).to_bits());
+static_assert(sub_clamp2_downcast(iiq32(0), iiq32(-800), iq20(1000)).to_bits() == iq20(800).to_bits());
+
+
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<20, int32_t> 
+sub_clamp2_downcast_iq20(iiq32 lhs, iiq32 rhs, int32_t ma){
+    #if 1
+    constexpr size_t RIGHT_SHIFTS = 32 - 20;
+
+    int64_t y_bits = int64_t((lhs.to_bits() - rhs.to_bits()));
+    const int32_t head_bits = int32_t(y_bits >> 32);
+
+    if(head_bits > ma) return iq20(ma);
+    if(head_bits < -ma) return iq20(-ma);
+    return iq20::from_bits(int32_t(y_bits >> RIGHT_SHIFTS));
+    #else
+    return sub_clamp2_downcast<20, int32_t>(lhs, rhs, iq20(ma));
+    #endif
+}
+
+static_assert(sub_clamp2_downcast_iq20(iiq32(1000), iiq32(-200), (1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast_iq20(iiq32(6000), iiq32(-800), (1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast_iq20(iiq32(-6000), iiq32(-800), (1000)).to_bits() == iq20(-1000).to_bits());
+static_assert(sub_clamp2_downcast_iq20(iiq32(3.5), iiq32(1.2), (1000)).to_bits() == iq20(2.3).to_bits());
+// static_assert(sub_clamp2_downcast_iq20(iiq32(13.5), iiq32(1.2), (1000)).to_bits() == iq20(12.3).to_bits());
+static_assert(sub_clamp2_downcast_iq20(iiq32(0), iiq32(-800), (1000)).to_bits() == iq20(800).to_bits());
+
+
 __no_inline static constexpr TrajState
 calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
     switch(demo_pattern){
         case DemoTrajPattern::Stop:{
-            return {0, 0};
+            return {0, 0, 0};
         }
         case DemoTrajPattern::Straight:{
             constexpr auto speed = 0.03_iq16;
 
             return {
                 make_iiq32(speed * t),
-                iq20(speed)
+                iq20(speed),
+                0
             };
         }
 
@@ -114,7 +160,8 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             position += iiq32::from_bits(delta.to_bits());
             return {
                 position,
-                iq20(speed)
+                iq20(speed),
+                0
             };
         }
         case DemoTrajPattern::Sine:{
@@ -124,7 +171,8 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             const auto [s,c] = math::sincos(speed * t);
             return {
                 make_iiq32(side_amplitude * iq16(s)),
-                side_amplitude * speed * iq16(c)
+                side_amplitude * speed * iq16(c),
+                0
             };
         }
         case DemoTrajPattern::Saw:{
@@ -133,7 +181,7 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             constexpr auto freq = 0.2_iq16;
             constexpr auto amplitude = 5.0_iq16;
             constexpr auto slew_rate = amplitude * freq;
-            return {make_iiq32(-iq16(math::frac(t * freq)) * amplitude), -slew_rate};
+            return {make_iiq32(-iq16(math::frac(t * freq)) * amplitude), -slew_rate, 0};
         }
         case DemoTrajPattern::Stairs:{
             constexpr auto freq = 0.3_iq16;
@@ -143,12 +191,13 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             const auto s = iq16(math::sinpu(t * freq));
             return {
                 make_iiq32((math::floor(s * (num_steps / 2)) * step)), 
+                0,
                 0
             };
         }
     }
     //unreachable
-    return {0, 0};
+    return {0, 0, 0};
 };
 
 static constexpr size_t pow2(const size_t x){
@@ -777,7 +826,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         auto & x2_now = state_2o.x2;
         
 
-        const iq20 e1 = math::clamp2(fixed_downcast<20>(state.encoder_rel_position64 - x1_now), E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20(state.encoder_rel_position64, x1_now, E1_LIMIT);
 
         const iq20 e2 = - x2_now;
 
@@ -860,7 +909,7 @@ static void process_traj_shape(
     FnSwitches fn_switches,
     const iiq32 traj_x1,
     const iq20 traj_x2,
-    [[maybe_unused]] const iq20 traj_x3
+    [[maybe_unused]] const iq16 traj_x3
 ){
 
     const auto traj_smooth_method = fn_switches.traj_smooth_method;
@@ -879,7 +928,7 @@ static void process_traj_shape(
         auto ref_x1 = traj_x1;
         auto ref_x2 = (use_traj_x2 ? traj_x2 : iq20(0));
 
-        const iq20 e1 = math::clamp2(fixed_downcast<20>(ref_x1 - x1_now), E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20(ref_x1, x1_now, E1_LIMIT);
         const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
@@ -887,7 +936,7 @@ static void process_traj_shape(
             extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
             + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
     }else{
-        state.traj_smooth_state.x1 = traj_x1.to_bits();
+        state.traj_smooth_state.x1 = traj_x1;
         //无前馈速度
         state.traj_smooth_state.x2 = 0;
     }
@@ -904,23 +953,23 @@ static void process_traj_shape(
         //使用终值定理得到无静差时补偿量为x2 * 2/r
         const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
         const iiq32 x1_traj = traj_hp_state.x1 + make_iiq32(x1_traj_comp);
-        
-        auto e1 = math::clamp2(fixed_downcast<20>(x1_traj - curve_state.x1), E1_LIMIT);
+        auto e1 = sub_clamp2_downcast_iq20(x1_traj, curve_state.x1, E1_LIMIT);
 
-        const bool curve_retrack_e1big_en = fn_switches.curve_retrack_e1big_en;
-        const bool do_curve_retrack_when_needed = curve_retrack_e1big_en;
-        static constexpr auto RETRACK_E1_THRESHOLD = 0.4_iq16;
-        static constexpr auto RETRACK_LEAD_X1 = 0.1_iq16;
+        const bool auto_curve_retrack_en = fn_switches.auto_curve_retrack_en;
+        const bool do_curve_retrack_when_needed = auto_curve_retrack_en;
+        static constexpr auto RETRACK_E1_THRESHOLD = 0.4_iq20;
+        static constexpr auto RETRACK_LEAD_X1 = 0.1_iq20;
 
         if(do_curve_retrack_when_needed){
-            const auto x1_now = state.encoder_state_2o.x1;
-            if(math::abs(e1) > RETRACK_E1_THRESHOLD){
-                const iiq32 x1_curve_retrack = math::step_to(x1_now, x1_traj, make_iiq32(RETRACK_LEAD_X1));
+            const auto x1_encoder = state.encoder_state_2o.x1;
+            if(math::abs(sub_clamp2_downcast_iq20(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
+                const iiq32 x1_curve_retrack = math::step_to(x1_encoder, x1_traj, make_iiq32(RETRACK_LEAD_X1));
                 const auto x2_curve_retrack = state.encoder_state_2o.x2;
 
                 curve_state.x1 = x1_curve_retrack;
                 curve_state.x2 = x2_curve_retrack;
-                e1 = fixed_downcast<20>(x1_traj - x1_curve_retrack);
+                state.retrack_count++;
+                e1 = sub_clamp2_downcast_iq20(x1_traj, x1_curve_retrack, 100);
             }
         }
         
@@ -935,8 +984,8 @@ static void process_traj_shape(
 
         curve_state.x1 = next_x1;
         curve_state.x2 = next_x2;
-        curve_state.x3 = math::closer_to_zero(iq20(u), lpf_2000hz(curve_state.x3, delta_x2 * FOC_FREQ));
-        // curve_state.x3 = delta_x2 * FOC_FREQ;
+        // curve_state.x3 = math::closer_to_zero(iq16(u), lpf_2000hz(curve_state.x3, iq16(delta_x2) * FOC_FREQ));
+        curve_state.x3 = iq16(delta_x2) * FOC_FREQ;
         curve_state.u = u;
     }
 }
@@ -948,7 +997,7 @@ static void process_mechanical_loop(
     FnSwitches fn_switches,
     const iiq32 curve_x1,
     const iq20 curve_x2,
-    const iq20 curve_x3
+    const iq16 curve_x3
 ){
     //#region 力矩转电流
 
@@ -960,8 +1009,8 @@ static void process_mechanical_loop(
 
     const auto & now_x1 = state.encoder_state_2o.x1;
 
-    constexpr auto torque_curr_step_limit = iq20(0.02);
-    constexpr auto torque_curr_limit = iq20(4.5);
+    constexpr auto torque_curr_step_limit = iq20(0.04);
+    constexpr auto torque_curr_limit = iq20(5.5);
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
@@ -977,11 +1026,11 @@ static void process_mechanical_loop(
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
             const iq20 kpp_normal = 12;
-            const iq20 kpp_big = 120;
-            const iq20 kpp = fn_switches.override_position_bigkp_en ? kpp_big : kpp_normal;
+            const iq20 kpp_big = 20;
+            const iq20 kpp = fn_switches.override_big_position_kp ? kpp_big : kpp_normal;
             // const iq20 kp = 1.2_iq20;
             constexpr iq20 kp = 0.6_iq20;
-            constexpr iq20 ki = 4.66_iq20;
+            constexpr iq20 ki = 6.66_iq20;
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
             const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1 - now_x1), kpp, E2_LIMIT));
@@ -1017,7 +1066,7 @@ static void process_mechanical_loop(
             const iq20 kp = 12.7_iq16;
             const iq20 kd = 0.26_iq16;
 
-            const iq20 e1 = iq20(math::clamp2(fixed_downcast<20>(curve_x1 - now_x1), E1_LIMIT));
+            const iq20 e1 = sub_clamp2_downcast_iq20(curve_x1, now_x1, E1_LIMIT);
             const iq20 e2 = iq20(math::clamp2(curve_x2 - now_x2, E2_LIMIT));
             
             iq20 torque_curr_cmd = (kp * e1) + (kd * e2)
@@ -1900,15 +1949,15 @@ void myesc_main(){
     fn_switches_.current_harmonic_suppression_en = 0;
     fn_switches_.elec_angle_source = ElecAngleSource::MagEncoder;
     fn_switches_.loop_wiring = LoopWiring::SeriesPi;
-    fn_switches_.override_position_bigkp_en = true;
+    fn_switches_.override_big_position_kp = true;
     
     // fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndZero;
     // fn_switches_.traj_smooth_method = TrajSmoothMethod::Disabled;
     fn_switches_.traj_smooth_method = TrajSmoothMethod::UseX1AndX2;
 
-    fn_switches_.curve_retrack_e1big_en = false;
-    fn_switches_.damping_forwardfeedback_en = true;
-    fn_switches_.interia_forwardfeedback_en = true;
+    fn_switches_.auto_curve_retrack_en = true;
+    fn_switches_.damping_forwardfeedback_en = false;
+    fn_switches_.interia_forwardfeedback_en = false;
 
     static constexpr size_t HEAP_ARENA_SIZE = 4096;
     auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
@@ -2077,19 +2126,17 @@ void myesc_main(){
             if(not do_sideshaft_calibrate){
                 [[maybe_unused]] const auto now_secs = clock::seconds();
 
+                auto & traj_state = state.traj_state;
                 #if 0
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
                     // DemoTrajPattern::Stop
-                    // DemoTrajPattern::Stairs
+                    DemoTrajPattern::Stairs
                     // DemoTrajPattern::Saw
-                    DemoTrajPattern::Triangle
+                    // DemoTrajPattern::Triangle
                 ;
 
-                auto traj_state = calc_demo_traj(now_secs, demo_pattern);
-                auto traj_x1 = traj_state.x1;
-                auto traj_x2 = traj_state.x2;
-                auto traj_x3 = 0_iq20;
+                traj_state = calc_demo_traj(now_secs, demo_pattern);
                 #else
                 static uint32_t tick = 0;
                 tick++;
@@ -2106,12 +2153,13 @@ void myesc_main(){
                 static constexpr auto ROUNDTRIP_CALC = motioner::RoundtripTrajGenerator::from(RBTRIP_PARAS);
                 auto samp_point = ROUNDTRIP_CALC.sample_tick(tick);
 
-                auto traj_x1 = samp_point.x1;
-                auto traj_x2 = samp_point.x2;
-                auto traj_x3 = samp_point.x3;
+
+                traj_state.x1 = samp_point.x1;
+                traj_state.x2 = samp_point.x2;
+                traj_state.x3 = samp_point.x3;
 
                 #endif
-                process_traj_shape(state, fn_switches, traj_x1, traj_x2, traj_x3);
+                process_traj_shape(state, fn_switches, traj_state.x1, traj_state.x2, traj_state.x3);
 
                 const auto curve_x1 = state.curve_state.x1;
                 const auto curve_x2 = state.curve_state.x2;
@@ -2549,22 +2597,18 @@ void myesc_main(){
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
             math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
             state.encoder_state_2o.x2,
-            // mag_volt * inv_mag_curr,
-            // state.busbar_curr_lp * BUSBAR_VOLT,
-            // state.flux_ob_state.x1,
-            // state.flux_ob_state.x2,
-            // state.torque_curr_cmd,
-            // state.curve_state.x3,
-            // state.curve_state.u,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 
         // auto & ec_state = state.encoder_calibrate_state;
 
-        auto encode_curr_err = [](const iq20 curr_err) -> int16_t{
+        [[maybe_unused]] auto encode_curr_err = [](const iq20 curr_err) -> int16_t{
             // int16_t bits = (curr_err.to_bits() >> 8) & ((1u << 12) - 1);
-            int32_t bits = intrinsics::mul32hsu(curr_err.to_bits(), 1u << 24);
+            static constexpr size_t LG2_RESOLUTION = 12;
+            static constexpr size_t Q_NUM = 20;
+            static constexpr size_t LEFT_SHIFTS = LG2_RESOLUTION + (32u - Q_NUM); 
+            int32_t bits = intrinsics::mul32hsu(curr_err.to_bits(), 1u << LEFT_SHIFTS);
             return int16_t(bits);
         };
 
@@ -2597,14 +2641,16 @@ void myesc_main(){
             // state.encoder_state_2o.x2,
             // state.pi_ref_x2,
 
-            state.torque_curr_cmd,
-            state.torque_curr_veryslowlp,
+            // state.torque_curr_cmd,
+            // state.torque_curr_veryslowlp,
             // iq20::from(float(math::bf16(float(state.torque_curr_veryslowlp)))),
-            encode_curr_err(state.torque_curr_veryslowlp),
+            // encode_curr_err(state.torque_curr_veryslowlp),
+            state.retrack_count,
+            // state.debug.traj_e1,
+            // math::fixed_downcast<16>(state.debug.traj_x1),
+            // math::fixed_downcast<16>(state.debug.curve_x1),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
-            // math::fixed_downcast<20>(state.encoder_rel_position64),
-            // iq20(math::fixed_downcast<20>(state.encoder_rel_position64 - state.peac_state.hat_turns)),
             // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );

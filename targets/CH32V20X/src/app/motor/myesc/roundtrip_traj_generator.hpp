@@ -22,7 +22,7 @@ enum class [[nodiscard]] RoundtripStage:uint8_t{
 struct [[nodiscard]] alignas(size_t) RoundtripSamplePoint final{
     iiq32 x1;
     iq20 x2;
-    iq20 x3;
+    iq16 x3;
     uint32_t t_stagelocal;
     RoundtripStage stage;
 };
@@ -103,9 +103,9 @@ struct [[nodiscard]] alignas(size_t) RoundtripTrajGenerator final {
     }
 
     __attribute__((optimize("-Ofast")))
-    constexpr iq20 calc_accdec_x3() const {
+    constexpr iq16 calc_accdec_x3() const {
         //b * f * f / 2^32 / T_ACC
-        static constexpr size_t Q_NUM = 20;
+        static constexpr size_t Q_NUM = 16;
         static constexpr size_t RIGHT_SHIFTS = 32 + LG2_T_ACC - Q_NUM;
         const int64_t v = int64_t(b) * fs * fs;
         return iq20::from_bits(int32_t(int64_t(v >> RIGHT_SHIFTS)));
@@ -159,7 +159,7 @@ struct [[nodiscard]] alignas(size_t) RoundtripTrajGenerator final {
         // 在半个周期内计算位置
         int64_t p64;
         iq20 x2;
-        iq20 x3 = 0;
+        iq16 x3 = 0;
         RoundtripStage stage;
         uint32_t t_stagelocal;
         
