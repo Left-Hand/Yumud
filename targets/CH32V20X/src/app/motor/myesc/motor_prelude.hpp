@@ -412,7 +412,7 @@ struct alignas(4) [[nodiscard]] HfiState{
 struct alignas(4) [[nodiscard]] AllState{
     HpState2o encoder_pll_state;
     CurveState curve_state;
-    HpState2o traj_smooth_state;
+    TrajState traj_smooth_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
@@ -422,13 +422,13 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 torque_curr_veryslowlp;
 
     Angular<uq32> openloop_elec_angle;
-    iq20 openloop_elec_speed;
+    iq16 openloop_elec_speed;
 
     Angular<uq32> elec_angle;
-    iq20 elec_speed;
+    iq16 elec_speed;
 
     Angular<uq32> sensed_elec_angle;
-    iq20 sensed_elec_speed;
+    iq16 sensed_elec_speed;
 
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;

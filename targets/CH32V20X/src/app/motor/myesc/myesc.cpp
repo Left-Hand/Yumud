@@ -61,6 +61,22 @@ static constexpr iiq32 make_iiq32(const math::fixed<Q, D> x){
     return iiq32::from_bits(int64_t(bits) << LEFT_SHIFTS);
 } 
 
+static constexpr uq32 iiq32_crop_frac(const iiq32 x){
+    return uq32::from_bits(uint32_t(x.to_bits() & UINT32_MAX));
+}
+
+static constexpr int32_t iiq32_crop_revs(const iiq32 x){
+    return int32_t(x.to_bits() >> 32);
+}
+
+
+static constexpr iiq32 iiq32_add_revs(const iiq32 x, const int32_t n_revs){
+    const auto frac = iiq32_crop_frac(x);
+    const int32_t revs = iiq32_crop_revs(x);
+    return iiq32::from_bits(int64_t(int64_t(revs + n_revs) << 32) | frac.to_bits());
+}
+
+// static_assert(iiq32_add_revs(iiq32(0.2f), 1).to_bits() == iiq32(1.2f).to_bits());
 
 template<size_t Q_final, typename D_final, size_t Q, typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
@@ -283,7 +299,7 @@ static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = dsp::adrc::FhanPrecomputed<iq16>::from({
-    .r = 44.5_iq16,
+    .r = 144.5_iq16,
     .h = 0.003_iq16,
 });
 
@@ -697,8 +713,7 @@ static void process_observer_calc(AllState & state, const FnSwitches fn_switches
 }
 
 [[maybe_unused]] __no_inline 
-static void process_encoder_calc(AllState & state, const FnSwitches fn_switches){
-
+static void process_encoder_cogging_harmonic(AllState & state, const FnSwitches fn_switches){
     #if 0
     {
         //anti cogging encoder harmonic, n = POLE_PAIRS * 6
@@ -781,20 +796,17 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         peac_state.hat_b2 = math::clamp2(peac_state.hat_b2, MAX_B);
 
     }
+    
+            if(fn_switches.encoder_harmonic_suppression_en){
+                encoder_abs_position64 += iiq32::from_bits(state.peac_state.harm.to_bits());
+            }
     #endif
 
+}
+
+[[maybe_unused]] __no_inline 
+static void process_encoder_pll(AllState & state, const FnSwitches fn_switches, iiq32 encoder_rel_position64){
     {
-        const auto encoder_position_offset = 0.946429_uq32;
-        const auto pole_pairs = POLE_PAIRS;
-
-        auto encoder_abs_position64 = state.encoder_abs_position64;
-
-        if(fn_switches.encoder_harmonic_suppression_en){
-            encoder_abs_position64 += iiq32::from_bits(state.peac_state.harm.to_bits());
-        }
-
-        state.encoder_rel_position64 = encoder_abs_position64 
-            - iiq32::from_bits(state.encoder_initial_position.to_bits());
 
         auto & state_2o = state.encoder_pll_state;
 
@@ -811,19 +823,14 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         x2_now = x2_now + math::roundlsb_downcast<20>(
             extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
             + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
-
-        auto encoder_abs_position32 = uq32::from_bits(uint32_t(encoder_abs_position64.to_bits()));
-
-        state.sensed_elec_angle = Angular<uq32>::from_turns((encoder_abs_position32 - encoder_position_offset) * pole_pairs);
-
-        const auto mech_speed = state.encoder_pll_state.x2;
-        state.sensed_elec_speed = mech_speed * pole_pairs;
-
     }
 }
 
+
+
+#if 0
 [[maybe_unused]] __no_inline 
-static void process_position_calc(AllState & state, const FnSwitches fn_switches){
+static void process_position_proc(AllState & state, const FnSwitches fn_switches){
 
 
     {
@@ -867,10 +874,8 @@ static void process_position_calc(AllState & state, const FnSwitches fn_switches
                 
                 case ElecAngleSource::MagEncoder:
                 case ElecAngleSource::AbzEncoder:
-                    process_encoder_calc(state, fn_switches);
-                    const auto elec_angle = state.sensed_elec_angle;
-                    const auto elec_speed = state.sensed_elec_speed;
-                    return {elec_angle, elec_speed};
+                
+
             }
             __builtin_unreachable();
         }();
@@ -878,23 +883,24 @@ static void process_position_calc(AllState & state, const FnSwitches fn_switches
     }
 };
 
+#endif
 
-[[maybe_unused]] __no_inline 
-static void process_traj_shape(
+
+[[maybe_unused]] 
+static void process_traj_preshape(
     AllState & state, 
     FnSwitches fn_switches,
     const iiq32 traj_x1,
     const iq20 traj_x2,
     [[maybe_unused]] const iq16 traj_x3
 ){
-
     const auto traj_smooth_method = fn_switches.traj_smooth_method;
-    const bool traj_frontend_smooth_en = traj_smooth_method != TrajSmoothMethod::Disabled;
+    const bool traj_frontend_smooth_en = (traj_smooth_method != TrajSmoothMethod::Disabled);
     
     if(traj_frontend_smooth_en){
         //启用此项 为轨迹规划器提供准确的前馈速度 使得规划输出与原始位置信号几乎零迟滞
 
-        const bool use_traj_x2 = traj_smooth_method == TrajSmoothMethod::UseX1AndX2;
+        const bool use_traj_x2 = (traj_smooth_method == TrajSmoothMethod::UseX1AndX2);
 
         auto & now_state = state.traj_smooth_state;
 
@@ -916,54 +922,60 @@ static void process_traj_shape(
         //无前馈速度
         state.traj_smooth_state.x2 = 0;
     }
+}
 
-    {
-        //基于fhan的梯形速度规划
-        const auto & traj_hp_state = state.traj_smooth_state;
-        auto & curve_state = state.curve_state;
 
-        const iq20 x2_traj = traj_hp_state.x2;
+[[maybe_unused]]
+static void process_traj_shape(
+    AllState & state, 
+    FnSwitches fn_switches,
+    const iiq32 hp_traj_x1,
+    const iq20 hp_traj_x2,
+    [[maybe_unused]] const iq16 hp_traj_x3
+){
+    const auto traj_smooth_method = fn_switches.traj_smooth_method;
+    //基于fhan的梯形速度规划
+    auto & curve_state = state.curve_state;
 
-        const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
+    const bool do_comp_traj_x1 = traj_smooth_method == TrajSmoothMethod::UseX1AndZero;
 
-        //使用终值定理得到无静差时补偿量为x2 * 2/r
-        const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(x2_traj * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
-        const iiq32 x1_traj = traj_hp_state.x1 + make_iiq32(x1_traj_comp);
-        auto e1 = sub_clamp2_downcast_iq20(x1_traj, curve_state.x1, E1_LIMIT);
+    //使用终值定理得到无静差时补偿量为x2 * 2/r
+    const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(hp_traj_x2 * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
+    const iiq32 x1_traj = hp_traj_x1 + make_iiq32(x1_traj_comp);
+    auto e1 = sub_clamp2_downcast_iq20(x1_traj, curve_state.x1, E1_LIMIT);
 
-        const bool auto_curve_retrack_en = fn_switches.auto_curve_retrack_en;
-        const bool do_curve_retrack_when_needed = auto_curve_retrack_en;
-        static constexpr auto RETRACK_E1_THRESHOLD = 0.4_iq20;
-        static constexpr auto RETRACK_LEAD_X1 = 0.1_iq20;
+    const bool auto_curve_retrack_en = fn_switches.auto_curve_retrack_en;
+    const bool do_curve_retrack_when_needed = auto_curve_retrack_en;
+    static constexpr auto RETRACK_E1_THRESHOLD = 0.4_iq20;
+    static constexpr auto RETRACK_LEAD_X1 = 0.1_iq20;
 
-        if(do_curve_retrack_when_needed){
-            const auto x1_encoder = state.encoder_pll_state.x1;
-            if(math::abs(sub_clamp2_downcast_iq20(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
-                const iiq32 x1_curve_retrack = math::step_to(x1_encoder, x1_traj, make_iiq32(RETRACK_LEAD_X1));
-                const auto x2_curve_retrack = state.encoder_pll_state.x2;
+    if(do_curve_retrack_when_needed){
+        const auto x1_encoder = state.encoder_pll_state.x1;
+        if(math::abs(sub_clamp2_downcast_iq20(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
+            const iiq32 x1_curve_retrack = math::step_to(x1_encoder, x1_traj, make_iiq32(RETRACK_LEAD_X1));
+            const auto x2_curve_retrack = state.encoder_pll_state.x2;
 
-                curve_state.x1 = x1_curve_retrack;
-                curve_state.x2 = x2_curve_retrack;
-                state.retrack_count++;
-                e1 = sub_clamp2_downcast_iq20(x1_traj, x1_curve_retrack, 100);
-            }
+            curve_state.x1 = x1_curve_retrack;
+            curve_state.x2 = x2_curve_retrack;
+            state.retrack_count++;
+            e1 = sub_clamp2_downcast_iq20(x1_traj, x1_curve_retrack, 100);
         }
-        
-        const iq20 e2 = math::clamp2(x2_traj - curve_state.x2, E2_LIMIT);
-
-        const auto u = CURVE_NLTD_FHAN({iq16(e1), iq16(e2)});
-
-        const auto next_x1 = curve_state.x1 + iiq32(extended_mul(curve_state.x2, TSAMPLE));
-        const auto next_x2 = math::clamp2(curve_state.x2 + iq20(u) * TSAMPLE, CURVE_X2_LIMIT);
-
-        const auto delta_x2 = next_x2 - curve_state.x2;
-
-        curve_state.x1 = next_x1;
-        curve_state.x2 = next_x2;
-        // curve_state.x3 = math::closer_to_zero(iq16(u), lpf_2000hz(curve_state.x3, iq16(delta_x2) * FOC_FREQ));
-        curve_state.x3 = iq16(delta_x2) * FOC_FREQ;
-        curve_state.u = u;
     }
+    
+    const iq20 e2 = math::clamp2(hp_traj_x2 - curve_state.x2, E2_LIMIT);
+
+    const auto u = CURVE_NLTD_FHAN({iq16(e1), iq16(e2)});
+
+    const auto next_x1 = curve_state.x1 + iiq32(extended_mul(curve_state.x2, TSAMPLE));
+    const auto next_x2 = math::clamp2(curve_state.x2 + iq20(u) * TSAMPLE, CURVE_X2_LIMIT);
+
+    const auto delta_x2 = next_x2 - curve_state.x2;
+
+    curve_state.x1 = next_x1;
+    curve_state.x2 = next_x2;
+    // curve_state.x3 = math::closer_to_zero(iq16(u), lpf_2000hz(curve_state.x3, iq16(delta_x2) * FOC_FREQ));
+    curve_state.x3 = iq16(delta_x2) * FOC_FREQ;
+    curve_state.u = u;
 }
 
 
@@ -1232,6 +1244,288 @@ void process_harmonic_suppression(
 #endif
 
 
+[[maybe_unused]] __no_inline static 
+void process_deadcomp_generate(
+    AllState & state, 
+    const FnSwitches fn_switches
+){
+    // const bool deadtime_comp_en = true;
+    const bool deadtime_comp_en = fn_switches.deadtime_compensate_en;
+
+    if(deadtime_comp_en){
+        // https://www.zhihu.com/question/270446098/answer/3215795384
+        // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
+
+        const auto uvw_curr_fastlp = state.uvw_curr_fastlp;
+        [[maybe_unused]] const auto weak_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 3;
+        [[maybe_unused]] const auto strong_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 6;
+        static constexpr auto DEADTIME_COMP_DUTYCYCLE = iq16(
+            (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
+        );
+
+        // [[maybe_unused]] static constexpr auto f = (float)DEADTIME_COMP_DUTYCYCLE;
+
+        [[maybe_unused]] static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
+        [[maybe_unused]] static constexpr auto TWO_BY_3 = uq32(2.0 / 3.0);
+        [[maybe_unused]] static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
+
+
+        UvwCoord<iq16> uvw_dutycycle_deadcomp;
+        [[maybe_unused]] auto & state_sign = state.deadcomp_state.uvw_sign;
+        [[maybe_unused]] auto & state_strong = state.deadcomp_state.uvw_strong;
+        [[maybe_unused]] auto prev_sign = state.deadcomp_state.uvw_sign;
+        [[maybe_unused]] auto prev_strong = state.deadcomp_state.uvw_strong;
+        
+        #if 0
+
+        #define REDETECT_PHASE(idx)\
+        if(prev_strong[idx]){\
+            if(prev_sign[idx] >= 0){\
+                if(uvw_curr_fastlp[idx] < strong_flip_threshold){\
+                    state_sign[idx] = -1;\
+                    state_strong[idx] = false;\
+                }\
+            }else{\
+                if(uvw_curr_fastlp[idx] > -strong_flip_threshold){\
+                    state_sign[idx] = 1;\
+                    state_strong[idx] = false;\
+                }\
+            }\
+        }else{\
+            if(prev_sign[idx] >= 0){\
+                if(uvw_curr_fastlp[idx] < -weak_flip_threshold){\
+                    state_sign[idx] = -1;\
+                    state_strong[idx] = true;\
+                }\
+            }else{\
+                if(uvw_curr_fastlp[idx] > weak_flip_threshold){\
+                    state_sign[idx] = 1;\
+                    state_strong[idx] = true;\
+                }\
+            }\
+        }
+        #else
+
+        #define REDETECT_PHASE(idx)\
+        state_sign[idx] = uvw_curr_fastlp[idx] > 0 ? 1 : -1;
+
+        #endif
+
+
+        REDETECT_PHASE(0)
+        REDETECT_PHASE(1)
+        REDETECT_PHASE(2)
+        // uvw_dutycycle_deadcomp[0] = (prev_sign[1] + prev_sign[2]) * DEADTIME_COMP_DUTYCYCLE;
+        // uvw_dutycycle_deadcomp[1] = (prev_sign[2] + prev_sign[0]) * DEADTIME_COMP_DUTYCYCLE;
+        // uvw_dutycycle_deadcomp[2] = (prev_sign[0] + prev_sign[1]) * DEADTIME_COMP_DUTYCYCLE;
+
+        uvw_dutycycle_deadcomp[0] = (prev_sign[0]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+        uvw_dutycycle_deadcomp[1] = (prev_sign[1]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+        uvw_dutycycle_deadcomp[2] = (prev_sign[2]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
+
+        state.uvw_dutycycle_deadcomp = uvw_dutycycle_deadcomp;
+        state.uvw_dutycycle_genout += uvw_dutycycle_deadcomp;
+    }
+}
+
+[[maybe_unused]] __no_inline static 
+void process_hfi_generate(
+    AllState & state, 
+    const FnSwitches fn_switches
+){
+    auto & hfi_state = state.hfi_state;
+
+
+    // const bool hfi_enabled = true;
+    const auto hfi_method = fn_switches.hfi_method;
+    const bool hfi_enabled = hfi_method != HfiMethod::Disabled;
+    const bool hfi_use_spin = hfi_method == HfiMethod::Spin;
+
+    if(hfi_enabled){
+        auto & table = SINCOS_32STEP_TABLE;
+        static constexpr size_t table_size = std::tuple_size_v<std::decay_t<decltype(table)>>;
+        static_assert(std::has_single_bit(table_size));
+
+        const auto table_idx_mask = table_size - 1;
+        const auto hfi_modu_depth = HFI_MODU_DEPTH_LIMIT;
+
+
+        auto calc_spin_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
+            const auto lg2_len_hfi_samples = 5;
+            const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
+
+            const auto table_fact = table_size / len_hfi_samples;
+            
+            const auto now_hfi_idx = hfi_state.hfi_idx;
+            if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
+            const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
+            const auto [s_bin2,c_bin2] = table[(now_hfi_idx * table_fact * 2) & table_idx_mask];
+
+            const auto hfi_response = dot2v2(
+                state.alphabeta_curr_raw.alpha, c_bin1,
+                state.alphabeta_curr_raw.beta, s_bin1
+            );
+
+            if(hfi_state.hfi_is_neg_samp){
+                const auto di = hfi_response - hfi_state.hfi_response;
+                hfi_state.hfi_response = hfi_response;
+
+                auto next_hfi_idx = now_hfi_idx + 1;
+
+
+                if(next_hfi_idx >= len_hfi_samples){
+                    next_hfi_idx = 0;
+
+                    hfi_state.spinhfi_bin0_real_response = hfi_state.spinhfi_bin0_real_response_acc >> lg2_len_hfi_samples;
+                    hfi_state.spinhfi_bin0_real_response_acc = 0;
+
+                    hfi_state.spinhfi_bin2_real_response = hfi_state.spinhfi_bin2_real_response_acc >> lg2_len_hfi_samples;
+                    hfi_state.spinhfi_bin2_real_response_acc = 0;
+
+                    hfi_state.spinhfi_bin2_imag_response = hfi_state.spinhfi_bin2_imag_response_acc >> lg2_len_hfi_samples;
+                    hfi_state.spinhfi_bin2_imag_response_acc = 0;
+
+                    hfi_state.spinhfi_bin2_real_response_slowlp = lpf_100hz(hfi_state.spinhfi_bin2_real_response_slowlp, hfi_state.spinhfi_bin2_real_response);
+                    hfi_state.spinhfi_bin2_imag_response_slowlp = lpf_100hz(hfi_state.spinhfi_bin2_imag_response_slowlp, hfi_state.spinhfi_bin2_imag_response);
+                }else{
+                    hfi_state.spinhfi_bin0_real_response_acc += di;
+
+                    hfi_state.spinhfi_bin2_real_response_acc += di * c_bin2;
+                    hfi_state.spinhfi_bin2_imag_response_acc += di * s_bin2;
+                }
+
+
+                hfi_state.hfi_idx = next_hfi_idx;
+            }else{
+                hfi_state.hfi_response = hfi_response;
+            }
+
+
+            auto bin2_real_response = hfi_state.spinhfi_bin2_real_response;
+            auto bin2_imag_response = hfi_state.spinhfi_bin2_imag_response;
+
+            if(math::abs(state.hfi_pll_state.angluar_speed_integral.to_turns()) > 10){
+                bin2_real_response -= hfi_state.spinhfi_bin2_real_response_slowlp;
+                bin2_imag_response -= hfi_state.spinhfi_bin2_imag_response_slowlp;
+            }
+
+            HFI_PLL_COEFFS.iterate(state.hfi_pll_state, {
+                iq16((bin2_imag_response) * 35),
+                iq16((bin2_real_response) * 35)
+            });
+
+            // HFI_PLL_COEFFS.iterate_err(state.hfi_pll_state,
+            //     iq16(iq32(math::atan2pu(bin2_imag_response, bin2_real_response)) - iq32(state.hfi_pll_state.angle.to_turns()))
+            // );
+
+            const auto now_hfi_lap_angle2x = state.hfi_pll_state.angle.cast_inner<uq16>();
+
+            const auto hfi_diff_angle2x = (now_hfi_lap_angle2x.cast_inner<iq16>()
+                - hfi_state.prev_hfi_lap_angle2x.cast_inner<iq16>()).signed_normalized();
+
+            hfi_state.prev_hfi_lap_angle2x = now_hfi_lap_angle2x;
+            hfi_state.hfi_multilap_angle2x = hfi_state.hfi_multilap_angle2x + hfi_diff_angle2x;
+
+            auto hfi_elec_angle = make_angular_from_turns(uq32(math::frac(hfi_state.hfi_multilap_angle2x.to_turns() >> 1)));
+            state.hfi_elec_angle = hfi_elec_angle;
+
+            if(hfi_state.hfi_is_neg_samp){
+                hfi_state.hfi_is_neg_samp = false;
+                return AlphaBetaCoord<iq20>{
+                    .alpha = hfi_modu_depth * c_bin1,
+                    .beta = hfi_modu_depth * s_bin1,
+                };
+            }else{
+                hfi_state.hfi_is_neg_samp = true;
+                return AlphaBetaCoord<iq20>{
+                    .alpha = (-hfi_modu_depth) * c_bin1,
+                    .beta = (-hfi_modu_depth) * s_bin1,
+                };
+            }
+        };
+
+
+
+
+        auto calc_pulse_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
+            const auto lg2_len_hfi_samples = 5;
+            const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
+
+            const auto table_fact = table_size / len_hfi_samples;
+
+            // const Angular<uq32> est_angle = state.hfi_pll_state.angle;
+            #if 0
+            const Angular<uq32> est_angle = Zero;
+            const auto est_angle_sincos = math::Rotation2<iq31>::from_angle(est_angle);
+            #else
+            const Angular<uq32> est_angle = state.hfi_pll_state.angle;
+            const auto est_angle_sincos = math::Rotation2<iq31>::from_angle(est_angle);
+
+            #endif
+
+
+            const auto now_hfi_idx = hfi_state.hfi_idx;
+            if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
+            const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
+
+            const auto est_dq_curr = state.alphabeta_curr_raw.inv_rotate(est_angle_sincos);
+
+            // if(hfi_state.hfi_is_neg_samp){
+                // const auto di = hfi_response - hfi_state.hfi_response;
+                // hfi_state.hfi_response = hfi_response;
+
+                auto next_hfi_idx = now_hfi_idx + 1;
+                if(next_hfi_idx >= len_hfi_samples){
+                    next_hfi_idx = 0;
+                }else{
+
+                }
+
+                // hfi_state.pulsehfi_q_response = di * c_bin1;
+                hfi_state.pulsehfi_q_response = lpf_500hz(hfi_state.pulsehfi_q_response, est_dq_curr.q * c_bin1);
+                // hfi_state.pulsehfi_q_response = est_dq_curr.q / est_dq_curr.d;
+                // hfi_state.pulsehfi_q_response = est_dq_curr.d;
+
+
+                hfi_state.hfi_idx = next_hfi_idx;
+
+            // }else{
+            //     hfi_state.hfi_response = hfi_response;
+            // }
+
+
+            HFI_PLL_COEFFS.iterate_err(state.hfi_pll_state, hfi_state.pulsehfi_q_response * 0.9_iq16);
+            auto hfi_elec_angle = state.hfi_pll_state.angle;
+            state.hfi_elec_angle = hfi_elec_angle + make_angular_from_turns(0.5_uq32);
+
+
+            const auto dq_dutycycle = DqCoord<iq20>{
+                // hfi_modu_depth * (hfi_state.hfi_is_neg_samp ? c_bin1 : -c_bin1),
+                hfi_modu_depth * (c_bin1),
+                0.0_iq20
+            };
+
+            hfi_state.hfi_is_neg_samp = !hfi_state.hfi_is_neg_samp;
+
+            return (dq_dutycycle).rotate(est_angle_sincos);
+
+        };
+
+
+        state.alphabeta_dutycycle_hfi = [&] -> AlphaBetaCoord<iq20> {
+            if(hfi_use_spin){
+                return calc_spin_hfi_dutycycle();
+            }else{
+                return calc_pulse_hfi_dutycycle();
+            }
+            __builtin_unreachable();
+        }();
+
+        state.alphabeta_dutycycle_final += state.alphabeta_dutycycle_hfi;
+    }
+
+}
+
 __no_inline static 
 void process_current_loop(
     AllState & state, 
@@ -1415,288 +1709,14 @@ void process_current_loop(
     const auto inv_busbar_volt = INV_BUSBAR_VOLT;
     const auto inv_busbar_volt_3by2 = (inv_busbar_volt * 3u) >> 1;
 
-    
-    {//hfi
-        auto & hfi_state = state.hfi_state;
-        auto alphabeta_dutycycle_final = (state.dq_volt_ctrl * inv_busbar_volt_3by2).rotate(elec_sincos);
+    // process_hfi_generate();
 
-
-        // const bool hfi_enabled = true;
-        const auto hfi_method = fn_switches.hfi_method;
-        const bool hfi_enabled = hfi_method != HfiMethod::Disabled;
-        const bool hfi_use_spin = hfi_method == HfiMethod::Spin;
-
-        if(hfi_enabled){
-            auto & table = SINCOS_32STEP_TABLE;
-            static constexpr size_t table_size = std::tuple_size_v<std::decay_t<decltype(table)>>;
-            static_assert(std::has_single_bit(table_size));
-
-            const auto table_idx_mask = table_size - 1;
-            const auto hfi_modu_depth = HFI_MODU_DEPTH_LIMIT;
-
-
-            auto calc_spin_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
-                const auto lg2_len_hfi_samples = 5;
-                const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
-
-                const auto table_fact = table_size / len_hfi_samples;
-                
-                const auto now_hfi_idx = hfi_state.hfi_idx;
-                if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
-                const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
-                const auto [s_bin2,c_bin2] = table[(now_hfi_idx * table_fact * 2) & table_idx_mask];
-
-                const auto hfi_response = dot2v2(
-                    state.alphabeta_curr_raw.alpha, c_bin1,
-                    state.alphabeta_curr_raw.beta, s_bin1
-                );
-
-                if(hfi_state.hfi_is_neg_samp){
-                    const auto di = hfi_response - hfi_state.hfi_response;
-                    hfi_state.hfi_response = hfi_response;
-
-                    auto next_hfi_idx = now_hfi_idx + 1;
-
-
-                    if(next_hfi_idx >= len_hfi_samples){
-                        next_hfi_idx = 0;
-
-                        hfi_state.spinhfi_bin0_real_response = hfi_state.spinhfi_bin0_real_response_acc >> lg2_len_hfi_samples;
-                        hfi_state.spinhfi_bin0_real_response_acc = 0;
-
-                        hfi_state.spinhfi_bin2_real_response = hfi_state.spinhfi_bin2_real_response_acc >> lg2_len_hfi_samples;
-                        hfi_state.spinhfi_bin2_real_response_acc = 0;
-
-                        hfi_state.spinhfi_bin2_imag_response = hfi_state.spinhfi_bin2_imag_response_acc >> lg2_len_hfi_samples;
-                        hfi_state.spinhfi_bin2_imag_response_acc = 0;
-
-                        hfi_state.spinhfi_bin2_real_response_slowlp = lpf_100hz(hfi_state.spinhfi_bin2_real_response_slowlp, hfi_state.spinhfi_bin2_real_response);
-                        hfi_state.spinhfi_bin2_imag_response_slowlp = lpf_100hz(hfi_state.spinhfi_bin2_imag_response_slowlp, hfi_state.spinhfi_bin2_imag_response);
-                    }else{
-                        hfi_state.spinhfi_bin0_real_response_acc += di;
-
-                        hfi_state.spinhfi_bin2_real_response_acc += di * c_bin2;
-                        hfi_state.spinhfi_bin2_imag_response_acc += di * s_bin2;
-                    }
-
-
-                    hfi_state.hfi_idx = next_hfi_idx;
-                }else{
-                    hfi_state.hfi_response = hfi_response;
-                }
-
-
-                auto bin2_real_response = hfi_state.spinhfi_bin2_real_response;
-                auto bin2_imag_response = hfi_state.spinhfi_bin2_imag_response;
-
-                if(math::abs(state.hfi_pll_state.angluar_speed_integral.to_turns()) > 10){
-                    bin2_real_response -= hfi_state.spinhfi_bin2_real_response_slowlp;
-                    bin2_imag_response -= hfi_state.spinhfi_bin2_imag_response_slowlp;
-                }
-
-                HFI_PLL_COEFFS.iterate(state.hfi_pll_state, {
-                    iq16((bin2_imag_response) * 35),
-                    iq16((bin2_real_response) * 35)
-                });
-
-                // HFI_PLL_COEFFS.iterate_err(state.hfi_pll_state,
-                //     iq16(iq32(math::atan2pu(bin2_imag_response, bin2_real_response)) - iq32(state.hfi_pll_state.angle.to_turns()))
-                // );
-
-                const auto now_hfi_lap_angle2x = state.hfi_pll_state.angle.cast_inner<uq16>();
-
-                const auto hfi_diff_angle2x = (now_hfi_lap_angle2x.cast_inner<iq16>()
-                    - hfi_state.prev_hfi_lap_angle2x.cast_inner<iq16>()).signed_normalized();
-
-                hfi_state.prev_hfi_lap_angle2x = now_hfi_lap_angle2x;
-                hfi_state.hfi_multilap_angle2x = hfi_state.hfi_multilap_angle2x + hfi_diff_angle2x;
-
-                auto hfi_elec_angle = make_angular_from_turns(uq32(math::frac(hfi_state.hfi_multilap_angle2x.to_turns() >> 1)));
-                state.hfi_elec_angle = hfi_elec_angle;
-
-                if(hfi_state.hfi_is_neg_samp){
-                    hfi_state.hfi_is_neg_samp = false;
-                    return AlphaBetaCoord<iq20>{
-                        .alpha = hfi_modu_depth * c_bin1,
-                        .beta = hfi_modu_depth * s_bin1,
-                    };
-                }else{
-                    hfi_state.hfi_is_neg_samp = true;
-                    return AlphaBetaCoord<iq20>{
-                        .alpha = (-hfi_modu_depth) * c_bin1,
-                        .beta = (-hfi_modu_depth) * s_bin1,
-                    };
-                }
-            };
-
-
-
-
-            auto calc_pulse_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
-                const auto lg2_len_hfi_samples = 5;
-                const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
-
-                const auto table_fact = table_size / len_hfi_samples;
-
-                // const Angular<uq32> est_angle = state.hfi_pll_state.angle;
-                #if 0
-                const Angular<uq32> est_angle = Zero;
-                const auto est_angle_sincos = math::Rotation2<iq31>::from_angle(est_angle);
-                #else
-                const Angular<uq32> est_angle = state.hfi_pll_state.angle;
-                const auto est_angle_sincos = math::Rotation2<iq31>::from_angle(est_angle);
-
-                #endif
-
-
-                const auto now_hfi_idx = hfi_state.hfi_idx;
-                if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
-                const auto [s_bin1,c_bin1] = table[(now_hfi_idx * table_fact) & table_idx_mask];
-
-                const auto est_dq_curr = state.alphabeta_curr_raw.inv_rotate(est_angle_sincos);
-
-                // if(hfi_state.hfi_is_neg_samp){
-                    // const auto di = hfi_response - hfi_state.hfi_response;
-                    // hfi_state.hfi_response = hfi_response;
-
-                    auto next_hfi_idx = now_hfi_idx + 1;
-                    if(next_hfi_idx >= len_hfi_samples){
-                        next_hfi_idx = 0;
-                    }else{
-
-                    }
-
-                    // hfi_state.pulsehfi_q_response = di * c_bin1;
-                    hfi_state.pulsehfi_q_response = lpf_500hz(hfi_state.pulsehfi_q_response, est_dq_curr.q * c_bin1);
-                    // hfi_state.pulsehfi_q_response = est_dq_curr.q / est_dq_curr.d;
-                    // hfi_state.pulsehfi_q_response = est_dq_curr.d;
-
-
-                    hfi_state.hfi_idx = next_hfi_idx;
-
-                // }else{
-                //     hfi_state.hfi_response = hfi_response;
-                // }
-
-
-                HFI_PLL_COEFFS.iterate_err(state.hfi_pll_state, hfi_state.pulsehfi_q_response * 0.9_iq16);
-                auto hfi_elec_angle = state.hfi_pll_state.angle;
-                state.hfi_elec_angle = hfi_elec_angle + make_angular_from_turns(0.5_uq32);
-
-
-                const auto dq_dutycycle = DqCoord<iq20>{
-                    // hfi_modu_depth * (hfi_state.hfi_is_neg_samp ? c_bin1 : -c_bin1),
-                    hfi_modu_depth * (c_bin1),
-                    0.0_iq20
-                };
-
-                hfi_state.hfi_is_neg_samp = !hfi_state.hfi_is_neg_samp;
-
-                return (dq_dutycycle).rotate(est_angle_sincos);
-
-            };
-
-
-            state.alphabeta_dutycycle_hfi = [&] -> AlphaBetaCoord<iq20> {
-                if(hfi_use_spin){
-                    return calc_spin_hfi_dutycycle();
-                }else{
-                    return calc_pulse_hfi_dutycycle();
-                }
-                __builtin_unreachable();
-            }();
-
-            alphabeta_dutycycle_final = alphabeta_dutycycle_final + state.alphabeta_dutycycle_hfi;
-        }
-
-        state.alphabeta_dutycycle_final = alphabeta_dutycycle_final;
-        state.alphabeta_volt_final = alphabeta_dutycycle_final * BUSBAR_VOLT;
-    }
-
+    state.alphabeta_dutycycle_final = (state.dq_volt_ctrl * inv_busbar_volt_3by2).rotate(elec_sincos);
+    state.alphabeta_volt_final = state.alphabeta_dutycycle_final * BUSBAR_VOLT;
 
     {
-        auto uvw_dutycycle_genout = SVM(state.alphabeta_dutycycle_final);
-
-        // const bool deadtime_comp_en = true;
-        const bool deadtime_comp_en = fn_switches.deadtime_compensate_en;
-
-        if(deadtime_comp_en){
-            // https://www.zhihu.com/question/270446098/answer/3215795384
-            // 《SVPWM逆变器死区补偿的研究与实现》 魏凯
-
-            const auto uvw_curr_fastlp = state.uvw_curr_fastlp;
-            [[maybe_unused]] const auto weak_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 3;
-            [[maybe_unused]] const auto strong_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 6;
-            static constexpr auto DEADTIME_COMP_DUTYCYCLE = iq16(
-                (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
-            );
-
-            // [[maybe_unused]] static constexpr auto f = (float)DEADTIME_COMP_DUTYCYCLE;
-
-            [[maybe_unused]] static constexpr auto ONE_BY_3 = uq32(1.0 / 3.0);
-            [[maybe_unused]] static constexpr auto TWO_BY_3 = uq32(2.0 / 3.0);
-            [[maybe_unused]] static constexpr auto ONE_BY_SQRT3 = uq32(1.0 / 1.73205080757);
-
-
-            UvwCoord<iq16> uvw_dutycycle_deadcomp;
-            [[maybe_unused]] auto & state_sign = state.deadcomp_state.uvw_sign;
-            [[maybe_unused]] auto & state_strong = state.deadcomp_state.uvw_strong;
-            [[maybe_unused]] auto prev_sign = state.deadcomp_state.uvw_sign;
-            [[maybe_unused]] auto prev_strong = state.deadcomp_state.uvw_strong;
-            
-            #if 0
-
-            #define REDETECT_PHASE(idx)\
-            if(prev_strong[idx]){\
-                if(prev_sign[idx] >= 0){\
-                    if(uvw_curr_fastlp[idx] < strong_flip_threshold){\
-                        state_sign[idx] = -1;\
-                        state_strong[idx] = false;\
-                    }\
-                }else{\
-                    if(uvw_curr_fastlp[idx] > -strong_flip_threshold){\
-                        state_sign[idx] = 1;\
-                        state_strong[idx] = false;\
-                    }\
-                }\
-            }else{\
-                if(prev_sign[idx] >= 0){\
-                    if(uvw_curr_fastlp[idx] < -weak_flip_threshold){\
-                        state_sign[idx] = -1;\
-                        state_strong[idx] = true;\
-                    }\
-                }else{\
-                    if(uvw_curr_fastlp[idx] > weak_flip_threshold){\
-                        state_sign[idx] = 1;\
-                        state_strong[idx] = true;\
-                    }\
-                }\
-            }
-            #else
-
-            #define REDETECT_PHASE(idx)\
-            state_sign[idx] = uvw_curr_fastlp[idx] > 0 ? 1 : -1;
-
-            #endif
-
-
-            REDETECT_PHASE(0)
-            REDETECT_PHASE(1)
-            REDETECT_PHASE(2)
-            // uvw_dutycycle_deadcomp[0] = (prev_sign[1] + prev_sign[2]) * DEADTIME_COMP_DUTYCYCLE;
-            // uvw_dutycycle_deadcomp[1] = (prev_sign[2] + prev_sign[0]) * DEADTIME_COMP_DUTYCYCLE;
-            // uvw_dutycycle_deadcomp[2] = (prev_sign[0] + prev_sign[1]) * DEADTIME_COMP_DUTYCYCLE;
-
-            uvw_dutycycle_deadcomp[0] = (prev_sign[0]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
-            uvw_dutycycle_deadcomp[1] = (prev_sign[1]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
-            uvw_dutycycle_deadcomp[2] = (prev_sign[2]) * (DEADTIME_COMP_DUTYCYCLE * TWO_BY_3);
-
-            uvw_dutycycle_genout = uvw_dutycycle_genout + uvw_dutycycle_deadcomp;
-            state.uvw_dutycycle_deadcomp = uvw_dutycycle_deadcomp;
-        }
-
-        state.uvw_dutycycle_genout = uvw_dutycycle_genout;
-
+        state.uvw_dutycycle_genout = SVM(state.alphabeta_dutycycle_final);
+        process_deadcomp_generate(state, fn_switches);
     }
 };
 
@@ -1914,8 +1934,8 @@ void myesc_main(){
     auto op_flags_ = OpFlags::from_default();
     op_flags_.dc_calibrate_unready = true;
 
-    // op_flags_.sideshaft_calibrate_unready = false;
-    op_flags_.sideshaft_calibrate_unready = true;
+    op_flags_.sideshaft_calibrate_unready = false;
+    // op_flags_.sideshaft_calibrate_unready = true;
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.current_harmonic_suppression_en = 0;
@@ -1979,9 +1999,7 @@ void myesc_main(){
         const bool sideshaft_calibrate_done = !op_flags.sideshaft_calibrate_unready;
         const bool do_sideshaft_calibrate = sideshaft_compensate and (!sideshaft_calibrate_done);
 
-        #if 1
-        // if(true){
-        // if(false){
+
         const auto encoder_position_raw = mag_encoder_get_angle().to_turns();
 
         auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
@@ -2055,7 +2073,7 @@ void myesc_main(){
                 state.encoder_abs_position64, encoder_position);
         }
 
-        #endif
+
 
         state.encoder_get_done_tick = get_timer_tick();
 
@@ -2093,7 +2111,25 @@ void myesc_main(){
             }
 
         }else{
-            process_position_calc(state, fn_switches);
+
+            state.encoder_rel_position64 = state.encoder_abs_position64 
+                - iiq32::from_bits(state.encoder_initial_position.to_bits());
+
+            process_encoder_pll(state, fn_switches, state.encoder_rel_position64);
+
+            auto encoder_abs_position32 = iiq32_crop_frac(state.encoder_abs_position64);
+
+            const auto elec_align_offset = 0.946429_uq32;
+            const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32 - elec_align_offset));
+            state.sensed_elec_angle = mech_angle * POLE_PAIRS;
+
+            const auto mech_speed = state.encoder_pll_state.x2;
+            state.sensed_elec_speed = iq16(mech_speed) * POLE_PAIRS;
+
+
+            state.elec_angle = state.sensed_elec_angle;
+            state.elec_speed = state.sensed_elec_speed;
+
 
             if(not do_sideshaft_calibrate){
                 [[maybe_unused]] const auto now_secs = clock::seconds();
@@ -2112,7 +2148,7 @@ void myesc_main(){
                 #else
                 static uint32_t tick = 0;
                 tick++;
-                if(tick >= FOC_FREQ * 80) tick = 0;
+                if(tick >= FOC_FREQ * 10) tick = 0;
 
                 static constexpr auto RBTRIP_PARAS = motioner::RoundtripParaments{
                     .fs = FOC_FREQ,
@@ -2131,7 +2167,12 @@ void myesc_main(){
                 traj_state.x3 = samp_point.x3;
 
                 #endif
-                process_traj_shape(state, fn_switches, traj_state.x1, traj_state.x2, traj_state.x3);
+
+
+                process_traj_preshape(state, fn_switches, traj_state.x1, traj_state.x2, traj_state.x3);
+
+                auto & hp_traj_state = state.traj_smooth_state;
+                process_traj_shape(state, fn_switches, hp_traj_state.x1, hp_traj_state.x2, hp_traj_state.x3);
 
                 const auto curve_x1 = state.curve_state.x1;
                 const auto curve_x2 = state.curve_state.x2;
@@ -2536,22 +2577,6 @@ void myesc_main(){
             // state.uvw_curr_raw.w,
             // math::atan2pu(state.flux_ob_state.x2,
 
-            // state.observer_pll_state.angluar_speed.to_turns(),
-            // state.flux_ob_state.lem1,
-            // state.flux_ob_state.lem2,
-            // state.flux_ob_state.flux_err,
-            // state.flux_ob_state.abs_lem,
-            // state.flux_ob_state.x2,
-            // state.flux_ob_state.x2_slowlp,
-            // state.sensed_elec_angle.to_turns(),
-            // state.busbar_curr_lp,
-            // state.torque_curr_cmd,
-            // state.dq_curr_raw,
-            // state.dq_curr_ref,
-            // state.speed_eso_state.speed_est,
-            // state.to_turns(),
-            // state.sensed_elec_speed,
-
             // uint16_t(TIM_INST->ATRLR)
             // timer.oc<4>().cvr(),
             // timer.arr()
@@ -2575,7 +2600,7 @@ void myesc_main(){
 
         // auto & ec_state = state.encoder_calibrate_state;
 
-        [[maybe_unused]] auto encode_curr_err = [](const iq20 curr_err) -> int16_t{
+        [[maybe_unused]] auto encode_curr_eps = [](const iq20 curr_err) -> int16_t{
             // int16_t bits = (curr_err.to_bits() >> 8) & ((1u << 12) - 1);
             static constexpr size_t LG2_RESOLUTION = 12;
             static constexpr size_t Q_NUM = 20;
@@ -2591,19 +2616,64 @@ void myesc_main(){
         );
         #endif
 
+        enum class HomeMethod:uint8_t{
+            Initial,
+            // CeilInitial,
+            // FloorInitial,
+            NearestZerosign,
+            CeilZerosign,
+            FloorZerosign,
+        };
+
+        [[maybe_unused]] const auto encoder_rel_p64 = state.encoder_rel_position64;
+        [[maybe_unused]] const auto encoder_initial_p32 = state.encoder_initial_position;
+        [[maybe_unused]] auto calc_home_position = [&](HomeMethod method) -> iiq32{
+            // const auto encoder_abs_p64 = state.encoder_abs_position64;
+
+            // const auto method
+            switch(method){
+                case HomeMethod::Initial:{
+                    return 0;
+                    break;
+                }
+                // case HomeMethod::CeilInitial:{
+
+                //     break;
+                // }
+                // case HomeMethod::FloorInitial:{
+                //     break;
+                // }
+                case HomeMethod::NearestZerosign:{
+                    const bool need_up_round = bool(encoder_initial_p32.to_bits() >> 31);
+                    auto p64 = iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits()));
+                    return iiq32_add_revs(p64, int32_t(need_up_round));
+                    break;
+                }
+                case HomeMethod::CeilZerosign:{
+                    return iiq32_add_revs(iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits())),1);
+                    break;
+                }
+                case HomeMethod::FloorZerosign:{
+                    return iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits()));
+                    break;
+                }
+            }
+            return 0;
+        };
+
         if(true)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
+            math::fixed_downcast<16>(state.traj_smooth_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_pll_state.x1),
-
-            // uq32::from_bits(state.encoder_abs_position64.to_bits() & UINT32_MAX) * POLE_PAIRS * 6 * 8,
-            // state.curve_state.debug.x1_retrack,
-            // math::fixed_downcast<16>(state.peac_state.hat_turns),
-            // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
-            // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
-            // state.encoder_pll_state.x2,
-            // (state.curve_state.x2),
+            state.traj_smooth_state.x2,
+            state.curve_state.x2,
+            // state.sensed_elec_angle.to_turns(),
+            // state.sensed_elec_speed,
+            // state.torque_curr_cmd,
+            // math::fixed_downcast<16>(calc_home_position(HomeMethod::NearestZerosign)),
+            // math::fixed_downcast<16>(calc_home_position(HomeMethod::CeilZerosign)),
+            // math::fixed_downcast<16>(calc_home_position(HomeMethod::FloorZerosign)),
             // state.peac_state.hat_b1,
             // state.peac_state.hat_b2,
             // state.peac_state.debug.e,
@@ -2614,8 +2684,9 @@ void myesc_main(){
             // state.torque_curr_cmd,
             // state.torque_curr_veryslowlp,
             // iq20::from(float(math::bf16(float(state.torque_curr_veryslowlp)))),
-            // encode_curr_err(state.torque_curr_veryslowlp),
-            state.retrack_count,
+            // encode_curr_eps(state.torque_curr_veryslowlp),
+            // state.retrack_count,
+            // state.busbar_curr_lp,
             // state.debug.traj_e1,
             // math::fixed_downcast<16>(state.debug.traj_x1),
             // math::fixed_downcast<16>(state.debug.curve_x1),
