@@ -84,4 +84,30 @@ using MotorProfile = MotorProfile_Gim4310;
 // using MotorProfile = MotorProfile_2207;
 
 
+static consteval uq32 calc_uq32_rcp(const auto x){
+    const uint32_t bits = uint32_t((1.0f / x) * (1ull << 32));
+    return  uq32::from_bits(bits + 1);
+}
+
+
+static constexpr auto PHASE_INDUCTANCE_MH = MotorProfile::PHASE_INDUCTANCE_MH;
+static constexpr auto PHASE_RESISTANCE_OHM = MotorProfile::PHASE_RESISTANCE_OHM;
+static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ;
+static constexpr auto Q_AXIS_INDUCTANCE_MH = MotorProfile::Q_AXIS_INDUCTANCE_MH;
+static constexpr auto D_AXIS_INDUCTANCE_MH = MotorProfile::D_AXIS_INDUCTANCE_MH;
+static constexpr auto FLUX_LINKAGE = MotorProfile::FLUX_LINKAGE;
+static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
+static constexpr uq32 INV_POLE_PAIRS = calc_uq32_rcp(POLE_PAIRS); 
+
+static constexpr size_t OBSERVER_PLL_FC = 65;
+static constexpr size_t HFI_PLL_FC = 65;
+static constexpr uq32 TSAMPLE = calc_uq32_rcp(FOC_FREQ);
+
+static constexpr int32_t CURVE_X2_LIMIT = 8;
+
+static constexpr int32_t E1_LIMIT = 100;
+static constexpr int32_t E2_LIMIT = 1000;
+
+static constexpr auto TORQUE_CURR_STEP_LIMIT = iq20(0.04);
+static constexpr auto TORQUE_CURR_LIMIT = iq20(5.5);
 }

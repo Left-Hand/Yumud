@@ -26,7 +26,6 @@
 #include "digipw/prelude/abdq.hpp"
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
-// #include "dsp/filter/butterworth/band.hpp"
 
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
@@ -35,9 +34,6 @@
 #include "motor_config.hpp"
 
 #include "core/math/clamp.hpp"
-// #include "core/math/float/fp8.hpp"
-// #include "core/math/float/bf16.hpp"
-
 #include "core/sdk.hpp"
 
 #include "core/string/owned/thrifty_string.hpp"
@@ -46,28 +42,13 @@
 #include "roundtrip_traj_generator.hpp"
 
 using namespace ymd;
-
-using namespace ymd::drivers;
-
-using namespace ymd::dsp::adrc;
 using namespace ymd::myesc;
-
-
 
 
 #define DBG_UART hal::usart2
 
 // template<size_t Q>
 // static constexpr traingle_pu(const uq32 t, const )
-
-enum class [[nodiscard]] DemoTrajPattern:uint8_t{
-    Stop,
-    Straight,
-    Sine,
-    Saw,
-    Stairs,
-    Triangle
-};
 
 
 
@@ -123,6 +104,17 @@ static_assert(sub_clamp2_downcast_iq20(iiq32(-6000), iiq32(-800), (1000)).to_bit
 static_assert(sub_clamp2_downcast_iq20(iiq32(3.5), iiq32(1.2), (1000)).to_bits() == iq20(2.3).to_bits());
 // static_assert(sub_clamp2_downcast_iq20(iiq32(13.5), iiq32(1.2), (1000)).to_bits() == iq20(12.3).to_bits());
 static_assert(sub_clamp2_downcast_iq20(iiq32(0), iiq32(-800), (1000)).to_bits() == iq20(800).to_bits());
+
+
+
+enum class [[nodiscard]] DemoTrajPattern:uint8_t{
+    Stop,
+    Straight,
+    Sine,
+    Saw,
+    Stairs,
+    Triangle
+};
 
 
 __no_inline static constexpr TrajState
@@ -204,11 +196,6 @@ static constexpr size_t pow2(const size_t x){
     return __builtin_ctz(x);
 }
 
-static consteval uq32 calc_uq32_rcp(const auto x){
-    const uint32_t bits = uint32_t((1.0f / x) * (1ull << 32));
-    return  uq32::from_bits(bits + 1);
-}
-
 static_assert(pow2(1) == 0);
 static_assert(pow2(2) == 1);
 static_assert(pow2(16) == 4);
@@ -258,8 +245,6 @@ static constexpr math::fixed<Q, int32_t> lpf_allpass(
 
 
 
-static constexpr size_t OBSERVER_PLL_FC = 65;
-static constexpr size_t HFI_PLL_FC = 65;
 
 static constexpr auto OBSERVER_PLL_COEFFS = 
     dsp::PllCoeffs::from_fsfc(FOC_FREQ, OBSERVER_PLL_FC, 2.0_iq16);
@@ -269,18 +254,18 @@ static constexpr auto HFI_PLL_COEFFS =
 
 
 
-static constexpr uq32 TSAMPLE = calc_uq32_rcp(FOC_FREQ);
+
 static constexpr iq20 HW_TORQUE_CURRENT_LIMIT = 
     std::min(
         CURRENT_HALFSCALE_AMPS, 
-        iq20(BUSBAR_VOLT) * uq32(0.666) / MotorProfile::PHASE_RESISTANCE_OHM
+        iq20(BUSBAR_VOLT) * uq32(0.666) / PHASE_RESISTANCE_OHM
     ) * uq32(0.8);
 
 static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
-    .fc = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ,
-    .phase_inductance_mh = MotorProfile::PHASE_INDUCTANCE_MH,
-    .phase_resistance_ohm = MotorProfile::PHASE_RESISTANCE_OHM,
+    .fc = PREFERD_CURRENT_CUTOFF_FREQ,
+    .phase_inductance_mh = PHASE_INDUCTANCE_MH,
+    .phase_resistance_ohm = PHASE_RESISTANCE_OHM,
 };
 
 
@@ -294,19 +279,10 @@ static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
     .r = HIGHCUTOFF_ENCODER_LTD2O_R
 }).unwrap();
 
-static constexpr auto rdt = float(HIGHCUTOFF_ENCODER_LTD2O_R) / FOC_FREQ;
 
 
-static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
-static constexpr uq32 INV_POLE_PAIRS = calc_uq32_rcp(POLE_PAIRS); 
 
-static constexpr int32_t CURVE_X2_LIMIT = 8;
-
-static constexpr int32_t E1_LIMIT = 100;
-static constexpr int32_t E2_LIMIT = 1000;
-
-
-[[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = FhanPrecomputed<iq16>::from({
+[[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = dsp::adrc::FhanPrecomputed<iq16>::from({
     .r = 44.5_iq16,
     .h = 0.003_iq16,
 });
@@ -567,9 +543,9 @@ static void process_observer_calc(AllState & state, const FnSwitches fn_switches
 
     // if(1){//sensorless observer
     if(false){//sensorless observer
-        constexpr auto L = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
-        constexpr auto R = MotorProfile::PHASE_RESISTANCE_OHM;
-        constexpr auto lambda = MotorProfile::FLUX_LINKAGE;
+        constexpr auto L = PHASE_INDUCTANCE_MH * uq32(0.001);
+        constexpr auto R = PHASE_RESISTANCE_OHM;
+        constexpr auto lambda = FLUX_LINKAGE;
         auto & flux_ob_state = state.flux_ob_state;
 
         const auto iaib = state.alphabeta_curr_raw;
@@ -734,7 +710,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         // hat_b1 += e * (np.sin(n * hat_theta)) * l2dt
         // hat_b2 += e * (np.cos(n * hat_theta)) * l2dt
 
-        static constexpr size_t POLE_PAIRS = MotorProfile::POLE_PAIRS * 2;
+        static constexpr size_t POLE_PAIRS = POLE_PAIRS * 2;
         // static constexpr size_t POLE_PAIRS_6X = POLE_PAIRS * 6;
         static constexpr size_t POLE_PAIRS_6X = POLE_PAIRS;
         // [[maybe_unused]] static constexpr iq32 MAX_B = iq32((1.0 / TAU / POLE_PAIRS_6X));
@@ -809,7 +785,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
 
     {
         const auto encoder_position_offset = 0.946429_uq32;
-        const auto pole_pairs = MotorProfile::POLE_PAIRS;
+        const auto pole_pairs = POLE_PAIRS;
 
         auto encoder_abs_position64 = state.encoder_abs_position64;
 
@@ -1009,8 +985,8 @@ static void process_mechanical_loop(
 
     const auto & now_x1 = state.encoder_state_2o.x1;
 
-    constexpr auto torque_curr_step_limit = iq20(0.04);
-    constexpr auto torque_curr_limit = iq20(5.5);
+    constexpr auto torque_curr_step_limit = TORQUE_CURR_STEP_LIMIT;
+    constexpr auto torque_curr_limit = TORQUE_CURR_LIMIT;
 
     const auto loop_wiring = fn_switches.loop_wiring;
 
@@ -1224,8 +1200,8 @@ void process_harmonic_suppression(
             RUN_PI_CONTROLLER(vq6c, iq6c)
             RUN_PI_CONTROLLER(vq6s, iq6s)
 
-            constexpr auto L = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
-            // constexpr auto R = MotorProfile::PHASE_RESISTANCE_OHM;
+            constexpr auto L = PHASE_INDUCTANCE_MH * uq32(0.001);
+            // constexpr auto R = PHASE_RESISTANCE_OHM;
             const auto dec_factor = kp * phi_s - 6 * elec_omega_rads * L;
 
             vd6c += id6s * dec_factor;
@@ -1304,9 +1280,9 @@ void process_current_loop(
         const bool do_mtpv = fn_switches.mtpv_en;
 
 
-        constexpr auto ld_lq_diff = MotorProfile::Q_AXIS_INDUCTANCE_MH - MotorProfile::D_AXIS_INDUCTANCE_MH;
+        constexpr auto ld_lq_diff = Q_AXIS_INDUCTANCE_MH - D_AXIS_INDUCTANCE_MH;
 
-        constexpr auto lambda = 1000 * MotorProfile::FLUX_LINKAGE;
+        constexpr auto lambda = 1000 * FLUX_LINKAGE;
         constexpr auto ld_lq_diff_by_lambda = ld_lq_diff / lambda;
 
         if(do_mtpa){
@@ -1361,7 +1337,7 @@ void process_current_loop(
         const bool is_speed_stable = true;
         const auto omega_rads = elec_omega_rads * is_speed_stable;
         
-        const auto phase_ind = MotorProfile::PHASE_INDUCTANCE_MH * uq32(0.001);
+        const auto phase_ind = PHASE_INDUCTANCE_MH * uq32(0.001);
         
         
         const bool cross_decoupling_enabled = fn_switches.cross_decoupling_en;
@@ -1374,7 +1350,7 @@ void process_current_loop(
         const bool bemf_decoupling_enabled = fn_switches.bemf_decoupling_en;
 
         if(bemf_decoupling_enabled){
-            q_volt_decouple += MotorProfile::FLUX_LINKAGE * omega_rads;
+            q_volt_decouple += FLUX_LINKAGE * omega_rads;
         }
 
         state.dq_volt_decouple.d = d_volt_decouple;
@@ -1891,6 +1867,7 @@ void myesc_main(){
     });
 
     #if 1
+    using drivers::VCE2755;
     auto mag_encoder_ = VCE2755{
         &spi,
         spi.allocate_cs_pin(&mag_encoder_cs_pin_)
@@ -2629,8 +2606,6 @@ void myesc_main(){
             // math::fixed_downcast<16>(state.peac_state.hat_turns),
             // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
-            // uq32::from_bits((state.encoder_rel_position64.to_bits() & UINT32_MAX) * MotorProfile::POLE_PAIRS * 6),
-            // math::fixed_downcast<16>(state.encoder_state_2o.x1 * MotorProfile::POLE_PAIRS),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
             // state.encoder_state_2o.x2,
             // (state.curve_state.x2),
