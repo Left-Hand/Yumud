@@ -96,7 +96,7 @@ std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
     const TimerCountFreq count_freq
 ){
     if(count_freq.is<NearestFreq>()){
-        const auto arr_and_psc = hal::timer::ArrAndPsc::from_nearest_count_freq(
+        const auto arr_and_psc = hal::timer::ArrAndPsc::from_nearest_freq(
             aligned_bus_clk_freq,
             count_freq.unwrap_as<NearestFreq>().count, 
             {0, 65535}

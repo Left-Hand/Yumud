@@ -52,22 +52,187 @@ static constexpr Result<uq32, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint3
 }
 
 
-template<size_t Q>
-__always_inline static constexpr math::fixed<Q, int32_t> lpf_1o(
-    const math::fixed<Q, int32_t> y_prev,  // y[n-1]
-    const math::fixed<Q, int32_t> x,       // x[n]
-    const uq32 alpha
+
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_i32_uq32(
+    const int32_t a, 
+    const int32_t b, 
+    const uq32 ratio
 ){
-    return y_prev + (x - y_prev) * alpha;
+    return a + intrinsics::mul32hsu(b - a, ratio.to_bits());
 }
 
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr int32_t lerp_u32_uq32(
+    const uint32_t a, 
+    const uint32_t b, 
+    const uq32 ratio
+){
+    return a + intrinsics::mul32hu(b - a, ratio.to_bits());
+}
+
+
+template<typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D lerp_int_uq32(
+    const D a, const D b, const uq32 ratio
+){
+    if constexpr(std::is_signed_v<D>){
+        return lerp_i32_uq32(static_cast<int32_t>(a), static_cast<int32_t>(b), ratio);
+    }else{
+        return lerp_u32_uq32(static_cast<uint32_t>(a), static_cast<uint32_t>(b), ratio);
+    }
+}
+
+template<size_t Q, typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> lerp_fixed_uq32(
+    const math::fixed<Q, D> a, 
+    const math::fixed<Q, D> b, 
+    const uq32 ratio
+){
+    const auto y_bits = lerp_int_uq32(a.to_bits(), b.to_bits(), ratio);
+    return math::fixed<Q, D>::from_bits(y_bits);
+}
+
+template<size_t Q, typename D>
+requires(sizeof(D) <= 4)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> lerp_fixed(
+    const math::fixed<Q, D> a, 
+    const math::fixed<Q, D> b, 
+    const math::fixed<Q, D> ratio
+){
+    const auto ratio_uq32 = uq32::from_bits(ratio.to_bits() << (32u - Q));
+    return lerp_fixed_uq32(a, b, ratio_uq32);
+}
+
+
+
+
+struct alignas(4) [[nodiscard]] FracIndex final{
+    uq32 frac;
+    uint32_t index;
+};
+
+struct alignas(4) [[nodiscard]] TableLengthInfo final{
+    uint32_t len;
+    uint32_t leading_zeros;
+
+    static constexpr TableLengthInfo from_len(size_t len){
+        if(not std::has_single_bit(len)) __builtin_trap();
+        return TableLengthInfo{
+            .len = len,
+            .leading_zeros = uint32_t(__builtin_clz(len - 1))
+        };
+    }
+
+    static constexpr TableLengthInfo from_lg2_len(size_t lg2_len){
+        return TableLengthInfo{
+            .len = 1u << lg2_len,
+            .leading_zeros = 32 - lg2_len
+        };
+    }
+};
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+constexpr FracIndex pu_ratio_to_fracindex(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    return {frac, index};
+}
+
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+[[nodiscard]] constexpr uint32_t 
+pu_ratio_to_nearest_roundback_index(TableLengthInfo len_info, const uq32 ratio) {
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    //uppround
+    return (index + bool(frac.to_bits() >> 31)) & (len_info.len - 1);
+}
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_roundback(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    const D value = table_data[index];
+
+    const uint32_t next_index = (index + 1) & (len_info.len - 1);
+    const D next_value = table_data[next_index];
+
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_roundback(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+
+    const math::fixed<Q, D> value = table_data[index];
+
+    const uint32_t next_index = (index + 1) & (len_info.len - 1);
+    const math::fixed<Q, D>  next_value = table_data[next_index];
+
+    return lerp_fixed_uq32(value, next_value, frac);
+}
+
+
+template<typename D>
+requires(std::is_integral_v<D>)
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr D 
+invlerp_table_nonround(const D * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    
+    const D value = table_data[index];
+
+    uint32_t next_index = (index + 1);
+    if((next_index) >= len_info.len) return value;
+
+    const D next_value = table_data[next_index];
+    return lerp_int_uq32(value, next_value, frac);
+}
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> 
+invlerp_table_nonround(const math::fixed<Q, D> * table_data, const TableLengthInfo len_info, const uq32 ratio){
+    const uint32_t index = (ratio.to_bits() >> (len_info.leading_zeros));
+    const uq32 frac = ratio * len_info.len;
+    
+    const D value = table_data[index];
+
+    uint32_t next_index = (index + 1);
+    if((next_index) >= len_info.len) return value;
+
+    const D next_value = table_data[next_index];
+    return lerp_fixed_uq32(value, next_value, frac);
+}
+
+
+
+
+
+
 template<size_t Q>
-__always_inline static constexpr math::fixed<Q, int32_t> leaky_1o(
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, int32_t> lpf_1o(
     const math::fixed<Q, int32_t> y_prev,  // y[n-1]
     const math::fixed<Q, int32_t> x,       // x[n]
     const uq32 alpha
 ){
-    return x + (y_prev - x) * alpha;
+    return lerp_fixed_uq32(y_prev, x, alpha);
 }
 
 template<size_t Q>

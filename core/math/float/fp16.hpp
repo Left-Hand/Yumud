@@ -1,111 +1,17 @@
 #pragma once
 
-#include "core/math/real.hpp"
-#include <cstdint>
-#include <bit>
-#include <limits>
+#include "core/math/fixed/fixed.hpp"
+#include "fp16_utils.hpp"
 
 namespace ymd::math{
 
-namespace intrinsics{
-
-
-constexpr uint32_t f32inf = 255UL << 23;
-constexpr uint32_t f16inf = 31UL << 23;
-constexpr uint32_t sign_mask = 0x80000000U;
-constexpr uint32_t round_mask = ~0xFFFU;
-
-// FP32 → FP16 前向转换（魔术数字法）
-// FP16 格式：符号(1) | 指数(5, 偏差=15) | 尾数(10)
-// 范围：2^-14 到 2^15（≈0.0000610352 到 65504）
-// 形式化验证：见 core/math/float/formal_verification/verify_fp16_complete.py
-// 验证结果：✓ 符号保留、✓ 边界值、✓ 单调性、✓ 溢出/下溢、✓ 特殊值（∞/NaN）
-__attribute__((optimize("-Ofast"), const))
-static constexpr uint16_t fp32_to_fp16_nonfpu(float value){
-    constexpr uint32_t magic_bits = 15UL << 23;
-
-    uint32_t in = std::bit_cast<uint32_t>(value);
-    uint32_t sign = in & sign_mask;
-    in ^= sign;
-    uint16_t out = 0;
-
-    if (in >= f32inf){
-        // 特殊值：∞ 或 NaN
-        // in >= f32inf 时，in = f32inf（Inf）或 in > f32inf（NaN）
-        if (in > f32inf) {
-            // NaN 路径
-            out = (uint16_t)0x7FFFU;
-        } else {
-            // ∞ 路径
-            out = (uint16_t)0x7C00U;
-        }
-    } else {
-        // 正常范围：使用魔术数字法缩放
-        // in < f32inf 保证进入此分支
-        in &= round_mask;
-        float f = std::bit_cast<float>(in);
-        f *= std::bit_cast<float>(magic_bits);
-        in = std::bit_cast<uint32_t>(f);
-        in -= round_mask;
-
-        if(in > f16inf){
-            // 溢出处理
-            in = f16inf;
-        }
-        out = (uint16_t)(in >> 13U);
-    }
-    out |= (uint16_t)(sign >> 16U);  // 添加符号位
-    return out;
-}
-
-// FP16 → FP32 反向转换（显式格式转换）
-// 指数范围映射：FP16[0,31] → FP32[112,143]（加 112）
-// 处理零值、规范化数、非规范化数、特殊值
-// 形式化验证：见 core/math/float/formal_verification/verify_fp16_complete.py
-// 验证结果：✓ 零值、✓ 规范化数、✓ 非规范化数、✓ 往返转换一致性、✓ 特殊值
-__attribute__((optimize("-Ofast"), const))
-static constexpr float fp16_to_fp32_nonfpu(uint16_t value){
-    uint32_t sign = value & 0x8000U;
-    uint32_t exp = (value >> 10U) & 0x1FU;
-    uint32_t mant = value & 0x3FFU;
-
-    uint32_t out_bits = 0;
-
-    if (exp == 0 && mant == 0) {
-        // 零值路径：±0
-        // exp=0 && mant=0 互斥于后续所有分支
-        out_bits = 0;
-    } else if (exp == 0) {
-        // 非规范化数路径（exp=0, mant≠0）
-        // 指数固定为 2^-14，FP32 中 exp32 = 113
-        // mant: FP16[10 bits] → FP32[23 bits] = mant << 13
-        if (!(mant != 0)) __builtin_unreachable();  // 确保 mant≠0
-        uint32_t exp32 = 113U;
-        uint32_t mant32 = mant << 13U;
-        out_bits = (exp32 << 23U) | mant32;
-    } else if (exp == 31U) {
-        // 特殊值路径（Inf 或 NaN）
-        // 指数为 0xFF，尾数直接映射
-        if (exp != 31U) __builtin_unreachable();  // 互斥条件检查
-        uint32_t exp32 = 0xFFU;
-        uint32_t mant32 = mant << 13U;
-        out_bits = (exp32 << 23U) | mant32;
-    } else {
-        // 规范化数路径（exp ∈ [1, 30]）
-        // 指数映射：exp16 + 112 → exp32
-        if (exp == 0 || exp == 31U) __builtin_unreachable();  // 前驱条件检查
-        uint32_t exp32 = exp + 112U;
-        uint32_t mant32 = mant << 13U;
-        out_bits = (exp32 << 23U) | mant32;
-    }
-
-    out_bits |= (sign << 16U);  // 添加符号位
-    return std::bit_cast<float>(out_bits);
-}
-
-}
-
-
+// https://github.com/Matrixchung/iFOC
+static constexpr bool HAS_NATIVE_FP16 = 
+#if (defined(__arm__) || defined(__aarch64__)) && defined(__ARM_FP16_FORMAT_IEEE) && defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC)
+    true;
+#else
+    false;
+#endif
 
 struct alignas(2) [[nodiscard]] fp16 final{
     using Self = fp16;
@@ -138,11 +44,15 @@ struct alignas(2) [[nodiscard]] fp16 final{
     constexpr fp16(const double val):fp16(static_cast<float>(val)){};
 
     [[nodiscard]] constexpr bool is_nan() const noexcept {
-        return exp == 0x1F && mant != 0;
+        return fp16_utils::fp16bits_is_nan(std::bit_cast<uint16_t>(*this));
+    }
+
+    [[nodiscard]] constexpr float to_f32() const {
+        return fp16_utils::fp16bits_to_fp32_nonfpu(to_bits());
     }
 
     [[nodiscard]] explicit constexpr operator float() const noexcept {
-        return intrinsics::fp16_to_fp32_nonfpu(to_bits());
+        return to_f32();
     }
 
     template<typename D>
@@ -157,15 +67,18 @@ struct alignas(2) [[nodiscard]] fp16 final{
         return fixed<Q, D>(float(*this));
     }
 
+    [[nodiscard]] explicit constexpr operator bool() const noexcept{
+        return fp16_utils::fp16bits_is_zero(std::bit_cast<uint16_t>(*this));
+    }
 private:
 
-    static constexpr fp16 int32_to_fp16_nonfpu(int32_t int_val){
-        return from_bits(intrinsics::fp32_to_fp16_nonfpu(static_cast<float>(int_val)));
+    static constexpr fp16 int32_to_fp16_nonfpu(int32_t int_val) noexcept{
+        return from_bits(fp16_utils::fp32_to_fp16bits_nonfpu(static_cast<float>(int_val)));
     }
 
     static constexpr fp16 int32_to_fp16(int32_t int_val){
         auto conv_with_fpu = [int_val]() -> fp16 {
-            return from_bits(intrinsics::fp32_to_fp16_nonfpu(static_cast<float>(int_val)));
+            return from_bits(fp16_utils::fp32_to_fp16bits_nonfpu(static_cast<float>(int_val)));
         };
 
         if(std::is_constant_evaluated()){
@@ -180,18 +93,25 @@ private:
     }
 
     static constexpr fp16 f32_to_fp16(const float f_val){
-        return from_bits(intrinsics::fp32_to_fp16_nonfpu(f_val));
+        return from_bits(fp16_utils::fp32_to_fp16bits_nonfpu(f_val));
     }
 };
 
 static_assert(sizeof(fp16) == 2);
 
 
+constexpr bool isinf(const ymd::math::fp16 value) noexcept {
+    return fp16_utils::fp16bits_is_inf(std::bit_cast<uint16_t>(value));
+}
 
+constexpr bool isnan(const ymd::math::fp16 value) noexcept {
+    return fp16_utils::fp16bits_is_nan(std::bit_cast<uint16_t>(value));
+}
 
 }
 
 namespace std{
+
     template<>
     struct is_arithmetic<ymd::math::fp16> : std::true_type {};
     template<>

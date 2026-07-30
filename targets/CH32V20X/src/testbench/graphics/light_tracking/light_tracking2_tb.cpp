@@ -22,6 +22,7 @@
 #include "hal/sysmisc/rng/rng.hpp"
 
 using namespace ymd;
+using namespace ymd::math;
 
 
 #if 0

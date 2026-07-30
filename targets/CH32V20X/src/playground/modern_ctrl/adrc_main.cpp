@@ -56,9 +56,9 @@ void adrc_main(){
         .x2_limit = 200
     }.try_into_precomputed().unwrap();
 
-    static constexpr auto track_coeffs = typename LinearTrackingDifferentiator<iq16, 2>::Config{
+    static constexpr auto feedback_differ_ = LinearTrackingDifferentiator<iq16, 2>::try_from({
         .fs = ISR_FREQ , .r = 1400
-    }.try_into_precomputed().unwrap();
+    }).unwrap();
 
     static constexpr NonlinearTrackingDifferentiator<iq16, 2> command_shaper_{
         coeffs
@@ -68,10 +68,6 @@ void adrc_main(){
     Microseconds elapsed_micros = 0us;
     SecondOrderState<iq16> shaped_track_state_var_;
     SecondOrderState<iq16> feedback_track_state_var_;
-
-    [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
-        track_coeffs
-    };
 
     [[maybe_unused]]
     auto command_shaper_poller = [&](){

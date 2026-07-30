@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <cstdint>
+#include <cstddef>
 
 namespace lib_o1heap{
 
@@ -34,7 +33,7 @@ static constexpr size_t FRAGMENT_SIZE_MIN = (O1HEAP_ALIGNMENT * 2U);
 /// This is risky, handle with care: if the allocation amount plus per-fragment overhead exceeds 2**(b-1),
 /// where b is the pointer bit width, then ceil(log2(amount)) yields b; then 2**b causes an integer overflow.
 /// To avoid this, we put a hard limit on fragment size (which is amount + per-fragment overhead): 2**(b-1)
-static constexpr size_t FRAGMENT_SIZE_MAX = ((SIZE_MAX >> 1U) + 1U);
+static constexpr size_t FRAGMENT_SIZE_MAX = ((size_t(~size_t(0)) >> 1U) + 1U);
 
 /// Normally we should subtract log2(FRAGMENT_SIZE_MIN) but log2 is bulky to compute using the preprocessor only.
 /// We will certainly end up with unused bins this way, but it is cheap to ignore.
@@ -43,16 +42,16 @@ static constexpr size_t NUM_BINS_MAX = (sizeof(size_t) * sizeof(char) * 8);
 struct alignas(2*sizeof(size_t)) [[nodiscard]] Fragment;
 
 /// Size is computed dynamically from (next - this) or (arena_end - this) for the last fragment.
-struct [[nodiscard]] FragmentHeader
-{
+struct [[nodiscard]] alignas(size_t) FragmentHeader final{
     Fragment* next;       ///< Next fragment in address order; NULL if this is the last fragment.
     uintptr_t prev_used;  ///< Prev pointer in upper bits, 'used' flag in bit 0.
 };
+
+
 static_assert(sizeof(FragmentHeader) == sizeof(void*) * 2U, "Memory layout error");
 static_assert(sizeof(FragmentHeader) == O1HEAP_ALIGNMENT, "Memory layout error");
 
-struct alignas(4*sizeof(size_t)) [[nodiscard]] Fragment
-{
+struct [[nodiscard]] alignas(size_t) Fragment final{
     FragmentHeader header;
     // Everything past the header may spill over into the allocatable space. The header survives across alloc/free.
     Fragment* next_free;  // Next free fragment in the bin; NULL in the last one.
@@ -74,8 +73,8 @@ static_assert(sizeof(Fragment) <= FRAGMENT_SIZE_MIN, "Memory layout error");
 /// compared to the amount of computation needed to do the actual memory management. In the future, we may add a
 /// preprocessor option that disables diagnostics for the benefit of the most performance-sensitive applications.
 /// If you find this feature relevant for your use case, consider opening a ticket.
-struct [[nodiscard]] O1HeapDiagnostics final{
-    using Self = O1HeapDiagnostics;
+struct [[nodiscard]] Diagnostics final{
+    using Self = Diagnostics;
     /// The total amount of memory available for serving allocation requests (heap size).
     /// The maximum allocation size is (capacity - O1HEAP_ALIGNMENT).
     /// This parameter does not include the overhead used up by O1HeapInstance and arena alignment.
@@ -108,14 +107,13 @@ struct [[nodiscard]] O1HeapDiagnostics final{
 } ;
 
 /// The definition is private, so the user code can only operate on pointers. This is done to enforce encapsulation.
-struct [[nodiscard]] O1HeapInstance
-{
+struct [[nodiscard]] O1HeapInstance final{
     Fragment* bins[NUM_BINS_MAX];  ///< Smallest fragments are in the bin at index 0.
     size_t    nonempty_bin_mask;   ///< Bit 1 represents a non-empty bin; bin at index 0 is for the smallest fragments.
 
     char* arena_end;  ///< Points past the last byte of the arena; used for computing size of the last fragment.
 
-    O1HeapDiagnostics diagnostics;
+    Diagnostics diagnostics;
 
     /// Obtains the maximum theoretically possible allocation size for this heap instance.
     /// This is useful when implementing std::allocator_traits<Alloc>::max_size.

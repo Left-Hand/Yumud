@@ -1,7 +1,9 @@
 #pragma once
 
 #include "dsp/controller/adrc/prelude.hpp"
-
+#include "core/math/mul.hpp"
+#include "core/math/fixed/fixed.hpp"
+#include "core/math/fixed/fxmath.hpp"
 
 namespace ymd::dsp::adrc{
 
@@ -36,22 +38,18 @@ public:
     using delta_type = uq16;
 
 
-    struct [[nodiscard]] Precomputed{
-        //采样间隔时间
-        uq32 dt;
+    //采样间隔时间
+    uq32 dt;
 
-        // r / fs
-        uq32 r_by_fs;
+    //2 / r
+    uq32 two_inv_r;
+    
+    // r / fs
+    uq32 r_dt;
 
-        // r^2 / fs
-        uq16 r2_by_fs;
+    // r^2 / fs
+    uq16 r2_dt;
 
-        friend OutputStream & operator<<(OutputStream & os, const Precomputed & self){
-            return os << os.field("dt")(self.dt) << os.splitter() 
-                << os.field("r_by_fs")(self.r_by_fs) << os.splitter()
-                << os.field("r2_by_fs")(self.r2_by_fs);
-        }
-    };
 
     struct [[nodiscard]] Config{
         // 采样频率
@@ -59,34 +57,41 @@ public:
 
         // 快速因子r 通过r的频率的信号响应减半
         uint32_t r;
-
-        constexpr Result<Precomputed, StringView> try_into_precomputed() const noexcept {
-            auto & self = *this;
-
-            if(fs >= 65536) [[unlikely]]
-                return Err(StringView("fs >= 65536"));
-            if(r >= 65536) [[unlikely]]
-                return Err(StringView("r >= 65536"));
-            if(r >= fs) [[unlikely]]
-                return Err(StringView("r >= fs"));
-
-            const auto dt = std::numeric_limits<uq32>::max() / self.fs;
-            const auto r_by_fs = uq32::from_bits(static_cast<uint32_t>(
-                uint64_t(r) * uint64_t(uint64_t(1) << 32) / fs));
-            const auto r2_by_fs = uq16::from_bits(static_cast<uint32_t>(
-                uint64_t(r)  * uint64_t(r) * uint64_t(uint64_t(1) << 16) / fs));
-
-            return Ok(Precomputed{
-                dt,
-                r_by_fs,
-                r2_by_fs
-            });
-        }
     };
 
+    using Self = LinearTrackingDifferentiator;
+    static constexpr Result<Self, StringView> try_from(const Config & cfg) noexcept {
 
-    constexpr explicit LinearTrackingDifferentiator(const Precomputed & coeffs):
-        coeffs_(coeffs){
+        if(cfg.fs >= 65536) [[unlikely]]
+            return Err(StringView("fs >= 65536"));
+        if(cfg.r >= 65536) [[unlikely]]
+            return Err(StringView("r >= 65536"));
+        if(cfg.r >= cfg.fs) [[unlikely]]
+            return Err(StringView("r >= fs"));
+        if(cfg.r < 4) [[unlikely]]
+            return Err(StringView("r < 4"));
+
+        #if 0
+        const auto dt = uq32::from_bits(fxmath::details::div32u<32>(1, cfg.fs));
+        const auto two_inv_r = uq32::from_bits(fxmath::details::div32u<32>(2, cfg.r));
+        const auto r_dt = dt * cfg.r;
+        const auto r2_dt = uq16::from_bits(uint32_t(uint64_t(cfg.r) * cfg.r * dt.to_bits()) >> 16);
+        #else
+
+        const auto dt = std::numeric_limits<uq32>::max() / cfg.fs;
+        const auto two_inv_r = (std::numeric_limits<uq32>::max() / cfg.r) << 1;
+        const auto r_dt = uq32::from_bits(static_cast<uint32_t>(
+            uint64_t(cfg.r) * uint64_t(uint64_t(1) << 32) / cfg.fs));
+        const auto r2_dt = uq16::from_bits(static_cast<uint32_t>(
+            uint64_t(cfg.r)  * uint64_t(cfg.r) * uint64_t(uint64_t(1) << 16) / cfg.fs));
+        #endif
+
+        return Ok(Self{
+            .dt =       dt,
+            .two_inv_r =     two_inv_r,
+            .r_dt =     r_dt,
+            .r2_dt =        r2_dt
+        });
     }
 
     using State = SecondOrderState<iq16>;
@@ -101,19 +106,25 @@ public:
         // 临界二阶阻尼系统
         
         // G(s) = 1 / (s ^ 2 + 2 * r * s + r ^ 2)
-        const auto x1_now_q16 = math::fixed_downcast<16>(x1_now);
+        // const auto x1_now_q16 = math::fixed_downcast<16>(x1_now);
+        const auto x1_now_q16 = math::roundlsb_downcast<16>(x1_now);
 
         [[maybe_unused]] const iq16 e1 = ref[0] - x1_now_q16;
         [[maybe_unused]] const iq16 e2 = ref[1] - x2_now;
 
-        x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, coeffs_.dt));
-        x2_now = x2_now + math::fixed_downcast<16>(
-            extended_mul(iq16(2 * e2), coeffs_.r_by_fs) 
-            + extended_mul(iq16(e1), coeffs_.r2_by_fs));
+        x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, dt));
+        x2_now = x2_now + math::roundlsb_downcast<16>(
+            extended_mul(iq16(2 * e2), r_dt) 
+            + extended_mul(iq16(e1), r2_dt));
     }
 
-private:
-    Precomputed coeffs_;
+    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+        return os << os.field("dt")(self.dt) << os.splitter() 
+            << os.field("two_inv_r")(self.two_inv_r) << os.splitter()
+            << os.field("r_dt")(self.r_dt) << os.splitter()
+            << os.field("r2_dt")(self.r2_dt);
+    }
+
 };
 
 

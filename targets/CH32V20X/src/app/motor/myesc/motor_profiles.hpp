@@ -95,20 +95,22 @@ struct MotorProfile_2207{
 
 
 
-struct MotorProfile_Gim4010{
+struct MotorProfile_Gim4310{
     //伺泰威关节电机
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr size_t DECUTION_RATIO = 10u;
     static constexpr auto Q_AXIS_INDUCTANCE_MH = iq20(570 * 1E-3);
     static constexpr auto D_AXIS_INDUCTANCE_MH = iq20(440 * 1E-3);
 
-    static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
-    static constexpr auto PHASE_RESISTANCE_OHM = 0.788_iq20;
+    // static constexpr auto PHASE_RESISTANCE_OHM = 1.18_iq20;
+    static constexpr auto PHASE_RESISTANCE_OHM = 1.18_iq20;
     static constexpr auto FLUX_LINKAGE = iq20(83.4 * 1E-4);
 
 
     static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 400;
 };
+
+
 // struct MotorProfile_Gkf2023{
 //     static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
 //     static constexpr size_t POLE_PAIRS = 7u;

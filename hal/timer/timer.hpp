@@ -306,7 +306,7 @@ public:
                 TimerOCN(p_inst_, TimerChannel::ChannelSelection::CH3N),
             }{;}
 
-    void on_cc_interrupt();
+    void isr_cc();
     TimerBdtr bdtr(){return TimerBdtr{
         .p_inst_ = p_inst_,
         .bus_freq = this->get_periph_clk_freq()

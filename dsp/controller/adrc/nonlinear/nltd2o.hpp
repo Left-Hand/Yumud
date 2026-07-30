@@ -39,7 +39,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
             const auto & self = *this;
             return Ok(Self{
                 .dt = uq32::from_rcp(fs), 
-                .fhan_op = (Fhan(Fhan::Config{.r = self.r, .h = self.h})),
+                .fhan_op = (Fhan::from({.r = self.r, .h = self.h})),
                 .x2_limit = self.x2_limit
             });
         }

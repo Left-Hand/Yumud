@@ -28,7 +28,7 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
 
 __attribute__((always_inline, const, optimize( "-Ofast" )))
 [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> 
-apply_flag_to_uq32(Atan2Flag flag, uint32_t uq32_result_pu) noexcept {
+atan2_apply_flag(Atan2Flag flag, uint32_t uq32_result_pu) noexcept {
 
     /* Check if we swapped the transformation. */
     if (flag.is_swapped) {
@@ -63,7 +63,7 @@ apply_flag_to_uq32(Atan2Flag flag, uint32_t uq32_result_pu) noexcept {
 // *     atan(y/x) = pi/2 - atan(x/y)
 // */
 __attribute__((always_inline, const, optimize( "-Ofast" )))
-[[nodiscard]] static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
+[[nodiscard]] static constexpr uint32_t atan2_transform_ratio_to_resultpu(uint32_t uq32_input) {
     // uq32_input ∈ [0, 1)
 
 
@@ -124,10 +124,10 @@ constexpr ymd::math::fixed<32, uint32_t> atan2pu32(
     } else{
         // 1/8 lap
         // 1/8 * 2^32
-        return apply_flag_to_uq32(flag, ((1u << (32 - 3))));
+        return atan2_apply_flag(flag, ((1u << (32 - 3))));
     }
-    const uint32_t uq32_result_pu = transfrom_pu_x_to_uq32_result(uq32_input);
-    return apply_flag_to_uq32(flag, uq32_result_pu);
+    const uint32_t uq32_result_pu = atan2_transform_ratio_to_resultpu(uq32_input);
+    return atan2_apply_flag(flag, uq32_result_pu);
 }
 
 template<size_t Q>
@@ -155,11 +155,11 @@ constexpr ymd::math::fixed<32, uint32_t> atanpu32(
         uq32_input = uiqn_y << (32 - Q);
         // uq32_input = (1u << (30));
     } else{// uiqn_y == ONE_BITS
-        return apply_flag_to_uq32(flag, ((1u << (32 - 3))));
+        return atan2_apply_flag(flag, ((1u << (32 - 3))));
     }
 
-    const uint32_t uq32_result_pu = transfrom_pu_x_to_uq32_result(uq32_input);
-    return apply_flag_to_uq32(flag, uq32_result_pu);
+    const uint32_t uq32_result_pu = atan2_transform_ratio_to_resultpu(uq32_input);
+    return atan2_apply_flag(flag, uq32_result_pu);
 }
 
 }

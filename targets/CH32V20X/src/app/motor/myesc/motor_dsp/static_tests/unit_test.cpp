@@ -2,6 +2,7 @@
 #include "../dsp_vec.hpp"
 #include "../dsp_pll.hpp"
 #include "../dsp_pi.hpp"
+#include "drivers/humiture/ntc/ntc.hpp"
 
 using namespace ymd;
 using namespace ymd::dsp;
@@ -134,12 +135,6 @@ static_assert(cross2v2(
 static_assert(cross2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == -2_iq16);
 
 
-
-
-
-
-static_assert(std::abs((float)(heightleg(5.0_iq20, 3.0_iq20)) - 4.0f) < 1e-4);
-static_assert(std::abs((float)(heightleg(5.0_iq20, 4.0_iq20)) - 3.0f) < 1e-4);
 
 static_assert(std::abs((float)std::get<0>(resat_unit_circle(0.2_iq20, 0.0_iq20)) - 1.0f) < 1e-4);
 
@@ -281,4 +276,153 @@ static_assert(abs_err_percentages(1.0f, 1.01f) < 1.1f);
     #undef TEST_CASE
 }
 
+
+[[maybe_unused]] static void test_invtable_int(){
+
+    {
+        static constexpr size_t LG2_TABLE_LEN = 2;
+        static constexpr size_t TABLE_LEN = 1 << LG2_TABLE_LEN;
+        static constexpr int32_t TABLE[TABLE_LEN] = {4,5,7,8};
+
+        static constexpr auto LEN_INFO = TableLengthInfo::from_len(TABLE_LEN);
+
+        static_assert(LEN_INFO.len == 4);
+        static_assert(LEN_INFO.leading_zeros == 30);
+
+
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.25_uq32) == 5);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.375_uq32) == 6);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.5_uq32) == 7);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.75_uq32) == 8);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.875_uq32) == 6);
+
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.124_uq32) == 0);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.126_uq32) == 1);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.874_uq32) == 3);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.876_uq32) == 0);
+    }
+
+    {
+        static constexpr size_t LG2_TABLE_LEN = 2;
+        static constexpr size_t TABLE_LEN = 1 << LG2_TABLE_LEN;
+        static constexpr iq16 TABLE[TABLE_LEN] = {4,5,7,8};
+
+        static constexpr auto LEN_INFO = TableLengthInfo::from_len(TABLE_LEN);
+
+        static_assert(LEN_INFO.len == 4);
+        static_assert(LEN_INFO.leading_zeros == 30);
+
+
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.25_uq32).to_bits() == 5 << 16);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.375_uq32).to_bits() == 6 << 16);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.5_uq32).to_bits() == 7 << 16);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.75_uq32).to_bits() == 8 << 16);
+        static_assert(invlerp_table_roundback(TABLE, LEN_INFO, 0.875_uq32).to_bits() == 6 << 16);
+
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.124_uq32) == 0);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.126_uq32) == 1);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.874_uq32) == 3);
+        static_assert(pu_ratio_to_nearest_roundback_index(LEN_INFO, 0.876_uq32) == 0);
+    }
+
+    {
+        static constexpr size_t TABLE_LEN = 4;
+        static constexpr int32_t TABLE[TABLE_LEN] = {4,5,7,8};
+
+        static constexpr auto LEN_INFO = TableLengthInfo::from_len(TABLE_LEN);
+
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.25_uq32) == 5);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.375_uq32) == 6);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.5_uq32) == 7);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.75_uq32) == 8);
+        static_assert(invlerp_table_nonround(TABLE, LEN_INFO, 0.875_uq32) == 8);
+    }
+
 }
+
+
+
+// Apache 2.0
+// https://github.com/mjbots/moteus/tree/main/fw/thermistor.h
+// 32点插值表计算温度
+// 经过py脚本(ntc_plot.py)对比可发现在-40°C~125°C内该方法基本贴合数值计算方法，而工业级的温度需求是-40°C至+85°C
+// 前提是桥臂另一侧定值电阻和R0较为接近，即25°C时位于中性点位
+
+static constexpr size_t THERMISTOR_TABLE_LEN = 32;
+
+template<typename D>
+static constexpr void init_thermistor_lookup_table(
+    std::span<D, THERMISTOR_TABLE_LEN> table,
+    const drivers::NtcCalculatorF & ntc_calc,
+    const float rdiv_kohms // The resistor divider pair.
+){
+    for(size_t i = 1; i < THERMISTOR_TABLE_LEN; i++){
+        const float norm_v = float(i) / THERMISTOR_TABLE_LEN;
+        float rt_kohms = rdiv_kohms / norm_v - rdiv_kohms;
+        table[i] = static_cast<D>(ntc_calc.kohms_to_celsius(rt_kohms));
+    }
+    table[0] = table[1];
+}
+
+template<typename D>
+static constexpr D invlerp_thermistor_table(
+    std::span<const D, THERMISTOR_TABLE_LEN> table, 
+    uint16_t adc_raw
+) {
+    constexpr auto LEN_INFO = TableLengthInfo::from_len(THERMISTOR_TABLE_LEN);
+
+    constexpr size_t ADC_SHIFT = 20;//32 - log2(4096)
+
+    const uq32 pu_ratio = uq32::from_bits(uint32_t(adc_raw) << ADC_SHIFT);
+    return invlerp_table_nonround(table.data(), LEN_INFO, pu_ratio);
+}
+
+
+[[maybe_unused]] static void test_thermistor_table(){
+    {
+        static constexpr auto ntc = drivers::NtcCalculatorF::from_b0r0(3950, 100);
+
+        using D = int32_t;
+        static constexpr auto thermistor_table = []{
+            std::array<D, THERMISTOR_TABLE_LEN> table;
+            init_thermistor_lookup_table<D>(std::span(table), ntc, 100);
+            return table;
+        }();
+
+        static constexpr auto c25 = invlerp_thermistor_table(std::span(thermistor_table), 2048);
+        static_assert((float)c25 == 25.0f);
+    }
+}
+
+
+
+
+
+
+// // B参数转Steinhart-Hart
+// static constexpr SteinhartHartParams b0r0_to_abc(const float b0, const float r0){
+//     constexpr float T0 = 298.15f;
+//     {
+//         1.0f/T0 - math::ln(r0)/b0,
+//         1.0f/b0,
+//         0.0f
+//     };
+// }
+
+// struct SteinhartHartNTC {
+//     float A, B, C;  // Steinhart-Hart系数
+    
+//     // 从B参数转换
+//     static SteinhartHartNTC from_B_R0(float B, float R0) {
+
+//     }
+    
+//     float resistance_to_celsius(float R) const {
+//         float lnR = logf(R);
+//         float invT = A + B * lnR + C * lnR * lnR * lnR;
+//         return 1.0f/invT - 273.15f;
+//     }
+// };
+
+}
+

@@ -18,9 +18,7 @@
 
 #include "lib_o1heap.hpp"
 #include "lib_o1heap_port.hpp"
-#include <limits.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstring>
 
 namespace lib_o1heap{
 
@@ -41,9 +39,8 @@ static_assert(INSTANCE_SIZE_PADDED >= sizeof(O1HeapInstance), "Invalid instance 
 static_assert((INSTANCE_SIZE_PADDED % O1HEAP_ALIGNMENT) == 0U, "Invalid instance footprint computation");
 
 __attribute__((always_inline))
-static constexpr size_t larger(const size_t a, const size_t b)
-{
-    return (a > b) ? a : b;
+static constexpr size_t maxSz(const size_t a, const size_t b){
+    return a > b ? a : b;
 }
 
 /// Undefined for zero argument.
@@ -52,7 +49,7 @@ static constexpr uint_fast8_t log2Floor(const size_t x)
 {
     O1HEAP_ASSERT(x > 0);
     // NOLINTNEXTLINE redundant cast to the same type.
-    return (uint_fast8_t) (((sizeof(x) * CHAR_BIT) - 1U) - ((uint_fast8_t) O1HEAP_CLZ(x)));
+    return (uint_fast8_t) (((sizeof(x) * (sizeof(char) * 8)) - 1U) - ((uint_fast8_t) O1HEAP_CLZ(x)));
 }
 
 /// Raise 2 into the specified power.
@@ -70,7 +67,7 @@ static constexpr size_t roundUpToPowerOf2(const size_t x)
 {
     O1HEAP_ASSERT(x >= 2U);
     // NOLINTNEXTLINE redundant cast to the same type.
-    return ((size_t) 1U) << ((sizeof(x) * CHAR_BIT) - ((uint_fast8_t) O1HEAP_CLZ(x - 1U)));
+    return ((size_t) 1U) << ((sizeof(x) * (sizeof(char) * 8)) - ((uint_fast8_t) O1HEAP_CLZ(x - 1U)));
 }
 
 // ---------------------------------------- FRAGMENT HEADER ACCESSORS ----------------------------------------
@@ -318,7 +315,7 @@ void* lib_o1heap::O1HeapInstance::Allocate(const size_t amount)
             this->diagnostics.allocated += alloc_size;
             O1HEAP_ASSERT(this->diagnostics.allocated <= this->diagnostics.capacity);
             this->diagnostics.peak_allocated =
-                larger(this->diagnostics.peak_allocated, this->diagnostics.allocated);
+                maxSz(this->diagnostics.peak_allocated, this->diagnostics.allocated);
 
             // Finalize the fragment we just allocated.
             O1HEAP_ASSERT(this->fragGetSize(frag) >= amount + O1HEAP_ALIGNMENT);
@@ -329,7 +326,7 @@ void* lib_o1heap::O1HeapInstance::Allocate(const size_t amount)
     }
 
     // Update the diagnostics.
-    this->diagnostics.peak_request_size = larger(this->diagnostics.peak_request_size, amount);
+    this->diagnostics.peak_request_size = maxSz(this->diagnostics.peak_request_size, amount);
     if (O1HEAP_LIKELY((out == NULL) && (amount > 0U)))
     {
         this->diagnostics.oom_count++;
@@ -418,7 +415,7 @@ void* lib_o1heap::O1HeapInstance::Reallocate(void* const pointer, const size_t n
     }
 
     // SPECIAL CASE: Prevent size overflow like in o1heapAllocate().
-    this->diagnostics.peak_request_size = larger(this->diagnostics.peak_request_size, new_amount);
+    this->diagnostics.peak_request_size = maxSz(this->diagnostics.peak_request_size, new_amount);
     if (O1HEAP_UNLIKELY(new_amount > (this->diagnostics.capacity - O1HEAP_ALIGNMENT)))
     {
         this->diagnostics.oom_count++;
@@ -492,7 +489,7 @@ void* lib_o1heap::O1HeapInstance::Reallocate(void* const pointer, const size_t n
             interlink(frag, (next->GetNext()));
             this->diagnostics.allocated += next_size;
         }
-        this->diagnostics.peak_allocated = larger(this->diagnostics.peak_allocated, this->diagnostics.allocated);
+        this->diagnostics.peak_allocated = maxSz(this->diagnostics.peak_allocated, this->diagnostics.allocated);
         return pointer;  // MISRA: Early return simplifies control flow.
     }
 
@@ -526,7 +523,7 @@ void* lib_o1heap::O1HeapInstance::Reallocate(void* const pointer, const size_t n
             interlink(prev, next_free ? (next->GetNext()) : next);
             this->diagnostics.allocated += prev_size + next_size;
         }
-        this->diagnostics.peak_allocated = larger(this->diagnostics.peak_allocated, this->diagnostics.allocated);
+        this->diagnostics.peak_allocated = maxSz(this->diagnostics.peak_allocated, this->diagnostics.allocated);
         return out;  // MISRA: Early return simplifies control flow.
     }
 
@@ -562,7 +559,7 @@ bool O1HeapInstance::DoInvariantsHold() const
     }
 
     // Create a local copy of the diagnostics struct.
-    const O1HeapDiagnostics diag = this->diagnostics;
+    const Diagnostics diag = this->diagnostics;
 
     // Capacity check.
     valid = valid && (diag.capacity <= FRAGMENT_SIZE_MAX) && (diag.capacity >= FRAGMENT_SIZE_MIN) &&

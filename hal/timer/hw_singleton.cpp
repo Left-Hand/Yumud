@@ -25,7 +25,7 @@ void TIM##x##_TRG_COM_IRQHandler(void){\
     }\
 }\
 void TIM##x##_CC_IRQHandler(void){\
-    timer##x.on_cc_interrupt();\
+    timer##x.isr_cc();\
 }\
 
 

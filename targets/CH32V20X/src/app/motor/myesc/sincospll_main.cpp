@@ -13,37 +13,36 @@
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_pll.hpp"
+#include "roundtrip_traj_generator.hpp"
+
 
 using namespace ymd;
+using namespace ymd::motioner;
 
 
 
-static constexpr size_t F_SAMPLE = 36000;
+static constexpr size_t F_SAMPLE = 25000;
 static constexpr auto DT = uq32::from_rcp(F_SAMPLE);
 
 
+struct NoiseGenerator{
+    uint32_t seed;
 
-static constexpr math::fixed<32, uint32_t> uq32_mul(const math::fixed<32, uint32_t> a, const size_t b){
-    const auto bits = static_cast<uint32_t>((static_cast<uint64_t>(a.to_bits()) * b) & std::numeric_limits<uint32_t>::max());
-    return math::fixed<32, uint32_t>::from_bits(bits);
-}
-static_assert(uq32_mul(0.125_uq32,13) == 0.625_uq32);
+    static constexpr NoiseGenerator from_default(){
+        return NoiseGenerator{0};
+    }
 
-[[maybe_unused]] static uint32_t generate_noise(){
-    static uint32_t seed = 0;
-    seed = seed * 214013 + 2531011;
-    return seed;
-}
-
-
-struct [[nodiscard]] SinCosCorrector{
-    struct Config{
-
-    };
+    constexpr uint32_t next() noexcept {
+        seed = seed * 214013 + 2531011;
+        return seed;
+    }
 };
+
+void rbtrip_main();
 
 
 void sincospll_main(){
+    return rbtrip_main();
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -89,7 +88,11 @@ void sincospll_main(){
     pll_state_.reset();
 
     static constexpr auto PLL_COEFFS = dsp::PllCoeffs::from_fsfc(F_SAMPLE, 70, 1.7_iq16);
+    auto noise_generator_ = NoiseGenerator::from_default();
 
+    auto generate_noise = [&]() -> uint32_t{
+        return noise_generator_.next();
+    };
 
     Microseconds isr_elapsed_us_ = 0us;
     // [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
@@ -122,7 +125,7 @@ void sincospll_main(){
             const auto mock_cosine= (mock_angle_ + (Angular<uq32>::from_turns(uq32(0.33333333)))).sin();
             #endif
 
-            [[maybe_unused]] const auto [noise_sine_, noise_cosine_] = [] -> std::tuple<iq16, iq16>{
+            [[maybe_unused]] const auto [noise_sine_, noise_cosine_] = [&] -> std::tuple<iq16, iq16>{
                 const uint32_t noise = generate_noise();
                 const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x1ffF));
                 const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x1ffF));
@@ -218,6 +221,108 @@ void sincospll_main(){
             // measured_cosine_,
             isr_elapsed_us_.count()
 
+        );
+    }
+}
+
+
+
+
+static constexpr iq16 downcast_position(int64_t x){
+    const auto frac = uint32_t(x);
+    const auto revs = int32_t(x >> 32);
+    return iq16::from_bits((revs << 16) | (frac >> 16));
+}
+
+[[maybe_unused]] void rbtrip_main(){
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
+        // .baudrate = hal::NearestFreq(6000000),
+        .tx_strategy = CommStrategy::Blocking,
+    });
+    DEBUGGER.retarget(&DEBUGGER_INST);
+    DEBUGGER.build_config()
+        .set_eps(5)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
+
+
+    hal::timer2.init({
+        .remap = hal::TIM2_REMAP_A0_A1_A2_A3,
+        .count_freq =  hal::NearestFreq(F_SAMPLE),
+        .count_mode = hal::TimerCountMode::Up
+    }).unwrap().dont_alter_to_pins();
+    hal::timer2.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
+    hal::timer2.enable_interrupt<hal::TimerIT::Update>(EN);
+
+    // static constexpr float x2_f = (float(F_SAMPLE) / TICKS_PER_REV);
+    // static constexpr float acc_dt = float(1u << 12) / F_SAMPLE;
+    // static constexpr float x3_f = x2_f / acc_dt;
+    // static constexpr float x3_f = float(F_SAMPLE) * F_SAMPLE / (1 << 12) / TICKS_PER_REV;
+    // static constexpr uint32_t b = (1ull << 32) / TICKS_PER_REV;
+    // static constexpr auto x3_iq = iq20::from_bits((int64_t(b) * F_SAMPLE * F_SAMPLE) >> 24);
+    // static constexpr auto x3_iq_f = float(x3_iq);
+    static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 4;
+    static constexpr auto RBTRIP_PARAS = RoundtripParaments{
+        .fs = F_SAMPLE,
+        .uniform_ticks = -int32_t(TICKS_PER_REV) * 4, 
+        .ticks_per_rev = TICKS_PER_REV,
+        .x1_initial = iiq32(-7), 
+    };
+
+    static constexpr auto ROUNDTRIP_GEN = RoundtripTrajGenerator::from(RBTRIP_PARAS);
+    iiq32 x1;
+    RoundtripStage stage;
+    uint32_t t_stagelocal = 0;
+    iq20 x2;
+    iq20 x3;
+
+    auto isr_fn = [&]{
+        static uint32_t t_counter = 0;
+        t_counter++;
+        const uint32_t t = (t_counter < 20000) ? 0 : (t_counter - 20000);
+        auto res = ROUNDTRIP_GEN.sample_tick(t);
+        x1 = res.x1;
+        x2 = res.x2;
+        x3 = res.x3;
+        stage = res.stage;
+        t_stagelocal = res.t_stagelocal;
+    };
+
+    Microseconds isr_elapsed_us_ = 0us;
+
+    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
+        switch(event){
+            case hal::TimerEvent::Update:{
+                const auto begin_us = clock::micros();
+                isr_fn();
+                isr_elapsed_us_ = clock::micros() - begin_us;
+                break;
+            }
+            default:
+                break;
+        }
+    });
+
+    hal::timer2.start();
+
+    while(true){
+        DEBUG_PRINTLN(
+            // iq16(frac) + iq16(revs),
+            downcast_position(x1.to_bits()),
+            // iq20::from_bits((int64_t(ROUNDTRIP_GEN.b) * F_SAMPLE) >> 12),
+            x2,
+            x3,
+            downcast_position(ROUNDTRIP_GEN.p64_initial),
+            downcast_position(ROUNDTRIP_GEN.p64_entry_uniform),
+            // t_stagelocal,
+            // uint8_t(stage),
+            isr_elapsed_us_.count()
         );
     }
 }

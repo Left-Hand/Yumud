@@ -293,7 +293,7 @@ void nuedc_2025e_joint_main(){
 
     using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
     using state2o = dsp::SecondOrderState<iq16>;
-    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = FOC_FREQ, .r = 105}.try_into_precomputed().unwrap()};
+    auto rotor_ltd = ltd2o::try_from({.fs = FOC_FREQ, .r = 105}).unwrap();
 
     state2o meas_rotor_state_var = {0, 0};
 

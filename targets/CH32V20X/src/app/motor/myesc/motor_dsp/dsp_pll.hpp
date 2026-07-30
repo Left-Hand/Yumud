@@ -6,7 +6,7 @@
 #include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "dsp_vec.hpp"
-
+#include "core/math/mul.hpp"
 
 namespace ymd::dsp{
 
@@ -31,13 +31,31 @@ struct [[nodiscard]] alignas(4) PllCoeffs final{
     uq32 ts;
 
     constexpr void iterate(PllState & state, const std::array<iq16, 2> normalized_sincos) const {
-        iq16 err = dsp::cross2v2(
+        #if 0
+        iq16 err = calc_err(
             normalized_sincos[0], state.sine, 
             normalized_sincos[1], state.cosine
         );
+        #else
+        iq16 err = math::cross2v2(
+            normalized_sincos[0], state.sine, 
+            normalized_sincos[1], state.cosine
+        );
+        #endif
 
         iterate_err(state, err);
     }
+
+    // static constexpr iq16 calc_err(
+    //     iq31 input_s, iq31 state_s,
+    //     iq31 input_c, iq31 state_c
+    // ){
+
+    //     int32_t bits = 0;
+    //     bits += intrinsics::mul32hss(input_s.to_bits(), state_c.to_bits());
+    //     bits -= intrinsics::mul32hss(input_c.to_bits(), state_s.to_bits());
+    //     return iq16(iq30::from_bits(bits));
+    // }
 
     constexpr void iterate_err(PllState & state, iq16 normalized_err) const {
         auto & self = *this;

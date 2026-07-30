@@ -3,34 +3,14 @@
 #include "uvw.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "middlewares/algebra/gesture/rotation2.hpp"
+#include "core/math/rotate.hpp"
+
 
 namespace ymd::digipw{
 
 template<typename T>
 struct DqCoord;
 
-namespace details{
-template<typename To, typename From>
-__attribute__((optimize("Ofast"), always_inline))
-static constexpr void inv_rotate(
-    To & dq, const From & alphabeta, const auto & angle
-){
-    auto [s,c] = angle.sincos();
-    dq.template get<0>() = alphabeta.template get<1>() * s + alphabeta.template get<0>() * c;
-    dq.template get<1>() = alphabeta.template get<1>() * c - alphabeta.template get<0>() * s;
-};
-
-
-template<typename To, typename From>
-__attribute__((optimize("Ofast"), always_inline))
-static constexpr void rotate(
-    To & alphabeta, const From & dq, const auto & angle
-){
-    auto [s,c] = angle.sincos();
-    alphabeta.template get<0>() = dq.template get<0>() * c - dq.template get<1>() * s;
-    alphabeta.template get<1>() = dq.template get<1>() * c + dq.template get<0>() * s;
-};
-}
 
 template<typename T>
 struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
@@ -125,11 +105,9 @@ struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     }
 
 
-    template<typename U>
-    [[nodiscard]] constexpr DqCoord<T> inv_rotate(const math::Rotation2<U> rot) const noexcept {
-        DqCoord<T> dq;
-        details::inv_rotate(dq, *this, rot);
-        return dq;
+    [[nodiscard]] constexpr DqCoord<T> inv_rotate(const math::Rotation2<iq31> rot) const noexcept {
+        const auto inv_rotated = math::inv_rotate_iq31sincos(alpha, beta, rot.sine(), rot.cosine());
+        return DqCoord<T>{inv_rotated[0], inv_rotated[1]};
     }
 
     template<size_t I>
@@ -307,9 +285,8 @@ struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
 
     template<typename U>
     [[nodiscard]] constexpr AlphaBetaCoord<T> rotate(const U rot) const noexcept {
-        AlphaBetaCoord<T> ret;
-        details::rotate(ret, *this, rot);
-        return ret;
+        const auto rotated = math::rotate_iq31sincos(d, q, rot.sine(), rot.cosine());
+        return AlphaBetaCoord<T>{rotated[0], rotated[1]};
     }
 
     friend OutputStream & operator << (OutputStream & os, const DqCoord & self){

@@ -15,9 +15,15 @@ struct [[nodiscard]] HeaplessString final{
 
     constexpr explicit HeaplessString(const StringView str):
         length_(std::min(str.length(), N)){
-        #pragma GCC unroll 4
+
         for(size_t i = 0; i < length_; i++){
             buf_[i] = str.data()[i];
+        }
+
+        if(std::is_constant_evaluated()){
+            for(size_t i = length_; i < N; i++){
+                buf_[i] = 0;
+            }
         }
     }
 
@@ -108,7 +114,7 @@ struct [[nodiscard]] HeaplessString final{
         if (idx == 0) return Err();
 
         // 前移字符（注意循环终止条件）
-        for (size_t i = idx-1; i < length_ - 1; i++) {
+        for (size_t i = idx-1; i < size_t(length_) - 1; i++) {
             buf_[i] = buf_[i + 1];
         }
 
@@ -152,6 +158,10 @@ struct [[nodiscard]] HeaplessString final{
 
 private:
     std::array<char, N> buf_;
-    size_t length_;
+
+    using length_type = std::conditional_t<N < 256, uint8_t, 
+        std::conditional_t<N < 256 * 256, uint16_t, uint32_t>>;
+
+    length_type length_;
 };
 }

@@ -429,9 +429,6 @@ struct [[nodiscard]] TIM_Def{
         SMCFGR.ETP = en;
     }
 
-    struct [[nodiscard]] Events{
-        DEF_TIM_EVENT_FLAGS_FIELDS
-    };
 
     constexpr void add_dma_interrupts_en(const Events events){
         (uint16_t &)(DMAINTENR) |= BIT_CAST(uint16_t, events);

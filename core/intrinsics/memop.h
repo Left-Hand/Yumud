@@ -6,6 +6,9 @@
 extern "C"{
 #endif
 
+__attribute__((used, externally_visible, optimize( "-Ofast" )))
+void * memset_word_aligned(unsigned long * s, unsigned long c, unsigned int count);
+
 // from rt-thread
 // SPDX-License-Identifier: Apache-2.0
 
@@ -36,6 +39,9 @@ void *memset(void *s, int c, unsigned int count);
  */
 __attribute__((used, externally_visible, optimize( "-Ofast" )))
 void *memcpy(void * __restrict dst, const void * __restrict src, unsigned int count);
+
+__attribute__((used, externally_visible, optimize( "-Ofast" )))
+void *memmove(void * dst, const void * src, unsigned int count);
 
 
 #ifdef __cplusplus
