@@ -760,7 +760,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         // const iq32 e_l1dt = l1dt * e;
         // const iq32 e_l2dt = l2dt * e;
 
-        [[maybe_unused]] const auto now_x2 = state.encoder_state_2o.x2;
+        [[maybe_unused]] const auto now_x2 = state.encoder_pll_state.x2;
 
         // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
         // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
@@ -796,7 +796,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
         state.encoder_rel_position64 = encoder_abs_position64 
             - iiq32::from_bits(state.encoder_initial_position.to_bits());
 
-        auto & state_2o = state.encoder_state_2o;
+        auto & state_2o = state.encoder_pll_state;
 
         auto & x1_now = state_2o.x1;
         auto & x2_now = state_2o.x2;
@@ -816,7 +816,7 @@ static void process_encoder_calc(AllState & state, const FnSwitches fn_switches)
 
         state.sensed_elec_angle = Angular<uq32>::from_turns((encoder_abs_position32 - encoder_position_offset) * pole_pairs);
 
-        const auto mech_speed = state.encoder_state_2o.x2;
+        const auto mech_speed = state.encoder_pll_state.x2;
         state.sensed_elec_speed = mech_speed * pole_pairs;
 
     }
@@ -937,10 +937,10 @@ static void process_traj_shape(
         static constexpr auto RETRACK_LEAD_X1 = 0.1_iq20;
 
         if(do_curve_retrack_when_needed){
-            const auto x1_encoder = state.encoder_state_2o.x1;
+            const auto x1_encoder = state.encoder_pll_state.x1;
             if(math::abs(sub_clamp2_downcast_iq20(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
                 const iiq32 x1_curve_retrack = math::step_to(x1_encoder, x1_traj, make_iiq32(RETRACK_LEAD_X1));
-                const auto x2_curve_retrack = state.encoder_state_2o.x2;
+                const auto x2_curve_retrack = state.encoder_pll_state.x2;
 
                 curve_state.x1 = x1_curve_retrack;
                 curve_state.x2 = x2_curve_retrack;
@@ -977,13 +977,8 @@ static void process_mechanical_loop(
 ){
     //#region 力矩转电流
 
-    [[maybe_unused]] static constexpr iq20 TORQUE_2_CURRENT_RATIO = 1_iq20;
-
-
-
-    const auto now_x2 = state.encoder_state_2o.x2;
-
-    const auto & now_x1 = state.encoder_state_2o.x1;
+    const auto now_x2 = state.encoder_pll_state.x2;
+    const auto now_x1 = state.encoder_pll_state.x1;
 
     constexpr auto torque_curr_step_limit = TORQUE_CURR_STEP_LIMIT;
     constexpr auto torque_curr_limit = TORQUE_CURR_LIMIT;
@@ -996,8 +991,8 @@ static void process_mechanical_loop(
     const iq20 kf = 0.01_iq20;
     const auto x2comp_torque_curr = kf * curve_x2 * fn_switches.damping_forwardfeedback_en;
 
-
     state.torque_curr_x3comp = x3comp_torque_curr;
+    state.torque_curr_x2comp = x2comp_torque_curr;
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
@@ -2570,10 +2565,10 @@ void myesc_main(){
         if(false)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            math::fixed_downcast<16>(state.encoder_pll_state.x1),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
-            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
-            state.encoder_state_2o.x2,
+            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_pll_state.x1),
+            state.encoder_pll_state.x2,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
@@ -2599,7 +2594,7 @@ void myesc_main(){
         if(true)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            math::fixed_downcast<16>(state.encoder_pll_state.x1),
 
             // uq32::from_bits(state.encoder_abs_position64.to_bits() & UINT32_MAX) * POLE_PAIRS * 6 * 8,
             // state.curve_state.debug.x1_retrack,
@@ -2607,13 +2602,13 @@ void myesc_main(){
             // math::fixed_downcast<16>(state.peac_state.hat_turns) - math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_rel_position64) - math::fixed_downcast<16>(state.curve_state.x1),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
-            // state.encoder_state_2o.x2,
+            // state.encoder_pll_state.x2,
             // (state.curve_state.x2),
             // state.peac_state.hat_b1,
             // state.peac_state.hat_b2,
             // state.peac_state.debug.e,
             // state.peac_state.harm * 100,
-            // state.encoder_state_2o.x2,
+            // state.encoder_pll_state.x2,
             // state.pi_ref_x2,
 
             // state.torque_curr_cmd,
@@ -2626,7 +2621,7 @@ void myesc_main(){
             // math::fixed_downcast<16>(state.debug.curve_x1),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
-            // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_state_2o.x1),
+            // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_pll_state.x1),
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 

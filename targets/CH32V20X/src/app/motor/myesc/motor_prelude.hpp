@@ -410,13 +410,14 @@ struct alignas(4) [[nodiscard]] HfiState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    HpState2o encoder_state_2o;
+    HpState2o encoder_pll_state;
     CurveState curve_state;
     HpState2o traj_smooth_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
     iq20 torque_curr_cmd;
+    iq20 torque_curr_x2comp;
     iq20 torque_curr_x3comp;
     iq20 torque_curr_veryslowlp;
 

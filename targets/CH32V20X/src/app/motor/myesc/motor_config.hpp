@@ -90,11 +90,12 @@ static consteval uq32 calc_uq32_rcp(const auto x){
 }
 
 
-static constexpr auto PHASE_INDUCTANCE_MH = MotorProfile::PHASE_INDUCTANCE_MH;
 static constexpr auto PHASE_RESISTANCE_OHM = MotorProfile::PHASE_RESISTANCE_OHM;
-static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ;
 static constexpr auto Q_AXIS_INDUCTANCE_MH = MotorProfile::Q_AXIS_INDUCTANCE_MH;
 static constexpr auto D_AXIS_INDUCTANCE_MH = MotorProfile::D_AXIS_INDUCTANCE_MH;
+static constexpr auto PHASE_INDUCTANCE_MH = (Q_AXIS_INDUCTANCE_MH + D_AXIS_INDUCTANCE_MH) >> 1;
+static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = MotorProfile::PREFERD_CURRENT_CUTOFF_FREQ;
+
 static constexpr auto FLUX_LINKAGE = MotorProfile::FLUX_LINKAGE;
 static constexpr auto POLE_PAIRS = MotorProfile::POLE_PAIRS;
 static constexpr uq32 INV_POLE_PAIRS = calc_uq32_rcp(POLE_PAIRS); 
