@@ -2093,15 +2093,15 @@ void myesc_main(){
                     .fs = FOC_FREQ,
                     .revs_per_direction = 2, 
                     .ticks_per_rev = STEPS_PER_REV * 8,
-                    .x1_initial = int64_t(INT32_MIN) * 7, 
+                    .x1_initial = -7_iiq32, 
                 };
 
-                static constexpr auto roundtrip_state = motioner::RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
-                auto res = roundtrip_state.calc_roundtrip_curve(tick);
+                static constexpr auto ROUNDTRIP_CALC = motioner::RoundtripTrajGenerator::from(RBTRIP_PARAS);
+                auto samp_point = ROUNDTRIP_CALC.sample_tick(tick);
 
-                auto traj_x1 = iq16::from_bits(res.x1.to_bits() >> 16);
-                auto traj_x2 = res.x2;
-                auto traj_x3 = res.x3;
+                auto traj_x1 = iq16::from_bits(samp_point.x1.to_bits() >> 16);
+                auto traj_x2 = samp_point.x2;
+                auto traj_x3 = samp_point.x3;
 
                 #endif
                 process_traj_shape(state, fn_switches, traj_x1, traj_x2, traj_x3);

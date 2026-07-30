@@ -38,9 +38,11 @@ struct NoiseGenerator{
     }
 };
 
+void rbtrip_main();
 
 
 void sincospll_main(){
+    return rbtrip_main();
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -268,12 +270,12 @@ static constexpr iq16 downcast_position(int64_t x){
     static constexpr uint32_t TICKS_PER_REV = 14 * 6 * 8 * 4;
     static constexpr auto RBTRIP_PARAS = RoundtripParaments{
         .fs = F_SAMPLE,
-        .revs_per_direction = 8, 
+        .uniform_ticks = -int32_t(TICKS_PER_REV) * 4, 
         .ticks_per_rev = TICKS_PER_REV,
-        .x1_initial = int64_t(INT32_MIN) * 7, 
+        .x1_initial = iiq32(-7), 
     };
 
-    static constexpr auto roundtrip_state = RoundtripTrajGeneratorState::from(RBTRIP_PARAS);
+    static constexpr auto ROUNDTRIP_GEN = RoundtripTrajGenerator::from(RBTRIP_PARAS);
     iiq32 x1;
     RoundtripStage stage;
     uint32_t t_stagelocal = 0;
@@ -284,7 +286,7 @@ static constexpr iq16 downcast_position(int64_t x){
         static uint32_t t_counter = 0;
         t_counter++;
         const uint32_t t = (t_counter < 20000) ? 0 : (t_counter - 20000);
-        auto res = roundtrip_state.calc_roundtrip_curve(t);
+        auto res = ROUNDTRIP_GEN.sample_tick(t);
         x1 = res.x1;
         x2 = res.x2;
         x3 = res.x3;
@@ -313,12 +315,11 @@ static constexpr iq16 downcast_position(int64_t x){
         DEBUG_PRINTLN(
             // iq16(frac) + iq16(revs),
             downcast_position(x1.to_bits()),
-            // iq20::from_bits((int64_t(roundtrip_state.b) * F_SAMPLE) >> 12),
+            // iq20::from_bits((int64_t(ROUNDTRIP_GEN.b) * F_SAMPLE) >> 12),
             x2,
             x3,
-            downcast_position(roundtrip_state.p64_0),
-            downcast_position(roundtrip_state.p64_a),
-            downcast_position(roundtrip_state.p64_b),
+            downcast_position(ROUNDTRIP_GEN.p64_initial),
+            downcast_position(ROUNDTRIP_GEN.p64_entry_uniform),
             // t_stagelocal,
             // uint8_t(stage),
             isr_elapsed_us_.count()
