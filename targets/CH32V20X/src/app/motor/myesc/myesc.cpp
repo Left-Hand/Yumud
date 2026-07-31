@@ -1882,8 +1882,18 @@ void myesc_main(){
     });
 
     #if 1
-    using drivers::VCE2755;
-    auto mag_encoder_ = VCE2755{
+    using MagEncoder = drivers::VCE2755;
+
+
+    // struct [[nodiscard]] FutureAngle{
+    //     MagEncoder mag_encoder_;
+
+    //     Angular<uq32> get(){
+    //         return mag_encoder_.get_angle().examine().parse().unwrap();
+    //     }
+    // };
+
+    auto mag_encoder_ = MagEncoder{
         &spi,
         spi.allocate_cs_pin(&mag_encoder_cs_pin_)
             .unwrap()
@@ -1891,17 +1901,22 @@ void myesc_main(){
 
     mag_encoder_.init(Default).examine();
     mag_encoder_.set_direction(CW).examine();
-    mag_encoder_.set_filter_bandwidth(VCE2755::FilterBandwidth::_8BW0).examine();
+    mag_encoder_.set_filter_bandwidth(MagEncoder::FilterBandwidth::_8BW0).examine();
 
-    auto mag_encoder_get_angle = [&] -> Angular<uq32>{
+
+    auto mag_encoder_poll_conversion = [&] -> void{
+    };
+
+    auto mag_encoder_waitfor_angle = [&] -> Angular<uq32>{
         return mag_encoder_.get_angle().examine().parse().unwrap();
     };
 
     for(size_t i = 0; i < 100; i++){
-        (void)mag_encoder_get_angle();
+        mag_encoder_poll_conversion();
+        auto angle = mag_encoder_waitfor_angle();
+        (void)angle;
         clock::delay(100us);
     }
-    // mag_encoder_.set_filter_bandwidth(VCE2755::FilterBandwidth::_BW0).examine();
     #endif
 
 
@@ -1996,11 +2011,17 @@ void myesc_main(){
         state.isr_entry_tick = get_timer_tick();
 
 
-        const bool sideshaft_calibrate_done = !op_flags.sideshaft_calibrate_unready;
-        const bool do_sideshaft_calibrate = sideshaft_compensate and (!sideshaft_calibrate_done);
+        const bool is_sideshaft_calibrate_done = !op_flags.sideshaft_calibrate_unready;
+        const bool do_sideshaft_calibrate = sideshaft_compensate and (!is_sideshaft_calibrate_done);
 
 
-        const auto encoder_position_raw = mag_encoder_get_angle().to_turns();
+        mag_encoder_poll_conversion();
+
+
+        const auto uvw_bvalue = get_adc_uvw_bvalue();
+        process_current_sense(state, fn_switches, uvw_bvalue);
+
+        const auto encoder_position_raw = mag_encoder_waitfor_angle().to_turns();
 
         auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
             return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
@@ -2030,7 +2051,7 @@ void myesc_main(){
 
 
         auto correct_encoder_position = [&](const iq32 * table_data, uq32 raw_turns) -> uq32{
-            if(sideshaft_calibrate_done & fn_switches.sideshaft_compenstate_en){
+            if(is_sideshaft_calibrate_done & fn_switches.sideshaft_compenstate_en){
                 const auto table_eps = calc_encoder_eps(table_data, raw_turns);
                 return raw_turns + table_eps;
             }else{
@@ -2045,7 +2066,7 @@ void myesc_main(){
         #if 0
 
         auto calc_encoder_correct_method_signature = [&] -> uint8_t{
-            return 0xf0 | sideshaft_calibrate_done;
+            return 0xf0 | is_sideshaft_calibrate_done;
         };
 
 
@@ -2054,9 +2075,9 @@ void myesc_main(){
         if(state.encoder_correct_method_signature != encoder_correct_method_signature){
             state.encoder_initial_position = correct_encoder_position(
                 state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_position_raw);
-                
-                state.encoder_correct_method_signature = encoder_correct_method_signature;
-            }
+            
+            state.encoder_correct_method_signature = encoder_correct_method_signature;
+        }
         #else
             
         state.encoder_initial_position = correct_encoder_position(
@@ -2074,12 +2095,25 @@ void myesc_main(){
         }
 
 
+        state.encoder_rel_position64 = state.encoder_abs_position64 
+            - iiq32::from_bits(state.encoder_initial_position.to_bits());
+
+        process_encoder_pll(state, fn_switches, state.encoder_rel_position64);
+
+        auto encoder_abs_position32 = iiq32_crop_frac(state.encoder_abs_position64);
+
+        const auto elec_align_offset = 0.946429_uq32;
+        const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32 - elec_align_offset));
+        state.sensed_elec_angle = mech_angle * POLE_PAIRS;
+
+        const auto mech_speed = state.encoder_pll_state.x2;
+        state.sensed_elec_speed = iq16(mech_speed) * POLE_PAIRS;
+
+
+        state.elec_angle = state.sensed_elec_angle;
+        state.elec_speed = state.sensed_elec_speed;
 
         state.encoder_get_done_tick = get_timer_tick();
-
-
-        const auto uvw_bvalue = get_adc_uvw_bvalue();
-        process_current_sense(state, fn_switches, uvw_bvalue);
 
 
         if(op_flags.dc_calibrate_unready){
@@ -2111,24 +2145,6 @@ void myesc_main(){
             }
 
         }else{
-
-            state.encoder_rel_position64 = state.encoder_abs_position64 
-                - iiq32::from_bits(state.encoder_initial_position.to_bits());
-
-            process_encoder_pll(state, fn_switches, state.encoder_rel_position64);
-
-            auto encoder_abs_position32 = iiq32_crop_frac(state.encoder_abs_position64);
-
-            const auto elec_align_offset = 0.946429_uq32;
-            const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32 - elec_align_offset));
-            state.sensed_elec_angle = mech_angle * POLE_PAIRS;
-
-            const auto mech_speed = state.encoder_pll_state.x2;
-            state.sensed_elec_speed = iq16(mech_speed) * POLE_PAIRS;
-
-
-            state.elec_angle = state.sensed_elec_angle;
-            state.elec_speed = state.sensed_elec_speed;
 
 
             if(not do_sideshaft_calibrate){
@@ -2628,9 +2644,7 @@ void myesc_main(){
         [[maybe_unused]] const auto encoder_rel_p64 = state.encoder_rel_position64;
         [[maybe_unused]] const auto encoder_initial_p32 = state.encoder_initial_position;
         [[maybe_unused]] auto calc_home_position = [&](HomeMethod method) -> iiq32{
-            // const auto encoder_abs_p64 = state.encoder_abs_position64;
 
-            // const auto method
             switch(method){
                 case HomeMethod::Initial:{
                     return 0;

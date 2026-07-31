@@ -5,7 +5,7 @@
 namespace ymd::str{
 
 
-struct [[nodiscard]] DigitFracPair final{
+struct [[nodiscard]] alignas(size_t) DigitFracPair final{
     uint32_t digit_part;
     uint32_t frac_part;
 
@@ -28,9 +28,9 @@ struct [[nodiscard]] DigitFracPair final{
     }
 };
 
-// 0 < q_num <= 32
+// 0 <= q_num <= 32
 __attribute__((optimize("Ofast")))
-[[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint(
+[[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint32(
     uint32_t abs_value_bits, 
     uint8_t precision,
     uint8_t q_num
@@ -75,9 +75,26 @@ __attribute__((optimize("Ofast")))
     };
 }
 
+// 0 <= q_num <= 64
+__attribute__((optimize("Ofast")))
+[[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint64(
+    uint64_t abs_value_bits, 
+    uint8_t precision,
+    uint8_t q_num
+){
+    uint32_t digit_part = (uint32_t(abs_value_bits) >> q_num);
+    
+    uint32_t frac_part;
 
-// 0 < q_num <= 32
-[[nodiscard]] static constexpr char * _fmtnum_abs_fixedpoint(
+    return {
+        .digit_part = digit_part, 
+        .frac_part = frac_part
+    };
+}
+
+
+// 0 <= q_num <= 32
+[[nodiscard]] static constexpr char * _fmtnum_abs_fixedpoint32(
     char * p_str, 
     uint32_t abs_value_bits, 
     uint8_t precision, 
@@ -88,7 +105,7 @@ __attribute__((optimize("Ofast")))
     if(precision > MAX_PRECSION) precision = MAX_PRECSION;
 
 
-    const auto parts = depart_abs_fixedpoint(abs_value_bits, precision, q_num);
+    const auto parts = depart_abs_fixedpoint32(abs_value_bits, precision, q_num);
 
     p_str = parts.fmt_str(p_str, precision);
     return p_str;

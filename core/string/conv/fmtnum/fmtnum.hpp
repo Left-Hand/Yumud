@@ -78,7 +78,7 @@ struct [[nodiscard]] alignas(4) FixedTypeErased final{
     const uint8_t q_num;
 };
 
-[[nodiscard]] constexpr char * fmtnum_fixedpoint(
+[[nodiscard]] constexpr char * fmtnum_fixedpoint32(
     char * p_str, 
     uint32_t bits, 
     uint8_t precision, 
@@ -94,7 +94,7 @@ struct [[nodiscard]] alignas(4) FixedTypeErased final{
         }
     }
 
-    return _fmtnum_abs_fixedpoint(p_str, static_cast<uint32_t>(bits), precision, type.q_num);
+    return _fmtnum_abs_fixedpoint32(p_str, static_cast<uint32_t>(bits), precision, type.q_num);
 }
 
 

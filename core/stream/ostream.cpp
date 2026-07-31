@@ -229,7 +229,7 @@ void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
         .q_num = static_cast<uint8_t>(Q)
     };
 
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint32, this->config_.eps, type)
 }
 
 void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
@@ -238,7 +238,7 @@ void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
         .q_num = static_cast<uint8_t>(Q)
     };
 
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint, this->config_.eps, type)
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint32, this->config_.eps, type)
 }
 
 OutputStream & OutputStream::operator<<(const double val){
