@@ -386,8 +386,8 @@ static void setup_timer(){
         // .count_freq = hal::NearestFreq(FOC_FREQ * 2),
         .count_freq = hal::timer::ArrAndPsc{TIMER_ARR_VALUE,1-1},
         // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
-        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig,
-        // .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
+        // .count_mode = hal::TimerCountMode::CenterAligned,
+        .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
         // .count_mode = hal::TimerCountMode::Up
     })  .unwrap()
         .alter_to_pins({
@@ -2071,10 +2071,18 @@ void myesc_main(){
         mag_encoder_poll_conversion();
 
 
-        state.uvw_adc_bvalue = get_adc_uvw_bvalue();
-        process_current_sense(state, fn_switches, state.uvw_adc_bvalue);
 
         auto encoder_position_raw = mag_encoder_waitfor_angle().to_turns();
+
+        auto is_adc_injected_converstion_end = [&]{
+            static constexpr uint32_t JEOC_FLAG_MASK = 1u << 2;
+            if(ADC1->STATR & JEOC_FLAG_MASK){
+                ADC1->STATR = ADC1->STATR & (~JEOC_FLAG_MASK);
+                return true;
+            }
+            return false;
+        };
+
 
         #if 0
         {
@@ -2084,7 +2092,7 @@ void myesc_main(){
         }
         #endif
 
-        state.encoder_get_done_tick = get_timer_tick();
+
 
         auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
             return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
@@ -2180,6 +2188,11 @@ void myesc_main(){
         state.elec_speed = state.sensed_elec_speed;
 
 
+        while(not is_adc_injected_converstion_end());
+        state.uvw_adc_bvalue = get_adc_uvw_bvalue();
+        process_current_sense(state, fn_switches, state.uvw_adc_bvalue);
+
+        state.encoder_get_done_tick = get_timer_tick();
 
         if(op_flags.dc_calibrate_unready){
             auto & dc_state = state.dc_calibrate_state;
@@ -2406,7 +2419,7 @@ void myesc_main(){
     };
 
 
-    auto jeoc_isr = [&]{
+    auto foc_isr = [&]{
         auto & state = all_state_;
 
         timming_watch_pin_.set_high();
@@ -2418,20 +2431,20 @@ void myesc_main(){
         timming_watch_pin_.set_low();
     };
 
-    hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-
-    hal::adc1.set_event_callback(
-        [&](const hal::AdcEvent ev){
-            switch(ev){
-            case hal::AdcEvent::EndOfInjectedConversion:{
-                jeoc_isr();
+    hal::timer1.register_nvic<hal::TimerIT::CC4>(hal::NvicPriorityCode::highest(),  EN);
+    hal::timer1.enable_interrupt<hal::TimerIT::CC4>(EN);
+    hal::timer1.set_event_callback([&](const hal::TimerEvent & event){
+        switch(event){
+            case hal::TimerEvent::CC4:{
+                foc_isr();
                 break;
             }
-            default: break;
-            }
+            default:
+                break;
         }
-    );
+    });
+
+    hal::timer1.start();
 
     start_pwm();
 
@@ -2790,8 +2803,8 @@ void myesc_main(){
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
             tmrticks_to_us(state.isr_entry_tick),
-            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick),
-            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
+            tmrticks_to_us(state.encoder_get_done_tick),
+            tmrticks_to_us(state.isr_exit_tick)
         );
 
         poll_led_blink();

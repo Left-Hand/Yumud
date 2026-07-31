@@ -24,10 +24,6 @@
 using namespace ymd;
 
 
-#ifndef CH32V30X
-#define CH32V30X
-#endif
-
 
 #ifdef CH32V30X
 
@@ -36,8 +32,8 @@ static constexpr size_t PSC_VALUE = 1 - 1;
 static constexpr size_t ARR_VALUE = 4900 - 1;
 static constexpr size_t ARR_VALUE_2_BY_3 = (ARR_VALUE * 2) / 3;
 
-// static constexpr bool PHASE_INVERT_EN = true;
 static constexpr bool PHASE_INVERT_EN = false;
+// static constexpr bool PHASE_INVERT_EN = false;
 
 #define INVERT_PHASE_IF_NEEDED \
 {if constexpr(PHASE_INVERT_EN){\
@@ -72,9 +68,9 @@ static void set_timer10_duty(uint16_t ch1_duty, uint16_t ch2_duty, uint16_t ch3_
 void init_pwmgen_timers_interleaved(void)
 {
 
-    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, DISABLE);
-    GPIO_PinRemapConfig(GPIO_Remap_TIM8, DISABLE);
-    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM10, DISABLE);
+    // GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, DISABLE);
+    // GPIO_PinRemapConfig(GPIO_Remap_TIM8, DISABLE);
+    // GPIO_PinRemapConfig(GPIO_PartialRemap_TIM10, DISABLE);
 
 
     static constexpr TIM_OCInitTypeDef TIM_OCInitStructure = {
@@ -84,8 +80,8 @@ void init_pwmgen_timers_interleaved(void)
         .TIM_Pulse        = 0,
 
         #if 1
-        .TIM_OCPolarity   = TIM_OCPolarity_Low,
-        .TIM_OCNPolarity  = TIM_OCNPolarity_High,
+        .TIM_OCPolarity   = TIM_OCPolarity_High,
+        .TIM_OCNPolarity  = TIM_OCNPolarity_Low,
         #else
         .TIM_OCPolarity   = TIM_OCPolarity_High,
         .TIM_OCNPolarity  = TIM_OCNPolarity_Low,
@@ -117,7 +113,6 @@ void init_pwmgen_timers_interleaved(void)
 
     auto setup_pwmgen_timer = [](TIM_TypeDef * inst){
         static constexpr uint16_t INITIAL_COUNT_VALUE = 0;
-        // ============ 配置 TIM1（相位 0°） ============
         TIM_CounterModeConfig(inst, TIM_CounterMode_CenterAligned1);
         TIM_SetAutoreload(inst, ARR_VALUE);
         TIM_PrescalerConfig(inst, PSC_VALUE, TIM_PSCReloadMode_Immediate);
@@ -152,7 +147,7 @@ void init_pwmgen_timers_interleaved(void)
                         break;
                     case 2:
                         setup_pwmgen_timer(TIM10);
-                        // TIM_Cmd(TIM2, DISABLE);
+                        TIM_Cmd(TIM2, DISABLE);
                         cnt = 3;
                         break;
                 }
@@ -166,11 +161,11 @@ void init_pwmgen_timers_interleaved(void)
     
     TIM_Cmd(TIM2, ENABLE);
 
-    // clock::delay(10ms);
+    clock::delay(10ms);
 
-    // hal::timer2.set_event_callback(nullptr);
+    hal::timer2.set_event_callback(nullptr);
 
-    // TIM_Cmd(TIM2, ENABLE);
+    TIM_Cmd(TIM2, DISABLE);
 }
 
 
@@ -255,7 +250,7 @@ void axis3_main(){
             {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
 
-            #if 1
+            #if 0
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T1_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
             // {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},  
@@ -275,7 +270,7 @@ void axis3_main(){
     );
 
 
-    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T2TRGO);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
     hal::adc1.enable_auto_inject(DISEN);
     hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
@@ -313,15 +308,25 @@ void axis3_main(){
             }
         }
     );
+    #if 1
+    hal::timer1.oc<4>().init({
+        .oc_mode = hal::TimerOcMode::ActiveAboveCvr,
+        .cvr_sync_en = EN,
+        .valid_level = HIGH,
+        .out_en = EN
+    });
 
+    TIM1->CH4CVR = ARR_VALUE - 8;
+    #endif
+
+    set_timer1_duty(200, 300, 400);
+    set_timer8_duty(300, 300, 400);
+    set_timer10_duty(400, 300, 400);
 
     TIM_CtrlPWMOutputs(TIM1, ENABLE);
     TIM_CtrlPWMOutputs(TIM8, ENABLE);
     TIM_CtrlPWMOutputs(TIM10, ENABLE);
 
-    set_timer1_duty(200, 300, 400);
-    set_timer8_duty(300, 300, 400);
-    set_timer10_duty(400, 300, 400);
 
     while(true){
         DEBUG_PRINTLN(uint16_t(TIM1->CNT), uint16_t(TIM8->CNT), uint16_t(TIM10->CNT));
