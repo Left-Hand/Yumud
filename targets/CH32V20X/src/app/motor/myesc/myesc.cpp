@@ -129,7 +129,8 @@ enum class [[nodiscard]] DemoTrajPattern:uint8_t{
     Sine,
     Saw,
     Stairs,
-    Triangle
+    Triangle,
+    Miniwave
 };
 
 
@@ -175,6 +176,18 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
         case DemoTrajPattern::Sine:{
             constexpr auto speed = 1_iq16;
             constexpr auto side_amplitude = 1.4_iq16;
+
+            const auto [s,c] = math::sincos(speed * t);
+            return {
+                make_iiq32(side_amplitude * iq16(s)),
+                side_amplitude * speed * iq16(c),
+                0
+            };
+        }
+
+        case DemoTrajPattern::Miniwave:{
+            constexpr auto speed = 2_iq16;
+            constexpr auto side_amplitude = 0.01_iq16;
 
             const auto [s,c] = math::sincos(speed * t);
             return {
@@ -271,11 +284,7 @@ static constexpr auto HFI_PLL_COEFFS =
 
 
 
-static constexpr iq20 HW_TORQUE_CURRENT_LIMIT = 
-    std::min(
-        CURRENT_HALFSCALE_AMPS, 
-        iq20(BUSBAR_VOLT) * uq32(0.666) / PHASE_RESISTANCE_OHM
-    ) * uq32(0.8);
+
 
 static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
@@ -299,7 +308,7 @@ static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = dsp::adrc::FhanPrecomputed<iq16>::from({
-    .r = 144.5_iq16,
+    .r = CURVE_X3_LIMIT,
     .h = 0.003_iq16,
 });
 
@@ -506,8 +515,8 @@ static void setup_drv8323(){
 
     //使用更小的拉灌电流有助于减小mcu侧的adc毛刺
     // drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
-    // drv8323_idrive_pin_.inpu();
-    drv8323_idrive_pin_.inflt();//Sink 240mA/ Source 120mA
+    drv8323_idrive_pin_.inpu();
+    // drv8323_idrive_pin_.inflt();//Sink 240mA/ Source 120mA
     // drv8323_idrive_pin_.outpp(LOW);
 
 
@@ -1050,12 +1059,23 @@ static void process_mechanical_loop(
 
     switch(loop_wiring){
         case LoopWiring::SeriesPi:{
+            #if 0
+            //GIM4310
             const iq20 kpp_normal = 12;
             const iq20 kpp_big = 20;
             const iq20 kpp = fn_switches.override_big_position_kp ? kpp_big : kpp_normal;
             // const iq20 kp = 1.2_iq20;
             constexpr iq20 kp = 0.6_iq20;
             constexpr iq20 ki = 6.66_iq20;
+            #else
+            //Jc4310
+            const iq20 kpp_normal = 20;
+            const iq20 kpp_big = 30;
+            const iq20 kpp = fn_switches.override_big_position_kp ? kpp_big : kpp_normal;
+            // const iq20 kp = 1.2_iq20;
+            constexpr iq20 kp = 0.43_iq20;
+            constexpr iq20 ki = 14.66_iq20;
+            #endif
             constexpr auto ki_discrete = ki / FOC_FREQ;
 
             const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1 - now_x1), kpp, E2_LIMIT));
@@ -1993,8 +2013,8 @@ void myesc_main(){
     auto op_flags_ = OpFlags::from_default();
     op_flags_.dc_calibrate_unready = true;
 
-    // op_flags_.sideshaft_calibrate_unready = false;
-    op_flags_.sideshaft_calibrate_unready = true;
+    op_flags_.sideshaft_calibrate_unready = false;
+    // op_flags_.sideshaft_calibrate_unready = true;
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.current_harmonic_suppression_en = 0;
@@ -2057,7 +2077,15 @@ void myesc_main(){
         state.uvw_adc_bvalue = get_adc_uvw_bvalue();
         process_current_sense(state, fn_switches, state.uvw_adc_bvalue);
 
-        const auto encoder_position_raw = mag_encoder_waitfor_angle().to_turns();
+        auto encoder_position_raw = mag_encoder_waitfor_angle().to_turns();
+
+        #if 0
+        {
+            static constexpr size_t LG2_SIMULATED_ENCODER_RESOLUTION = 12;
+            static constexpr uint32_t MASK = ((1u << LG2_SIMULATED_ENCODER_RESOLUTION) - 1) << (32 - LG2_SIMULATED_ENCODER_RESOLUTION);
+            encoder_position_raw.bits &= MASK;
+        }
+        #endif
 
         state.encoder_get_done_tick = get_timer_tick();
 
@@ -2141,9 +2169,11 @@ void myesc_main(){
 
         auto encoder_abs_position32 = iiq32_crop_frac(state.encoder_abs_position64);
 
-        const auto elec_align_offset = 0.946429_uq32;
-        const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32 - elec_align_offset));
-        state.sensed_elec_angle = mech_angle * POLE_PAIRS;
+        // const auto elec_align_offset = 0.946429_uq32;
+        const auto elec_align_offset = 0.80_uq32;
+        // const auto elec_align_offset = 0.75_uq32;
+        const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32));
+        state.sensed_elec_angle = (mech_angle * POLE_PAIRS) + Angular<uq32>::from_turns(elec_align_offset);
 
         const auto mech_speed = state.encoder_ltd_state.x2;
         state.sensed_elec_speed = iq16(mech_speed) * POLE_PAIRS;
@@ -2189,11 +2219,12 @@ void myesc_main(){
                 [[maybe_unused]] const auto now_secs = clock::seconds();
 
                 auto & traj_state = state.traj_state;
-                #if 0
+                #if 1
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
                     // DemoTrajPattern::Stop
                     DemoTrajPattern::Stairs
+                    // DemoTrajPattern::Miniwave
                     // DemoTrajPattern::Saw
                     // DemoTrajPattern::Triangle
                 ;
@@ -2724,17 +2755,18 @@ void myesc_main(){
         };
 
         if(true)DEBUG_PRINTLN(
-            // math::fixed_downcast<16>(state.traj_state.x1),
+            math::fixed_downcast<16>(state.traj_state.x1),
             // math::fixed_downcast<16>(state.traj_smooth_state.x1),
             // math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_ltd_state.x1),
-            state.encoder_ltd_state.x2,
+            // math::fixed_downcast<16>(state.encoder_ltd_state.x1),
+            // state.encoder_ltd_state.x2,
             math::fixed_downcast<16>(state.encoder_pll_state.x1),
+            math::fixed_downcast<16>(state.encoder_rel_position64),
             state.encoder_pll_state.x2,
-            state.uvw_adc_bvalue,
-            ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
+            // state.uvw_adc_bvalue,
+            // ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
             // math::fixed_downcast<16>(state.encoder_abs_position64),
-            // math::fixed_downcast<16>(state.encoder_pll_state.x1 - state.encoder_abs_position64),
+            math::fixed_downcast<16>(state.encoder_rel_position64 - state.curve_state.x1) * 360,
 
 
             // state.traj_smooth_state.x2,
@@ -2752,7 +2784,7 @@ void myesc_main(){
             // state.encoder_ltd_state.x2,
             // state.pi_ref_x2,
 
-            // state.torque_curr_cmd,
+            state.torque_curr_cmd,
             // state.torque_curr_veryslowlp,
             // iq20::from(float(math::bf16(float(state.torque_curr_veryslowlp)))),
             // encode_curr_eps(state.torque_curr_veryslowlp),

@@ -72,7 +72,8 @@ static constexpr size_t DC_CAL_TIMES = 1 << LG2_DC_CAL_TIMES;
 
 
 // using MotorProfile = MotorProfile_Ysc;
-using MotorProfile = MotorProfile_Gim4310;
+// using MotorProfile = MotorProfile_Gim4310;
+using MotorProfile = MotorProfile_Jc4310;
 
 // using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_Wheel;
@@ -105,11 +106,25 @@ static constexpr size_t OBSERVER_PLL_FC = 65;
 static constexpr size_t HFI_PLL_FC = 65;
 static constexpr uq32 TSAMPLE = calc_uq32_rcp(FOC_FREQ);
 
+#if 0
+static constexpr int32_t CURVE_X2_LIMIT = 3;
+static constexpr auto CURVE_X3_LIMIT = 14.5_iq16;
+#endif
+
+#if 1
 static constexpr int32_t CURVE_X2_LIMIT = 8;
+static constexpr auto CURVE_X3_LIMIT = 24.5_iq16;
+#endif
 
 static constexpr int32_t E1_LIMIT = 100;
 static constexpr int32_t E2_LIMIT = 1000;
 
 static constexpr auto TORQUE_CURR_STEP_LIMIT = iq20(0.04);
-static constexpr auto TORQUE_CURR_LIMIT = iq20(5.5);
+static constexpr auto TORQUE_CURR_LIMIT = MotorProfile::CURRENT_LIMIT;
+
+static constexpr iq20 HW_TORQUE_CURRENT_LIMIT = 
+    std::min(
+        CURRENT_HALFSCALE_AMPS, 
+        iq20(BUSBAR_VOLT) * uq32(0.666) / PHASE_RESISTANCE_OHM
+    ) * uq32(0.8);
 }

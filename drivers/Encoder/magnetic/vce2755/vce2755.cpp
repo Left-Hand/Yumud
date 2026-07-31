@@ -52,9 +52,12 @@ static_assert(calc_crc4(0x00001) == 0x03);
 
 
 IResult<VCE2755::AnglePacket> VCE2755::get_angle(){
-    AnglePacket angle_packet;
-    if(const auto res = read_bulk(AnglePacket::BASE_ADDR, std::span(angle_packet.bytes));
+    // AnglePacket angle_packet;
+    std::array<uint8_t, 3> buffer;
+    if(const auto res = read_bulk(AnglePacket::BASE_ADDR, std::span(buffer));
         res.is_err()) return Err(res.unwrap_err());
+
+    const auto angle_packet = AnglePacket::from_be_bytes(buffer[0], buffer[1], buffer[2]);
     return Ok(angle_packet);
 }
 
