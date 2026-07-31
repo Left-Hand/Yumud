@@ -143,7 +143,7 @@ void TIM_TimeBaseInit(TIM_TypeDef *TIMx, const TIM_TimeBaseInitTypeDef *TIM_Time
  *
  * @return  none
  */
-void TIM_OC1Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC1Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -190,7 +190,7 @@ void TIM_OC1Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC2Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC2Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -235,7 +235,7 @@ void TIM_OC2Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC3Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC3Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -279,7 +279,7 @@ void TIM_OC3Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC4Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC4Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
