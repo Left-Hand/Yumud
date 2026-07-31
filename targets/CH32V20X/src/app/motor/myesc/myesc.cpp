@@ -346,10 +346,16 @@ __no_inline static void setup_adc(){
             {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
 
+            #if 1
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
             {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
             {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},  
-            {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
+            #else
+            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T28_5},  
+            #endif
+            // {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
 
             // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
@@ -498,8 +504,10 @@ static void setup_drv8323(){
     // drv8323_gain_pin_.outpp(HIGH);//40x
 
 
-    drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
-    // drv8323_idrive_pin_.inflt();
+    //使用更小的拉灌电流有助于减小mcu侧的adc毛刺
+    // drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
+    // drv8323_idrive_pin_.inpu();
+    drv8323_idrive_pin_.inflt();//Sink 240mA/ Source 120mA
     // drv8323_idrive_pin_.outpp(LOW);
 
 
@@ -808,7 +816,7 @@ static void process_encoder_cogging_harmonic(AllState & state, const FnSwitches 
 static void process_encoder_pll(
     AllState & state, 
     const FnSwitches fn_switches, 
-    iiq32 encoder_abs_position64
+    iiq32 x1
 ){
     #if 1
     {
@@ -821,7 +829,7 @@ static void process_encoder_pll(
 
         auto & pll_state = state.encoder_pll_state;
 
-        const iq20 e1 = sub_clamp2_downcast_iq20(encoder_abs_position64, pll_state.x1, E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20(x1, pll_state.x1, E1_LIMIT);
         pll_state.x2_integral = math::clamp2(pll_state.x2_integral + e1 * kidt, E2_LIMIT);
 
         pll_state.x2 = pll_state.x2_integral + e1 * kpdt;
@@ -836,7 +844,7 @@ static void process_encoder_pll(
 static void process_encoder_ltd(
     AllState & state, 
     const FnSwitches fn_switches, 
-    iiq32 encoder_rel_position64
+    iiq32 x1
 ){
     #if 1
     {
@@ -847,7 +855,7 @@ static void process_encoder_ltd(
         auto & x2_now = state_2o.x2;
         
 
-        const iq20 e1 = sub_clamp2_downcast_iq20(encoder_rel_position64, x1_now, E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20(x1, x1_now, E1_LIMIT);
 
         const iq20 e2 = - x2_now;
 
@@ -1125,8 +1133,7 @@ void process_harmonic_suppression(
 
         bool is_traditional = true;
         const auto dq_curr_ref = state.dq_curr_ref;
-        state.alphabeta_curr_ref = dq_curr_ref.rotate(elec_sincos);
-        state.uvw_curr_ref = state.alphabeta_curr_ref.to_uvw();
+
 
         const auto elec_sincos_5x = math::Rotation2<iq31>::from_angle(elec_angle * 5u);
 
@@ -1600,7 +1607,7 @@ void process_current_loop(
 
 
         const bool do_mtpa = fn_switches.mtpa_en;
-        const bool do_mtpv = fn_switches.mtpv_en;
+        const bool do_fw = fn_switches.mtpv_en;
 
 
         constexpr auto ld_lq_diff = Q_AXIS_INDUCTANCE_MH - D_AXIS_INDUCTANCE_MH;
@@ -1643,11 +1650,14 @@ void process_current_loop(
         }
 
         //TODO mtpv
-        if(do_mtpv){
+        if(do_fw){
         }
 
         state.dq_curr_ref.d = d_curr_ref;
         state.dq_curr_ref.q = q_curr_ref;
+
+        state.alphabeta_curr_ref = state.dq_curr_ref.rotate(elec_sincos);
+        state.uvw_curr_ref = state.alphabeta_curr_ref.to_uvw();
 
         state.backcalc_torque_curr = q_curr_ref * (1 + ld_lq_diff_by_lambda * d_curr_ref);
 
@@ -1983,8 +1993,8 @@ void myesc_main(){
     auto op_flags_ = OpFlags::from_default();
     op_flags_.dc_calibrate_unready = true;
 
-    op_flags_.sideshaft_calibrate_unready = false;
-    // op_flags_.sideshaft_calibrate_unready = true;
+    // op_flags_.sideshaft_calibrate_unready = false;
+    op_flags_.sideshaft_calibrate_unready = true;
 
     auto fn_switches_ = FnSwitches::from_default();
     fn_switches_.current_harmonic_suppression_en = 0;
@@ -1999,13 +2009,14 @@ void myesc_main(){
     fn_switches_.auto_curve_retrack_en = true;
     fn_switches_.damping_forwardfeedback_en = false;
     fn_switches_.interia_forwardfeedback_en = false;
+    fn_switches_.sideshaft_compensate_en = true;
 
     static constexpr size_t HEAP_ARENA_SIZE = 4096;
     auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
-    auto alloc = mem::ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
+    auto arena_allocater = mem::ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
 
 
-    auto & all_state_ = *reinterpret_cast<AllState *>(alloc.allocate(sizeof(AllState)));
+    auto & all_state_ = *reinterpret_cast<AllState *>(arena_allocater.allocate(sizeof(AllState)));
     all_state_.reset();
     all_state_.torque_curr_cmd = 0.0_iq20;
 
@@ -2014,9 +2025,7 @@ void myesc_main(){
     // profiler_.reset();
     // profiler_push_record(profiler_, MyRecord{ShortString8::try_from_cstr("MyTick00").unwrap(), get_timer_tick(), get_timer_tick()}).unwrap();
     // profiler_push_record(profiler_, MyRecord{ShortString8::try_from_cstr("wtf").unwrap(), get_timer_tick(), get_timer_tick()}).unwrap();
-
-    auto jeoc_isr = [&]{
-
+    auto foc_loop = [&]{
 
         static constexpr size_t ENCODER_SIDESHAFT_EPS_TABLE_LENGTH = POLE_PAIRS * 6;
         static_assert(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH < ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY);
@@ -2026,9 +2035,6 @@ void myesc_main(){
         static constexpr size_t REVS_PER_DIRECTION = 2;
         static constexpr size_t CALIBRATE_STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
         
-        // static constexpr bool do_sideshaft_calibrate = false;
-        static constexpr bool sideshaft_compensate = true;
-        // static constexpr bool sideshaft_compensate = fn_switches.sideshaft_compenstate_en;
         auto  & state = all_state_;
 
         //do clone, avoid external modify during isr
@@ -2039,23 +2045,21 @@ void myesc_main(){
         // const auto op_flags = std::bit_cast<FnSwitches>(uint32_t(op_flags_bits));
         auto & op_flags = op_flags_;
 
-        timming_watch_pin_.set_high();
-
-
-        state.isr_entry_tick = get_timer_tick();
 
 
         const bool is_sideshaft_calibrate_done = !op_flags.sideshaft_calibrate_unready;
-        const bool do_sideshaft_calibrate = sideshaft_compensate and (!is_sideshaft_calibrate_done);
+        const bool do_sideshaft_calibrate = (fn_switches.sideshaft_compensate_en) and (!is_sideshaft_calibrate_done);
 
 
         mag_encoder_poll_conversion();
 
 
-        const auto uvw_bvalue = get_adc_uvw_bvalue();
-        process_current_sense(state, fn_switches, uvw_bvalue);
+        state.uvw_adc_bvalue = get_adc_uvw_bvalue();
+        process_current_sense(state, fn_switches, state.uvw_adc_bvalue);
 
         const auto encoder_position_raw = mag_encoder_waitfor_angle().to_turns();
+
+        state.encoder_get_done_tick = get_timer_tick();
 
         auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
             return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
@@ -2085,7 +2089,7 @@ void myesc_main(){
 
 
         auto correct_encoder_position = [&](const iq32 * table_data, uq32 raw_turns) -> uq32{
-            if(is_sideshaft_calibrate_done & fn_switches.sideshaft_compenstate_en){
+            if(is_sideshaft_calibrate_done & fn_switches.sideshaft_compensate_en){
                 const auto table_eps = calc_encoder_eps(table_data, raw_turns);
                 return raw_turns + table_eps;
             }else{
@@ -2148,15 +2152,14 @@ void myesc_main(){
         state.elec_angle = state.sensed_elec_angle;
         state.elec_speed = state.sensed_elec_speed;
 
-        state.encoder_get_done_tick = get_timer_tick();
 
 
         if(op_flags.dc_calibrate_unready){
             auto & dc_state = state.dc_calibrate_state;
             dc_state.uvw_bvalue_offset_acc = {
-                std::get<0>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<0>(uvw_bvalue)),
-                std::get<1>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<1>(uvw_bvalue)),
-                std::get<2>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<2>(uvw_bvalue))
+                std::get<0>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<0>(state.uvw_adc_bvalue)),
+                std::get<1>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<1>(state.uvw_adc_bvalue)),
+                std::get<2>(dc_state.uvw_bvalue_offset_acc) + int32_t(std::get<2>(state.uvw_adc_bvalue))
             };
             dc_state.dc_cal_cnt++;
             if(dc_state.dc_cal_cnt >= DC_CAL_TIMES){
@@ -2372,6 +2375,16 @@ void myesc_main(){
         {
             set_uvw_dutycycle(state.uvw_dutycycle_genout, fn_switches.phase_invert_en);
         }
+    };
+
+
+    auto jeoc_isr = [&]{
+        auto & state = all_state_;
+
+        timming_watch_pin_.set_high();
+        state.isr_entry_tick = get_timer_tick();
+
+        foc_loop();
 
         state.isr_exit_tick = get_timer_tick();
         timming_watch_pin_.set_low();
@@ -2429,7 +2442,7 @@ void myesc_main(){
             }),
             
             script::make_function(StringView("sce"), [&](const bool en){
-                fn_switches_.sideshaft_compenstate_en = en;
+                fn_switches_.sideshaft_compensate_en = en;
             }),
 
             script::make_function(StringView("ehse"), [&](const bool en){
@@ -2718,12 +2731,14 @@ void myesc_main(){
             state.encoder_ltd_state.x2,
             math::fixed_downcast<16>(state.encoder_pll_state.x1),
             state.encoder_pll_state.x2,
-            math::fixed_downcast<16>(state.encoder_abs_position64),
-            math::fixed_downcast<16>(state.encoder_pll_state.x1 - state.encoder_abs_position64),
+            state.uvw_adc_bvalue,
+            ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
+            // math::fixed_downcast<16>(state.encoder_abs_position64),
+            // math::fixed_downcast<16>(state.encoder_pll_state.x1 - state.encoder_abs_position64),
 
 
-            state.traj_smooth_state.x2,
-            state.curve_state.x2,
+            // state.traj_smooth_state.x2,
+            // state.curve_state.x2,
             // state.sensed_elec_angle.to_turns(),
             // state.sensed_elec_speed,
             // state.torque_curr_cmd,
@@ -2748,7 +2763,8 @@ void myesc_main(){
             // math::fixed_downcast<16>(state.debug.curve_x1),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
-            // math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_ltd_state.x1),
+            tmrticks_to_us(state.isr_entry_tick),
+            tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick),
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
 

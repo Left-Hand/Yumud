@@ -170,7 +170,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     uint32_t mtpa_en : 1;
     uint32_t mtpv_en : 1;
 
-    uint32_t sideshaft_compenstate_en : 1;
+    uint32_t sideshaft_compensate_en : 1;
     uint32_t override_big_position_kp : 1;
     uint32_t damping_forwardfeedback_en : 1;
     uint32_t interia_forwardfeedback_en : 1;
@@ -449,6 +449,7 @@ struct alignas(4) [[nodiscard]] AllState{
         uint8_t encoder_correct_method_signature;
     };
 
+    std::array<int32_t, 3> uvw_adc_bvalue;
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;
     UvwCoord<iq20> uvw_curr_slowlp;
