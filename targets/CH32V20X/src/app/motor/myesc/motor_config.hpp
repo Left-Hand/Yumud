@@ -7,10 +7,10 @@
 namespace ymd::myesc{
 
 
-// static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
-static constexpr uint32_t CHOPPER_FREQ = 25000;
-// static constexpr uint32_t CHOPPER_FREQ = 10_KHz;
-static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
+// static constexpr uint32_t FOC_FREQ = 40_KHz;
+static constexpr uint32_t FOC_FREQ = 25000;
+// static constexpr uint32_t FOC_FREQ = 12000;
+// static constexpr uint32_t FOC_FREQ = 10_KHz;
 
 static constexpr auto DEADTIME_NANOS = 120ns;
 // static constexpr auto DEADTIME_NANOS = 2720ns;
@@ -35,18 +35,14 @@ static constexpr uq32 INV_CTRL_VOLT_LIMIT = uq32(1 / CTRL_VOLT_LIMIT);
 
 // #region OPA 
 static constexpr double SHUNT_RESISTANCE_OHMS = 0.004f;
-static constexpr double HW_OPA_GAIN = 20;
+static constexpr double HW_OPA_GAIN = 40;
 static constexpr double ONCHIP_ADC_OPA_GAIN = 1;
 static constexpr double OPA_GAIN = HW_OPA_GAIN * ONCHIP_ADC_OPA_GAIN;
 static constexpr double CURRENT_HALFSCALE_AMPS_F = 1.65 / (OPA_GAIN * SHUNT_RESISTANCE_OHMS);
 // #endregion
 
-
-
-
-// static constexpr auto CURRENT_AMPS_PER_ADC_LSB = uq32(CURRENT_HALFSCALE_AMPS_F / (1 << 12));
-
-static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << 12);
+static constexpr size_t LG2_ADC_RESOLUTION = 12;
+static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << LG2_ADC_RESOLUTION);
 static constexpr auto CURRENT_HALFSCALE_AMPS = iq20(CURRENT_HALFSCALE_AMPS_F);
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_AMPS_PER_ADC_LSB_F);
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;
@@ -54,8 +50,8 @@ static constexpr auto ADC_LSB_PER_CURRENT_AMPS = iq16(1.0f / CURRENT_AMPS_PER_AD
 
 
 // static constexpr iq20 HFI_VOLT = HFI_MODU_DEPTH_LIMIT * BUSBAR_VOLT;
-static constexpr float HALFWAVE_MICROS = 1000000.0 / (CHOPPER_FREQ * 2);
-static constexpr size_t TIMER_ARR_VALUE = 144000000 / (CHOPPER_FREQ * 2) - 1;
+static constexpr float HALFWAVE_MICROS = 1000000.0 / (FOC_FREQ * 2);
+static constexpr size_t TIMER_ARR_VALUE = 144000000 / (FOC_FREQ * 2) - 1;
 static constexpr float ADC_SAMPLE_TICKS = (13.5 + 1.5) * 3;
 static constexpr float ADC_ALIGNED_IPCORE_FREQ = 144000000;
 static constexpr float ADC_CLOCK_DIVIDER_COUNT = 8;

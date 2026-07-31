@@ -383,7 +383,7 @@ static void setup_timer(){
     auto & timer = hal::timer1;
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
-        // .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2),
+        // .count_freq = hal::NearestFreq(FOC_FREQ * 2),
         .count_freq = hal::timer::ArrAndPsc{TIMER_ARR_VALUE,1-1},
         // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig,
@@ -509,8 +509,8 @@ static void setup_drv8323(){
     // drv8323_gain_pin_.outpp(LOW);
     // drv8323_gain_pin_.outpp(LOW);
     // drv8323_gain_pin_.inpd();//10x
-    drv8323_gain_pin_.inflt();//20x
-    // drv8323_gain_pin_.outpp(HIGH);//40x
+    // drv8323_gain_pin_.inflt();//20x
+    drv8323_gain_pin_.outpp(HIGH);//40x
 
 
     //使用更小的拉灌电流有助于减小mcu侧的adc毛刺
@@ -1997,13 +1997,10 @@ void myesc_main(){
     led_green_pin_.outpp();
 
     [[maybe_unused]] auto poll_led_blink = [&]{
-
-        led_red_pin_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 200) > 100);
-        led_blue_pin_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 400) > 200);
-        led_green_pin_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 800) > 400);
+        const auto millis_u32 = uint32_t(clock::millis().count());
+        led_red_pin_ = BoolLevel::from((millis_u32 % 200u) > 100);
+        led_blue_pin_ = BoolLevel::from((millis_u32 % 400u) > 200);
+        led_green_pin_ = BoolLevel::from((millis_u32 % 800u) > 400);
     };
 
 
@@ -2526,9 +2523,6 @@ void myesc_main(){
         if(false)DEBUG_PRINTLN();
             // die_celsius_,
             // s, c, 
-            // pwm_u_.cvr(),
-            // pwm_v_.cvr(),
-            // pwm_w_.cvr(),
             // state.uvw_curr_raw.u,
             // state.uvw_curr_raw.v + state.uvw_curr_raw.w,
             // state.uvw_curr_raw.v,
@@ -2763,8 +2757,8 @@ void myesc_main(){
             math::fixed_downcast<16>(state.encoder_pll_state.x1),
             math::fixed_downcast<16>(state.encoder_rel_position64),
             state.encoder_pll_state.x2,
-            // state.uvw_adc_bvalue,
-            // ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
+            state.uvw_adc_bvalue[0],
+            ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
             // math::fixed_downcast<16>(state.encoder_abs_position64),
             math::fixed_downcast<16>(state.encoder_rel_position64 - state.curve_state.x1) * 360,
 

@@ -183,6 +183,8 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
+
+    axis3_main();
     // sincos_main();
     icm42688_main();
     // jvci_main();

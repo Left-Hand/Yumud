@@ -38,6 +38,110 @@ template<typename T>
 namespace ymd::lld{
 
 
+    
+void timeroc_set_oc_mode(
+    void * p_inst,
+    const TimerChannelSelection ch_sel, 
+    const TimerOcMode mode
+){
+    using ChannelSelection = TimerChannelSelection;
+    const uint8_t bits = std::bit_cast<uint8_t>(mode) << 4;
+
+    switch(ch_sel.kind()){
+        case ChannelSelection::CH1:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR1;
+            const uint16_t m_code = TIM_OC1M;
+            const uint16_t s_code = TIM_CC1S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(bits);
+            SPL_INST(p_inst)->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH2:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR1;
+            const uint16_t m_code = TIM_OC2M;
+            const uint16_t s_code = TIM_CC2S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(bits) << 8);
+            SPL_INST(p_inst)->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH3:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR2;
+            const uint16_t m_code = TIM_OC3M;
+            const uint16_t s_code = TIM_CC3S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(bits);
+            SPL_INST(p_inst)->CHCTLR2 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH4:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR2;
+            const uint16_t m_code = TIM_OC4M;
+            const uint16_t s_code = TIM_CC4S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code << 8)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(bits) << 8);
+            SPL_INST(p_inst)->CHCTLR2 = tmpccmrx;
+            break;
+        }
+        default:
+            __builtin_trap();
+            break;
+    }
+}
+
+
+
+void timeroc_enable_output(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const Enable en
+){
+    if(en == EN) SPL_INST(p_inst)->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel) * 2));
+    else SPL_INST(p_inst)->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel)) * 2)));
+}
+
+
+
+void timeroc_enable_cvr_sync(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const Enable en
+){
+    using ChannelSelection = TimerChannelSelection;
+    const auto e_code = (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable;
+    switch(ch_sel.kind()){
+        case ChannelSelection::CH1:
+            TIM_OC1PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH2:
+            TIM_OC2PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH3:
+            TIM_OC3PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH4:
+            TIM_OC4PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        default:
+            __builtin_trap();
+            break;
+    }
+}
+
+void timeroc_set_valid_level(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const BoolLevel level
+){
+    if(level == LOW) SPL_INST(p_inst)->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel) * 2 + 1));
+    else SPL_INST(p_inst)->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel)) * 2 + 1)));
+}
+
 bool timer_is_up_counting(void * p_inst){
     auto p_reg = (volatile uint16_t *)(&SPL_INST(p_inst)->CTLR1);
     return reg_get_bit(uint16_t(*p_reg), uint16_t(TIM_DIR)) == 0;
