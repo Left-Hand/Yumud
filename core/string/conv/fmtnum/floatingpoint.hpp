@@ -5,6 +5,8 @@
 #include <tuple>
 
 namespace ymd::str{
+
+
 // 计算正值浮点数的整数部分 
 // 此代码不使用任何浮点运算，nan/inf值安全由调用者保障
 static constexpr uint32_t floor_abs_f32_nonfpu(const float f_val){
@@ -59,7 +61,8 @@ static constexpr uint32_t floor_abs_f32_nonfpu(const float f_val){
     return sig >> shift;
 }
 
-
+// 计算正值浮点数的小数部分 
+// 此代码不使用任何浮点运算，nan/inf值安全由调用者保障
 static constexpr uint32_t frac_abs_f32_nonfpu(const float f_val, const uint32_t scale) {
     const uint32_t u = std::bit_cast<uint32_t>(f_val);
     const int32_t exp = ((u >> 23) & 0xFF) - 127;
@@ -76,7 +79,7 @@ static constexpr uint32_t frac_abs_f32_nonfpu(const float f_val, const uint32_t 
         // sig * scale <= (2^24) * scale
         // If shift is large enough that sig * scale < 2^(shift-1), result is 0
         // Max sig*scale: assume scale <= 100000 (10^5) → ~1.6e12 < 2^41
-        if (shift > 60) {
+        if (shift > 60) [[unlikely]] {
             return 0;
         }
         const uint64_t num = static_cast<uint64_t>(sig) * scale;

@@ -28,7 +28,7 @@ struct [[nodiscard]] alignas(size_t) DigitFracPair final{
     }
 };
 
-// 0 <= q_num <= 32
+// 0 < q_num <= 32
 __attribute__((optimize("Ofast")))
 [[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint32(
     uint32_t abs_value_bits, 
@@ -37,6 +37,7 @@ __attribute__((optimize("Ofast")))
 ){
 
     if(q_num > 32) __builtin_unreachable();
+    if(q_num == 0) __builtin_unreachable();
 
     if(q_num == 32) [[unlikely]]{
         q_num = 31;
@@ -47,27 +48,21 @@ __attribute__((optimize("Ofast")))
     
     uint32_t frac_part;
     
-    // 右移Q位提取小数部分（注意处理Q=0的情况）
-    if(q_num != 0) [[likely]] {
-        const uint32_t pow10_scale = POW10_TABLE[precision];
-        const uint32_t lower_mask = (1u << q_num) - 1;
-        
-        // 使用64位整数进行计算，避免溢出
-        const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
+    const uint32_t pow10_scale = POW10_TABLE[precision];
+    const uint32_t lower_mask = (1u << q_num) - 1;
     
-        frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (q_num - 1)) + 1) >> 1;
+    // 使用64位整数进行计算，避免溢出
+    const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
 
-        // 检查是否需要进位到整数部分
-        if(frac_part >= pow10_scale){
-            digit_part += 1;
-        
-            // 如果发生进位，调整小数部分
-            frac_part -= pow10_scale;
-        }
-    }else{
-        frac_part = 0;
+    frac_part = (static_cast<uint32_t>(frac_scaled_bits >> (q_num - 1)) + 1) >> 1;
+
+    // 检查是否需要进位到整数部分
+    if(frac_part >= pow10_scale){
+        digit_part += 1;
+    
+        // 如果发生进位，调整小数部分
+        frac_part -= pow10_scale;
     }
-
 
     return {
         .digit_part = digit_part, 
@@ -75,7 +70,7 @@ __attribute__((optimize("Ofast")))
     };
 }
 
-// 0 <= q_num <= 64
+// 0 < q_num <= 64
 __attribute__((optimize("Ofast")))
 [[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint64(
     uint64_t abs_value_bits, 
@@ -104,8 +99,12 @@ __attribute__((optimize("Ofast")))
     constexpr size_t MAX_PRECSION = POW10_TABLE.size() - 1;
     if(precision > MAX_PRECSION) precision = MAX_PRECSION;
 
-
-    const auto parts = depart_abs_fixedpoint32(abs_value_bits, precision, q_num);
+    const auto parts = [&] -> DigitFracPair{
+        if(q_num == 0)[[unlikely]]{
+            return {abs_value_bits, 0};
+        }
+        return depart_abs_fixedpoint32(abs_value_bits, precision, q_num);
+    }();
 
     p_str = parts.fmt_str(p_str, precision);
     return p_str;

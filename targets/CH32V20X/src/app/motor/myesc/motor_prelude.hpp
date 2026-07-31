@@ -366,6 +366,12 @@ struct alignas(4) [[nodiscard]] HpState2o final{
     iq20 x2;
 };
 
+struct alignas(4) [[nodiscard]] PllState final{
+    iiq32 x1;
+    iq20 x2;
+    iq20 x2_integral;
+};
+
 
 struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState final{
     iiq32 hat_turns;
@@ -410,7 +416,8 @@ struct alignas(4) [[nodiscard]] HfiState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    HpState2o encoder_pll_state;
+    HpState2o encoder_ltd_state;
+    PllState encoder_pll_state;
     CurveState curve_state;
     TrajState traj_smooth_state;
     TrajState traj_state;
