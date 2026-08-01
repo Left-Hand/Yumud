@@ -343,7 +343,7 @@ void alx_aoa_main(){
         }
     );
 
-    uwb_uart_.set_event_callback([&](const hal::UartEvent & ev){
+    uwb_uart_.set_isr_callback([&](const hal::UartEvent & ev){
         auto poll_parser = [&](){
             times ++;
             const auto quantity = uwb_uart_.rx_queue()

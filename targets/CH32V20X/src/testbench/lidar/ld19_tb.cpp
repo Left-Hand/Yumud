@@ -77,7 +77,7 @@ void ld19_main(){
     static_assert(false, "Unsupported MCU");
     #endif
 
-    ld19_uart_.set_event_callback([&](const hal::UartEvent & ev){
+    ld19_uart_.set_isr_callback([&](const hal::UartEvent & ev){
         auto poll_parser = [&](){
             while(true){
                 uint8_t byte;

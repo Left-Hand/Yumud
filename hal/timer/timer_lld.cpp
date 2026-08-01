@@ -38,6 +38,110 @@ template<typename T>
 namespace ymd::lld{
 
 
+    
+void timeroc_set_oc_mode(
+    void * p_inst,
+    const TimerChannelSelection ch_sel, 
+    const TimerOcMode mode
+){
+    using ChannelSelection = TimerChannelSelection;
+    const uint8_t bits = std::bit_cast<uint8_t>(mode) << 4;
+
+    switch(ch_sel.kind()){
+        case ChannelSelection::CH1:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR1;
+            const uint16_t m_code = TIM_OC1M;
+            const uint16_t s_code = TIM_CC1S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(bits);
+            SPL_INST(p_inst)->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH2:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR1;
+            const uint16_t m_code = TIM_OC2M;
+            const uint16_t s_code = TIM_CC2S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(bits) << 8);
+            SPL_INST(p_inst)->CHCTLR1 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH3:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR2;
+            const uint16_t m_code = TIM_OC3M;
+            const uint16_t s_code = TIM_CC3S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(bits);
+            SPL_INST(p_inst)->CHCTLR2 = tmpccmrx;
+            break;
+        }
+        case ChannelSelection::CH4:{
+            uint16_t tmpccmrx = SPL_INST(p_inst)->CHCTLR2;
+            const uint16_t m_code = TIM_OC4M;
+            const uint16_t s_code = TIM_CC4S;
+            tmpccmrx &= uint16_t(~(uint16_t(m_code << 8)));
+            tmpccmrx &= uint16_t(~(uint16_t(s_code)));
+            tmpccmrx |= uint16_t(uint16_t(bits) << 8);
+            SPL_INST(p_inst)->CHCTLR2 = tmpccmrx;
+            break;
+        }
+        default:
+            __builtin_trap();
+            break;
+    }
+}
+
+
+
+void timeroc_enable_output(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const Enable en
+){
+    if(en == EN) SPL_INST(p_inst)->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel) * 2));
+    else SPL_INST(p_inst)->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel)) * 2)));
+}
+
+
+
+void timeroc_enable_cvr_sync(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const Enable en
+){
+    using ChannelSelection = TimerChannelSelection;
+    const auto e_code = (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable;
+    switch(ch_sel.kind()){
+        case ChannelSelection::CH1:
+            TIM_OC1PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH2:
+            TIM_OC2PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH3:
+            TIM_OC3PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        case ChannelSelection::CH4:
+            TIM_OC4PreloadConfig(SPL_INST(p_inst), e_code);
+            break;
+        default:
+            __builtin_trap();
+            break;
+    }
+}
+
+void timeroc_set_valid_level(
+    void * p_inst,
+    const TimerChannelSelection ch_sel,
+    const BoolLevel level
+){
+    if(level == LOW) SPL_INST(p_inst)->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel) * 2 + 1));
+    else SPL_INST(p_inst)->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel)) * 2 + 1)));
+}
+
 bool timer_is_up_counting(void * p_inst){
     auto p_reg = (volatile uint16_t *)(&SPL_INST(p_inst)->CTLR1);
     return reg_get_bit(uint16_t(*p_reg), uint16_t(TIM_DIR)) == 0;
@@ -268,60 +372,108 @@ void timer_set_remap(const Nth nth, const TimerRemap rm){
         }
         break;
     #endif
+
+
+    #ifdef GPIO_PartialRemap_TIM9
+    case 9:
+        switch(rm){
+            case TimerRemap::_0:
+                return;
+            case TimerRemap::_1:
+                return;
+            case TimerRemap::_2:
+                GPIO_PinRemapConfig(GPIO_PartialRemap_TIM9, ENABLE);
+                return;
+            case TimerRemap::_3:
+                GPIO_PinRemapConfig(GPIO_FullRemap_TIM9, ENABLE);
+                return;
+        }
+        break;
+    #endif
+
+    #ifdef GPIO_PartialRemap_TIM10
+    case 10:
+        switch(rm){
+            case TimerRemap::_0:
+                return;
+            case TimerRemap::_1:
+                return;
+            case TimerRemap::_2:
+                GPIO_PinRemapConfig(GPIO_PartialRemap_TIM10, ENABLE);
+                return;
+            case TimerRemap::_3:
+                GPIO_PinRemapConfig(GPIO_FullRemap_TIM10, ENABLE);
+                return;
+        }
+        break;
+    #endif
     }
     __builtin_trap();
 }
 
 void timer_enable_rcc(const Nth nth, const Enable en){
     switch(nth.count()){
-    #ifdef TIM1_PRESENT
+    #ifdef RCC_APB2Periph_TIM1
     case 1:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, (en == EN));
         return;
     #endif
 
-    #ifdef TIM2_PRESENT
+    #ifdef RCC_APB1Periph_TIM2
     case 2:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, (en == EN));
         return;
     #endif
 
-    #ifdef TIM3_PRESENT
+    #ifdef RCC_APB1Periph_TIM3
     case 3:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, (en == EN));
         return;
     #endif
 
-    #ifdef TIM4_PRESENT
+    #ifdef RCC_APB1Periph_TIM4
     case 4:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, (en == EN));
         return;
     #endif
 
-    #ifdef TIM5_PRESENT
+    #ifdef RCC_APB1Periph_TIM4
     case 5:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, (en == EN));
         return;
     #endif
 
     
-    #ifdef TIM6_PRESENT
+    #ifdef RCC_APB1Periph_TIM6
     case 6:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, (en == EN));
         return;
     #endif
 
-    #ifdef TIM7_PRESENT
+    #ifdef RCC_APB1Periph_TIM7
     case 7:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, (en == EN));
         return;
     #endif
 
-    #ifdef TIM8_PRESENT
+    #ifdef RCC_APB2Periph_TIM9
     case 8:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, (en == EN));
         return;
     #endif
+
+    #ifdef RCC_APB2Periph_TIM9
+    case 9:
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, (en == EN));
+        return;
+    #endif
+
+    #ifdef RCC_APB2Periph_TIM10
+    case 10:
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM10, (en == EN));
+        return;
+    #endif
+
     }
     __builtin_trap();
 }

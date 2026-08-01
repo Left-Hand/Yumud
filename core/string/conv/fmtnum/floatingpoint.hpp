@@ -5,6 +5,8 @@
 #include <tuple>
 
 namespace ymd::str{
+
+
 // 计算正值浮点数的整数部分 
 // 此代码不使用任何浮点运算，nan/inf值安全由调用者保障
 static constexpr uint32_t floor_abs_f32_nonfpu(const float f_val){
@@ -59,7 +61,8 @@ static constexpr uint32_t floor_abs_f32_nonfpu(const float f_val){
     return sig >> shift;
 }
 
-
+// 计算正值浮点数的小数部分 
+// 此代码不使用任何浮点运算，nan/inf值安全由调用者保障
 static constexpr uint32_t frac_abs_f32_nonfpu(const float f_val, const uint32_t scale) {
     const uint32_t u = std::bit_cast<uint32_t>(f_val);
     const int32_t exp = ((u >> 23) & 0xFF) - 127;
@@ -76,7 +79,7 @@ static constexpr uint32_t frac_abs_f32_nonfpu(const float f_val, const uint32_t 
         // sig * scale <= (2^24) * scale
         // If shift is large enough that sig * scale < 2^(shift-1), result is 0
         // Max sig*scale: assume scale <= 100000 (10^5) → ~1.6e12 < 2^41
-        if (shift > 60) {
+        if (shift > 60) [[unlikely]] {
             return 0;
         }
         const uint64_t num = static_cast<uint64_t>(sig) * scale;
@@ -161,7 +164,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
 // 例：在给定precision为4时114.514返回(114,5140)
 // static_assert(depart_abs_f32(114.5140, 4).digit_part == 114);
 // static_assert(depart_abs_f32(114.5140, 4).frac_part == 5140);
-[[maybe_unused]] static constexpr DigitFracPair depart_abs_f32(
+[[maybe_unused]] static constexpr DigitFracPair32 depart_abs_f32(
     float fval, 
     uint8_t precision
 ) {
@@ -188,7 +191,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
 
 
 [[maybe_unused]] static constexpr char * _fmtnum_f32(
-    char* p_str, 
+    char * __restrict p_str, 
     float value, 
     uint8_t precision
 ) {
@@ -220,7 +223,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
     const int32_t exponent = ((unsigned_bits >> 23) & 0xFF) - 127;
     const uint32_t mantissa = unsigned_bits & 0x7FFFFF;
     
-    const auto parts = [&] -> DigitFracPair{
+    const auto parts = [&] -> DigitFracPair32{
         // 处理零
         if (exponent == -127 && mantissa == 0) [[unlikely]] {
             return {

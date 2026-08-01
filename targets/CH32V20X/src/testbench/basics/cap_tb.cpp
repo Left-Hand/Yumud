@@ -74,13 +74,13 @@ void cap_main(){
     
     DEBUGGER.retarget(&DBG_UART);
 
-        DEBUGGER.build_config()
-            .set_eps(4)
-            .set_splitter(",")
-            .no_brackets(EN)
-            .no_fieldname(EN)
-            .force_sync(EN)
-            .finalize();
+    DEBUGGER.build_config()
+        .set_eps(4)
+        .set_splitter(",")
+        .no_brackets(EN)
+        .no_fieldname(EN)
+        .force_sync(EN)
+        .finalize();
     // DEBUGGER.force_sync(EN);
 
     auto & timer = hal::timer1;
@@ -96,8 +96,7 @@ void cap_main(){
         hal::TimerChannelSelection::CH3,
     }).unwrap();
     timer.enable_arr_sync(EN);
-    timer.bdtr().init({100ns});
-    // timer.enable_arr_sync(DISEN);
+    timer.configure_bdtr(100ns, Default);
     timer.start();
     
     
@@ -116,7 +115,7 @@ void cap_main(){
     auto watch_pin_ = hal::PA<4>();
     watch_pin_.outpp();
 
-    hal::timer3.set_event_callback([&](const hal::TimerEvent & event){
+    hal::timer3.set_isr_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::CC3:{
 

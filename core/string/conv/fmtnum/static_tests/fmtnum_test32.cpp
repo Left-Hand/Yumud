@@ -8,7 +8,6 @@
 using namespace ymd;
 using namespace ymd::str;
 
-#if 1
 
 namespace {
 
@@ -22,7 +21,7 @@ struct Diag{
 };
 
 
-[[maybe_unused]] static void test_fmt_u8(){
+[[maybe_unused]] static void test_all(){
 
 
     {
@@ -260,7 +259,7 @@ struct Diag{
         constexpr auto diag = []{
             Diag ret;
             const auto type = FixedTypeErased{.is_signed = false, .q_num = 16};
-            const auto end = fmtnum_fixedpoint(ret.buffer.data(), uint32_t(1.145127 * (1ull << 16)), 6, type);
+            const auto end = fmtnum_fixedpoint32(ret.buffer.data(), uint32_t(1.145127 * (1ull << 16)), 6, type);
             ret.length = end - ret.buffer.data();
             return ret;
         }();
@@ -288,7 +287,7 @@ struct Diag{
         constexpr auto diag = []{
             Diag ret;
             const auto type = FixedTypeErased{.is_signed = false, .q_num = 28};
-            const auto end = fmtnum_fixedpoint(ret.buffer.data(), uint32_t(1.145127 * (1ull << 28)), 7, type);
+            const auto end = fmtnum_fixedpoint32(ret.buffer.data(), uint32_t(1.145127 * (1ull << 28)), 7, type);
             ret.length = end - ret.buffer.data();
             return ret;
         }();
@@ -309,5 +308,3 @@ struct Diag{
 }
 
 }
-
-#endif

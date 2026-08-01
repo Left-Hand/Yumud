@@ -396,7 +396,7 @@ void steadywin_main(){
     };
 
     //设置定时器事件回调
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_isr_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             on_mc_callback();

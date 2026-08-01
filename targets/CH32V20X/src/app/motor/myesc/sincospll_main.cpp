@@ -171,7 +171,7 @@ void sincospll_main(){
         }
     };
 
-    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
+    hal::timer2.set_isr_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::Update:{
                 const auto begin_us = clock::micros();
@@ -296,7 +296,7 @@ static constexpr iq16 downcast_position(int64_t x){
 
     Microseconds isr_elapsed_us_ = 0us;
 
-    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
+    hal::timer2.set_isr_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::Update:{
                 const auto begin_us = clock::micros();

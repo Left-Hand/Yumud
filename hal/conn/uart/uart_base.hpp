@@ -68,7 +68,7 @@ public:
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){event_callback_ = std::forward<Fn>(cb);}
+    void set_isr_callback(Fn && cb){isr_callback_ = std::forward<Fn>(cb);}
 
     [[nodiscard]] virtual size_t try_write_bytes(std::span<const uint8_t> bytes) = 0;
 
@@ -81,7 +81,7 @@ public:
     auto & rx_queue(){return rx_queue_;}
 
 protected:
-    EventCallback event_callback_;
+    EventCallback isr_callback_;
 
 public:
     CommStrategy tx_strategy_;

@@ -130,12 +130,11 @@ struct VCE2755_Prelude{
     };
 
 
-    struct [[nodiscard]] AnglePacket final{
+    struct [[nodiscard]] alignas(4) AnglePacket final{
         static constexpr RegAddr BASE_ADDR = RegAddr{0x03};
         union{
             struct {
-                uint8_t angle_17_10;
-                uint8_t angle_9_2;
+
 
                 // CRC0～CRC3 为 4bitCRC，系 ANGLE+SMF+BTE 共 20bit 数据的 CRC 校验值，
                 // 对应的 CRC 生成多项式为 X4+X+1，初始值=0000b，数据输入输出不取反。
@@ -145,19 +144,21 @@ struct VCE2755_Prelude{
                 uint8_t bte:1;
                 uint8_t mag_weak:1;
                 uint8_t angle_1_0:2;
+
+                uint8_t angle_9_2;
+                uint8_t angle_17_10;
             };
 
             std::array<uint8_t, 3> bytes;
         };
-        uint8_t __padding__; // to 32bit
-            
-        [[nodiscard]] static AnglePacket from_bytes(
+
+        [[nodiscard]] static AnglePacket from_be_bytes(
             const uint8_t b1, const uint8_t b2, const uint8_t b3
         ){
             AnglePacket ret;
-            ret.bytes[0] = b1;
+            ret.bytes[2] = b1;
             ret.bytes[1] = b2;
-            ret.bytes[2] = b3;
+            ret.bytes[0] = b3;
             return ret;
         }
 
@@ -169,17 +170,13 @@ struct VCE2755_Prelude{
             // if(vce2755::calc_crc4(bits20) != crc_3_0) [[unlikely]]
             //     return Err(Error::InvalidCrc);
             #endif
-            const auto turns = static_cast<uq32>(uq18::from_bits(static_cast<uint32_t>(bits20 >> 2)));
+            const auto turns = uq32::from_bits(uint32_t(bits20 >> 2) << 14);
             return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
 
         [[nodiscard]] constexpr uint32_t b20() const noexcept {
-            uint32_t bits = 0;
-            bits |= static_cast<uint32_t>(bytes[0]) << 12;
-            bits |= static_cast<uint32_t>(bytes[1]) << 4;
-            bits |= static_cast<uint32_t>(bytes[2]) >> 4;
-            return bits;
+            return (std::bit_cast<uint32_t>(*this) << 8) >> 12;
         }
     };
     static_assert(sizeof(AnglePacket) == 4);

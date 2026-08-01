@@ -236,7 +236,7 @@ void lt8960_tb(){
         .unwrap();
         timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback([&](hal::TimerEvent ev){
+        timer.set_isr_callback([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
                 poll_tx_task();
@@ -263,7 +263,7 @@ void lt8960_tb(){
         }).unwrap();
         timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback([&](hal::TimerEvent ev){
+        timer.set_isr_callback([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
                 poll_rx_task();

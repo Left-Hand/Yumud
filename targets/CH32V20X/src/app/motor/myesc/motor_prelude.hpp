@@ -170,7 +170,7 @@ struct alignas(4) [[nodiscard]] FnSwitches{
     uint32_t mtpa_en : 1;
     uint32_t mtpv_en : 1;
 
-    uint32_t sideshaft_compenstate_en : 1;
+    uint32_t sideshaft_compensate_en : 1;
     uint32_t override_big_position_kp : 1;
     uint32_t damping_forwardfeedback_en : 1;
     uint32_t interia_forwardfeedback_en : 1;
@@ -366,6 +366,12 @@ struct alignas(4) [[nodiscard]] HpState2o final{
     iq20 x2;
 };
 
+struct alignas(4) [[nodiscard]] PllState final{
+    iiq32 x1;
+    iq20 x2;
+    iq20 x2_integral;
+};
+
 
 struct alignas(4) [[nodiscard]] ProctiveEncoderAnticoggingState final{
     iiq32 hat_turns;
@@ -410,9 +416,10 @@ struct alignas(4) [[nodiscard]] HfiState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    HpState2o encoder_pll_state;
+    HpState2o encoder_ltd_state;
+    PllState encoder_pll_state;
     CurveState curve_state;
-    HpState2o traj_smooth_state;
+    TrajState traj_smooth_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
@@ -422,13 +429,13 @@ struct alignas(4) [[nodiscard]] AllState{
     iq20 torque_curr_veryslowlp;
 
     Angular<uq32> openloop_elec_angle;
-    iq20 openloop_elec_speed;
+    iq16 openloop_elec_speed;
 
     Angular<uq32> elec_angle;
-    iq20 elec_speed;
+    iq16 elec_speed;
 
     Angular<uq32> sensed_elec_angle;
-    iq20 sensed_elec_speed;
+    iq16 sensed_elec_speed;
 
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
@@ -442,6 +449,7 @@ struct alignas(4) [[nodiscard]] AllState{
         uint8_t encoder_correct_method_signature;
     };
 
+    std::array<int32_t, 3> uvw_adc_bvalue;
     UvwCoord<iq20> uvw_curr_raw;
     UvwCoord<iq20> uvw_curr_ref;
     UvwCoord<iq20> uvw_curr_slowlp;

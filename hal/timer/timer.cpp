@@ -519,7 +519,7 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
 
 void BasicTimer::deinit(){
     this->enable_rcc(DISEN);
-    event_callback_ = nullptr;
+    isr_callback_ = nullptr;
 }
 
 
@@ -607,8 +607,26 @@ void GeneralTimer::enable_master_slave_mode(const Enable en){
         (en == EN) ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
 
-void TimerBdtr::init(const Config & cfg){
-    auto & self = *this;
+void BasicTimer::enable_cc_ctrl_sync(const Enable en){
+    TIM_CCPreloadControl(SPL_INST(p_inst_), (en == EN));
+}
+
+
+
+TimerDeadzoneCode AdvancedTimer::calc_deadzone_code(TimerDeadzone deadzone){
+    if(deadzone.is<TimerDeadzoneCode>()) {
+        return deadzone.unwrap_as<TimerDeadzoneCode>();
+    }
+    if(deadzone.is<Nanoseconds>()) {
+        const auto bus_freq = this->get_periph_clk_freq();
+        return TimerDeadzoneCode::from_ns(bus_freq, deadzone.unwrap_as<Nanoseconds>());
+    }
+
+    __builtin_trap();
+}
+
+
+void AdvancedTimer::configure_bdtr(TimerDeadzone deadzone, const BdtrConfig & cfg){
     // MOE
     // 主输出使能位。一旦刹车信号有效，将被异步清零。
     // 1：允许 OCx 和 OCxN 设为输出；
@@ -621,19 +639,13 @@ void TimerBdtr::init(const Config & cfg){
     // 置位；
     // 0：MOE 只能被软件置位。
 
-    const auto deadzone_code = [&] -> TimerDeadzoneCode{
-        if(cfg.deadzone.is<TimerDeadzoneCode>()) 
-            return cfg.deadzone.unwrap_as<TimerDeadzoneCode>();
-        if(cfg.deadzone.is<Nanoseconds>()) 
-            return TimerDeadzoneCode::from_ns(self.bus_freq, cfg.deadzone.unwrap_as<Nanoseconds>());
-        __builtin_trap();
-    }();
+    const auto deadzone_code = calc_deadzone_code(deadzone);
 
     // https://zhuanlan.zhihu.com/p/648629584
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Enable,
         .TIM_OSSIState = TIM_OSSIState_Enable,
-        .TIM_LOCKLevel = static_cast<uint16_t>(std::bit_cast<uint8_t>(cfg.level) << 8),
+        .TIM_LOCKLevel = static_cast<uint16_t>(std::bit_cast<uint8_t>(cfg.lock_level) << 8),
         .TIM_DeadTime = deadzone_code.bits,
         .TIM_Break = TIM_Break_Disable,
         // .TIM_Break = TIM_Break_Enable,
@@ -656,9 +668,6 @@ void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
 }
 #endif
 
-void BasicTimer::enable_cc_ctrl_sync(const Enable en){
-    TIM_CCPreloadControl(SPL_INST(p_inst_), (en == EN));
-}
 
 
 static constexpr uint16_t VALID_INTERRUPT_FLAG_MASK = 0x00ff;

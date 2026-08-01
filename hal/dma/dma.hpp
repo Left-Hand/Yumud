@@ -102,8 +102,8 @@ public:
     }
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){
-        event_callback_ = std::forward<Fn>(cb);
+    void set_isr_callback(Fn && cb){
+        isr_callback_ = std::forward<Fn>(cb);
     }
 
     [[nodiscard]] bool is_transfer_complete();
@@ -123,7 +123,7 @@ public:
     
     Mode mode_ = Mode::Default;
     
-    Callback event_callback_ = nullptr;
+    Callback isr_callback_ = nullptr;
 
 
     void enable_transfer_complete_interrupt(const Enable en);
@@ -156,7 +156,7 @@ public:
     }
 
     __fast_inline void on_interrupt(DmaEvent event){
-        EXECUTE(event_callback_, event);
+        EXECUTE(isr_callback_, event);
     }
 
     

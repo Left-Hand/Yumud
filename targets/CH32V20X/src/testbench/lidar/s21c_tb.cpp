@@ -123,7 +123,7 @@ void s21c_main(){
     static constexpr uint32_t TX_DURATION_TICKS = TX_DURATION_MS.count() * LIDAR_SCAN_FREQ / 1000;
 
     Microseconds elapsed_us_ = 0us;
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_isr_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             // const auto now_secs = clock::seconds();

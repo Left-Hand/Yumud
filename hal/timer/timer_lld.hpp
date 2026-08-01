@@ -10,6 +10,31 @@
 
 namespace ymd::lld{
 
+    
+void timeroc_set_oc_mode(
+    void * p_inst,
+    const hal::TimerChannelSelection ch_sel, 
+    const hal::TimerOcMode mode
+);
+
+
+void timeroc_enable_output(
+    void * p_inst,
+    const hal::TimerChannelSelection ch_sel,
+    const Enable en
+);
+
+void timeroc_enable_cvr_sync(
+    void * p_inst,
+    const hal::TimerChannelSelection ch_sel,
+    const Enable en
+);
+
+void timeroc_set_valid_level(
+    void * p_inst,
+    const hal::TimerChannelSelection ch_sel,
+    const BoolLevel level
+);
 
 [[nodiscard]] bool timer_is_up_counting(void * p_inst);
 
@@ -21,7 +46,7 @@ std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
 void timer_set_remap(const Nth nth, const hal::TimerRemap rm);
 void timer_enable_rcc(const Nth nth, const Enable en);
 
-void timer_channel_enable_dma(void * p_inst,     const hal::TimerChannelSelection sel, const Enable en);
+void timer_channel_enable_dma(void * p_inst,const hal::TimerChannelSelection sel, const Enable en);
 
 
 volatile uint16_t & timer_channel_find_cvr(

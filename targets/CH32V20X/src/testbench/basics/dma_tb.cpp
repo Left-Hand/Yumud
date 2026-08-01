@@ -34,7 +34,7 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & dma_channel){
     logger.println("DMA init done");
 
 
-    dma_channel.set_event_callback([&](const hal::DmaEvent ev){
+    dma_channel.set_isr_callback([&](const hal::DmaEvent ev){
         switch(ev){
             case hal::DmaEvent::TransferComplete:
                 logger.println("d", dma_channel.pending_count());

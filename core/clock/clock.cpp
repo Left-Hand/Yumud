@@ -229,39 +229,54 @@ void set_systick_handler(std::function<void(void)> && cb){
 }
 
 namespace {
-//为了避免64位计算在32位处理器上引入的除法开销 将64位的微秒刻分成三个部分
-struct MicrosDump{
-    uint64_t low_15:15;
-    uint64_t middle_15:15;
-    uint64_t high_31:31;
-    uint64_t unused:3;//精度足以万年 可以舍弃3位
+
+
+//为了避免64位计算在32位处理器上引入的除法开销 将64位分成三个部分
+struct [[nodiscard]] MicrosDump final{
+    uint64_t bits;
+
+    [[nodiscard]] constexpr uint32_t low15() const {
+        static constexpr uint32_t MASK = (1u << 15) - 1;
+        return uint32_t(bits) & MASK;
+    }
+
+    [[nodiscard]] constexpr uint32_t middle15() const {
+        static constexpr uint32_t MASK = (1u << 15) - 1;
+        return uint32_t(bits >> 15) & MASK;
+    }
+
+    [[nodiscard]] constexpr uint32_t high31() const {
+        static constexpr uint32_t MASK = (1u << 31) - 1;
+        return uint32_t(bits >> 30) & MASK;
+    }
 };
 
-//经过测试这段代码在120年的时间刻度内能保证可靠性
-static constexpr math::fixed<32, uint64_t> micros_to_seconds(uint64_t micros_count){
+
+static constexpr math::fixed<32, uint64_t> 
+div1e6(uint64_t micros_count){
     static_assert(sizeof(MicrosDump) == sizeof(uint64_t));
     const MicrosDump micros_dump = std::bit_cast<MicrosDump>(micros_count);
     uint64_t result_bits = 0;
     
     {
-        uint64_t value = static_cast<uint64_t>(micros_dump.low_15);
         constexpr uint64_t FACTOR = (std::numeric_limits<uint64_t>::max()) / 1000000ULL;
+        uint32_t value = uint32_t(micros_dump.low15());
         uint64_t scaled_value = (value * FACTOR) >> 32;
 
         result_bits += scaled_value;
     }
     
     {
-        constexpr uint64_t FACTOR = math::fixed<32, uint64_t>((1 << 15) / 1e6).to_bits();
-        uint64_t value = static_cast<uint64_t>(micros_dump.middle_15);
+        constexpr uint64_t FACTOR = uint64_t((1ull << 47) / 1e6) + 1;
+        uint32_t value = uint32_t(micros_dump.middle15());
         uint64_t scaled_value = (value * FACTOR);
         result_bits += scaled_value;
     }
     
     {
-        constexpr uint64_t FACTOR = math::fixed<32, uint64_t>((1 << 30) / 1e6).to_bits() >> 11;
+        constexpr uint64_t FACTOR = static_cast<uint64_t>((1ull << 51) / 1e6) + 1;
         static_assert(FACTOR < std::numeric_limits<uint32_t>::max());
-        uint64_t value = static_cast<uint64_t>(micros_dump.high_31);
+        uint32_t value = uint32_t(micros_dump.high31());
         uint64_t scaled_value = (value * FACTOR) << 11;
         result_bits += scaled_value;
     }
@@ -269,31 +284,24 @@ static constexpr math::fixed<32, uint64_t> micros_to_seconds(uint64_t micros_cou
     return math::fixed<32, uint64_t>::from_bits(result_bits);
 }
 
-static_assert(micros_to_seconds(1000000).to_bits() == 1.0 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(1E8)).to_bits() == 1E2 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(4E8)).to_bits() == 4E2 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(7E8)).to_bits() == 7E2 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(1E12)).to_bits() == 1E6 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(1E15)).to_bits() == 1E9 * (1Ull << 32));
-static_assert(micros_to_seconds(uint64_t(4E15)).to_bits() == 4E9 * (1Ull << 32));
-}
+static_assert(div1e6(1000000).to_bits() == 1.0 * (1Ull << 32));
+static_assert(div1e6(uint64_t(1E8)).to_bits() == 1E2 * (1Ull << 32));
+static_assert(div1e6(uint64_t(4E8)).to_bits() == 4E2 * (1Ull << 32));
+static_assert(div1e6(uint64_t(7E8)).to_bits() == 7E2 * (1Ull << 32));
+static_assert(div1e6(uint64_t(1E12)).to_bits() == 1e6 * (1Ull << 32));
+static_assert(div1e6(uint64_t(1E15)).to_bits() == 1E9 * (1Ull << 32));
+static_assert(div1e6(uint64_t(4E15)).to_bits() == 4E9 * (1Ull << 32));
 
 
-math::fixed<32, uint64_t> seconds_precious(){
-    return micros_to_seconds(micros().count());
-}
-
-math::fixed<16, uint32_t> seconds(){
-
-
-    static_assert(sizeof(MicrosDump) == sizeof(uint64_t));
-
-    const MicrosDump micros_dump = std::bit_cast<MicrosDump>(uint64_t(micros().count()));
+static constexpr math::fixed<16, uint32_t> 
+div1e6_lossy(uint64_t micros_count){
+    const MicrosDump micros_dump = std::bit_cast<MicrosDump>(micros_count);
 
     uint32_t result_bits = 0;
     {
-        uint64_t value = static_cast<uint64_t>(micros_dump.low_15);
         constexpr uint64_t FACTOR = (std::numeric_limits<uint64_t>::max()) / 1000000ULL;
+
+        uint64_t value = static_cast<uint64_t>(micros_dump.low15());
         uint64_t scaled_value = (value * FACTOR) >> 48;
 
         result_bits += scaled_value;
@@ -302,9 +310,24 @@ math::fixed<16, uint32_t> seconds(){
     auto result = math::fixed<16, uint32_t>::from_bits(result_bits);
     return 
         result
-        + math::fixed<16, uint32_t>((1 << 15) / 1e6) * static_cast<uint32_t>(micros_dump.middle_15)
-        + math::fixed<16, uint32_t>((1 << 30) / 1e6) * static_cast<uint32_t>(micros_dump.high_31)
+        + math::fixed<16, uint32_t>((1 << 15) / 1e6) * static_cast<uint32_t>(micros_dump.middle15())
+        + math::fixed<16, uint32_t>((1 << 30) / 1e6) * static_cast<uint32_t>(micros_dump.high31())
         ;
+}
+
+}
+
+
+
+
+
+math::fixed<32, uint64_t> seconds_precious(){
+    //经过测试这段代码在120年的时间刻度内能保证可靠性
+    return div1e6(micros().count());
+}
+
+math::fixed<16, uint32_t> seconds(){
+    return div1e6_lossy(micros().count());
 }
 
 

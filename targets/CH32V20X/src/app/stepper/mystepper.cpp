@@ -299,7 +299,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_isr_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             motor_system_.resume().examine();
@@ -477,8 +477,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     isr_trig_gpio.outpp();
 
     adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.enable_interrupt(hal::AdcIT::JEOC, EN);
+    adc.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -493,7 +493,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_isr_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             b_curr = inj_b.get_voltage();
@@ -586,8 +586,8 @@ void mystepper_main(){
     digipw::AlphaBetaCoord<iq16> alphabeta_curr = {0, 0};
 
     adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.enable_interrupt(hal::AdcIT::JEOC, EN);
+    adc.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -654,7 +654,7 @@ void mystepper_main(){
 
     timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_isr_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             [[maybe_unused]] const auto now_secs = clock::seconds();
