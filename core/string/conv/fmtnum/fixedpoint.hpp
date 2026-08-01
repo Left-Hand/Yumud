@@ -2,6 +2,7 @@
 
 #include "decimal.hpp"
 
+
 namespace ymd::str{
 
 
@@ -27,6 +28,8 @@ struct [[nodiscard]] alignas(size_t) DigitFracPair32 final{
         return p_str;
     }
 };
+
+
 
 // 对32位定点数的绝对值求得整数部分和小数部分
 // 0 < q_num <= 32
@@ -114,6 +117,8 @@ struct [[nodiscard]] alignas(16) DigitFracPair64 final {
             // 超过32位的大整数，拆分高低32位分别格式化
             const uint32_t hi32 = static_cast<uint32_t>(self.digit_part / 1000000000ULL);
             const uint32_t lo32 = static_cast<uint32_t>(self.digit_part % 1000000000ULL);
+
+
             if(hi32 > 0) {
                 p_str = _fmtnum_u32_dec_fittest(p_str, hi32);
                 _fmtnum_u32_dec_padded({p_str, p_str + 9}, lo32);

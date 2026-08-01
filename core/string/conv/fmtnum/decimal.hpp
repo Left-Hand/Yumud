@@ -4,6 +4,7 @@
 #include "core/string/utils/pow10.hpp"
 #include "core/string/utils/div10.hpp"
 #include "prelude.hpp"
+#include <tuple>
 
 namespace ymd::str{
 
@@ -31,6 +32,7 @@ struct [[nodiscard]] MutStrSpan final{
     constexpr uint32_t MAGIC = static_cast<uint32_t>((1ull << SHIFTS) / 100000 + 1);
     return static_cast<uint32_t>((static_cast<uint64_t>(MAGIC) * (u32_in)) >> SHIFTS);
 }
+
 
 
 
@@ -114,22 +116,6 @@ static constexpr void _fmtnum_u32_dec_padded(MutStrSpan s, uint32_t unsigned_val
     details::_fmtnum_u32_dec_inner(s, unsigned_val);
 }
 
-#if 0
-//TODO replace impl
-static constexpr char * _stupid_fmtnum_u64_dec(char* p_str, uint64_t unsigned_val) {
-
-    const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), 10);
-    int32_t i = len - 1;
-
-    do {
-		const uint8_t digit = unsigned_val % 10;
-        p_str[i] = (digit) + '0';
-        i--;
-    } while((unsigned_val /= 10) > 0 and (i >= 0));
-
-    return p_str + len;
-}
-#endif
 
 
 }

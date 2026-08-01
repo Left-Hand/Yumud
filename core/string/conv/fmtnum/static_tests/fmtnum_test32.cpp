@@ -21,7 +21,7 @@ struct Diag{
 };
 
 
-[[maybe_unused]] static void test_fmt_u8(){
+[[maybe_unused]] static void test_all(){
 
 
     {
