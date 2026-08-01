@@ -44,6 +44,12 @@
 
 using namespace ymd;
 
+extern "C"{
+__attribute__((used, externally_visible))
+void abort(){
+    sys::abort();
+}
+}
 
 void sys::preinit(){
     #ifdef N32G45X
@@ -379,24 +385,18 @@ void sys::trip(){
     #ifdef TIM10_PRESENT
     hal::timer10.deinit();
     #endif
-    #ifdef TIM11_PRESENT
-    hal::timer11.deinit();
-    #endif
-    #ifdef TIM12_PRESENT
-    hal::timer12.deinit();
-    #endif
 }
 
-static constexpr const char * unwrap_str_or(const char * str, const char * or_str){
+static constexpr const char * _unwrap_str_or(const char * str, const char * or_str){
     return str != nullptr ? str : or_str;
 }
 
-static constexpr const char * str_or_unknown(const char * str){
-    return unwrap_str_or(str, "unknown");
+static constexpr const char * _str_or_unknown(const char * str){
+    return _unwrap_str_or(str, "unknown");
 }
 
-static constexpr const char * str_or_null(const char * str){
-    return unwrap_str_or(str, "null");
+static constexpr const char * _str_or_null(const char * str){
+    return _unwrap_str_or(str, "null");
 }
 
 
@@ -416,9 +416,9 @@ void sys::abort(const AbortInfo & info){
     DEBUG_PRINTLN("\r\nsystem aborted");
     DEBUG_PRINTLN("-----------");
 
-    DEBUG_PRINTS("file name:", str_or_unknown(info.file_name));
+    DEBUG_PRINTS("file name:", _str_or_unknown(info.file_name));
 
-    // DEBUG_PRINT("function name:", str_or_unknown(info.function_name), 
+    // DEBUG_PRINT("function name:", _str_or_unknown(info.function_name), 
     //     '(', info.line, ':', info.column, ')', DEBUGGER.endl());
 
     if(info.function_name) {
@@ -426,10 +426,10 @@ void sys::abort(const AbortInfo & info){
             '(', info.line, ':', info.column, ')'
         );
     }else{
-        DEBUG_PRINTLN("function name:", str_or_unknown(nullptr));
+        DEBUG_PRINTLN("function name:", _str_or_unknown(nullptr));
     }
 
-    DEBUG_PRINTS("reason:", str_or_unknown(info.reason));
+    DEBUG_PRINTS("reason:", _str_or_unknown(info.reason));
 
     const auto & arguments = info.arguments;
     const auto flag = arguments.flag;
@@ -443,7 +443,7 @@ void sys::abort(const AbortInfo & info){
         DEBUG_PRINT(str);
         do{
             if(arg_descr.is_cstr()) {
-                DEBUG_PRINTS((str_or_null(reinterpret_cast<const char *>(arg))));
+                DEBUG_PRINTS((_str_or_null(reinterpret_cast<const char *>(arg))));
                 return;
             }
         }while(false);
