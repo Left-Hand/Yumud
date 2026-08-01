@@ -164,7 +164,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
 // 例：在给定precision为4时114.514返回(114,5140)
 // static_assert(depart_abs_f32(114.5140, 4).digit_part == 114);
 // static_assert(depart_abs_f32(114.5140, 4).frac_part == 5140);
-[[maybe_unused]] static constexpr DigitFracPair depart_abs_f32(
+[[maybe_unused]] static constexpr DigitFracPair32 depart_abs_f32(
     float fval, 
     uint8_t precision
 ) {
@@ -223,7 +223,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
     const int32_t exponent = ((unsigned_bits >> 23) & 0xFF) - 127;
     const uint32_t mantissa = unsigned_bits & 0x7FFFFF;
     
-    const auto parts = [&] -> DigitFracPair{
+    const auto parts = [&] -> DigitFracPair32{
         // 处理零
         if (exponent == -127 && mantissa == 0) [[unlikely]] {
             return {

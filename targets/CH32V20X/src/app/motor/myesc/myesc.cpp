@@ -2044,13 +2044,13 @@ void myesc_main(){
     // profiler_push_record(profiler_, MyRecord{ShortString8::try_from_cstr("wtf").unwrap(), get_timer_tick(), get_timer_tick()}).unwrap();
     auto foc_loop = [&]{
 
-        static constexpr size_t ENCODER_SIDESHAFT_EPS_TABLE_LENGTH = POLE_PAIRS * 6;
-        static_assert(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH < ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY);
+        static constexpr size_t SIDESHAFT_EPS_TABLE_LENGTH = POLE_PAIRS * 6;
+        static_assert(SIDESHAFT_EPS_TABLE_LENGTH < ENCODER_SIDESHAFT_EPS_TABLE_CAPACITY);
         static constexpr size_t SIDESHAFT_CALIBRATE_OVERSAMPLES = 16;
-        static constexpr size_t STEPS_PER_CELL_PER_REV = 256 * 2;
-        static constexpr size_t SAMPLE_DURATION_STEPS = STEPS_PER_CELL_PER_REV / SIDESHAFT_CALIBRATE_OVERSAMPLES;
-        static constexpr size_t REVS_PER_DIRECTION = 2;
-        static constexpr size_t CALIBRATE_STEPS_PER_REV = (STEPS_PER_CELL_PER_REV * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+        static constexpr size_t SIDESHAFT_CALIBRATE_STEPS_PER_ELEMENT = 256 * 2;
+        static constexpr size_t SIDESHAFT_CALIBRATE_STEPS_PER_SAMPLE = SIDESHAFT_CALIBRATE_STEPS_PER_ELEMENT / SIDESHAFT_CALIBRATE_OVERSAMPLES;
+        static constexpr size_t CALIBRATE_REVS_PER_DIRECTION = 2;
+        static constexpr size_t SIDESHAFT_CALIBRATE_STEPS_PER_REV = (SIDESHAFT_CALIBRATE_STEPS_PER_ELEMENT * SIDESHAFT_EPS_TABLE_LENGTH);
         
         auto  & state = all_state_;
 
@@ -2099,24 +2099,27 @@ void myesc_main(){
         };
 
         auto steps_to_turns = [](const size_t steps) -> uq32{
-            const size_t rem = steps % CALIBRATE_STEPS_PER_REV;
-            constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / CALIBRATE_STEPS_PER_REV) + 1);
+            const size_t rem = steps % SIDESHAFT_CALIBRATE_STEPS_PER_REV;
+            constexpr uq32 FACTOR = uq32::from_bits(uint32_t(float(1ull << 32) / SIDESHAFT_CALIBRATE_STEPS_PER_REV) + 1);
             return rem * FACTOR;
         };
 
 
 
         auto calc_encoder_eps = [](const iq32 * table_data, const uq32 raw_turns) -> iq32{
-            auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, raw_turns.to_bits());
-            const auto frac = (raw_turns * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+            auto index = intrinsics::mul32hu(SIDESHAFT_EPS_TABLE_LENGTH, raw_turns.to_bits());
+            const auto frac = (raw_turns * SIDESHAFT_EPS_TABLE_LENGTH);
 
-            auto next_index = warp_index(index + 1, ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+            auto next_index = warp_index(index + 1, SIDESHAFT_EPS_TABLE_LENGTH);
 
-            static constexpr size_t RIGHT_SHIFTS = pow2(SIDESHAFT_CALIBRATE_OVERSAMPLES * REVS_PER_DIRECTION);
-            const auto now_cell_value = table_data[index];
-            const auto next_cell_value = table_data[next_index];
+            static constexpr size_t RIGHT_SHIFTS = pow2(SIDESHAFT_CALIBRATE_OVERSAMPLES * CALIBRATE_REVS_PER_DIRECTION);
+            const auto & now_element = table_data[index];
+            const auto & next_element = table_data[next_index];
+            
+            const auto now_element_value = now_element;
+            const auto next_element_value = next_element;
 
-            const auto table_eps = lerp_fixed_uq32(now_cell_value, next_cell_value, frac) >> RIGHT_SHIFTS;
+            const auto table_eps = lerp_fixed_uq32(now_element_value, next_element_value, frac) >> RIGHT_SHIFTS;
             return table_eps;
         };
 
@@ -2248,8 +2251,8 @@ void myesc_main(){
                 static constexpr auto RBTRIP_PARAS = motioner::RoundtripParaments{
                     .fs = FOC_FREQ,
                     // .revs_per_direction = 2, 
-                    .uniform_ticks = 2 * CALIBRATE_STEPS_PER_REV,
-                    .ticks_per_rev = CALIBRATE_STEPS_PER_REV,
+                    .uniform_ticks = 2 * SIDESHAFT_CALIBRATE_STEPS_PER_REV,
+                    .ticks_per_rev = SIDESHAFT_CALIBRATE_STEPS_PER_REV,
                     .x1_initial = iiq32(-7), 
                 };
 
@@ -2281,8 +2284,8 @@ void myesc_main(){
 
                     static constexpr size_t LG2_STEPS_CURRENT_RAMP = 14u;
 
-                    static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / CALIBRATE_STEPS_PER_REV);
-                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(CALIBRATE_STEPS_PER_REV) / FOC_FREQ;
+                    static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / SIDESHAFT_CALIBRATE_STEPS_PER_REV);
+                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(SIDESHAFT_CALIBRATE_STEPS_PER_REV) / FOC_FREQ;
                     [[maybe_unused]] static constexpr float SECONDS_RAMP = double(1 << LG2_STEPS_CURRENT_RAMP) / FOC_FREQ;
 
                     using Counter = EncoderNonlinearCalibrateCounter;
@@ -2342,7 +2345,7 @@ void myesc_main(){
                         case Stage::Forward:{
                             next_stage = Stage::Forward;
                             next_count_value = now_count_value + 1;
-                            if(next_count_value >= CALIBRATE_STEPS_PER_REV * REVS_PER_DIRECTION){
+                            if(next_count_value >= SIDESHAFT_CALIBRATE_STEPS_PER_REV * CALIBRATE_REVS_PER_DIRECTION){
                                 next_stage = Stage::Backward;
                                 next_count_value = 0;
                             }
@@ -2353,12 +2356,12 @@ void myesc_main(){
                             
                             const auto mech_eps = warp_encoder_err(cmd_mech_turns, encoder_position_raw);
 
-                            const auto frac = (encoder_position_raw * ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
-                            const auto index = intrinsics::mul32hu(ENCODER_SIDESHAFT_EPS_TABLE_LENGTH, encoder_position_raw.to_bits());
+                            const auto frac = (encoder_position_raw * SIDESHAFT_EPS_TABLE_LENGTH);
+                            const auto index = intrinsics::mul32hu(SIDESHAFT_EPS_TABLE_LENGTH, encoder_position_raw.to_bits());
 
-                            const auto table_index = warp_index(index + (frac >= 0.5_uq32), ENCODER_SIDESHAFT_EPS_TABLE_LENGTH);
+                            const auto table_index = warp_index(index + (frac >= 0.5_uq32), SIDESHAFT_EPS_TABLE_LENGTH);
 
-                            if(now_count_value % (SAMPLE_DURATION_STEPS) == 0){
+                            if(now_count_value % (SIDESHAFT_CALIBRATE_STEPS_PER_SAMPLE) == 0){
                                 ec_state.eps_table[table_index] += mech_eps;
                             }
 
@@ -2372,7 +2375,7 @@ void myesc_main(){
                             next_stage = Stage::Backward;
                             next_count_value = now_count_value + 1;
 
-                            if(next_count_value >= CALIBRATE_STEPS_PER_REV * REVS_PER_DIRECTION){
+                            if(next_count_value >= SIDESHAFT_CALIBRATE_STEPS_PER_REV * CALIBRATE_REVS_PER_DIRECTION){
                             // if(next_count_value >= 0){
                                 next_stage = Stage::Complete;
                                 next_count_value = 0;

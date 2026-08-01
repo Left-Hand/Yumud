@@ -5,7 +5,7 @@
 namespace ymd::str{
 
 
-struct [[nodiscard]] alignas(size_t) DigitFracPair final{
+struct [[nodiscard]] alignas(size_t) DigitFracPair32 final{
     uint32_t digit_part;
     uint32_t frac_part;
 
@@ -30,7 +30,7 @@ struct [[nodiscard]] alignas(size_t) DigitFracPair final{
 
 // 0 < q_num <= 32
 __attribute__((optimize("Ofast")))
-[[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint32(
+[[nodiscard]] static constexpr DigitFracPair32 depart_abs_fixedpoint32(
     uint32_t abs_value_bits, 
     uint8_t precision,
     uint8_t q_num
@@ -72,7 +72,7 @@ __attribute__((optimize("Ofast")))
 
 // 0 < q_num <= 64
 __attribute__((optimize("Ofast")))
-[[nodiscard]] static constexpr DigitFracPair depart_abs_fixedpoint64(
+[[nodiscard]] static constexpr DigitFracPair32 depart_abs_fixedpoint64(
     uint64_t abs_value_bits, 
     uint8_t precision,
     uint8_t q_num
@@ -99,7 +99,7 @@ __attribute__((optimize("Ofast")))
     constexpr size_t MAX_PRECSION = POW10_TABLE.size() - 1;
     if(precision > MAX_PRECSION) precision = MAX_PRECSION;
 
-    const auto parts = [&] -> DigitFracPair{
+    const auto parts = [&] -> DigitFracPair32{
         if(q_num == 0)[[unlikely]]{
             return {abs_value_bits, 0};
         }
