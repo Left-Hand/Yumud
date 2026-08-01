@@ -91,7 +91,7 @@ struct [[nodiscard]] WriteEEprom final {
     }
 
     static constexpr Self from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return Self{
             .address = bytes[0],
@@ -121,7 +121,7 @@ struct [[nodiscard]] ReadEEprom final {
     }
 
     static constexpr Self from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return Self{
             .address = bytes[0]
@@ -168,7 +168,7 @@ struct [[nodiscard]] GetAllInfo final {
     }
 
     static constexpr GetAllInfo from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return GetAllInfo{
             .sf = StatusField::from_u8(bytes[0]),
@@ -206,7 +206,7 @@ struct [[nodiscard]] GetAbs final{
     }
 
     static constexpr GetAbs from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept{
         return GetAbs{
             .sf = StatusField::from_u8(bytes[0]),
@@ -240,7 +240,7 @@ struct [[nodiscard]] GetAbm final {
     }
 
     static constexpr GetAbm from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return GetAbm{
             .sf = StatusField::from_u8(bytes[0]),
@@ -278,10 +278,12 @@ struct [[nodiscard]] GetVersion final {
     }
 
     static constexpr GetVersion from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         std::array<uint8_t, 8> buffer;
-        std::copy(bytes.begin(), bytes.end(), buffer.data());
+        for(size_t i = 0; i < 8; i++){
+            buffer[i] = bytes[i];
+        }
         return std::bit_cast<GetVersion>(buffer);
     }
 };
@@ -312,7 +314,7 @@ struct [[nodiscard]] ClearAbmAndFault final {
     }
 
     static constexpr ClearAbmAndFault from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return ClearAbmAndFault{
             .sf = StatusField::from_u8(bytes[0]),
@@ -347,7 +349,7 @@ struct [[nodiscard]] ClearAbs final {
     }
 
     static constexpr ClearAbs from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return ClearAbs{
             .sf = StatusField::from_u8(bytes[0]),
@@ -378,7 +380,7 @@ struct [[nodiscard]] WriteEEprom final {
     }
 
     static constexpr WriteEEprom from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return WriteEEprom{
             .address = bytes[0],
@@ -409,7 +411,7 @@ struct [[nodiscard]] ReadEEprom final {
     }
 
     static constexpr ReadEEprom from_bytes(
-        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+        const uint8_t * __restrict bytes
     ) noexcept {
         return ReadEEprom{
             .address = bytes[0],

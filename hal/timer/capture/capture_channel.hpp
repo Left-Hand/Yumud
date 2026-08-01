@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/clock/clock.hpp"
-#include "core/clock/monotonic_clock.hpp"
 #include "hal/exti/exti.hpp"
 #include "core/math/real.hpp"
 #include "hal/gpio/gpio.hpp"

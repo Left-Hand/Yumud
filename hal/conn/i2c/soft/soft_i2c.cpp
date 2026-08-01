@@ -10,10 +10,8 @@ using namespace ymd::hal;
 // 但对于另一部分芯片(如BMI160) 这可能会导致通信误码
 // #define SOFT_I2C_SCL_USE_PP_THAN_OD
 
-
 // #define SOFT_I2C_DISCARD_ACK
 // #define SOFT_I2C_TEST_TIMEOUT (1000)
-
 
 void SoftI2c::delay_dur(){
     if(delays_) clock::delay(Microseconds(delays_));
@@ -27,7 +25,6 @@ HalResult SoftI2c::wait_ack(){
     sda_pin().inpu();
     delay_dur();
     scl_pin().set_high();
-    // TimeStamp delta;
 
     bool ovt = false;
 

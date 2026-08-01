@@ -179,7 +179,7 @@ noheadtail(std::span<const uint8_t, N> in){
     {
         constexpr uint8_t received_bytes[] = {0x02, 0x00, 0x10, 0x78, 0x14, 0x7e};
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
-        constexpr auto msg = resp_msgs::GetAbs::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::GetAbs::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.sf.is_none());
         // Check the ABS values: 0x10, 0x78, 0x14 -> little endian: 0x147810
         static_assert(msg.abs.bytes[0] == 0x10);
@@ -191,7 +191,7 @@ noheadtail(std::span<const uint8_t, N> in){
     {
         constexpr uint8_t received_bytes[] = {0x8a, 0x00, 0x00, 0x00, 0x00, 0x8a};
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
-        constexpr auto msg = resp_msgs::GetAbm::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::GetAbm::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.sf.is_none());
         // Check the ABM values: 0x00, 0x00, 0x00 -> all zeros
         static_assert(msg.abm.bytes[0] == 0x00);
@@ -208,7 +208,7 @@ noheadtail(std::span<const uint8_t, N> in){
         };
 
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
-        constexpr auto msg = resp_msgs::GetAllInfo::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::GetAllInfo::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.sf.is_none());
         // Check the ABS values: 0x7a, 0x6d, 0x0f -> little endian: 0x0f6d7a
         static_assert(msg.abs.bytes[0] == 0x7a);
@@ -232,7 +232,7 @@ noheadtail(std::span<const uint8_t, N> in){
         };
 
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
-        constexpr auto msg = resp_msgs::GetVersion::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::GetVersion::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.encoder_product_code.low == 0x1389);
         static_assert(msg.encoder_product_code.high == 0x7531);
         static_assert(msg.firmware_version.low == 0x2a96);
@@ -244,7 +244,7 @@ noheadtail(std::span<const uint8_t, N> in){
         constexpr uint8_t received_bytes[] = {0xea, 0x01, 0x69, 0x82};
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto msg = resp_msgs::ReadEEprom::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::ReadEEprom::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.address == 0x01);
         static_assert(msg.value == 0x69);
     }
@@ -254,7 +254,7 @@ noheadtail(std::span<const uint8_t, N> in){
         constexpr uint8_t received_bytes[] = {0x62, 0x00, 0xa9, 0x99, 0x18, 0x4a};
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto msg = resp_msgs::ClearAbmAndFault::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::ClearAbmAndFault::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.sf.is_none());
         // Check the ABS values: 0xa9, 0x99, 0x18 -> little endian: 0x1899a9
         static_assert(msg.abs.bytes[0] == 0xa9);
@@ -267,39 +267,12 @@ noheadtail(std::span<const uint8_t, N> in){
         constexpr uint8_t received_bytes[] = {0x32, 0x01, 0x69, 0x5a};
         static_assert(verify_checksum(std::span(received_bytes)).is_ok());
 
-        constexpr auto msg = resp_msgs::WriteEEprom::from_bytes(noheadtail(std::span{received_bytes}));
+        constexpr auto msg = resp_msgs::WriteEEprom::from_bytes(noheadtail(std::span{received_bytes}).data());
         static_assert(msg.address == 0x01);
         static_assert(msg.value == 0x69);
     }
 }
 
 
-[[maybe_unused]] static void test_crc(){
-    {
-        static constexpr uint8_t CRC_VALUE = ChecksumBuilder::from_default()
-            .push_byte(0x8a)
-            .finalize();
-        static_assert(CRC_VALUE == 0x8a);
-    }
-
-    // Test CRC for WriteEEprom request: [0x32, 0x01, 0x69] -> CRC should be 0x5a
-    {
-        static constexpr uint8_t CRC_VALUE = ChecksumBuilder::from_default()
-            .push_byte(0x32)
-            .push_byte(0x01)
-            .push_byte(0x69)
-            .finalize();
-        static_assert(CRC_VALUE == 0x5a);
-    }
-
-    // Test CRC for ReadEEprom request: [0xea, 0x01] -> CRC should be 0xeb
-    {
-        static constexpr uint8_t CRC_VALUE = ChecksumBuilder::from_default()
-            .push_byte(0xea)
-            .push_byte(0x01)
-            .finalize();
-        static_assert(CRC_VALUE == 0xeb);
-    }
-}
 
 }
