@@ -72,8 +72,8 @@ using EventCallback = Can::EventCallback;
 #define DEBUG_UNREACHABLE() __builtin_unreachable();
 
 #define TRY_EMIT_EVENT(self, x)   \
-if(self.event_callback_ != nullptr) {\
-    self.event_callback_(x);\
+if(self.isr_callback_ != nullptr) {\
+    self.isr_callback_(x);\
 }else{/* do nothing */}
 
 #define TRY_EMIT_EVENT_OR_ABORT(self, x, str) TRY_EMIT_EVENT(self, x);
@@ -88,15 +88,15 @@ if(self.event_callback_ != nullptr) {\
 
 
 #define TRY_EMIT_EVENT(self, x)   \
-if(self.event_callback_ != nullptr) {\
-    self.event_callback_(x);\
+if(self.isr_callback_ != nullptr) {\
+    self.isr_callback_(x);\
 }\
 
 #if CAN_READABLE_ABORT_REASON_EN == 1
 
     #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
-    if(self.event_callback_ != nullptr){\
-        self.event_callback_(x);\
+    if(self.isr_callback_ != nullptr){\
+        self.isr_callback_(x);\
     } else{\
         sys::abort(AbortInfo::from_reason(str));\
     }\
@@ -107,8 +107,8 @@ if(self.event_callback_ != nullptr) {\
 #else
 
     #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
-    if(self.event_callback_ != nullptr){\
-        self.event_callback_(x);\
+    if(self.isr_callback_ != nullptr){\
+        self.isr_callback_(x);\
     } else{\
         sys::abort(AbortInfo::from_default());\
     }\
@@ -582,7 +582,7 @@ Option<ClassicCanFrame> Can::try_read(){
 
 
 void CanIrqHandler::isr_tx(Can & self){
-    const bool callback_present = self.event_callback_ != nullptr;
+    const bool callback_present = self.isr_callback_ != nullptr;
     
     // 阶段1：处理中断事件（找RQCP置1的邮箱）
 
@@ -617,7 +617,7 @@ void CanIrqHandler::isr_tx(Can & self){
                     .mbox_idx = std::bit_cast<hal::CanMailboxIndex>(uint8_t(i)),
                     .code = code
                 });
-                self.event_callback_(ev);
+                self.isr_callback_(ev);
             }
 
             //写1清除RQCP/TXOK/ALST/TERR(写0无效)

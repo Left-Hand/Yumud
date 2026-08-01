@@ -136,11 +136,11 @@ public:
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(TimerEvent)>;
 protected:
-    Callback event_callback_ = nullptr;
+    Callback isr_callback_ = nullptr;
     void enable(const Enable en);
     void invoke_callback(TimerEvent event){
-        if(event_callback_ == nullptr) [[unlikely]] return;
-        event_callback_(event);
+        if(isr_callback_ == nullptr) [[unlikely]] return;
+        isr_callback_(event);
     }
 public:
     explicit BasicTimer(void * inst):
@@ -210,8 +210,8 @@ public:
 
     //设置事件处理函数
     template<typename Fn>
-    void set_event_callback(Fn && cb){
-        event_callback_ = std::forward<Fn>(cb);
+    void set_isr_callback(Fn && cb){
+        isr_callback_ = std::forward<Fn>(cb);
     }
 
     void set_remap(const TimerRemap rm);
@@ -264,9 +264,9 @@ public:
 
     //处理中断响应
     void isr_specified(const IT I){
-        if(event_callback_ == nullptr) [[unlikely]]
+        if(isr_callback_ == nullptr) [[unlikely]]
             return;
-        event_callback_(I);
+        isr_callback_(I);
     }
 
     void set_compare(const TimerChannel::ChannelSelection, const uint16_t compare_value);

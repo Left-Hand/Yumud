@@ -156,7 +156,7 @@ void svpwm3_main(){
 
     adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{

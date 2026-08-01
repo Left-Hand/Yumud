@@ -114,8 +114,8 @@ public:
 
     //设置回调函数（禁止在初始化后修改）
     template<typename Fn>
-    void set_event_callback(Fn && cb){
-        event_callback_ = std::forward<Fn>(cb);
+    void set_isr_callback(Fn && cb){
+        isr_callback_ = std::forward<Fn>(cb);
     }
 
 
@@ -142,7 +142,7 @@ private:
     RingBuf<ClassicCanFrame, CAN_BUFFERED_QUEUE_SIZE> rx_queue_;
     RingBuf<ClassicCanFrame, CAN_BUFFERED_QUEUE_SIZE> tx_queue_;
 
-    EventCallback event_callback_ = nullptr;
+    EventCallback isr_callback_ = nullptr;
 
     void alter_to_pins(const CanRemap remap);
     void enable_rcc(const Enable en);

@@ -2421,8 +2421,7 @@ void myesc_main(){
         }
     };
 
-
-    auto foc_isr = [&]{
+    auto isr_foc = [&]{
         auto & state = all_state_;
 
         timming_watch_pin_.set_high();
@@ -2436,10 +2435,10 @@ void myesc_main(){
 
     hal::timer1.register_nvic<hal::TimerIT::CC4>(hal::NvicPriorityCode::highest(),  EN);
     hal::timer1.enable_interrupt<hal::TimerIT::CC4>(EN);
-    hal::timer1.set_event_callback([&](const hal::TimerEvent & event){
+    hal::timer1.set_isr_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::CC4:{
-                foc_isr();
+                isr_foc();
                 break;
             }
             default:

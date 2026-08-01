@@ -44,8 +44,8 @@ using Event = Uart::Event;
 
 
 #define TRY_EMIT_EVENT(self, x)   \
-if(self.event_callback_ != nullptr) {\
-    self.event_callback_(x);\
+if(self.isr_callback_ != nullptr) {\
+    self.isr_callback_(x);\
 }\
 
 
@@ -53,8 +53,8 @@ if(self.event_callback_ != nullptr) {\
 
 
 #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
-if(self.event_callback_ != nullptr){\
-    self.event_callback_(x);\
+if(self.isr_callback_ != nullptr){\
+    self.isr_callback_(x);\
 } else{\
 }\
 
@@ -65,8 +65,8 @@ if(self.event_callback_ != nullptr){\
 #else
 
 #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
-if(self.event_callback_ != nullptr){\
-    self.event_callback_(x);\
+if(self.isr_callback_ != nullptr){\
+    self.isr_callback_(x);\
 } else{\
     UNREACHABLE();\
 }\
@@ -538,7 +538,7 @@ void Uart::setup_tx_dma(const DmaPriority priority){
     });
 
 
-    tx_dma_.set_event_callback([this](const DmaEvent ev){
+    tx_dma_.set_isr_callback([this](const DmaEvent ev){
         UNUSED(ev);
         poll_tx_dma();
     });
@@ -610,7 +610,7 @@ void Uart::setup_rx_dma(const DmaPriority priority){
     });
 
 
-    rx_dma_.set_event_callback(
+    rx_dma_.set_isr_callback(
         [this](const DmaEvent ev) -> void{
             auto & self = *this;
             const auto rx_dma_buf_index = self.rx_dma_buf_index_;

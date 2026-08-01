@@ -283,7 +283,7 @@ void winter_mc_tutorial_main(){
         set_pwm_dutycycle(pwm_dutycycle);
     };
 
-    isr_timer.set_event_callback([&](const hal::TimerEvent ev){
+    isr_timer.set_isr_callback([&](const hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:
                 motor_isr();

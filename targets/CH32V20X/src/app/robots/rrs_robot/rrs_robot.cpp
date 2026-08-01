@@ -120,7 +120,7 @@ public:
         auto & timer = hal::timer1;
         timer.register_nvic<hal::TimerIT::Update>(hal::NvicPriorityCode::highest(),  EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback(std::forward<Fn>(fn));
+        timer.set_isr_callback(std::forward<Fn>(fn));
     }
 
 

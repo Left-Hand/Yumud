@@ -519,7 +519,7 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
 
 void BasicTimer::deinit(){
     this->enable_rcc(DISEN);
-    event_callback_ = nullptr;
+    isr_callback_ = nullptr;
 }
 
 

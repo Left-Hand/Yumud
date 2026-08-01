@@ -173,7 +173,7 @@ void stl06n_main(){
     #endif
 
 
-    lidar_uart_.set_event_callback([&](const hal::UartEvent & ev){
+    lidar_uart_.set_isr_callback([&](const hal::UartEvent & ev){
         watch_pin_.set_high();
         auto guard = make_scope_guard([&]{
             watch_pin_.set_low();

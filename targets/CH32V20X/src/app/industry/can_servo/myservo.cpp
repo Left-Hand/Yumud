@@ -325,7 +325,7 @@ void myservo_main(){
 
     hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    hal::adc1.set_event_callback(
+    hal::adc1.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
