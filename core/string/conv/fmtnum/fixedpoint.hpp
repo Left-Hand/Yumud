@@ -12,7 +12,7 @@ struct [[nodiscard]] alignas(size_t) DigitFracPair32 final{
 
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr char * fmt_str(char * p_str, const uint8_t precision) const noexcept {
+    [[nodiscard]] constexpr char * fmt_str(char * __restrict p_str, const uint8_t precision) const noexcept {
         auto & self = *this;
         // 转换整数部分
         p_str = _fmtnum_u32_dec_fittest(p_str, self.digit_part);
@@ -80,7 +80,7 @@ __attribute__((optimize("Ofast")))
 
 // 0 <= q_num <= 32
 [[nodiscard]] static constexpr char * _fmtnum_abs_fixedpoint32(
-    char * p_str, 
+    char * __restrict p_str, 
     uint32_t abs_value_bits, 
     uint8_t precision, 
     uint8_t q_num
@@ -105,34 +105,24 @@ __attribute__((optimize("Ofast")))
 
 struct [[nodiscard]] alignas(16) DigitFracPair64 final {
     uint64_t digit_part;
-    uint64_t frac_part;
+    uint32_t frac_part;
 
     __attribute__((always_inline))
-    [[nodiscard]] constexpr char * fmt_str(char * p_str, const uint8_t precision) const noexcept {
+    [[nodiscard]] constexpr char * fmt_str(char * __restrict p_str, const uint8_t precision) const noexcept {
         auto & self = *this;
-        // 转换整数部分：大部分嵌入式场景下digit_part不超32位，走快速路径
+
+
         if(self.digit_part <= UINT32_MAX) [[likely]] {
             p_str = _fmtnum_u32_dec_fittest(p_str, static_cast<uint32_t>(self.digit_part));
         } else {
-            // 超过32位的大整数，拆分高低32位分别格式化
-            const uint32_t hi32 = static_cast<uint32_t>(self.digit_part / 1000000000ULL);
-            const uint32_t lo32 = static_cast<uint32_t>(self.digit_part % 1000000000ULL);
-
-
-            if(hi32 > 0) {
-                p_str = _fmtnum_u32_dec_fittest(p_str, hi32);
-                _fmtnum_u32_dec_padded({p_str, p_str + 9}, lo32);
-                p_str += 9;
-            } else {
-                p_str = _fmtnum_u32_dec_fittest(p_str, lo32);
-            }
+            p_str = _fmtnum_u64_dec_fittest(p_str, self.digit_part);
         }
 
         // 转换小数部分
         if(precision > 0) {
             p_str[0] = '.';
             p_str++;
-            _fmtnum_u32_dec_padded({p_str, p_str + precision}, static_cast<uint32_t>(self.frac_part));
+            _fmtnum_u32_dec_padded({p_str, p_str + precision}, self.frac_part);
             p_str += precision;
         }
 
@@ -160,7 +150,6 @@ __attribute__((optimize("Ofast")))
     }
 
     uint64_t digit_part = abs_value_bits >> q_num;
-    uint64_t frac_part;
 
     constexpr size_t MAX_PRECISION = POW10_TABLE.size() - 1;
     if(precision > MAX_PRECISION) __builtin_unreachable();
@@ -211,7 +200,7 @@ __attribute__((optimize("Ofast")))
     }
 
     // 舍入：(shifted + 1) >> 1，结果 < pow10_scale < 2^31，保证不超过32位
-    frac_part = (static_cast<uint64_t>(shifted) + 1) >> 1;
+    uint32_t frac_part = (static_cast<uint32_t>(shifted) + 1) >> 1;
 
     // 检查舍入进位
     if(frac_part >= pow10_scale) {
@@ -228,7 +217,7 @@ __attribute__((optimize("Ofast")))
 
 // 0 <= q_num <= 64
 [[nodiscard]] static constexpr char * _fmtnum_abs_fixedpoint64(
-    char * p_str,
+    char * __restrict p_str,
     uint64_t abs_value_bits,
     uint8_t precision,
     uint8_t q_num

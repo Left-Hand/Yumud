@@ -29,7 +29,7 @@ struct Diag{
     }
 };
 
-
+#if 0
 
 __attribute__((optimize("Ofast")))
 [[nodiscard]] static constexpr uint64_t approx_div1e9(uint64_t x) {
@@ -129,44 +129,7 @@ static_assert(approx_div1e9(uint64_t(999'000'000'001ull)) == 999);
 static_assert(std::get<0>(divrem1e9(uint64_t(998'999'999'999ull))) == 998);
 static_assert(std::get<1>(divrem1e9(uint64_t(998'999'999'999ull))) == 999'999'999);
 
-__attribute__((const, optimize("Ofast")))
-static constexpr uint64_t mul64_hi(uint64_t a, uint64_t b) {
-    uint32_t a0 = (uint32_t)a, a1 = (uint32_t)(a >> 32);
-    uint32_t b0 = (uint32_t)b, b1 = (uint32_t)(b >> 32);
-    uint64_t low  = (uint64_t)a0 * b0;
-    uint64_t mid1 = (uint64_t)a0 * b1;
-    uint64_t mid2 = (uint64_t)a1 * b0;
-    uint64_t high = (uint64_t)a1 * b1;
-    uint64_t carry = (low >> 32) + (mid1 & 0xFFFFFFFFULL) + (mid2 & 0xFFFFFFFFULL);
-    return high + (mid1 >> 32) + (mid2 >> 32) + (carry >> 32);
-}
-
-
-__attribute__((const, optimize("Ofast")))
-static constexpr std::tuple<uint64_t, uint32_t> bigint_divrem1e9(const uint64_t x) {
-
-    constexpr uint32_t _1E9 = 1'000'000'000;
-
-    // ceil(2^64 / 1e9)
-    constexpr uint64_t MAGIC = (UINT64_MAX / uint64_t(_1E9)) + 1;
-
-    if(x < _1E9) return {0, (uint32_t)x};
-
-    uint64_t q = mul64_hi(x, MAGIC);   // 近似商，误差 ≤ 1
-
-    if (q == 0) __builtin_unreachable();
-
-    // 关键：计算 (q-1)*D，避免溢出（因为 (q-1)*D ≤ x）
-    uint64_t tmp = x - (q - 1) * _1E9;     // 无溢出，tmp ∈ [0, 2D-1]
-
-    if (tmp < uint64_t(_1E9)) {
-        // q 偏大 1，真实商 = q-1
-        return {q - 1, (uint32_t)tmp};
-    } else {
-        // q 即真实商，余数 = tmp - D
-        return {q, (uint32_t)(tmp - _1E9)};
-    }
-}
+#endif
 
 
 static_assert(std::get<0>(bigint_divrem1e9(uint64_t(998'999'999'999ull))) == 998);
@@ -234,46 +197,6 @@ static_assert(std::get<0>(bigint_divrem1e9(123'456'789'012'345'678ull)) == 123'4
 static_assert(std::get<1>(bigint_divrem1e9(123'456'789'012'345'678ull)) == 12'345'678);
 
 
-__attribute__((optimize("-Ofast")))
-[[nodiscard]] static constexpr char* _fmtnum_u64_dec_fittest(
-    char* p_str,
-    uint64_t abs_val
-) {
-    // 若高32位为0，直接委托给32位版本
-    if (bool(abs_val >> 32) == false) {
-        return _fmtnum_u32_dec_fittest(p_str, uint32_t(abs_val));
-    }
-
-    uint64_t quo = abs_val;
-    uint32_t rem = 0;
-
-    static constexpr size_t MAX_BLOCKS = 3;
-    uint32_t blocks[MAX_BLOCKS];
-    int cnt = 0;
-
-    // 逐块分解，存储所有余数（低位块在前）
-    while (true) {
-        auto [q, r] = bigint_divrem1e9(quo);
-        quo = q;
-        rem = r;
-        blocks[cnt++] = rem;
-        if (quo == 0) break;
-    }
-
-    // 从最高位块开始，向缓冲区正向写入
-    for (int i = cnt - 1; i >= 0; --i) {
-        uint32_t val = blocks[i];
-        if (i == cnt - 1) {
-            // 最高位块：直接使用 u32 专用函数（自带位数计算）
-            p_str = _fmtnum_u32_dec_fittest(p_str, val);
-        } else {
-            // 非最高位块：固定 9 位，左补零
-            _fmtnum_u32_dec_padded({p_str, p_str + 9}, val);
-            p_str += 9;
-        }
-    }
-    return p_str;
-}
 
 
 

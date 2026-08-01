@@ -77,7 +77,7 @@ static constexpr ScientificParts depart_abs_fixedpoint_scientific(
 
 
 static constexpr char * _fmtnum_abs_fixedpoint_scientific(
-    char * p_str, 
+    char * __restrict p_str, 
     uint32_t abs_value_bits, 
     uint8_t precsion, 
     const uint8_t Q

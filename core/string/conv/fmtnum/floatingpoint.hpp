@@ -191,7 +191,7 @@ static constexpr std::pair<uint32_t, uint32_t> u64_div_u32(const uint64_t a, con
 
 
 [[maybe_unused]] static constexpr char * _fmtnum_f32(
-    char* p_str, 
+    char * __restrict p_str, 
     float value, 
     uint8_t precision
 ) {
