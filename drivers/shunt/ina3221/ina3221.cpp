@@ -83,7 +83,7 @@ IResult<> INA3221::reset(){
     auto reg = RegCopy(regs_.config_reg);
     auto gaurd = make_scope_guard([&](){
         reg.rst = false;
-        reg.apply();
+        reg.commit_changes();
     });
 
     reg.rst = true;

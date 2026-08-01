@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/stream/BufStream.hpp"
+#include "core/stream/buf_stream.hpp"
 
 #include "core/polymorphism/proxy.hpp"
 #include "core/math/real.hpp"

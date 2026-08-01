@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "hal/conn/spi/spidrv.hpp"
 
 // 参考资料：

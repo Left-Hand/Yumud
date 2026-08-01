@@ -37,7 +37,7 @@ IResult<> ADS1115::start_conv(){
 
     auto guard = make_scope_guard([&]{
         reg.busy = false;
-        reg.apply();
+        reg.commit_changes();
     });
 
 

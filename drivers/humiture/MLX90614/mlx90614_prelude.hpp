@@ -10,7 +10,7 @@
 
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90614-non-contact-temp-sensor.html
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/math/real.hpp"
 #include "middlewares/algebra/vectors/vec3.hpp"
 

@@ -4,7 +4,7 @@
 
 #include "../tb.h"
 
-#include "core/int/int_t.hpp"
+#include "core/math/int/int_t.hpp"
 #include "core/debug/debug.hpp"
 
 

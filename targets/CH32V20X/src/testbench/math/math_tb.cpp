@@ -3,7 +3,7 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/int/int_t.hpp"
+#include "core/math/int/int_t.hpp"
 #include "core/math/realmath.hpp"
 #include "core/math/matrix/static_matrix.hpp"
 #include "core/math/matrix/ceres/ceres.hpp"

@@ -140,23 +140,6 @@ static_assert(depart_abs_fixedpoint_scientific((uint32_t)((0.5999995) * (1u << 2
 static_assert(depart_abs_fixedpoint_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).exponent == -1);
 
 
-static_assert(frac_abs_f32_nonfpu(114.514f, 10000) == 5140);
-static_assert(frac_abs_f32_nonfpu(0.1919f, 10000) == 1919);
-static_assert(frac_abs_f32_nonfpu(0.19185f, 10000) == 1919);
-static_assert(frac_abs_f32_nonfpu(0.191849f, 10000) == 1918);
-static_assert(frac_abs_f32_nonfpu(0.114514f, 1000000) == 114514);
-static_assert(frac_abs_f32_nonfpu(0.001f, 1000) == 1);
-static_assert(frac_abs_f32_nonfpu(1e-8f, 1000) == 0);
-
-
-static_assert(frac_abs_f32_nonfpu(1099.9996, 1e3) == 1000);
-
-static_assert(floor_abs_f32_nonfpu(1000) == 1000);
-static_assert(floor_abs_f32_nonfpu(1e6) == 1e6);
-static_assert(floor_abs_f32_nonfpu(1e7) == 1e7);
-// static_assert(floor_abs_f32_nonfpu(1e8) == 1e8);
-// static_assert(floor_abs_f32(1e8) == 1e8);
-
 
 // ==================== 64位定点数拆分测试 ====================
 

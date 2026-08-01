@@ -70,7 +70,7 @@ private:
         const uint8_t bits = reg.to_bits();
         if(const auto res = write_reg(T::REG_ADDR, bits); 
             res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

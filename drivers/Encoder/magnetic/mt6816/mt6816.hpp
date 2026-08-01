@@ -2,7 +2,7 @@
 
 //不推荐用于新设计 性价比不高 
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 

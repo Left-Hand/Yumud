@@ -39,7 +39,7 @@ private:
             reg.to_bits()
         );
         if(res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return res;
     }
 

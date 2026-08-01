@@ -387,16 +387,22 @@ void sys::trip(){
     #endif
 }
 
-static constexpr const char * _unwrap_str_or(const char * str, const char * or_str){
+
+namespace{
+
+using cstr_t = const char *;
+
+static constexpr cstr_t _unwrap_str_or(cstr_t __restrict str, cstr_t __restrict or_str){
     return str != nullptr ? str : or_str;
 }
 
-static constexpr const char * _str_or_unknown(const char * str){
+static constexpr cstr_t _str_or_unknown(cstr_t str){
     return _unwrap_str_or(str, "unknown");
 }
 
-static constexpr const char * _str_or_null(const char * str){
+static constexpr cstr_t _str_or_null(cstr_t str){
     return _unwrap_str_or(str, "null");
+}
 }
 
 
@@ -436,14 +442,14 @@ void sys::abort(const AbortInfo & info){
     DEBUG_PRINTS("flag:", std::hex, flag.to_u32());
 
     auto print_arg = [&](
-        const char * str, 
+        cstr_t prefix_str, 
         const AbortInfo::Arguments::ArgDescr arg_descr, 
         const void * arg
     ){
-        DEBUG_PRINT(str);
+        DEBUG_PRINT(prefix_str);
         do{
             if(arg_descr.is_cstr()) {
-                DEBUG_PRINTS((_str_or_null(reinterpret_cast<const char *>(arg))));
+                DEBUG_PRINTS((_str_or_null(reinterpret_cast<cstr_t>(arg))));
                 return;
             }
         }while(false);

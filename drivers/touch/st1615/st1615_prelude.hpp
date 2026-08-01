@@ -3,7 +3,7 @@
 // Apache-2.0 license
 // https://github.com/embedded-drivers/sitronix-touch
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 

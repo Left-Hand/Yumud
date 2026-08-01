@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
@@ -91,7 +91,7 @@ private:
             reg.to_bits(), 
             std::endian::little
         ); res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
     

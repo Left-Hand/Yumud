@@ -128,7 +128,7 @@ IResult<> AK8963::reset(){
     const auto res = write_reg(reg);
     clock::delay(1ms);
     reg.srst = 0;
-    reg.apply();
+    reg.commit_changes();
     return res;
 }
 

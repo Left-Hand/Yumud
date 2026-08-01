@@ -49,7 +49,7 @@ private:
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = write_reg(T::REG_ADDR, reg.to_bits());
-        if(res.is_ok()) reg.apply();
+        if(res.is_ok()) reg.commit_changes();
         return res;
     }
 

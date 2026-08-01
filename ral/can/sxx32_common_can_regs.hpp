@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/constants/enums.hpp"
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 namespace ymd::ral::can::sxx32_common{
 

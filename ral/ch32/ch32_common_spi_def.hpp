@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 #ifndef BIT_CAST
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))

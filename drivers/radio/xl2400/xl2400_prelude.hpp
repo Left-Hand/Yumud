@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/strong_type_gradation.hpp"
 #include "core/stream/ostream.hpp"
 

@@ -450,7 +450,7 @@ IResult<> LT8920::set_sync_word(const uint64_t syncword){
             R16_SYNCWORD_BASE_ADDR + i, 
             reg.bits
         ); res.is_err()) return res;
-        reg.apply();
+        reg.commit_changes();
     }
 
     return Ok();

@@ -4,7 +4,7 @@
 
 //HT16K33是一款使用标准I2C协议的Led矩阵扫描/按键扫描芯片 同时带有中断引脚
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 

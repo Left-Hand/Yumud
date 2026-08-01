@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/STMicroIMU.hpp"
 #include "lis3dh_prelude.hpp"
@@ -118,7 +118,7 @@ private:
         if(const auto res = transport_.write_reg(
             static_cast<uint8_t>(T::REG_ADDR), reg.to_bits()
         );  res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

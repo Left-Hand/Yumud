@@ -9,7 +9,7 @@
 #include <tuple>
 #include <optional>
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/math/real.hpp"
 #include "middlewares/algebra/vectors/vec3.hpp"
 

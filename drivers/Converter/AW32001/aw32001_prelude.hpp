@@ -27,7 +27,7 @@
 // 以防止输入源被拉低。在这种情况下，如果系统电压比电池电压低30mV，
 // 则电池到系统的供电路径将完全导通以为系统负载供电，这称为补充模式。
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"

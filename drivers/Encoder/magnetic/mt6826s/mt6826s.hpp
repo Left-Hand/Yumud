@@ -34,7 +34,7 @@ private:
             0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

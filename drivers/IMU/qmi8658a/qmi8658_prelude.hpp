@@ -2,7 +2,7 @@
 
 //这个驱动已经完成了基础使用
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Errno.hpp"
 
 #include "drivers/IMU/IMU.hpp"

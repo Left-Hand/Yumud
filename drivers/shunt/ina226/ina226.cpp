@@ -169,7 +169,7 @@ IResult<> INA226::soft_reset(){
 
     // this bit self-clears by hardware after the reset is complete. The reset bit will always read as 0.
     reg.rst = 0;
-    reg.apply();
+    reg.commit_changes();
     return Ok();
 }
 

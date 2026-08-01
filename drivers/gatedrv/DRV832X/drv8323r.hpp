@@ -39,7 +39,7 @@ private:
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

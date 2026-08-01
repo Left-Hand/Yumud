@@ -51,7 +51,7 @@ private:
 
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

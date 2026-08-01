@@ -3,7 +3,7 @@
 
 // https://github.com/pololu/vl6180x-arduino/blob/master/VL6180X.h
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 

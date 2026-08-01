@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 //参考资料：https://github.com/Emandhal/MCP251XFD/blob/master/MCP251XFD.h
 

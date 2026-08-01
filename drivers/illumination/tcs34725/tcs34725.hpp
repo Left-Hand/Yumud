@@ -79,7 +79,7 @@ private:
             conv_reg_address_repeated(T::REG_ADDR), 
             reg.to_bits(), std::endian::little
         ); res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
     

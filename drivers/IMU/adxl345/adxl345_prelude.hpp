@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/AnalogDeviceIMU.hpp"
 

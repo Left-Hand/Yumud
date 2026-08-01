@@ -2,7 +2,7 @@
 
 #include "core/math/fixed/fxmath_nontranscend.hpp"
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/math/real.hpp"

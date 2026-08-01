@@ -2,7 +2,7 @@
 
 //15位磁编码器
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
 

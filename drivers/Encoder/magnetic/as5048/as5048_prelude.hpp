@@ -4,7 +4,7 @@
 #include "hal/conn/i2c/i2cdrv.hpp"
 
 #include "drivers/encoder/encoder.hpp"
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 //AS5048是一款18年的14位磁编码器 已经不推荐用于新设计
 

@@ -2,7 +2,7 @@
 
 #include "primitive/arithmetic/percentage.hpp"
 
-#include "core/int/uint24_t.hpp"
+#include "core/math/int/uint24_t.hpp"
 #include "core/math/realmath.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bits/u11x16.hpp"

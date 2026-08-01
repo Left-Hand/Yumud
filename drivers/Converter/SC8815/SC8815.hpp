@@ -98,7 +98,7 @@ private:
             uint8_t(T::REG_ADDR), 
             reg.to_bits(), std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
     
