@@ -71,7 +71,7 @@ static constexpr auto CONF_CURVE_X3_LIMIT = 24.5_iq16;
 //should below 1/sqrt(3):
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)
 // reach svm max duty
-static_assert(CONF_CTRL_MODU_DEPTH_LIMIT_F + CONF_HFI_MODU_DEPTH_LIMIT_F < (2.0 / 1.74));
+static_assert(CONF_CTRL_MODU_DEPTH_LIMIT_F + CONF_HFI_MODU_DEPTH_LIMIT_F < (1.0 / 1.74));
 
 static constexpr auto BUSBAR_VOLT = iq20(CONF_BUSBAR_VOLTAGE_F);
 static constexpr auto INV_BUSBAR_VOLT = uq32(1.0 / CONF_BUSBAR_VOLTAGE_F);

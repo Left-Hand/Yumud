@@ -12,21 +12,29 @@ using namespace ymd::str;
 namespace {
 
 struct Diag{
+    using Self = Diag;
+
     std::array<char, 32> buffer;
     size_t length;
+
+    static constexpr Self from_zero(){
+        Self self;
+        std::fill_n(self.buffer.data(), self.buffer.size(), 0);
+        self.length = 0;
+        return self;
+    }
 
     constexpr MutStrSpan crop() {
         return {buffer.data(), buffer.data() + length};
     }
 };
 
-
 [[maybe_unused]] static void test_all(){
 
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = _fmtnum_u32_dec_fittest(ret.buffer.data(), 11) - ret.buffer.data();
             return ret;
         }();
@@ -38,7 +46,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = 4;
             _fmtnum_u32_dec_padded(ret.crop(), 11);
             return ret;
@@ -53,7 +61,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = 4;
             _fmtnum_u32_dec_padded(ret.crop(), 114514);
             return ret;
@@ -68,7 +76,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = _fmtnum_u32_dec_fittest(ret.buffer.data(), 112178021) - ret.buffer.data();
             return ret;
         }();
@@ -87,7 +95,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = 2;
             _fmtnum_u32_hex(ret.crop(), 0x5a);
             return ret;
@@ -100,7 +108,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             ret.length = 8;
             _fmtnum_u32_bin(ret.crop(), 0x5a);
             return ret;
@@ -120,7 +128,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), 0x5a, 8, IntTypeErased::from<int32_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -135,7 +143,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), 2134, 10, IntTypeErased::from<int32_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -151,7 +159,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), 254, 2, IntTypeErased::from<int8_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -172,7 +180,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), -123, 10, IntTypeErased::from<int8_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -189,7 +197,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), 0x12345678, 16, IntTypeErased::from<uint32_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -209,7 +217,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), 0x12345678, 16, IntTypeErased::from<uint16_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -224,7 +232,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), UINT32_MAX, 10, IntTypeErased::from<uint32_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -242,7 +250,7 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
+            auto ret = Diag::from_zero();
             const auto end = fmtnum_integral32(ret.buffer.data(), UINT32_MAX, 10, IntTypeErased::from<int32_t>());
             ret.length = end - ret.buffer.data();
             return ret;
@@ -257,8 +265,8 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
-            const auto type = FixedTypeErased{.is_signed = false, .q_num = 16};
+            auto ret = Diag::from_zero();
+            const auto type = FixedTypeTag{.q_num = 16, .is_signed = false, };
             const auto end = fmtnum_fixedpoint32(ret.buffer.data(), uint32_t(1.145127 * (1ull << 16)), 6, type);
             ret.length = end - ret.buffer.data();
             return ret;
@@ -285,8 +293,8 @@ struct Diag{
 
     {
         constexpr auto diag = []{
-            Diag ret;
-            const auto type = FixedTypeErased{.is_signed = false, .q_num = 28};
+            auto ret = Diag::from_zero();
+            const auto type = FixedTypeTag{.q_num = 28, .is_signed = false, };
             const auto end = fmtnum_fixedpoint32(ret.buffer.data(), uint32_t(1.145127 * (1ull << 28)), 7, type);
             ret.length = end - ret.buffer.data();
             return ret;

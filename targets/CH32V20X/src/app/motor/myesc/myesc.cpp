@@ -2642,11 +2642,11 @@ void myesc_main(){
         if(true)DEBUG_PRINTLN(
 
             math::fixed_downcast<16>(state.traj_state.x1),
+            // state.traj_state.x1,
             math::fixed_downcast<16>(state.traj_smooth_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
             math::fixed_downcast<16>(state.encoder_ltd_state.x1),
             // ,
-            // uint64_t(1'999'999'999),
             // state.encoder_ltd_state.x2,
             // math::fixed_downcast<16>(state.encoder_pll_state.x1),
             // math::fixed_downcast<16>(state.encoder_rel_position64),

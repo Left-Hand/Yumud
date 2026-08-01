@@ -131,28 +131,43 @@ constexpr char * fmtnum_integral64(
 }
 
 
-struct [[nodiscard]] alignas(4) FixedTypeErased final{
-    bool is_signed;
-    const uint8_t q_num;
-};
 
 [[nodiscard]] constexpr char * fmtnum_fixedpoint32(
     char * __restrict p_str, 
-    uint32_t bits, 
+    int32_t bits, 
     uint8_t precision, 
-    FixedTypeErased type
+    FixedTypeTag type
 ){
     if(type.is_signed){
-        const bool is_negative = std::bit_cast<int32_t>(bits) < 0;
+        const bool is_negative = bits < 0;
 
         if(is_negative){
             p_str[0] = '-';
             p_str++;
-            bits = static_cast<uint32_t>(-std::bit_cast<int32_t>(bits));
+            bits = -bits;
         }
     }
 
     return _fmtnum_abs_fixedpoint32(p_str, static_cast<uint32_t>(bits), precision, type.q_num);
+}
+
+[[nodiscard]] constexpr char * fmtnum_fixedpoint64(
+    char * __restrict p_str, 
+    int64_t bits, 
+    uint8_t precision, 
+    FixedTypeTag type
+){
+    if(type.is_signed){
+        const bool is_negative = bits < 0;
+
+        if(is_negative){
+            p_str[0] = '-';
+            p_str++;
+            bits = -bits;
+        }
+    }
+
+    return _fmtnum_abs_fixedpoint64(p_str, static_cast<uint64_t>(bits), precision, type.q_num);
 }
 
 
