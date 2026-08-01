@@ -92,20 +92,6 @@ friend void ::TIM##x##_IRQHandler(void);\
 
 namespace ymd::hal{
 
-
-struct [[nodiscard]] TimerBdtr final{
-    void * p_inst_;
-    uint32_t bus_freq;
-
-    struct [[nodiscard]] Config{
-        TimerDeadzone deadzone;
-        TimerBdtrLockLevel level = TimerBdtrLockLevel::Off;
-    };
-
-    void init(const Config &config);
-};
-
-
 using TimerLibError = Infallible;
 
 struct [[nodiscard]] TimerPinSetuper final{
@@ -307,10 +293,7 @@ public:
             }{;}
 
     void isr_cc();
-    TimerBdtr bdtr(){return TimerBdtr{
-        .p_inst_ = p_inst_,
-        .bus_freq = this->get_periph_clk_freq()
-    };}
+
     void set_repeat_times(const uint16_t rep);
 
     template<size_t I>
@@ -335,6 +318,20 @@ public:
     #endif
 
 
+    struct [[nodiscard]] BdtrConfig{
+        TimerBdtrLockLevel lock_level;
+
+        static constexpr BdtrConfig from_default(){
+            return {
+                .lock_level = TimerBdtrLockLevel::Off
+            };
+        }
+    };
+
+    void configure_bdtr(TimerDeadzone deadzone, const BdtrConfig & config);
+
+private:
+    TimerDeadzoneCode calc_deadzone_code(TimerDeadzone deadzone);
 };
 
 

@@ -372,60 +372,108 @@ void timer_set_remap(const Nth nth, const TimerRemap rm){
         }
         break;
     #endif
+
+
+    #ifdef GPIO_PartialRemap_TIM9
+    case 9:
+        switch(rm){
+            case TimerRemap::_0:
+                return;
+            case TimerRemap::_1:
+                return;
+            case TimerRemap::_2:
+                GPIO_PinRemapConfig(GPIO_PartialRemap_TIM9, ENABLE);
+                return;
+            case TimerRemap::_3:
+                GPIO_PinRemapConfig(GPIO_FullRemap_TIM9, ENABLE);
+                return;
+        }
+        break;
+    #endif
+
+    #ifdef GPIO_PartialRemap_TIM10
+    case 10:
+        switch(rm){
+            case TimerRemap::_0:
+                return;
+            case TimerRemap::_1:
+                return;
+            case TimerRemap::_2:
+                GPIO_PinRemapConfig(GPIO_PartialRemap_TIM10, ENABLE);
+                return;
+            case TimerRemap::_3:
+                GPIO_PinRemapConfig(GPIO_FullRemap_TIM10, ENABLE);
+                return;
+        }
+        break;
+    #endif
     }
     __builtin_trap();
 }
 
 void timer_enable_rcc(const Nth nth, const Enable en){
     switch(nth.count()){
-    #ifdef TIM1_PRESENT
+    #ifdef RCC_APB2Periph_TIM1
     case 1:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, (en == EN));
         return;
     #endif
 
-    #ifdef TIM2_PRESENT
+    #ifdef RCC_APB1Periph_TIM2
     case 2:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, (en == EN));
         return;
     #endif
 
-    #ifdef TIM3_PRESENT
+    #ifdef RCC_APB1Periph_TIM3
     case 3:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, (en == EN));
         return;
     #endif
 
-    #ifdef TIM4_PRESENT
+    #ifdef RCC_APB1Periph_TIM4
     case 4:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, (en == EN));
         return;
     #endif
 
-    #ifdef TIM5_PRESENT
+    #ifdef RCC_APB1Periph_TIM4
     case 5:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, (en == EN));
         return;
     #endif
 
     
-    #ifdef TIM6_PRESENT
+    #ifdef RCC_APB1Periph_TIM6
     case 6:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, (en == EN));
         return;
     #endif
 
-    #ifdef TIM7_PRESENT
+    #ifdef RCC_APB1Periph_TIM7
     case 7:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, (en == EN));
         return;
     #endif
 
-    #ifdef TIM8_PRESENT
+    #ifdef RCC_APB2Periph_TIM9
     case 8:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, (en == EN));
         return;
     #endif
+
+    #ifdef RCC_APB2Periph_TIM9
+    case 9:
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, (en == EN));
+        return;
+    #endif
+
+    #ifdef RCC_APB2Periph_TIM10
+    case 10:
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM10, (en == EN));
+        return;
+    #endif
+
     }
     __builtin_trap();
 }

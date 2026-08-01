@@ -162,8 +162,8 @@ void digipw_main(){
         hal::TimerChannelSelection::CH2,
         hal::TimerChannelSelection::CH3,
     }).unwrap();
+    timer.configure_bdtr(10ns, Default);
     timer.start();
-    timer.bdtr().init({10ns});
 
     auto & pwm = timer.oc<1>();
     auto & pwmn = timer.ocn<1>();

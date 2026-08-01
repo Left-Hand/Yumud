@@ -1756,7 +1756,7 @@ static void setup_timer(){
         }).unwrap()
         ;
 
-    timer.bdtr().init({DEADTIME_NANOS});
+    timer.configure_bdtr(DEADTIME_NANOS, Default);
     timer.enable_arr_sync(EN);
 
     timer.oc<1>().init(Default);
