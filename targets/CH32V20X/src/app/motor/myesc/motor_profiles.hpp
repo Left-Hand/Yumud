@@ -123,7 +123,7 @@ struct MotorProfile_Jc4310{
     static constexpr auto FLUX_LINKAGE = iq20(83.4 * 1E-4);
 
     static constexpr auto PREFERD_CURRENT_CUTOFF_FREQ = 280;
-    static constexpr auto CURRENT_LIMIT = 1.2_iq20;
+    static constexpr auto CURRENT_LIMIT = 0.9_iq20;
 };
 
 // 吊扇电机

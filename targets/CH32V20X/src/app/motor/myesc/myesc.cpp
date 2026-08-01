@@ -157,7 +157,7 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             static constexpr int flip_duration = 32;
             const bool is_forward = int(t) % (flip_duration * 2) < flip_duration;
 
-            constexpr iq32 abs_speed = iq32(abs_delta * FOC_FREQ);
+            constexpr iq32 abs_speed = iq32(abs_delta * CONF_FOC_FREQ);
             [[maybe_unused]] constexpr float abs_speed_f = (float)abs_speed;
 
             auto speed = abs_speed;
@@ -237,14 +237,14 @@ static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
     const math::fixed<Q, int32_t> x_state,
     const math::fixed<Q, int32_t> x_new
 ){
-    constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
+    constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(CONF_FOC_FREQ, FC).unwrap();
     return lpf_1o(x_state, x_new, ALPHA);
 }
 
-constexpr auto ALPHA_100HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 100).unwrap();
-constexpr auto ALPHA_10HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 10).unwrap();
-constexpr auto ALPHA_1HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ, 1).unwrap();
-constexpr auto ALPHA_01HZ = dsp::calc_lpf_alpha_uq32(FOC_FREQ * 10, 1).unwrap();
+constexpr auto ALPHA_100HZ = dsp::calc_lpf_alpha_uq32(CONF_FOC_FREQ, 100).unwrap();
+constexpr auto ALPHA_10HZ = dsp::calc_lpf_alpha_uq32(CONF_FOC_FREQ, 10).unwrap();
+constexpr auto ALPHA_1HZ = dsp::calc_lpf_alpha_uq32(CONF_FOC_FREQ, 1).unwrap();
+constexpr auto ALPHA_01HZ = dsp::calc_lpf_alpha_uq32(CONF_FOC_FREQ * 10, 1).unwrap();
 
 #define DEF_GEN_LPF_FUNC(fc)\
 template<size_t Q>\
@@ -277,10 +277,10 @@ static constexpr math::fixed<Q, int32_t> lpf_allpass(
 
 
 static constexpr auto OBSERVER_PLL_COEFFS = 
-    dsp::PllCoeffs::from_fsfc(FOC_FREQ, OBSERVER_PLL_FC, 2.0_iq16);
+    dsp::PllCoeffs::from_fsfc(CONF_FOC_FREQ, CONF_OBSERVER_PLL_FC, 2.0_iq16);
 
 static constexpr auto HFI_PLL_COEFFS = 
-    dsp::PllCoeffs::from_fsfc(FOC_FREQ, HFI_PLL_FC, 2.0_iq16);
+    dsp::PllCoeffs::from_fsfc(CONF_FOC_FREQ, CONF_HFI_PLL_FC, 2.0_iq16);
 
 
 
@@ -288,7 +288,7 @@ static constexpr auto HFI_PLL_COEFFS =
 
 
 static constexpr auto CURRENT_REGULATOR_CFG = dsp::LrSeriesCurrentRegulatorConfig{
-    .fs = FOC_FREQ,
+    .fs = CONF_FOC_FREQ,
     .fc = PREFERD_CURRENT_CUTOFF_FREQ,
     .phase_inductance_mh = PHASE_INDUCTANCE_MH,
     .phase_resistance_ohm = PHASE_RESISTANCE_OHM,
@@ -301,7 +301,7 @@ using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
 static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
 [[maybe_unused]] static constexpr auto HIGHCUTOFF_ENCODER_LTD2O = Ltd2o::try_from({
-    .fs = FOC_FREQ, 
+    .fs = CONF_FOC_FREQ, 
     .r = HIGHCUTOFF_ENCODER_LTD2O_R
 }).unwrap();
 
@@ -309,7 +309,7 @@ static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
 
 
 [[maybe_unused]] static constexpr auto CURVE_NLTD_FHAN = dsp::adrc::FhanPrecomputed<iq16>::from({
-    .r = CURVE_X3_LIMIT,
+    .r = CONF_CURVE_X3_LIMIT,
     .h = 0.003_iq16,
 });
 
@@ -424,7 +424,7 @@ static void process_observer_calc(AllState & state, const FnSwitches fn_switches
         // );
 
         // flux_ob_state.x1_slowhp = leaky_1o(
-        //     flux_ob_state.x1_slowhp, x1_delta *FOC_FREQ, uq32::from_bits(~ALPHA_10HZ.to_bits())
+        //     flux_ob_state.x1_slowhp, x1_delta *CONF_FOC_FREQ, uq32::from_bits(~ALPHA_10HZ.to_bits())
         // );
 
         // flux_ob_state.x1_slowhp = x1 - x1_prev;
@@ -458,7 +458,7 @@ static void process_observer_calc(AllState & state, const FnSwitches fn_switches
         
         // https://zhuanlan.zhihu.com/p/887911569 反馈增益的设置是定为20000-100000之间调整
         [[maybe_unused]] constexpr auto gamma_half = 70000;
-        constexpr auto gamma_half_dt = uq16(float(gamma_half) / FOC_FREQ);
+        constexpr auto gamma_half_dt = uq16(float(gamma_half) / CONF_FOC_FREQ);
 
         const auto lem1 = flux_ob_state.x1 - L_iaib[0];
         const auto lem2 = flux_ob_state.x2 - L_iaib[1];
@@ -552,7 +552,7 @@ static void process_encoder_cogging_harmonic(AllState & state, const FnSwitches 
         static constexpr auto ALPHA = uq32(0.0001);
         #endif
 
-        // static constexpr uq32 L1DT = uq32(float(L1) / FOC_FREQ);
+        // static constexpr uq32 L1DT = uq32(float(L1) / CONF_FOC_FREQ);
 
 
         const uq32 harm_turns = uq32::from_bits(peac_state.hat_turns.to_bits() & UINT32_MAX) 
@@ -807,14 +807,14 @@ static void process_traj_shape(
     const auto u = CURVE_NLTD_FHAN({iq16(e1), iq16(e2)});
 
     const auto next_x1 = curve_state.x1 + iiq32(extended_mul(curve_state.x2, TSAMPLE));
-    const auto next_x2 = math::clamp2(curve_state.x2 + iq20(u) * TSAMPLE, CURVE_X2_LIMIT);
+    const auto next_x2 = math::clamp2(curve_state.x2 + iq20(u) * TSAMPLE, CONF_CURVE_X2_LIMIT);
 
     const auto delta_x2 = next_x2 - curve_state.x2;
 
     curve_state.x1 = next_x1;
     curve_state.x2 = next_x2;
-    // curve_state.x3 = math::closer_to_zero(iq16(u), lpf_2000hz(curve_state.x3, iq16(delta_x2) * FOC_FREQ));
-    curve_state.x3 = iq16(delta_x2) * FOC_FREQ;
+    // curve_state.x3 = math::closer_to_zero(iq16(u), lpf_2000hz(curve_state.x3, iq16(delta_x2) * CONF_FOC_FREQ));
+    curve_state.x3 = iq16(delta_x2) * CONF_FOC_FREQ;
     curve_state.u = u;
 }
 
@@ -865,7 +865,7 @@ static void process_mechanical_loop(
             constexpr iq20 kp = 0.43_iq20;
             constexpr iq20 ki = 14.66_iq20;
             #endif
-            constexpr auto ki_discrete = ki / FOC_FREQ;
+            constexpr auto ki_discrete = ki / CONF_FOC_FREQ;
 
             const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1 - now_x1), kpp, E2_LIMIT));
 
@@ -1110,7 +1110,7 @@ void process_deadcomp_generate(
         [[maybe_unused]] const auto weak_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 3;
         [[maybe_unused]] const auto strong_flip_threshold = CURRENT_AMPS_PER_ADC_LSB * 6;
         static constexpr auto DEADTIME_COMP_DUTYCYCLE = iq16(
-            (DEADTIME_NANOS.count() * FOC_FREQ * 1e-9)
+            (CONF_DEADTIME_NANOS.count() * CONF_FOC_FREQ * 1e-9)
         );
 
         // [[maybe_unused]] static constexpr auto f = (float)DEADTIME_COMP_DUTYCYCLE;
@@ -1193,18 +1193,18 @@ void process_hfi_generate(
 
     if(hfi_enabled){
         auto & table = SINCOS_32STEP_TABLE;
-        static constexpr size_t table_size = std::tuple_size_v<std::decay_t<decltype(table)>>;
-        static_assert(std::has_single_bit(table_size));
+        static constexpr size_t TABLE_SIZE = std::tuple_size_v<std::decay_t<decltype(table)>>;
+        static_assert(std::has_single_bit(TABLE_SIZE));
 
-        const auto table_idx_mask = table_size - 1;
-        const auto hfi_modu_depth = HFI_MODU_DEPTH_LIMIT;
+        const auto table_idx_mask = TABLE_SIZE - 1;
+        const auto hfi_modu_depth = CONF_HFI_MODU_DEPTH_LIMIT;
 
 
         auto calc_spin_hfi_dutycycle = [&] -> AlphaBetaCoord<iq20>{
             const auto lg2_len_hfi_samples = 5;
             const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
 
-            const auto table_fact = table_size / len_hfi_samples;
+            const auto table_fact = TABLE_SIZE / len_hfi_samples;
             
             const auto now_hfi_idx = hfi_state.hfi_idx;
             if(now_hfi_idx >= len_hfi_samples) __builtin_unreachable();
@@ -1301,7 +1301,7 @@ void process_hfi_generate(
             const auto lg2_len_hfi_samples = 5;
             const auto len_hfi_samples = 1 << lg2_len_hfi_samples;
 
-            const auto table_fact = table_size / len_hfi_samples;
+            const auto table_fact = TABLE_SIZE / len_hfi_samples;
 
             // const Angular<uq32> est_angle = state.hfi_pll_state.angle;
             #if 0
@@ -1688,6 +1688,13 @@ static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
 
 
 
+static constexpr std::partial_ordering compare_bvalue(const int32_t bvalue){
+    static constexpr int32_t HI_THRESHOLD = ADC_MIDPOINT_BVALUE + CONF_ADC_MIDPOINT_OFFSET_BVALUE_TOLERANCE;
+    static constexpr int32_t LO_THRESHOLD = ADC_MIDPOINT_BVALUE - CONF_ADC_MIDPOINT_OFFSET_BVALUE_TOLERANCE;
+    if(bvalue >= HI_THRESHOLD) return std::partial_ordering::greater;
+    if(bvalue <= LO_THRESHOLD) return std::partial_ordering::less;
+    return std::partial_ordering::equivalent;
+};
 
 
 [[nodiscard]] static constexpr size_t 
@@ -1708,6 +1715,7 @@ __no_inline static void setup_adc(){
             {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
 
+            {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
             #if 1
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
             {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
@@ -1717,7 +1725,6 @@ __no_inline static void setup_adc(){
             {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
             {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T28_5},  
             #endif
-            // {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
 
             // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
@@ -1737,7 +1744,7 @@ static void setup_timer(){
     auto & timer = hal::timer1;
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
-        // .count_freq = hal::NearestFreq(FOC_FREQ * 2),
+        // .count_freq = hal::NearestFreq(CONF_FOC_FREQ * 2),
         .count_freq = hal::timer::ArrAndPsc{TIMER_ARR_VALUE,1-1},
         // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
         // .count_mode = hal::TimerCountMode::CenterAligned,
@@ -1756,7 +1763,7 @@ static void setup_timer(){
         }).unwrap()
         ;
 
-    timer.configure_bdtr(DEADTIME_NANOS, Default);
+    timer.configure_bdtr(CONF_DEADTIME_NANOS, Default);
     timer.enable_arr_sync(EN);
 
     timer.oc<1>().init(Default);
@@ -1819,9 +1826,9 @@ static void set_uvw_dutycycle(UvwCoord<iq16> dutycycle, const bool phase_invert_
 static std::array<int32_t, 3> get_adc_uvw_bvalue(){
     auto * inst = ADC1;
     return {
-        static_cast<int32_t>(inst->IDATAR1),
         static_cast<int32_t>(inst->IDATAR2),
-        static_cast<int32_t>(inst->IDATAR3)
+        static_cast<int32_t>(inst->IDATAR3),
+        static_cast<int32_t>(inst->IDATAR4)
     };
 };
 
@@ -1835,6 +1842,8 @@ static void start_pwm(){
     TIM_INST->CTLR1 |= (uint16_t)TIM_CEN;
     TIM_INST->BDTR |= (uint16_t)TIM_MOE;
 };
+
+
 
 
 
@@ -2206,10 +2215,29 @@ void myesc_main(){
             dc_state.dc_cal_cnt++;
             if(dc_state.dc_cal_cnt >= DC_CAL_TIMES){
                 dc_state.uvw_bvalue_offset = {
-                    int32_t(std::get<0>(dc_state.uvw_bvalue_offset_acc) >> LG2_DC_CAL_TIMES),
-                    int32_t(std::get<1>(dc_state.uvw_bvalue_offset_acc) >> LG2_DC_CAL_TIMES),
-                    int32_t(std::get<2>(dc_state.uvw_bvalue_offset_acc) >> LG2_DC_CAL_TIMES)
+                    int32_t(std::get<0>(dc_state.uvw_bvalue_offset_acc) >> CONF_LG2_DC_CAL_TIMES),
+                    int32_t(std::get<1>(dc_state.uvw_bvalue_offset_acc) >> CONF_LG2_DC_CAL_TIMES),
+                    int32_t(std::get<2>(dc_state.uvw_bvalue_offset_acc) >> CONF_LG2_DC_CAL_TIMES)
                 };
+
+
+                const auto u_compare_res = compare_bvalue(dc_state.uvw_bvalue_offset[0]);
+                const auto v_compare_res = compare_bvalue(dc_state.uvw_bvalue_offset[1]);
+                const auto w_compare_res = compare_bvalue(dc_state.uvw_bvalue_offset[2]);
+
+                auto raise_midpoint_outofrange_exception_ifneeded = [&](std::partial_ordering compare_order){
+                    if(compare_order != std::partial_ordering::equivalent){
+
+                        //TODO add exception recover
+                        sys::trip();
+                        __builtin_abort();
+                    }
+                };
+
+                raise_midpoint_outofrange_exception_ifneeded(u_compare_res);
+                raise_midpoint_outofrange_exception_ifneeded(v_compare_res);
+                raise_midpoint_outofrange_exception_ifneeded(w_compare_res);
+
                 op_flags.dc_calibrate_unready = false;
             }
 
@@ -2245,10 +2273,10 @@ void myesc_main(){
                 #else
                 static uint32_t tick = 0;
                 tick++;
-                if(tick >= FOC_FREQ * 10) tick = 0;
+                if(tick >= CONF_FOC_FREQ * 10) tick = 0;
 
                 static constexpr auto RBTRIP_PARAS = motioner::RoundtripParaments{
-                    .fs = FOC_FREQ,
+                    .fs = CONF_FOC_FREQ,
                     // .revs_per_direction = 2, 
                     .uniform_ticks = 2 * SIDESHAFT_CALIBRATE_STEPS_PER_REV,
                     .ticks_per_rev = SIDESHAFT_CALIBRATE_STEPS_PER_REV,
@@ -2283,9 +2311,9 @@ void myesc_main(){
 
                     static constexpr size_t LG2_STEPS_CURRENT_RAMP = 14u;
 
-                    static constexpr iq16 ELEC_X2 = iq16(FOC_FREQ * 1.0 / SIDESHAFT_CALIBRATE_STEPS_PER_REV);
-                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(SIDESHAFT_CALIBRATE_STEPS_PER_REV) / FOC_FREQ;
-                    [[maybe_unused]] static constexpr float SECONDS_RAMP = double(1 << LG2_STEPS_CURRENT_RAMP) / FOC_FREQ;
+                    static constexpr iq16 ELEC_X2 = iq16(CONF_FOC_FREQ * 1.0 / SIDESHAFT_CALIBRATE_STEPS_PER_REV);
+                    [[maybe_unused]] static constexpr float SECONDS_PER_REV = double(SIDESHAFT_CALIBRATE_STEPS_PER_REV) / CONF_FOC_FREQ;
+                    [[maybe_unused]] static constexpr float SECONDS_RAMP = double(1 << LG2_STEPS_CURRENT_RAMP) / CONF_FOC_FREQ;
 
                     using Counter = EncoderNonlinearCalibrateCounter;
                     using Stage = EncoderNonlinearCalibrateStage;
@@ -2516,14 +2544,16 @@ void myesc_main(){
 
         // const auto angle = mag_encoder_.update().examine().parse().unwrap();
         [[maybe_unused]] const auto now_secs = clock::seconds();
+        const uint32_t temp_bvalue = static_cast<uint32_t>(ADC1->IDATAR1);
 
-        state.temperature_state.die().celsius = lpf_10hz(state.temperature_state.die().celsius, TEMP_TRIMER.parse_u12(ADC1->IDATAR4));
+        state.temperature_state.die().celsius = lpf_10hz(
+            state.temperature_state.die().celsius, TEMP_TRIMER.parse_bvalue_u12(temp_bvalue));
 
         #if 0
         // {
             const auto offset = state.hfi_state.spinhfi_bin0_real_response;
             const auto amp = math::mag(state.hfi_state.spinhfi_bin2_real_response, hfi_state.spinhfi_bin2_imag_response) * 2;
-            static constexpr auto factor = (int)(iq12(FOC_FREQ) / iq12(HFI_MODU_DEPTH_LIMIT * BUSBAR_VOLT));
+            static constexpr auto factor = (int)(iq12(CONF_FOC_FREQ) / iq12(CONF_HFI_MODU_DEPTH_LIMIT * BUSBAR_VOLT));
             [[maybe_unused]] const auto lq_est_mh = iq20(1000.0 / factor) / (offset - amp);
             [[maybe_unused]] const auto ld_est_mh = iq20(1000.0 / factor) / (offset + amp);
         // }
@@ -2534,161 +2564,6 @@ void myesc_main(){
         // }
         #endif
 
-        if(false)DEBUG_PRINTLN();
-            // die_celsius_,
-            // s, c, 
-            // state.uvw_curr_raw.u,
-            // state.uvw_curr_raw.v + state.uvw_curr_raw.w,
-            // state.uvw_curr_raw.v,
-            // state.uvw_curr_raw.w,
-            // state.uvw_curr_slowlp.u,
-            // state.uvw_curr_slowlp.v + state.uvw_curr_slowlp.w,
-            // u_disconn_dbs.count,
-            // v_disconn_dbs.count,
-            // judge_is_disconn(state.uvw_curr_slowlp.u,state.uvw_curr_slowlp.v + state.uvw_curr_slowlp.w),
-            // judge_is_disconn(state.uvw_curr_slowlp.v,state.uvw_curr_slowlp.u + state.uvw_curr_slowlp.w),
-            // state.alphabeta_volt_final.alpha,
-            // state.alphabeta_volt_final.beta,
-            // state.d_volt_gen,
-            // state.q_volt_gen,
-            // flux_sensorless_ob.angle().to_turns(),
-            // flux_sensorless_ob.state().flux_state_mf[0],
-            // flux_sensorless_ob.state().flux_state_mf[1],
-            // flux_sensorless_ob.state().v_alphabeta_last[0],
-            // flux_sensorless_ob.state().v_alphabeta_last[1],
-            // state.torque_curr_cmd,
-            // state.uvw_curr_raw,
-            // state.dq_volt_ctrl,
-            // state.elec_angle.to_turns(),
-            // state.alphabeta_curr_raw.alpha,
-            // state.alphabeta_curr_raw.beta,
-            // state.alphabeta_dutycycle_hfi,
-            // hfi_state.hfi_idx,
-            // hfi_state.hfi_is_neg_samp,
-            // state.dq_volt_ctrl.q,
-            // state.dq_curr_raw.q,
-
-            // hfi_state.spinhfi_bin2_real_response, 
-            // hfi_state.spinhfi_bin0_real_response,
-            // hfi_state.spinhfi_bin2_imag_response, 
-            // hfi_state.spinhfi_bin2_imag_response + hfi_state.spinhfi_bin0_real_response, 
-            // hfi_state.spinhfi_bin2_imag_response, 
-            // hfi_state.spinhfi_bin1_imag_response
-            // ),
-            // hfi_state.spinhfi_bin2_real_response_slowlp,
-            // hfi_state.spinhfi_bin2_imag_response_slowlp,
-            // state.alphabeta_curr_raw.alpha,
-            // state.dq_volt_ctrl.d,
-            // state.dq_volt_ctrl.q,
-            // mag_volt,
-            // inv_mag_curr,
-            // state.uvw_curr_raw,
-            
-            // lq_est_mh,
-            // ld_est_mh,
-
-            
-            // state.openloop_elec_angle.to_turns(),
-            // state.hfi_elec_angle.to_turns(),
-            // state.uvw_dutycycle_genout,
-            // state.uvw_dutycycle_deadcomp,
-            // state.deadcomp_state.uvw_sign,
-            // hfi_state.pulsehfi_q_response,
-            // state.alphabeta_curr_raw.length(),
-            // state.dq_volt_ctrl.length(),
-            // state.dq_volt_ctrl.length() / state.alphabeta_curr_raw.length(),
-            // state.alphabeta_volt_final.length(),
-            // math::atan2(hfi_state.spinhfi_bin1_imag_response,
-            //     hfi_state.spinhfi_bin1_real_response),
-
-            // math::atan2(hfi_state.spinhfi_bin2_imag_response,
-            //     hfi_state.spinhfi_bin2_real_response) / 2,
-            // state.openloop_elec_angle.to_turns(),
-            // state.hfi_pll_state.angle.to_turns(),
-            // state.hfi_elec_angle.to_turns(),
-            // state.openloop_elec_angle.to_turns(),
-            // state.hfi_elec_angle.to_turns(),
-            // state.hfi_pll_state.angle.to_turns(),
-            // state.hfi_pll_state.angle.to_turns(),
-            // state.hfi_pll_state.angluar_speed.to_turns(),
-            // state.hfi_elec_angle.to_turns(),
-            // state.temperature_state.die().to_celsius(),
-
-            // state.hybrid_elec_angle.to_turns(),
-            // state.observer_hybrid_ratio,
-
-            // offset / (offset * offset - amp * amp),
-
-            // iq12(offset) * int(1000000/ factor),
-            // iq12(amp) * int(1000000/ factor),
-            // state.hfi_elec_angle.to_turns(),
-            // spinhfi_bin2_angle.to_turns(),
-
-            // hfi_idx,
-            // state.alphabeta_curr_raw[0],
-            // state.alphabeta_curr_raw[1],
-            // state.deadtime_comp_alphabeta_dutycycle,
-            // state.uvw_dutycycle_genout,
-
-            // hfi_state.spinhfi_bin2_imag_response,
-            // hfi_state.spinhfi_bin2_real_response
-            // full_arr,
-            // state.isr_elapsed_ticks.count(),
-            
-            // die_celsius_,
-            // flux_sensorless_ob.angle().to_turns(),
-            // math::atan2pu(state.alphabeta_curr_raw[0], state.alphabeta_curr_raw[1]),
-            // state.alphabeta_curr_raw[0] / state.alphabeta_curr_raw[1],
-            // state.uvw_curr_ref,
-            // state.alphabeta_curr_raw,
-            // state.alphabeta_curr_ref,
-            // state.alphabeta_curr_raw,
-            // state.dq5_curr_lp,
-            // state.harmonic_state.id6c,
-            // state.harmonic_state.id6s,
-            // state.harmonic_state.iq6c,
-            // state.harmonic_state.iq6s,
-            // state.dq5_curr_lp[0],
-            // state.dq5_curr_lp[1],
-            // state.dq7_curr_lp[0],
-            // state.dq7_curr_lp[1],
-            // state.harmonic_state.vs5c_integral,
-            // state.harmonic_state.vs5s_integral,
-            // state.harmonic_state.vs7c_integral,
-            // state.harmonic_state.vs7s_integral,
-            // state.harmonic_state.vd6c_integral,
-            // state.harmonic_state.vd6s_integral,
-            // state.harmonic_state.vq6c_integral,
-            // state.harmonic_state.vq6s_integral,
-
-            // state.harmonic_state.delta_vd6_in,
-            // state.harmonic_state.delta_vq6_in,
-            // tmrticks_to_us(state.isr_entry_tick),
-            // tmrticks_to_us(state.isr_exit_tick),
-            // state.busbar_curr_lp,
-            // state.dq_curr_raw.q,
-            // state.dq_curr_raw.d,
-
-            // state.flux_ob_state.lem1,
-            // state.flux_ob_state.lem2,
-            // state.uvw_dutycycle_genout,
-            // state.dq_volt_ctrl.q,
-            // state.dq_volt_ctrl.d,
-            // state.dq_curr_raw.d,
-            // state.dq_curr_raw.q,
-            // state.busbar_curr_lp,
-            // state.uvw_curr_raw.w,
-            // math::atan2pu(state.flux_ob_state.x2,
-
-            // uint16_t(TIM_INST->ATRLR)
-            // timer.oc<4>().cvr(),
-            // timer.arr()
-            // state.isr_elapsed_ticks.count()
-            // state.alphabeta_volt_final,
-            // state.alphabeta_curr_raw
-            // state.uvw_curr_raw.u,
-            // state.uvw_curr_raw.v,
-            // state.uvw_curr_raw.w
 
         if(false)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
@@ -2764,17 +2639,21 @@ void myesc_main(){
 
         if(true)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
-            // math::fixed_downcast<16>(state.traj_smooth_state.x1),
-            // math::fixed_downcast<16>(state.curve_state.x1),
-            // math::fixed_downcast<16>(state.encoder_ltd_state.x1),
+            math::fixed_downcast<16>(state.traj_smooth_state.x1),
+            math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.encoder_ltd_state.x1),
             // state.encoder_ltd_state.x2,
-            math::fixed_downcast<16>(state.encoder_pll_state.x1),
-            math::fixed_downcast<16>(state.encoder_rel_position64),
-            state.encoder_pll_state.x2,
-            state.uvw_adc_bvalue[0],
-            ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
+            // math::fixed_downcast<16>(state.encoder_pll_state.x1),
+            // math::fixed_downcast<16>(state.encoder_rel_position64),
+            // state.encoder_pll_state.x2,
+
+            // ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
+            // state.uvw_adc_bvalue,
+            // state.uvw_curr_raw,
+            // state.uvw_curr_ref,
+            state.temperature_state.die().celsius,
             // math::fixed_downcast<16>(state.encoder_abs_position64),
-            math::fixed_downcast<16>(state.encoder_rel_position64 - state.curve_state.x1) * 360,
+            // math::fixed_downcast<16>(state.encoder_rel_position64 - state.curve_state.x1) * 360,
 
 
             // state.traj_smooth_state.x2,
@@ -2793,6 +2672,7 @@ void myesc_main(){
             // state.pi_ref_x2,
 
             state.torque_curr_cmd,
+            state.dq_curr_ref,
             // state.torque_curr_veryslowlp,
             // iq20::from(float(math::bf16(float(state.torque_curr_veryslowlp)))),
             // encode_curr_eps(state.torque_curr_veryslowlp),
@@ -2803,8 +2683,9 @@ void myesc_main(){
             // math::fixed_downcast<16>(state.debug.curve_x1),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
-            tmrticks_to_us(state.isr_entry_tick),
-            tmrticks_to_us(state.encoder_get_done_tick),
+            // state.temperature_state.die().celsius,
+            // tmrticks_to_us(state.isr_entry_tick),
+            // tmrticks_to_us(state.encoder_get_done_tick),
             tmrticks_to_us(state.isr_exit_tick)
         );
 

@@ -155,7 +155,7 @@ struct [[nodiscard]] TemperatureTrimer final{
         };
     }
     
-    constexpr iq16 parse_u12(const uint16_t x) const noexcept {
+    constexpr iq16 parse_bvalue_u12(const uint16_t x) const noexcept {
         constexpr uint16_t K = static_cast<uint16_t>(-COEFF1 * 65536);
         return iq16::from_bits(b.to_bits() - (K * x)); 
     }
