@@ -145,6 +145,12 @@ enum class [[nodiscard]] Event:uint8_t{
     EndOfInjectedConversion,
     AnalogWatchdog
 };
+
+struct [[nodiscard]] ChannelConfig final{
+    ChannelSelection ch_sel;
+    SampleCycles sample_cycles;
+};
+
 }
 
 namespace ymd::hal{
@@ -157,4 +163,10 @@ using AdcRegularTrigger = adc::RegularTrigger;
 using AdcInjectedTrigger = adc::InjectedTrigger;
 using AdcIT = adc::IT;
 using AdcEvent = adc::Event;
+using AdcChannelConfig = adc::ChannelConfig;
+
+
+static constexpr size_t MAX_REGULAR_CHANNELS = 16;
+static constexpr size_t MAX_INJECTED_CHANNELS = 4;
+
 }

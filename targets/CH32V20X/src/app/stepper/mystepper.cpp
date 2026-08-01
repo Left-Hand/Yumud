@@ -477,7 +477,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     isr_trig_gpio.outpp();
 
     adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.enable_interrupt(hal::AdcIT::JEOC, EN);
     adc.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
@@ -586,7 +586,7 @@ void mystepper_main(){
     digipw::AlphaBetaCoord<iq16> alphabeta_curr = {0, 0};
 
     adc.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.enable_interrupt(hal::AdcIT::JEOC, EN);
     adc.set_isr_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){

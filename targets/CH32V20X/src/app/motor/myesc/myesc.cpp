@@ -40,6 +40,7 @@
 #include "core/intrinsics/memop.h"
 #include "core/mem/arena.hpp"
 #include "roundtrip_traj_generator.hpp"
+#include "hal/analog/adc/adc_lld.hpp"
 
 using namespace ymd;
 using namespace ymd::myesc;
@@ -311,218 +312,6 @@ static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
     .r = CURVE_X3_LIMIT,
     .h = 0.003_iq16,
 });
-
-
-
-
-static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
-    const auto abs_ref = math::abs(ref);
-    if(abs_ref < CURRENT_NOISE_STDVAR) return false;
-    const auto abs_meas = math::abs(meas);
-    return (abs_meas * 30 < abs_ref) and (abs_meas < CURRENT_NOISE_STDVAR);
-}
-
-
-
-
-static constexpr iq16 _tmrticks_to_us(const int32_t counter_value){
-    static constexpr uint32_t factor = (1ull << 32) * (1.0 / 144);
-    return iq16::from_bits(int32_t((int64_t(counter_value) * factor) >> 16));
-}
-
-static constexpr iq16 tmrticks_to_us(const TimerTick tick){
-    int32_t counter_value = int32_t(tick.counter_value);
-    if(tick.is_up_counting) counter_value = TIMER_ARR_VALUE + counter_value;
-    else counter_value = TIMER_ARR_VALUE - counter_value;
-    return _tmrticks_to_us(counter_value);
-}
-
-[[nodiscard]] static constexpr size_t 
-warp_index(const size_t x, const size_t len){
-    size_t next = x;
-    if(next > len) 
-        next -= len;
-    return next;
-};
-
-
-#define TIM_INST TIM1
-#define ADC_INST ADC1
-
-__no_inline static void setup_adc(){
-
-    hal::adc1.init({
-            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
-        },{
-
-            #if 1
-            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
-            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
-            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},  
-            #else
-            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T28_5},  
-            #endif
-            // {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
-
-            // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T7_5},
-
-        },
-        {}
-    );
-
-    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
-    // hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
-    hal::adc1.enable_auto_inject(DISEN);
-}
-
-static void setup_timer(){
-    auto & timer = hal::timer1;
-    timer.init({
-        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
-        // .count_freq = hal::NearestFreq(FOC_FREQ * 2),
-        .count_freq = hal::timer::ArrAndPsc{TIMER_ARR_VALUE,1-1},
-        // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
-        // .count_mode = hal::TimerCountMode::CenterAligned,
-        .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
-        // .count_mode = hal::TimerCountMode::Up
-    })  .unwrap()
-        .alter_to_pins({
-            hal::TimerChannelSelection::CH1,
-            hal::TimerChannelSelection::CH2,
-            hal::TimerChannelSelection::CH3,
-            hal::TimerChannelSelection::CH4,
-
-            hal::TimerChannelSelection::CH1N,
-            hal::TimerChannelSelection::CH2N,
-            hal::TimerChannelSelection::CH3N,
-        }).unwrap()
-        ;
-
-    timer.bdtr().init({DEADTIME_NANOS});
-    timer.enable_arr_sync(EN);
-
-    timer.oc<1>().init(Default);
-    timer.oc<2>().init(Default);
-    timer.oc<3>().init(Default);    
-    timer.oc<4>().init({
-        .oc_mode = hal::TimerOcMode::ActiveAboveCvr,
-        .cvr_sync_en = EN,
-        .valid_level = HIGH,
-        .out_en = EN
-    });
-
-
-    {
-        timer.oc<1>().cvr() = TIMER_ARR_VALUE >> 1;
-        timer.oc<2>().cvr() = TIMER_ARR_VALUE >> 1;
-        timer.oc<3>().cvr() = TIMER_ARR_VALUE >> 1;
-        timer.oc<4>().cvr() = TIMER_ARR_VALUE - 8;
-    }
-
-
-    timer.ocn<1>().init(Default);
-    timer.ocn<2>().init(Default);
-    timer.ocn<3>().init(Default);
-}
-
-
-
-static TimerTick get_timer_tick() {
-    auto * inst = TIM_INST;
-    if(lld::timer_is_up_counting(inst)){
-        return TimerTick{
-            .counter_value = static_cast<uint16_t>(inst->CNT),
-            .is_up_counting = true
-        };
-    }else{
-        return TimerTick{
-            .counter_value = static_cast<uint16_t>(inst->CNT),
-            .is_up_counting = false
-        };
-    }
-};
-
-static void set_uvw_dutycycle(UvwCoord<iq16> dutycycle, const bool phase_invert_en){
-    auto * inst = TIM_INST;
-    
-    const uint16_t half_arr = TIMER_ARR_VALUE >> 1;
-    if(phase_invert_en) std::swap(dutycycle.v, dutycycle.w);
-    
-    auto convert = [&](const iq16 channel_dutycycle) -> uint16_t{
-        return uint16_t(int32_t((channel_dutycycle.to_bits() * TIMER_ARR_VALUE) >> 16) + half_arr);
-    };
-
-    
-    inst->CH1CVR = convert(dutycycle.template get<0>());
-    inst->CH2CVR = convert(dutycycle.template get<1>());
-    inst->CH3CVR = convert(dutycycle.template get<2>());
-};
-
-static std::array<int32_t, 3> get_adc_uvw_bvalue(){
-    auto * inst = ADC1;
-    return {
-        static_cast<int32_t>(inst->IDATAR1),
-        static_cast<int32_t>(inst->IDATAR2),
-        static_cast<int32_t>(inst->IDATAR3)
-    };
-};
-
-
-static void stop_pwm(){
-    TIM_INST->CTLR1 &= (uint16_t)(~((uint16_t)TIM_CEN));
-    TIM_INST->BDTR &= (uint16_t)(~((uint16_t)TIM_MOE));
-};
-
-static void start_pwm(){
-    TIM_INST->CTLR1 |= (uint16_t)TIM_CEN;
-    TIM_INST->BDTR |= (uint16_t)TIM_MOE;
-};
-
-
-
-static void setup_drv8323(){
-
-
-    auto drv8323_en_pin_ = hal::PA<11>();
-    auto drv8323_slp_pin_ = hal::PA<12>();
-    auto drv8323_nfault_pin_ = hal::PA<6>();
-    drv8323_nfault_pin_.inpu();
-
-    drv8323_en_pin_.outpp(LOW);
-    drv8323_slp_pin_.outpp(LOW);
-
-    auto drv8323_mode_pin_      = hal::PB<4>();
-    auto drv8323_vds_pin_       = hal::PB<3>();
-    auto drv8323_idrive_pin_    = hal::PB<5>();
-    auto drv8323_gain_pin_      = hal::PA<15>();
-
-
-
-
-    drv8323_mode_pin_.outpp(LOW);      //6x pwm
-    // drv8323_mode_pin_.outpp(HIGH);    //independent
-
-    // drv8323_gain_pin_.outpp(LOW);
-    // drv8323_gain_pin_.outpp(LOW);
-    // drv8323_gain_pin_.inpd();//10x
-    // drv8323_gain_pin_.inflt();//20x
-    drv8323_gain_pin_.outpp(HIGH);//40x
-
-
-    //使用更小的拉灌电流有助于减小mcu侧的adc毛刺
-    // drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
-    drv8323_idrive_pin_.inpu();
-    // drv8323_idrive_pin_.inflt();//Sink 240mA/ Source 120mA
-    // drv8323_idrive_pin_.outpp(LOW);
-
-
-    drv8323_vds_pin_.outpp(LOW); //10A保护
-    // drv8323_vds_pin_.outpp(HIGH); //dangerous no ocp protect!!!!
-}
 
 
 [[maybe_unused]] __no_inline 
@@ -1835,6 +1624,19 @@ protected:
 
 using ShortString8 = ThriftyInlineString<8>;
 
+
+static constexpr iq16 _tmrticks_to_us(const int32_t counter_value){
+    static constexpr uint32_t factor = (1ull << 32) * (1.0 / 144);
+    return iq16::from_bits(int32_t((int64_t(counter_value) * factor) >> 16));
+}
+
+static constexpr iq16 tmrticks_to_us(const TimerTick tick){
+    int32_t counter_value = int32_t(tick.counter_value);
+    if(tick.is_up_counting) counter_value = TIMER_ARR_VALUE + counter_value;
+    else counter_value = TIMER_ARR_VALUE - counter_value;
+    return _tmrticks_to_us(counter_value);
+}
+
 struct [[nodiscard]] alignas(size_t) MyRecord final{
     using Id = ShortString8;
     
@@ -1874,6 +1676,203 @@ struct MyProfiler : public ProfilerBase<MyProfiler, MyRecord> {
 
 __no_inline auto  profiler_push_record(MyProfiler & profiler, MyRecord && record){
     return profiler.try_push_record(std::move(record));
+}
+
+static constexpr bool judge_is_disconn(const iq20 meas, const iq20 ref){
+    const auto abs_ref = math::abs(ref);
+    if(abs_ref < CURRENT_NOISE_STDVAR) return false;
+    const auto abs_meas = math::abs(meas);
+    return (abs_meas * 30 < abs_ref) and (abs_meas < CURRENT_NOISE_STDVAR);
+}
+
+
+
+
+
+
+[[nodiscard]] static constexpr size_t 
+warp_index(const size_t x, const size_t len){
+    size_t next = x;
+    if(next > len) 
+        next -= len;
+    return next;
+};
+
+
+#define TIM_INST TIM1
+#define ADC_INST ADC1
+
+__no_inline static void setup_adc(){
+
+    hal::adc1.init({
+            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
+        },{
+
+            #if 1
+            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},  
+            #else
+            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T28_5},  
+            #endif
+            // {hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T28_5},  
+
+            // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T7_5},
+
+        },
+        {}
+    );
+
+    
+    lld::adc_set_injected_trigger(ADC1, hal::AdcInjectedTrigger::T1CC4);
+    lld::adc_enable_auto_inject(ADC1, DISEN);
+    lld::adc_cmd(ADC1, EN);
+}
+
+static void setup_timer(){
+    auto & timer = hal::timer1;
+    timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
+        // .count_freq = hal::NearestFreq(FOC_FREQ * 2),
+        .count_freq = hal::timer::ArrAndPsc{TIMER_ARR_VALUE,1-1},
+        // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
+        // .count_mode = hal::TimerCountMode::CenterAligned,
+        .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
+        // .count_mode = hal::TimerCountMode::Up
+    })  .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+            hal::TimerChannelSelection::CH4,
+
+            hal::TimerChannelSelection::CH1N,
+            hal::TimerChannelSelection::CH2N,
+            hal::TimerChannelSelection::CH3N,
+        }).unwrap()
+        ;
+
+    timer.bdtr().init({DEADTIME_NANOS});
+    timer.enable_arr_sync(EN);
+
+    timer.oc<1>().init(Default);
+    timer.oc<2>().init(Default);
+    timer.oc<3>().init(Default);    
+    timer.oc<4>().init({
+        .oc_mode = hal::TimerOcMode::ActiveAboveCvr,
+        .cvr_sync_en = EN,
+        .valid_level = HIGH,
+        .out_en = EN
+    });
+
+
+    {
+        timer.oc<1>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<2>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<3>().cvr() = TIMER_ARR_VALUE >> 1;
+        timer.oc<4>().cvr() = TIMER_ARR_VALUE - 8;
+    }
+
+
+    timer.ocn<1>().init(Default);
+    timer.ocn<2>().init(Default);
+    timer.ocn<3>().init(Default);
+}
+
+
+
+static TimerTick get_timer_tick() {
+    auto * inst = TIM_INST;
+    if(lld::timer_is_up_counting(inst)){
+        return TimerTick{
+            .counter_value = static_cast<uint16_t>(inst->CNT),
+            .is_up_counting = true
+        };
+    }else{
+        return TimerTick{
+            .counter_value = static_cast<uint16_t>(inst->CNT),
+            .is_up_counting = false
+        };
+    }
+};
+
+static void set_uvw_dutycycle(UvwCoord<iq16> dutycycle, const bool phase_invert_en){
+    auto * inst = TIM_INST;
+    
+    const uint16_t half_arr = TIMER_ARR_VALUE >> 1;
+    if(phase_invert_en) std::swap(dutycycle.v, dutycycle.w);
+    
+    auto convert = [&](const iq16 channel_dutycycle) -> uint16_t{
+        return uint16_t(int32_t((channel_dutycycle.to_bits() * TIMER_ARR_VALUE) >> 16) + half_arr);
+    };
+
+    
+    inst->CH1CVR = convert(dutycycle.template get<0>());
+    inst->CH2CVR = convert(dutycycle.template get<1>());
+    inst->CH3CVR = convert(dutycycle.template get<2>());
+};
+
+static std::array<int32_t, 3> get_adc_uvw_bvalue(){
+    auto * inst = ADC1;
+    return {
+        static_cast<int32_t>(inst->IDATAR1),
+        static_cast<int32_t>(inst->IDATAR2),
+        static_cast<int32_t>(inst->IDATAR3)
+    };
+};
+
+
+static void stop_pwm(){
+    TIM_INST->CTLR1 &= (uint16_t)(~((uint16_t)TIM_CEN));
+    TIM_INST->BDTR &= (uint16_t)(~((uint16_t)TIM_MOE));
+};
+
+static void start_pwm(){
+    TIM_INST->CTLR1 |= (uint16_t)TIM_CEN;
+    TIM_INST->BDTR |= (uint16_t)TIM_MOE;
+};
+
+
+
+static void setup_drv8323(){
+
+
+    auto drv8323_en_pin_ = hal::PA<11>();
+    auto drv8323_slp_pin_ = hal::PA<12>();
+    auto drv8323_nfault_pin_ = hal::PA<6>();
+    drv8323_nfault_pin_.inpu();
+
+    drv8323_en_pin_.outpp(LOW);
+    drv8323_slp_pin_.outpp(LOW);
+
+    auto drv8323_mode_pin_      = hal::PB<4>();
+    auto drv8323_vds_pin_       = hal::PB<3>();
+    auto drv8323_idrive_pin_    = hal::PB<5>();
+    auto drv8323_gain_pin_      = hal::PA<15>();
+
+    drv8323_mode_pin_.outpp(LOW);      //6x pwm
+    // drv8323_mode_pin_.outpp(HIGH);    //independent
+
+    // drv8323_gain_pin_.outpp(LOW);
+    // drv8323_gain_pin_.outpp(LOW);
+    // drv8323_gain_pin_.inpd();//10x
+    // drv8323_gain_pin_.inflt();//20x
+    drv8323_gain_pin_.outpp(HIGH);//40x
+
+
+    //使用更小的拉灌电流有助于减小mcu侧的adc毛刺
+    // drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
+    drv8323_idrive_pin_.inpu();
+    // drv8323_idrive_pin_.inflt();//Sink 240mA/ Source 120mA
+    // drv8323_idrive_pin_.outpp(LOW);
+
+
+    drv8323_vds_pin_.outpp(LOW); //10A保护
+    // drv8323_vds_pin_.outpp(HIGH); //dangerous no ocp protect!!!!
 }
 
 

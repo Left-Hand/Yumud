@@ -273,7 +273,7 @@ void axis3_main(){
     hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
     hal::adc1.enable_auto_inject(DISEN);
     hal::adc1.register_nvic(hal::NvicPriorityCode::highest(),  EN);
-    hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    hal::adc1.enable_interrupt(hal::AdcIT::JEOC, EN);
 
 
     auto jeoc_isr = [&]{
