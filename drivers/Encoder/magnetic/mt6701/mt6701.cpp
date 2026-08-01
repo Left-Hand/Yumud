@@ -55,7 +55,7 @@ IResult<> MT6701::init(){
     return Ok();
 }
 
-IResult<Angular<uq32>> MT6701::get_lap_angle(){
+IResult<Angular<uq32>> MT6701::get_angle(){
     auto & reg = regs_.raw_angle_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());

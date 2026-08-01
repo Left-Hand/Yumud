@@ -15,7 +15,7 @@ public:
 
     IResult<> update();
 
-    IResult<Angular<uq32>> get_lap_angle();
+    IResult<Angular<uq32>> get_angle();
     
     IResult<EncoderFaultBitFields> get_fault();
 

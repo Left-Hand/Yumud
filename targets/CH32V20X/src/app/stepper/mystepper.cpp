@@ -90,7 +90,7 @@ public:
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            const auto either_lap_position = encoder_.read_lap_angle();
+            const auto either_lap_position = encoder_.get_angle();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
             Angular<uq32>::from_turns(1 - either_lap_position.unwrap().to_turns());

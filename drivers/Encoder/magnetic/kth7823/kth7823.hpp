@@ -13,7 +13,7 @@ public:
     IResult<> init();
     IResult<> validate();
 
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_angle();
 
     IResult<> burn_zero_angle(const Angular<uq32> angle);
 

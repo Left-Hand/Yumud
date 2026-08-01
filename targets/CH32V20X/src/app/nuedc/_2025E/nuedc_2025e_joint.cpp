@@ -356,7 +356,7 @@ void nuedc_2025e_joint_main(){
             bmi160_.update().examine();
         }
 
-        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        const auto meas_lap_angle = ma730_.get_angle().examine(); 
         rotor_ltd.iterate(meas_rotor_state_var, {iq16(meas_lap_angle.to_turns()), 0});
     };
 
@@ -370,7 +370,7 @@ void nuedc_2025e_joint_main(){
             return;
         }
 
-        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        const auto meas_lap_angle = ma730_.get_angle().examine(); 
         const auto meas_elec_angle = elecangle_comp_(meas_lap_angle);
 
         const auto meas_x1 = math::fixed_downcast<16>(meas_rotor_state_var.x1);

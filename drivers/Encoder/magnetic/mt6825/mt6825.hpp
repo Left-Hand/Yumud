@@ -22,7 +22,7 @@ struct MT6825 final: public MT6825_Prelude{
         spi_drv_(hal::SpiDrv(spi, rank)){}
 
 
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_angle();
 private:
     hal::SpiDrv spi_drv_;
 

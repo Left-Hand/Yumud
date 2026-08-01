@@ -22,7 +22,7 @@ public:
     IResult<> init(const Config & cfg);
 
     IResult<> set_zero_angle(const Angular<uq32> angle);
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_angle();
 
     IResult<> set_trim_x(const uq16 k);
 

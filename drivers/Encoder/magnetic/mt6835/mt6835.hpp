@@ -15,14 +15,10 @@ public:
 
     IResult<> init();
 
-    IResult<> update();
-    IResult<Angular<uq32>> read_lap_angle(){
-        return last_packet_.parse();
-    }
+    IResult<Angular<uq32>> update();
 private:
     MT6835_Regs regs_ = {};
     hal::SpiDrv spi_drv_;
-    AnglePacket last_packet_;
 
     IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
     IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);

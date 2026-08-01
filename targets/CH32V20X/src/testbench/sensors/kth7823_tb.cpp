@@ -39,7 +39,7 @@ void kth7823_main(){
     };
 
     while(true){
-        const auto lap_angle = mag_enc.read_lap_angle().examine();
+        const auto lap_angle = mag_enc.get_angle().examine();
         DEBUG_PRINTLN(lap_angle.to_turns());
         clock::delay(10ms);
     }
