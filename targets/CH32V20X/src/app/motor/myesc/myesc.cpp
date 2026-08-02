@@ -130,6 +130,7 @@ static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(0), iiq32(-800), (1000)).t
 enum class [[nodiscard]] DemoTrajPattern:uint8_t{
     Stop,
     Straight,
+    LargeSine,
     Sine,
     Saw,
     Stairs,
@@ -204,6 +205,18 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
             constexpr auto speed = 4_iq16;
             constexpr auto side_amplitude = 0.00016_iq16;
             // constexpr auto side_amplitude = 0.006_iq16;
+
+            const auto [s,c] = math::sincos(speed * t);
+            return {
+                make_iiq32(side_amplitude * iq16(s)),
+                side_amplitude * speed * iq16(c),
+                0
+            };
+        }
+
+        case DemoTrajPattern::LargeSine:{
+            constexpr auto speed = 1_iq16;
+            constexpr auto side_amplitude = 4.00016_iq16;
 
             const auto [s,c] = math::sincos(speed * t);
             return {
@@ -350,7 +363,7 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1400;
+static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 900;
 [[maybe_unused]] static constexpr auto HIGHCUTOFF_ENCODER_LTD2O = Ltd2o::try_from({
     .fs = CONF_FOC_FREQ, 
     .r = HIGHCUTOFF_ENCODER_LTD2O_R
@@ -2444,6 +2457,7 @@ void myesc_main(){
                 #if 1
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
+                    // DemoTrajPattern::LargeSine
                     // DemoTrajPattern::Stop
                     // DemoTrajPattern::Stairs
                     // DemoTrajPattern::Miniwave
@@ -2488,6 +2502,7 @@ void myesc_main(){
                     auto traj_x2_constrained = traj_state.x2;
                     auto traj_x3_constrained = traj_state.x3;
 
+                    //TODO 预判轨迹将要超限，避免超限后硬钳位让后级规划路线必然超调
                     if(traj_x1_relinit < constrain_min_relinit){
                         traj_x1_relinit_constrained = constrain_min_relinit;
                         traj_x2_constrained = 0;
@@ -2814,11 +2829,11 @@ void myesc_main(){
 
 
         if(true)DEBUG_PRINTLN(
-            // math::fixed_downcast<16>(state.traj_state.x1),
+            math::fixed_downcast<16>(state.traj_state.x1),
             // state.traj_state.x1,
-            // math::fixed_downcast<16>(state.presmooth_traj_state.x1),
-            // math::fixed_downcast<16>(state.curve_state.x1),
-            // math::fixed_downcast<16>(state.relinit_ltd_state.x1),
+            math::fixed_downcast<16>(state.presmooth_traj_state.x1),
+            math::fixed_downcast<16>(state.curve_state.x1),
+            math::fixed_downcast<16>(state.relinit_ltd_state.x1),
             // state.uvw_adc_bvalue[1],
             // 100 * ,
             // 100 * ),
@@ -2836,10 +2851,10 @@ void myesc_main(){
             // state.temperature_state.die().celsius,
             // math::fixed_downcast<16>(state.encoder_abs_position64),
             // (state.encoder_relinit_position64 - state.curve_state.x1) * int64_t(3000.0 * TAU),
-            state.encoder_abs_position64,
+            // state.encoder_abs_position64,
             // state.encoder_initial_abs_position32,
             // state.home_abs_position64,
-            state.home_relinit_position64,
+            // state.home_relinit_position64,
 
             // state.presmooth_traj_state.x2,
             // state.curve_state.x2,

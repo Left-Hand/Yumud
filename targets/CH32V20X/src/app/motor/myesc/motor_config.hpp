@@ -73,10 +73,10 @@ static constexpr auto CONF_CURVE_X3_LIMIT = 94.5_iq16;
 static constexpr uq32 CONF_HOME_ABS_OFFSET = uq32(0.7);
 
 // 相对原点的最小位置限位
-static constexpr auto CONF_CONSTRAIN_MIN_RELHOME_POSITION = iiq32(-20.2);
+static constexpr auto CONF_CONSTRAIN_MIN_RELHOME_POSITION = iiq32(-0.1);
 
 // 相对原点的最大位置限位
-static constexpr auto CONF_CONSTRAIN_MAX_RELHOME_POSITION = iiq32(20.2);
+static constexpr auto CONF_CONSTRAIN_MAX_RELHOME_POSITION = iiq32(0.1);
 
 //should below 1/sqrt(3):
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)
