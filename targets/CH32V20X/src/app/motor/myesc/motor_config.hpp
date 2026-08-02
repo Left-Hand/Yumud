@@ -72,11 +72,11 @@ static constexpr auto CONF_CURVE_X3_LIMIT = 94.5_iq16;
 // 原点对应的编码器单圈绝对计数值(如果使用编码器查找原点)
 static constexpr uq32 CONF_HOME_ABS_OFFSET = uq32(0.7);
 
-// 相对原点的最大位置限位
-static constexpr auto CONF_CONSTRAIN_MIN_RELHOME_POSITION = iiq32(-0.2);
-
 // 相对原点的最小位置限位
-static constexpr auto CONF_CONSTRAIN_MAX_RELHOME_POSITION = iiq32(0.2);
+static constexpr auto CONF_CONSTRAIN_MIN_RELHOME_POSITION = iiq32(-20.2);
+
+// 相对原点的最大位置限位
+static constexpr auto CONF_CONSTRAIN_MAX_RELHOME_POSITION = iiq32(20.2);
 
 //should below 1/sqrt(3):
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)

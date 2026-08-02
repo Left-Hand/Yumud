@@ -778,7 +778,7 @@ static void process_position_proc(AllState & state, const FnSwitches fn_switches
 
 
 [[maybe_unused]] 
-static void process_traj_preshape(
+static void process_traj_presmooth(
     AllState & state, 
     FnSwitches fn_switches,
     const iiq32 traj_x1,
@@ -793,7 +793,7 @@ static void process_traj_preshape(
 
         const bool use_traj_x2 = (traj_smooth_method == TrajSmoothMethod::UseX1AndX2);
 
-        auto & now_state = state.traj_smooth_state;
+        auto & now_state = state.presmooth_traj_state;
 
         auto & x1_now = now_state.x1;
         auto & x2_now = now_state.x2;
@@ -809,9 +809,9 @@ static void process_traj_preshape(
             extended_mul(iq20(2 * e2), HIGHCUTOFF_ENCODER_LTD2O.r_dt) 
             + extended_mul(iq20(e1), HIGHCUTOFF_ENCODER_LTD2O.r2_dt));
     }else{
-        state.traj_smooth_state.x1 = traj_x1;
+        state.presmooth_traj_state.x1 = traj_x1;
         //无前馈速度
-        state.traj_smooth_state.x2 = 0;
+        state.presmooth_traj_state.x2 = 0;
     }
 }
 
@@ -2206,6 +2206,7 @@ void myesc_main(){
 
 
 
+
         auto warp_encoder_err = [](const uq32 ref, const uq32 meas) -> iq32{
             return ((iq32(ref) - iq32(meas)) * POLE_PAIRS) * uq32(1.0 / POLE_PAIRS);
         };
@@ -2249,6 +2250,16 @@ void myesc_main(){
         const auto encoder_position = correct_encoder_position(
             state.encoder_calibrate_state.eps_table.data(), encoder_position_raw);
             
+
+        if(not state.is_encoder_initial_position_recorded){
+            state.encoder_initial_abs_position32_raw = encoder_position_raw;
+            state.encoder_abs_position64 = iiq32::from_bits(encoder_position.to_bits());
+            state.is_encoder_initial_position_recorded = true;
+        }else{
+            state.encoder_abs_position64 = uq32_wrapped_update(
+                state.encoder_abs_position64, encoder_position);
+        }
+
         #if 0
 
         auto calc_encoder_correct_method_signature = [&] -> uint8_t{
@@ -2271,14 +2282,6 @@ void myesc_main(){
         #endif
 
 
-        if(not state.is_encoder_initial_position_recorded){
-            state.encoder_initial_abs_position32_raw = encoder_position_raw;
-            state.encoder_abs_position64 = iiq32::from_bits(encoder_position.to_bits());
-            state.is_encoder_initial_position_recorded = true;
-        }else{
-            state.encoder_abs_position64 = uq32_wrapped_update(
-                state.encoder_abs_position64, encoder_position);
-        }
 
 
         state.encoder_relinit_position64 = state.encoder_abs_position64 
@@ -2346,18 +2349,14 @@ void myesc_main(){
             const auto home_method = HomeMethod::Nearest;
             // const auto home_method = HomeMethod::Ceil;
             // const auto home_method = HomeMethod::Floor;
+
             const auto home_abs_position64 = calc_home_abs_position64(home_method);
 
-            
-            const auto neg_encoder_initial_position64 = - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
-            state.home_abs_position64 = home_abs_position64;
-            
-            const auto home_relinit_position64 = home_abs_position64 + neg_encoder_initial_position64;
-            state.home_relinit_position64 = home_relinit_position64;
+            state.home_relinit_position64 = home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
+
+            state.is_home_position_recorded = true;
         }
         
-        [[maybe_unused]] const auto constrain_min_relinit_position64 = CONF_CONSTRAIN_MIN_RELHOME_POSITION + state.home_relinit_position64;
-        [[maybe_unused]] const auto constrain_max_relinit_position64 = CONF_CONSTRAIN_MAX_RELHOME_POSITION + state.home_relinit_position64;
 
         process_encoder_ltd(state, fn_switches, state.encoder_relinit_position64);
 
@@ -2476,14 +2475,46 @@ void myesc_main(){
                 traj_state.x3 = samp_point.x3;
 
                 #endif
+                
+                #if 1
+                {
+                    const auto traj_x1_relhome = traj_state.x1;
+                    const auto traj_x1_relinit = traj_x1_relhome + state.home_relinit_position64;
 
+                    const auto constrain_min_relinit = CONF_CONSTRAIN_MIN_RELHOME_POSITION + state.home_relinit_position64;
+                    const auto constrain_max_relinit = CONF_CONSTRAIN_MAX_RELHOME_POSITION + state.home_relinit_position64;
+
+                    auto traj_x1_relinit_constrained = traj_x1_relinit;
+                    auto traj_x2_constrained = traj_state.x2;
+                    auto traj_x3_constrained = traj_state.x3;
+
+                    if(traj_x1_relinit < constrain_min_relinit){
+                        traj_x1_relinit_constrained = constrain_min_relinit;
+                        traj_x2_constrained = 0;
+                        traj_x3_constrained = 0;
+                    }else if(traj_x1_relinit > constrain_max_relinit){
+                        traj_x1_relinit_constrained = constrain_max_relinit;
+                        traj_x2_constrained = 0;
+                        traj_x3_constrained = 0;
+                    }
+
+                    process_traj_presmooth(state, fn_switches, 
+                        traj_x1_relinit_constrained,
+                        traj_x2_constrained,
+                        traj_x3_constrained);
+                };
+                #else
                 const auto traj_x1_relhome = traj_state.x1;
                 // const auto traj_x1_relinit = state.home_abs_position64
                 // const auto traj_x1_relinit = traj_x1_relhome + state.home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
-                const auto traj_x1_relinit = traj_x1_relhome + state.home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
-                process_traj_preshape(state, fn_switches, traj_x1_relinit, traj_state.x2, traj_state.x3);
+                // const auto traj_x1_relinit = traj_x1_relhome + ;
+                // const auto home_relinit_position64 = state.home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
+                const auto home_relinit_position64 = state.home_relinit_position64;
+                const auto traj_x1_relinit = traj_x1_relhome + home_relinit_position64;
+                process_traj_presmooth(state, fn_switches, traj_x1_relinit, traj_state.x2, traj_state.x3);
+                #endif
 
-                auto & hp_traj_state = state.traj_smooth_state;
+                auto & hp_traj_state = state.presmooth_traj_state;
                 process_traj_shape(state, fn_switches, hp_traj_state.x1, hp_traj_state.x2, hp_traj_state.x3);
 
                 const auto curve_x1_relinit = state.curve_state.x1;
@@ -2521,7 +2552,7 @@ void myesc_main(){
                     // uint8_t next_specifier = now_specifier;
                     uint32_t next_count_value = 0;
 
-                    auto _g = make_scope_guard([&]{
+                    auto gaurd = make_scope_guard([&]{
                         Counter counter{0};
                         counter.stage().set(next_stage);
                         // counter.specifier().set(next_specifier);
@@ -2785,7 +2816,7 @@ void myesc_main(){
         if(true)DEBUG_PRINTLN(
             // math::fixed_downcast<16>(state.traj_state.x1),
             // state.traj_state.x1,
-            // math::fixed_downcast<16>(state.traj_smooth_state.x1),
+            // math::fixed_downcast<16>(state.presmooth_traj_state.x1),
             // math::fixed_downcast<16>(state.curve_state.x1),
             // math::fixed_downcast<16>(state.relinit_ltd_state.x1),
             // state.uvw_adc_bvalue[1],
@@ -2805,12 +2836,12 @@ void myesc_main(){
             // state.temperature_state.die().celsius,
             // math::fixed_downcast<16>(state.encoder_abs_position64),
             // (state.encoder_relinit_position64 - state.curve_state.x1) * int64_t(3000.0 * TAU),
-            // state.encoder_abs_position64,
-            state.encoder_initial_abs_position32,
-            state.home_abs_position64,
+            state.encoder_abs_position64,
+            // state.encoder_initial_abs_position32,
+            // state.home_abs_position64,
             state.home_relinit_position64,
 
-            // state.traj_smooth_state.x2,
+            // state.presmooth_traj_state.x2,
             // state.curve_state.x2,
             // state.sensed_elec_angle.to_turns(),
             // state.sensed_elec_speed,

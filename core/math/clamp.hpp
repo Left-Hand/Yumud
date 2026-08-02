@@ -36,6 +36,16 @@ static constexpr math::fixed<Q, D> step_to(
     return math::fixed<Q, D>::from_bits(x_bits);
 }
 
+
+template<size_t Q, typename D>
+__always_inline __attribute__((const, optimize( "-Ofast" )))
+static constexpr math::fixed<Q, D> clamp(math::fixed<Q, D> x, math::fixed<Q, D> mi, math::fixed<Q, D> ma){
+    const auto y_bits = clamp_int<D>(x.to_bits(), mi.to_bits(), ma.to_bits());
+    return math::fixed<Q, D>::from_bits(y_bits);
+}
+
+
+
 template<size_t Q, typename D>
 __always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<Q, D> clamp2(math::fixed<Q, D> x, D ma){

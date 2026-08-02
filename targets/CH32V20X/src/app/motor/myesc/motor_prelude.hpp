@@ -419,7 +419,7 @@ struct alignas(4) [[nodiscard]] AllState{
     HpState2o relinit_ltd_state;
     PllState encoder_pll_state;
     CurveState curve_state;
-    TrajState traj_smooth_state;
+    TrajState presmooth_traj_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
@@ -444,7 +444,7 @@ struct alignas(4) [[nodiscard]] AllState{
     iiq32 encoder_relinit_position64;
 
 
-    iiq32 home_abs_position64;
+    // iiq32 home_abs_position64;
     iiq32 home_relinit_position64;
 
 
