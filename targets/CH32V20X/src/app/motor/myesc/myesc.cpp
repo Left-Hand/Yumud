@@ -102,27 +102,28 @@ static_assert(sub_clamp2_downcast(iiq32(0), iiq32(-800), iq20(1000)).to_bits() =
 
 __always_inline __attribute__((const, optimize( "-Ofast" )))
 static constexpr math::fixed<20, int32_t> 
-sub_clamp2_downcast_iq20(iiq32 lhs, iiq32 rhs, int32_t ma){
+sub_clamp2_downcast_iq20_roundlsb(iiq32 lhs, iiq32 rhs, int32_t ma){
     #if 1
-    constexpr size_t RIGHT_SHIFTS = 32 - 20;
+    constexpr size_t RIGHT_SHIFTS = (32 - 20) - 1;
 
     int64_t y_bits = int64_t((lhs.to_bits() - rhs.to_bits()));
     const int32_t head_bits = int32_t(y_bits >> 32);
 
     if(head_bits > ma) return iq20(ma);
     if(head_bits < -ma) return iq20(-ma);
-    return iq20::from_bits(int32_t(y_bits >> RIGHT_SHIFTS));
+    int32_t final_bits = int32_t(y_bits >> RIGHT_SHIFTS);
+    return iq20::from_bits(int32_t(final_bits + 1) >> 1);
     #else
     return sub_clamp2_downcast<20, int32_t>(lhs, rhs, iq20(ma));
     #endif
 }
 
-static_assert(sub_clamp2_downcast_iq20(iiq32(1000), iiq32(-200), (1000)).to_bits() == iq20(1000).to_bits());
-static_assert(sub_clamp2_downcast_iq20(iiq32(6000), iiq32(-800), (1000)).to_bits() == iq20(1000).to_bits());
-static_assert(sub_clamp2_downcast_iq20(iiq32(-6000), iiq32(-800), (1000)).to_bits() == iq20(-1000).to_bits());
-static_assert(sub_clamp2_downcast_iq20(iiq32(3.5), iiq32(1.2), (1000)).to_bits() == iq20(2.3).to_bits());
-// static_assert(sub_clamp2_downcast_iq20(iiq32(13.5), iiq32(1.2), (1000)).to_bits() == iq20(12.3).to_bits());
-static_assert(sub_clamp2_downcast_iq20(iiq32(0), iiq32(-800), (1000)).to_bits() == iq20(800).to_bits());
+static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(1000), iiq32(-200), (1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(6000), iiq32(-800), (1000)).to_bits() == iq20(1000).to_bits());
+static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(-6000), iiq32(-800), (1000)).to_bits() == iq20(-1000).to_bits());
+// static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(3.5), iiq32(1.2), (1000)).to_bits() == iq20(2.3).to_bits());
+// static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(13.5), iiq32(1.2), (1000)).to_bits() == iq20(12.3).to_bits());
+static_assert(sub_clamp2_downcast_iq20_roundlsb(iiq32(0), iiq32(-800), (1000)).to_bits() == iq20(800).to_bits());
 
 
 
@@ -133,9 +134,20 @@ enum class [[nodiscard]] DemoTrajPattern:uint8_t{
     Saw,
     Stairs,
     Triangle,
-    Miniwave
+    Miniwave,
+    ScanSine,
+    ScanSquare,
 };
 
+template<size_t Q, typename D>
+static constexpr math::fixed<Q, D> squpu(const math::fixed<Q, D> x){
+    constexpr D MASK = D(1ull << (Q - 1));
+    const D ret_bits = bool(x.to_bits() & MASK) << Q;
+    return math::fixed<Q, D>::from_bits(ret_bits);
+}
+
+static_assert(squpu(0.2_iq16) == 0);
+static_assert(squpu(0.7_iq16).to_bits() == 1 << 16);
 
 __no_inline static constexpr TrajState
 calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
@@ -189,8 +201,43 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
         }
 
         case DemoTrajPattern::Miniwave:{
-            constexpr auto speed = 2_iq16;
-            constexpr auto side_amplitude = 0.01_iq16;
+            constexpr auto speed = 4_iq16;
+            constexpr auto side_amplitude = 0.00016_iq16;
+            // constexpr auto side_amplitude = 0.006_iq16;
+
+            const auto [s,c] = math::sincos(speed * t);
+            return {
+                make_iiq32(side_amplitude * iq16(s)),
+                side_amplitude * speed * iq16(c),
+                0
+            };
+        }
+
+        case DemoTrajPattern::ScanSquare:{
+            // constexpr auto speed = 4_iq16;
+            // constexpr auto side_amplitude = 0.0016_iq16;
+
+            // constexpr auto freq = 10;
+            constexpr auto freq = 16;
+            // constexpr auto side_amplitude = 0.016_iq16;
+            constexpr auto side_amplitude = 0.012_iq16;
+
+            const auto p = bool(squpu(freq * t)) * side_amplitude;
+
+            return {
+                make_iiq32(p),
+                0,
+                0
+            };
+        }
+
+        case DemoTrajPattern::ScanSine:{
+            // constexpr auto speed = 4_iq16;
+            // constexpr auto side_amplitude = 0.0016_iq16;
+
+            constexpr auto speed = 48_iq16;
+            constexpr auto side_amplitude = 0.016_iq16;
+            // constexpr auto side_amplitude = 0.006_iq16;
 
             const auto [s,c] = math::sincos(speed * t);
             return {
@@ -210,7 +257,9 @@ calc_demo_traj(const uq16 t, const DemoTrajPattern demo_pattern){
         case DemoTrajPattern::Stairs:{
             constexpr auto freq = 0.3_iq16;
             constexpr size_t num_steps = 6;
-            constexpr auto half_amplitude = 0.4_iq16;
+            // constexpr auto half_amplitude = 0.4_iq16;
+            // constexpr auto half_amplitude = 0.04_iq16;
+            constexpr auto half_amplitude = 0.004_iq16;
             constexpr auto step = half_amplitude * 2/ num_steps;
             const auto s = iq16(math::sinpu(t * freq));
             return {
@@ -301,7 +350,7 @@ static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_prec
 
 using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
 
-static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1200;
+static constexpr size_t HIGHCUTOFF_ENCODER_LTD2O_R = 1400;
 [[maybe_unused]] static constexpr auto HIGHCUTOFF_ENCODER_LTD2O = Ltd2o::try_from({
     .fs = CONF_FOC_FREQ, 
     .r = HIGHCUTOFF_ENCODER_LTD2O_R
@@ -583,7 +632,7 @@ static void process_encoder_cogging_harmonic(AllState & state, const FnSwitches 
         // const iq32 e_l1dt = l1dt * e;
         // const iq32 e_l2dt = l2dt * e;
 
-        [[maybe_unused]] const auto now_x2 = state.encoder_ltd_state.x2;
+        [[maybe_unused]] const auto now_x2 = state.relinit_ltd_state.x2;
 
         // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
         // peac_state.hat_turns = peac_state.hat_turns + iiq32::from_bits((math::clamp2(now_x2 + e * L1, 200_iq20) * TSAMPLE).to_bits() << 12);
@@ -629,7 +678,7 @@ static void process_encoder_pll(
 
         auto & pll_state = state.encoder_pll_state;
 
-        const iq20 e1 = sub_clamp2_downcast_iq20(x1, pll_state.x1, E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20_roundlsb(x1, pll_state.x1, E1_LIMIT);
         pll_state.x2_integral = math::clamp2(pll_state.x2_integral + e1 * kidt, E2_LIMIT);
 
         pll_state.x2 = pll_state.x2_integral + e1 * kpdt;
@@ -649,13 +698,13 @@ static void process_encoder_ltd(
     #if 1
     {
 
-        auto & state_2o = state.encoder_ltd_state;
+        auto & state_2o = state.relinit_ltd_state;
 
         auto & x1_now = state_2o.x1;
         auto & x2_now = state_2o.x2;
         
 
-        const iq20 e1 = sub_clamp2_downcast_iq20(x1, x1_now, E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20_roundlsb(x1, x1_now, E1_LIMIT);
 
         const iq20 e2 = - x2_now;
 
@@ -752,7 +801,7 @@ static void process_traj_preshape(
         auto ref_x1 = traj_x1;
         auto ref_x2 = (use_traj_x2 ? traj_x2 : iq20(0));
 
-        const iq20 e1 = sub_clamp2_downcast_iq20(ref_x1, x1_now, E1_LIMIT);
+        const iq20 e1 = sub_clamp2_downcast_iq20_roundlsb(ref_x1, x1_now, E1_LIMIT);
         const iq20 e2 = math::clamp2(ref_x2 - x2_now, E2_LIMIT);
 
         x1_now = x1_now + static_cast<iiq32>(extended_mul(x2_now, TSAMPLE));
@@ -784,7 +833,7 @@ static void process_traj_shape(
     //使用终值定理得到无静差时补偿量为x2 * 2/r
     const iq16 x1_traj_comp = do_comp_traj_x1 ? iq16(hp_traj_x2 * HIGHCUTOFF_ENCODER_LTD2O.two_inv_r) : iq16(0);
     const iiq32 x1_traj = hp_traj_x1 + make_iiq32(x1_traj_comp);
-    auto e1 = sub_clamp2_downcast_iq20(x1_traj, curve_state.x1, E1_LIMIT);
+    auto e1 = sub_clamp2_downcast_iq20_roundlsb(x1_traj, curve_state.x1, E1_LIMIT);
 
     const bool auto_curve_retrack_en = fn_switches.auto_curve_retrack_en;
     const bool do_curve_retrack_when_needed = auto_curve_retrack_en;
@@ -792,15 +841,15 @@ static void process_traj_shape(
     static constexpr auto RETRACK_LEAD_X1 = 0.1_iq20;
 
     if(do_curve_retrack_when_needed){
-        const auto x1_encoder = state.encoder_ltd_state.x1;
-        if(math::abs(sub_clamp2_downcast_iq20(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
+        const auto x1_encoder = state.relinit_ltd_state.x1;
+        if(math::abs(sub_clamp2_downcast_iq20_roundlsb(curve_state.x1, x1_encoder, 100)) > RETRACK_E1_THRESHOLD){
             const iiq32 x1_curve_retrack = math::step_to(x1_encoder, x1_traj, make_iiq32(RETRACK_LEAD_X1));
-            const auto x2_curve_retrack = state.encoder_ltd_state.x2;
+            const auto x2_curve_retrack = state.relinit_ltd_state.x2;
 
             curve_state.x1 = x1_curve_retrack;
             curve_state.x2 = x2_curve_retrack;
             state.retrack_count++;
-            e1 = sub_clamp2_downcast_iq20(x1_traj, x1_curve_retrack, 100);
+            e1 = sub_clamp2_downcast_iq20_roundlsb(x1_traj, x1_curve_retrack, 100);
         }
     }
     
@@ -825,14 +874,15 @@ static void process_traj_shape(
 static void process_mechanical_loop(
     AllState & state, 
     FnSwitches fn_switches,
-    const iiq32 curve_x1,
+    const iiq32 curve_x1_relinit,
     const iq20 curve_x2,
     const iq16 curve_x3
 ){
     //#region 力矩转电流
 
-    const auto now_x2 = state.encoder_ltd_state.x2;
-    const auto now_x1 = state.encoder_ltd_state.x1;
+    auto now_x2 = state.relinit_ltd_state.x2;
+    if(math::abs(now_x2) < 0.03_iq20) now_x2 = 0;
+    const auto now_x1 = state.relinit_ltd_state.x1;
 
     constexpr auto torque_curr_step_limit = TORQUE_CURR_STEP_LIMIT;
     constexpr auto torque_curr_limit = TORQUE_CURR_LIMIT;
@@ -860,17 +910,19 @@ static void process_mechanical_loop(
             constexpr iq20 ki = 6.66_iq20;
             #else
             //Jc4310
-            const iq20 kpp_normal = 20;
+            const iq20 kpp_normal = 30;
             const iq20 kpp_big = 30;
             const iq20 kpp = fn_switches.override_big_position_kp ? kpp_big : kpp_normal;
             // const iq20 kp = 1.2_iq20;
             constexpr iq20 kp = 0.43_iq20;
-            constexpr iq20 ki = 14.66_iq20;
+            constexpr iq20 ki = 18.66_iq20;
             #endif
             constexpr auto ki_discrete = ki / CONF_FOC_FREQ;
 
-            const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1 - now_x1), kpp, E2_LIMIT));
+            const iq20 ref_x2 = iq20(math::mul_roundlsb_clamp2(fixed_downcast<20>(curve_x1_relinit - now_x1), kpp, E2_LIMIT));
+            // const auto hp_ref_x2 = iiq52::from_bits((curve_x1_relinit - now_x1).to_bits() * kpp.to_bits());
 
+            // state.hp_pi_ref_x2 = hp_ref_x2;
             state.pi_ref_x2 = ref_x2;
             const iq20 e2 = math::clamp2((ref_x2 + curve_x2) - now_x2, E2_LIMIT);
             state.pi_e2 = e2;
@@ -902,7 +954,7 @@ static void process_mechanical_loop(
             const iq20 kp = 12.7_iq16;
             const iq20 kd = 0.26_iq16;
 
-            const iq20 e1 = sub_clamp2_downcast_iq20(curve_x1, now_x1, E1_LIMIT);
+            const iq20 e1 = sub_clamp2_downcast_iq20_roundlsb(curve_x1_relinit, now_x1, E1_LIMIT);
             const iq20 e2 = iq20(math::clamp2(curve_x2 - now_x2, E2_LIMIT));
             
             iq20 torque_curr_cmd = (kp * e1) + (kd * e2)
@@ -1793,6 +1845,8 @@ static void setup_timer(){
 }
 
 
+
+__attribute__((optimize("-Os")))
 [[maybe_unused]] static uint8_t * 
 march_c_test(uint8_t * const begin, uint8_t * const end) {
     uint8_t * p = begin;
@@ -2144,7 +2198,7 @@ void myesc_main(){
 
         #if 0
         {
-            static constexpr size_t LG2_SIMULATED_ENCODER_RESOLUTION = 12;
+            static constexpr size_t LG2_SIMULATED_ENCODER_RESOLUTION = 16;
             static constexpr uint32_t MASK = ((1u << LG2_SIMULATED_ENCODER_RESOLUTION) - 1) << (32 - LG2_SIMULATED_ENCODER_RESOLUTION);
             encoder_position_raw.bits &= MASK;
         }
@@ -2205,20 +2259,20 @@ void myesc_main(){
         const auto encoder_correct_method_signature = calc_encoder_correct_method_signature();
 
         if(state.encoder_correct_method_signature != encoder_correct_method_signature){
-            state.encoder_initial_position = correct_encoder_position(
-                state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_position_raw);
+            state.encoder_initial_abs_position32 = correct_encoder_position(
+                state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_abs_position32_raw);
             
             state.encoder_correct_method_signature = encoder_correct_method_signature;
         }
         #else
             
-        state.encoder_initial_position = correct_encoder_position(
-            state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_position_raw);
+        state.encoder_initial_abs_position32 = correct_encoder_position(
+            state.encoder_calibrate_state.eps_table.data(), state.encoder_initial_abs_position32_raw);
         #endif
 
 
         if(not state.is_encoder_initial_position_recorded){
-            state.encoder_initial_position_raw = encoder_position_raw;
+            state.encoder_initial_abs_position32_raw = encoder_position_raw;
             state.encoder_abs_position64 = iiq32::from_bits(encoder_position.to_bits());
             state.is_encoder_initial_position_recorded = true;
         }else{
@@ -2227,11 +2281,90 @@ void myesc_main(){
         }
 
 
-        state.encoder_rel_position64 = state.encoder_abs_position64 
-            - iiq32::from_bits(state.encoder_initial_position.to_bits());
+        state.encoder_relinit_position64 = state.encoder_abs_position64 
+            - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
 
-        process_encoder_ltd(state, fn_switches, state.encoder_rel_position64);
-        process_encoder_pll(state, fn_switches, state.encoder_abs_position64);
+
+
+        if(not state.is_home_position_recorded){
+            enum class HomeMethod:uint8_t{
+                Initial,
+                Nearest,
+                Ceil,
+                Floor,
+            };
+
+            const auto home_abs_offset32 = CONF_HOME_ABS_OFFSET;
+            const auto home_abs_offset64 = iiq32::from_bits(home_abs_offset32.to_bits()) ;
+
+
+            [[maybe_unused]] auto calc_home_abs_position64 = [&](HomeMethod method) -> iiq32{
+                [[maybe_unused]] const auto encoder_initial_p32 = state.encoder_initial_abs_position32;
+
+                switch(method){
+                    case HomeMethod::Initial:{
+                        return 0;
+                        break;
+                    }
+                    case HomeMethod::Nearest:{
+                        constexpr int64_t HALF = int64_t(INT32_MAX);
+                        constexpr int64_t NEG_HALF = int64_t(INT32_MIN);
+                        const int64_t diff = int64_t(encoder_initial_p32.to_bits()) - int64_t(home_abs_offset32.to_bits());
+
+                        const int32_t adjust_revs = [&]{
+                            if(diff > HALF) return 1;
+                            else if(diff < NEG_HALF) return -1;
+                            return 0;
+                        }();
+
+                        return iiq32(adjust_revs) + home_abs_offset64;
+
+                        break;
+                    }
+                    case HomeMethod::Ceil:{
+                        const int32_t adjust_revs = [&]{
+                            if(encoder_initial_p32.to_bits() > home_abs_offset32.to_bits()) 
+                                return 1;
+                            return 0;
+                        }();
+                        return iiq32(adjust_revs) + home_abs_offset64;
+                        break;
+                    }
+                    case HomeMethod::Floor:{
+                        const int32_t adjust_revs = [&]{
+                            if(encoder_initial_p32.to_bits() < home_abs_offset32.to_bits()) 
+                                return - 1;
+                            return 0;
+                        }();
+                        return iiq32(adjust_revs) + home_abs_offset64;
+                        break;
+                    }
+                }
+                return 0;
+            };
+
+            const auto home_method = HomeMethod::Nearest;
+            // const auto home_method = HomeMethod::Ceil;
+            // const auto home_method = HomeMethod::Floor;
+            const auto home_abs_position64 = calc_home_abs_position64(home_method);
+
+            
+            const auto neg_encoder_initial_position64 = - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
+            state.home_abs_position64 = home_abs_position64;
+            
+            const auto home_relinit_position64 = home_abs_position64 + neg_encoder_initial_position64;
+            state.home_relinit_position64 = home_relinit_position64;
+        }
+        
+        [[maybe_unused]] const auto constrain_min_relinit_position64 = CONF_CONSTRAIN_MIN_RELHOME_POSITION + state.home_relinit_position64;
+        [[maybe_unused]] const auto constrain_max_relinit_position64 = CONF_CONSTRAIN_MAX_RELHOME_POSITION + state.home_relinit_position64;
+
+        process_encoder_ltd(state, fn_switches, state.encoder_relinit_position64);
+
+        #if 0
+        // nothing use pll currently
+        // process_encoder_pll(state, fn_switches, state.encoder_abs_position64);
+        #endif
 
         auto encoder_abs_position32 = iiq32_crop_frac(state.encoder_abs_position64);
 
@@ -2241,7 +2374,7 @@ void myesc_main(){
         const auto mech_angle = Angular<uq32>::from_turns((encoder_abs_position32));
         state.sensed_elec_angle = (mech_angle * POLE_PAIRS) + Angular<uq32>::from_turns(elec_align_offset);
 
-        const auto mech_speed = state.encoder_ltd_state.x2;
+        const auto mech_speed = state.relinit_ltd_state.x2;
         state.sensed_elec_speed = iq16(mech_speed) * POLE_PAIRS;
 
 
@@ -2313,8 +2446,9 @@ void myesc_main(){
                 static constexpr auto demo_pattern = 
                     // DemoTrajPattern::Sine
                     // DemoTrajPattern::Stop
-                    DemoTrajPattern::Stairs
+                    // DemoTrajPattern::Stairs
                     // DemoTrajPattern::Miniwave
+                    DemoTrajPattern::ScanSquare
                     // DemoTrajPattern::Saw
                     // DemoTrajPattern::Triangle
                 ;
@@ -2343,16 +2477,19 @@ void myesc_main(){
 
                 #endif
 
-
-                process_traj_preshape(state, fn_switches, traj_state.x1, traj_state.x2, traj_state.x3);
+                const auto traj_x1_relhome = traj_state.x1;
+                // const auto traj_x1_relinit = state.home_abs_position64
+                // const auto traj_x1_relinit = traj_x1_relhome + state.home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
+                const auto traj_x1_relinit = traj_x1_relhome + state.home_abs_position64 - iiq32::from_bits(state.encoder_initial_abs_position32.to_bits());
+                process_traj_preshape(state, fn_switches, traj_x1_relinit, traj_state.x2, traj_state.x3);
 
                 auto & hp_traj_state = state.traj_smooth_state;
                 process_traj_shape(state, fn_switches, hp_traj_state.x1, hp_traj_state.x2, hp_traj_state.x3);
 
-                const auto curve_x1 = state.curve_state.x1;
+                const auto curve_x1_relinit = state.curve_state.x1;
                 const auto curve_x2 = state.curve_state.x2;
                 const auto curve_x3 = state.curve_state.x3;
-                process_mechanical_loop(state, fn_switches, curve_x1, curve_x2, curve_x3);
+                process_mechanical_loop(state, fn_switches, curve_x1_relinit, curve_x2, curve_x3);
             }
 
 
@@ -2618,10 +2755,10 @@ void myesc_main(){
         if(false)DEBUG_PRINTLN(
             math::fixed_downcast<16>(state.traj_state.x1),
             math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_ltd_state.x1),
+            math::fixed_downcast<16>(state.relinit_ltd_state.x1),
             // iq16::from_bits(int32_t(differential_int64(state.differ, state.curve_state.x1.to_bits()) >> 6)),
-            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.encoder_ltd_state.x1),
-            state.encoder_ltd_state.x2,
+            math::fixed_downcast<16>(state.curve_state.x1) - math::fixed_downcast<16>(state.relinit_ltd_state.x1),
+            state.relinit_ltd_state.x2,
             tmrticks_to_us(state.isr_exit_tick) - tmrticks_to_us(state.isr_entry_tick)
             // tmrticks_to_us(state.encoder_get_done_tick) - tmrticks_to_us(state.isr_entry_tick)
         );
@@ -2644,88 +2781,55 @@ void myesc_main(){
         );
         #endif
 
-        enum class HomeMethod:uint8_t{
-            Initial,
-            // CeilInitial,
-            // FloorInitial,
-            NearestZerosign,
-            CeilZerosign,
-            FloorZerosign,
-        };
-
-        [[maybe_unused]] const auto encoder_rel_p64 = state.encoder_rel_position64;
-        [[maybe_unused]] const auto encoder_initial_p32 = state.encoder_initial_position;
-        [[maybe_unused]] auto calc_home_position = [&](HomeMethod method) -> iiq32{
-
-            switch(method){
-                case HomeMethod::Initial:{
-                    return 0;
-                    break;
-                }
-                // case HomeMethod::CeilInitial:{
-
-                //     break;
-                // }
-                // case HomeMethod::FloorInitial:{
-                //     break;
-                // }
-                case HomeMethod::NearestZerosign:{
-                    const bool need_up_round = bool(encoder_initial_p32.to_bits() >> 31);
-                    auto p64 = iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits()));
-                    return iiq32_add_revs(p64, int32_t(need_up_round));
-                    break;
-                }
-                case HomeMethod::CeilZerosign:{
-                    return iiq32_add_revs(iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits())),1);
-                    break;
-                }
-                case HomeMethod::FloorZerosign:{
-                    return iiq32::from_bits(-int64_t(encoder_initial_p32.to_bits()));
-                    break;
-                }
-            }
-            return 0;
-        };
 
         if(true)DEBUG_PRINTLN(
-
-            math::fixed_downcast<16>(state.traj_state.x1),
+            // math::fixed_downcast<16>(state.traj_state.x1),
             // state.traj_state.x1,
-            math::fixed_downcast<16>(state.traj_smooth_state.x1),
-            math::fixed_downcast<16>(state.curve_state.x1),
-            math::fixed_downcast<16>(state.encoder_ltd_state.x1),
+            // math::fixed_downcast<16>(state.traj_smooth_state.x1),
+            // math::fixed_downcast<16>(state.curve_state.x1),
+            // math::fixed_downcast<16>(state.relinit_ltd_state.x1),
+            // state.uvw_adc_bvalue[1],
+            // 100 * ,
+            // 100 * ),
             // ,
-            // state.encoder_ltd_state.x2,
-            // math::fixed_downcast<16>(state.encoder_pll_state.x1),
-            // math::fixed_downcast<16>(state.encoder_rel_position64),
+            // state.relinit_ltd_state.x2,
+            // 100 * state.encoder_pll_state.x1),/
+            // 100 * state.encoder_relinit_position64  , 
+            // state.encoder_relinit_position64.to_bits() >> (32 - 18),
             // state.encoder_pll_state.x2,
 
             // ADC_LSB_PER_CURRENT_AMPS * state.uvw_curr_ref.u + state.dc_calibrate_state.uvw_bvalue_offset[0],
             // state.uvw_adc_bvalue,
             // state.uvw_curr_raw,
             // state.uvw_curr_ref,
-            state.temperature_state.die().celsius,
+            // state.temperature_state.die().celsius,
             // math::fixed_downcast<16>(state.encoder_abs_position64),
-            // math::fixed_downcast<16>(state.encoder_rel_position64 - state.curve_state.x1) * 360,
-
+            // (state.encoder_relinit_position64 - state.curve_state.x1) * int64_t(3000.0 * TAU),
+            // state.encoder_abs_position64,
+            state.encoder_initial_abs_position32,
+            state.home_abs_position64,
+            state.home_relinit_position64,
 
             // state.traj_smooth_state.x2,
             // state.curve_state.x2,
             // state.sensed_elec_angle.to_turns(),
             // state.sensed_elec_speed,
             // state.torque_curr_cmd,
-            // math::fixed_downcast<16>(calc_home_position(HomeMethod::NearestZerosign)),
-            // math::fixed_downcast<16>(calc_home_position(HomeMethod::CeilZerosign)),
-            // math::fixed_downcast<16>(calc_home_position(HomeMethod::FloorZerosign)),
+            // math::fixed_downcast<16>(),
+            // math::fixed_downcast<16>(calc_home_abs_position64(HomeMethod::Ceil)),
+            // math::fixed_downcast<16>(calc_home_abs_position64(HomeMethod::Floor)),
             // state.peac_state.hat_b1,
             // state.peac_state.hat_b2,
             // state.peac_state.debug.e,
             // state.peac_state.harm * 100,
-            // state.encoder_ltd_state.x2,
+            // state.relinit_ltd_state.x2,
             // state.pi_ref_x2,
-
-            state.torque_curr_cmd,
-            state.dq_curr_ref,
+            // state.torque_curr_cmd,
+            // state.pi_e2,
+            // state.pi_ref_x2,
+            // state.hp_pi_ref_x2,
+            // state.torque_curr_integral,
+            // state.dq_curr_ref,
             // state.torque_curr_veryslowlp,
             // iq20::from(float(math::bf16(float(state.torque_curr_veryslowlp)))),
             // encode_curr_eps(state.torque_curr_veryslowlp),
@@ -2733,7 +2837,7 @@ void myesc_main(){
             // state.busbar_curr_lp,
             // state.debug.traj_e1,
             // math::fixed_downcast<16>(state.debug.traj_x1),
-            // math::fixed_downcast<16>(state.debug.curve_x1),
+            // math::fixed_downcast<16>(state.debug.curve_x1_relinit),
             // state.peac_state.debug.harm_turns,
             // state.peac_state.harm_c,
             // state.temperature_state.die().celsius,

@@ -416,7 +416,7 @@ struct alignas(4) [[nodiscard]] HfiState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    HpState2o encoder_ltd_state;
+    HpState2o relinit_ltd_state;
     PllState encoder_pll_state;
     CurveState curve_state;
     TrajState traj_smooth_state;
@@ -441,12 +441,20 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> observer_elec_angle;
 
     iiq32 encoder_abs_position64;
-    iiq32 encoder_rel_position64;
-    uq32 encoder_initial_position_raw;
-    uq32 encoder_initial_position;
+    iiq32 encoder_relinit_position64;
+
+
+    iiq32 home_abs_position64;
+    iiq32 home_relinit_position64;
+
+
+
+    uq32 encoder_initial_abs_position32_raw;
+    uq32 encoder_initial_abs_position32;
     struct alignas(4) {
-        bool is_encoder_initial_position_recorded;
         uint8_t encoder_correct_method_signature;
+        bool is_encoder_initial_position_recorded;
+        bool is_home_position_recorded;
     };
 
     std::array<int32_t, 3> uvw_adc_bvalue;
@@ -468,6 +476,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     HarmonicState harmonic_state;
 
+    // iiq52 hp_pi_ref_x2;
     iq20 pi_ref_x2;
     iq20 pi_e2;
     iq20 mtpa_d_curr;
