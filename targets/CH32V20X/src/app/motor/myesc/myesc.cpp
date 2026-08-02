@@ -1793,6 +1793,50 @@ static void setup_timer(){
 }
 
 
+[[maybe_unused]] static uint8_t * 
+march_c_test(uint8_t * const begin, uint8_t * const end) {
+    uint8_t * p = begin;
+    while (p < end) {
+        *p = 0x00;
+        p++;
+    }
+    p = begin;
+    while (p < end) {
+        if (*p != 0x00)
+            return p;
+        *p = 0xff;
+        p++;
+    }
+    p = begin;
+    while (p < end) {
+        if (*p != 0xff)
+            return p;
+        *p = 0x00;
+        p++;
+    }
+    p = end - 1;
+    while (p >= begin) {
+        if (*p != 0x00)
+            return p;
+        *p = 0xff;
+        p--;
+    }
+    p = end - 1;
+    while (p >= begin) {
+        if (*p != 0xff)
+            return p;
+        *p = 0x00;
+        p--;
+    }
+    p = end - 1;
+    while (p >= begin) {
+        if (*p != 0x00)
+            return p;
+        p--;
+    }
+    return nullptr;
+}
+
 
 static TimerTick get_timer_tick() {
     auto * inst = TIM_INST;
@@ -2040,6 +2084,10 @@ void myesc_main(){
 
     static constexpr size_t HEAP_ARENA_SIZE = 4096;
     auto p_arena_resource = std::make_unique<uint8_t[]>(HEAP_ARENA_SIZE);
+
+    if(auto p_broken_ram_byte = march_c_test(p_arena_resource.get(), p_arena_resource.get() + HEAP_ARENA_SIZE)){
+        PANIC{"march_c test failed", reinterpret_cast<uintptr_t>(p_broken_ram_byte)};
+    }
     auto arena_allocater = mem::ArenaAllocater::from(std::span(p_arena_resource.get(), HEAP_ARENA_SIZE));
 
 

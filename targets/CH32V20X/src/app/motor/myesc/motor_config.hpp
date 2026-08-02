@@ -28,7 +28,7 @@ static constexpr double CONF_SHUNT_RESISTANCE_OHMS_F = 0.004f;
 static constexpr double CONF_OPA_GAIN_F = 40;
 
 //adc位数
-static constexpr size_t CONF_LG2_ADC_RESOLUTION = 12;
+static constexpr size_t CONF_ADC_RESOLUTION_BITS = 12;
 
 //直流校准次数
 static constexpr size_t CONF_LG2_DC_CAL_TIMES = 5 + 7;
@@ -90,11 +90,11 @@ static constexpr double CURRENT_HALFSCALE_AMPS_F = ADC_HALFSCALE_VOLTAGE_F / (CO
 // #endregion
 
 
-static constexpr uint32_t ADC_MAXIMUM_BVALUE = (1u << CONF_LG2_ADC_RESOLUTION) - 1;
-static constexpr uint32_t ADC_MIDPOINT_BVALUE = (1u << (CONF_LG2_ADC_RESOLUTION)) / 2;
+static constexpr uint32_t ADC_MAXIMUM_BVALUE = (1u << CONF_ADC_RESOLUTION_BITS) - 1;
+static constexpr uint32_t ADC_MIDPOINT_BVALUE = (1u << (CONF_ADC_RESOLUTION_BITS)) / 2;
 
 
-static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << CONF_LG2_ADC_RESOLUTION);
+static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << CONF_ADC_RESOLUTION_BITS);
 static constexpr auto CURRENT_HALFSCALE_AMPS = iq20(CURRENT_HALFSCALE_AMPS_F);
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_AMPS_PER_ADC_LSB_F);
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;

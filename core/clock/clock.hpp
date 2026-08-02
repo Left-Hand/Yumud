@@ -81,7 +81,10 @@ inline auto now(){
 }
 
 namespace ymd{
-void set_systick_handler(std::function<void(void)> && cb);
+
+using SystickCallback = std::function<void(void *)>;
+
+void systick_set_isr_callback(SystickCallback cb, void * p_args);
 
 
 

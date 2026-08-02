@@ -40,17 +40,44 @@ static constexpr auto PWM_DUTYCYCLE_LIMIT = 0.85_iq16;
 static constexpr auto PWM_DUTYCYCLE_DELTA_LIMIT = 8.2_iq16 / MC_FREQ;
 
 //这里我测出来它每圈产生900个计数
-static constexpr size_t CNT_PER_TURN = 900;
+static constexpr size_t COUNTS_PER_REVOLUTION = 900;
 
 static constexpr iq16 rotor_cnt_to_position(const int32_t cnt){
-    // constexpr uint64_t FACTOR = 1 + ((1ull << (32 + 16))) / CNT_PER_TURN;
-    constexpr uint64_t FACTOR = ((1ull << (32 + 16))) / CNT_PER_TURN;
+    // constexpr uint64_t FACTOR = 1 + ((1ull << (32 + 16))) / COUNTS_PER_REVOLUTION;
+    constexpr uint64_t FACTOR = ((1ull << (32 + 16))) / COUNTS_PER_REVOLUTION;
     return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(cnt) * FACTOR) >> 32));
 };
 
-static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN) - 1) < 1E-4);
-static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN * 32700) - 32700) < 1E-4);
-static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN * -32700) - -32700) < 1E-4);
+static_assert(math::abs((double)rotor_cnt_to_position(COUNTS_PER_REVOLUTION) - 1) < 1E-4);
+static_assert(math::abs((double)rotor_cnt_to_position(COUNTS_PER_REVOLUTION * 32700) - 32700) < 1E-4);
+static_assert(math::abs((double)rotor_cnt_to_position(COUNTS_PER_REVOLUTION * -32700) - -32700) < 1E-4);
+
+
+
+template<
+    typename D, 
+    size_t LG2_RESOLUTION = (sizeof(D) * 8),
+    typename SD = std::make_signed_t<D>
+>
+static constexpr SD wrapped_diff(const D prev, const D now){
+    using S = std::make_signed_t<D>;
+    static constexpr int32_t RESOLUTION = int32_t(1 << LG2_RESOLUTION);
+    static constexpr int32_t HALF_RESOLUTION = int32_t(1 << (LG2_RESOLUTION - 1));
+
+    int32_t delta = static_cast<int32_t>(now) - static_cast<int32_t>(prev);
+
+    if(delta > HALF_RESOLUTION){
+        delta -= RESOLUTION;
+    }else if(delta < (-HALF_RESOLUTION)){
+        delta += RESOLUTION;
+    }
+
+    return delta;
+}
+
+static_assert(wrapped_diff<uint16_t>(65535, 20) == 21);
+static_assert(wrapped_diff<uint16_t>(0, 20) == 20);
+
 
 void winter_mc_tutorial_main(){
     auto & DEBUG_UART = hal::usart2;
@@ -131,7 +158,7 @@ void winter_mc_tutorial_main(){
     };
 
     //获取编码器的位置
-    auto get_encoder_cnt = [&] -> uint16_t{
+    auto get_encoder_count_value = [&] -> uint16_t{
         return static_cast<uint16_t>(encoder_timer.cnt());
     };
 
@@ -185,7 +212,7 @@ void winter_mc_tutorial_main(){
 
     repl_server.enable_echo(DISEN);
 
-    auto repl_list = script::make_list( "list",
+    static auto repl_list = script::make_list( "list",
         script::make_function("rst", [](){sys::reset();}),
         script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
         script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
@@ -198,7 +225,7 @@ void winter_mc_tutorial_main(){
         script::make_mut_property("dm", reinterpret_cast<uint8_t *>(&demo_manipulate_source))
     );
 
-    auto motor_isr = [&]{
+    auto isr_motor = [&]{
         //获取当前的时间
         [[maybe_unused]] const auto now_secs = clock::seconds();
 
@@ -228,7 +255,7 @@ void winter_mc_tutorial_main(){
         }
 
         //#region 更新电机运动状态变量
-        const auto meas_rotor_cnt = get_rotor_cnt(get_encoder_cnt());
+        const auto meas_rotor_cnt = get_rotor_cnt(get_encoder_count_value());
 
         //1.获取编码器位置
         //2.通过编码器的位置计算得出转子的位置
@@ -286,7 +313,7 @@ void winter_mc_tutorial_main(){
     isr_timer.set_isr_callback([&](const hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:
-                motor_isr();
+                isr_motor();
                 break;
             default:
                 break;
