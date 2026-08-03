@@ -48,7 +48,7 @@ private:
             std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.to_bits()); res.is_err()
         ) return res;
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

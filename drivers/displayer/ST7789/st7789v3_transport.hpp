@@ -3,7 +3,7 @@
 #include "st7789_prelude.hpp"
 #include "core/container/bits_queue.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"
 
 namespace ymd::drivers{

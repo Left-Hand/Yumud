@@ -45,7 +45,7 @@ IResult<> MMC5603::reset(){
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     reg.do_reset = false;
-    reg.apply();
+    reg.commit_changes();
     return Ok();
 }
 

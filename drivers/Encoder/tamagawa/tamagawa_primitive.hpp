@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 #include "core/container/heapless_vector.hpp"
 #include "primitive/arithmetic/angular.hpp"
 #include "tamagawa_utils.hpp"
@@ -19,6 +20,15 @@ static constexpr size_t MAX_EEPROM_PAGE = 0x3c;
 static constexpr size_t MAX_CONTEXT_SIZE = 8;
 
 
+
+#define DEF_PROPERTY_BFPROXY(prop_name, start_bit, stop_bit, p_type_name, bits)\
+[[nodiscard]] constexpr auto prop_name(this auto && self) {\
+    return ymd::make_bitfield_proxy<start_bit, stop_bit, p_type_name>(bits);}
+
+#define DEF_PROPERTY_BIT(prop_name, start_bit, bits) \
+    DEF_PROPERTY_BFPROXY(prop_name, start_bit, (start_bit + 1), bool, bits)
+
+
 enum class [[nodiscard]] CfCode:uint8_t{
     GetAbs = 0x02,
     GetAbm = 0x8a,
@@ -30,24 +40,18 @@ enum class [[nodiscard]] CfCode:uint8_t{
     ClearAbmAndFault = 0x62
 };
 
-struct [[nodiscard]] StatusField final{
+struct [[nodiscard]] alignas(1) StatusField final{
     using Self = StatusField;
-    //delimitier error in request frame
-    uint8_t speed_err:1;
 
-    //paraity error in request frame
-    uint8_t comm_err:1;
-
-    //overheat / multiturn err / battery err / batter alarm
-    uint8_t battery_under_voltage:1;
-
-    //counting err
-    uint8_t supply_under_voltage:1;
-
-    uint8_t install_err:1;
-    uint8_t __resv__:1;
-    uint8_t multi_turns_err:1;
-    uint8_t temp_err:1;
+    uint8_t bits;
+    
+    DEF_PROPERTY_BIT(speed_err,              0, &self.bits);
+    DEF_PROPERTY_BIT(comm_err   , 1, &self.bits);
+    DEF_PROPERTY_BIT(battery_under_voltage         , 2, &self.bits);
+    DEF_PROPERTY_BIT(supply_under_voltage       , 3, &self.bits);
+    DEF_PROPERTY_BIT(install_err              , 4, &self.bits);
+    DEF_PROPERTY_BIT(multi_turns_err          , 6, &self.bits);
+    DEF_PROPERTY_BIT(temp_err          , 7, &self.bits);
 
     static constexpr Self from_u8(const uint8_t b){
         return std::bit_cast<Self>(b);
@@ -63,18 +67,24 @@ struct [[nodiscard]] StatusField final{
     }
 };
 
-struct [[nodiscard]] Almc final{
-    uint8_t over_speed:1;
-    uint8_t full_absolute_status:1;
-    uint8_t counting_error:1;
-    uint8_t counter_overflow:1;
-    uint8_t over_heat:1;
-    uint8_t multiturn_error:1;
-    uint8_t battery_error:1;
-    uint8_t battery_alarm:1;
+static_assert(sizeof(StatusField));
+
+struct [[nodiscard]] alignas(1) Almc final{
+    uint8_t bits;
+
+    DEF_PROPERTY_BIT(over_speed,              0, &self.bits);
+    DEF_PROPERTY_BIT(full_absolute_status   , 1, &self.bits);
+    DEF_PROPERTY_BIT(counting_error         , 2, &self.bits);
+    DEF_PROPERTY_BIT(counter_overflow       , 3, &self.bits);
+    DEF_PROPERTY_BIT(over_heat              , 4, &self.bits);
+    DEF_PROPERTY_BIT(multiturn_error        , 5, &self.bits);
+    DEF_PROPERTY_BIT(battery_error          , 6, &self.bits);
+    DEF_PROPERTY_BIT(battery_alarm          , 7, &self.bits);
 };
 
-struct [[nodiscard]] Abs24 final{
+static_assert(sizeof(Almc));
+
+struct [[nodiscard]] alignas(1) Abs24 final{
     using Self = Abs24;
     std::array<uint8_t, 3> bytes;
 
@@ -106,7 +116,9 @@ struct [[nodiscard]] Abs24 final{
     }
 };
 
-struct [[nodiscard]] Abm24 final{
+static_assert(sizeof(Abs24));
+
+struct [[nodiscard]] alignas(1) Abm24 final{
     using Self = Abm24;
     std::array<uint8_t, 3> bytes;
 
@@ -132,5 +144,10 @@ struct [[nodiscard]] Abm24 final{
     }
 };
 
+static_assert(sizeof(Abm24));
+
+
+#undef DEF_PROPERTY_BFPROXY
+#undef DEF_PROPERTY_BIT
 
 }

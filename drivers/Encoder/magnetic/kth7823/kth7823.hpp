@@ -13,7 +13,7 @@ public:
     IResult<> init();
     IResult<> validate();
 
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_angle();
 
     IResult<> burn_zero_angle(const Angular<uq32> angle);
 
@@ -43,7 +43,7 @@ private:
     IResult<> burn_reg(const RegCopy<T> & reg){
         if(const auto res = transport_.burn_reg(T::REG_ADDR, reg.to_bits()); 
             res.is_err()) return res;
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 };

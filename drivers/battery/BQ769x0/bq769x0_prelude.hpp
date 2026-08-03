@@ -2,7 +2,7 @@
 
 // 用于锂离子电池和磷酸盐电池的 BQ769x0 3 节至 15 节串联、电池监控器系列
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "hal/conn/i2c/i2cdrv.hpp"

@@ -4,7 +4,7 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"
-#include "core/stream/BufStream.hpp"
+#include "core/stream/buf_stream.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/conn/spi/hw_singleton.hpp"

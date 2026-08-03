@@ -17,7 +17,7 @@
 // 道上可编程的多种超范围情况。
 
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"

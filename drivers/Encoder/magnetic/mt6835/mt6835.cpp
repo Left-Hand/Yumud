@@ -26,20 +26,6 @@ std::array<uint8_t, 3> make_req(
     };
 }
 
-IResult<> Self::init() {
-    TODO();
-    return Ok();
-}
-
-
-IResult<> Self::update() {
-    TODO();
-    return Ok();
-}
-
-
-
-
 IResult<> Self::write_reg(const RegAddr reg_addr, const uint8_t reg_val){
 
     const auto req = make_req(Command::WriteReg, reg_addr, reg_val);

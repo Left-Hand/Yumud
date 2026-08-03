@@ -4,9 +4,9 @@
 #include "motor_leso.hpp"
 #include "motor_dsp/dsp_pll.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
+#include "digipw/prelude/abdq.hpp"
 
-
-namespace ymd::myesc{
+namespace ymd::remnfoc{
 
 using namespace ymd::digipw;
 
@@ -75,6 +75,30 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
     UseX1AndZero,
     UseX1AndX2,
 };
+
+enum class [[nodiscard]] HomeMethod:uint8_t{
+    //初始位置作为原点
+    Initial,
+
+    //最近的编码器单圈零位
+    NearestZero,
+
+    //上取整编码器单圈零位
+    CeilZero,
+
+    //下取整编码器单圈零位
+    FloorZero,
+
+    //最近的编码器单圈零位+原点单圈偏移
+    Nearest,
+
+    //上取整编码器单圈零位+原点单圈偏移
+    Ceil,
+
+    //下取整编码器单圈零位+原点单圈偏移
+    Floor,
+};
+
 
 struct alignas(4) [[nodiscard]] AlertFlags{
     uint32_t phase_u_disconn:1;
@@ -154,8 +178,7 @@ struct alignas(4) [[nodiscard]] OpFlags{
 struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
-    uint32_t phase_invert_en : 1;
-
+    uint32_t reverse_encoder : 1;
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t current_harmonic_suppression_en : 1;
@@ -416,10 +439,10 @@ struct alignas(4) [[nodiscard]] HfiState{
 };
 
 struct alignas(4) [[nodiscard]] AllState{
-    HpState2o encoder_ltd_state;
+    HpState2o relinit_ltd_state;
     PllState encoder_pll_state;
     CurveState curve_state;
-    TrajState traj_smooth_state;
+    TrajState presmooth_traj_state;
     TrajState traj_state;
 
     iq20 torque_curr_integral;
@@ -440,13 +463,18 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
-    iiq32 encoder_abs_position64;
-    iiq32 encoder_rel_position64;
-    uq32 encoder_initial_position_raw;
-    uq32 encoder_initial_position;
+    uq32 encoder_abs_position32;
+    iiq32 encoder_relinit_position64;
+    iiq32 home_relinit_position64;
+
+
+
+    uq32 encoder_initial_abs_position32_raw;
+    uq32 encoder_initial_abs_position32;
     struct alignas(4) {
-        bool is_encoder_initial_position_recorded;
         uint8_t encoder_correct_method_signature;
+        bool is_encoder_initial_position_recorded;
+        bool is_home_position_recorded;
     };
 
     std::array<int32_t, 3> uvw_adc_bvalue;
@@ -468,6 +496,7 @@ struct alignas(4) [[nodiscard]] AllState{
 
     HarmonicState harmonic_state;
 
+    // iiq52 hp_pi_ref_x2;
     iq20 pi_ref_x2;
     iq20 pi_e2;
     iq20 mtpa_d_curr;
@@ -513,7 +542,8 @@ struct alignas(4) [[nodiscard]] AllState{
     
     
     TimerTick isr_entry_tick;
-    TimerTick encoder_get_done_tick;
+    TimerTick encoder_conversion_complete_tick;
+    TimerTick ctrlloop_complete_tick;
     TimerTick isr_exit_tick;
     
     ProctiveEncoderAnticoggingState peac_state;

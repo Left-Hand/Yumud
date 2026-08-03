@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/enum/enum_array.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include <tuple>

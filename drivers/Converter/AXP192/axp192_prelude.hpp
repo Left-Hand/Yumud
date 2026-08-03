@@ -21,7 +21,7 @@
 // 所未有的设备电能使用体验。 
 //  AXP192 提供 6mm x 6mm 48-pin QFN 封装。
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "hal/conn/i2c/i2cdrv.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/realmath.hpp"
-#include "core/stream/BufStream.hpp"
+#include "core/stream/buf_stream.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/tmp/reflect/enum.hpp"

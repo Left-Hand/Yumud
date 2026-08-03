@@ -10,7 +10,7 @@
 // 量时，SC8815也支持电池反向放电工作，输出设定的
 // 电压，并且放电最高电压可达36V。
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/result.hpp"
 #include "core/utils/Errno.hpp"
 

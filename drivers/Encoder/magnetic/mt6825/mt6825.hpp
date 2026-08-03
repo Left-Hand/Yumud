@@ -22,7 +22,7 @@ struct MT6825 final: public MT6825_Prelude{
         spi_drv_(hal::SpiDrv(spi, rank)){}
 
 
-    IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> get_angle();
 private:
     hal::SpiDrv spi_drv_;
 
@@ -30,7 +30,7 @@ private:
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

@@ -61,7 +61,7 @@ private:
             res.is_err()) return res;
         if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

@@ -13,7 +13,7 @@
 //  * 参考仅用于理解问题领域，未复制任何具体实现。
 
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "drivers/IMU/IMU.hpp"
 
 

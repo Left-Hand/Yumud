@@ -4,7 +4,7 @@
 #include <cstdint>
 
 
-namespace ymd::myesc{
+namespace ymd::remnfoc{
 
 
 //FOC频率
@@ -28,7 +28,7 @@ static constexpr double CONF_SHUNT_RESISTANCE_OHMS_F = 0.004f;
 static constexpr double CONF_OPA_GAIN_F = 40;
 
 //adc位数
-static constexpr size_t CONF_LG2_ADC_RESOLUTION = 12;
+static constexpr size_t CONF_ADC_RESOLUTION_BITS = 12;
 
 //直流校准次数
 static constexpr size_t CONF_LG2_DC_CAL_TIMES = 5 + 7;
@@ -65,13 +65,23 @@ static constexpr auto CONF_CURVE_X3_LIMIT = 14.5_iq16;
 
 #if 1
 static constexpr int32_t CONF_CURVE_X2_LIMIT = 8;
-static constexpr auto CONF_CURVE_X3_LIMIT = 24.5_iq16;
+// static constexpr auto CONF_CURVE_X3_LIMIT = 24.5_iq16;
+static constexpr auto CONF_CURVE_X3_LIMIT = 94.5_iq16;
 #endif
+
+// 原点对应的编码器单圈绝对计数值(如果使用编码器查找原点)
+static constexpr uq32 CONF_HOME_ABS_OFFSET = uq32(0.7);
+
+// 相对原点的最小位置限位
+static constexpr auto CONF_CONSTRAIN_MIN_RELHOME_POSITION = iiq32(-0.1);
+
+// 相对原点的最大位置限位
+static constexpr auto CONF_CONSTRAIN_MAX_RELHOME_POSITION = iiq32(0.1);
 
 //should below 1/sqrt(3):
 // 1/sqrt(3) * 1.5 = 2 / sqrt(3)
 // reach svm max duty
-static_assert(CONF_CTRL_MODU_DEPTH_LIMIT_F + CONF_HFI_MODU_DEPTH_LIMIT_F < (2.0 / 1.74));
+static_assert(CONF_CTRL_MODU_DEPTH_LIMIT_F + CONF_HFI_MODU_DEPTH_LIMIT_F < (1.0 / 1.74));
 
 static constexpr auto BUSBAR_VOLT = iq20(CONF_BUSBAR_VOLTAGE_F);
 static constexpr auto INV_BUSBAR_VOLT = uq32(1.0 / CONF_BUSBAR_VOLTAGE_F);
@@ -90,11 +100,11 @@ static constexpr double CURRENT_HALFSCALE_AMPS_F = ADC_HALFSCALE_VOLTAGE_F / (CO
 // #endregion
 
 
-static constexpr uint32_t ADC_MAXIMUM_BVALUE = (1u << CONF_LG2_ADC_RESOLUTION) - 1;
-static constexpr uint32_t ADC_MIDPOINT_BVALUE = (1u << (CONF_LG2_ADC_RESOLUTION)) / 2;
+static constexpr uint32_t ADC_MAXIMUM_BVALUE = (1u << CONF_ADC_RESOLUTION_BITS) - 1;
+static constexpr uint32_t ADC_MIDPOINT_BVALUE = (1u << (CONF_ADC_RESOLUTION_BITS)) / 2;
 
 
-static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << CONF_LG2_ADC_RESOLUTION);
+static constexpr double CURRENT_AMPS_PER_ADC_LSB_F = 2 * CURRENT_HALFSCALE_AMPS_F / (1 << CONF_ADC_RESOLUTION_BITS);
 static constexpr auto CURRENT_HALFSCALE_AMPS = iq20(CURRENT_HALFSCALE_AMPS_F);
 static constexpr auto CURRENT_AMPS_PER_ADC_LSB = iq20(CURRENT_AMPS_PER_ADC_LSB_F);
 static constexpr auto CURRENT_NOISE_STDVAR = CURRENT_AMPS_PER_ADC_LSB * 8;

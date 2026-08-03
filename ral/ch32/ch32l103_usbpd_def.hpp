@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 namespace ymd::ral::ch32::ch32l103_usbpd{
 

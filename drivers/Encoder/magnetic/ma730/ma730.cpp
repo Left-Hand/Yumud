@@ -25,7 +25,7 @@ using IResult = typename MA730::IResult<T>;
 IResult<> MA730::init(const Config & cfg){
     if(const auto res = set_direction(cfg.direction);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_lap_angle();
+    if(const auto res = get_angle();
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -78,7 +78,7 @@ IResult<EncoderFaultBitFields> MA730::get_fault(){
     return Ok(fault);
 }
 
-IResult<Angular<uq32>> MA730::read_lap_angle(){
+IResult<Angular<uq32>> MA730::get_angle(){
     const uint16_t data = ({
         const auto res = direct_read();
         if(res.is_err()) return Err(res.unwrap_err());

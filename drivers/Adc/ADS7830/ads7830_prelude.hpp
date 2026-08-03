@@ -3,7 +3,7 @@
 //这个驱动已经完成
 //这个驱动已经通过测试
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 

@@ -7,7 +7,7 @@
 
 // 参考资料：https://blog.csdn.net/qq_42250136/article/details/156201848
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"

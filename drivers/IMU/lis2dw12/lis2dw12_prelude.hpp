@@ -2,7 +2,7 @@
 
 //这个驱动还在开发中
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/STMicroIMU.hpp"

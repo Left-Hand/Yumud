@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 #include "hal/media/dvp/dvp.hpp"
 #include "primitive/image/image.hpp"

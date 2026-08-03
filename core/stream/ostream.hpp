@@ -349,23 +349,25 @@ public:
 
     //#region print integer
 private:
-    void print_int32(const uint32_t int_val, const str::IntTypeErased type);
-    void print_int64(const uint64_t int_val, const str::IntTypeErased type);
+    void print_integral32(const uint32_t int_val, const str::IntTypeErased type_tag);
+    void print_integral64(const uint64_t int_val, const str::IntTypeErased type_tag);
 
 
-    void print_iq32(const int32_t bits, const uint32_t Q);
-    void print_uq32(const uint32_t bits, const uint32_t Q);
+    void print_fixedpoint32(const uint32_t bits, const str::FixedTypeTag type_tag);
+    void print_fixedpoint64(const uint64_t bits, const str::FixedTypeTag type_tag);
 public:
 
     template<size_t Q, typename D>
     OutputStream & operator<<(const math::fixed<Q, D> & q_val){
-        // print_iq16(math::fixed<16, int32_t>(q_val));
-        static_assert(sizeof(D) <= 4);
+        static constexpr auto type_tag = str::FixedTypeTag{
+            .q_num = Q,
+            .is_signed = std::is_signed_v<D>
+        };
 
-        if constexpr (std::is_signed_v<D>){
-            print_iq32(static_cast<int32_t>(q_val.to_bits()), Q);
+        if constexpr(sizeof(D) <= 4){
+            print_fixedpoint32(uint32_t(q_val.to_bits()), type_tag);
         }else{
-            print_uq32(static_cast<uint32_t>(q_val.to_bits()), Q);
+            print_fixedpoint64(uint64_t(q_val.to_bits()), type_tag);
         }
         return *this;
     }
@@ -375,9 +377,9 @@ public:
     requires (std::is_integral_v<T> and (sizeof(T) <= 8))
     OutputStream & operator<<(const T int_val){
         if constexpr(sizeof(T) <= 4){
-            print_int32(static_cast<uint32_t>(int_val), str::IntTypeErased::from<T>());
+            print_integral32(static_cast<uint32_t>(int_val), str::IntTypeErased::from<T>());
         }else if constexpr(sizeof(T) <= 8){
-            print_int64(static_cast<uint64_t>(int_val), str::IntTypeErased::from<T>());
+            print_integral64(static_cast<uint64_t>(int_val), str::IntTypeErased::from<T>());
         }
         return *this;
     }
@@ -773,12 +775,12 @@ public:
 private:
     Config config_;
 
-    __fast_inline void print_splt(){
+    void print_splt(){
         write_bytes(config_.splitter_byte());
     }
 
     template<typename T>
-    __fast_inline void print_splt_then_entity(T && any){
+    void print_splt_then_entity(T && any){
         if constexpr(details::need_insert_splitter_before_v<T>){
             print_splt();
         }
@@ -786,18 +788,18 @@ private:
     }
 
     template<typename T>
-    __fast_inline void print_given_splt_then_entity(const char splt, T && any){
+    void print_given_splt_then_entity(const char splt, T && any){
         if constexpr(details::need_insert_splitter_before_v<T>){
             write_byte(splt);
         }
         *this << std::forward<T>(any);
     }
 
-    __fast_inline void print_end(){
+    void print_end(){
         flush();
     }
 
-    __fast_inline void print_indent(){
+    void print_indent(){
         if((config_.indent == 0)) [[likely]]
             return;
         for(size_t i = 0; i < config_.indent; i++){
@@ -805,7 +807,7 @@ private:
         }
     }
 
-    __fast_inline void print_endl(){
+    void print_endl(){
         static constexpr const char * enter_str = "\r\n";
         static constexpr size_t enter_str_len = 2;
 
@@ -834,7 +836,7 @@ private:
 
         // 用于压入数据，当数据溢满时发送数据包
         template<typename Fn>
-        __fast_inline void push_bytes(const std::span<const uint8_t> bytes, Fn&& fn) {
+        void push_bytes(const std::span<const uint8_t> bytes, Fn&& fn) {
             size_t offset = 0;
             while (offset < bytes.size()) {
                 size_t free_cap = OSTREAM_BUF_SIZE - size;
@@ -858,7 +860,7 @@ private:
 
         // 强制刷新缓冲区（发送剩余数据）
         template<typename Fn>
-        __fast_inline void flush(Fn&& fn) {
+        void flush(Fn&& fn) {
             if (size > 0) {
                 std::forward<Fn>(fn)(std::span<const uint8_t>(buf.data(), size));  // 发送缓冲区数据
                 clear();  // 发送后重置缓冲区
@@ -866,7 +868,7 @@ private:
         }
 
         // 清空缓冲区（不发送数据）
-        __fast_inline void clear() {
+        void clear() {
             size = 0;
         }
     };

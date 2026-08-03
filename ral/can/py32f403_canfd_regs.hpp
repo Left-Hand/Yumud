@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/constants/enums.hpp"
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 //使用ptb/stb模型
 

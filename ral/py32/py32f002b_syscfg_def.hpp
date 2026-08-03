@@ -2,7 +2,7 @@
 
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 
 namespace ymd::ral::py32::py32f002b{

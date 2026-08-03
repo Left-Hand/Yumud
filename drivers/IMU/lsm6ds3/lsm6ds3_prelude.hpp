@@ -1,6 +1,6 @@
 
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Errno.hpp"
 #include "drivers/IMU/IMU.hpp"
 

@@ -32,9 +32,9 @@ void lt8920_main(){
 
     auto transport = LT8920_SpiTransport{&spi, spi.allocate_cs_pin(&spi_cs_pin_).unwrap()};
     LT8920 lt{transport};
-    set_systick_handler([&](){
+    systick_set_isr_callback([&](void * args){
         lt.tick().examine();
-    });
+    }, nullptr);
 
 
     auto nrst_pin_ = hal::PB<0>();

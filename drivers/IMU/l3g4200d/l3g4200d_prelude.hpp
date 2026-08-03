@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/result.hpp"
 #include "hal/conn/i2c/i2cdrv.hpp"
 #include "drivers/IMU/IMU.hpp"

@@ -61,9 +61,6 @@ int raise(int sig) {
     return 0; // 返回0表示成功
 }
 
-void abort(void){
-    while(1);
-}
 
 void *__dso_handle = nullptr;
 void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle){

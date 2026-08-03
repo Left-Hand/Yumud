@@ -135,7 +135,7 @@ Result<void, Error> DRV2605L::reset(){
     reg.dev_reset = 1;
     if(const auto res = write_reg(reg); res.is_err()) return res;
     reg.dev_reset = 0;
-    reg.apply();
+    reg.commit_changes();
     return Ok();
 }
 

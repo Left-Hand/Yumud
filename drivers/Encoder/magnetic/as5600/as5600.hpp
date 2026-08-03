@@ -62,7 +62,7 @@ private:
             std::bit_cast<uint8_t>(T::REG_ADDR), 
             reg.to_bits(), std::endian::little); 
             err.is_err()) return Err(err.unwrap_err());
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

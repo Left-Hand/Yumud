@@ -37,7 +37,7 @@ private:
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(reg.address, reg.to_bits());
             res.is_err()) return res;
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
     

@@ -22,7 +22,7 @@ IResult<> Self::init(){
     return Ok();
 }
 
-IResult<Angular<uq32>> Self::get_lap_angle(){
+IResult<Angular<uq32>> Self::get_angle(){
     TODO();
     return Ok(Angular<uq32>::ZERO);
 }

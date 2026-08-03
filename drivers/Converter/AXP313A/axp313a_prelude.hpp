@@ -3,7 +3,7 @@
 // AXP313A 是一款简化版的电源管理芯片，主要提供DC-DC转换功能
 // 相比AXP192，AXP313A功能更加精简，主要用于基础的电源转换需求
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "hal/conn/i2c/i2cdrv.hpp"

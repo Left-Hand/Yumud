@@ -39,7 +39,7 @@ void ma730_main(){
     }).examine();
 
     while(true){
-        const auto angle = ma730.read_lap_angle().examine();
+        const auto angle = ma730.get_angle().examine();
         DEBUG_PRINTLN(angle.to_turns());
     }
 }

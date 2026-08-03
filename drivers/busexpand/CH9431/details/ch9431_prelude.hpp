@@ -4,7 +4,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/conn/spi/spidrv.hpp"
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 namespace ymd::drivers{
 

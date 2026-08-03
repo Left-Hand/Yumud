@@ -18,7 +18,7 @@ struct MT6826S final: public MT6826S_Prelude
         spi_drv_(std::move(spi_drv)){}
 
     IResult<> init();
-    IResult<Angular<uq32>> get_lap_angle();
+    IResult<Angular<uq32>> get_angle();
     IResult<EncoderFaultBitFields> get_fault();
     // [[nodiscard]] IResult<void> update();
 
@@ -34,7 +34,7 @@ private:
             0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

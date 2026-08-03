@@ -100,7 +100,7 @@ IResult<> Transport::transceive_u16(uint16_t & rx, const uint16_t tx){
     return Ok();
 }
 
-IResult<Angular<uq32>> KTH7823::read_lap_angle(){
+IResult<Angular<uq32>> KTH7823::get_angle(){
     uint16_t bits;
         
     if(const auto res = transport_.direct_read(bits); 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "drivers/IMU/details/BoschIMU.hpp"
 
 // 参考实现

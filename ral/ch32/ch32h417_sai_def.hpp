@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 
 #ifndef ASSERT_REG_IS_32BIT

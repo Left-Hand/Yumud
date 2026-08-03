@@ -4,7 +4,7 @@
 #include "core/clock/time.hpp"
 
 #include "hal/conn/uart/hw_singleton.hpp"
-#include "core/stream/BufStream.hpp"
+#include "core/stream/buf_stream.hpp"
 #include "core/utils/Result.hpp"
 #include "core/intrinsics/reverse.hpp"
 #include <cmath>

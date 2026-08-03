@@ -20,16 +20,12 @@ public:
     IResult<> init() ;
 
     IResult<> update();
-    IResult<Angular<uq32>> read_lap_angle() {
-        return Ok(Angular<uq32>::from_turns(lap_turns_));
-    }
+    IResult<Angular<uq32>> get_angle();
 private:
     using Regs = AS5048A_Regset;
 
     hal::SpiDrv spi_drv_;
     Regs regs_ = {};
-
-    uq32 lap_turns_ = 0;
 
     uint16_t get_position_data();
 

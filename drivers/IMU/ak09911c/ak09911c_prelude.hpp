@@ -9,7 +9,7 @@
 //注意
 //市售的AK09911模块没有给RSTN接上拉电阻 导致模块默认处于复位状态
 
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 #include "drivers/IMU/IMU.hpp"
 #include "drivers/IMU/details/AsahiKaseiIMU.hpp"
 

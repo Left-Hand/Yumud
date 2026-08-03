@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/int/uint24_t.hpp"
+#include "core/math/int/uint24_t.hpp"
 #include "core/constants/enums.hpp"
 #include <bit>
 #include <span>
@@ -19,7 +19,7 @@ public:
         self.as_bits_mut() = owner_.to_bits();
     }
 
-    constexpr void apply() const noexcept {
+    constexpr void commit_changes() const noexcept {
         const T & self = *this;
         owner_.as_bits_mut() = self.to_bits();
     }

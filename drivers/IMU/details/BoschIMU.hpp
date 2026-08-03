@@ -29,7 +29,7 @@ public:
     Result<void, Error> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
-        reg.apply();
+        reg.commit_changes();
         return Ok();
     }
 

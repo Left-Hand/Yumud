@@ -10,6 +10,20 @@
 using namespace ymd;
 
 
+
+namespace{
+
+template<typename T>
+static constexpr bool _is_positive_helper(T val, const bool has_signed_tag){
+    if(has_signed_tag){
+        using ST = std::make_signed_t<T>;
+        return std::bit_cast<ST>(val) >= 0;
+    }else{
+        return val != 0;
+    }
+} 
+
+
 __attribute__((always_inline))
 static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
     switch(radix){
@@ -30,6 +44,8 @@ static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
 
     //should unreachable
     return p_str;
+}
+
 }
 
 void OutputStream::write_nt_chars(const char * p_str){
@@ -176,20 +192,13 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
-template<typename T>
-static constexpr bool is_positive(T val){
-    if constexpr(std::is_signed_v<T>) {
-        return val >= 0;
-    } else {
-        return true;
-    }
-} 
+
 
 #define PRINT_NUMERIC_BEGIN(cap)\
     alignas(4) std::array<char, cap> buf;\
     char * p_str = buf.data();\
 
-#define PRINT_NUMERIC_END(convfunc, ...)\
+#define PRINT_NUMERIC_END(val, convfunc, ...)\
     p_str = convfunc(p_str, val, ##__VA_ARGS__);\
     size_t len = p_str - buf.data();\
     this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
@@ -198,10 +207,10 @@ static constexpr bool is_positive(T val){
 
 #define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
     PRINT_NUMERIC_BEGIN(cap)\
-    if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
+    if((config_.specifier.showpos and _is_positive_helper(val, type_tag.is_signed))) [[unlikely]]{\
         p_str[0] = ('+');\
         p_str++;}\
-    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
+    PRINT_NUMERIC_END(val, convfunc, ##__VA_ARGS__)\
 
 
 #define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
@@ -209,36 +218,30 @@ static constexpr bool is_positive(T val){
     {\
         if((config_.specifier.showbase)) [[unlikely]]{\
             p_str = put_basealpha_lower(p_str, config_.radix);}\
-        else if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
+        else if((config_.specifier.showpos and _is_positive_helper(val, type_tag.is_signed))) [[unlikely]]{\
             p_str[0] = ('+');\
             p_str++;\
         }\
     }\
-    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
+    PRINT_NUMERIC_END(val, convfunc, ##__VA_ARGS__)\
 
 
 
 OutputStream & OutputStream::operator<<(const float val){
-    PRINT_NUMERIC_TEMPLATE(val, 64, str::fmtnum_f32, this->config_.eps)
+    PRINT_NUMERIC_BEGIN(64)
+    if((config_.specifier.showpos and (val > 0.0f))) [[unlikely]]{
+        p_str[0] = ('+');
+        p_str++;}
+    PRINT_NUMERIC_END(val, str::fmtnum_f32, this->config_.eps)
     return *this;
 }
 
-void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
-    const str::FixedTypeErased type = {
-        .is_signed = true,
-        .q_num = static_cast<uint8_t>(Q)
-    };
-
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint32, this->config_.eps, type)
+void OutputStream::print_fixedpoint32(const uint32_t bits, const str::FixedTypeTag type_tag){
+    PRINT_NUMERIC_TEMPLATE(bits, (32 + 12), str::fmtnum_fixedpoint32, this->config_.eps, type_tag)
 }
 
-void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
-    const str::FixedTypeErased type = {
-        .is_signed = false,
-        .q_num = static_cast<uint8_t>(Q)
-    };
-
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixedpoint32, this->config_.eps, type)
+void OutputStream::print_fixedpoint64(const uint64_t bits, const str::FixedTypeTag type_tag){
+    PRINT_NUMERIC_TEMPLATE(bits, (64 + 12), str::fmtnum_fixedpoint64, this->config_.eps, type_tag)
 }
 
 OutputStream & OutputStream::operator<<(const double val){
@@ -246,12 +249,12 @@ OutputStream & OutputStream::operator<<(const double val){
 }
 
 
-void OutputStream::print_int32(const uint32_t val, const str::IntTypeErased type){
-    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_integral32, this->config_.radix, type);
+void OutputStream::print_integral32(const uint32_t val, const str::IntTypeErased type_tag){
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_integral32, this->config_.radix, type_tag);
 }
 
-void OutputStream::print_int64(const uint64_t val, const str::IntTypeErased type){
-    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_integral64, this->config_.radix, type);
+void OutputStream::print_integral64(const uint64_t val, const str::IntTypeErased type_tag){
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_integral64, this->config_.radix, type_tag);
 }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "core/io/regs.hpp"
+#include "core/utils/reg_base.hpp"
 
 
 namespace ymd::ral::ch32::ch32v203_opa{
