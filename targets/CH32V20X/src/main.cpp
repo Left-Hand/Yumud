@@ -9,7 +9,7 @@ int main(){
     #ifdef CH32V20X
     
     // sincospll_main();
-    myesc_main();
+    remnfoc_main();
     // cas_main();
     // vce2755_main();
     // sincospll_main();
@@ -78,7 +78,7 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
-    // myesc_main();
+    // remnfoc_main();
     // alx_aoa_main();
     // mk8000tr_main();
     // vl53l5cx_main();
@@ -179,7 +179,7 @@ int main(){
     // eeprom_tb(usart1);
     // eeprom_main();
     // myservo_main();
-    // myesc_main();
+    // remnfoc_main();
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
@@ -193,7 +193,7 @@ int main(){
     // winter_mc_tutorial_main();
     // stl06n_main();
     // render_main();
-    // myesc_main();
+    // remnfoc_main();
     // s21c_main();
     // steadywin_main();
     // alx_aoa_main();

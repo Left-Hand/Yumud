@@ -4,7 +4,7 @@
 #include <cstdint>
 
 
-namespace ymd::myesc{
+namespace ymd::remnfoc{
 
 
 //FOC频率

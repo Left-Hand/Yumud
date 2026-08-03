@@ -13,7 +13,7 @@
 #include "motor_dsp/dsp_lpf.hpp"
 #include "motor_dsp/dsp_vec.hpp"
 #include "motor_dsp/dsp_pll.hpp"
-#include "roundtrip_traj_generator.hpp"
+#include "utilities/roundtrip_traj_generator.hpp"
 
 
 using namespace ymd;

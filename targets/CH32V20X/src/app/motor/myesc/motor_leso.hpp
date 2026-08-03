@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/math/fixed/fixed.hpp"
+#include "core/utils/Result.hpp"
+#include "dsp/state_vector.hpp"
 
 namespace ymd::dsp::adrc{
 

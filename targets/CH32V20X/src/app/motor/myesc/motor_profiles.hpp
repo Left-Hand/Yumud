@@ -5,7 +5,7 @@
 //常见电机参数：
 // https://item.taobao.com/item.htm?id=643573104607
 
-namespace ymd::myesc{
+namespace ymd::remnfoc{
 
 
 struct MotorProfile_Gim6010{

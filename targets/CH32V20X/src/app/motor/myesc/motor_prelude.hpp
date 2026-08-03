@@ -4,9 +4,9 @@
 #include "motor_leso.hpp"
 #include "motor_dsp/dsp_pll.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
+#include "digipw/prelude/abdq.hpp"
 
-
-namespace ymd::myesc{
+namespace ymd::remnfoc{
 
 using namespace ymd::digipw;
 
@@ -75,6 +75,17 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
     UseX1AndZero,
     UseX1AndX2,
 };
+
+enum class [[nodiscard]] HomeMethod:uint8_t{
+    Initial,
+    NearestZero,
+    CeilZero,
+    FloorZero,
+    Nearest,
+    Ceil,
+    Floor,
+};
+
 
 struct alignas(4) [[nodiscard]] AlertFlags{
     uint32_t phase_u_disconn:1;
@@ -522,7 +533,8 @@ struct alignas(4) [[nodiscard]] AllState{
     
     
     TimerTick isr_entry_tick;
-    TimerTick encoder_get_done_tick;
+    TimerTick encoder_conversion_complete_tick;
+    TimerTick ctrlloop_complete_tick;
     TimerTick isr_exit_tick;
     
     ProctiveEncoderAnticoggingState peac_state;
