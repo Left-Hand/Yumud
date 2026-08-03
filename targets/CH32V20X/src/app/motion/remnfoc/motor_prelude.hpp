@@ -77,12 +77,25 @@ enum class [[nodiscard]] TrajSmoothMethod:uint8_t{
 };
 
 enum class [[nodiscard]] HomeMethod:uint8_t{
+    //初始位置作为原点
     Initial,
+
+    //最近的编码器单圈零位
     NearestZero,
+
+    //上取整编码器单圈零位
     CeilZero,
+
+    //下取整编码器单圈零位
     FloorZero,
+
+    //最近的编码器单圈零位+原点单圈偏移
     Nearest,
+
+    //上取整编码器单圈零位+原点单圈偏移
     Ceil,
+
+    //下取整编码器单圈零位+原点单圈偏移
     Floor,
 };
 
@@ -165,8 +178,7 @@ struct alignas(4) [[nodiscard]] OpFlags{
 struct alignas(4) [[nodiscard]] FnSwitches{
     using Self = FnSwitches;
 
-    uint32_t phase_invert_en : 1;
-
+    uint32_t reverse_encoder : 1;
 
     uint32_t deadtime_compensate_en : 1;
     uint32_t current_harmonic_suppression_en : 1;
@@ -451,11 +463,8 @@ struct alignas(4) [[nodiscard]] AllState{
     Angular<uq32> hfi_elec_angle;
     Angular<uq32> observer_elec_angle;
 
-    iiq32 encoder_abs_position64;
+    uq32 encoder_abs_position32;
     iiq32 encoder_relinit_position64;
-
-
-    // iiq32 home_abs_position64;
     iiq32 home_relinit_position64;
 
 
